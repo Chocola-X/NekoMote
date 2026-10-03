@@ -3,6 +3,7 @@
 #include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
+#include <nekomote/runtime/spring.hpp>
 
 #include <cmath>
 #include <cstdlib>
@@ -437,4 +438,33 @@ TEST_CASE("Warmed animation, expression routing and geometry allocate no project
     measure_allocations = false;
     REQUIRE(succeeded);
     REQUIRE(measured_allocations == 0);
+}
+TEST_CASE("Spring advancement has independent state and no project heap", "[runtime][allocation]")
+{
+    using namespace nekomote::runtime;
+    SpringState first, second;
+    const SpringCoefficients coefficients{0.03125f, 0.125f, 0.3f};
+    const SpringOutput output{{1, 2}, 9.6f, 1};
+    for (int i = 0; i < 120; ++i)
+        advance_spring(first, coefficients, {}, {0.1f, 0});
+    const auto snapshot = first;
+    Vec2 observed;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 1000; ++i)
+    {
+        advance_spring(first, coefficients, {}, {0.1f, 0});
+        observed = spring_output(first, output);
+    }
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(std::isfinite(observed.x));
+    REQUIRE(std::isfinite(observed.y));
+    REQUIRE(second.position == std::array<double, 2>{});
+    REQUIRE(second.velocity == std::array<double, 2>{});
+    second = snapshot;
+    for (int i = 0; i < 1000; ++i)
+        advance_spring(second, coefficients, {}, {0.1f, 0});
+    REQUIRE(first.position == second.position);
+    REQUIRE(first.velocity == second.velocity);
 }

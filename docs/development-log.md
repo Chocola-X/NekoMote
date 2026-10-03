@@ -90,3 +90,11 @@
 - 上述隔离只关闭八个物理 enabled 字节，以允许手工指定物理绑定；它不认证积分器。未修改 PSB 的实验会将这些手工物理值恢复为控制器输出，已记录原始失败结果。更新采样工具后，原 PSB 零步默认 PNG hash 仍为 `e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793`。
 - 采样工具新增显式 hair/parts/bust SDK scale 输入，默认保持全零。120 步未修改 PSB 观察显示 scale=1 的静止模型物理绑定全零，而 scale=0 的胸部 UD 从第一步即为 -18.189874649；scale 不能当作禁用开关或简单输出倍数。移动模型从第二步开始产生响应，下一步核实锚点和积分。
 - Debug 49 项、ASan/UBSan 48 项检查通过。限幅只增加常数空间数值运算，无动态分配；尚不宣称完整物理或播放性能。
+
+## P6 弹簧内核与受控物理事件
+
+- 用元数据数值/字符串的同长度 PSB fixture、逐步外部位移事件、逐步 atan/sqrt 观察隔离物理更新。所有地址表/资源与外部素材只读，非法范围/字符串/编码宽度明确拒绝，新增工具零步 PNG 仍与旧基线 hash 一致。
+- 原生 SpringState/advance_spring/spring_output 无 JSON/GL/宿主依赖；验证重力/弹簧/摩擦顺序、幅度减 ofs 的顺序与配对死区。四型号相同 atan 单位映射；12 组冻结轨迹、535 条数值断言通过。
+- 原生内核计算参数后经正常场景/GL 输出，四个 24 步弹簧隔离截图全部 PASS，alpha 无差、RGB 最大 1/255，目视核实；不把 fixture 验证记为未经修改的完整播放验收。证据 `docs/validation/p6-spring-images.json`。
+- Debug/Release 51 个入口、ASan/UBSan 50 核心入口全部通过；预热后的 1000 步无普通 C++ new，独立状态重置一致。发布态单粒子 step+map 中位 16.834 ns/op，仅数值内核。
+- 父级累计 Float32 变换候选更贴近锚点位置，但 30 组静态图片仍 23 PASS/7 FAIL，未直接替代正式几何。完整 locator/变形继承、头发两粒子约束、物理 schema 和实时会话待接入，详见 `docs/p6-physics-investigation.md`。

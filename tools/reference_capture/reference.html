@@ -8,12 +8,12 @@ window.ready = false;
 window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
 window.mathTrace=[];
 window.enableMathTrace=false;
-if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','atan2']) {
+if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','tan','atan','atan2','asin','acos','pow']) {
     const fn=Math[name];
     Math[name]=function(...args) {
         const result=fn(...args);
         if(window.traceMath && window.mathTrace.length<2000)
-            window.mathTrace.push({name,args,result,stack:new Error().stack});
+            window.mathTrace.push({step:window.authorStep||0,name,args,result,stack:new Error().stack});
         return result;
     };
 }
@@ -85,6 +85,13 @@ window.capture = async function(options) {
     }
     if(options.sampleVariables) observeVariables(0);
     for (let i=0;i<options.steps;++i) {
+        window.authorStep=i+1;
+        for(const event of options.events||[]) if(event.step===i+1) {
+            for(const [name,value] of Object.entries(event.variables||{}))
+                EmotePlayer_SetVariable(id,name,value,0,0);
+            for(const [name,force] of Object.entries(event.forces||{}))
+                EmotePlayer_SetOuterForce(id,name,force[0],force[1],0,0);
+        }
         EmotePlayer_Update(id,options.stepFrames);
         if(options.sampleVariables) observeVariables(i+1);
     }

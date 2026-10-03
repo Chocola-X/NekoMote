@@ -1,7 +1,7 @@
 """Diagnostic PSB fixture mutation, never a runtime importer.
 
 Only walks the PSB compact-array/dictionary address tables to change explicitly
-selected control flags or atlas icon dimensions. Layout facts were checked against psbfile (MIT,
+selected flags, dimensions, numbers or existing string references. Layout facts were checked against psbfile (MIT,
 number201724) and FreeMote's public PSB definitions; this implementation is
 independent. Unselected payloads and all address tables remain unchanged. Capture metadata records every changed byte and both hashes.
 """
@@ -9,7 +9,7 @@ import struct
 
 
 def make_fixture(data, *, disable_clamp=False, disable_physics=False,
-                 disable_auto_blink=False, icon_sizes=None):
+                 disable_auto_blink=False, icon_sizes=None, numbers=None, strings=None):
     if data[:4] != b'PSB\0' or struct.unpack_from('<HH', data, 4) != (4, 0):
         raise ValueError('diagnostic fixture requires an unencrypted PSB v4')
     result = bytearray(data)
@@ -100,6 +100,57 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
             struct.pack_into('<f', result, pos+1, value)
             edits.append(dict(path=f'/source/{texture}/icon/{icon}/{name}',
                               offset=pos+1, before=before, after=value, bytes=4))
+
+    def resolve(path):
+        # JSON Pointer paths identify source fields; never insert a value or
+        # change encoded widths, collections, address tables or resources.
+        if not path.startswith(('/metadata/', '/object/')):
+            raise ValueError('fixtures require an explicit metadata/object path')
+        pos = struct.unpack_from('<I', data, 36)[0]
+        for token in path.split('/')[1:]:
+            token = token.replace('~1', '/').replace('~0', '~')
+            if data[pos] == 0x21:
+                pos = dictionary(pos)[token]
+            elif data[pos] == 0x20:
+                offsets, begin = table(pos+1)
+                if not token.isdecimal() or not 0 <= int(token) < len(offsets):
+                    raise ValueError('fixture array index is out of range: '+path)
+                pos = begin+offsets[int(token)]
+            else:
+                raise ValueError('fixture path traverses a scalar: '+path)
+        return pos
+
+    for path, value in (numbers or {}).items():
+        pos = resolve(path)
+        tag = data[pos]
+        if tag in (0x1e, 0x1f):
+            fmt = '<f' if tag == 0x1e else '<d'
+            before = struct.unpack_from(fmt, data, pos+1)[0]
+            payload = struct.pack(fmt, value)
+        elif 0x05 <= tag <= 0x0c and isinstance(value, int):
+            width = tag-4
+            before = int.from_bytes(data[pos+1:pos+1+width], 'little', signed=True)
+            payload = value.to_bytes(width, 'little', signed=True)
+        elif tag in (0x04, 0x1d) and value == 0:
+            continue
+        else:
+            raise ValueError('numeric fixture requires a representable same-width number: '+path)
+        result[pos+1:pos+1+len(payload)] = payload
+        edits.append(dict(path=path, offset=pos+1, before=before, after=value, bytes=len(payload)))
+    offsets, _ = table(struct.unpack_from('<I', data, 16)[0])
+    strings_begin = struct.unpack_from('<I', data, 20)[0]
+    labels = [data[strings_begin+offset:data.index(0, strings_begin+offset)].decode('utf-8')
+              for offset in offsets]
+    for path, value in (strings or {}).items():
+        pos = resolve(path)
+        width = data[pos]-0x14
+        if not 1 <= width <= 4:
+            raise ValueError('string fixture requires an existing string token: '+path)
+        index = labels.index(value)
+        payload = index.to_bytes(width, 'little')
+        before = labels[integer(pos+1, width)]
+        result[pos+1:pos+1+width] = payload
+        edits.append(dict(path=path, offset=pos+1, before=before, after=value, bytes=width))
     allowed = {edit['offset']+i for edit in edits for i in range(edit.get('bytes', 1))}
     if any(a != b and pos not in allowed for pos, (a, b) in enumerate(zip(result, data))):
         raise ValueError('unexpected diagnostic fixture difference')

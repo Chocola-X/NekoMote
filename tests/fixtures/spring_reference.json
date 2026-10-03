@@ -1,0 +1,3199 @@
+{
+  "scope": "Isolated fixed author step kernel; locator transforms and full physics playback are not certified",
+  "value_tolerance": 1e-05,
+  "cases": [
+    {
+      "name": "half",
+      "coefficients": {
+        "spring": 0.5,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -0.6467359066009521,
+            0
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0.07636695355176926,
+            0
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0.6756348609924316,
+            0
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0.9042515158653259,
+            0
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            0.7089057564735413,
+            0
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            0.22775645554065704,
+            0
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            -0.2930312752723694,
+            0
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            -0.6204203963279724,
+            0
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            -0.6354852318763733,
+            0
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            -0.3706982135772705,
+            0
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            0.02324872463941574,
+            0
+          ]
+        },
+        {
+          "step": 13,
+          "value": [
+            0.3577803671360016,
+            0
+          ]
+        },
+        {
+          "step": 14,
+          "value": [
+            0.49393850564956665,
+            0
+          ]
+        },
+        {
+          "step": 15,
+          "value": [
+            0.3970150649547577,
+            0
+          ]
+        },
+        {
+          "step": 16,
+          "value": [
+            0.13850359618663788,
+            0
+          ]
+        },
+        {
+          "step": 17,
+          "value": [
+            -0.14831380546092987,
+            0
+          ]
+        },
+        {
+          "step": 18,
+          "value": [
+            -0.3343760669231415,
+            0
+          ]
+        },
+        {
+          "step": 19,
+          "value": [
+            -0.3508949875831604,
+            0
+          ]
+        },
+        {
+          "step": 20,
+          "value": [
+            -0.21184270083904266,
+            0
+          ]
+        },
+        {
+          "step": 21,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 22,
+          "value": [
+            0.18898801505565643,
+            0
+          ]
+        },
+        {
+          "step": 23,
+          "value": [
+            0.26945874094963074,
+            0
+          ]
+        },
+        {
+          "step": 24,
+          "value": [
+            0.22198821604251862,
+            0
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "17f3a48e33d2ec2ef933a47d19f8c13bfecc4edce723606e77da456effacbc5f",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0.5,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "8d140604c3057cb1af2f70eaadf7630cf998d5c5153605024065cb8d861a1b7e"
+    },
+    {
+      "name": "original",
+      "coefficients": {
+        "spring": 0.03125,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -1.1178361177444458,
+            0
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            -1.0598421096801758,
+            0
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            -0.9801357984542847,
+            0
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            -0.8835963606834412,
+            0
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            -0.7749559879302979,
+            0
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            -0.6586902737617493,
+            0
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            -0.5389282703399658,
+            0
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            -0.4193824231624603,
+            0
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            -0.30329763889312744,
+            0
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            -0.19341972470283508,
+            0
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            -0.09198165684938431,
+            0
+          ]
+        },
+        {
+          "step": 13,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 14,
+          "value": [
+            0.07918009907007217,
+            0
+          ]
+        },
+        {
+          "step": 15,
+          "value": [
+            0.1469140350818634,
+            0
+          ]
+        },
+        {
+          "step": 16,
+          "value": [
+            0.20216256380081177,
+            0
+          ]
+        },
+        {
+          "step": 17,
+          "value": [
+            0.2449759691953659,
+            0
+          ]
+        },
+        {
+          "step": 18,
+          "value": [
+            0.27573859691619873,
+            0
+          ]
+        },
+        {
+          "step": 19,
+          "value": [
+            0.2951163053512573,
+            0
+          ]
+        },
+        {
+          "step": 20,
+          "value": [
+            0.30400270223617554,
+            0
+          ]
+        },
+        {
+          "step": 21,
+          "value": [
+            0.30346643924713135,
+            0
+          ]
+        },
+        {
+          "step": 22,
+          "value": [
+            0.29470008611679077,
+            0
+          ]
+        },
+        {
+          "step": 23,
+          "value": [
+            0.27897197008132935,
+            0
+          ]
+        },
+        {
+          "step": 24,
+          "value": [
+            0.2575819790363312,
+            0
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "b7f9430ec8a3eff50df200c864a3c645d6c2fa460759c6905fae268154fccf4e",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        }
+      ],
+      "reference_metadata_sha256": "c5e5677373b1e22767b63f78b32dc5ce1b56ff824f09a2f36503db8cac985055"
+    },
+    {
+      "name": "friction-half",
+      "coefficients": {
+        "spring": 0.03125,
+        "friction": 0.5,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -1.131286382675171,
+            0
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            -1.1046653985977173,
+            0
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            -1.0741139650344849,
+            0
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            -1.0420726537704468,
+            0
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            -1.0097852945327759,
+            0
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            -0.9778778553009033,
+            0
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            -0.9466575980186462,
+            0
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            -0.9162675142288208,
+            0
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            -0.886766254901886,
+            0
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            -0.858169436454773,
+            0
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            -0.8304706811904907,
+            0
+          ]
+        },
+        {
+          "step": 13,
+          "value": [
+            -0.8036530017852783,
+            0
+          ]
+        },
+        {
+          "step": 14,
+          "value": [
+            -0.7776941657066345,
+            0
+          ]
+        },
+        {
+          "step": 15,
+          "value": [
+            -0.7525696754455566,
+            0
+          ]
+        },
+        {
+          "step": 16,
+          "value": [
+            -0.7282543182373047,
+            0
+          ]
+        },
+        {
+          "step": 17,
+          "value": [
+            -0.7047229409217834,
+            0
+          ]
+        },
+        {
+          "step": 18,
+          "value": [
+            -0.6819506883621216,
+            0
+          ]
+        },
+        {
+          "step": 19,
+          "value": [
+            -0.6599133610725403,
+            0
+          ]
+        },
+        {
+          "step": 20,
+          "value": [
+            -0.6385875344276428,
+            0
+          ]
+        },
+        {
+          "step": 21,
+          "value": [
+            -0.6179502010345459,
+            0
+          ]
+        },
+        {
+          "step": 22,
+          "value": [
+            -0.5979792475700378,
+            0
+          ]
+        },
+        {
+          "step": 23,
+          "value": [
+            -0.5786532759666443,
+            0
+          ]
+        },
+        {
+          "step": 24,
+          "value": [
+            -0.5599514842033386,
+            0
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "b85a9d6515d510d43fc5f5b20c609f091fc4ac3c99775f8a015b9a731b7c012c",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/friction",
+          "offset": 284183,
+          "before": 0.125,
+          "after": 0.5,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "eb5a942a118c66a15229105a3415bc893b5037c8987b577d2ee36a64f4251960"
+    },
+    {
+      "name": "vertical",
+      "coefficients": {
+        "spring": 0.5,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              0,
+              1
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            -1.2926385402679443
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            0.15273253619670868
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0,
+            1.3503198623657227
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0,
+            1.8062283992767334
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            0,
+            1.4167144298553467
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            0,
+            0.45547646284103394
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            0,
+            -0.585985004901886
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            0,
+            -1.240105152130127
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            0,
+            -1.2701799869537354
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            0,
+            -0.7412393689155579
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            0,
+            0.0464974083006382
+          ]
+        },
+        {
+          "step": 13,
+          "value": [
+            0,
+            0.715419590473175
+          ]
+        },
+        {
+          "step": 14,
+          "value": [
+            0,
+            0.9875056147575378
+          ]
+        },
+        {
+          "step": 15,
+          "value": [
+            0,
+            0.7938372492790222
+          ]
+        },
+        {
+          "step": 16,
+          "value": [
+            0,
+            0.27699899673461914
+          ]
+        },
+        {
+          "step": 17,
+          "value": [
+            0,
+            -0.2966175377368927
+          ]
+        },
+        {
+          "step": 18,
+          "value": [
+            0,
+            -0.6686368584632874
+          ]
+        },
+        {
+          "step": 19,
+          "value": [
+            0,
+            -0.7016567587852478
+          ]
+        },
+        {
+          "step": 20,
+          "value": [
+            0,
+            -0.42365607619285583
+          ]
+        },
+        {
+          "step": 21,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 22,
+          "value": [
+            0,
+            0.37795522809028625
+          ]
+        },
+        {
+          "step": 23,
+          "value": [
+            0,
+            0.538857102394104
+          ]
+        },
+        {
+          "step": 24,
+          "value": [
+            0,
+            0.44394269585609436
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "17f3a48e33d2ec2ef933a47d19f8c13bfecc4edce723606e77da456effacbc5f",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0.5,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "af2dfb5544193c268d998ae07b3fb24c8071b0f38fb4a332bbc2d372b5813e85"
+    },
+    {
+      "name": "gravity-step",
+      "coefficients": {
+        "spring": 0,
+        "friction": 0.125,
+        "gravity": 0.3
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            0.6036369204521179
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            1.733100414276123
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0,
+            3.3112685680389404
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0,
+            5.252999782562256
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            0,
+            7.460413932800293
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            0,
+            9.82530403137207
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            0,
+            12.238675117492676
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            0,
+            14.603536605834961
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            0,
+            16.8453426361084
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            0,
+            18.916259765625
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            0,
+            20.793209075927734
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "7249962837b29bededabe8dd805b4ff44eba03fe28dc67864192896163b365ce",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "5806dfef78bf224a4ca8b4eeb448a73bbc5e443c747d25a9f9c1c5a108c64466"
+    },
+    {
+      "name": "idle-scale2",
+      "coefficients": {
+        "spring": 0.03125,
+        "friction": 0.125,
+        "gravity": 0.3
+      },
+      "state": {
+        "position": [
+          0.0,
+          9.600044
+        ],
+        "velocity": [
+          0.0,
+          9.804964e-06
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 9.599772,
+        "amplitude": 2
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            18.190587997436523
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            18.19060707092285
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            18.190622329711914
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0,
+            18.190628051757812
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0,
+            18.190629959106445
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            0,
+            18.190628051757812
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            0,
+            18.190622329711914
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            0,
+            18.19061279296875
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            0,
+            18.190601348876953
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            0,
+            18.19058609008789
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            0,
+            18.190570831298828
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            0,
+            18.190553665161133
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [],
+      "reference_metadata_sha256": "ef55bab69c4ac816a93f01ba2db2f76a43b11f613c658175bea90a3e64a562ef"
+    },
+    {
+      "name": "force-small-0.008",
+      "coefficients": {
+        "spring": 0,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              0.008,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            null
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            null
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            null
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "a4fee1bbf3a6eecf437eb3565af1d51b1a6a0e79fe6ac02db42883351be9d392",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "5874d5c267e9a5a5c3c65f14b40b5880e7561afb312ddfb18ce03da84b566f31"
+    },
+    {
+      "name": "force-small-0.009",
+      "coefficients": {
+        "spring": 0,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              0.009,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            null
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -0.01034999918192625,
+            null
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            -0.01034999918192625,
+            null
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "a4fee1bbf3a6eecf437eb3565af1d51b1a6a0e79fe6ac02db42883351be9d392",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "477093f974ba33a6385a26a79a076c15f67571be4364e6aa8bc7d5a2b92b4098"
+    },
+    {
+      "name": "force-pair-diag",
+      "coefficients": {
+        "spring": 0,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              0.0065,
+              0.00325
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0,
+            0
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "a4fee1bbf3a6eecf437eb3565af1d51b1a6a0e79fe6ac02db42883351be9d392",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "d470cf0fd4903e9ead99abae6d0771d736e56f088603e9b417f616ea22557f38"
+    },
+    {
+      "name": "force-pair-large",
+      "coefficients": {
+        "spring": 0,
+        "friction": 0.125,
+        "gravity": 0
+      },
+      "state": {
+        "position": [
+          0.0,
+          0
+        ],
+        "velocity": [
+          0.0,
+          0
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 0,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              0.01,
+              0.005
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -0.011499999091029167,
+            -0.011499999091029167
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            -0.011499999091029167,
+            -0.011499999091029167
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            -0.011499999091029167,
+            -0.011499999091029167
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            -0.011499999091029167,
+            -0.011499999091029167
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "a4fee1bbf3a6eecf437eb3565af1d51b1a6a0e79fe6ac02db42883351be9d392",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1
+        },
+        {
+          "path": "/metadata/bustControl/0/param/ofs",
+          "offset": 284212,
+          "before": 9.599772,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/p/y",
+          "offset": 284249,
+          "before": 9.600044,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/param/pv/y",
+          "offset": 284272,
+          "before": 9.804964065551758e-06,
+          "after": 0,
+          "bytes": 4
+        },
+        {
+          "path": "/metadata/bustControl/0/gravity",
+          "offset": 284188,
+          "before": 0.3,
+          "after": 0,
+          "bytes": 8
+        },
+        {
+          "path": "/metadata/bustControl/0/spring",
+          "offset": 284287,
+          "before": 0.03125,
+          "after": 0,
+          "bytes": 4
+        }
+      ],
+      "reference_metadata_sha256": "80e5eeaa3d133b5aca93d0fbc7a42011a97c4cf6cff97ef22d6ab515276c323b"
+    },
+    {
+      "name": "original-force-after-init",
+      "coefficients": {
+        "spring": 0.03125,
+        "friction": 0.125,
+        "gravity": 0.3
+      },
+      "state": {
+        "position": [
+          0.0,
+          9.600044
+        ],
+        "velocity": [
+          0.0,
+          9.804964e-06
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 9.599772,
+        "amplitude": 1
+      },
+      "events": [
+        {
+          "step": 2,
+          "forces": {
+            "bust": [
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "step": 3,
+          "forces": {
+            "bust": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            -1.1178361177444458,
+            0.0006421070429496467
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            -1.0598421096801758,
+            0.000654294213745743
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            -0.9801357984542847,
+            0.0006602711509913206
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            -0.8835963606834412,
+            0.0006623051012866199
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [],
+      "reference_metadata_sha256": "45f36ad0918602b9b8e600fa7752e11d9f26ab9e825d57c00e78cb54b2594ff9"
+    },
+    {
+      "name": "idle-scale0",
+      "coefficients": {
+        "spring": 0.03125,
+        "friction": 0.125,
+        "gravity": 0.3
+      },
+      "state": {
+        "position": [
+          0.0,
+          9.600044
+        ],
+        "velocity": [
+          0.0,
+          9.804964e-06
+        ]
+      },
+      "output": {
+        "axis_scale": [
+          1.0,
+          2.0
+        ],
+        "offset": 9.599772,
+        "amplitude": 0
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 1,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 2,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 3,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 4,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 5,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 6,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 7,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 8,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 9,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 10,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 11,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 12,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 13,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 14,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 15,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 16,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 17,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 18,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 19,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 20,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 21,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 22,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 23,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 24,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 25,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 26,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 27,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 28,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 29,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 30,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 31,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 32,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 33,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 34,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 35,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 36,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 37,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 38,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 39,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 40,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 41,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 42,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 43,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 44,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 45,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 46,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 47,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 48,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 49,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 50,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 51,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 52,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 53,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 54,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 55,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 56,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 57,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 58,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 59,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 60,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 61,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 62,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 63,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 64,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 65,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 66,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 67,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 68,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 69,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 70,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 71,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 72,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 73,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 74,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 75,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 76,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 77,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 78,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 79,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 80,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 81,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 82,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 83,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 84,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 85,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 86,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 87,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 88,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 89,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 90,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 91,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 92,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 93,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 94,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 95,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 96,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 97,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 98,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 99,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 100,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 101,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 102,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 103,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 104,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 105,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 106,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 107,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 108,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 109,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 110,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 111,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 112,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 113,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 114,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 115,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 116,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 117,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 118,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 119,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        },
+        {
+          "step": 120,
+          "value": [
+            0,
+            -18.18987464904785
+          ]
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [],
+      "reference_metadata_sha256": "9cbbcf1edc1b14992c505faf98c541ef83937b1f566f0934197e5052755d2951"
+    }
+  ]
+}

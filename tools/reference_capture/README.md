@@ -15,7 +15,7 @@ python3 tools/reference_capture/capture.py --reference-root ../NekoWebShow \
 
 隔离图集区域只用于基础 UV/alpha 对照；其过滤依据是诊断观测，不认证场景图或网格求值。trace 是验证数据，禁止作为正式原生运行时的顶点/动画数据来源。完整模型验证必须使用未过滤画面。
 
-P3 支持两项额外诊断：`--trace-math` 记录原引擎的 sqrt/sin/cos/atan2 调用；只在显式启用时替换 Math 入口，不能用于性能测量。`--disable-clamp` 在内存生成 PSB v4 测试 fixture，仅把 `/metadata/clampControl/*/enabled` 从 1 改成 0，记录每个字节、原/新 PSB hash。原文件保持只读，此类截图不是未经修改的原模型验收结果。默认命令仍使用原 PSB；最终控制规则必须通过原 PSB 的对照。
+P3 支持两项额外诊断：`--trace-math` 记录原引擎的 sqrt/sin/cos/tan/atan/atan2/asin/acos/pow 调用；只在显式启用时替换 Math 入口，不能用于性能测量。`--disable-clamp` 在内存生成 PSB v4 测试 fixture，仅把 `/metadata/clampControl/*/enabled` 从 1 改成 0，记录每个字节、原/新 PSB hash。原文件保持只读，此类截图不是未经修改的原模型验收结果。默认命令仍使用原 PSB；最终控制规则必须通过原 PSB 的对照。
 
 --fixture-icon-size tex/0077=213,213 只在内存修改所选 atlas icon 的 float32 宽/高，保持地址表和未选载荷不变；记录修改字段、字节范围与 hash。仅用于网格尺寸边界实验，不能替代原 PSB 的正式验收。外部目录始终只读。
 
@@ -50,3 +50,7 @@ python3 tools/reference_capture/validate_animation.py --reference-root ../NekoWe
 ```
 
 同静态入口要求新目录，可显式复用校验过的参考目录。冻结原 PSB/fixture/驱动/当前资产、截图和 trace hash，验收保留 0.001px 几何与 2/255 图像阈值；任何 FAIL 返回非零，完整播放认证始终 false。
+
+P6 支持 `--physics-scales '{"hair":1,"parts":1,"bust":1}'`，默认仍为全零；这不是 enabled 开关。`--events '[{"step":2,"forces":{"bust":[1,0]}},{"step":3,"forces":{"bust":[0,0]}}]'` 在对应 Update 之前执行显式 SDK 外力请求；force 标签是 `bust`/`hair`/`parts`，不是控制器的日文名称。也可使用 `variables` 在指定步骤立即写变量。逐步 Math trace 包含作者步号。
+
+`--fixture-numbers '{"/metadata/bustControl/0/spring":0.5}'` 和 `--fixture-strings '{"/metadata/bustControl/0/baseLayer":"center_fronthair"}'` 仅在内存改写同长度的 PSB 数字/现有字符串引用。限于明确 metadata/object JSON Pointer，拒绝插入字段、扩大数值宽度或不存在的字符串；地址表和资源保持原样，每次记录字段、字节范围、值和 hash。仅用于隔离语义，不能作为未经修改的完整模型验收。禁止把采样结果或此类修改加入正式播放路径。
