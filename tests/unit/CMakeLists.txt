@@ -9,14 +9,18 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/cmake)
 add_executable(nekomote_unit_tests
     test_types.cpp
     test_math.cpp
-    test_units.cpp)
+    test_units.cpp
+    test_import.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
-        nekomote::model
+        nekomote::asset_io
         Catch2::Catch2WithMain)
 
 target_compile_features(nekomote_unit_tests PRIVATE cxx_std_20)
+
+target_compile_definitions(nekomote_unit_tests PRIVATE
+    NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")
 
 include(Catch)
 catch_discover_tests(nekomote_unit_tests)

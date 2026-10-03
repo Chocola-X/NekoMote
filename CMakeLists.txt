@@ -18,6 +18,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 option(NEKOMOTE_BUILD_PREVIEW "Build the GLFW preview application" ON)
+option(NEKOMOTE_BUILD_TOOLS   "Build offline tools (importer, ...)" ON)
 option(NEKOMOTE_BUILD_TESTS   "Build unit tests" ON)
 option(NEKOMOTE_ENABLE_ASAN   "Enable AddressSanitizer + UBSan" OFF)
 option(NEKOMOTE_WERROR        "Treat warnings as errors" ON)
@@ -40,6 +41,11 @@ endif()
 include(cmake/Dependencies.cmake)
 
 add_subdirectory(src/model)
+add_subdirectory(src/asset_io)
+
+if(NEKOMOTE_BUILD_TOOLS)
+    add_subdirectory(tools/import_emote)
+endif()
 
 if(NEKOMOTE_BUILD_PREVIEW)
     find_package(OpenGL REQUIRED)

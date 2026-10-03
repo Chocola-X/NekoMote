@@ -15,7 +15,8 @@
 #include <cstdio>
 #include <cstring>
 
-namespace {
+namespace
+{
 
 // GL enums used here. Spelled out so we don't need a full GL header just for
 // the diagnostic path.
@@ -30,14 +31,16 @@ using GlClearColorFn = void (*)(float, float, float, float);
 using GlViewportFn = void (*)(int, int, int, int);
 using GlGetStringFn = const unsigned char* (*)(unsigned int);
 
-struct GlProcs {
+struct GlProcs
+{
     GlClearFn clear{};
     GlClearColorFn clear_color{};
     GlViewportFn viewport{};
     GlGetStringFn get_string{};
 };
 
-bool load_gl_procs(GlProcs& out) {
+bool load_gl_procs(GlProcs& out)
+{
     out.clear = reinterpret_cast<GlClearFn>(glfwGetProcAddress("glClear"));
     out.clear_color = reinterpret_cast<GlClearColorFn>(glfwGetProcAddress("glClearColor"));
     out.viewport = reinterpret_cast<GlViewportFn>(glfwGetProcAddress("glViewport"));
@@ -45,7 +48,8 @@ bool load_gl_procs(GlProcs& out) {
     return out.clear && out.clear_color && out.viewport && out.get_string;
 }
 
-void print_diagnostics(const GlProcs& gl) {
+void print_diagnostics(const GlProcs& gl)
+{
     const char* vendor = reinterpret_cast<const char*>(gl.get_string(kGlVendor));
     const char* renderer = reinterpret_cast<const char*>(gl.get_string(kGlRenderer));
     const char* version = reinterpret_cast<const char*>(gl.get_string(kGlVersion));
@@ -60,12 +64,14 @@ void print_diagnostics(const GlProcs& gl) {
     std::fflush(stdout);
 }
 
-int run_window() {
-    glfwSetErrorCallback([](int code, const char* description) {
-        std::fprintf(stderr, "nekomote_preview: glfw error %d: %s\n", code, description);
-    });
+int run_window()
+{
+    glfwSetErrorCallback(
+        [](int code, const char* description)
+        { std::fprintf(stderr, "nekomote_preview: glfw error %d: %s\n", code, description); });
 
-    if (glfwInit() == GLFW_FALSE) {
+    if (glfwInit() == GLFW_FALSE)
+    {
         std::fprintf(stderr, "nekomote_preview: glfwInit failed\n");
         return 1;
     }
@@ -82,7 +88,8 @@ int run_window() {
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "NekoMote preview", nullptr, nullptr);
-    if (window == nullptr) {
+    if (window == nullptr)
+    {
         std::fprintf(stderr,
                      "nekomote_preview: failed to create a GLFW window.\n"
                      "This usually means no display server or no GL 3.3 capable context.\n");
@@ -94,7 +101,8 @@ int run_window() {
     glfwSwapInterval(1);
 
     GlProcs gl{};
-    if (!load_gl_procs(gl)) {
+    if (!load_gl_procs(gl))
+    {
         std::fprintf(stderr, "nekomote_preview: failed to load GL entry points\n");
         glfwDestroyWindow(window);
         glfwTerminate();
@@ -106,14 +114,16 @@ int run_window() {
     // Confirm the core library is usable from the preview TU (boundary check).
     nekomote::IdGenerator<nekomote::NodeIdTag> gen;
     nekomote::NodeId first = gen.next();
-    if (!first.valid()) {
+    if (!first.valid())
+    {
         std::fprintf(stderr, "nekomote_preview: core id generator broken\n");
         glfwDestroyWindow(window);
         glfwTerminate();
         return 4;
     }
 
-    while (glfwWindowShouldClose(window) == GLFW_FALSE) {
+    while (glfwWindowShouldClose(window) == GLFW_FALSE)
+    {
         int fb_w = 0;
         int fb_h = 0;
         glfwGetFramebufferSize(window, &fb_w, &fb_h);
@@ -126,7 +136,8 @@ int run_window() {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
     }
@@ -136,9 +147,10 @@ int run_window() {
     return 0;
 }
 
-}  // namespace
+} // namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     // Reserved for future flags (e.g. --asset-root, --model). P0 ignores them.
     (void)argc;
     (void)argv;

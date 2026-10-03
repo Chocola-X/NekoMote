@@ -1,0 +1,67 @@
+{
+  "spec": "ems",
+  "version": 3.03,
+  "screenSize": { "width": 800, "height": 600, "originX": 0, "originY": 0 },
+  "metadata": {
+    "variableList": [
+      { "label": "move_UD", "frameList": [ { "frame": -30, "label": "up" }, { "frame": 0, "label": "center" }, { "frame": 30, "label": "down" } ] }
+    ],
+    "customPartsOrder": ["0", "1"]
+  },
+  "source": {
+    "tex": {
+      "icon": {
+        "0000": { "attr": 1, "left": 0.0, "top": 0.0, "width": 32.0, "height": 32.0, "originX": 16, "originY": 16, "metadata": { "zorder": 1 } },
+        "0001": { "attr": 1, "left": 32.0, "top": 0.0, "width": 64.0, "height": 64.0, "originX": 32, "originY": 32, "metadata": { "zorder": 2 } }
+      },
+      "texture": { "width": 256, "height": 256, "type": "RGBA8", "pixel": "#resource#0" }
+    }
+  },
+  "object": {
+    "body_parts": {
+      "motion": {
+        "torso": {
+          "type": 0,
+          "layer": [
+            {
+              "label": "base",
+              "coordinate": 0,
+              "meshCombine": 0,
+              "meshDivision": 4,
+              "meshTransform": 1,
+              "parameterize": 0,
+              "stencilType": 0,
+              "inheritMask": 0,
+              "transformOrder": [0, 3, 2, 1],
+              "parameter": [ { "id": "move_UD", "rangeBegin": -30, "rangeEnd": 30, "division": 60, "discretization": 0, "enabled": 1 } ],
+              "frameList": [
+                {
+                  "time": 0, "type": 3,
+                  "content": {
+                    "coord": [10.0, 20.0, 0.0],
+                    "icon": "0000",
+                    "src": "tex",
+                    "mask": 33554432,
+                    "opa": 1.0,
+                    "mesh": { "bp": [0.0,0.0, 0.33,0.0, 0.67,0.0, 1.0,0.0, 0.0,0.33, 0.33,0.33, 0.67,0.33, 1.0,0.33, 0.0,0.67, 0.33,0.67, 0.67,0.67, 1.0,0.67, 0.0,1.0, 0.33,1.0, 0.67,1.0, 1.0,1.0], "cc": null }
+                  }
+                },
+                {
+                  "time": 30, "type": 3,
+                  "content": {
+                    "coord": [10.0, 25.0, 0.0],
+                    "icon": "0000",
+                    "src": "tex",
+                    "mask": 33554432,
+                    "mesh": { "bp": null, "cc": null }
+                  }
+                }
+              ],
+              "children": []
+            }
+          ]
+        }
+      }
+    }
+  }
+}

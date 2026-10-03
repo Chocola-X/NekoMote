@@ -1,11 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-
 #include <nekomote/units.hpp>
 
 using namespace nekomote;
 
-TEST_CASE("Seconds arithmetic", "[units]") {
+TEST_CASE("Seconds arithmetic", "[units]")
+{
     Seconds a{1.0f};
     Seconds b{0.5f};
     REQUIRE((a + b).value == 1.5f);
@@ -16,7 +16,8 @@ TEST_CASE("Seconds arithmetic", "[units]") {
     REQUIRE(b < a);
 }
 
-TEST_CASE("FixedStep validity", "[units]") {
+TEST_CASE("FixedStep validity", "[units]")
+{
     FixedStep zero{};
     REQUIRE_FALSE(zero.valid());
 
@@ -24,13 +25,15 @@ TEST_CASE("FixedStep validity", "[units]") {
     REQUIRE(step.valid());
 }
 
-TEST_CASE("Alpha multiply", "[units]") {
+TEST_CASE("Alpha multiply", "[units]")
+{
     Alpha a{0.5f};
     Alpha b{0.4f};
     REQUIRE((a * b).value == 0.2f);
 }
 
-TEST_CASE("degrees_to_radians", "[units]") {
+TEST_CASE("degrees_to_radians", "[units]")
+{
     Radians r = degrees_to_radians(180.0f);
     REQUIRE_THAT(r.value, Catch::Matchers::WithinAbs(3.14159265358979323846f, 1e-5f));
 

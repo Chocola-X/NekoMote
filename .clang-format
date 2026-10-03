@@ -3,85 +3,34 @@ Language:        Cpp
 BasedOnStyle:    LLVM
 Standard:        c++20
 
-# Indentation: 4 spaces, no tabs (per AGENTS.md §5)
 IndentWidth:     4
 TabWidth:        4
 UseTab:          Never
 ColumnLimit:     100
 
-# Naming: types PascalCase, functions/vars snake_case, members snake_case_
-AccessModifierOffset: -4
-AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: Consecutive
-AlignConsecutiveDeclarations: None
-AlignEscapedNewlines: Right
-AlignOperands:   Align
-AlignTrailingComments: true
+BreakBeforeBraces: Allman
+PointerAlignment: Left
+DerivePointerAlignment: false
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - { Regex: '^"nekomote/', Priority: 1 }
+  - { Regex: '^<.*\.hpp>', Priority: 2 }
+  - { Regex: '^<.*\.h>', Priority: 3 }
+  - { Regex: '^<.*>', Priority: 4 }
 
-AllowAllArgumentsOnPreviousLine: false
-AllowAllParametersOfDeclarationOnPreviousLine: false
-AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
+AlignAfterOpenBracket: Align
+AlignTrailingComments: true
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
-AllowShortLambdasOnASingleLine: None
-AllowShortEnumsOnASingleLine: false
-
 AlwaysBreakTemplateDeclarations: Yes
-BinPackArguments: true
-BinPackParameters: true
-BreakBeforeBinaryOperators: None
-BreakBeforeBraces: Allman
-BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
-BreakStringLiterals: true
-
-CompactNamespaces: false
-ConstructorInitializerAllInOneLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
-Cpp11BracedListStyle: true
-DerivePointerAlignment: false
 FixNamespaceComments: true
-IncludeBlocks: Regroup
-IncludeCategories:
-  - { regex: '^"nekomote/', priority: 1 }
-  - { regex: '^<.*\.hpp>', priority: 2 }
-  - { regex: '^<.*\.h>', priority: 3 }
-  - { regex: '^<.*>', priority: 4 }
 IndentCaseLabels: true
-IndentPPDirectives: None
-IndentWrappedFunctionNames: false
-KeepEmptyLinesAtTheStartOfBlocks: false
-LambdaBodyIndentation: Outer
-MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
-PointerAlignment: Left
-ReflowComments: true
-SortIncludes: CaseSensitive
-SpaceAfterCStyleCast: false
-SpaceAfterLogicalNot: false
-SpaceAfterTemplateKeyword: true
-SpaceBeforeAssignmentOperators: true
-SpaceBeforeCpp11BracedList: false
-SpaceBeforeCtorInitializerColon: true
-SpaceBeforeInheritanceColon: true
 SpaceBeforeParens: ControlStatements
-SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyBlock: false
-SpaceInEmptyParentheses: false
-SpacesBeforeTrailingComments: 1
-SpacesInAngles: Never
-SpacesInCStyleCastParentheses: false
-SpacesInConditionalStatement: false
-SpacesInContainerLiterals: true
-SpacesInLineCommentPrefix:
-  Minimal: 1
-  Maximal: -1
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
-StatementMacros: []
-TypenameMacros: []
-WhitespaceBeforeBraces: true

@@ -1,11 +1,12 @@
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <iosfwd>
 
-namespace nekomote {
+namespace nekomote
+{
 
 // Strongly typed identifiers.
 //
@@ -20,29 +21,61 @@ namespace nekomote {
 // (see docs/conventions.md).
 
 template <typename Tag>
-struct Id {
+struct Id
+{
     using value_type = std::uint32_t;
 
     value_type value{0};
 
     constexpr Id() noexcept = default;
-    explicit constexpr Id(value_type v) noexcept : value(v) {}
+    explicit constexpr Id(value_type v) noexcept : value(v)
+    {
+    }
 
-    constexpr bool valid() const noexcept { return value != 0; }
+    constexpr bool valid() const noexcept
+    {
+        return value != 0;
+    }
 
-    constexpr bool operator==(Id other) const noexcept { return value == other.value; }
-    constexpr bool operator!=(Id other) const noexcept { return value != other.value; }
-    constexpr bool operator<(Id other) const noexcept { return value < other.value; }
-    constexpr bool operator>(Id other) const noexcept { return value > other.value; }
+    constexpr bool operator==(Id other) const noexcept
+    {
+        return value == other.value;
+    }
+    constexpr bool operator!=(Id other) const noexcept
+    {
+        return value != other.value;
+    }
+    constexpr bool operator<(Id other) const noexcept
+    {
+        return value < other.value;
+    }
+    constexpr bool operator>(Id other) const noexcept
+    {
+        return value > other.value;
+    }
 };
 
-struct NodeIdTag {};
-struct TextureIdTag {};
-struct ParamIdTag {};
-struct InstanceIdTag {};
-struct MeshIdTag {};
-struct TimelineIdTag {};
-struct SurfaceIdTag {};  // output surface / render target
+struct NodeIdTag
+{
+};
+struct TextureIdTag
+{
+};
+struct ParamIdTag
+{
+};
+struct InstanceIdTag
+{
+};
+struct MeshIdTag
+{
+};
+struct TimelineIdTag
+{
+};
+struct SurfaceIdTag
+{
+}; // output surface / render target
 
 using NodeId = Id<NodeIdTag>;
 using TextureId = Id<TextureIdTag>;
@@ -55,33 +88,41 @@ using SurfaceId = Id<SurfaceIdTag>;
 // Monotonic id generator. Not thread-safe; owners are single-threaded by
 // contract (AGENTS.md §7: initial single-threaded evaluation).
 template <typename Tag>
-class IdGenerator {
-public:
+class IdGenerator
+{
+  public:
     using id_type = Id<Tag>;
 
     IdGenerator() noexcept = default;
 
-    id_type next() noexcept {
+    id_type next() noexcept
+    {
         // Skip 0 so every issued id is valid().
         ++cursor_;
         return id_type{cursor_};
     }
 
-    void reset() noexcept { cursor_ = 0; }
+    void reset() noexcept
+    {
+        cursor_ = 0;
+    }
 
-private:
+  private:
     typename id_type::value_type cursor_{0};
 };
 
-}  // namespace nekomote
+} // namespace nekomote
 
-namespace std {
+namespace std
+{
 
 template <typename Tag>
-struct hash<nekomote::Id<Tag>> {
-    size_t operator()(nekomote::Id<Tag> id) const noexcept {
+struct hash<nekomote::Id<Tag>>
+{
+    size_t operator()(nekomote::Id<Tag> id) const noexcept
+    {
         return hash<typename nekomote::Id<Tag>::value_type>{}(id.value);
     }
 };
 
-}  // namespace std
+} // namespace std

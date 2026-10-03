@@ -1,0 +1,8 @@
+{
+  "PsbVersion": 4,
+  "PsbType": "Motion",
+  "Platform": "ems",
+  "Resources": {
+    "0": "minimal-resources/tex.png"
+  }
+}
