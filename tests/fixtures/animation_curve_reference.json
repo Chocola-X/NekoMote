@@ -1,0 +1,456 @@
+{
+  "scope": "Scalar easing only; original variable observations, no native timeline/physics certification.",
+  "normalized_tolerance": 5e-07,
+  "experiments": [
+    {
+      "case": "p5-easing-positive25/body_UD/2.5",
+      "easing": 2.5,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [],
+        "transitions": {
+          "body_UD": {
+            "value": 30,
+            "frames": 14,
+            "easing": 2.5
+          }
+        },
+        "variable": "body_UD",
+        "from_value": 0,
+        "target": 30
+      },
+      "samples": [
+        {
+          "progress": 0.0,
+          "observed_normalized": 0.0
+        },
+        {
+          "progress": 0.0714285746216774,
+          "observed_normalized": 9.739842886726061e-05
+        },
+        {
+          "progress": 0.1428571492433548,
+          "observed_normalized": 0.0011019373933474222
+        },
+        {
+          "progress": 0.2142857164144516,
+          "observed_normalized": 0.004554873704910279
+        },
+        {
+          "progress": 0.2857142984867096,
+          "observed_normalized": 0.012466999888420104
+        },
+        {
+          "progress": 0.3571428656578064,
+          "observed_normalized": 0.02722368836402893
+        },
+        {
+          "progress": 0.4285714328289032,
+          "observed_normalized": 0.05153251091639201
+        },
+        {
+          "progress": 0.5,
+          "observed_normalized": 0.0883883555730184
+        },
+        {
+          "progress": 0.5714285969734192,
+          "observed_normalized": 0.1410479704538981
+        },
+        {
+          "progress": 0.6428571343421936,
+          "observed_normalized": 0.2130103588104248
+        },
+        {
+          "progress": 0.7142857313156128,
+          "observed_normalized": 0.30800091425577797
+        },
+        {
+          "progress": 0.7857142686843872,
+          "observed_normalized": 0.42995837529500325
+        },
+        {
+          "progress": 0.8571428656578064,
+          "observed_normalized": 0.5830239613850912
+        },
+        {
+          "progress": 0.9285714030265808,
+          "observed_normalized": 0.7715318044026692
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    },
+    {
+      "case": "p5-easing-negative25/body_UD/-2.5",
+      "easing": -2.5,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [],
+        "transitions": {
+          "body_UD": {
+            "value": 30,
+            "frames": 14,
+            "easing": -2.5
+          }
+        },
+        "variable": "body_UD",
+        "from_value": 0,
+        "target": 30
+      },
+      "samples": [
+        {
+          "progress": 0.0,
+          "observed_normalized": 0.0
+        },
+        {
+          "progress": 0.0714285746216774,
+          "observed_normalized": 0.4704731305440267
+        },
+        {
+          "progress": 0.1428571492433548,
+          "observed_normalized": 0.5735132217407226
+        },
+        {
+          "progress": 0.2142857164144516,
+          "observed_normalized": 0.6439545313517253
+        },
+        {
+          "progress": 0.2857142984867096,
+          "observed_normalized": 0.6991203943888347
+        },
+        {
+          "progress": 0.3571428656578064,
+          "observed_normalized": 0.7451445897420247
+        },
+        {
+          "progress": 0.4285714328289032,
+          "observed_normalized": 0.7849893569946289
+        },
+        {
+          "progress": 0.5,
+          "observed_normalized": 0.820335324605306
+        },
+        {
+          "progress": 0.5714285969734192,
+          "observed_normalized": 0.852237319946289
+        },
+        {
+          "progress": 0.6428571343421936,
+          "observed_normalized": 0.8814051310221355
+        },
+        {
+          "progress": 0.7142857313156128,
+          "observed_normalized": 0.9083414713541667
+        },
+        {
+          "progress": 0.7857142686843872,
+          "observed_normalized": 0.9334168116251628
+        },
+        {
+          "progress": 0.8571428656578064,
+          "observed_normalized": 0.9569128036499024
+        },
+        {
+          "progress": 0.9285714030265808,
+          "observed_normalized": 0.9790489196777343
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    },
+    {
+      "case": "p5-jump-step36/move_UD/-10",
+      "easing": -10,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [
+          "\u30d4\u30e7\u30f3"
+        ],
+        "transitions": {},
+        "variable": "move_UD",
+        "from_value": 0,
+        "target": -2
+      },
+      "samples": [
+        {
+          "progress": 0.0,
+          "observed_normalized": -0.0
+        },
+        {
+          "progress": 0.1666666716337204,
+          "observed_normalized": 0.8496869802474976
+        },
+        {
+          "progress": 0.3333333432674408,
+          "observed_normalized": 0.9049515724182129
+        },
+        {
+          "progress": 0.5,
+          "observed_normalized": 0.9389309287071228
+        },
+        {
+          "progress": 0.6666666865348816,
+          "observed_normalized": 0.9638106226921082
+        },
+        {
+          "progress": 0.8333333134651184,
+          "observed_normalized": 0.9835619330406189
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    },
+    {
+      "case": "p5-sample05-step60/move_UD/1",
+      "easing": 1,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [
+          "sample_05"
+        ],
+        "transitions": {},
+        "variable": "move_UD",
+        "from_value": 0,
+        "target": 10
+      },
+      "samples": [
+        {
+          "progress": 0.0,
+          "observed_normalized": 0.0
+        },
+        {
+          "progress": 0.07692307978868484,
+          "observed_normalized": 0.005917160212993622
+        },
+        {
+          "progress": 0.1538461595773697,
+          "observed_normalized": 0.02366864085197449
+        },
+        {
+          "progress": 0.23076923191547394,
+          "observed_normalized": 0.05325444340705872
+        },
+        {
+          "progress": 0.3076923191547394,
+          "observed_normalized": 0.09467456936836242
+        },
+        {
+          "progress": 0.38461539149284363,
+          "observed_normalized": 0.14792900085449218
+        },
+        {
+          "progress": 0.4615384638309479,
+          "observed_normalized": 0.21301774978637694
+        },
+        {
+          "progress": 0.5384615659713745,
+          "observed_normalized": 0.28994083404541016
+        },
+        {
+          "progress": 0.6153846383094788,
+          "observed_normalized": 0.3786982536315918
+        },
+        {
+          "progress": 0.692307710647583,
+          "observed_normalized": 0.47928996086120607
+        },
+        {
+          "progress": 0.7692307829856873,
+          "observed_normalized": 0.5917160034179687
+        },
+        {
+          "progress": 0.8461538553237915,
+          "observed_normalized": 0.7159763813018799
+        },
+        {
+          "progress": 0.9230769276618958,
+          "observed_normalized": 0.8520709991455078
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    },
+    {
+      "case": "p5-sample05-step60/move_UD/-1",
+      "easing": -1,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [
+          "sample_05"
+        ],
+        "transitions": {},
+        "variable": "move_UD",
+        "from_value": 10,
+        "target": -10
+      },
+      "samples": [
+        {
+          "progress": 0.0714285746216774,
+          "observed_normalized": 0.2672612428665161
+        },
+        {
+          "progress": 0.1428571492433548,
+          "observed_normalized": 0.37796448469161986
+        },
+        {
+          "progress": 0.2142857164144516,
+          "observed_normalized": 0.462910059094429
+        },
+        {
+          "progress": 0.2857142984867096,
+          "observed_normalized": 0.5345225036144257
+        },
+        {
+          "progress": 0.3571428656578064,
+          "observed_normalized": 0.5976143181324005
+        },
+        {
+          "progress": 0.4285714328289032,
+          "observed_normalized": 0.6546536803245544
+        },
+        {
+          "progress": 0.5,
+          "observed_normalized": 0.7071067810058593
+        },
+        {
+          "progress": 0.5714285969734192,
+          "observed_normalized": 0.7559289455413818
+        },
+        {
+          "progress": 0.6428571343421936,
+          "observed_normalized": 0.8017837524414062
+        },
+        {
+          "progress": 0.7142857313156128,
+          "observed_normalized": 0.8451542854309082
+        },
+        {
+          "progress": 0.7857142686843872,
+          "observed_normalized": 0.8864053010940551
+        },
+        {
+          "progress": 0.8571428656578064,
+          "observed_normalized": 0.9258201599121094
+        },
+        {
+          "progress": 0.9285714030265808,
+          "observed_normalized": 0.9636241912841796
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    },
+    {
+      "case": "p5-sample05-step60/body_UD/0",
+      "easing": 0,
+      "sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "source_request": {
+        "timelines": [
+          "sample_05"
+        ],
+        "transitions": {},
+        "variable": "body_UD",
+        "from_value": 0,
+        "target": 30
+      },
+      "samples": [
+        {
+          "progress": 0.0,
+          "observed_normalized": 0.0
+        },
+        {
+          "progress": 0.07692307978868484,
+          "observed_normalized": 0.07692307631174723
+        },
+        {
+          "progress": 0.1538461595773697,
+          "observed_normalized": 0.15384615262349446
+        },
+        {
+          "progress": 0.23076923191547394,
+          "observed_normalized": 0.23076923688252768
+        },
+        {
+          "progress": 0.3076923191547394,
+          "observed_normalized": 0.3076923370361328
+        },
+        {
+          "progress": 0.38461539149284363,
+          "observed_normalized": 0.38461538950602214
+        },
+        {
+          "progress": 0.4615384638309479,
+          "observed_normalized": 0.46153847376505536
+        },
+        {
+          "progress": 0.5384615659713745,
+          "observed_normalized": 0.5384615580240886
+        },
+        {
+          "progress": 0.6153846383094788,
+          "observed_normalized": 0.6153846740722656
+        },
+        {
+          "progress": 0.692307710647583,
+          "observed_normalized": 0.692307726542155
+        },
+        {
+          "progress": 0.7692307829856873,
+          "observed_normalized": 0.7692307790120443
+        },
+        {
+          "progress": 0.8461538553237915,
+          "observed_normalized": 0.8461538314819336
+        },
+        {
+          "progress": 0.9230769276618958,
+          "observed_normalized": 0.9230769475301107
+        },
+        {
+          "progress": 1.0,
+          "observed_normalized": 1.0
+        }
+      ]
+    }
+  ]
+}

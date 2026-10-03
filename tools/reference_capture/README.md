@@ -11,7 +11,7 @@ python3 tools/reference_capture/capture.py --reference-root ../NekoWebShow \
 # --trace 导出诊断几何/状态；--isolate-icon 0003 仅保留原驱动某图集区域的绘制
 ```
 
-默认 800×1080、scale=1、coord=(0,400)、零固定步进。禁用 RAF，关闭 hair/parts/bust 物理与风，绕过应用反应规则，以全新 player 采样。保留原驱动渲染纹理及 WebGL 合成方式，包括透明颜色保护的两遍绘制。截图空白、页面错误或 GL 错误会失败；元数据记录源码 hash、默认变量、输入、GPU 和可见像素数。
+默认 800×1080、scale=1、coord=(0,400)、零固定步进。禁用 RAF，将 SDK hair/parts/bust scale 设为 0 并关闭风，绕过应用反应规则，以全新 player 采样。注意 scale=0 并不停止控制器积分；零步静态基线有效，带步进的物理隔离必须使用下述显式 fixture。保留原驱动渲染纹理及 WebGL 合成方式，包括透明颜色保护的两遍绘制。截图空白、页面错误或 GL 错误会失败；元数据记录源码 hash、默认变量、输入、GPU 和可见像素数。
 
 隔离图集区域只用于基础 UV/alpha 对照；其过滤依据是诊断观测，不认证场景图或网格求值。trace 是验证数据，禁止作为正式原生运行时的顶点/动画数据来源。完整模型验证必须使用未过滤画面。
 
@@ -31,3 +31,7 @@ python3 tools/reference_capture/validate_static.py --reference-root ../NekoWebSh
 ```
 
 输出目录必须新建。默认重新导入四型号并采样原 PSB；也可显式指定 `--reuse-reference <既有采样目录>`，此时核对原始素材、驱动、资产与 PNG hash，以及初态、变量和物理配置。工具不覆盖证据，逐组记录全部结果，有任一失败则最终返回非零。当前有已知 FAIL，见 `docs/validation/p4-static-images.json`；阶段/完整播放认证始终保持 false。
+
+P5 时间线诊断支持 `--timeline LABEL`（可重复，按指定顺序播放）、`--timeline-flags N`、`--sample-variables` 和 `--observe-variable LABEL`。逐步记录原始变量与播放状态；额外 observe 用于 CountVariables 未列出的物理绑定。`timelineInfo.reportedLoop/reportedFrames` 仅保留 SDK 查询原值，目前它们与实际播放终点不一致，不能作为时长/循环真值。
+
+`--transitions '{"body_UD":{"value":30,"frames":14,"easing":2.5}}'` 调用原 SDK 的变量过渡入口。`--disable-physics --disable-auto-blink` 仅在内存 PSB fixture 把相应控制器 enabled/blinkEnabled 从 1 改成 0，每个修改字节都有记录。它们用于分别验证时间线与控制器，不能宣称为完整原模型动画验收。源 PSB 始终只读。步进大小和初态必须一致：原 SDK 的半帧步进与整帧步进存在事件/过渡顺序差异。

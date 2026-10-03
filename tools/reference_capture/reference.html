@@ -43,9 +43,12 @@ window.capture = async function(options) {
         const label=EmotePlayer_GetVariableLabelAt(id,i);
         variables[label]=EmotePlayer_GetVariable(id,label);
     }
+    for(const label of options.observeVariables||[]) variables[label]=EmotePlayer_GetVariable(id,label);
     window.traceMath=options.traceMath;
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
+    for(const [label,request] of Object.entries(options.transitions||{}))
+        EmotePlayer_SetVariable(id,label,request.value,request.frames,request.easing);
     EmoteDevice_SetMaskMode(1);
     EmoteDevice_SetProtectTranslucentTextureColor(true);
     EmoteDevice_SetMaskRegionClipping(true);
@@ -56,7 +59,32 @@ window.capture = async function(options) {
     player._globalA=255*options.opacity;
     player._speed=0; player._stepUpdate=false;
     player._hairScale=player._partsScale=player._bustScale=0;
-    for (let i=0;i<options.steps;++i) EmotePlayer_Update(id,options.stepFrames);
+    const timelineInfo=[];
+    for (const [count,label,diff] of [
+        [EmotePlayer_CountMainTimelines,EmotePlayer_GetMainTimelineLabelAt,false],
+        [EmotePlayer_CountDiffTimelines,EmotePlayer_GetDiffTimelineLabelAt,true]]) {
+        for(let i=0;i<count(id);i++) {
+            const name=label(id,i);
+            timelineInfo.push({label:name,diff,reportedLoop:EmotePlayer_IsLoopTimeline(id,name),
+                              reportedFrames:EmotePlayer_GetTimelineTotalFrameCount(id,name)});
+        }
+    }
+    const samples=[];
+    const observeVariables=step=>{
+        const values={};
+        for(const name of Object.keys(variables)) values[name]=EmotePlayer_GetVariable(id,name);
+        samples.push({step,frame:step*options.stepFrames,values,
+                      playing:(options.timelines||[]).map(name=>EmotePlayer_IsTimelinePlaying(id,name))});
+    };
+    for(const name of options.timelines||[]) {
+        if(!timelineInfo.some(t=>t.label===name)) throw new Error('unknown timeline: '+name);
+        EmotePlayer_PlayTimeline(id,name,options.timelineFlags||0);
+    }
+    if(options.sampleVariables) observeVariables(0);
+    for (let i=0;i<options.steps;++i) {
+        EmotePlayer_Update(id,options.stepFrames);
+        if(options.sampleVariables) observeVariables(i+1);
+    }
     device.animating=true;
     device.lastAnimationTime=0;
     window.traceEnabled=options.trace;
@@ -74,7 +102,8 @@ window.capture = async function(options) {
     for(const label of Object.keys(variables))
         observedVariables[label]=EmotePlayer_GetVariable(id,label);
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
-    const metadata={defaults:variables, observedVariables, mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
+    const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
+        mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
     return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace,stateTrace:window.stateTrace,maskPixels:window.maskPixels};

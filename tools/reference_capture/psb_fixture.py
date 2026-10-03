@@ -8,7 +8,8 @@ independent. Unselected payloads and all address tables remain unchanged. Captur
 import struct
 
 
-def make_fixture(data, *, disable_clamp=False, icon_sizes=None):
+def make_fixture(data, *, disable_clamp=False, disable_physics=False,
+                 disable_auto_blink=False, icon_sizes=None):
     if data[:4] != b'PSB\0' or struct.unpack_from('<HH', data, 4) != (4, 0):
         raise ValueError('diagnostic fixture requires an unencrypted PSB v4')
     result = bytearray(data)
@@ -56,6 +57,23 @@ def make_fixture(data, *, disable_clamp=False, icon_sizes=None):
 
     root = dictionary(struct.unpack_from('<I', data, 36)[0])
     edits = []
+    metadata = dictionary(root['metadata'])
+    for collection, field in ([('bustControl', 'enabled'), ('hairControl', 'enabled'),
+                                ('partsControl', 'enabled')] if disable_physics else []) + (
+                                [('eyeControl', 'blinkEnabled')] if disable_auto_blink else []):
+        controls = metadata[collection]
+        if data[controls] != 0x20:
+            raise ValueError('expected PSB controller collection: '+collection)
+        offsets, begin = table(controls+1)
+        for index, offset in enumerate(offsets):
+            pos = dictionary(begin+offset)[field]
+            if data[pos] == 0x04 or data[pos:pos+2] == b'\x05\x00':
+                continue
+            if data[pos:pos+2] != b'\x05\x01':
+                raise ValueError('fixture expects integer controller flag encoded in one byte')
+            result[pos+1] = 0
+            edits.append(dict(path=f'/metadata/{collection}/{index}/{field}',
+                              offset=pos+1, before=1, after=0))
     if disable_clamp:
         controls = dictionary(root['metadata'])['clampControl']
         if data[controls] != 0x20:

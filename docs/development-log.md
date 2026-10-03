@@ -67,3 +67,10 @@
 - GPU pipeline 隔离使用参考几何得到合成 RGB/alpha 零差；位置/UV 替换实验将残差定位为几何。所有此类诊断输入只留忽略的 evidence，不用于运行时或预览。
 - 未验证 frame.type=1 选中时明确拒绝；回归覆盖未知父层变换不能静默影响子 sprite。正常上一帧也不会在失败后泄漏。
 - 阶段子步骤提交前 Debug/Release/ASan 检查及基线见 docs/p4-static-composition.md。P3/P4 继续进行中；下一步核实轮廓计算精度、嵌套与反向遮罩，继续时间线的独立语义采样。
+
+## P5 独立语义调查
+
+- 修复参考采样的物理声明：scale=0 不停止积分；添加显式控制器 fixture、逐步变量、额外物理绑定、主/差分播放和直接变量过渡诊断。原 PSB/外部驱动只读。
+- 六组 easing 原始轨迹冻结回归通过（归一化容差 5e−7），Debug/Release 43、ASan/UBSan 42 项通过。
+- 新采样工具零步默认 PNG 与既有基线完全相同；九字节禁用物理/眨眼 fixture 的 idle 120 帧也完全相同。
+- 发现变量关键帧启动目标过渡、更新分区敏感、SDK loop/duration 查询不可靠以及表情控制图不能省略。详见 docs/p5-animation-investigation.md。下一步规范化控制数据并实现作者固定时钟；P3/P4 与完整动画仍未完成。

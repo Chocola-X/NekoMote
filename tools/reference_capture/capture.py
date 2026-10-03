@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import http.server
 import json
+import math
 import pathlib
 import subprocess
 import tempfile
@@ -33,9 +34,42 @@ def main():
     parser.add_argument('--trace-math', action='store_true')
     parser.add_argument('--disable-clamp', action='store_true',
                         help='diagnostic PSB fixture; original files are never modified')
+    parser.add_argument('--disable-physics', action='store_true',
+                        help='diagnostic PSB fixture disables bust/hair/parts controller flags')
+    parser.add_argument('--disable-auto-blink', action='store_true',
+                        help='diagnostic PSB fixture disables automatic eye blinking')
+    parser.add_argument('--observe-variable', action='append', default=[],
+                        help='observe additional source binding labels omitted by CountVariables')
+    parser.add_argument('--transitions', type=json.loads, default={},
+                        help='explicit original SetVariable requests: name -> {value,frames,easing}')
     parser.add_argument('--steps', type=int, default=0)
     parser.add_argument('--step-frames', type=float, default=1)
+    parser.add_argument('--timeline', action='append', default=[],
+                        help='original timeline label, in play order')
+    parser.add_argument('--timeline-flags', type=int, default=0)
+    parser.add_argument('--sample-variables', action='store_true',
+                        help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if args.steps < 0 or args.steps > 100000 or not math.isfinite(args.step_frames) or args.step_frames <= 0:
+        parser.error('requires 0..100000 steps and a positive finite step size')
+    if args.timeline_flags < 0 or args.timeline_flags > 0xffffffff:
+        parser.error('timeline flags must be an unsigned 32-bit integer')
+    def finite_number(value):
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    if not isinstance(args.variables, dict) or any(
+            not name or not finite_number(value) for name, value in args.variables.items()):
+        parser.error('variables must be an object mapping nonempty labels to finite numbers')
+    if not isinstance(args.transitions, dict):
+        parser.error('transitions must be an object')
+    for name, request in args.transitions.items():
+        if not name or not isinstance(request, dict) or set(request) != {'value', 'frames', 'easing'}:
+            parser.error('each transition requires exactly value, frames and easing')
+        if any(not finite_number(value) for value in request.values()) or request['frames'] < 0:
+            parser.error('transition fields must be finite numbers with frames >= 0')
+    if any(not math.isfinite(value) for value in (args.x, args.y, args.opacity, args.scale)) or \
+            args.scale <= 0 or not 0 <= args.opacity <= 1 or \
+            not 0 < args.width <= 16384 or not 0 < args.height <= 16384:
+        parser.error('invalid finite output dimensions, placement, scale or opacity')
     root = args.reference_root.resolve()
     archive = root / 'data' / (args.model + '.pure.psb.zip')
     with zipfile.ZipFile(archive) as z:
@@ -51,8 +85,10 @@ def main():
         sizes[name] = [float(v) for v in dimensions.split(',')]
         if len(sizes[name]) != 2:
             raise ValueError('fixture icon size requires width,height')
-    if args.disable_clamp or sizes:
-        psb, edits = make_fixture(psb, disable_clamp=args.disable_clamp, icon_sizes=sizes)
+    if args.disable_clamp or args.disable_physics or args.disable_auto_blink or sizes:
+        psb, edits = make_fixture(psb, disable_clamp=args.disable_clamp,
+                                 disable_physics=args.disable_physics,
+                                 disable_auto_blink=args.disable_auto_blink, icon_sizes=sizes)
     here = pathlib.Path(__file__).resolve().parent
     html = (here / 'reference.html').read_text()
     if args.trace_math:
@@ -84,6 +120,8 @@ def main():
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
+                   timelines=args.timeline, timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
+                   observeVariables=args.observe_variable, transitions=args.transitions,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={'hair': 0, 'parts': 0, 'bust': 0, 'wind': False},
                    diagnostic_fixture_edits=edits)
