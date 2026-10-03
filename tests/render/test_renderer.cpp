@@ -128,7 +128,7 @@ TEST_CASE("GPU atlas orientation, alpha, host target and resize", "[gpu]")
     Context context;
     render_gl::Renderer renderer(glfwGetProcAddress);
     Output output;
-    renderer.reserve(8, 12, 2, 1);
+    renderer.reserve({8, 12, 2, 1});
     renderer.upload_texture(TextureId{1}, kAtlas);
     output.resize(64, 64);
     const auto vertices = quad(0, 0, 1, 1);
@@ -179,7 +179,7 @@ TEST_CASE("GPU preserves transparent draw order and warmed frames allocate no C+
     render_gl::Renderer renderer(glfwGetProcAddress);
     Output output;
     output.resize(64, 64);
-    renderer.reserve(8, 12, 2, 1);
+    renderer.reserve({8, 12, 2, 1});
     renderer.upload_texture(TextureId{1}, kAtlas);
     auto red = quad(0.25f, 0.25f, 0.25f, 0.25f), green = quad(0.75f, 0.25f, 0.75f, 0.25f, 0.5f);
     std::array<RenderVertex, 8> vertices{};
@@ -226,7 +226,7 @@ TEST_CASE("GPU rejects bad frames and supports repeated resource lifetimes", "[g
     for (int i = 0; i < 12; ++i)
     {
         render_gl::Renderer renderer(glfwGetProcAddress);
-        renderer.reserve(4, 6, 1, 1);
+        renderer.reserve({4, 6, 1, 1});
         renderer.upload_texture(TextureId{1}, kAtlas);
         REQUIRE_THROWS(renderer.upload_texture(TextureId{1}, kAtlas));
         const auto vertices = quad(0, 0, 1, 1);
@@ -237,4 +237,116 @@ TEST_CASE("GPU rejects bad frames and supports repeated resource lifetimes", "[g
         renderer.render({0, 0, 0}, {});
         REQUIRE(glGetError() == GL_NO_ERROR);
     }
+}
+
+TEST_CASE("GPU protected straight colour differs from ordinary premultiplied over", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.reserve({8, 12, 2, 2});
+    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    const auto red = quad(0.5f, 0.5f, 0.5f, 0.5f);
+    auto green = quad(0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(red.begin(), red.end(), vertices.begin());
+    std::copy(green.begin(), green.end(), vertices.begin() + 4);
+    std::array<DrawCommand, 2> commands{
+        {{TextureId{1}, 0, 6, BlendMode::Over, ColorProtection::PreserveTranslucent},
+         {TextureId{2}, 6, 6, BlendMode::Over, ColorProtection::PreserveTranslucent}}};
+    RenderFrame frame{vertices, kIndices, commands, ColorComposition::ProtectedStraight};
+    renderer.prepare(frame);
+    REQUIRE_THROWS(renderer.render({output.framebuffer, 64, 64}, {}));
+    renderer.resize_output(64, 64);
+    GLint green_bits = 0;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                          GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE, &green_bits);
+    INFO("mask attachment green bits=" << green_bits);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    auto sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[0] >= 63);
+    REQUIRE(sample[0] <= 65);
+    REQUIRE(sample[1] >= 190);
+    REQUIRE(sample[1] <= 192);
+    REQUIRE(sample[3] >= 191);
+    REQUIRE(sample[3] <= 192);
+    frame.commands = std::span(commands).first(1);
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[0] == 255);
+    REQUIRE(sample[3] == 128);
+    commands[0].protection = ColorProtection::None;
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[0] >= 127);
+    REQUIRE(sample[0] <= 129);
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("GPU alpha masks union with observed five-bit precision and reuse resized resources",
+          "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.reserve({8, 12, 1, 2, 2, 1});
+    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    auto vertices = quad(0.5f, 0.5f, 0.5f, 0.5f);
+    std::array<DrawCommand, 1> commands{
+        {{TextureId{2}, 0, 6, BlendMode::Over, ColorProtection::PreserveTranslucent, MaskId{1}}}};
+    std::array<DrawCommand, 2> mask_commands{
+        {{TextureId{1}, 0, 6, BlendMode::Over}, {TextureId{1}, 0, 6, BlendMode::Over}}};
+    std::array<MaskDefinition, 1> masks{{{0, 2}}};
+    RenderFrame frame{vertices,      std::span(kIndices).first(6),
+                      commands,      ColorComposition::ProtectedStraight,
+                      mask_commands, masks};
+    renderer.prepare(frame);
+    renderer.resize_output(64, 64);
+    GLint green_bits = 0;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                          GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE, &green_bits);
+    INFO("mask attachment green bits=" << green_bits);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    auto sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[1] == 255);
+    INFO("mask alpha=" << static_cast<int>(sample[3]));
+    REQUIRE(sample[3] >= 197);
+    REQUIRE(sample[3] <= 198); // quantized union: 16/31 then 24/31; sampling rounds to RGBA8
+    masks[0].command_count = 0;
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32)[3] == 0);
+    masks[0].command_count = 2;
+    renderer.prepare(frame);
+    for (int i = 0; i < 120; ++i)
+        renderer.render({output.framebuffer, 64, 64}, {});
+    allocation_count = 0;
+    track_allocations = true;
+    for (int i = 0; i < 100; ++i)
+    {
+        renderer.prepare(frame);
+        renderer.resize_output(64, 64);
+        renderer.render({output.framebuffer, 64, 64}, {});
+    }
+    track_allocations = false;
+    REQUIRE(allocation_count == 0);
+    output.resize(128, 128);
+    REQUIRE_THROWS(renderer.render({output.framebuffer, 128, 128}, {}));
+    renderer.resize_output(128, 128);
+    renderer.render({output.framebuffer, 128, 128}, {0, 0, 2, {}});
+    sample = pixel(renderer.capture({output.framebuffer, 128, 128}), 64, 64);
+    REQUIRE(sample[3] >= 197);
+    REQUIRE(sample[3] <= 198);
+    masks[0] = {2, 1};
+    REQUIRE_THROWS(renderer.prepare(frame));
+    masks[0] = {0, 2};
+    mask_commands[0].mask = MaskId{1};
+    REQUIRE_THROWS(renderer.prepare(frame)); // recursive mask reads are explicitly unsupported
+    REQUIRE(glGetError() == GL_NO_ERROR);
 }

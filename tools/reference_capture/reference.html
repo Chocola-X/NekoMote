@@ -60,6 +60,7 @@ window.capture = async function(options) {
     device.animating=true;
     device.lastAnimationTime=0;
     window.traceEnabled=options.trace;
+    window.traceMaskPixels=options.traceMaskPixels;
     window.isolateRect=options.isolateRect;
     device.drawAnimation(0);
     window.traceEnabled=false;
@@ -76,6 +77,6 @@ window.capture = async function(options) {
     const metadata={defaults:variables, observedVariables, mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
-    return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace};
+    return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace,stateTrace:window.stateTrace,maskPixels:window.maskPixels};
 };
 </script>

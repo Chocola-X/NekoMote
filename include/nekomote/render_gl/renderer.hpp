@@ -3,6 +3,7 @@
 #include <nekomote/image.hpp>
 #include <nekomote/render_frame.hpp>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -27,6 +28,11 @@ struct View
     float origin_x{0}, origin_y{0}, scale{1};
     std::array<float, 4> clear{0, 0, 0, 0}; // premultiplied target clear
 };
+struct Capacity
+{
+    std::size_t vertices{0}, indices{0}, commands{0}, textures{0};
+    std::size_t mask_commands{0}, masks{0};
+};
 class Renderer
 {
   public:
@@ -35,10 +41,12 @@ class Renderer
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
     // Reserves capacity once; prepare rejects larger frames instead of allocating.
-    void reserve(std::size_t vertices, std::size_t indices, std::size_t commands,
-                 std::size_t textures);
+    void reserve(Capacity capacity);
     void upload_texture(TextureId id, const ImageRgba8& image);
     void prepare(RenderFrame frame);
+    // Explicit loading/resize boundary. ProtectedStraight needs a matching
+    // RGBA8 intermediate. Repeated unchanged dimensions retain GPU storage.
+    void resize_output(int width, int height);
     void render(Target target, const View& view);
     // Diagnostic GPU readback only; omitted from render/benchmark paths.
     ImageRgba8 capture(Target target);

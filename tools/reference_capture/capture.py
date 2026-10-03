@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--variables', type=json.loads, default={})
     parser.add_argument('--isolate-icon', help='diagnostic filtering of original driver draw calls')
     parser.add_argument('--trace', action='store_true')
+    parser.add_argument('--trace-mask-pixels', action='store_true', help='diagnostic mask readback; not for benchmarks')
     parser.add_argument('--fixture-icon-size', action='append', default=[],
                         help='diagnostic atlas/icon=width,height crop dimensions')
     parser.add_argument('--trace-math', action='store_true')
@@ -82,7 +83,7 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
-                   variables=args.variables, trace=args.trace, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
+                   variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={'hair': 0, 'parts': 0, 'bust': 0, 'wind': False},
                    diagnostic_fixture_edits=edits)

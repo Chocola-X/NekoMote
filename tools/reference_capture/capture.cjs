@@ -16,7 +16,11 @@ const fs = require('node:fs');
         if (errors.length) throw new Error(errors.join('\n'));
         fs.writeFileSync(options.output+'.png',Buffer.from(result.png.split(',')[1],'base64'));
         fs.writeFileSync(options.output+'.json',JSON.stringify({...options,...result.metadata},null,2)+'\n');
-        if (options.trace) fs.writeFileSync(options.output+'.trace.json',JSON.stringify(result.trace));
+        if (options.trace) {
+            fs.writeFileSync(options.output+'.trace.json',JSON.stringify(result.trace));
+            fs.writeFileSync(options.output+'.state.json',JSON.stringify(result.stateTrace));
+            if(options.traceMaskPixels) fs.writeFileSync(options.output+'.mask-pixels.json',JSON.stringify(result.maskPixels));
+        }
         console.log(JSON.stringify(result.metadata));
     } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

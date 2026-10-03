@@ -141,7 +141,7 @@ int run(const Options& o)
     glfwSwapInterval(o.benchmark ? 0 : 1);
     render_gl::Renderer renderer(glfwGetProcAddress);
     std::printf("%s\n", renderer.diagnostics().c_str());
-    renderer.reserve(4, 6, 1, 1);
+    renderer.reserve({4, 6, 1, 1});
     std::array<RenderVertex, 4> vertices{};
     const std::array<std::uint32_t, 6> indices{0, 1, 2, 0, 2, 3};
     const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
@@ -170,8 +170,9 @@ int run(const Options& o)
         checked(geometry_instance->evaluate());
         checked(geometry_instance->build_frame());
         const auto frame = geometry_instance->frame();
-        renderer.reserve(frame.vertices.size(), frame.indices.size(), frame.commands.size(),
-                         geometry_scene->textures().size());
+        renderer.reserve({frame.vertices.size(), frame.indices.size(), frame.commands.size(),
+                          geometry_scene->textures().size(), frame.mask_commands.size(),
+                          frame.masks.size()});
         for (const auto& texture : geometry_scene->textures())
         {
             auto decoded = asset_io::load_png(o.asset.parent_path() / texture.path);
@@ -182,7 +183,8 @@ int run(const Options& o)
             renderer.upload_texture(texture.id, decoded.image);
         }
         renderer.prepare(frame);
-        std::printf("GEOMETRY DIAGNOSTIC: %zu sprites; masks/complete composition unavailable\n",
+        std::printf("STATIC DIAGNOSTIC: %zu sprites; union masks/protected composition; animation "
+                    "unavailable\n",
                     geometry_instance->primitives().size());
         for (const auto& diagnostic : geometry_scene->diagnostics())
             std::printf("%s\n", diagnostic.c_str());
@@ -224,6 +226,7 @@ int run(const Options& o)
     }
     if (o.benchmark)
     {
+        renderer.resize_output(o.width, o.height);
         const render_gl::Target target{0, o.width, o.height};
         for (int i = 0; i < 120; ++i)
         {
@@ -255,6 +258,7 @@ int run(const Options& o)
         int w = 0, h = 0;
         glfwGetFramebufferSize(window.get(), &w, &h);
         const render_gl::Target target{0, w, h};
+        renderer.resize_output(w, h);
         renderer.render(target, view);
         if (!o.screenshot.empty() && count == 0)
         {

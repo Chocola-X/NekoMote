@@ -58,8 +58,12 @@ struct Binding
 };
 struct Node
 {
-    std::string label;
+    std::string label, source_label;
+    std::uint32_t scope{0};
     NodeId parent;
+    MaskId mask;
+    int stencil_type{0};
+    std::vector<std::string> mask_sources;
     ResourceId guard;
     Binding binding;
     std::vector<Key> keys;
@@ -74,6 +78,12 @@ struct Clamp
     int type{0};
     bool enabled{true};
 };
+struct CompiledMask
+{
+    NodeId node;
+    std::vector<NodeId> members;
+    bool resolved{true};
+};
 struct CompiledData
 {
     std::vector<VariableSymbol> variables;
@@ -81,6 +91,8 @@ struct CompiledData
     std::vector<Resource> resources{1};
     std::vector<Node> nodes{1};
     std::vector<Clamp> clamps;
+    std::vector<CompiledMask> masks;
+    std::size_t mask_command_capacity{0};
     std::vector<std::string> diagnostics;
     std::size_t vertex_capacity{0}, index_capacity{0};
 };
@@ -135,6 +147,7 @@ struct Compiler
     std::unordered_map<std::string, ResourceId> resources;
     std::unordered_map<std::string, ParamId> variables;
     std::vector<const model::Part*> stack;
+    std::uint32_t next_scope{0};
 
     ParamId variable(const std::string& name)
     {
@@ -189,8 +202,9 @@ struct Compiler
                     p.patch[i] = {raw[i * 2], raw[i * 2 + 1]};
             }
         }
-        p.unsupported = c.zx.has_value() || c.zy.has_value() || c.ox.has_value() ||
-                        c.oy.has_value() || field_or(c.flip, 0) != 0 || field_or(c.bm, 0) != 0 ||
+        p.unsupported = frame.type == 1 || c.zx.has_value() || c.zy.has_value() ||
+                        c.ox.has_value() || c.oy.has_value() || field_or(c.flip, 0) != 0 ||
+                        field_or(c.bm, 0) != 0 ||
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
                         (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0);
         require(std::isfinite(p.translation.x) && std::isfinite(p.translation.y) &&
@@ -207,17 +221,23 @@ struct Compiler
         require(stack.size() < 128 && std::find(stack.begin(), stack.end(), &part) == stack.end(),
                 path, "cyclic or too deep motion references");
         stack.push_back(&part);
+        const auto scope = ++next_scope;
         for (const auto& layer : part.layers)
-            node(layer, part, parent, guard, path, depth + 1);
+            node(layer, part, parent, guard, path, depth + 1, scope);
         stack.pop_back();
     }
     void node(const model::Layer& layer, const model::Part& part, NodeId parent, ResourceId guard,
-              const std::string& parent_path, std::size_t depth)
+              const std::string& parent_path, std::size_t depth, std::uint32_t scope)
     {
         require(depth < 256, parent_path, "expanded layer nesting too deep");
         require(data.nodes.size() < 100000, parent_path, "expanded scene too large");
         Node n;
         n.label = parent_path + "/" + layer.label;
+        n.source_label = layer.label;
+        n.scope = scope;
+        n.stencil_type = layer.stencil_type;
+        n.mask_sources = layer.stencil_composite_mask_layers;
+        require(layer.type != 12 || layer.stencil_type == 5, n.label, "unverified stencil type");
         n.parent = parent;
         n.guard = guard;
         n.type = layer.type;
@@ -267,8 +287,6 @@ struct Compiler
                 motions.insert(p.resource);
             n.keys.push_back({f.time, f.type, std::move(p)});
         }
-        if (layer.type == 12)
-            data.diagnostics.push_back(n.label + ": stencil composition pending P4");
         const NodeId id{static_cast<std::uint32_t>(data.nodes.size())};
         data.nodes.push_back(std::move(n));
         const auto path = data.nodes[id.value].label;
@@ -280,7 +298,7 @@ struct Compiler
                    depth + 1);
         }
         for (const auto& child : layer.children)
-            node(child, part, id, {}, path, depth + 1);
+            node(child, part, id, {}, path, depth + 1, scope);
     }
 };
 struct State
@@ -370,11 +388,11 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
         for (const auto& name : names)
         {
             const auto& r = asset.icons.at(name);
-            require(r.width > 0 && r.height > 0 && std::isfinite(r.width) &&
-                        std::isfinite(r.height) && textures.contains(r.texture) &&
-                        r.width == std::floor(r.width) && r.height == std::floor(r.height),
-                    name,
-                    "invalid or nonintegral sprite rectangle; source truncation is unverified");
+            require(
+                r.width > 0 && r.height > 0 && std::isfinite(r.width) && std::isfinite(r.height) &&
+                    textures.contains(r.texture) && r.width == std::floor(r.width) &&
+                    r.height == std::floor(r.height) && (r.attr == 0 || r.attr == 1),
+                name, "invalid or nonintegral sprite rectangle; source truncation is unverified");
             const ResourceId id{static_cast<std::uint32_t>(data->resources.size())};
             data->resources.push_back(
                 {name, ResourceKind::Sprite, textures.at(r.texture), r, nullptr});
@@ -399,6 +417,48 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                 "not a motion");
         compiler.motion(*data->resources[base->second.value].motion, {}, {},
                         asset.base_group + "/" + asset.base_motion);
+        // Resolve labels within each expanded motion scope, not across instances.
+        for (std::size_t i = 1; i < data->nodes.size(); ++i)
+        {
+            auto& node = data->nodes[i];
+            node.mask = data->nodes[node.parent.value].mask;
+            if (node.type != 12)
+                continue;
+            node.mask = MaskId{static_cast<std::uint32_t>(data->masks.size() + 1)};
+            CompiledMask mask{NodeId{static_cast<std::uint32_t>(i)}, {}};
+            std::vector<NodeId> roots;
+            for (const auto& name : node.mask_sources)
+            {
+                NodeId root;
+                for (std::size_t j = 1; j < data->nodes.size(); ++j)
+                    if (data->nodes[j].scope == node.scope && data->nodes[j].source_label == name)
+                    {
+                        require(!root.valid(), node.label, "ambiguous stencil source label");
+                        root = NodeId{static_cast<std::uint32_t>(j)};
+                    }
+                if (!root.valid())
+                {
+                    mask.resolved = false;
+                    data->diagnostics.push_back(node.label + "/" + name +
+                                                ": unresolved mask source; reject if selected");
+                }
+                else
+                    roots.push_back(root);
+            }
+            require(!node.mask_sources.empty(), node.label, "empty stencil source list");
+            for (std::size_t j = 1; j < data->nodes.size(); ++j)
+            {
+                auto ancestor = NodeId{static_cast<std::uint32_t>(j)};
+                while (ancestor.valid() &&
+                       std::find(roots.begin(), roots.end(), ancestor) == roots.end())
+                    ancestor = data->nodes[ancestor.value].parent;
+                if (ancestor.valid())
+                    mask.members.push_back(NodeId{static_cast<std::uint32_t>(j)});
+            }
+            data->mask_command_capacity += mask.members.size();
+            require(data->mask_command_capacity <= 1000000, node.label, "mask capacity exceeded");
+            data->masks.push_back(std::move(mask));
+        }
         for (std::size_t i = data->nodes.size() - 1; i > 0; --i)
         {
             const auto& n = data->nodes[i];
@@ -454,16 +514,21 @@ struct GeometryInstance::Impl
     std::vector<GeometryPrimitive> primitives;
     std::vector<RenderVertex> vertices;
     std::vector<std::uint32_t> indices;
-    std::vector<DrawCommand> commands;
-    bool evaluated{false};
+    std::vector<DrawCommand> commands, mask_commands;
+    std::vector<MaskDefinition> masks;
+    std::vector<std::uint32_t> node_commands;
+    std::vector<bool> used_masks;
+    bool evaluated{false}, frame_ready{false};
     explicit Impl(const CompiledData& data)
         : scene(data), input(data.variables.size() + 1), parameters(input.size()),
-          states(data.nodes.size())
+          states(data.nodes.size()), node_commands(data.nodes.size()), used_masks(data.masks.size())
     {
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
         indices.reserve(data.index_capacity);
         commands.reserve(data.nodes.size());
+        mask_commands.reserve(data.mask_command_capacity);
+        masks.resize(data.masks.size());
     }
     Vec2 transform(NodeId id, Vec2 p) const noexcept
     {
@@ -497,6 +562,7 @@ GeometryStatus GeometryInstance::set_parameter(ParamId id, float value) noexcept
         return {GeometryError::NonfiniteParameter, {}, id};
     impl_->input[id.value] = value;
     impl_->evaluated = false;
+    impl_->frame_ready = false;
     return {};
 }
 GeometryStatus GeometryInstance::evaluate() noexcept
@@ -506,7 +572,13 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     instance.vertices.clear();
     instance.indices.clear();
     instance.commands.clear();
+    instance.mask_commands.clear();
+    std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
+    std::fill(instance.node_commands.begin(), instance.node_commands.end(),
+              std::numeric_limits<std::uint32_t>::max());
+    std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
     instance.evaluated = false;
+    instance.frame_ready = false;
     std::copy(instance.input.begin(), instance.input.end(), instance.parameters.begin());
     const auto& scene = instance.scene;
     for (const auto& c : scene.clamps)
@@ -572,6 +644,11 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             state.transform.mesh = state.transform.mesh || state.pose.mesh;
             state.transform_parent = parent.transform_parent;
         }
+        // A canonical identity BP still requests tessellation/density, but its
+        // coordinate map is exactly neutral. Avoid polynomial roundoff shifting
+        // integer pixel bounds across a mask-region floor/ceil boundary.
+        if (state.transform.patch == identity_patch())
+            state.transform.mesh = false;
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)
             // Priority-two automatic density is the maximum active ancestor
@@ -609,9 +686,15 @@ Vec2 GeometryInstance::sample_atlas_point(NodeId node, Vec2 atlas_pixel) const n
 GeometryStatus GeometryInstance::build_frame() noexcept
 {
     auto& instance = *impl_;
+    instance.frame_ready = false;
     instance.vertices.clear();
     instance.indices.clear();
     instance.commands.clear();
+    instance.mask_commands.clear();
+    std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
+    std::fill(instance.node_commands.begin(), instance.node_commands.end(),
+              std::numeric_limits<std::uint32_t>::max());
+    std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
     if (!instance.evaluated)
         return {GeometryError::UnsupportedTransform, {}, {}};
     for (const auto& p : instance.primitives)
@@ -628,9 +711,14 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         for (int y = 0; y <= ny; ++y)
             for (int x = 0; x <= nx; ++x)
             {
-                const float u = r.left + static_cast<float>(x) / static_cast<float>(nx) * r.width;
-                const float v = r.top + static_cast<float>(y) / static_cast<float>(ny) * r.height;
-                const auto point = sample_atlas_point(p.node, {u, v});
+                const float local_x = static_cast<float>(x) / static_cast<float>(nx) * r.width;
+                const float local_y = static_cast<float>(y) / static_cast<float>(ny) * r.height;
+                const float u = r.left + local_x;
+                const float v = r.top + local_y;
+                // Atlas packing affects UV only. Adding a large atlas offset and
+                // subtracting it before deformation loses local subpixel precision.
+                const auto point =
+                    instance.transform(p.node, {local_x - r.origin_x, local_y - r.origin_y});
                 instance.vertices.push_back({point.x,
                                              point.y,
                                              u / static_cast<float>(texture.width),
@@ -645,16 +733,61 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                 for (const auto index : {a, b, c, b, d, c})
                     instance.indices.push_back(index);
             }
-        instance.commands.push_back({p.texture, first,
-                                     static_cast<std::uint32_t>(instance.indices.size()) - first,
-                                     BlendMode::Over});
+        const auto mask = instance.scene.nodes[p.node.value].mask;
+        if (mask.valid())
+            instance.used_masks[mask.value - 1] = true;
+        instance.node_commands[p.node.value] = static_cast<std::uint32_t>(instance.commands.size());
+        instance.commands.push_back(
+            {p.texture, first, static_cast<std::uint32_t>(instance.indices.size()) - first,
+             BlendMode::Over,
+             r.attr == 1 ? ColorProtection::PreserveTranslucent : ColorProtection::None, mask});
     }
+    for (std::size_t i = 0; i < instance.scene.masks.size(); ++i)
+    {
+        if (!instance.used_masks[i])
+            continue;
+        const auto& source = instance.scene.masks[i];
+        if (!source.resolved)
+        {
+            instance.commands.clear();
+            return {GeometryError::UnsupportedMask, source.node, {}};
+        }
+        auto& definition = instance.masks[i];
+        definition.first_command = static_cast<std::uint32_t>(instance.mask_commands.size());
+        for (const auto node : source.members)
+        {
+            const auto command_index = instance.node_commands[node.value];
+            const auto& state = instance.states[node.value];
+            const auto& resource = instance.scene.resources[state.pose.resource.value];
+            if (state.pose.active && state.opacity > 0 && resource.kind == ResourceKind::Blank &&
+                instance.scene.nodes[node.value].type == 0)
+            {
+                instance.commands.clear();
+                return {GeometryError::UnsupportedMask, node, {}};
+            }
+            if (command_index == std::numeric_limits<std::uint32_t>::max())
+                continue;
+            auto command = instance.commands[command_index];
+            if (command.mask.valid())
+            {
+                instance.commands.clear();
+                return {GeometryError::UnsupportedMask, node, {}};
+            }
+            command.protection = ColorProtection::None;
+            instance.mask_commands.push_back(command);
+        }
+        definition.command_count =
+            static_cast<std::uint32_t>(instance.mask_commands.size()) - definition.first_command;
+    }
+    instance.frame_ready = true;
     return {};
 }
 RenderFrame GeometryInstance::frame() const noexcept
 {
-    if (!impl_->evaluated)
+    if (!impl_->frame_ready)
         return {};
-    return {impl_->vertices, impl_->indices, impl_->commands};
+    return {impl_->vertices,      impl_->indices,
+            impl_->commands,      ColorComposition::ProtectedStraight,
+            impl_->mask_commands, impl_->masks};
 }
 } // namespace nekomote::runtime

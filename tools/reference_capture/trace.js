@@ -1,11 +1,29 @@
 // Diagnostic observation only. This code never participates in native playback.
 window.drawTrace = [];
+window.stateTrace = [];
+window.maskPixels = [];
 (() => {
     const proto=WebGLRenderingContext.prototype;
     const buffers=new Map();
     const textures=new Map();
+    const framebuffers=new Map();
     const original={};
-    for (const name of ['bufferData','bufferSubData','createTexture','drawElements','drawArrays']) original[name]=proto[name];
+    for (const name of ['texImage2D','texParameteri','bufferData','bufferSubData','createTexture','drawElements','drawArrays','clear']) original[name]=proto[name];
+    const textureInfo=new Map();
+    proto.texImage2D=function(...args) {
+        const texture=this.getParameter(this.TEXTURE_BINDING_2D);
+        const info=textureInfo.get(texture)||{};
+        if(args.length===9) Object.assign(info,{width:args[3],height:args[4],format:args[6],type:args[7]});
+        else Object.assign(info,{width:args[5].width,height:args[5].height});
+        textureInfo.set(texture,info);
+        return original.texImage2D.apply(this,args);
+    };
+    proto.texParameteri=function(target,pname,param) {
+        const texture=this.getParameter(this.TEXTURE_BINDING_2D);
+        const info=textureInfo.get(texture)||{};
+        info[pname]=param;textureInfo.set(texture,info);
+        return original.texParameteri.call(this,target,pname,param);
+    };
     proto.bufferData=function(target,data,usage) {
         const binding=this.getParameter(target===this.ARRAY_BUFFER?this.ARRAY_BUFFER_BINDING:this.ELEMENT_ARRAY_BUFFER_BINDING);
         buffers.set(binding,typeof data==='number'?new Uint8Array(data):new Uint8Array(data.buffer,data.byteOffset,data.byteLength).slice());
@@ -18,6 +36,40 @@ window.drawTrace = [];
     };
     proto.createTexture=function() {
         const t=original.createTexture.call(this);textures.set(t,textures.size+1);return t;
+    };
+    function state(gl) {
+        const framebuffer=gl.getParameter(gl.FRAMEBUFFER_BINDING);
+        if(framebuffer && !framebuffers.has(framebuffer)) framebuffers.set(framebuffer,framebuffers.size+1);
+        const active=gl.getParameter(gl.ACTIVE_TEXTURE);
+        gl.activeTexture(gl.TEXTURE0);
+        const bound0=gl.getParameter(gl.TEXTURE_BINDING_2D);
+        const texture0=textures.get(bound0)||0;
+        gl.activeTexture(gl.TEXTURE1);
+        const bound1=gl.getParameter(gl.TEXTURE_BINDING_2D);
+        const texture1=textures.get(bound1)||0;
+        gl.activeTexture(active);
+        return {
+            framebufferId:framebuffer?(framebuffers.get(framebuffer)):0,
+            attachment:framebuffer?(textures.get(gl.getFramebufferAttachmentParameter(
+                gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME))||0):0,
+            textureUnits:[texture0,texture1],
+            textureInfo:[textureInfo.get(bound0)||{},textureInfo.get(bound1)||{}],
+            scissorBox:Array.from(gl.getParameter(gl.SCISSOR_BOX)),
+            viewport:Array.from(gl.getParameter(gl.VIEWPORT)),
+            colorBits:[gl.RED_BITS,gl.GREEN_BITS,gl.BLUE_BITS,gl.ALPHA_BITS].map(p=>gl.getParameter(p)),
+            colorMask:Array.from(gl.getParameter(gl.COLOR_WRITEMASK)),
+            blendEnabled:gl.isEnabled(gl.BLEND),
+            ditherEnabled:gl.isEnabled(gl.DITHER),
+            stencilEnabled:gl.isEnabled(gl.STENCIL_TEST),
+            depthEnabled:gl.isEnabled(gl.DEPTH_TEST),
+            scissorEnabled:gl.isEnabled(gl.SCISSOR_TEST)
+        };
+    }
+    proto.clear=function(mask) {
+        if(window.traceEnabled) window.stateTrace.push({
+            beforeDraw:window.drawTrace.length,mask,
+            clearColor:Array.from(this.getParameter(this.COLOR_CLEAR_VALUE)),...state(this)});
+        return original.clear.call(this,mask);
     };
     function observe(gl,mode,count,indexType,indexOffset,first) {
         if (!window.traceEnabled && !window.isolateRect) return true;
@@ -56,7 +108,7 @@ window.drawTrace = [];
             const value=gl.getUniform(program,gl.getUniformLocation(program,info.name));
             uniforms[info.name]=ArrayBuffer.isView(value)?Array.from(value):value;
         }
-        const record={mode,count,indices,attributes,uniforms,
+        const record={mode,count,indices,attributes,uniforms,glState:state(gl),
             texture:textures.get(gl.getParameter(gl.TEXTURE_BINDING_2D)),
             framebuffer:!!gl.getParameter(gl.FRAMEBUFFER_BINDING),
             blend:[gl.getParameter(gl.BLEND_SRC_RGB),gl.getParameter(gl.BLEND_DST_RGB),gl.getParameter(gl.BLEND_SRC_ALPHA),gl.getParameter(gl.BLEND_DST_ALPHA)],
@@ -71,6 +123,30 @@ window.drawTrace = [];
         }
         return true;
     }
-    proto.drawElements=function(mode,count,type,offset) {if(!observe(this,mode,count,type,offset,0)) return;return original.drawElements.call(this,mode,count,type,offset);};
-    proto.drawArrays=function(mode,first,count) {if(!observe(this,mode,count,0,0,first)) return;return original.drawArrays.call(this,mode,first,count);};
+    function maskReadback(gl) {
+        if(!window.traceEnabled || !window.traceMaskPixels) return;
+        const framebuffer=gl.getParameter(gl.FRAMEBUFFER_BINDING);
+        if(!framebuffer) return;
+        const texture=gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,
+                                                          gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+        if(textures.get(texture)!==3) return;
+        const size=gl.getParameter(gl.VIEWPORT);
+        const pixels=new Uint8Array(size[2]*size[3]*4);
+        gl.readPixels(0,0,size[2],size[3],gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+        const nonzero=[],histogram=new Array(256).fill(0);
+        for(let i=0;i<pixels.length/4;i++) {
+            const value=pixels[i*4+1];histogram[value]++;
+            if(value) nonzero.push([i,value]);
+        }
+        window.maskPixels.push({draw:window.drawTrace.length-1,width:size[2],height:size[3],
+                               nonzero,histogram});
+    }
+    proto.drawElements=function(mode,count,type,offset) {
+        if(!observe(this,mode,count,type,offset,0)) return;
+        const result=original.drawElements.call(this,mode,count,type,offset);maskReadback(this);return result;
+    };
+    proto.drawArrays=function(mode,first,count) {
+        if(!observe(this,mode,count,0,0,first)) return;
+        const result=original.drawArrays.call(this,mode,first,count);maskReadback(this);return result;
+    };
 })();

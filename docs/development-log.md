@@ -56,3 +56,14 @@
 - 原生诊断截图已生成并目视检查：alpha 完全匹配，RGB 仍失败，瞳孔遮罩/透明颜色保护待 P4，不宣称 M1。
 - Debug/Release 39 入口、ASan/UBSan 38 核心入口通过；预热后 200 次资源切换/求值/构帧普通 C++ new 计数为零。Release CPU 求值+构帧 P50/P95/P99=0.628749/0.655709/0.719409ms（固定输入 2000 次），范围和硬件见 docs/p3-native-scene.md。
 - P3 保持进行中；本次提交是已验证的几何子步骤，下一步遮罩/合成。
+
+## 2026-10-04 P4 遮罩/颜色保护子步骤
+
+- 加入 source-independent mask/保护合成协议、RGBA8 中间目标、5-bit mask scratch；union、每次清空、源/绘制区域交集及 2 像素边界通过观察确认。显式 resize/reserve，RAII 与热路径无普通 C++ new 已测试。
+- 原 WebGL 上传 type=4444 不等于实际附件位数：当前 NVIDIA/ANGLE mask 为 5/5/5/1，直接查询及 32 档 green 读回确认；原生 RGB5_A1 并查询 green=5。改正先前误用实际 green=8 的目标后，四型号初态通过。
+- 局部网格与 atlas packing 解耦，canonical identity BP 保持精确坐标；Bézier double 基函数减少 Float32 累加舍入。不同域精度、系数、controller 与 placement 候选无法统一闭合，已移出实现，无按型号/姿态切换公式。
+- 新 static 验证入口重导入四型号，校验原 PSB/驱动/资产/PNG hash、输入、物理和 fixture；全部 30 组几何通过（最大 0.000251655px），严格图像 23 PASS/7 FAIL，共 10 个像素 RGB 达 3/255。保留 2/255 门槛与全部 FAIL，不将阶段标完成。
+- 1200×2000、0.65 倍的完整可见身体通过：alpha=0、RGB 最大差 1/255；与原项目 BG_29A 的离线合成也通过，已目视检查并列图。背景尚未进入 application。
+- GPU pipeline 隔离使用参考几何得到合成 RGB/alpha 零差；位置/UV 替换实验将残差定位为几何。所有此类诊断输入只留忽略的 evidence，不用于运行时或预览。
+- 未验证 frame.type=1 选中时明确拒绝；回归覆盖未知父层变换不能静默影响子 sprite。正常上一帧也不会在失败后泄漏。
+- 阶段子步骤提交前 Debug/Release/ASan 检查及基线见 docs/p4-static-composition.md。P3/P4 继续进行中；下一步核实轮廓计算精度、嵌套与反向遮罩，继续时间线的独立语义采样。

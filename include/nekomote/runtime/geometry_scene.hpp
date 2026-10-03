@@ -4,6 +4,7 @@
 #include <nekomote/model/asset.hpp>
 #include <nekomote/render_frame.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <span>
 #include <string>
@@ -41,7 +42,8 @@ enum class GeometryError
     UnsupportedDiscretization,
     UnsupportedTransform,
     UnsupportedCombination,
-    UnsupportedTessellation
+    UnsupportedTessellation,
+    UnsupportedMask
 };
 struct GeometryStatus
 {
@@ -98,7 +100,8 @@ class GeometryInstance
     // node must come from this instance's current primitives(). Samples an icon
     // in atlas pixel coordinates; useful for geometry evidence and inspection.
     Vec2 sample_atlas_point(NodeId node, Vec2 atlas_pixel) const noexcept;
-    // Diagnostic geometry only. Masks/complete composition are not available.
+    // Static diagnostic frame. Supports verified union masks and protected straight
+    // composition; unsupported selected mask sources/nesting fail explicitly.
     // Unknown automatic tessellation explicitly fails instead of drawing a quad.
     GeometryStatus build_frame() noexcept;
     RenderFrame frame() const noexcept;

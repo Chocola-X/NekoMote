@@ -201,6 +201,32 @@ TEST_CASE("Cyclic motion graphs fail during compilation with a source path", "[r
     REQUIRE(compiled.errors.size() == 1);
     REQUIRE(compiled.errors[0].find("rig/main/reference") != std::string::npos);
 }
+TEST_CASE("Unverified active ancestors and frame types cannot silently affect sprites",
+          "[runtime][scene]")
+{
+    auto input = rig();
+    // Unsupported alternate frames may remain in an immutable asset, but a
+    // selected frame must fail; successful previous frame data must expire.
+    input.parts[2].layers[0].frame_list[0].type = 1;
+    auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    REQUIRE_FALSE(instance.frame().commands.empty());
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("pick"), 1));
+    REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.primitives().empty());
+    REQUIRE(instance.frame().commands.empty());
+
+    input = rig();
+    input.parts[0].layers[0].frame_list[0].content.data.zx = field(2.0f);
+    compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance ancestor(*compiled.scene);
+    REQUIRE(ancestor.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(ancestor.frame().commands.empty());
+}
 
 TEST_CASE("Warmed geometry evaluation and frame building allocate no project heap",
           "[runtime][scene]")
@@ -265,5 +291,99 @@ TEST_CASE("Automatic priority-two meshes match original size boundary captures",
         REQUIRE(instance.evaluate());
         REQUIRE(instance.build_frame());
         REQUIRE(instance.frame().vertices.size() == static_cast<std::size_t>(points));
+    }
+}
+
+TEST_CASE(
+    "Mask labels bind within reusable motion instances and required failures publish no frame",
+    "[runtime][scene]")
+{
+    auto input = rig();
+    for (std::size_t i = 1; i < input.parts.size(); ++i)
+    {
+        auto& part = input.parts[i];
+        part.layers[0].label = "white";
+        FrameContent blank;
+        blank.src = field(std::string{"blank"});
+        blank.icon = field(std::string{"32:32:16:16"});
+        auto mask = layer("mask", 12, blank);
+        mask.inherit_mask = 0x24007fc;
+        mask.stencil_type = 5;
+        mask.stencil_composite_mask_layers = {"white"};
+        auto pupil = sprite();
+        pupil.coord = field(std::array<float, 3>{0, 0, 7});
+        mask.children.push_back(layer("pupil", 0, pupil));
+        part.layers.push_back(mask);
+    }
+    auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    auto frame = instance.frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE(frame.commands[0].mask == MaskId{});
+    REQUIRE(frame.commands[1].mask == MaskId{1});
+    REQUIRE(frame.mask_commands.size() == 1);
+    REQUIRE(frame.mask_commands[0].first_index == frame.commands[0].first_index);
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("pick"), 1));
+    REQUIRE(instance.frame().commands.empty());
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    frame = instance.frame();
+    REQUIRE(frame.commands[1].mask == MaskId{2});
+    REQUIRE(frame.masks[0].command_count == 0);
+    REQUIRE(frame.masks[1].command_count == 1);
+    REQUIRE(frame.mask_commands[0].first_index == frame.commands[0].first_index);
+    input.parts[1].layers[1].stencil_composite_mask_layers = {"missing source"};
+    auto invalid = runtime::compile_geometry_scene(input);
+    REQUIRE(invalid.scene);
+    REQUIRE_FALSE(invalid.scene->diagnostics().empty());
+    runtime::GeometryInstance rejected(*invalid.scene);
+    REQUIRE(rejected.evaluate());
+    REQUIRE(rejected.build_frame().error == runtime::GeometryError::UnsupportedMask);
+    REQUIRE(rejected.frame().vertices.empty());
+    REQUIRE(rejected.frame().commands.empty());
+}
+
+TEST_CASE("Atlas packing changes UV without changing deformed model geometry", "[runtime][scene]")
+{
+    auto input = rig();
+    input.parts.resize(1);
+    input.textures[0].width = input.textures[0].height = 4096;
+    auto& rect = input.icons.at("atlas/a");
+    rect.width = 71;
+    rect.height = 60;
+    auto content = sprite();
+    MeshData mesh;
+    std::array<float, 32> raw{};
+    const auto patch = runtime::identity_patch();
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        raw[i * 2] = patch[i].x;
+        raw[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(raw);
+    content.mesh = field(mesh);
+    input.parts[0].layers = {layer("sprite", 0, content)};
+    auto first = runtime::compile_geometry_scene(input);
+    REQUIRE(first.scene);
+    rect.left = 3072;
+    rect.top = 2048;
+    auto second = runtime::compile_geometry_scene(input);
+    REQUIRE(second.scene);
+    runtime::GeometryInstance a(*first.scene), b(*second.scene);
+    REQUIRE(a.evaluate());
+    REQUIRE(b.evaluate());
+    REQUIRE(a.build_frame());
+    REQUIRE(b.build_frame());
+    const auto va = a.frame().vertices, vb = b.frame().vertices;
+    REQUIRE(va.size() == vb.size());
+    for (std::size_t i = 0; i < va.size(); ++i)
+    {
+        REQUIRE(va[i].x == vb[i].x);
+        REQUIRE(va[i].y == vb[i].y);
+        REQUIRE(vb[i].u > va[i].u);
+        REQUIRE(vb[i].v > va[i].v);
     }
 }

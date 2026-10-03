@@ -21,11 +21,36 @@ enum class BlendMode
     Multiply,
     Screen
 };
+enum class ColorProtection
+{
+    None,
+    PreserveTranslucent
+};
+enum class ColorComposition
+{
+    PremultipliedOver,
+    ProtectedStraight
+};
+struct MaskTag
+{
+};
+using MaskId = Id<MaskTag>;
 struct DrawCommand
 {
     TextureId texture;
     std::uint32_t first_index{0}, index_count{0};
     BlendMode blend{BlendMode::Over};
+    ColorProtection protection{ColorProtection::None};
+    MaskId mask{};
+};
+// Union of sampled alpha, cleared to zero for every application. Mask commands
+// use the same geometry buffers as colour commands. IDs are one-based indices
+// into RenderFrame::masks; zero means no mask. Current raster contract: five-bit
+// stored coverage, bilinear sampling, floor-power-of-two output dimensions, and
+// a two-output-pixel border for intersected source/draw region clipping.
+struct MaskDefinition
+{
+    std::uint32_t first_command{0}, command_count{0};
 };
 // Non-owning views; caller keeps storage alive until prepare returns.
 struct RenderFrame
@@ -33,5 +58,8 @@ struct RenderFrame
     std::span<const RenderVertex> vertices;
     std::span<const std::uint32_t> indices;
     std::span<const DrawCommand> commands;
+    ColorComposition composition{ColorComposition::PremultipliedOver};
+    std::span<const DrawCommand> mask_commands{};
+    std::span<const MaskDefinition> masks{};
 };
 } // namespace nekomote

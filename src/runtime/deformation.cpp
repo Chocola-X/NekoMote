@@ -8,10 +8,23 @@ namespace nekomote::runtime
 {
 namespace
 {
-std::array<float, 4> bernstein(float t) noexcept
+std::array<double, 4> bernstein(double t) noexcept
 {
-    const float s = 1 - t;
+    const double s = 1 - t;
     return {s * s * s, 3 * t * s * s, 3 * t * t * s, t * t * t};
+}
+std::array<double, 2> evaluate_precise(const Patch& patch, double u, double v) noexcept
+{
+    const auto bx = bernstein(u), by = bernstein(v);
+    std::array<double, 2> result{};
+    for (std::size_t y = 0; y < 4; ++y)
+        for (std::size_t x = 0; x < 4; ++x)
+        {
+            const double weight = bx[x] * by[y];
+            result[0] += static_cast<double>(patch[y * 4 + x].x) * weight;
+            result[1] += static_cast<double>(patch[y * 4 + x].y) * weight;
+        }
+    return result;
 }
 } // namespace
 Patch identity_patch() noexcept
@@ -24,18 +37,21 @@ Patch identity_patch() noexcept
 }
 Vec2 evaluate_patch(const Patch& patch, Vec2 uv) noexcept
 {
-    const auto bx = bernstein(uv.x), by = bernstein(uv.y);
-    Vec2 result;
-    for (std::size_t y = 0; y < 4; ++y)
-        for (std::size_t x = 0; x < 4; ++x)
-            result += patch[y * 4 + x] * (bx[x] * by[y]);
-    return result;
+    const auto result = evaluate_precise(patch, uv.x, uv.y);
+    return {static_cast<float>(result[0]), static_cast<float>(result[1])};
 }
 Vec2 deform_point(const Patch& patch, PatchDomain domain, Vec2 point) noexcept
 {
-    const auto p = evaluate_patch(patch, {(point.x + domain.origin.x) / domain.size.x,
-                                          (point.y + domain.origin.y) / domain.size.y});
-    return {p.x * domain.size.x - domain.origin.x, p.y * domain.size.y - domain.origin.y};
+    const auto p =
+        evaluate_precise(patch,
+                         (static_cast<double>(point.x) + static_cast<double>(domain.origin.x)) /
+                             static_cast<double>(domain.size.x),
+                         (static_cast<double>(point.y) + static_cast<double>(domain.origin.y)) /
+                             static_cast<double>(domain.size.y));
+    return {static_cast<float>(p[0] * static_cast<double>(domain.size.x) -
+                               static_cast<double>(domain.origin.x)),
+            static_cast<float>(p[1] * static_cast<double>(domain.size.y) -
+                               static_cast<double>(domain.origin.y))};
 }
 void add_patch_displacement(Patch& destination, const Patch& helper) noexcept
 {

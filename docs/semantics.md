@@ -5,14 +5,14 @@
 | 字段 | 状态 | 当前证据与下一步 |
 | --- | --- | --- |
 | source.*.texture.pixel | 结构已验证 | `#resource#N` 对应 resx.Resources[N]；需解码图片核对尺寸 |
-| motion.parameter / layer.parameterize | 结构已验证，映射候选 | 主模型 parameter 位于 motion，层索引必须保留 null；参考端固定变量采样 |
-| frame.content 缺失/null | 结构已验证，行为未验证 | 末尾 type=0 无 content，不能转换成默认可见帧 |
-| mesh.bp | 候选 | 主模型 32 个分量；4×4 双三次 Bézier 为待验证解释；不得称为已确认 |
+| motion.parameter / layer.parameterize | 固定姿态映射已验证 | 线性范围/端点、null 覆盖与组合控制见下文；其他离散化拒绝 |
+| frame.content 缺失/null | 固定姿态已验证 | type=0/无 content 不可见；type=2 hold、type=3 linear；type=1 未验证且选中时拒绝 |
+| mesh.bp | 固定姿态已验证，精度门槛未闭合 | 4×4 双三次 Bézier、域和组合见 30 组证据；不可推广到 cc/所有继承 |
 | mesh.cc | 未验证 | 保留任意数量有限分量，不能假定和 bp 一样为 32 |
 | meshCombine / meshSyncChildMask | 未验证 | 空白变形层与图像层嵌套；需单变量与组合输入实验 |
 | content.mask | 未验证 | 很多非零值对应内容属性存在位，不应直接当成 alpha 遮罩 ID |
 | inheritMask / transformOrder | 未验证 | 保留原值并记录参考实验；不能直接全部继承父矩阵 |
-| stencilCompositeMaskLayerList | 未验证 | 必须保留图层引用，P4 确认组合与清除 |
+| stencilCompositeMaskLayerList | type=5 单层 union 已验证 | motion 实例内引用、每次清空及裁切见 P4；嵌套/反向/blank 源仍拒绝 |
 | metadata.customPartsOrder | 未验证 | 主模型值为字符串数字，不是解析后的 motion 名称；禁止当作当前部件绘制顺序 |
 | variableList.frameList | 结构已验证 | 是标记帧列表；不能据此声称获得运行时默认值 |
 | timelineControl | 结构已验证，求值未验证 | 轨道/空帧/easing/diff/loop 单独保存；P5 对照 |
@@ -39,3 +39,7 @@
 初始“按图像尺寸固定 3/64 密度”的候选在 body_LR=30 与 azuki 初态失败。进一步用 213×213 fixture 区分近似密度：304×122 父域 D=20 输出 D=20；3/64 会输出 19。此规则已通过实际原生网格和拓扑对照，其他 priority 自动模式未验证。fixture 仅内存修改尺寸，原仓库只读。
 
 完整模型初始图像的 alpha 相同，但 RGB 失败；遮罩与半透明颜色保护尚未实现。不得将上述几何认证扩展成完整静态画面认证。
+
+## P4 静态合成子步骤（进行中）
+
+后续实现和证据见 [P4 记录](p4-static-composition.md)。type=5 单层组合、5-bit mask 覆盖、区域裁切与 icon.attr=1 透明颜色保护已核实。四型号初态和主模型完整身体通过原网页截图；30 组严格图像对照仍有 7 FAIL、10 个轮廓像素。GPU 渲染与几何精度问题已通过独立诊断隔离；未知精度边界与嵌套仍不能记为已验证。上面的初始图像失败是保留的历史记录。

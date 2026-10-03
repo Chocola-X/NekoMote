@@ -1,0 +1,95 @@
+{
+  "scope": "Observed original WebGL framebuffer storage on the recorded NVIDIA/ANGLE environment; no universal source-format claim.",
+  "model": "chocola-teenage",
+  "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)",
+  "sources": {
+    "psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+    "original_psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "framebuffer_bits_and_viewports": [
+    [
+      0,
+      [
+        8,
+        8,
+        8,
+        8
+      ],
+      [
+        0,
+        0,
+        800,
+        1080
+      ]
+    ],
+    [
+      1,
+      [
+        8,
+        8,
+        8,
+        8
+      ],
+      [
+        0,
+        0,
+        800,
+        1080
+      ]
+    ],
+    [
+      3,
+      [
+        5,
+        5,
+        5,
+        1
+      ],
+      [
+        0,
+        0,
+        512,
+        1024
+      ]
+    ]
+  ],
+  "green_readback_levels": [
+    0,
+    8,
+    16,
+    25,
+    33,
+    41,
+    49,
+    58,
+    66,
+    74,
+    82,
+    90,
+    99,
+    107,
+    115,
+    123,
+    132,
+    140,
+    148,
+    156,
+    165,
+    173,
+    181,
+    189,
+    197,
+    206,
+    214,
+    222,
+    230,
+    239,
+    247,
+    255
+  ],
+  "source_png_sha256": "b6bf222f880cd60e412efe748cfed4b79ec78f11f6405ffba1cd2a387428e4d6",
+  "native_format": "GL_RGB5_A1; green size queried and required to equal 5",
+  "mask_readback_diagnostic_only": true
+}

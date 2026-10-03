@@ -162,6 +162,23 @@ int run(const Options& o)
                                      native_indices.end());
             }
             ++primitive_index;
+            std::array<float, 4> frame_bounds{
+                std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+                -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()};
+            for (const auto index : native_indices)
+            {
+                const auto& vertex = frame.vertices[index];
+                const float x = vertex.x * metadata.at("scale").get<float>() +
+                                metadata.at("x").get<float>() +
+                                metadata.at("width").get<float>() / 2;
+                const float y = vertex.y * metadata.at("scale").get<float>() +
+                                metadata.at("y").get<float>() +
+                                metadata.at("height").get<float>() / 2;
+                frame_bounds[0] = std::min(frame_bounds[0], x);
+                frame_bounds[1] = std::min(frame_bounds[1], y);
+                frame_bounds[2] = std::max(frame_bounds[2], x);
+                frame_bounds[3] = std::max(frame_bounds[3], y);
+            }
             std::vector<bool> matched(native_indices.size());
             std::size_t unmatched = 0;
             double frame_maximum = 0;
@@ -275,6 +292,7 @@ int run(const Options& o)
                      {"label", p.label},
                      {"samples", samples},
                      {"frame_vertices", native_indices.size()},
+                     {"frame_bounds", frame_bounds},
                      {"missing_reference_triangles", missing_triangles},
                      {"unused_native_triangles", unused_triangles},
                      {"unmatched_reference_vertices", unmatched},
@@ -301,7 +319,7 @@ int run(const Options& o)
                     scene.node_count(), instance.primitives().size(), largest, missing.size());
     }
     else
-        std::printf("native nodes=%zu primitives=%zu complete composition pending P4\n",
+        std::printf("native nodes=%zu primitives=%zu static diagnostics; animation unavailable\n",
                     scene.node_count(), instance.primitives().size());
     if (!o.output.empty())
     {
