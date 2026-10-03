@@ -16,3 +16,5 @@ python3 tools/reference_capture/capture.py --reference-root ../NekoWebShow \
 隔离图集区域只用于基础 UV/alpha 对照；其过滤依据是诊断观测，不认证场景图或网格求值。trace 是验证数据，禁止作为正式原生运行时的顶点/动画数据来源。完整模型验证必须使用未过滤画面。
 
 P3 支持两项额外诊断：`--trace-math` 记录原引擎的 sqrt/sin/cos/atan2 调用；只在显式启用时替换 Math 入口，不能用于性能测量。`--disable-clamp` 在内存生成 PSB v4 测试 fixture，仅把 `/metadata/clampControl/*/enabled` 从 1 改成 0，记录每个字节、原/新 PSB hash。原文件保持只读，此类截图不是未经修改的原模型验收结果。默认命令仍使用原 PSB；最终控制规则必须通过原 PSB 的对照。
+
+--fixture-icon-size tex/0077=213,213 只在内存修改所选 atlas icon 的 float32 宽/高，保持地址表和未选载荷不变；记录修改字段、字节范围与 hash。仅用于网格尺寸边界实验，不能替代原 PSB 的正式验收。外部目录始终只读。

@@ -1,0 +1,692 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "coordinate_tolerance_px": 0.001,
+  "physics_disabled": true,
+  "cases": [
+    {
+      "model": "chocola-date-a",
+      "case": "arm1",
+      "variables": {
+        "arm_type": 1
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00014124122685095473,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "226fe63babcc8aee310d7173984d0a010fbd208d09280c162b43d9570ca0ad53"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "body-lr-ud",
+      "variables": {
+        "body_LR": -15,
+        "body_UD": 20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4189,
+      "indices": 20832,
+      "max_error_px": 0.0004967901793243319,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "8530b060c951ff90dd67604a498fb9de470e4e53b4bc1d39fcafae158a833abe"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "body-lr30",
+      "variables": {
+        "body_LR": 30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4189,
+      "indices": 20832,
+      "max_error_px": 0.0005033087921896558,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "e0ab5125af44522a9add58f62448c4a92f67f53f581c51e275bf4cc681d09b8a"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "combination",
+      "variables": {
+        "head_LR": 15,
+        "head_UD": -20,
+        "head_slant": 10,
+        "body_LR": -15,
+        "body_UD": 20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4224,
+      "indices": 20976,
+      "max_error_px": 0.0005033087921896558,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "612ec4b4f7a457eb27b9f44055be98bda97c0fd8e6fbbd1099e6856901f1ca3d"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "default",
+      "variables": {},
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00014124122685095473,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "226fe63babcc8aee310d7173984d0a010fbd208d09280c162b43d9570ca0ad53"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "eye-closed",
+      "variables": {
+        "face_eye_open": 10
+      },
+      "nodes": 431,
+      "primitives": 27,
+      "vertices": 660,
+      "indices": 2994,
+      "max_error_px": 0.00013461679662221055,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "90ac15c6da481afb34eac551b46253954ec3f3a0c4d20da9bbdcbb185eaa4b78"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "eye-look",
+      "variables": {
+        "face_eye_LR": 15,
+        "face_eye_UD": -20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00013802356102133865,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "ba3e910660e6505054957d6d21e1d94c180d4c482afaaa988e3ce6b950e9b4d1"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "eye-lr",
+      "variables": {
+        "face_eye_LR": 15
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00015589658365227775,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "86ded690060add908eee4d2b61225a80fe1edbbd96eb8aa8338f887d60f69f8d"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "eye-ud",
+      "variables": {
+        "face_eye_UD": -20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.000148773193359375,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "999d72b42efe8abdf42b876d69f0297c6a1af485e2105608b8eca86a7c453318"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-body-lr",
+      "variables": {
+        "head_LR": 15,
+        "body_LR": -15
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4224,
+      "indices": 20976,
+      "max_error_px": 0.0006372257390692475,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "36f94ac416484b2a1c9a826dce6969d8a6ef8aa0ee33e791d95b8b48e3411237"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-lr-30",
+      "variables": {
+        "head_LR": 30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4137,
+      "indices": 20550,
+      "max_error_px": 0.00036748030330787035,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "58f164078309ec8c26eeefcc765bde565e02352f6f465a6ae979fbef1769b8b1"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-lr-minus1",
+      "variables": {
+        "head_LR": -1
+      },
+      "nodes": 431,
+      "primitives": 34,
+      "vertices": 4281,
+      "indices": 21276,
+      "max_error_px": 0.0003712623614683972,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "90f909a0362e272b1b57026eb604385f253602ac903adaf44e7610b75f6b228a"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-lr-minus30",
+      "variables": {
+        "head_LR": -30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4137,
+      "indices": 20550,
+      "max_error_px": 0.0004920811613951751,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "772ebc764954fc253ee235ada46efc409c1962caec9db16c62f160e68ae1f76a"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-lr-ud",
+      "variables": {
+        "head_LR": 15,
+        "head_UD": -20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4224,
+      "indices": 20976,
+      "max_error_px": 0.0003712623614683972,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "aecf44c01a27c854fc9a14f3ac7c0b0abb73bbbb9938b2e9591c8ce64fdb62ab"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-lr15",
+      "variables": {
+        "head_LR": 15
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4137,
+      "indices": 20550,
+      "max_error_px": 0.0004920811613951751,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "ea07a975d7c1093b792551bddaf01d33beeb496d5abada0943ff14873a9e1e78"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-slant30",
+      "variables": {
+        "head_slant": 30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 3279,
+      "indices": 16200,
+      "max_error_px": 0.0003085899111352033,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "2b72060b49f00e0d1a16310bf4c2f9ee309b1ae22f6d60cc759b4a08609e1ea4"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-ud30",
+      "variables": {
+        "head_UD": 30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 4240,
+      "indices": 21072,
+      "max_error_px": 0.0004283346205938171,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "c093f53cb6e001d1ac02c34d668bc09fd9eb282534872fc4dc970ebdaa58816f"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "mouth-open",
+      "variables": {
+        "face_talk": 3
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1660,
+      "indices": 8046,
+      "max_error_px": 0.00014124122685095473,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "d73e463211c5b612bb4b976200180c38d1780a150948138bbd5273292c6f5a18"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move10-10",
+      "variables": {
+        "move_LR": 10,
+        "move_UD": 10
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.000148356906758347,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "681a39d46d8cf43fdf37524df9a3962a586517a59243d945cc6ecf5baf1abf66"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move15-15",
+      "variables": {
+        "move_LR": 15,
+        "move_UD": 15
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00013499124358536146,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "d002d4aa00a636688c5f9c28fee033c9a184dffc69150329fa31a9500d0656e0"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move15-20",
+      "variables": {
+        "move_LR": 15,
+        "move_UD": -20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00014955364825372817,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "9a8a023bd58eaf962de21c122d10c16a95ff9e95b94c121ce2546a6f0007b46b"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move30-15",
+      "variables": {
+        "move_LR": 30,
+        "move_UD": 15
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00013738538330511577,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "95be898e340ede6832ca0202e933f4216cd9ca937147ad38a2c18a5e979bc1dd"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move30-30",
+      "variables": {
+        "move_LR": 30,
+        "move_UD": 30
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.0001528856233776226,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "44e48db81f4dc701e7594ba2cb59f10972a7a612b1c06f14a417efe7e2303a97"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "move5-20",
+      "variables": {
+        "move_LR": 5,
+        "move_UD": 20
+      },
+      "nodes": 431,
+      "primitives": 33,
+      "vertices": 1521,
+      "indices": 7332,
+      "max_error_px": 0.00015728399755926745,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "fb096b011484391443d59d1e286ebf4f3bf80239c9a40296ce70b428a7649430"
+    },
+    {
+      "model": "vanilla-date-a",
+      "case": "default",
+      "variables": {},
+      "nodes": 445,
+      "primitives": 34,
+      "vertices": 1754,
+      "indices": 8472,
+      "max_error_px": 0.000195407844159938,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+        "original_psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "365c8bce7f97f746a5956fb8a961a7689b1676ba58f5caac44558f959cf8dadc"
+    },
+    {
+      "model": "vanilla-date-a",
+      "case": "combination",
+      "variables": {
+        "head_LR": 13,
+        "head_UD": -17,
+        "head_slant": 11,
+        "body_LR": -9,
+        "body_UD": 19
+      },
+      "nodes": 445,
+      "primitives": 34,
+      "vertices": 4393,
+      "indices": 21852,
+      "max_error_px": 0.000552117306560688,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+        "original_psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "d883d6eb658b49088d05caf9b89a5f9616cbfaad1b5a28542c467ec32ae314f1"
+    },
+    {
+      "model": "chocola-teenage",
+      "case": "default",
+      "variables": {},
+      "nodes": 455,
+      "primitives": 34,
+      "vertices": 2309,
+      "indices": 11346,
+      "max_error_px": 0.00018754193959475486,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+        "original_psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "21ac659947c0e2a2e07cdb7a85d288a85ca8b912f04f05c81c0527e815b23f35"
+    },
+    {
+      "model": "chocola-teenage",
+      "case": "combination",
+      "variables": {
+        "head_LR": 13,
+        "head_UD": -17,
+        "head_slant": 11,
+        "body_LR": -9,
+        "body_UD": 19
+      },
+      "nodes": 455,
+      "primitives": 34,
+      "vertices": 4470,
+      "indices": 22248,
+      "max_error_px": 0.0003712623614683972,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+        "original_psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "3b2dd6902dbbbdde04630975fc8e212fdfacc509b4e7836a7fa16b63a27e6b3c"
+    },
+    {
+      "model": "azuki-maid-a",
+      "case": "default",
+      "variables": {},
+      "nodes": 482,
+      "primitives": 37,
+      "vertices": 3161,
+      "indices": 15636,
+      "max_error_px": 0.00023144243335140248,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "5116ef0af19666626089ce3e086caa9658be28e6afa344a43146740f030a93e7",
+        "original_psb": "5116ef0af19666626089ce3e086caa9658be28e6afa344a43146740f030a93e7",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "be7273d0dce8adb986509ed1be05d491d390e1a323ae6f6e9c41dbb6b2138c71"
+    },
+    {
+      "model": "azuki-maid-a",
+      "case": "combination",
+      "variables": {
+        "head_LR": 13,
+        "head_UD": -17,
+        "head_slant": 11,
+        "body_LR": -9,
+        "body_UD": 19
+      },
+      "nodes": 482,
+      "primitives": 37,
+      "vertices": 4829,
+      "indices": 24054,
+      "max_error_px": 0.0003112194527339346,
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "reference_sources": {
+        "psb": "5116ef0af19666626089ce3e086caa9658be28e6afa344a43146740f030a93e7",
+        "original_psb": "5116ef0af19666626089ce3e086caa9658be28e6afa344a43146740f030a93e7",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "trace_sha256": "b920816b7da9ff6d2b9b9b123b47db76d054ceead8979fd2725281e5a3415cbc"
+    }
+  ]
+}

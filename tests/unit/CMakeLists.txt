@@ -13,7 +13,8 @@ add_executable(nekomote_unit_tests
     test_import.cpp
     test_asset_validation.cpp
     test_image.cpp
-    test_deformation.cpp)
+    test_deformation.cpp
+    test_geometry_scene.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE

@@ -1,15 +1,14 @@
 """Diagnostic PSB fixture mutation, never a runtime importer.
 
 Only walks the PSB compact-array/dictionary address tables to change explicitly
-selected control flags. Layout facts were checked against psbfile (MIT,
+selected control flags or atlas icon dimensions. Layout facts were checked against psbfile (MIT,
 number201724) and FreeMote's public PSB definitions; this implementation is
-independent. The complete source model and all geometry/resource bytes remain
-unchanged. Capture metadata records every changed byte and both hashes.
+independent. Unselected payloads and all address tables remain unchanged. Capture metadata records every changed byte and both hashes.
 """
 import struct
 
 
-def disable_clamp(data):
+def make_fixture(data, *, disable_clamp=False, icon_sizes=None):
     if data[:4] != b'PSB\0' or struct.unpack_from('<HH', data, 4) != (4, 0):
         raise ValueError('diagnostic fixture requires an unencrypted PSB v4')
     result = bytearray(data)
@@ -56,18 +55,34 @@ def disable_clamp(data):
         return {names[key]: begin+offset for key, offset in zip(keys, offsets)}
 
     root = dictionary(struct.unpack_from('<I', data, 36)[0])
-    controls = dictionary(root['metadata'])['clampControl']
-    if data[controls] != 0x20:
-        raise ValueError('expected PSB clamp collection')
-    offsets, begin = table(controls+1)
     edits = []
-    for index, offset in enumerate(offsets):
-        pos = dictionary(begin+offset)['enabled']
-        if data[pos:pos+2] != b'\x05\x01':
-            raise ValueError('fixture expects enabled=1 encoded in one byte')
-        result[pos+1] = 0
-        edits.append(dict(path=f'/metadata/clampControl/{index}/enabled',
-                          offset=pos+1, before=1, after=0))
-    if sum(a != b for a, b in zip(result, data)) != len(edits):
+    if disable_clamp:
+        controls = dictionary(root['metadata'])['clampControl']
+        if data[controls] != 0x20:
+            raise ValueError('expected PSB clamp collection')
+        offsets, begin = table(controls+1)
+        for index, offset in enumerate(offsets):
+            pos = dictionary(begin+offset)['enabled']
+            if data[pos:pos+2] != b'\x05\x01':
+                raise ValueError('fixture expects enabled=1 encoded in one byte')
+            result[pos+1] = 0
+            edits.append(dict(path=f'/metadata/clampControl/{index}/enabled',
+                              offset=pos+1, before=1, after=0))
+    for qualified, size in (icon_sizes or {}).items():
+        texture, icon = qualified.split('/')
+        icons = dictionary(dictionary(dictionary(root['source'])[texture])['icon'])
+        fields = dictionary(icons[icon])
+        for name, value in zip(['width', 'height'], size):
+            if not value > 0:
+                raise ValueError('fixture icon size must be positive')
+            pos = fields[name]
+            if data[pos] != 0x1e:
+                raise ValueError('fixture icon size must be float32')
+            before = struct.unpack_from('<f', data, pos+1)[0]
+            struct.pack_into('<f', result, pos+1, value)
+            edits.append(dict(path=f'/source/{texture}/icon/{icon}/{name}',
+                              offset=pos+1, before=before, after=value, bytes=4))
+    allowed = {edit['offset']+i for edit in edits for i in range(edit.get('bytes', 1))}
+    if any(a != b and pos not in allowed for pos, (a, b) in enumerate(zip(result, data))):
         raise ValueError('unexpected diagnostic fixture difference')
     return bytes(result), edits

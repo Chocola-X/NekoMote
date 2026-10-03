@@ -1,6 +1,7 @@
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
+#include <nekomote/runtime/geometry_scene.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -25,7 +26,8 @@ struct Options
     std::string icon;
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
-    bool hidden{false};
+    bool hidden{false}, geometry{false};
+    std::vector<std::pair<std::string, float>> variables;
 };
 float parse_number(const std::string& value)
 {
@@ -70,6 +72,13 @@ Options parse(int argc, char** argv)
             o.scale = parse_number(next());
         else if (flag == "--opacity")
             o.opacity = parse_number(next());
+        else if (flag == "--geometry-diagnostic")
+            o.geometry = true;
+        else if (flag == "--variable")
+        {
+            const auto name = next();
+            o.variables.emplace_back(name, parse_number(next()));
+        }
         else if (flag == "--hidden")
             o.hidden = true;
         else
@@ -78,7 +87,12 @@ Options parse(int argc, char** argv)
     if (o.width <= 0 || o.height <= 0 || o.width > 16384 || o.height > 16384 || o.frames < 0 ||
         o.benchmark < 0 || o.scale <= 0 || o.opacity < 0 || o.opacity > 1)
         throw std::runtime_error("invalid output/diagnostic settings");
-    if (!o.asset.empty() && o.icon.empty())
+    if (o.geometry && (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
+        throw std::runtime_error(
+            "geometry diagnostic requires an asset, no icon filter and opacity=1");
+    if (!o.geometry && !o.variables.empty())
+        throw std::runtime_error("--variable requires --geometry-diagnostic");
+    if (!o.geometry && !o.asset.empty() && o.icon.empty())
         throw std::runtime_error(
             "P2 requires --icon texture/icon; complete model evaluation is not implemented");
     if (o.asset.empty() && !o.icon.empty())
@@ -132,7 +146,48 @@ int run(const Options& o)
     const std::array<std::uint32_t, 6> indices{0, 1, 2, 0, 2, 3};
     const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
     render_gl::View view{o.x, o.y, o.scale, {0, 0, 0, 0}};
-    if (!o.asset.empty())
+    std::unique_ptr<const runtime::GeometryScene> geometry_scene;
+    std::unique_ptr<runtime::GeometryInstance> geometry_instance;
+    if (o.geometry)
+    {
+        auto loaded = asset_io::load_asset(o.asset);
+        if (!loaded.ok)
+            throw std::runtime_error(loaded.errors.front());
+        auto compiled = runtime::compile_geometry_scene(loaded.asset);
+        if (!compiled.scene)
+            throw std::runtime_error(compiled.errors.front());
+        geometry_scene = std::move(compiled.scene);
+        geometry_instance = std::make_unique<runtime::GeometryInstance>(*geometry_scene);
+        const auto checked = [&](runtime::GeometryStatus status)
+        {
+            if (!status)
+                throw std::runtime_error("geometry error " +
+                                         std::to_string(static_cast<int>(status.error)) + ": " +
+                                         std::string(geometry_scene->node_label(status.node)));
+        };
+        for (const auto& [name, value] : o.variables)
+            checked(geometry_instance->set_parameter(geometry_scene->find_variable(name), value));
+        checked(geometry_instance->evaluate());
+        checked(geometry_instance->build_frame());
+        const auto frame = geometry_instance->frame();
+        renderer.reserve(frame.vertices.size(), frame.indices.size(), frame.commands.size(),
+                         geometry_scene->textures().size());
+        for (const auto& texture : geometry_scene->textures())
+        {
+            auto decoded = asset_io::load_png(o.asset.parent_path() / texture.path);
+            if (!decoded.ok)
+                throw std::runtime_error(decoded.error);
+            if (decoded.image.width != texture.width || decoded.image.height != texture.height)
+                throw std::runtime_error("PNG dimensions disagree with compiled scene");
+            renderer.upload_texture(texture.id, decoded.image);
+        }
+        renderer.prepare(frame);
+        std::printf("GEOMETRY DIAGNOSTIC: %zu sprites; masks/complete composition unavailable\n",
+                    geometry_instance->primitives().size());
+        for (const auto& diagnostic : geometry_scene->diagnostics())
+            std::printf("%s\n", diagnostic.c_str());
+    }
+    else if (!o.asset.empty())
     {
         auto loaded = asset_io::load_asset(o.asset);
         if (!loaded.ok)

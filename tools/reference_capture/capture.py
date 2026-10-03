@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import threading
 import zipfile
-from psb_fixture import disable_clamp
+from psb_fixture import make_fixture
 
 
 def main():
@@ -27,6 +27,8 @@ def main():
     parser.add_argument('--variables', type=json.loads, default={})
     parser.add_argument('--isolate-icon', help='diagnostic filtering of original driver draw calls')
     parser.add_argument('--trace', action='store_true')
+    parser.add_argument('--fixture-icon-size', action='append', default=[],
+                        help='diagnostic atlas/icon=width,height crop dimensions')
     parser.add_argument('--trace-math', action='store_true')
     parser.add_argument('--disable-clamp', action='store_true',
                         help='diagnostic PSB fixture; original files are never modified')
@@ -42,8 +44,14 @@ def main():
         psb = z.read(names[0])
     original_psb_hash = hashlib.sha256(psb).hexdigest()
     edits = []
-    if args.disable_clamp:
-        psb, edits = disable_clamp(psb)
+    sizes = {}
+    for item in args.fixture_icon_size:
+        name, dimensions = item.split('=')
+        sizes[name] = [float(v) for v in dimensions.split(',')]
+        if len(sizes[name]) != 2:
+            raise ValueError('fixture icon size requires width,height')
+    if args.disable_clamp or sizes:
+        psb, edits = make_fixture(psb, disable_clamp=args.disable_clamp, icon_sizes=sizes)
     here = pathlib.Path(__file__).resolve().parent
     html = (here / 'reference.html').read_text()
     if args.trace_math:

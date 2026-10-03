@@ -14,6 +14,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--reference-root', type=pathlib.Path, required=True)
     parser.add_argument('--importer', type=pathlib.Path, required=True)
+    parser.add_argument('--native-evaluator', type=pathlib.Path,
+                        help='optional compiled nekomote_pose; verifies actual vertices and topology')
     parser.add_argument('--browser', type=pathlib.Path, required=True)
     parser.add_argument('--output', type=pathlib.Path, required=True,
                         help='new directory; never overwrites existing evidence')
@@ -50,7 +52,21 @@ def main():
         passed = (not report['missing_primitives'] and report['max_error'] is not None and
                   report['max_error'] <= baseline['coordinate_tolerance_px'] and
                   len(report['comparisons']) == case['primitives'])
-        reports.append(dict(model=model, case=name, passed=passed, report=report))
+        native = None
+        if args.native_evaluator:
+            native_path = args.output / (model+'-'+name+'-native.json')
+            run(args.native_evaluator, '--asset', asset, '--variables', json.dumps(case['variables']),
+                '--sample-trace', str(stem)+'.trace.json', '--output', native_path)
+            native = json.loads(native_path.read_text())
+            passed = passed and (
+                native['frame_error'] == 0 and not native['missing_primitives'] and
+                native['primitives'] == case['primitives'] and
+                native['frame_max_error_px'] <= baseline['coordinate_tolerance_px'] and
+                native['unmatched_reference_vertices'] == 0 and
+                native['unused_native_vertices'] == 0 and
+                native['missing_reference_triangles'] == 0 and
+                native['unused_native_triangles'] == 0)
+        reports.append(dict(model=model, case=name, passed=passed, report=report, native=native))
         (args.output / 'report.json').write_text(json.dumps(reports, ensure_ascii=False, indent=2)+'\n')
         print(model, name, 'PASS' if passed else 'FAIL', report['max_error'], flush=True)
         if not passed:

@@ -46,6 +46,7 @@ add_subdirectory(src/asset_io)
 
 if(NEKOMOTE_BUILD_TOOLS)
     add_subdirectory(tools/import_emote)
+    add_subdirectory(tools/pose_probe)
 endif()
 
 if(NEKOMOTE_BUILD_PREVIEW)

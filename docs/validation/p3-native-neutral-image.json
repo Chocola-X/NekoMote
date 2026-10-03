@@ -1,0 +1,43 @@
+{
+  "reference_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+  "native_sha256": "550e0b7324af5a3d70dacde3205007d1e8d6b125baa1d1aa327bae58301498f8",
+  "size": [
+    800,
+    1080
+  ],
+  "raw_max_rgba": [
+    255,
+    255,
+    255,
+    0
+  ],
+  "alpha_max_error": 0,
+  "composed_max_rgb_black_white": [
+    [
+      59,
+      144,
+      140
+    ],
+    [
+      59,
+      144,
+      140
+    ]
+  ],
+  "tolerance": 2,
+  "pixels_over_tolerance": 10485,
+  "reference_bbox": [
+    0,
+    196,
+    800,
+    1080
+  ],
+  "native_bbox": [
+    0,
+    196,
+    800,
+    1080
+  ],
+  "passed": false,
+  "expected_status": "FAIL: masks and protected colour composition pending P4"
+}

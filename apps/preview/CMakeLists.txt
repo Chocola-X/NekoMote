@@ -5,6 +5,7 @@ add_executable(nekomote_preview main.cpp)
 target_link_libraries(nekomote_preview
     PRIVATE
         nekomote::asset_io
+        nekomote::runtime
         nekomote::render_gl
         glfw
         OpenGL::GL)

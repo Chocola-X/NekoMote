@@ -1,0 +1,269 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <nekomote/runtime/deformation.hpp>
+#include <nekomote/runtime/geometry_scene.hpp>
+
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <new>
+
+namespace
+{
+thread_local bool measure_allocations = false;
+thread_local std::size_t measured_allocations = 0;
+} // namespace
+// Project-owned, ordinary C++ heap allocations only; warmed math/framework and
+// diagnostics are excluded. Geometry storage has no over-aligned element types.
+void* operator new(std::size_t size)
+{
+    if (measure_allocations)
+        ++measured_allocations;
+    if (void* p = std::malloc(size ? size : 1))
+        return p;
+    throw std::bad_alloc();
+}
+void* operator new[](std::size_t size)
+{
+    return ::operator new(size);
+}
+void operator delete(void* p) noexcept
+{
+    std::free(p);
+}
+void operator delete[](void* p) noexcept
+{
+    std::free(p);
+}
+void operator delete(void* p, std::size_t) noexcept
+{
+    std::free(p);
+}
+void operator delete[](void* p, std::size_t) noexcept
+{
+    std::free(p);
+}
+
+namespace
+{
+using namespace nekomote;
+using namespace nekomote::model;
+template <typename T>
+Field<T> field(T value)
+{
+    return {FieldState::Value, std::move(value)};
+}
+Layer layer(std::string label, int type, FrameContent content)
+{
+    Layer result;
+    result.label = std::move(label);
+    result.type = type;
+    result.inherit_mask = 0x20007fc;
+    result.mesh_division = 20;
+    result.frame_list = {{0, 2, field(std::move(content))}};
+    return result;
+}
+FrameContent sprite()
+{
+    FrameContent content;
+    content.src = field(std::string{"atlas"});
+    content.icon = field(std::string{"a"});
+    return content;
+}
+ModelAsset rig()
+{
+    ModelAsset result;
+    result.base_group = "rig";
+    result.base_motion = "main";
+    result.textures.push_back({"atlas", "textures/0.png", "RGBA8", 64, 32});
+    result.icons.emplace("atlas/a", IconRect{"atlas", 0, 0, 8, 4, 3, 1});
+    FrameContent reference;
+    reference.src = field(std::string{"rig"});
+    reference.icon = field(std::string{"A"});
+    reference.coord = field(std::array<float, 3>{10, 20, 4});
+    auto root = layer("reference", 3, reference);
+    root.parameterize = field(0);
+    root.parameter = {{"pick", 0, 1, 1, 0, true}};
+    reference.icon = field(std::string{"B"});
+    root.frame_list.push_back({1, 2, field(reference)});
+    Part main;
+    main.group = "rig";
+    main.name = "main";
+    main.layers.push_back(std::move(root));
+    Part a, b;
+    a.group = b.group = "rig";
+    a.name = "A";
+    b.name = "B";
+    auto content = sprite();
+    content.coord = field(std::array<float, 3>{2, 3, 2});
+    a.layers.push_back(layer("sprite", 0, content));
+    content.coord = field(std::array<float, 3>{-5, -6, 6});
+    b.layers.push_back(layer("sprite", 0, content));
+    result.parts = {std::move(main), std::move(a), std::move(b)};
+    return result;
+}
+void near(Vec2 actual, Vec2 expected)
+{
+    REQUIRE_THAT(actual.x, Catch::Matchers::WithinAbs(expected.x, 0.001f));
+    REQUIRE_THAT(actual.y, Catch::Matchers::WithinAbs(expected.y, 0.001f));
+}
+} // namespace
+
+TEST_CASE("Reusable motion branches switch without sharing instance state", "[runtime][scene]")
+{
+    auto input = rig();
+    auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    input = {}; // the compiled scene owns every binding/key/resource it needs
+    const auto& scene = *compiled.scene;
+    runtime::GeometryInstance first(scene), second(scene);
+    REQUIRE(first.evaluate());
+    REQUIRE(second.evaluate());
+    REQUIRE(first.primitives().size() == 1);
+    const auto id = first.primitives()[0].node;
+    near(first.sample_atlas_point(id, {0, 0}), {9, 22});
+    REQUIRE(first.primitives()[0].depth == 6.0f);
+    const auto pick = scene.find_variable("pick");
+    REQUIRE(first.set_parameter(pick, 0.5f));
+    REQUIRE(first.evaluate());
+    near(first.sample_atlas_point(first.primitives()[0].node, {0, 0}), {9, 22});
+    REQUIRE(first.set_parameter(pick, 1));
+    REQUIRE(first.evaluate());
+    REQUIRE(first.primitives().size() == 1);
+    near(first.sample_atlas_point(first.primitives()[0].node, {0, 0}), {2, 13});
+    REQUIRE(first.primitives()[0].depth == 10.0f);
+    near(second.sample_atlas_point(second.primitives()[0].node, {0, 0}), {9, 22});
+    REQUIRE(first.build_frame());
+    REQUIRE(first.frame().commands.size() == 1);
+    REQUIRE(first.frame().vertices.size() == 4);
+    near({first.frame().vertices[0].x, first.frame().vertices[0].y}, {2, 13});
+    REQUIRE(first.set_parameter({}, 0).error == runtime::GeometryError::InvalidParameter);
+    REQUIRE(first.set_parameter(pick, std::numeric_limits<float>::quiet_NaN()).error ==
+            runtime::GeometryError::NonfiniteParameter);
+}
+TEST_CASE("Same-domain helpers combine before the parent's rotation", "[runtime][scene]")
+{
+    auto input = rig();
+    input.parts.resize(1);
+    auto content = sprite();
+    auto child = layer("sprite", 0, content);
+    FrameContent blank;
+    blank.src = field(std::string{"blank"});
+    blank.icon = field(std::string{"16:16:8:8"});
+    MeshData mesh;
+    auto patch = runtime::identity_patch();
+    std::array<float, 32> raw{};
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        raw[i * 2] = patch[i].x;
+        raw[i * 2 + 1] = patch[i].y + 0.5f;
+    }
+    mesh.bp = field(raw);
+    blank.mesh = field(mesh);
+    auto helper = layer("helper", 0, blank);
+    helper.mesh_combine = 1;
+    helper.children.push_back(child);
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        raw[i * 2] = patch[i].x + 0.25f;
+        raw[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(raw);
+    blank.mesh = field(mesh);
+    blank.angle = field(90.0f);
+    blank.coord = field(std::array<float, 3>{10, 20, 0});
+    auto root = layer("base patch", 0, blank);
+    root.children.push_back(helper);
+    input.parts[0].layers = {root};
+    auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.primitives().size() == 1);
+    near(instance.sample_atlas_point(instance.primitives()[0].node, {0, 0}), {3, 21});
+    REQUIRE(instance.build_frame());
+    REQUIRE(instance.frame().vertices.size() == 15 * 9); // D=20, rectangle aspect=2
+    input.parts[0].layers[0].children[0].children[0].mesh_division = 0;
+    auto automatic = runtime::compile_geometry_scene(input);
+    REQUIRE(automatic.scene);
+    runtime::GeometryInstance unsupported(*automatic.scene);
+    REQUIRE(unsupported.evaluate());
+    REQUIRE(unsupported.build_frame().error == runtime::GeometryError::UnsupportedTessellation);
+    REQUIRE(unsupported.frame().commands.empty());
+}
+TEST_CASE("Cyclic motion graphs fail during compilation with a source path", "[runtime][scene]")
+{
+    auto input = rig();
+    input.parts[1].layers[0].frame_list[0].content.data.src = field(std::string{"rig"});
+    input.parts[1].layers[0].frame_list[0].content.data.icon = field(std::string{"main"});
+    const auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE_FALSE(compiled.scene);
+    REQUIRE(compiled.errors.size() == 1);
+    REQUIRE(compiled.errors[0].find("rig/main/reference") != std::string::npos);
+}
+
+TEST_CASE("Warmed geometry evaluation and frame building allocate no project heap",
+          "[runtime][scene]")
+{
+    auto compiled = runtime::compile_geometry_scene(rig());
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    const auto parameter = compiled.scene->find_variable("pick");
+    for (int i = 0; i < 120; ++i)
+    {
+        REQUIRE(instance.set_parameter(parameter, static_cast<float>(i % 2)));
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+    }
+    bool success = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(instance.set_parameter(parameter, static_cast<float>(i % 2)));
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(instance.build_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Automatic priority-two meshes match original size boundary captures", "[runtime][scene]")
+{
+    // Captured PSB grids at both sides of the 64 and 128 pixel boundaries.
+    for (const auto [size, points] : {std::pair{63, 20}, std::pair{64, 25}, std::pair{127, 56},
+                                      std::pair{128, 64}, std::pair{213, 144}})
+    {
+        auto input = rig();
+        input.parts.resize(1);
+        input.textures[0].width = input.textures[0].height = 256;
+        auto& rect = input.icons.at("atlas/a");
+        rect.width = rect.height = static_cast<float>(size);
+        FrameContent content;
+        content.src = field(std::string{"blank"});
+        content.icon = field(std::string{"304:122:152:61"});
+        MeshData mesh;
+        std::array<float, 32> raw{};
+        const auto patch = runtime::identity_patch();
+        for (std::size_t i = 0; i < patch.size(); ++i)
+        {
+            raw[i * 2] = patch[i].x;
+            raw[i * 2 + 1] = patch[i].y;
+        }
+        mesh.bp = field(raw);
+        content.mesh = field(mesh);
+        auto node = layer("automatic", 0, sprite());
+        node.mesh_division = 0;
+        node.obj_tri_priority = 2;
+        auto parent = layer("parent domain", 0, content);
+        parent.children.push_back(node);
+        input.parts[0].layers = {parent};
+        auto compiled = runtime::compile_geometry_scene(input);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().vertices.size() == static_cast<std::size_t>(points));
+    }
+}
