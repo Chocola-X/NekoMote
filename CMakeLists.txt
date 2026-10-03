@@ -41,6 +41,7 @@ endif()
 include(cmake/Dependencies.cmake)
 
 add_subdirectory(src/model)
+add_subdirectory(src/runtime)
 add_subdirectory(src/asset_io)
 
 if(NEKOMOTE_BUILD_TOOLS)

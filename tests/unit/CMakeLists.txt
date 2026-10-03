@@ -12,11 +12,13 @@ add_executable(nekomote_unit_tests
     test_units.cpp
     test_import.cpp
     test_asset_validation.cpp
-    test_image.cpp)
+    test_image.cpp
+    test_deformation.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
         nekomote::asset_io
+        nekomote::runtime
         Catch2::Catch2WithMain
         nlohmann_json::nlohmann_json)
 

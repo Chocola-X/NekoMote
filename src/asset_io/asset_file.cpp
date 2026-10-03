@@ -312,6 +312,24 @@ inline void from_json(const Json& j, VariableDef& v)
     v.frames = checked_value<decltype(v.frames)>(j.at("frames"));
 }
 
+inline void to_json(Json& j, const PairedClamp& v)
+{
+    j = Json{{"label", v.label},           {"variable_x", v.variable_x},
+             {"variable_y", v.variable_y}, {"range_begin", v.range_begin},
+             {"range_end", v.range_end},   {"type", v.type},
+             {"enabled", v.enabled}};
+}
+inline void from_json(const Json& j, PairedClamp& v)
+{
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.variable_x = checked_value<decltype(v.variable_x)>(j.at("variable_x"));
+    v.variable_y = checked_value<decltype(v.variable_y)>(j.at("variable_y"));
+    v.range_begin = checked_value<decltype(v.range_begin)>(j.at("range_begin"));
+    v.range_end = checked_value<decltype(v.range_end)>(j.at("range_end"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.enabled = checked_value<decltype(v.enabled)>(j.at("enabled"));
+}
+
 inline void to_json(Json& j, const VariableKey& v)
 {
     j = Json{{"time", v.time}, {"type", v.type}, {"value", v.value}, {"easing", v.easing}};
@@ -365,6 +383,7 @@ inline void to_json(Json& j, const ModelAsset& v)
              {"textures", v.textures},
              {"parts", v.parts},
              {"timelines", v.timelines},
+             {"paired_clamps", v.paired_clamps},
              {"parts_order", v.parts_order},
              {"total_layers", v.total_layers},
              {"total_frames", v.total_frames},
@@ -387,6 +406,7 @@ inline void from_json(const Json& j, ModelAsset& v)
     v.textures = checked_value<decltype(v.textures)>(j.at("textures"));
     v.parts = checked_value<decltype(v.parts)>(j.at("parts"));
     v.timelines = checked_value<decltype(v.timelines)>(j.at("timelines"));
+    v.paired_clamps = checked_value<decltype(v.paired_clamps)>(j.at("paired_clamps"));
     v.parts_order = checked_value<decltype(v.parts_order)>(j.at("parts_order"));
     v.total_layers = checked_value<decltype(v.total_layers)>(j.at("total_layers"));
     v.total_frames = checked_value<decltype(v.total_frames)>(j.at("total_frames"));

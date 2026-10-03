@@ -165,3 +165,45 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
     REQUIRE_FALSE(loaded.ok);
     REQUIRE_FALSE(loaded.errors.empty());
 }
+TEST_CASE("Paired clamp data survives compilation and rejects invalid ranges", "[asset][import]")
+{
+    Workspace w;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    auto j = read(root / "minimal.json");
+    j["metadata"]["clampControl"] = Json::array({{{"label", "position"},
+                                                  {"var_lr", "move_LR"},
+                                                  {"var_ud", "move_UD"},
+                                                  {"min", -30},
+                                                  {"max", 30},
+                                                  {"enabled", 1},
+                                                  {"type", 0}}});
+    SECTION("valid")
+    {
+        const auto result = import_modified(w, j);
+        REQUIRE(result.ok);
+        REQUIRE(result.asset.paired_clamps.size() == 1);
+        const auto bundle = w.path / "bundle";
+        REQUIRE(nekomote::asset_io::write_bundle(result, root, bundle).empty());
+        const auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+        REQUIRE(loaded.ok);
+        const auto& clamp = loaded.asset.paired_clamps[0];
+        REQUIRE(clamp.variable_x == "move_LR");
+        REQUIRE(clamp.variable_y == "move_UD");
+        REQUIRE(clamp.range_begin == -30.0f);
+        REQUIRE(clamp.range_end == 30.0f);
+        REQUIRE(clamp.enabled);
+        REQUIRE(clamp.type == 0);
+    }
+    SECTION("invalid range")
+    {
+        j["metadata"]["clampControl"][0]["max"] = -30;
+        const auto result = import_modified(w, j);
+        REQUIRE_FALSE(result.ok);
+        REQUIRE(result.report.errors[0].find("/metadata/clampControl/0") != std::string::npos);
+    }
+    SECTION("invalid enabled flag")
+    {
+        j["metadata"]["clampControl"][0]["enabled"] = 2;
+        REQUIRE_FALSE(import_modified(w, j).ok);
+    }
+}

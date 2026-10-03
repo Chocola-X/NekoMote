@@ -63,6 +63,11 @@ void validate_asset(const model::ModelAsset& a)
         require(motions.insert(p.group + "/" + p.name).second, "duplicate motion");
     if (!a.base_group.empty())
         require(motions.contains(a.base_group + "/" + a.base_motion), "base motion");
+    for (const auto& c : a.paired_clamps)
+        require(!c.variable_x.empty() && !c.variable_y.empty() && c.variable_x != c.variable_y &&
+                    std::isfinite(c.range_begin) && std::isfinite(c.range_end) &&
+                    c.range_begin < c.range_end,
+                "paired clamp " + c.label);
     int layers = 0, frames = 0, bp = 0, cc = 0;
     auto walk = [&](auto&& self, const model::Layer& l, const model::Part& part, int depth) -> void
     {

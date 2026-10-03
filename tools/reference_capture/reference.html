@@ -6,6 +6,17 @@
 <script>
 window.ready = false;
 window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
+window.mathTrace=[];
+window.enableMathTrace=false;
+if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','atan2']) {
+    const fn=Math[name];
+    Math[name]=function(...args) {
+        const result=fn(...args);
+        if(window.traceMath && window.mathTrace.length<2000)
+            window.mathTrace.push({name,args,result,stack:new Error().stack});
+        return result;
+    };
+}
 var Module = {onRuntimeInitialized() { window.ready = true; }};
 </script>
 <script src="/trace.js"></script>
@@ -32,6 +43,7 @@ window.capture = async function(options) {
         const label=EmotePlayer_GetVariableLabelAt(id,i);
         variables[label]=EmotePlayer_GetVariable(id,label);
     }
+    window.traceMath=options.traceMath;
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
     EmoteDevice_SetMaskMode(1);
@@ -51,13 +63,17 @@ window.capture = async function(options) {
     window.isolateRect=options.isolateRect;
     device.drawAnimation(0);
     window.traceEnabled=false;
+    window.traceMath=false;
     const pixels=new Uint8Array(canvas.width*canvas.height*4);
     gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
     let visiblePixels=0;
     for(let p=3;p<pixels.length;p+=4) if(pixels[p]) visiblePixels++;
     if(!visiblePixels) throw new Error("reference produced an empty image");
+    const observedVariables={};
+    for(const label of Object.keys(variables))
+        observedVariables[label]=EmotePlayer_GetVariable(id,label);
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
-    const metadata={defaults:variables, width:canvas.width,height:canvas.height,
+    const metadata={defaults:variables, observedVariables, mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
     return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace};

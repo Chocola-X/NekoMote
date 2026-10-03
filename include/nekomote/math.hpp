@@ -14,8 +14,8 @@ namespace nekomote
 //                   space as "as authored in the imported asset".
 //
 //   uv space      - [0,1]^2, origin top-left, Y down (image convention).
-//                   OpenGL texture upload flips Y at the render_gl boundary so
-//                   the rest of the pipeline works in image convention.
+//                   OpenGL upload preserves image row order; shaders sample top-left
+//                   UVs directly. Only diagnostic readback flips framebuffer rows.
 //
 //   screen space  - pixels, origin top-left, Y down. render_gl converts to NDC.
 //

@@ -136,6 +136,14 @@ struct VariableDef
     std::vector<std::pair<int, std::string>> frames;
 };
 
+struct PairedClamp
+{
+    std::string label, variable_x, variable_y;
+    float range_begin{0}, range_end{0};
+    int type{0};
+    bool enabled{true};
+};
+
 struct VariableKey
 {
     float time{0};
@@ -171,6 +179,7 @@ struct ModelAsset
     std::vector<TextureDef> textures;
     std::vector<Part> parts;
     std::vector<Timeline> timelines;
+    std::vector<PairedClamp> paired_clamps;
     std::vector<std::string> parts_order; // meaning unverified; not draw order
     int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};
 };

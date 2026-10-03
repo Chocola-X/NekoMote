@@ -532,6 +532,33 @@ ImportResult parse(const ImportOptions& opts)
     }
     if (md.contains("customPartsOrder"))
         a.parts_order = string_vector(md["customPartsOrder"], "/metadata/customPartsOrder");
+    if (md.contains("clampControl"))
+    {
+        std::size_t index = 0;
+        for (const auto& c : array(md["clampControl"], "/metadata/clampControl"))
+        {
+            const auto p = "/metadata/clampControl/" + std::to_string(index++);
+            object(c, p);
+            PairedClamp clamp;
+            clamp.label = get_string(c, "label", p);
+            clamp.variable_x = get_string(c, "var_lr", p);
+            clamp.variable_y = get_string(c, "var_ud", p);
+            clamp.range_begin = get_float(c, "min", p);
+            clamp.range_end = get_float(c, "max", p);
+            clamp.type = get_int(c, "type", p);
+            const auto enabled = get_int(c, "enabled", p, 1);
+            check(enabled == 0 || enabled == 1, p + "/enabled", "expected 0 or 1");
+            clamp.enabled = enabled == 1;
+            check(!clamp.variable_x.empty() && !clamp.variable_y.empty() &&
+                      clamp.variable_x != clamp.variable_y,
+                  p, "clamp requires two distinct variables");
+            check(clamp.range_begin < clamp.range_end, p, "invalid clamp range");
+            a.paired_clamps.push_back(std::move(clamp));
+            unknown_fields(
+                c, p, {"label", "var_lr", "var_ud", "min", "max", "type", "enabled", "comment"},
+                result.report);
+        }
+    }
     if (md.contains("timelineControl"))
         for (const auto& t : array(md["timelineControl"], "/metadata/timelineControl"))
         {
@@ -569,10 +596,10 @@ ImportResult parse(const ImportOptions& opts)
             }
             a.timelines.push_back(std::move(timeline));
         }
-    unknown_fields(
-        md, "/metadata",
-        {"variableList", "instantVariableList", "customPartsOrder", "timelineControl", "base"},
-        result.report);
+    unknown_fields(md, "/metadata",
+                   {"variableList", "instantVariableList", "customPartsOrder", "timelineControl",
+                    "base", "clampControl"},
+                   result.report);
     unknown_fields(d, "",
                    {"spec", "version", "screenSize", "source", "object", "metadata", "id", "label"},
                    result.report);
