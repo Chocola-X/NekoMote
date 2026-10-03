@@ -1,3 +1,12 @@
 .codeartsdoer/
 .codex/
 refer/
+
+# build artifacts (CMakePresets uses build/<preset>/)
+build/
+compile_commands.json
+
+# editor / os cruft
+*.swp
+*~
+.DS_Store
