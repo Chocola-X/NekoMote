@@ -58,3 +58,14 @@ set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 if(NEKOMOTE_BUILD_PREVIEW)
     FetchContent_MakeAvailable(glfw)
 endif()
+
+# GL loader stays inside render_gl; bundled registry makes generation reproducible.
+if(NEKOMOTE_BUILD_PREVIEW)
+    FetchContent_Declare(glad
+        GIT_REPOSITORY https://github.com/Dav1dde/glad.git
+        GIT_TAG v2.0.8
+        GIT_SHALLOW TRUE
+        SOURCE_SUBDIR cmake)
+    FetchContent_MakeAvailable(glad)
+    glad_add_library(nekomote_gl_loader STATIC REPRODUCIBLE API gl:core=3.3)
+endif()

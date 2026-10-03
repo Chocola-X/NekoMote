@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--height', type=int, default=1080)
     parser.add_argument('--x', type=float, default=0)
     parser.add_argument('--y', type=float, default=400)
+    parser.add_argument('--opacity', type=float, default=1)
     parser.add_argument('--scale', type=float, default=1)
     parser.add_argument('--variables', type=json.loads, default={})
     parser.add_argument('--isolate-icon', help='diagnostic filtering of original driver draw calls')
@@ -61,7 +62,7 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
-                   width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale,
+                   width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, steps=args.steps, stepFrames=args.step_frames,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={'hair': 0, 'parts': 0, 'bust': 0, 'wind': False})

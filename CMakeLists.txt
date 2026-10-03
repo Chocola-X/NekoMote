@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 project(nekomote
     VERSION 0.1.0
     DESCRIPTION "NekoMote: native 2D model runtime and live wallpaper for Linux"
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,10 +49,14 @@ endif()
 
 if(NEKOMOTE_BUILD_PREVIEW)
     find_package(OpenGL REQUIRED)
+    add_subdirectory(src/render_gl)
     add_subdirectory(apps/preview)
 endif()
 
 if(NEKOMOTE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests/unit)
+    if(NEKOMOTE_BUILD_PREVIEW)
+        add_subdirectory(tests/render)
+    endif()
 endif()

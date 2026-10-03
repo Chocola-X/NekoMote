@@ -13,3 +13,4 @@ compile_commands.json
 
 # Development browser capture dependency cache
 node_modules/
+__pycache__/

@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：初稿，2026-10-03。当前状态：P0/P1 已复核，P2 开发中，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
+版本：初稿，2026-10-03。当前状态：P0/P1 已复核，P2 已验证，下一步 P3/P4，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
 
 ## 1. 产品与开发策略
 
@@ -114,7 +114,7 @@ flowchart TD
 | --- | --- | --- | --- | --- |
 | P0 | 工程骨架与验证环境 | 本规划 | 构建、检查入口、边界、样例路径 | 完成 |
 | P1 | 素材审计与导入规范 | P0 | 字段/能力矩阵、当前 schema、导入工具 | 完成 |
-| P2 | 原生静态绘制基础 | P1 | 图集、几何、目标、单帧对照 | 未开始 |
+| P2 | 原生静态绘制基础 | P1 | 图集、几何、目标、单帧对照 | 完成 |
 | P3 | 参数、场景图与网格变形 | P1、P2 | 参数求值和经验证的变形 | 未开始 |
 | P4 | 遮罩与完整静态合成 | P3 | 一个复杂模型的正确静态画面 | 未开始 |
 | P5 | 时间线、差分与动态播放 | P4 | 可控动态播放器 | 未开始 |
@@ -413,4 +413,4 @@ GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必�
 4. P1 定义当前资产 schema、能力报告和字段证据；随后交错推进基础 GPU 绘制。
 5. 完成 P3/P4 的复杂模型闭合后再推进完整动画。每次交付更新实际阶段状态。
 
-当前下一步是 **P2 原生静态绘制基础**（ROADMAP §7）。P0/P1 复核记录见 [docs/development-log.md](docs/development-log.md) 与 [docs/p1-handoff.md](docs/p1-handoff.md)。
+当前下一步是 **P3 参数、场景图与网格变形**（ROADMAP §8）。P0/P1 复核记录见 [docs/development-log.md](docs/development-log.md) 与 [docs/p1-handoff.md](docs/p1-handoff.md)。

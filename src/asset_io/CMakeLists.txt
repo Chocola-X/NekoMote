@@ -7,7 +7,8 @@ target_sources(nekomote_asset_io
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/import_emote.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/asset_file.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/image.cpp)
 
 target_include_directories(nekomote_asset_io
     PUBLIC
@@ -21,3 +22,7 @@ target_link_libraries(nekomote_asset_io
         nekomote_warnings
     PRIVATE
         nlohmann_json::nlohmann_json)
+
+add_library(nekomote_stb STATIC stb.cpp)
+target_include_directories(nekomote_stb SYSTEM PUBLIC ${stb_SOURCE_DIR})
+target_link_libraries(nekomote_asset_io PRIVATE nekomote_stb)

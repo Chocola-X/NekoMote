@@ -11,7 +11,8 @@ add_executable(nekomote_unit_tests
     test_math.cpp
     test_units.cpp
     test_import.cpp
-    test_asset_validation.cpp)
+    test_asset_validation.cpp
+    test_image.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE

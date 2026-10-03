@@ -40,6 +40,8 @@ window.capture = async function(options) {
     // Draw through the original player's render texture and original WebGL
     // composition path. speed=0 prevents any dependence on elapsed real time.
     player._coord=[options.x,options.y]; player._scale=options.scale;
+    EmotePlayer_SetVariable(id,"_globalA",255*options.opacity,0,0);
+    player._globalA=255*options.opacity;
     player._speed=0; player._stepUpdate=false;
     player._hairScale=player._partsScale=player._bustScale=0;
     for (let i=0;i<options.steps;++i) EmotePlayer_Update(id,options.stepFrames);
