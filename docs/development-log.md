@@ -74,3 +74,11 @@
 - 六组 easing 原始轨迹冻结回归通过（归一化容差 5e−7），Debug/Release 43、ASan/UBSan 42 项通过。
 - 新采样工具零步默认 PNG 与既有基线完全相同；九字节禁用物理/眨眼 fixture 的 idle 120 帧也完全相同。
 - 发现变量关键帧启动目标过渡、更新分区敏感、SDK loop/duration 查询不可靠以及表情控制图不能省略。详见 docs/p5-animation-investigation.md。下一步规范化控制数据并实现作者固定时钟；P3/P4 与完整动画仍未完成。
+
+## P5 原生动画与 schema 3 子步骤
+
+- 将控制元数据规范化至 schema 3，四型号已有 model 字段逐字段未变，静态矩阵仍 23/30 图片 PASS、10 个失败像素。只支持当前 schema，旧资产需重新导入。
+- 原生动画 Program/Instance 接入主动作、线性表达式路径、并行/待机差分和 60 Hz 作者时钟；实时预览与固定步进截图使用同一路径。
+- 18 组冻结数值轨迹和状态回归通过；Debug/Release 48、ASan/UBSan 47 项，预热后 500 步零普通 C++ new。
+- 原生动态 7 组全部几何通过，严格图片 2 PASS/5 FAIL，共 18 个像素 RGB 达 3/255；已经目视核实并列图，不放宽门槛。
+- 确认 blinkEnabled=0 同时改变 Eye 过渡行为，调整 Eye 实验使用仅物理隔离的参考。非线性跨段和选择器仍明确拒绝。详见 docs/p5-native-animation.md。

@@ -28,7 +28,7 @@ def main():
                         help='explicit previously captured reference directory; hashes are checked')
     args = parser.parse_args()
     root = pathlib.Path(__file__).resolve().parents[2]
-    baseline = json.loads((root / 'docs/validation/p3-geometry.json').read_text())
+    baseline = json.loads((root / 'docs/validation/static-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
     current_sources = {name: hashlib.sha256((args.reference_root / 'driver' / name).read_bytes()).hexdigest()
@@ -64,10 +64,12 @@ def main():
             if (metadata['source_hashes'].get(key) != expected or
                     current_sources[model if key in ('psb', 'original_psb') else key] != expected):
                 raise ValueError('reference source changed: '+key)
-        if hashlib.sha256(asset.read_bytes()).hexdigest() != case['hashes']['asset']:
+        if hashlib.sha256(asset.read_bytes()).hexdigest() != case['asset_sha256']:
             raise ValueError('imported asset changed; review and rebuild the baseline: '+model)
         if hashlib.sha256(reference.with_suffix('.png').read_bytes()).hexdigest() != case['reference_png_sha256']:
             raise ValueError('reference image changed: '+stem_name)
+        if hashlib.sha256(pathlib.Path(str(reference)+'.trace.json').read_bytes()).hexdigest() != case['reference_trace_sha256']:
+            raise ValueError('reference trace changed: '+stem_name)
         native = args.output / stem_name
         command = [args.preview, '--geometry-diagnostic', '--asset', asset,
                    '--origin', 400, 940, '--width', 800, '--height', 1080,

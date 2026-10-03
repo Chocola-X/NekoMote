@@ -8,7 +8,7 @@
 
 namespace nekomote::asset_io
 {
-inline constexpr int kAssetSchema = 2;
+inline constexpr int kAssetSchema = 3;
 struct AssetResult
 {
     model::ModelAsset asset;

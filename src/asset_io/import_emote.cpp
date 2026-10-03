@@ -596,9 +596,76 @@ ImportResult parse(const ImportOptions& opts)
             }
             a.timelines.push_back(std::move(timeline));
         }
+    for (const auto& [collection, kind] :
+         {std::pair{"transitionControl", VariableControlKind::Linear},
+          {"immediateControl", VariableControlKind::Immediate},
+          {"eyebrowControl", VariableControlKind::Expression},
+          {"eyeControl", VariableControlKind::Eye},
+          {"mouthControl", VariableControlKind::Mouth},
+          {"selectorControl", VariableControlKind::Selector}})
+    {
+        if (!md.contains(collection))
+            continue;
+        std::size_t index = 0;
+        for (const auto& c : array(md[collection], std::string("/metadata/") + collection))
+        {
+            const auto p = std::string("/metadata/") + collection + "/" + std::to_string(index++);
+            object(c, p);
+            VariableControl control;
+            control.kind = kind;
+            control.variable = get_string(c, "label", p);
+            const auto flag = [&](const char* key, int fallback)
+            {
+                const auto value = get_int(c, key, p, fallback);
+                check(value == 0 || value == 1, p + "/" + key, "expected 0 or 1");
+                return value == 1;
+            };
+            control.enabled = flag("enabled", 1);
+            control.blink_enabled = flag("blinkEnabled", 0);
+            control.begin_frame = get_float(c, "beginFrame", p);
+            control.end_frame = get_float(c, "endFrame", p);
+            control.blink_frames = get_float(c, "blinkFrameCount", p);
+            control.blink_interval_min = get_float(c, "blinkIntervalMin", p);
+            control.blink_interval_max = get_float(c, "blinkIntervalMax", p);
+            control.talk_variable = get_string(c, "talkLabel", p);
+            if (c.contains("edge"))
+                for (const auto& edge : array(c["edge"], p + "/edge"))
+                    control.edges.push_back(float_array<2>(edge, p + "/edge"));
+            if (c.contains("node"))
+                for (const auto& node : array(c["node"], p + "/node"))
+                    control.junctions.push_back(float_vector(node, p + "/node"));
+            if (c.contains("optionList"))
+                for (const auto& option : array(c["optionList"], p + "/optionList"))
+                {
+                    object(option, p + "/optionList");
+                    const auto name = get_string(option, "label", p + "/optionList");
+                    check(!name.empty() && option.contains("onValue") &&
+                              option.contains("offValue"),
+                          p + "/optionList", "selector output requires label/onValue/offValue");
+                    control.options.push_back(
+                        {name, number(option["onValue"], p + "/optionList/onValue"),
+                         number(option["offValue"], p + "/optionList/offValue")});
+                    unknown_fields(option, p + "/optionList", {"label", "onValue", "offValue"},
+                                   result.report);
+                }
+            check(!control.variable.empty(), p, "empty controller variable");
+            for (const auto& edge : control.edges)
+                check(edge[0] <= edge[1], p + "/edge", "invalid edge range");
+            check(control.blink_frames >= 0 && control.blink_interval_min >= 0 &&
+                      control.blink_interval_max >= control.blink_interval_min,
+                  p, "invalid blink timing");
+            a.variable_controls.push_back(std::move(control));
+            unknown_fields(c, p,
+                           {"label", "enabled", "beginFrame", "endFrame", "blinkEnabled",
+                            "blinkFrameCount", "blinkIntervalMin", "blinkIntervalMax", "talkLabel",
+                            "edge", "node", "optionList", "parameter", "comment", "comemnt"},
+                           result.report);
+        }
+    }
     unknown_fields(md, "/metadata",
                    {"variableList", "instantVariableList", "customPartsOrder", "timelineControl",
-                    "base", "clampControl"},
+                    "base", "clampControl", "transitionControl", "immediateControl",
+                    "eyebrowControl", "eyeControl", "mouthControl", "selectorControl"},
                    result.report);
     unknown_fields(d, "",
                    {"spec", "version", "screenSize", "source", "object", "metadata", "id", "label"},

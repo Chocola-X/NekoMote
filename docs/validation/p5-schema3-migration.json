@@ -1,0 +1,37 @@
+{
+  "rebuild_required": true,
+  "models": [
+    {
+      "model": "chocola-date-a",
+      "old_schema": 2,
+      "new_schema": 3,
+      "existing_model_fields_unchanged": true,
+      "controls": 41,
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf"
+    },
+    {
+      "model": "vanilla-date-a",
+      "old_schema": 2,
+      "new_schema": 3,
+      "existing_model_fields_unchanged": true,
+      "controls": 41,
+      "asset_sha256": "d3144f5ffe9a2b31b434788d204f81ae7f4dc1b1061ed769abac97aede60f7b6"
+    },
+    {
+      "model": "chocola-teenage",
+      "old_schema": 2,
+      "new_schema": 3,
+      "existing_model_fields_unchanged": true,
+      "controls": 38,
+      "asset_sha256": "34c1618503086d3f9c229d23aa2a8fee859217611e62cae7ba860c6c7bd0612d"
+    },
+    {
+      "model": "azuki-maid-a",
+      "old_schema": 2,
+      "new_schema": 3,
+      "existing_model_fields_unchanged": true,
+      "controls": 41,
+      "asset_sha256": "cbc7b8c9a72acd5ee45eafbc8fb618efe0cc689468e62622c5cc2a9af51d93b9"
+    }
+  ]
+}

@@ -76,9 +76,10 @@ window.capture = async function(options) {
         samples.push({step,frame:step*options.stepFrames,values,
                       playing:(options.timelines||[]).map(name=>EmotePlayer_IsTimelinePlaying(id,name))});
     };
-    for(const name of options.timelines||[]) {
+    for(const request of options.plays||[]) {
+        const name=request.label;
         if(!timelineInfo.some(t=>t.label===name)) throw new Error('unknown timeline: '+name);
-        EmotePlayer_PlayTimeline(id,name,options.timelineFlags||0);
+        EmotePlayer_PlayTimeline(id,name,request.flags);
     }
     if(options.sampleVariables) observeVariables(0);
     for (let i=0;i<options.steps;++i) {

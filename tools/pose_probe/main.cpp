@@ -1,15 +1,18 @@
 #include <nekomote/asset_io/asset_file.hpp>
+#include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <memory>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -23,7 +26,9 @@ struct Options
 {
     std::filesystem::path asset, trace, output;
     Json variables = Json::object();
-    int benchmark{0};
+    int benchmark{0}, steps{0};
+    bool animation{false};
+    Json transitions = Json::object(), plays = Json::array();
 };
 Json read(const std::filesystem::path& path)
 {
@@ -32,12 +37,25 @@ Json read(const std::filesystem::path& path)
         throw std::runtime_error("cannot open " + path.string());
     return Json::parse(input);
 }
+int parse_integer(const std::string& text)
+{
+    int value = 0;
+    const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
+    if (result.ec != std::errc{} || result.ptr != text.data() + text.size())
+        throw std::runtime_error("invalid integer: " + text);
+    return value;
+}
 Options parse(int argc, char** argv)
 {
     Options o;
     for (int i = 1; i < argc; ++i)
     {
         const std::string flag = argv[i];
+        if (flag == "--animation-diagnostic")
+        {
+            o.animation = true;
+            continue;
+        }
         if (i + 1 == argc)
             throw std::runtime_error("missing value for " + flag);
         const std::string value = argv[++i];
@@ -49,13 +67,21 @@ Options parse(int argc, char** argv)
             o.output = value;
         else if (flag == "--variables")
             o.variables = Json::parse(value);
+        else if (flag == "--steps")
+            o.steps = parse_integer(value);
+        else if (flag == "--transitions")
+            o.transitions = Json::parse(value);
+        else if (flag == "--plays")
+            o.plays = Json::parse(value);
         else if (flag == "--benchmark")
-            o.benchmark = std::stoi(value);
+            o.benchmark = parse_integer(value);
         else
             throw std::runtime_error("unknown option: " + flag);
     }
     if (o.asset.empty() || (!o.trace.empty() && o.output.empty()) || o.benchmark < 0 ||
-        !o.variables.is_object())
+        !o.variables.is_object() || o.steps < 0 || o.steps > 100000 || !o.transitions.is_object() ||
+        !o.plays.is_array() ||
+        (!o.animation && (o.steps || !o.transitions.empty() || !o.plays.empty())))
         throw std::runtime_error("requires --asset; trace diagnostics require --output");
     return o;
 }
@@ -75,17 +101,84 @@ int run(const Options& o)
     auto compiled = runtime::compile_geometry_scene(loaded.asset);
     if (!compiled.scene)
         throw std::runtime_error(compiled.errors.front());
+    std::unique_ptr<const runtime::AnimationProgram> animation_program;
+    std::unique_ptr<runtime::AnimationInstance> animation_player;
+    const auto animation_checked = [](runtime::AnimationStatus status)
+    {
+        if (!status)
+            throw std::runtime_error(
+                "animation error=" + std::to_string(static_cast<int>(status.error)) +
+                " timeline=" + std::to_string(status.timeline.value) +
+                " parameter=" + std::to_string(status.parameter.value));
+    };
+    Json animation_samples = Json::array();
+    Json animated_variables = Json::object();
+    if (o.animation)
+    {
+        auto animation = runtime::compile_animation(loaded.asset, *compiled.scene);
+        if (!animation.program)
+            throw std::runtime_error(animation.errors.front());
+        animation_program = std::move(animation.program);
+        animation_player = std::make_unique<runtime::AnimationInstance>(*animation_program);
+        auto& player = *animation_player;
+        const auto& checked = animation_checked;
+        for (const auto& [name, value] : o.variables.items())
+            checked(player.transition(compiled.scene->find_variable(name), value.get<float>()));
+        for (const auto& [name, request] : o.transitions.items())
+            checked(player.transition(
+                compiled.scene->find_variable(name), request.at("value").get<float>(),
+                request.at("frames").get<float>(), request.at("easing").get<float>()));
+        for (const auto& request : o.plays)
+        {
+            const int flags = request.at("flags").get<int>();
+            if (flags != 0 && flags != 1 && flags != 3)
+                throw std::runtime_error("supported diagnostic play flags are 0, 1, 3");
+            checked(player.play(
+                animation_program->find_timeline(request.at("label").get<std::string>()),
+                flags == 0   ? runtime::TimelinePlayMode::Replace
+                : flags == 1 ? runtime::TimelinePlayMode::Parallel
+                             : runtime::TimelinePlayMode::AdditiveParallel));
+        }
+        const auto sample = [&](int step)
+        {
+            Json values = Json::object(), playing = Json::array();
+            for (const auto& value : player.values())
+                values[compiled.scene->variables()[value.id.value - 1].name] = value.value;
+            for (const auto& request : o.plays)
+                playing.push_back(player.is_playing(
+                    animation_program->find_timeline(request.at("label").get<std::string>())));
+            animation_samples.push_back(
+                Json{{"step", step}, {"values", values}, {"playing", playing}});
+            animated_variables = std::move(values);
+        };
+        sample(0);
+        for (int i = 0; i < o.steps; ++i)
+        {
+            checked(player.step());
+            sample(i + 1);
+        }
+    }
     // Native evaluation is independent of the source loader's lifetime.
     loaded = {};
     const auto& scene = *compiled.scene;
     runtime::GeometryInstance instance(scene);
-    for (const auto& [name, value] : o.variables.items())
+    for (const auto& [name, value] : (o.animation ? animated_variables : o.variables).items())
         check(instance.set_parameter(scene.find_variable(name), value.get<float>()));
     check(instance.evaluate());
+    const auto advance_pose = [&]()
+    {
+        if (animation_player)
+        {
+            animation_checked(animation_player->step());
+            for (const auto& value : animation_player->values())
+                check(instance.set_parameter(value.id, value.value));
+        }
+    };
     if (o.benchmark)
     {
         for (int i = 0; i < 120; ++i)
         {
+            advance_pose();
             check(instance.evaluate());
             check(instance.build_frame());
         }
@@ -93,6 +186,7 @@ int run(const Options& o)
         for (auto& time : times)
         {
             const auto start = std::chrono::steady_clock::now();
+            advance_pose();
             const auto status = instance.evaluate();
             const auto built = instance.build_frame();
             time =
@@ -104,18 +198,25 @@ int run(const Options& o)
         std::sort(times.begin(), times.end());
         const auto percentile = [&times](std::size_t p)
         { return times[(times.size() - 1) * p / 100]; };
-        std::printf("evaluate+build_frame CPU ms P50=%.6f P95=%.6f P99=%.6f; nodes=%zu samples=%d "
+        std::printf("%s CPU ms P50=%.6f P95=%.6f P99=%.6f; nodes=%zu samples=%d "
                     "warmup=120\n",
+                    o.animation ? "author step+parameter binding+evaluate+build_frame"
+                                : "evaluate+build_frame",
                     percentile(50), percentile(95), percentile(99), scene.node_count(),
                     o.benchmark);
     }
+    if (animation_player && o.benchmark)
+        for (const auto& parameter : animation_player->values())
+            animated_variables[scene.variables()[parameter.id.value - 1].name] = parameter.value;
     const auto frame_status = instance.build_frame();
     Json report{{"frame_error", static_cast<int>(frame_status.error)},
                 {"frame_error_node", scene.node_label(frame_status.node)},
                 {"frame_vertices", instance.frame().vertices.size()},
                 {"frame_indices", instance.frame().indices.size()},
                 {"certified", false},
-                {"variables", o.variables},
+                {"variables", o.animation ? animated_variables : o.variables},
+                {"animation_samples", animation_samples},
+                {"manual_controllers", o.animation},
                 {"nodes", scene.node_count()},
                 {"primitives", instance.primitives().size()},
                 {"diagnostics", scene.diagnostics()}};
@@ -319,8 +420,9 @@ int run(const Options& o)
                     scene.node_count(), instance.primitives().size(), largest, missing.size());
     }
     else
-        std::printf("native nodes=%zu primitives=%zu static diagnostics; animation unavailable\n",
-                    scene.node_count(), instance.primitives().size());
+        std::printf(
+            "native nodes=%zu primitives=%zu; diagnostic only; physical controllers unavailable\n",
+            scene.node_count(), instance.primitives().size());
     if (!o.output.empty())
     {
         std::ofstream output(o.output);

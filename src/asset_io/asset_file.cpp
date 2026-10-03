@@ -367,6 +367,54 @@ inline void from_json(const Json& j, Timeline& v)
     v.tracks = checked_value<decltype(v.tracks)>(j.at("tracks"));
 }
 
+inline void to_json(Json& j, const SelectorOption& v)
+{
+    j = Json{{"variable", v.variable}, {"on_value", v.on_value}, {"off_value", v.off_value}};
+}
+inline void from_json(const Json& j, SelectorOption& v)
+{
+    v.variable = checked_value<decltype(v.variable)>(j.at("variable"));
+    v.on_value = checked_value<decltype(v.on_value)>(j.at("on_value"));
+    v.off_value = checked_value<decltype(v.off_value)>(j.at("off_value"));
+}
+inline void to_json(Json& j, const VariableControl& v)
+{
+    j = Json{{"kind", static_cast<int>(v.kind)},
+             {"variable", v.variable},
+             {"talk_variable", v.talk_variable},
+             {"enabled", v.enabled},
+             {"blink_enabled", v.blink_enabled},
+             {"begin_frame", v.begin_frame},
+             {"end_frame", v.end_frame},
+             {"blink_frames", v.blink_frames},
+             {"blink_interval_min", v.blink_interval_min},
+             {"blink_interval_max", v.blink_interval_max},
+             {"edges", v.edges},
+             {"junctions", v.junctions},
+             {"options", v.options}};
+}
+inline void from_json(const Json& j, VariableControl& v)
+{
+    const int kind = checked_value<int>(j.at("kind"));
+    if (kind < 0 || kind > static_cast<int>(VariableControlKind::Selector))
+        throw std::runtime_error("invalid variable controller kind");
+    v.kind = static_cast<VariableControlKind>(kind);
+    v.variable = checked_value<decltype(v.variable)>(j.at("variable"));
+    v.talk_variable = checked_value<decltype(v.talk_variable)>(j.at("talk_variable"));
+    v.enabled = checked_value<decltype(v.enabled)>(j.at("enabled"));
+    v.blink_enabled = checked_value<decltype(v.blink_enabled)>(j.at("blink_enabled"));
+    v.begin_frame = checked_value<decltype(v.begin_frame)>(j.at("begin_frame"));
+    v.end_frame = checked_value<decltype(v.end_frame)>(j.at("end_frame"));
+    v.blink_frames = checked_value<decltype(v.blink_frames)>(j.at("blink_frames"));
+    v.blink_interval_min =
+        checked_value<decltype(v.blink_interval_min)>(j.at("blink_interval_min"));
+    v.blink_interval_max =
+        checked_value<decltype(v.blink_interval_max)>(j.at("blink_interval_max"));
+    v.edges = checked_value<decltype(v.edges)>(j.at("edges"));
+    v.junctions = checked_value<decltype(v.junctions)>(j.at("junctions"));
+    v.options = checked_value<decltype(v.options)>(j.at("options"));
+}
+
 inline void to_json(Json& j, const ModelAsset& v)
 {
     j = Json{{"spec", v.spec},
@@ -383,6 +431,7 @@ inline void to_json(Json& j, const ModelAsset& v)
              {"textures", v.textures},
              {"parts", v.parts},
              {"timelines", v.timelines},
+             {"variable_controls", v.variable_controls},
              {"paired_clamps", v.paired_clamps},
              {"parts_order", v.parts_order},
              {"total_layers", v.total_layers},
@@ -406,6 +455,7 @@ inline void from_json(const Json& j, ModelAsset& v)
     v.textures = checked_value<decltype(v.textures)>(j.at("textures"));
     v.parts = checked_value<decltype(v.parts)>(j.at("parts"));
     v.timelines = checked_value<decltype(v.timelines)>(j.at("timelines"));
+    v.variable_controls = checked_value<decltype(v.variable_controls)>(j.at("variable_controls"));
     v.paired_clamps = checked_value<decltype(v.paired_clamps)>(j.at("paired_clamps"));
     v.parts_order = checked_value<decltype(v.parts_order)>(j.at("parts_order"));
     v.total_layers = checked_value<decltype(v.total_layers)>(j.at("total_layers"));

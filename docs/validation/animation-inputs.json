@@ -1,0 +1,549 @@
+{
+  "asset_schema": 3,
+  "coordinate_tolerance_px": 0.001,
+  "note": "Manual animation/controller isolation only; physics fixture always, blinkEnabled=0 fixture only for clips without eye tracks. Exact source requests and hashes are frozen; full model playback is not certified.",
+  "cases": [
+    {
+      "model": "chocola-date-a",
+      "case": "sample05-1",
+      "steps": 1,
+      "initial": {},
+      "disable_blink": false,
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 0
+        }
+      ],
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "7e87419f5eacdab05a34b1b272254cd184c242f5261c7ebb28b8beb56f1be6d7",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "3bd2c7e46e356f08f6ece2a1acc9aa25cd4c46790279fd79394b8161876f20ef"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "sample05-14",
+      "steps": 14,
+      "initial": {},
+      "disable_blink": false,
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 0
+        }
+      ],
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "fe94f2538f4dbd21a104ab20ea30d1f5f0ad8ab78a2461cb43ded231e797df59",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "425ce5b8a963b814fdce67141730db805aa1aa8dfdd2eb6e642651d545998605"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "sample05-29",
+      "steps": 29,
+      "initial": {},
+      "disable_blink": false,
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 0
+        }
+      ],
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "169e0f2e1f9fd3a4f23345a8b43ef9421f732641cdea2b738650d96b282e4270",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "e62131a5f1acd4cfdf38026bb1190278c77ee6ebdf9d32fe8bae2ea6d8b90b7d"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "head-21",
+      "steps": 21,
+      "initial": {
+        "head_LR": 10
+      },
+      "disable_blink": true,
+      "plays": [
+        {
+          "label": "首横振り",
+          "flags": 1
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "95cddb6555352c165e23f413837e7bc01c5a9bd46375a5fd0747040dc91b5794",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "bdcd1d54d65dff8ff2cb5e49fb9b1b55ea983a31b5db43285b272421438b032b"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "jump-15",
+      "steps": 15,
+      "initial": {
+        "move_UD": 5
+      },
+      "disable_blink": true,
+      "plays": [
+        {
+          "label": "ピョン",
+          "flags": 1
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "b2e9f5ab23d223ad315c84e676e88e7b4a3590aa5d556985b0d100fb3f2ad153",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "477e5c78576bd7f74c1590da0e627014f08eaae781a2834d2ed454fc60e9e4a8"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "additive-422",
+      "steps": 422,
+      "initial": {
+        "body_UD": 12,
+        "head_slant": 5
+      },
+      "disable_blink": true,
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "d2b666a9049a1eba3dcdf034676fa591c99d7ded8a940f174276fe839bbdd642",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "725557fbf459ce2fe57865f30eab1a63585891931ecc6b431069a99966cff0e3"
+    },
+    {
+      "model": "chocola-date-a",
+      "case": "parallel-20",
+      "steps": 20,
+      "initial": {
+        "head_LR": 10,
+        "body_UD": 10
+      },
+      "disable_blink": true,
+      "plays": [
+        {
+          "label": "首横振り",
+          "flags": 1
+        },
+        {
+          "label": "移動",
+          "flags": 3
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "reference_png_sha256": "7d7e018c798a24917a11a7e845c1bcef673a72789164289cc6b76ce575caed14",
+      "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+      "reference_trace_sha256": "b69cf7ceb40008395782887c7ac703c9e256119e5ee0ae0ae9f9269b0b0369d3"
+    }
+  ]
+}

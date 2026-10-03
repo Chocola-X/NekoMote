@@ -362,6 +362,11 @@ std::string_view GeometryScene::node_label(NodeId id) const noexcept
     return id.valid() && id.value < impl_->nodes.size() ? impl_->nodes[id.value].label
                                                         : std::string_view{};
 }
+GeometryCapacity GeometryScene::frame_capacity() const noexcept
+{
+    return {impl_->vertex_capacity, impl_->index_capacity, impl_->nodes.size(),
+            impl_->mask_command_capacity, impl_->masks.size()};
+}
 GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
 {
     GeometryCompileResult result;
@@ -407,6 +412,17 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
         }
         for (const auto& v : asset.variables)
             compiler.variable(v.label);
+        for (const auto& control : asset.variable_controls)
+        {
+            compiler.variable(control.variable);
+            if (!control.talk_variable.empty())
+                compiler.variable(control.talk_variable);
+            for (const auto& option : control.options)
+                compiler.variable(option.variable);
+        }
+        for (const auto& timeline : asset.timelines)
+            for (const auto& track : timeline.tracks)
+                compiler.variable(track.label);
         for (const auto& c : asset.paired_clamps)
             data->clamps.push_back({compiler.variable(c.variable_x),
                                     compiler.variable(c.variable_y), c.range_begin, c.range_end,

@@ -68,6 +68,27 @@ void validate_asset(const model::ModelAsset& a)
                     std::isfinite(c.range_begin) && std::isfinite(c.range_end) &&
                     c.range_begin < c.range_end,
                 "paired clamp " + c.label);
+    for (const auto& c : a.variable_controls)
+    {
+        const auto path = "variable controller " + c.variable;
+        require(!c.variable.empty(), path);
+        for (float value : {c.begin_frame, c.end_frame, c.blink_frames, c.blink_interval_min,
+                            c.blink_interval_max})
+            require(std::isfinite(value), path);
+        require(c.blink_frames >= 0 && c.blink_interval_min >= 0 &&
+                    c.blink_interval_max >= c.blink_interval_min,
+                path + "/blink timing");
+        for (const auto& edge : c.edges)
+            require(std::isfinite(edge[0]) && std::isfinite(edge[1]) && edge[0] <= edge[1],
+                    path + "/edge");
+        for (const auto& junction : c.junctions)
+            for (float value : junction)
+                require(std::isfinite(value), path + "/junction");
+        for (const auto& option : c.options)
+            require(!option.variable.empty() && std::isfinite(option.on_value) &&
+                        std::isfinite(option.off_value),
+                    path + "/option");
+    }
     int layers = 0, frames = 0, bp = 0, cc = 0;
     auto walk = [&](auto&& self, const model::Layer& l, const model::Part& part, int depth) -> void
     {

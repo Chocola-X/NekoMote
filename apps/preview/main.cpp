@@ -1,6 +1,7 @@
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
+#include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 
 #define GLFW_INCLUDE_NONE
@@ -8,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -26,7 +28,9 @@ struct Options
     std::string icon;
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
-    bool hidden{false}, geometry{false};
+    bool hidden{false}, geometry{false}, animation{false};
+    int steps{0};
+    std::vector<std::pair<std::string, runtime::TimelinePlayMode>> plays;
     std::vector<std::pair<std::string, float>> variables;
 };
 float parse_number(const std::string& value)
@@ -36,6 +40,14 @@ float parse_number(const std::string& value)
     if (end != value.size() || !std::isfinite(result))
         throw std::runtime_error("invalid number: " + value);
     return result;
+}
+int parse_integer(const std::string& text)
+{
+    int value = 0;
+    const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
+    if (result.ec != std::errc{} || result.ptr != text.data() + text.size())
+        throw std::runtime_error("invalid integer: " + text);
+    return value;
 }
 Options parse(int argc, char** argv)
 {
@@ -56,13 +68,13 @@ Options parse(int argc, char** argv)
         else if (flag == "--screenshot")
             o.screenshot = next();
         else if (flag == "--width")
-            o.width = std::stoi(next());
+            o.width = parse_integer(next());
         else if (flag == "--height")
-            o.height = std::stoi(next());
+            o.height = parse_integer(next());
         else if (flag == "--frames")
-            o.frames = std::stoi(next());
+            o.frames = parse_integer(next());
         else if (flag == "--benchmark")
-            o.benchmark = std::stoi(next());
+            o.benchmark = parse_integer(next());
         else if (flag == "--origin")
         {
             o.x = parse_number(next());
@@ -72,6 +84,21 @@ Options parse(int argc, char** argv)
             o.scale = parse_number(next());
         else if (flag == "--opacity")
             o.opacity = parse_number(next());
+        else if (flag == "--steps")
+            o.steps = parse_integer(next());
+        else if (flag == "--animation-diagnostic")
+            o.animation = true;
+        else if (flag == "--play")
+        {
+            const auto name = next();
+            const auto flags = next();
+            if (flags != "0" && flags != "1" && flags != "3")
+                throw std::runtime_error("play flags must be 0, 1 or 3");
+            o.plays.emplace_back(name, flags == "0" ? runtime::TimelinePlayMode::Replace
+                                       : flags == "1"
+                                           ? runtime::TimelinePlayMode::Parallel
+                                           : runtime::TimelinePlayMode::AdditiveParallel);
+        }
         else if (flag == "--geometry-diagnostic")
             o.geometry = true;
         else if (flag == "--variable")
@@ -85,16 +112,19 @@ Options parse(int argc, char** argv)
             throw std::runtime_error("unknown argument: " + flag);
     }
     if (o.width <= 0 || o.height <= 0 || o.width > 16384 || o.height > 16384 || o.frames < 0 ||
-        o.benchmark < 0 || o.scale <= 0 || o.opacity < 0 || o.opacity > 1)
+        o.benchmark < 0 || o.steps < 0 || o.steps > 100000 || o.scale <= 0 || o.opacity < 0 ||
+        o.opacity > 1)
         throw std::runtime_error("invalid output/diagnostic settings");
-    if (o.geometry && (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
+    if ((o.geometry || o.animation) && (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
         throw std::runtime_error(
             "geometry diagnostic requires an asset, no icon filter and opacity=1");
-    if (!o.geometry && !o.variables.empty())
+    if (!o.geometry && !o.animation && !o.variables.empty())
         throw std::runtime_error("--variable requires --geometry-diagnostic");
-    if (!o.geometry && !o.asset.empty() && o.icon.empty())
+    if (!o.geometry && !o.animation && !o.asset.empty() && o.icon.empty())
         throw std::runtime_error(
             "P2 requires --icon texture/icon; complete model evaluation is not implemented");
+    if ((!o.animation && (o.steps || !o.plays.empty())) || (o.animation && o.geometry))
+        throw std::runtime_error("animation requests require --animation-diagnostic exclusively");
     if (o.asset.empty() && !o.icon.empty())
         throw std::runtime_error("--icon requires --asset");
     if (!o.screenshot.empty() && o.frames == 0)
@@ -148,7 +178,17 @@ int run(const Options& o)
     render_gl::View view{o.x, o.y, o.scale, {0, 0, 0, 0}};
     std::unique_ptr<const runtime::GeometryScene> geometry_scene;
     std::unique_ptr<runtime::GeometryInstance> geometry_instance;
-    if (o.geometry)
+    std::unique_ptr<const runtime::AnimationProgram> animation_program;
+    std::unique_ptr<runtime::AnimationInstance> animation_instance;
+    const auto animation_checked = [](runtime::AnimationStatus status)
+    {
+        if (!status)
+            throw std::runtime_error(
+                "animation error=" + std::to_string(static_cast<int>(status.error)) +
+                " timeline=" + std::to_string(status.timeline.value) +
+                " parameter=" + std::to_string(status.parameter.value));
+    };
+    if (o.geometry || o.animation)
     {
         auto loaded = asset_io::load_asset(o.asset);
         if (!loaded.ok)
@@ -167,12 +207,31 @@ int run(const Options& o)
         };
         for (const auto& [name, value] : o.variables)
             checked(geometry_instance->set_parameter(geometry_scene->find_variable(name), value));
+        if (o.animation)
+        {
+            auto animation = runtime::compile_animation(loaded.asset, *geometry_scene);
+            if (!animation.program)
+                throw std::runtime_error(animation.errors.front());
+            animation_program = std::move(animation.program);
+            animation_instance = std::make_unique<runtime::AnimationInstance>(*animation_program);
+            for (const auto& [name, value] : o.variables)
+                animation_checked(
+                    animation_instance->transition(geometry_scene->find_variable(name), value));
+            for (const auto& [name, mode] : o.plays)
+                animation_checked(
+                    animation_instance->play(animation_program->find_timeline(name), mode));
+            for (int i = 0; i < o.steps; ++i)
+                animation_checked(animation_instance->step());
+            for (const auto& value : animation_instance->values())
+                checked(geometry_instance->set_parameter(value.id, value.value));
+        }
         checked(geometry_instance->evaluate());
         checked(geometry_instance->build_frame());
         const auto frame = geometry_instance->frame();
-        renderer.reserve({frame.vertices.size(), frame.indices.size(), frame.commands.size(),
-                          geometry_scene->textures().size(), frame.mask_commands.size(),
-                          frame.masks.size()});
+        const auto capacity = geometry_scene->frame_capacity();
+        renderer.reserve({capacity.vertices, capacity.indices, capacity.commands,
+                          geometry_scene->textures().size(), capacity.mask_commands,
+                          capacity.masks});
         for (const auto& texture : geometry_scene->textures())
         {
             auto decoded = asset_io::load_png(o.asset.parent_path() / texture.path);
@@ -183,9 +242,9 @@ int run(const Options& o)
             renderer.upload_texture(texture.id, decoded.image);
         }
         renderer.prepare(frame);
-        std::printf("STATIC DIAGNOSTIC: %zu sprites; union masks/protected composition; animation "
-                    "unavailable\n",
-                    geometry_instance->primitives().size());
+        std::printf(
+            "%s DIAGNOSTIC: %zu sprites; physical controllers/auto blink are not integrated\n",
+            o.animation ? "ANIMATION" : "STATIC", geometry_instance->primitives().size());
         for (const auto& diagnostic : geometry_scene->diagnostics())
             std::printf("%s\n", diagnostic.c_str());
     }
@@ -253,8 +312,37 @@ int run(const Options& o)
         return 0;
     }
     int count = 0;
+    auto previous_frame = std::chrono::steady_clock::now();
+    bool space_down = false;
+    auto playback = runtime::PlaybackState::Running;
     while (!glfwWindowShouldClose(window.get()))
     {
+        const auto now = std::chrono::steady_clock::now();
+        const double elapsed = std::chrono::duration<double>(now - previous_frame).count();
+        previous_frame = now;
+        if (animation_instance && o.screenshot.empty())
+        {
+            const bool pressed = glfwGetKey(window.get(), GLFW_KEY_SPACE) == GLFW_PRESS;
+            if (pressed && !space_down)
+            {
+                playback = playback == runtime::PlaybackState::Running
+                               ? runtime::PlaybackState::Paused
+                               : runtime::PlaybackState::Running;
+                animation_instance->set_playback_state(playback);
+            }
+            space_down = pressed;
+            animation_checked(animation_instance->advance(elapsed));
+            for (const auto& value : animation_instance->values())
+                if (!geometry_instance->set_parameter(value.id, value.value))
+                    throw std::runtime_error("invalid animated parameter");
+            const auto evaluated = geometry_instance->evaluate();
+            const auto built = evaluated ? geometry_instance->build_frame() : evaluated;
+            if (!built)
+                throw std::runtime_error(
+                    "geometry error=" + std::to_string(static_cast<int>(built.error)) + ": " +
+                    std::string(geometry_scene->node_label(built.node)));
+            renderer.prepare(geometry_instance->frame());
+        }
         int w = 0, h = 0;
         glfwGetFramebufferSize(window.get(), &w, &h);
         const render_gl::Target target{0, w, h};

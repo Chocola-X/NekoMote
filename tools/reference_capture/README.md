@@ -35,3 +35,18 @@ python3 tools/reference_capture/validate_static.py --reference-root ../NekoWebSh
 P5 时间线诊断支持 `--timeline LABEL`（可重复，按指定顺序播放）、`--timeline-flags N`、`--sample-variables` 和 `--observe-variable LABEL`。逐步记录原始变量与播放状态；额外 observe 用于 CountVariables 未列出的物理绑定。`timelineInfo.reportedLoop/reportedFrames` 仅保留 SDK 查询原值，目前它们与实际播放终点不一致，不能作为时长/循环真值。
 
 `--transitions '{"body_UD":{"value":30,"frames":14,"easing":2.5}}'` 调用原 SDK 的变量过渡入口。`--disable-physics --disable-auto-blink` 仅在内存 PSB fixture 把相应控制器 enabled/blinkEnabled 从 1 改成 0，每个修改字节都有记录。它们用于分别验证时间线与控制器，不能宣称为完整原模型动画验收。源 PSB 始终只读。步进大小和初态必须一致：原 SDK 的半帧步进与整帧步进存在事件/过渡顺序差异。
+
+`--play LABEL FLAGS` 可重复，用于同次采样中逐动作指定标志（与 --timeline 互斥）。资产 diff 标签不替代播放标志：原 SDK 的 1=parallel、2=difference，所以典型主动作用 1、差分用 3。普通 GetVariable 不包含差分；必须以实际几何/画面对照。
+
+`blinkEnabled=0` fixture 还改变 Eye 变量过渡行为（当前观察为立即切换），不能把 --disable-auto-blink 的截图当作只去掉随机眨眼的原始时间线轨迹。涉及 Eye 轨道时使用仅 --disable-physics 的隔离对照；不涉及 Eye 的轨道可保留该 fixture，并记录限定范围。
+
+动画截图矩阵：
+
+```sh
+python3 tools/reference_capture/validate_animation.py --reference-root ../NekoWebShow \
+  --importer build/dev/bin/nekomote_import --preview build/dev/bin/nekomote_preview \
+  --evaluator build/dev/bin/nekomote_pose --browser /path/to/chrome \
+  --output build/evidence/animation-validation
+```
+
+同静态入口要求新目录，可显式复用校验过的参考目录。冻结原 PSB/fixture/驱动/当前资产、截图和 trace hash，验收保留 0.001px 几何与 2/255 图像阈值；任何 FAIL 返回非零，完整播放认证始终 false。

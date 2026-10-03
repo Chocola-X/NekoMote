@@ -55,6 +55,10 @@ struct GeometryStatus
         return error == GeometryError::None;
     }
 };
+struct GeometryCapacity
+{
+    std::size_t vertices{0}, indices{0}, commands{0}, mask_commands{0}, masks{0};
+};
 class GeometryInstance;
 struct GeometryCompileResult;
 // Diagnostic static scene, not a certified player. Source bindings/resources
@@ -70,6 +74,7 @@ class GeometryScene
     std::span<const std::string> diagnostics() const noexcept;
     ParamId find_variable(std::string_view name) const noexcept; // load/diagnostics only
     std::size_t node_count() const noexcept;
+    GeometryCapacity frame_capacity() const noexcept;
     std::string_view node_label(NodeId id) const noexcept;
 
   private:

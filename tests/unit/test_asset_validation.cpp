@@ -207,3 +207,50 @@ TEST_CASE("Paired clamp data survives compilation and rejects invalid ranges", "
         REQUIRE_FALSE(import_modified(w, j).ok);
     }
 }
+
+TEST_CASE("Expression and selector rules survive offline compilation", "[asset][import]")
+{
+    Workspace w;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    auto source = read(root / "minimal.json");
+    source["metadata"]["eyebrowControl"] = Json::array({{{"label", "expression"},
+                                                         {"enabled", 1},
+                                                         {"beginFrame", 0},
+                                                         {"edge", {{0, 10}, {11, 20}}},
+                                                         {"node", {{10, 11}}}}});
+    source["metadata"]["selectorControl"] = Json::array(
+        {{{"label", "arm"},
+          {"enabled", 1},
+          {"optionList", Json::array({{{"label", "fade"}, {"onValue", 0}, {"offValue", 1}}})}}});
+    SECTION("portable roundtrip")
+    {
+        const auto imported = import_modified(w, source);
+        REQUIRE(imported.ok);
+        REQUIRE(nekomote::asset_io::write_bundle(imported, root, w.path / "bundle").empty());
+        const auto loaded = nekomote::asset_io::load_asset(w.path / "bundle/model.nkm.json");
+        REQUIRE(loaded.ok);
+        REQUIRE(loaded.asset.variable_controls.size() == 2);
+        const auto& expression = loaded.asset.variable_controls[0];
+        REQUIRE(expression.kind == nekomote::model::VariableControlKind::Expression);
+        REQUIRE(expression.edges.size() == 2);
+        REQUIRE(expression.junctions[0][1] == 11.0f);
+        REQUIRE(loaded.asset.variable_controls[1].options[0].off_value == 1.0f);
+        auto compiled = read(w.path / "bundle/model.nkm.json");
+        compiled["model"]["variable_controls"][0]["kind"] = 100;
+        write(w.path / "bundle/model.nkm.json", compiled);
+        REQUIRE_FALSE(nekomote::asset_io::load_asset(w.path / "bundle/model.nkm.json").ok);
+    }
+    SECTION("invalid edge")
+    {
+        source["metadata"]["eyebrowControl"][0]["edge"][0] = {10, 0};
+        const auto imported = import_modified(w, source);
+        REQUIRE_FALSE(imported.ok);
+        REQUIRE(imported.report.errors[0].find("/metadata/eyebrowControl/0/edge") !=
+                std::string::npos);
+    }
+    SECTION("invalid flag")
+    {
+        source["metadata"]["selectorControl"][0]["enabled"] = 2;
+        REQUIRE_FALSE(import_modified(w, source).ok);
+    }
+}

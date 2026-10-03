@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 
@@ -386,4 +387,54 @@ TEST_CASE("Atlas packing changes UV without changing deformed model geometry", "
         REQUIRE(vb[i].u > va[i].u);
         REQUIRE(vb[i].v > va[i].v);
     }
+}
+
+TEST_CASE("Warmed animation, expression routing and geometry allocate no project heap",
+          "[runtime][animation][allocation]")
+{
+    auto asset = rig();
+    Timeline clip;
+    clip.label = "cycle";
+    clip.loop_begin = 0;
+    clip.loop_end = 17;
+    clip.tracks.push_back(
+        {"pick",
+         {{0, 2, field(1.0f), field(0.0f)}, {9, 2, field(0.0f), field(0.0f)}, {17, 0, {}, {}}}});
+    asset.timelines.push_back(std::move(clip));
+    VariableControl expression;
+    expression.kind = VariableControlKind::Expression;
+    expression.variable = "expression";
+    expression.edges = {{{0, 1}}, {{2, 3}}};
+    expression.junctions = {{1, 2}};
+    asset.variable_controls.push_back(std::move(expression));
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    auto animation = runtime::compile_animation(asset, *compiled.scene);
+    REQUIRE(animation.program);
+    runtime::AnimationInstance player(*animation.program);
+    runtime::GeometryInstance geometry(*compiled.scene);
+    const auto cycle = animation.program->find_timeline("cycle");
+    const auto parameter = compiled.scene->find_variable("expression");
+    REQUIRE(player.play(cycle, runtime::TimelinePlayMode::Parallel));
+    const auto update = [&](int frame)
+    {
+        if (frame % 20 == 0 && !player.transition(parameter, frame % 40 == 0 ? 3.0f : 0.0f, 10))
+            return false;
+        if (!player.step())
+            return false;
+        for (const auto& value : player.values())
+            if (!geometry.set_parameter(value.id, value.value))
+                return false;
+        return static_cast<bool>(geometry.evaluate()) && static_cast<bool>(geometry.build_frame());
+    };
+    for (int i = 0; i < 120; ++i)
+        REQUIRE(update(i));
+    bool succeeded = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 120; i < 620; ++i)
+        succeeded = update(i) && succeeded;
+    measure_allocations = false;
+    REQUIRE(succeeded);
+    REQUIRE(measured_allocations == 0);
 }

@@ -165,6 +165,34 @@ struct Timeline
     std::vector<VariableTrack> tracks;
 };
 
+// Controller rules are asset data, not inferred from a variable's name or its
+// editor marker list. Expression edge/node topology routes value transitions.
+enum class VariableControlKind
+{
+    Linear,
+    Immediate,
+    Expression,
+    Eye,
+    Mouth,
+    Selector
+};
+struct SelectorOption
+{
+    std::string variable;
+    float on_value{0}, off_value{0};
+};
+struct VariableControl
+{
+    VariableControlKind kind{VariableControlKind::Linear};
+    std::string variable, talk_variable;
+    bool enabled{true}, blink_enabled{false};
+    float begin_frame{0}, end_frame{0};
+    float blink_frames{0}, blink_interval_min{0}, blink_interval_max{0};
+    std::vector<std::array<float, 2>> edges;
+    std::vector<std::vector<float>> junctions;
+    std::vector<SelectorOption> options;
+};
+
 // No filesystem, JSON, window or graphics types cross this boundary. Source
 // archives and unsupported-field diagnostics are owned by the offline importer.
 struct ModelAsset
@@ -179,6 +207,7 @@ struct ModelAsset
     std::vector<TextureDef> textures;
     std::vector<Part> parts;
     std::vector<Timeline> timelines;
+    std::vector<VariableControl> variable_controls;
     std::vector<PairedClamp> paired_clamps;
     std::vector<std::string> parts_order; // meaning unverified; not draw order
     int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};

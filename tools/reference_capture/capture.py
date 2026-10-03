@@ -47,6 +47,8 @@ def main():
     parser.add_argument('--timeline', action='append', default=[],
                         help='original timeline label, in play order')
     parser.add_argument('--timeline-flags', type=int, default=0)
+    parser.add_argument('--play', action='append', nargs=2, default=[], metavar=('LABEL', 'FLAGS'),
+                        help='ordered per-timeline requests; mutually exclusive with --timeline')
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
@@ -54,6 +56,14 @@ def main():
         parser.error('requires 0..100000 steps and a positive finite step size')
     if args.timeline_flags < 0 or args.timeline_flags > 0xffffffff:
         parser.error('timeline flags must be an unsigned 32-bit integer')
+    if args.play and args.timeline:
+        parser.error('choose either --play requests or --timeline')
+    plays = [{'label': name, 'flags': args.timeline_flags} for name in args.timeline]
+    for name, flag in args.play:
+        value = int(flag, 0)
+        if not name or not 0 <= value <= 0xffffffff:
+            parser.error('play requires a nonempty label and unsigned 32-bit flags')
+        plays.append({'label': name, 'flags': value})
     def finite_number(value):
         return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
     if not isinstance(args.variables, dict) or any(
@@ -120,7 +130,8 @@ def main():
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
-                   timelines=args.timeline, timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
+                   timelines=[p['label'] for p in plays], plays=plays,
+                   timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={'hair': 0, 'parts': 0, 'bust': 0, 'wind': False},

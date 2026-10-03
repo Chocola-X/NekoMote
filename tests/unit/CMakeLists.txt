@@ -15,7 +15,8 @@ add_executable(nekomote_unit_tests
     test_image.cpp
     test_deformation.cpp
     test_geometry_scene.cpp
-    test_animation_curve.cpp)
+    test_animation_curve.cpp
+    test_animation.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
