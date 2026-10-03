@@ -1,40 +1,35 @@
 #pragma once
 
-#include <filesystem>
-#include <string>
-#include <vector>
-
 #include <nekomote/model/asset.hpp>
 
-namespace nekomote::asset_io {
+#include <filesystem>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
-struct ImportOptions {
-    std::filesystem::path json_path;        // model .json
-    std::filesystem::path resx_path;        // model .resx.json
-    std::filesystem::path resource_root;    // dir resolving texture paths
+namespace nekomote::asset_io
+{
+struct ImportOptions
+{
+    std::filesystem::path json_path, resx_path, resource_root;
+    std::unordered_map<std::string, std::string> external_textures;
 };
-
-struct ImportReport {
-    std::vector<std::string> warnings;
-    std::vector<std::string> errors;
-
-    int parts_count{0};
-    int layers_count{0};
-    int frames_count{0};
-    int icons_count{0};
-    int textures_count{0};
-    int variables_count{0};
-    std::string texture_path;  // resolved primary texture path
+struct ImportReport
+{
+    std::vector<std::string> warnings, errors, unsupported_fields;
+    int parts_count{0}, layers_count{0}, frames_count{0}, icons_count{0};
+    int textures_count{0}, variables_count{0};
+    std::string texture_path;
 };
-
-struct ImportResult {
+struct ImportResult
+{
     model::ModelAsset asset;
     ImportReport report;
+    // Offline audit archive, never consumed by runtime/render_gl.
+    std::string source_archive;
     bool ok{false};
 };
-
-// Parse an E-mote PSB JSON + resx into a ModelAsset. Never throws; failures
-// land in ImportReport.errors and ok=false.
+// Expected input and I/O errors return ok=false with a JSON pointer/file path.
+// Allocation failures are not converted to a successful or partial asset.
 ImportResult import_emote(const ImportOptions& opts);
-
-}  // namespace nekomote::asset_io
+} // namespace nekomote::asset_io

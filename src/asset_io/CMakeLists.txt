@@ -5,7 +5,9 @@ add_library(nekomote::asset_io ALIAS nekomote_asset_io)
 
 target_sources(nekomote_asset_io
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/import_emote.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/import_emote.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/asset_file.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp)
 
 target_include_directories(nekomote_asset_io
     PUBLIC

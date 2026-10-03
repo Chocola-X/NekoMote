@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-
 #include <nekomote/asset_io/import_emote.hpp>
 #include <nekomote/model/asset.hpp>
 
@@ -11,22 +10,26 @@
 namespace fs = std::filesystem;
 using namespace nekomote;
 
-namespace {
+namespace
+{
 
-fs::path fixtures_dir() {
+fs::path fixtures_dir()
+{
     return fs::path{NEKOMOTE_FIXTURES_DIR};
 }
 
-asset_io::ImportResult import_fixture(const std::string& name) {
+asset_io::ImportResult import_fixture(const std::string& name)
+{
     asset_io::ImportOptions opts;
     opts.json_path = fixtures_dir() / (name + ".json");
     opts.resx_path = fixtures_dir() / (name + ".resx.json");
     return asset_io::import_emote(opts);
 }
 
-}  // namespace
+} // namespace
 
-TEST_CASE("Minimal fixture imports with correct structure", "[import]") {
+TEST_CASE("Minimal fixture imports with correct structure", "[import]")
+{
     auto result = import_fixture("minimal");
     REQUIRE(result.ok);
 
@@ -45,7 +48,7 @@ TEST_CASE("Minimal fixture imports with correct structure", "[import]") {
     REQUIRE(layer.label == "base");
     REQUIRE(layer.mesh_division == 4);
     REQUIRE(layer.mesh_transform == 1);
-    REQUIRE(layer.parameterize == 0);
+    REQUIRE(layer.parameterize.value() == 0);
     REQUIRE(layer.frame_list.size() == 2);
     REQUIRE(layer.parameter.size() == 1);
     REQUIRE(layer.parameter[0].id == "move_UD");
@@ -53,30 +56,31 @@ TEST_CASE("Minimal fixture imports with correct structure", "[import]") {
     REQUIRE(layer.parameter[0].range_end == 30.0f);
 
     const model::LayerFrame& f0 = layer.frame_list[0];
-    REQUIRE(f0.time == 0);
-    REQUIRE(f0.content.coord[0] == 10.0f);
-    REQUIRE(f0.content.coord[1] == 20.0f);
-    REQUIRE(f0.content.icon == "0000");
-    REQUIRE(f0.content.src == "tex");
-    REQUIRE(f0.content.opa.has_value());
-    REQUIRE(f0.content.opa.value() == 1.0f);
-    REQUIRE(f0.content.mesh.bp.has_value());
+    REQUIRE(f0.time == 0.0f);
+    REQUIRE(f0.content.data.coord.data[0] == 10.0f);
+    REQUIRE(f0.content.data.coord.data[1] == 20.0f);
+    REQUIRE(f0.content.data.icon.data == "0000");
+    REQUIRE(f0.content.data.src.data == "tex");
+    REQUIRE(f0.content.data.opa.has_value());
+    REQUIRE(f0.content.data.opa.value() == 1.0f);
+    REQUIRE(f0.content.data.mesh.data.bp.has_value());
 
     const model::LayerFrame& f1 = layer.frame_list[1];
-    REQUIRE(f1.time == 30);
-    REQUIRE_FALSE(f1.content.mesh.bp.has_value());
+    REQUIRE(f1.time == 30.0f);
+    REQUIRE_FALSE(f1.content.data.mesh.data.bp.has_value());
 }
 
-TEST_CASE("Minimal fixture icons and texture", "[import]") {
+TEST_CASE("Minimal fixture icons and texture", "[import]")
+{
     auto result = import_fixture("minimal");
     REQUIRE(result.ok);
 
     const model::ModelAsset& a = result.asset;
     REQUIRE(a.icons.size() == 2);
-    REQUIRE(a.icons.count("0000") == 1);
-    REQUIRE(a.icons.count("0001") == 1);
-    REQUIRE(a.icons.at("0000").width == 32.0f);
-    REQUIRE(a.icons.at("0001").width == 64.0f);
+    REQUIRE(a.icons.count("tex/0000") == 1);
+    REQUIRE(a.icons.count("tex/0001") == 1);
+    REQUIRE(a.icons.at("tex/0000").width == 32.0f);
+    REQUIRE(a.icons.at("tex/0001").width == 64.0f);
 
     REQUIRE(a.textures.size() == 1);
     REQUIRE(a.textures[0].name == "tex");
@@ -86,7 +90,8 @@ TEST_CASE("Minimal fixture icons and texture", "[import]") {
     REQUIRE(result.report.texture_path == "minimal-resources/tex.png");
 }
 
-TEST_CASE("Minimal fixture variables and parts order", "[import]") {
+TEST_CASE("Minimal fixture variables and parts order", "[import]")
+{
     auto result = import_fixture("minimal");
     REQUIRE(result.ok);
 
@@ -102,7 +107,8 @@ TEST_CASE("Minimal fixture variables and parts order", "[import]") {
     REQUIRE(a.parts_order[1] == "1");
 }
 
-TEST_CASE("Minimal fixture diagnostics counts", "[import]") {
+TEST_CASE("Minimal fixture diagnostics counts", "[import]")
+{
     auto result = import_fixture("minimal");
     REQUIRE(result.ok);
     REQUIRE(result.report.parts_count == 1);
@@ -115,7 +121,8 @@ TEST_CASE("Minimal fixture diagnostics counts", "[import]") {
     REQUIRE(result.asset.cc_nonnull == 0);
 }
 
-TEST_CASE("Missing file fails gracefully", "[import]") {
+TEST_CASE("Missing file fails gracefully", "[import]")
+{
     asset_io::ImportOptions opts;
     opts.json_path = fixtures_dir() / "nonexistent.json";
     opts.resx_path = fixtures_dir() / "nonexistent.resx.json";
@@ -124,9 +131,11 @@ TEST_CASE("Missing file fails gracefully", "[import]") {
     REQUIRE_FALSE(result.report.errors.empty());
 }
 
-TEST_CASE("Real model chocola-date-a imports", "[import][real]") {
+TEST_CASE("Real model chocola-date-a imports", "[import][real]")
+{
     const char* root = std::getenv("NEKOMOTE_TEST_REAL_ASSET");
-    if (root == nullptr) {
+    if (root == nullptr)
+    {
         WARN("NEKOMOTE_TEST_REAL_ASSET not set; skipping real model import test");
         return;
     }

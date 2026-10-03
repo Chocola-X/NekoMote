@@ -4,7 +4,7 @@
 
 - CMake ≥ 3.25
 - Ninja
-- C++20 编译器（GCC ≥ 13 或 Clang ≥ 16；开发机验证 GCC 15.2.1 / Clang 20.1.8）
+- C++20 编译器（GCC ≥ 13 或 Clang ≥ 16；开发机验证 GCC 15.1.1 / Clang 20.1.8）
 - 首次配置需联网（FetchContent 拉取依赖）
 - 预览额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
 

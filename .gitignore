@@ -10,3 +10,6 @@ compile_commands.json
 *.swp
 *~
 .DS_Store
+
+# Development browser capture dependency cache
+node_modules/

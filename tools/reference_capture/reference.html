@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<style>html,body {margin:0;background:transparent} canvas {display:block}</style>
+<canvas id="canvas"></canvas>
+<script>
+window.ready = false;
+window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
+var Module = {onRuntimeInitialized() { window.ready = true; }};
+</script>
+<script src="/trace.js"></script>
+<script src="/driver/FreeMoteDriver.js"></script>
+<script src="/driver/emoteplayer.js"></script>
+<script>
+window.capture = async function(options) {
+    const canvas = document.getElementById('canvas');
+    canvas.width = options.width; canvas.height = options.height;
+    EmotePlayer.setRenderCanvas(canvas);
+    const player = new EmotePlayer(canvas);
+    player.loadData(new Uint8Array(await (await fetch('/model.psb')).arrayBuffer()));
+    const device = EmotePlayer.device;
+    const gl = device.gl;
+    const id = player.playerId;
+    EmotePlayer_SetHairScale(id, 0);
+    EmotePlayer_SetPartsScale(id, 0);
+    EmotePlayer_SetBustScale(id, 0);
+    EmotePlayer_StopWind(id);
+    EmotePlayer_SetCoord(id, options.x, options.y, 0, 0);
+    EmotePlayer_SetScale(id, options.scale, 0, 0);
+    const variables = {};
+    for (let i=0; i<EmotePlayer_CountVariables(id); ++i) {
+        const label=EmotePlayer_GetVariableLabelAt(id,i);
+        variables[label]=EmotePlayer_GetVariable(id,label);
+    }
+    for (const [label,value] of Object.entries(options.variables))
+        EmotePlayer_SetVariable(id,label,value,0,0);
+    EmoteDevice_SetMaskMode(1);
+    EmoteDevice_SetProtectTranslucentTextureColor(true);
+    EmoteDevice_SetMaskRegionClipping(true);
+    // Draw through the original player's render texture and original WebGL
+    // composition path. speed=0 prevents any dependence on elapsed real time.
+    player._coord=[options.x,options.y]; player._scale=options.scale;
+    player._speed=0; player._stepUpdate=false;
+    player._hairScale=player._partsScale=player._bustScale=0;
+    for (let i=0;i<options.steps;++i) EmotePlayer_Update(id,options.stepFrames);
+    device.animating=true;
+    device.lastAnimationTime=0;
+    window.traceEnabled=options.trace;
+    window.isolateRect=options.isolateRect;
+    device.drawAnimation(0);
+    window.traceEnabled=false;
+    const pixels=new Uint8Array(canvas.width*canvas.height*4);
+    gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+    let visiblePixels=0;
+    for(let p=3;p<pixels.length;p+=4) if(pixels[p]) visiblePixels++;
+    if(!visiblePixels) throw new Error("reference produced an empty image");
+    const renderer=gl.getExtension('WEBGL_debug_renderer_info');
+    const metadata={defaults:variables, width:canvas.width,height:canvas.height,
+        renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
+        version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
+    return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace};
+};
+</script>

@@ -1,0 +1,488 @@
+#include <nekomote/asset_io/asset_file.hpp>
+#include <nlohmann/json.hpp>
+
+#include <chrono>
+#include <cmath>
+#include <fstream>
+#include <limits>
+#include <stdexcept>
+#include <type_traits>
+
+#include "validation.hpp"
+
+namespace nekomote::model
+{
+using Json = nlohmann::json;
+template <typename T>
+T checked_value(const Json& j)
+{
+    if constexpr (std::is_arithmetic_v<T> && !std::is_same_v<T, bool>)
+    {
+        if constexpr (std::is_integral_v<T>)
+        {
+            if (!j.is_number_integer())
+                throw std::runtime_error("asset integer has wrong type");
+        }
+        else if (!j.is_number())
+            throw std::runtime_error("asset number has wrong type");
+        const long double value = j.get<long double>();
+        if (!std::isfinite(value) ||
+            value < static_cast<long double>(std::numeric_limits<T>::lowest()) ||
+            value > static_cast<long double>(std::numeric_limits<T>::max()))
+            throw std::runtime_error("asset number is out of range");
+        return j.get<T>();
+    }
+    else if constexpr (std::is_same_v<T, std::string>)
+    {
+        return j.get<T>();
+    }
+    else if constexpr (requires { typename T::mapped_type; })
+    {
+        if (!j.is_object())
+            throw std::runtime_error("asset map has wrong type");
+        T result;
+        for (auto it = j.begin(); it != j.end(); ++it)
+            result.emplace(it.key(), checked_value<typename T::mapped_type>(it.value()));
+        return result;
+    }
+    else if constexpr (requires(T x) { x.push_back(typename T::value_type{}); })
+    {
+        if (!j.is_array())
+            throw std::runtime_error("asset array has wrong type");
+        T result;
+        result.reserve(j.size());
+        for (const auto& v : j)
+            result.push_back(checked_value<typename T::value_type>(v));
+        return result;
+    }
+    else if constexpr (requires {
+                           typename T::first_type;
+                           typename T::second_type;
+                       })
+    {
+        if (!j.is_array() || j.size() != 2)
+            throw std::runtime_error("asset pair has wrong shape");
+        return {checked_value<typename T::first_type>(j[0]),
+                checked_value<typename T::second_type>(j[1])};
+    }
+    else if constexpr (requires {
+                           std::tuple_size<T>::value;
+                           typename T::value_type;
+                       })
+    {
+        if (!j.is_array() || j.size() != std::tuple_size<T>::value)
+            throw std::runtime_error("asset array has wrong length");
+        T result;
+        for (std::size_t i = 0; i < j.size(); ++i)
+            result[i] = checked_value<typename T::value_type>(j[i]);
+        return result;
+    }
+    else
+        return j.get<T>();
+}
+template <typename T>
+inline void to_json(Json& j, const Field<T>& f)
+{
+    j = Json{{"state", static_cast<int>(f.state)}};
+    if (f.has_value())
+        j["value"] = f.data;
+}
+template <typename T>
+inline void from_json(const Json& j, Field<T>& f)
+{
+    const int state = j.at("state").get<int>();
+    if (state < 0 || state > 2)
+        throw std::runtime_error("invalid field state");
+    f.state = static_cast<FieldState>(state);
+    if (f.has_value())
+        f.data = checked_value<T>(j.at("value"));
+}
+inline void to_json(Json& j, const IconRect& v)
+{
+    j = Json{{"texture", v.texture},   {"left", v.left},     {"top", v.top},
+             {"width", v.width},       {"height", v.height}, {"origin_x", v.origin_x},
+             {"origin_y", v.origin_y}, {"attr", v.attr},     {"zorder", v.zorder}};
+}
+inline void from_json(const Json& j, IconRect& v)
+{
+    v.texture = checked_value<decltype(v.texture)>(j.at("texture"));
+    v.left = checked_value<decltype(v.left)>(j.at("left"));
+    v.top = checked_value<decltype(v.top)>(j.at("top"));
+    v.width = checked_value<decltype(v.width)>(j.at("width"));
+    v.height = checked_value<decltype(v.height)>(j.at("height"));
+    v.origin_x = checked_value<decltype(v.origin_x)>(j.at("origin_x"));
+    v.origin_y = checked_value<decltype(v.origin_y)>(j.at("origin_y"));
+    v.attr = checked_value<decltype(v.attr)>(j.at("attr"));
+    v.zorder = checked_value<decltype(v.zorder)>(j.at("zorder"));
+}
+
+inline void to_json(Json& j, const TextureDef& v)
+{
+    j = Json{{"name", v.name},
+             {"path", v.path},
+             {"format", v.format},
+             {"width", v.width},
+             {"height", v.height}};
+}
+inline void from_json(const Json& j, TextureDef& v)
+{
+    v.name = checked_value<decltype(v.name)>(j.at("name"));
+    v.path = checked_value<decltype(v.path)>(j.at("path"));
+    v.format = checked_value<decltype(v.format)>(j.at("format"));
+    v.width = checked_value<decltype(v.width)>(j.at("width"));
+    v.height = checked_value<decltype(v.height)>(j.at("height"));
+}
+
+inline void to_json(Json& j, const MeshData& v)
+{
+    j = Json{{"bp", v.bp}, {"cc", v.cc}};
+}
+inline void from_json(const Json& j, MeshData& v)
+{
+    v.bp = checked_value<decltype(v.bp)>(j.at("bp"));
+    v.cc = checked_value<decltype(v.cc)>(j.at("cc"));
+}
+
+inline void to_json(Json& j, const MotionContent& v)
+{
+    j = Json{{"mask", v.mask}, {"time_offset", v.time_offset}};
+}
+inline void from_json(const Json& j, MotionContent& v)
+{
+    v.mask = checked_value<decltype(v.mask)>(j.at("mask"));
+    v.time_offset = checked_value<decltype(v.time_offset)>(j.at("time_offset"));
+}
+
+inline void to_json(Json& j, const FrameContent& v)
+{
+    j = Json{{"coord", v.coord}, {"icon", v.icon},     {"src", v.src},     {"mask", v.mask},
+             {"opa", v.opa},     {"angle", v.angle},   {"zx", v.zx},       {"zy", v.zy},
+             {"ox", v.ox},       {"oy", v.oy},         {"color", v.color}, {"bm", v.bm},
+             {"flip", v.flip},   {"motion", v.motion}, {"mesh", v.mesh}};
+}
+inline void from_json(const Json& j, FrameContent& v)
+{
+    v.coord = checked_value<decltype(v.coord)>(j.at("coord"));
+    v.icon = checked_value<decltype(v.icon)>(j.at("icon"));
+    v.src = checked_value<decltype(v.src)>(j.at("src"));
+    v.mask = checked_value<decltype(v.mask)>(j.at("mask"));
+    v.opa = checked_value<decltype(v.opa)>(j.at("opa"));
+    v.angle = checked_value<decltype(v.angle)>(j.at("angle"));
+    v.zx = checked_value<decltype(v.zx)>(j.at("zx"));
+    v.zy = checked_value<decltype(v.zy)>(j.at("zy"));
+    v.ox = checked_value<decltype(v.ox)>(j.at("ox"));
+    v.oy = checked_value<decltype(v.oy)>(j.at("oy"));
+    v.color = checked_value<decltype(v.color)>(j.at("color"));
+    v.bm = checked_value<decltype(v.bm)>(j.at("bm"));
+    v.flip = checked_value<decltype(v.flip)>(j.at("flip"));
+    v.motion = checked_value<decltype(v.motion)>(j.at("motion"));
+    v.mesh = checked_value<decltype(v.mesh)>(j.at("mesh"));
+}
+
+inline void to_json(Json& j, const LayerFrame& v)
+{
+    j = Json{{"time", v.time}, {"type", v.type}, {"content", v.content}};
+}
+inline void from_json(const Json& j, LayerFrame& v)
+{
+    v.time = checked_value<decltype(v.time)>(j.at("time"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.content = checked_value<decltype(v.content)>(j.at("content"));
+}
+
+inline void to_json(Json& j, const ParamBinding& v)
+{
+    j = Json{{"id", v.id},
+             {"range_begin", v.range_begin},
+             {"range_end", v.range_end},
+             {"division", v.division},
+             {"discretization", v.discretization},
+             {"enabled", v.enabled}};
+}
+inline void from_json(const Json& j, ParamBinding& v)
+{
+    v.id = checked_value<decltype(v.id)>(j.at("id"));
+    v.range_begin = checked_value<decltype(v.range_begin)>(j.at("range_begin"));
+    v.range_end = checked_value<decltype(v.range_end)>(j.at("range_end"));
+    v.division = checked_value<decltype(v.division)>(j.at("division"));
+    v.discretization = checked_value<decltype(v.discretization)>(j.at("discretization"));
+    v.enabled = checked_value<decltype(v.enabled)>(j.at("enabled"));
+}
+
+inline void to_json(Json& j, const Layer& v)
+{
+    j = Json{{"label", v.label},
+             {"type", v.type},
+             {"coordinate", v.coordinate},
+             {"mesh_combine", v.mesh_combine},
+             {"mesh_division", v.mesh_division},
+             {"mesh_transform", v.mesh_transform},
+             {"stencil_type", v.stencil_type},
+             {"original_index", v.original_index},
+             {"mesh_sync_child_mask", v.mesh_sync_child_mask},
+             {"export_self", v.export_self},
+             {"join_target", v.join_target},
+             {"ground_correction", v.ground_correction},
+             {"motion_independent_layer_inherit", v.motion_independent_layer_inherit},
+             {"obj_tri_priority", v.obj_tri_priority},
+             {"parameterize", v.parameterize},
+             {"shape", v.shape},
+             {"inherit_mask", v.inherit_mask},
+             {"transform_order", v.transform_order},
+             {"stencil_composite_mask_layers", v.stencil_composite_mask_layers},
+             {"parameter", v.parameter},
+             {"frame_list", v.frame_list},
+             {"children", v.children}};
+}
+inline void from_json(const Json& j, Layer& v)
+{
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.coordinate = checked_value<decltype(v.coordinate)>(j.at("coordinate"));
+    v.mesh_combine = checked_value<decltype(v.mesh_combine)>(j.at("mesh_combine"));
+    v.mesh_division = checked_value<decltype(v.mesh_division)>(j.at("mesh_division"));
+    v.mesh_transform = checked_value<decltype(v.mesh_transform)>(j.at("mesh_transform"));
+    v.stencil_type = checked_value<decltype(v.stencil_type)>(j.at("stencil_type"));
+    v.original_index = checked_value<decltype(v.original_index)>(j.at("original_index"));
+    v.mesh_sync_child_mask =
+        checked_value<decltype(v.mesh_sync_child_mask)>(j.at("mesh_sync_child_mask"));
+    v.export_self = checked_value<decltype(v.export_self)>(j.at("export_self"));
+    v.join_target = checked_value<decltype(v.join_target)>(j.at("join_target"));
+    v.ground_correction = checked_value<decltype(v.ground_correction)>(j.at("ground_correction"));
+    v.motion_independent_layer_inherit =
+        checked_value<decltype(v.motion_independent_layer_inherit)>(
+            j.at("motion_independent_layer_inherit"));
+    v.obj_tri_priority = checked_value<decltype(v.obj_tri_priority)>(j.at("obj_tri_priority"));
+    v.parameterize = checked_value<decltype(v.parameterize)>(j.at("parameterize"));
+    v.shape = checked_value<decltype(v.shape)>(j.at("shape"));
+    v.inherit_mask = checked_value<decltype(v.inherit_mask)>(j.at("inherit_mask"));
+    v.transform_order = checked_value<decltype(v.transform_order)>(j.at("transform_order"));
+    v.stencil_composite_mask_layers = checked_value<decltype(v.stencil_composite_mask_layers)>(
+        j.at("stencil_composite_mask_layers"));
+    v.parameter = checked_value<decltype(v.parameter)>(j.at("parameter"));
+    v.frame_list = checked_value<decltype(v.frame_list)>(j.at("frame_list"));
+    v.children = checked_value<decltype(v.children)>(j.at("children"));
+}
+
+inline void to_json(Json& j, const PriorityFrame& v)
+{
+    j = Json{{"time", v.time}, {"type", v.type}, {"content", v.content}};
+}
+inline void from_json(const Json& j, PriorityFrame& v)
+{
+    v.time = checked_value<decltype(v.time)>(j.at("time"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.content = checked_value<decltype(v.content)>(j.at("content"));
+}
+
+inline void to_json(Json& j, const Part& v)
+{
+    j = Json{{"group", v.group},
+             {"name", v.name},
+             {"type", v.type},
+             {"last_time", v.last_time},
+             {"loop_time", v.loop_time},
+             {"parameterize", v.parameterize},
+             {"parameter", v.parameter},
+             {"priority", v.priority},
+             {"layer_index_map", v.layer_index_map},
+             {"layers", v.layers}};
+}
+inline void from_json(const Json& j, Part& v)
+{
+    v.group = checked_value<decltype(v.group)>(j.at("group"));
+    v.name = checked_value<decltype(v.name)>(j.at("name"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.last_time = checked_value<decltype(v.last_time)>(j.at("last_time"));
+    v.loop_time = checked_value<decltype(v.loop_time)>(j.at("loop_time"));
+    v.parameterize = checked_value<decltype(v.parameterize)>(j.at("parameterize"));
+    v.parameter = checked_value<decltype(v.parameter)>(j.at("parameter"));
+    v.priority = checked_value<decltype(v.priority)>(j.at("priority"));
+    v.layer_index_map = checked_value<decltype(v.layer_index_map)>(j.at("layer_index_map"));
+    v.layers = checked_value<decltype(v.layers)>(j.at("layers"));
+}
+
+inline void to_json(Json& j, const VariableDef& v)
+{
+    j = Json{{"label", v.label}, {"frames", v.frames}};
+}
+inline void from_json(const Json& j, VariableDef& v)
+{
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.frames = checked_value<decltype(v.frames)>(j.at("frames"));
+}
+
+inline void to_json(Json& j, const VariableKey& v)
+{
+    j = Json{{"time", v.time}, {"type", v.type}, {"value", v.value}, {"easing", v.easing}};
+}
+inline void from_json(const Json& j, VariableKey& v)
+{
+    v.time = checked_value<decltype(v.time)>(j.at("time"));
+    v.type = checked_value<decltype(v.type)>(j.at("type"));
+    v.value = checked_value<decltype(v.value)>(j.at("value"));
+    v.easing = checked_value<decltype(v.easing)>(j.at("easing"));
+}
+
+inline void to_json(Json& j, const VariableTrack& v)
+{
+    j = Json{{"label", v.label}, {"keys", v.keys}};
+}
+inline void from_json(const Json& j, VariableTrack& v)
+{
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.keys = checked_value<decltype(v.keys)>(j.at("keys"));
+}
+
+inline void to_json(Json& j, const Timeline& v)
+{
+    j = Json{{"label", v.label},           {"diff", v.diff},         {"last_time", v.last_time},
+             {"loop_begin", v.loop_begin}, {"loop_end", v.loop_end}, {"tracks", v.tracks}};
+}
+inline void from_json(const Json& j, Timeline& v)
+{
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.diff = checked_value<decltype(v.diff)>(j.at("diff"));
+    v.last_time = checked_value<decltype(v.last_time)>(j.at("last_time"));
+    v.loop_begin = checked_value<decltype(v.loop_begin)>(j.at("loop_begin"));
+    v.loop_end = checked_value<decltype(v.loop_end)>(j.at("loop_end"));
+    v.tracks = checked_value<decltype(v.tracks)>(j.at("tracks"));
+}
+
+inline void to_json(Json& j, const ModelAsset& v)
+{
+    j = Json{{"spec", v.spec},
+             {"version", v.version},
+             {"screen_width", v.screen_width},
+             {"screen_height", v.screen_height},
+             {"screen_origin_x", v.screen_origin_x},
+             {"screen_origin_y", v.screen_origin_y},
+             {"base_group", v.base_group},
+             {"base_motion", v.base_motion},
+             {"variables", v.variables},
+             {"instant_variables", v.instant_variables},
+             {"icons", v.icons},
+             {"textures", v.textures},
+             {"parts", v.parts},
+             {"timelines", v.timelines},
+             {"parts_order", v.parts_order},
+             {"total_layers", v.total_layers},
+             {"total_frames", v.total_frames},
+             {"bp_nonnull", v.bp_nonnull},
+             {"cc_nonnull", v.cc_nonnull}};
+}
+inline void from_json(const Json& j, ModelAsset& v)
+{
+    v.spec = checked_value<decltype(v.spec)>(j.at("spec"));
+    v.version = checked_value<decltype(v.version)>(j.at("version"));
+    v.screen_width = checked_value<decltype(v.screen_width)>(j.at("screen_width"));
+    v.screen_height = checked_value<decltype(v.screen_height)>(j.at("screen_height"));
+    v.screen_origin_x = checked_value<decltype(v.screen_origin_x)>(j.at("screen_origin_x"));
+    v.screen_origin_y = checked_value<decltype(v.screen_origin_y)>(j.at("screen_origin_y"));
+    v.base_group = checked_value<decltype(v.base_group)>(j.at("base_group"));
+    v.base_motion = checked_value<decltype(v.base_motion)>(j.at("base_motion"));
+    v.variables = checked_value<decltype(v.variables)>(j.at("variables"));
+    v.instant_variables = checked_value<decltype(v.instant_variables)>(j.at("instant_variables"));
+    v.icons = checked_value<decltype(v.icons)>(j.at("icons"));
+    v.textures = checked_value<decltype(v.textures)>(j.at("textures"));
+    v.parts = checked_value<decltype(v.parts)>(j.at("parts"));
+    v.timelines = checked_value<decltype(v.timelines)>(j.at("timelines"));
+    v.parts_order = checked_value<decltype(v.parts_order)>(j.at("parts_order"));
+    v.total_layers = checked_value<decltype(v.total_layers)>(j.at("total_layers"));
+    v.total_frames = checked_value<decltype(v.total_frames)>(j.at("total_frames"));
+    v.bp_nonnull = checked_value<decltype(v.bp_nonnull)>(j.at("bp_nonnull"));
+    v.cc_nonnull = checked_value<decltype(v.cc_nonnull)>(j.at("cc_nonnull"));
+}
+
+} // namespace nekomote::model
+
+namespace nekomote::asset_io
+{
+namespace
+{
+using Json = nlohmann::json;
+void write_json(const std::filesystem::path& path, const Json& j)
+{
+    std::ofstream stream(path, std::ios::binary);
+    if (!stream)
+        throw std::runtime_error("cannot create " + path.string());
+    stream << j.dump(2) << '\n';
+    stream.close();
+    if (!stream)
+        throw std::runtime_error("write failed: " + path.string());
+}
+} // namespace
+AssetResult load_asset(const std::filesystem::path& file)
+{
+    AssetResult r;
+    try
+    {
+        std::ifstream stream(file, std::ios::binary);
+        if (!stream)
+            throw std::runtime_error("cannot open " + file.string());
+        Json j;
+        stream >> j;
+        if (j.at("schema") != kAssetSchema)
+            throw std::runtime_error("unsupported asset schema; rebuild with nekomote_import");
+        r.asset = j.at("model").get<model::ModelAsset>();
+        validate_asset(r.asset);
+        r.ok = true;
+    }
+    catch (const Json::exception& e)
+    {
+        r.errors.push_back(file.string() + ": " + e.what());
+    }
+    catch (const std::runtime_error& e)
+    {
+        r.errors.push_back(e.what());
+    }
+    return r;
+}
+
+std::vector<std::string> write_bundle(const ImportResult& result,
+                                      const std::filesystem::path& resource_root,
+                                      const std::filesystem::path& destination)
+{
+    if (!result.ok)
+        return {"refusing to write failed import"};
+    std::filesystem::path temporary;
+    try
+    {
+        if (destination.empty() || std::filesystem::exists(destination))
+            throw std::runtime_error("bundle destination must be a new directory: " +
+                                     destination.string());
+        temporary = destination;
+        temporary +=
+            ".tmp-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+        if (!std::filesystem::create_directories(temporary / "textures"))
+            throw std::runtime_error("cannot create temporary bundle");
+        auto asset = result.asset;
+        for (std::size_t i = 0; i < asset.textures.size(); ++i)
+        {
+            auto& t = asset.textures[i];
+            const auto path = "textures/" + std::to_string(i) + ".png";
+            std::filesystem::copy_file(resource_root / t.path, temporary / path);
+            t.path = path;
+        }
+        write_json(temporary / "model.nkm.json", Json{{"schema", kAssetSchema}, {"model", asset}});
+        write_json(temporary / "source.json", Json::parse(result.source_archive));
+        write_json(temporary / "report.json",
+                   Json{{"structural_import", true},
+                        {"playback_certified", false},
+                        {"unsupported_fields", result.report.unsupported_fields},
+                        {"warnings", result.report.warnings}});
+        std::filesystem::rename(temporary, destination);
+        temporary.clear();
+        return {};
+    }
+    catch (const std::exception& e)
+    {
+        if (!temporary.empty())
+        {
+            std::error_code ec;
+            std::filesystem::remove_all(temporary, ec);
+        }
+        return {e.what()};
+    }
+}
+} // namespace nekomote::asset_io

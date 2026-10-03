@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：初稿，2026-10-03。当前状态：P0（工程骨架与验证环境）已完成，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
+版本：初稿，2026-10-03。当前状态：P0/P1 已复核，P2 开发中，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
 
 ## 1. 产品与开发策略
 
@@ -16,11 +16,11 @@ NekoMote 独立实现原生二维模型运行时，使用已有 E-mote 解包素
 
 ### 2.1 工作区
 
-- 新项目：`/run/media/chocola/MIKU/NekoMote/`。
-- 原项目：`/run/media/chocola/MIKU/NekoWebShow/`，调查基线 `main` / `47751f6a2cbce50ed7b1cdc8727e4d4bacf83b0e`。
+- 新项目：本仓库根目录。
+- 原项目：同级目录 `../NekoWebShow/`，调查基线 `main` / `47751f6a2cbce50ed7b1cdc8727e4d4bacf83b0e`。
 - 原项目目录当前有 195 条模型目录记录；完整原生兼容性尚未验证。
 - 本地 `refer/` 保存旧调查报告和参考源码，已被 Git 忽略。
-- 当前开发环境：KDE / X11，CMake 4.1.1、Ninja 1.12.1、GCC 15.2.1、Clang/clang-format 20.1.8。仅用于说明当前环境，不把这些精确版本强制写成未来最低要求。
+- 当前开发环境：KDE / X11，CMake 4.0.3、Ninja 1.12.1、GCC 15.1.1、Clang/clang-format 20.1.8。仅用于说明当前环境，不把这些精确版本强制写成未来最低要求。
 
 用户已批准路线规划和开发规范；本文件不是“阶段已完成”的报告。当前已有暂存的 `.gitignore` 属于仓库初始工作，规划任务不修改其内容或暂存状态。
 
@@ -65,7 +65,7 @@ NekoMote 独立实现原生二维模型运行时，使用已有 E-mote 解包素
 
 ### 3.2 目标组织
 
-以下是目标目录，当前尚未创建源代码。随阶段需要逐项建立：
+以下是目标目录，随阶段需要逐项建立：
 
 ```text
 include/nekomote/            真正需要跨模块/宿主的公共契约
@@ -108,7 +108,7 @@ flowchart TD
 
 ## 4. 阶段地图与完成状态
 
-所有阶段当前均为“未开始”。只在退出条件全部有证据时更新为“完成”；失败、近似和阻塞单独记录。
+下表记录当前实测状态。只在退出条件全部有证据时更新为“完成”；失败、近似和阻塞单独记录。
 
 | 阶段 | 目标 | 前置 | 主要交付 | 状态 |
 | --- | --- | --- | --- | --- |
@@ -146,7 +146,7 @@ P1 的素材调查和 P2 的通用 GPU 基础可交错推进；P3/P4 的语义�
 - 缺少 `refer/` 仍能配置和构建；缺素材只影响显式素材操作。
 - Presets 和检查命令可按文档复现，不写不存在的脚本。
 
-P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --preset dev`、`ctest --preset dev`。这三个入口当前尚不可执行，建立时以实际配置为准。
+P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --preset dev`、`ctest --preset dev`。这三个入口已在 P0 建立并可执行。
 
 ## 6. P1：素材审计、语义清单与导入器
 
@@ -408,9 +408,9 @@ GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必�
 ## 17. 下一位 Agent 的第一批任务
 
 1. 读本规范入口与路线图，检查用户当前授权、Git 状态和已有源码。
-2. 从 P0 开始建立最小可复现构建；不提前实现桌面插件、全部后端或格式兼容逻辑。
+2. 从当前已验证阶段继续；不提前实现桌面插件、全部后端或格式兼容逻辑。
 3. 素材路径由命令/开发配置传入；选 `chocola-date-a` 建立数据清单和来源 hash。
 4. P1 定义当前资产 schema、能力报告和字段证据；随后交错推进基础 GPU 绘制。
 5. 完成 P3/P4 的复杂模型闭合后再推进完整动画。每次交付更新实际阶段状态。
 
-当前下一步是 **P1 素材审计与导入规范**（ROADMAP §6）。P0 工程骨架与验证环境已完成，交接记录见 [docs/p0-handoff.md](docs/p0-handoff.md)。
+当前下一步是 **P2 原生静态绘制基础**（ROADMAP §7）。P0/P1 复核记录见 [docs/development-log.md](docs/development-log.md) 与 [docs/p1-handoff.md](docs/p1-handoff.md)。

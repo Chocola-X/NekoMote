@@ -8,128 +8,171 @@
 #include <utility>
 #include <vector>
 
-namespace nekomote::model {
+namespace nekomote::model
+{
 
-// Strongly typed model asset schema (immutable after import).
-//
-// This is the project's own representation of an imported E-mote model. It is
-// produced by asset_io/importer from the source PSB/JSON and consumed by the
-// runtime. The source field paths and raw E-mote values are not carried into
-// the hot path; diagnostics live in the ImportReport instead.
-//
-// Field semantics and evidence: docs/p1-handoff.md, docs/conventions.md.
-// Coordinate/UV/matrix conventions: see docs/conventions.md.
-
-// Atlas sub-rectangle for an icon entry (source.tex.icon["NNNN"]).
-struct IconRect {
-    float left{0.0f};
-    float top{0.0f};
-    float width{0.0f};
-    float height{0.0f};
-    float origin_x{0.0f};
-    float origin_y{0.0f};
-    int attr{0};
-    int zorder{0};
+// Missing, explicit null and a numeric zero are distinct source states. Runtime
+// compilation resolves these once; frame evaluation never parses source JSON.
+enum class FieldState
+{
+    Missing,
+    Null,
+    Value
 };
 
-// Texture atlas definition (source.tex.texture + resx Resources).
-struct TextureDef {
-    std::string name;        // logical name, e.g. "tex"
-    std::string path;        // path to PNG relative to resource root
-    int width{0};            // atlas pixel width
-    int height{0};           // atlas pixel height
-    std::string format;      // e.g. "RGBA8"
+template <typename T>
+struct Field
+{
+    FieldState state{FieldState::Missing};
+    T data{};
+    bool has_value() const
+    {
+        return state == FieldState::Value;
+    }
+    const T& value() const
+    {
+        return data;
+    }
+    const T& operator*() const
+    {
+        return data;
+    }
 };
 
-// Mesh control points for one frame. bp is 16 control points x 2 coords,
-// row-major (row 0..3, col 0..3), in normalized [0,1]^2 parameter space.
-// has_bp=false means the frame uses the identity grid (col/3, row/3).
-// cc (color control) is tracked for completeness; semantics unverified.
-struct MeshData {
-    std::optional<std::array<float, 32>> bp;
-    std::optional<std::array<float, 32>> cc;
+struct IconRect
+{
+    std::string texture;
+    float left{0}, top{0}, width{0}, height{0}, origin_x{0}, origin_y{0};
+    int attr{0}, zorder{0};
 };
 
-// Per-frame content of a layer. This is the rendering primitive.
-struct FrameContent {
-    std::array<float, 3> coord{{0.0f, 0.0f, 0.0f}};  // x, y, z(depth)
-    std::string icon;        // raw icon string: "NNNN", "x:y:w:h", or name
-    std::string src;         // texture name: "tex", "blank", part name, ...
-    std::uint64_t mask{0};   // mask bitmask
-    std::optional<float> opa;        // opacity; absent => unchanged
-    std::optional<std::uint32_t> color;  // packed RGBA; absent => unchanged
-    std::optional<int> bm;           // blend mode; absent => default
-    MeshData mesh;
+struct TextureDef
+{
+    std::string name, path, format;
+    int width{0}, height{0};
 };
 
-struct LayerFrame {
-    int time{0};
+// A 32-component bp occurs in the current corpus. Its interpretation remains
+// a candidate until reference experiments recorded in docs/semantics.md pass.
+// cc has a different, unverified layout: retain every component, never truncate.
+struct MeshData
+{
+    Field<std::array<float, 32>> bp;
+    Field<std::vector<float>> cc;
+};
+
+struct MotionContent
+{
+    Field<std::uint64_t> mask;
+    Field<float> time_offset;
+};
+
+struct FrameContent
+{
+    Field<std::array<float, 3>> coord;
+    Field<std::string> icon, src;
+    Field<std::uint64_t> mask;
+    Field<float> opa, angle, zx, zy, ox, oy;
+    Field<std::uint32_t> color;
+    Field<int> bm, flip;
+    Field<MotionContent> motion;
+    Field<MeshData> mesh;
+};
+
+struct LayerFrame
+{
+    float time{0};
     int type{0};
-    FrameContent content;
+    Field<FrameContent> content;
 };
 
-// Parameter binding: maps a layer's frameList to a variable.
-struct ParamBinding {
-    std::string id;          // variable label, e.g. "face_talk"
-    float range_begin{0.0f};
-    float range_end{0.0f};
-    int division{0};
-    int discretization{0};
+struct ParamBinding
+{
+    std::string id;
+    float range_begin{0}, range_end{0};
+    int division{0}, discretization{0};
     bool enabled{true};
 };
 
-// A renderable layer. Children form the scene graph.
-struct Layer {
+struct Layer
+{
     std::string label;
-    int coordinate{0};
-    int mesh_combine{0};     // 0=main, 1=helper(delta)
-    int mesh_division{0};    // subdivision per edge
-    int mesh_transform{0};   // 0=none, 1=bezier, 2=composite
-    int parameterize{0};     // index into part's parameter table
-    int stencil_type{0};
+    int type{0}, coordinate{0}, mesh_combine{0}, mesh_division{0}, mesh_transform{0};
+    int stencil_type{0}, original_index{0}, mesh_sync_child_mask{0};
+    int export_self{1}, join_target{1}, ground_correction{0};
+    int motion_independent_layer_inherit{0}, obj_tri_priority{0};
+    Field<int> parameterize, shape;
     std::uint64_t inherit_mask{0};
     std::vector<int> transform_order;
+    std::vector<std::string> stencil_composite_mask_layers;
     std::vector<ParamBinding> parameter;
     std::vector<LayerFrame> frame_list;
     std::vector<Layer> children;
 };
 
-// A named part within a part group (e.g. face_parts/motion/口_基礎).
-struct Part {
-    std::string group;       // "face_parts", "body_parts", ...
-    std::string name;        // part name
+struct PriorityFrame
+{
+    float time{0};
+    int type{0};
+    Field<std::vector<int>> content;
+};
+
+// A source object motion is a reusable subtree, not an independently drawn part.
+struct Part
+{
+    std::string group, name;
+    int type{0};
+    float last_time{0}, loop_time{-1};
+    Field<int> parameterize;
+    std::vector<ParamBinding> parameter;
+    std::vector<PriorityFrame> priority;
+    std::unordered_map<std::string, int> layer_index_map;
     std::vector<Layer> layers;
 };
 
-// Variable definition (metadata.variableList[]).
-struct VariableDef {
+struct VariableDef
+{
     std::string label;
-    std::vector<std::pair<int, std::string>> frames;  // (frame value, label)
+    std::vector<std::pair<int, std::string>> frames;
 };
 
-// The immutable model asset.
-struct ModelAsset {
-    std::string spec;        // "ems"
-    float version{0.0f};
-    int screen_width{0};
-    int screen_height{0};
-    int screen_origin_x{0};
-    int screen_origin_y{0};
+struct VariableKey
+{
+    float time{0};
+    int type{0};
+    Field<float> value, easing;
+};
 
+struct VariableTrack
+{
+    std::string label;
+    std::vector<VariableKey> keys;
+};
+
+struct Timeline
+{
+    std::string label;
+    int diff{0};
+    float last_time{-1}, loop_begin{-1}, loop_end{-1};
+    std::vector<VariableTrack> tracks;
+};
+
+// No filesystem, JSON, window or graphics types cross this boundary. Source
+// archives and unsupported-field diagnostics are owned by the offline importer.
+struct ModelAsset
+{
+    std::string spec;
+    float version{0};
+    int screen_width{0}, screen_height{0}, screen_origin_x{0}, screen_origin_y{0};
+    std::string base_group, base_motion;
     std::vector<VariableDef> variables;
-    std::vector<VariableDef> instant_variables;
-
-    std::unordered_map<std::string, IconRect> icons;   // "0003" -> rect
+    std::vector<std::string> instant_variables;
+    std::unordered_map<std::string, IconRect> icons; // qualified "texture/icon"
     std::vector<TextureDef> textures;
-
     std::vector<Part> parts;
-    std::vector<std::string> parts_order;  // customPartsOrder (part ids)
-
-    // Counts for diagnostics (filled by importer).
-    int total_layers{0};
-    int total_frames{0};
-    int bp_nonnull{0};
-    int cc_nonnull{0};
+    std::vector<Timeline> timelines;
+    std::vector<std::string> parts_order; // meaning unverified; not draw order
+    int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};
 };
 
-}  // namespace nekomote::model
+} // namespace nekomote::model

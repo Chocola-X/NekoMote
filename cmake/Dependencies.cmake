@@ -41,7 +41,9 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        v3.5.3
     GIT_SHALLOW    TRUE)
-FetchContent_MakeAvailable(Catch2)
+if(NEKOMOTE_BUILD_TESTS)
+    FetchContent_MakeAvailable(Catch2)
+endif()
 
 # --- GLFW (preview window + GL context) ------------------------------------------
 FetchContent_Declare(
@@ -53,4 +55,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
+if(NEKOMOTE_BUILD_PREVIEW)
+    FetchContent_MakeAvailable(glfw)
+endif()
