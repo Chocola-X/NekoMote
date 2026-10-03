@@ -1,0 +1,1134 @@
+{
+  "phase_complete": false,
+  "scope": "type=1 symmetric positive hard circular paired clamp; physics integrator not implemented",
+  "input": {
+    "model": "chocola-date-a",
+    "width": 800,
+    "height": 1080,
+    "origin": [
+      0,
+      400
+    ],
+    "steps": 0,
+    "bust_variables": [
+      "bust_LR",
+      "bust_UD",
+      "bust_LR_spare",
+      "bust_UD_spare"
+    ]
+  },
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "pair0",
+      "x": 30,
+      "y": 0,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "3199f28ad86c97603f79aad20476efaaafd99358c4ffe9053814b2b185a2ba4b",
+        "native_sha256": "aec1939648fbbba3bbe1759986cacffdb4be9ea8a1bb43c3fa0de0958e6c3597",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "1fc69f8192437716b2c0056150dce2f21ae5d3343844be82d7d0a64b421f087e"
+    },
+    {
+      "case": "pair1",
+      "x": 0,
+      "y": -18.189874649,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "f1b603bbd02966c745d40e84509fca19fbcdf15d1ed6032912c01bd2a07a192c",
+        "native_sha256": "a8b78000c2a8a09857dfb5510203363dd207986c231548d67c7d654b0a5c19ca",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "df7b2e98b94ae203a7f59adacc52cd9122e96639cc5657d68ad62e567cb137ae"
+    },
+    {
+      "case": "pair2",
+      "x": 30,
+      "y": 30,
+      "frame_max_error_px": 6.518557544950508e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "39717e3ee347ba1d7f5cda7a73d23d302dacb75f7555fb2156dffb3097bc1d6b",
+        "native_sha256": "3584ff5ad254c73dee0a4c2f36505e171c52b64e469de39a34bd2defa01c5824",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "adbefad081f02cc2ad55d6db1fc38c92b704470cbf7f99a2a215368819a75bf6"
+    },
+    {
+      "case": "pair3",
+      "x": 15,
+      "y": 15,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "d31e5439931715329884b6cf6de64798111ef476f05999eb8b792a790c5a6621",
+        "native_sha256": "f1c2626b1349112ef38215bc7020fa88b4303ab4201d37439015c87ae0c7c70b",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "f5c653702573848b5b6107c93c9b11a47a0753676d74a6dcf26cb932e0a26d9e"
+    },
+    {
+      "case": "pair4",
+      "x": 15,
+      "y": -20,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "7cb5b91d02fd960b762449c84a3df2b75f81b3221987ffdf86c980e41b3c7931",
+        "native_sha256": "4ef46337d70f6375808a09ca364a6aa2ee73ddfca7ba527264d4007570210940",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "d0960d7b1d7e9d0a2d02938970231b06b44413f4afa760580db7b195e082af82"
+    },
+    {
+      "case": "pair5",
+      "x": 30,
+      "y": 15,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "9482507a597454023e8dbedb0e5bb0ede002f9eba6caa551437a231999d419d3",
+        "native_sha256": "3038cf5fb56935f54f2fce8337c0974adb853c3a2821a52d1e84fb571506cdeb",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "adb02a0e4af5da65e2f3e066569cab8656086baddefe5663d05f9fa963d6fe9d"
+    },
+    {
+      "case": "pair6",
+      "x": 60,
+      "y": 15,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "da4b8cdeea2398cb80d141bbd8babe6e2ced06c266023ad03daefc886b9d6346",
+        "native_sha256": "7e2e5372130b30b830ff05491b621aa00575614b771e4270adad5bc1d6275dfc",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "3011f385454dfc832f9c0c4f1c485d38d2df964376d3f8a93de1a36b0097e36d"
+    },
+    {
+      "case": "pair7",
+      "x": -30,
+      "y": -30,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "92ca8e2eb0391b4a559bc81867d6ab987bc0455cdeb62d8a16425b8adffed123",
+        "native_sha256": "58f39cdece0143b5b57a3ae647bd16aa99c35cc057cef76b0c6a1ce88ffe70ed",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "201d83d9963ea17af930a49ae78caa0c3a21ede76539f95326f7522b91822c44"
+    },
+    {
+      "case": "pair8",
+      "x": 1,
+      "y": -1,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "8a020f3931650b3940e961657ba0d1e0651f0575edaf5c037f487f2c5c863dd8",
+        "native_sha256": "3ea5ddd29968205152d80b1b7d6df8986ea4d4c915ab5b8451491d5b8d582102",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "e0a389ebf0cc5b8b4cea65002f18ce69bbe78c4809a48908db7d9324bbd7cc0c"
+    },
+    {
+      "case": "pair9",
+      "x": 0,
+      "y": 0,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "missing_primitives": [],
+      "unmatched_reference_vertices": 0,
+      "unused_native_vertices": 0,
+      "missing_reference_triangles": 0,
+      "unused_native_triangles": 0,
+      "frame_error": 0,
+      "image": {
+        "reference_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+        "native_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      },
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    }
+  ]
+}

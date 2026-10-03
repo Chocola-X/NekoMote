@@ -42,6 +42,8 @@ def main():
                         help='observe additional source binding labels omitted by CountVariables')
     parser.add_argument('--transitions', type=json.loads, default={},
                         help='explicit original SetVariable requests: name -> {value,frames,easing}')
+    parser.add_argument('--physics-scales', type=json.loads, default={'hair': 0, 'parts': 0, 'bust': 0},
+                        help='explicit SDK controller scales; zero does not disable integration')
     parser.add_argument('--steps', type=int, default=0)
     parser.add_argument('--step-frames', type=float, default=1)
     parser.add_argument('--timeline', action='append', default=[],
@@ -76,6 +78,9 @@ def main():
             parser.error('each transition requires exactly value, frames and easing')
         if any(not finite_number(value) for value in request.values()) or request['frames'] < 0:
             parser.error('transition fields must be finite numbers with frames >= 0')
+    if not isinstance(args.physics_scales, dict) or set(args.physics_scales) != {'hair', 'parts', 'bust'} or \
+            any(not finite_number(v) or v < 0 for v in args.physics_scales.values()):
+        parser.error('physics scales require finite nonnegative hair, parts and bust')
     if any(not math.isfinite(value) for value in (args.x, args.y, args.opacity, args.scale)) or \
             args.scale <= 0 or not 0 <= args.opacity <= 1 or \
             not 0 < args.width <= 16384 or not 0 < args.height <= 16384:
@@ -134,7 +139,7 @@ def main():
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
-                   physics={'hair': 0, 'parts': 0, 'bust': 0, 'wind': False},
+                   physics={**args.physics_scales, 'wind': False},
                    diagnostic_fixture_edits=edits)
     if args.isolate_icon:
         source = root / 'model_conversion' / args.model.split('-')[0] / args.model / (args.model + '.json')

@@ -22,6 +22,10 @@ Vec2 deform_point(const Patch& patch, PatchDomain domain, Vec2 point) noexcept;
 void add_patch_displacement(Patch& destination, const Patch& helper) noexcept;
 // Symmetric type=0 paired control. Input and output are in variable units;
 // extent must be positive and finite. Inputs clamp to [-extent,+extent].
-// This maps the pair radially, preserving direction. Physics type=1 is pending.
+// This maps the pair radially, preserving direction.
 Vec2 clamp_pair(Vec2 input, float extent) noexcept;
+// Type-one hard circular limit. Preserve both components inside the radius;
+// outside, normalize the original vector, without first clamping either axis.
+// Finite input and a positive finite extent are required.
+Vec2 clamp_circle(Vec2 input, float extent) noexcept;
 } // namespace nekomote::runtime

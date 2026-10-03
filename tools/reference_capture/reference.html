@@ -32,9 +32,9 @@ window.capture = async function(options) {
     const device = EmotePlayer.device;
     const gl = device.gl;
     const id = player.playerId;
-    EmotePlayer_SetHairScale(id, 0);
-    EmotePlayer_SetPartsScale(id, 0);
-    EmotePlayer_SetBustScale(id, 0);
+    EmotePlayer_SetHairScale(id, options.physics.hair);
+    EmotePlayer_SetPartsScale(id, options.physics.parts);
+    EmotePlayer_SetBustScale(id, options.physics.bust);
     EmotePlayer_StopWind(id);
     EmotePlayer_SetCoord(id, options.x, options.y, 0, 0);
     EmotePlayer_SetScale(id, options.scale, 0, 0);
@@ -58,7 +58,9 @@ window.capture = async function(options) {
     EmotePlayer_SetVariable(id,"_globalA",255*options.opacity,0,0);
     player._globalA=255*options.opacity;
     player._speed=0; player._stepUpdate=false;
-    player._hairScale=player._partsScale=player._bustScale=0;
+    player._hairScale=options.physics.hair;
+    player._partsScale=options.physics.parts;
+    player._bustScale=options.physics.bust;
     const timelineInfo=[];
     for (const [count,label,diff] of [
         [EmotePlayer_CountMainTimelines,EmotePlayer_GetMainTimelineLabelAt,false],

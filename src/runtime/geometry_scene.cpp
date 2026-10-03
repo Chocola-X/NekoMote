@@ -604,9 +604,9 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const Vec2 input{instance.parameters[c.x.value], instance.parameters[c.y.value]};
         if (input == Vec2{})
             continue;
-        if (c.type != 0 || c.begin != -c.end || c.end <= 0)
+        if ((c.type != 0 && c.type != 1) || c.begin != -c.end || c.end <= 0)
             return {GeometryError::UnsupportedClamp, {}, c.x};
-        const auto output = clamp_pair(input, c.end);
+        const auto output = c.type == 0 ? clamp_pair(input, c.end) : clamp_circle(input, c.end);
         instance.parameters[c.x.value] = output.x;
         instance.parameters[c.y.value] = output.y;
     }

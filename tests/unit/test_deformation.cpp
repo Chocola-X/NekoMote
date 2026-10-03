@@ -55,3 +55,19 @@ TEST_CASE("Paired control matches original WebGL position observations", "[runti
     near(clamp_pair({0, -12}, 30), {0, -12});
     near(clamp_pair({90, -90}, 30), {21.2132034f, -21.2132034f});
 }
+TEST_CASE("Physical paired limit preserves the original vector direction", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    // Frozen Math observations and actual geometry from original WebGL PSB.
+    // (60,15) distinguishes radial normalization from per-axis clipping.
+    // See docs/validation/p6-circle-clamp.json.
+    near(clamp_circle({30, 30}, 30), {21.2132034f, 21.2132034f});
+    near(clamp_circle({30, 15}, 30), {26.8328157f, 13.4164076f});
+    near(clamp_circle({60, 15}, 30), {29.1042747f, 7.2760687f});
+    near(clamp_circle({-30, -30}, 30), {-21.2132034f, -21.2132034f});
+    near(clamp_circle({15, 15}, 30), {15, 15}, 0);
+    near(clamp_circle({15, -20}, 30), {15, -20}, 0);
+    near(clamp_circle({0, -18.1898746f}, 30), {0, -18.1898746f}, 0);
+    near(clamp_circle({30, 0}, 30), {30, 0}, 0);
+    near(clamp_circle({0, 0}, 30), {0, 0}, 0);
+}
