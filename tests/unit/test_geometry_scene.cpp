@@ -530,6 +530,9 @@ TEST_CASE("Warmed animation, expression and Eye routing allocate no project heap
         if (frame % 20 == 0 && !player.transition(eye_parameter, frame % 40 == 0 ? 30.0f : 5.0f, 10,
                                                   frame % 40 == 0 ? 1.0f : -1.0f))
             return false;
+        if (frame % 20 == 10 && (!player.transition(parameter, 1.5f, 8, 1) ||
+                                 !player.transition(eye_parameter, 24.04f, 8, -1)))
+            return false;
         if (!player.step())
             return false;
         for (const auto& value : player.values())

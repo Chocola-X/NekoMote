@@ -314,10 +314,10 @@ TEST_CASE("Animation rejects unknown IDs and selected unsupported controllers", 
             runtime::AnimationError::InvalidTimeline);
     REQUIRE_FALSE(player.transition(reference.scene->find_variable("body_UD"),
                                     std::numeric_limits<float>::quiet_NaN()));
-    REQUIRE(player.transition(reference.scene->find_variable("face_eyebrow"), 56, 20, 1).error ==
-            runtime::AnimationError::UnsupportedController);
+    REQUIRE(player.transition(reference.scene->find_variable("face_eyebrow"), 56, 20, 1));
     REQUIRE(player.values()[reference.scene->find_variable("face_eyebrow").value - 1].value ==
-            0.0f);
+            56.0f);
+    player.reset();
     const auto idle = reference.program->find_timeline("待機ループ00");
     REQUIRE(player.play(idle, runtime::TimelinePlayMode::AdditiveParallel));
     for (int i = 0; i < 70; ++i)
@@ -397,10 +397,12 @@ TEST_CASE("Expression transitions report an inverse curve domain failure without
         runtime::compile_playback(reference.asset, runtime::PhysicsMode::DisabledDiagnostic);
     REQUIRE(compiled.program);
     runtime::PlaybackInstance playback(*compiled.program);
+    REQUIRE(playback.frame_primitives().empty());
     REQUIRE(playback.transition(parameter, 40, 2, 1));
     REQUIRE(playback.step());
     REQUIRE_FALSE(playback.step());
     REQUIRE_FALSE(playback.prepare_frame());
+    REQUIRE(playback.frame_primitives().empty());
     playback.reset();
     REQUIRE(playback.transition(parameter, 40, 20, 1));
     REQUIRE(playback.step());
@@ -855,6 +857,43 @@ TEST_CASE("Difference timeline typed controllers, weights and stopping match sou
                 const auto id = program.animation().find_timeline(label);
                 REQUIRE(player.timeline_weight(id) == ratio.get<float>());
                 REQUIRE(player.is_playing(id) == sample.at("playing").at(label).get<bool>());
+            }
+        }
+    }
+}
+
+TEST_CASE("Expression endpoints outside the control graph cancel interpolation", "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "expression_gap_reference.json");
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::AnimationInstance player(*reference.program, {1});
+        const auto apply = [&](const Json& transitions)
+        {
+            for (const auto& [name, transition] : transitions.items())
+                REQUIRE(player.transition(
+                    reference.scene->find_variable(name), transition.at("value").get<float>(),
+                    transition.at("frames").get<float>(), transition.at("easing").get<float>()));
+        };
+        for (const auto& [name, initial] : experiment.at("variables").items())
+            REQUIRE(player.transition(reference.scene->find_variable(name), initial.get<float>()));
+        apply(experiment.at("transitions"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            for (const auto& event : experiment.at("events"))
+                if (event.at("step") == sample.at("step"))
+                    apply(event.value("transitions", Json::object()));
+            REQUIRE(player.step());
+            for (const auto& [name, expected] : sample.at("values").items())
+            {
+                INFO(name);
+                INFO(sample.at("step"));
+                REQUIRE_THAT(value(player, reference.scene->find_variable(name)),
+                             Catch::Matchers::WithinAbs(expected.get<double>(),
+                                                        fixture.at("tolerance").get<double>()));
             }
         }
     }

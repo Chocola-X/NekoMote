@@ -213,7 +213,15 @@ bool route(const Controller& c, Transition& state, float target) noexcept
     }
     const auto start_edge = edge_at(c, state.value), end_edge = edge_at(c, target);
     if (start_edge < 0 || end_edge < 0)
-        return false;
+    {
+        // An endpoint outside the expression graph cancels interpolation and
+        // assigns the requested value. It is neither clamped nor routed through
+        // a neighbouring interval. Original SDK sample_02 and explicit gap /
+        // out-of-range requests: tests/fixtures/expression_gap_reference.json.
+        state.path.clear();
+        state.length = 0;
+        return true;
+    }
     const auto& a = c.edges[static_cast<std::size_t>(start_edge)];
     const auto& b = c.edges[static_cast<std::size_t>(end_edge)];
     float best = start_edge == end_edge ? std::abs(target - state.value) : kInfinity;
@@ -574,7 +582,6 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 track.variable = scene.find_variable(source.label);
                 require(track.variable.valid(),
                         clip.label + "/" + source.label + ": missing variable");
-                const auto& controller = data->controllers[track.variable.value];
                 for (std::size_t i = 0; i < source.keys.size(); ++i)
                 {
                     const auto& key = source.keys[i];
@@ -598,9 +605,6 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                                          ? std::max(0.0f, source.keys[i + 1].time - key.time - 1)
                                          : 0;
                         if (!std::isfinite(e.target) || !std::isfinite(e.easing))
-                            clip.supported = false;
-                        if ((controller.kind == Kind::Expression || controller.kind == Kind::Eye) &&
-                            edge_at(controller, e.target) < 0)
                             clip.supported = false;
                     }
                     track.events.push_back(e);

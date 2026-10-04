@@ -123,6 +123,8 @@ class PlaybackInstance
     // accepted and no snapshots are gathered in advance/prepare_frame.
     std::optional<GeometryNodeObservation> observe_node(NodeId id) const noexcept;
     std::optional<SpringObservation> observe_spring(std::size_t index) const noexcept;
+    // Scene-owned labels and prepared draw ranges; same validity as frame().
+    std::span<const GeometryPrimitive> frame_primitives() const noexcept;
 
   private:
     struct Impl;

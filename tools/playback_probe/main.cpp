@@ -319,7 +319,19 @@ int run(int argc, char** argv)
                 {"frame_vertices", player.frame().vertices.size()},
                 {"frame_indices", player.frame().indices.size()}};
     if (request.value("dump_frame", false))
+    {
         report["frame"] = diagnostics::frame_json(player.frame(), scene.textures());
+        report["primitives"] = Json::array();
+        for (const auto& primitive : player.frame_primitives())
+            report["primitives"].push_back({{"node", primitive.node.value},
+                                            {"label", primitive.label},
+                                            {"source", primitive.source},
+                                            {"texture", primitive.texture.value},
+                                            {"first_index", primitive.draw.first_index},
+                                            {"index_count", primitive.draw.index_count},
+                                            {"opacity", primitive.opacity},
+                                            {"mesh_division", primitive.mesh_division}});
+    }
     if (request.value("observe_nodes", false))
     {
         report["nodes"] = Json::array();

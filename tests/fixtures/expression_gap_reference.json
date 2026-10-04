@@ -1,0 +1,447 @@
+{
+  "scope": "Original unmodified PSBs via public SetVariable/GetVariable. Endpoints outside expression graph assign immediately, including return from gap. Seed1; no SDK implementation read.",
+  "tolerance": 1e-05,
+  "cases": [
+    {
+      "case": "source-transition8",
+      "model": "azuki-casual-a",
+      "variables": {
+        "face_eye_open": 5
+      },
+      "transitions": {
+        "face_eye_open": {
+          "value": 24.04,
+          "frames": 8,
+          "easing": 0
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "transitions": {
+            "face_eye_open": {
+              "value": 5,
+              "frames": 8,
+              "easing": 0
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "877138b7ed30dcf04586c3a443a0c7175c92743a0632fa892c32d8be9ee3eb38",
+        "original_psb": "877138b7ed30dcf04586c3a443a0c7175c92743a0632fa892c32d8be9ee3eb38",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "7fa8816e5333f799da658f272355ca812f1ada110372b29f12297ff7be297ad4",
+      "samples": [
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 24.040000915527344
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 24.040000915527344
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 24.040000915527344
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 24.040000915527344
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 5
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 5
+          }
+        }
+      ]
+    },
+    {
+      "case": "source-expression8",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 10,
+          "frames": 8,
+          "easing": 0
+        },
+        "face_eye_open": {
+          "value": -20,
+          "frames": 8,
+          "easing": 0
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "transitions": {
+            "face_eyebrow": {
+              "value": 40,
+              "frames": 8,
+              "easing": 0
+            },
+            "face_eye_open": {
+              "value": 40,
+              "frames": 8,
+              "easing": 0
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "7ec3ef87bf333b85473b1317a81b3da7d99d5d11ab7d1e14b17b37d1acbf6b33",
+      "samples": [
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": -20,
+            "face_eyebrow": 1.25
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": -20,
+            "face_eyebrow": 2.5
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": -20,
+            "face_eyebrow": 3.75
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": -20,
+            "face_eyebrow": 5
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 6.75
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 8.5
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 32.75
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 34.5
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 36.25
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 38
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 39.75
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 40,
+            "face_eyebrow": 40
+          }
+        }
+      ]
+    },
+    {
+      "case": "source-expression-gap8",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 10.5,
+          "frames": 8,
+          "easing": 1
+        },
+        "face_eye_open": {
+          "value": 45,
+          "frames": 8,
+          "easing": 1
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "transitions": {
+            "face_eyebrow": {
+              "value": 40,
+              "frames": 8,
+              "easing": 1
+            },
+            "face_eye_open": {
+              "value": 10,
+              "frames": 8,
+              "easing": 1
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "be27bace1fb6cc3a14c711667da88115595999451c32905769aaa4350e27a080",
+      "samples": [
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 45,
+            "face_eyebrow": 10.5
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 45,
+            "face_eyebrow": 10.5
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 45,
+            "face_eyebrow": 10.5
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 45,
+            "face_eyebrow": 10.5
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 40
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -306,6 +306,11 @@ std::uint64_t PlaybackInstance::tick_count() const noexcept
 {
     return impl_->ticks;
 }
+std::span<const GeometryPrimitive> PlaybackInstance::frame_primitives() const noexcept
+{
+    return impl_->frame_ready && !impl_->faulted ? impl_->geometry.primitives()
+                                                 : std::span<const GeometryPrimitive>{};
+}
 std::optional<GeometryNodeObservation> PlaybackInstance::observe_node(NodeId id) const noexcept
 {
     if (!impl_->frame_ready || impl_->faulted)

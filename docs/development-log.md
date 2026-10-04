@@ -331,3 +331,11 @@
 - Debug/Release122全通过；未修改CPU核心，不额外重复ASan。最终阶段仍未认证：四组边缘像素、全素材、桌面、性能/长期稳定性继续推进。证据 docs/validation/p6-player-pacing.json。
 
 - 安全窗口自检最终Debug/Release均通过；先等待六次初始swap，避免EGL drawable尚未分配时把1×1有效内容误当成暂停回归。该初始失败单独保留。
+
+## 2026-10-05 P5/P6 表情图外端点
+
+- 全目录 CPU 调查发现 sample_02 的 face_eye_open=24.04 落在声明区间20与30之间；原版公开 SDK 显示目标或当前值不在图内时立即赋值，取消插值。范围外-20/45、表情间隙10.5和中途反向请求再次验证，不钳位、不修改PSB、不读取核心源码。
+- 移除相应时间线的过度拒绝，Expression/Eye 共用明确规则；三组48步原版轨迹冻结为 expression_gap_reference.json。Azuki sample_02 60步完整物理/标量/几何/图像全部PASS（最大标量2.384185791e−7、几何7.629394531e−5px），并目视核实；旧Eye十组、Chocola四组全部回归PASS。
+- Debug/Release123、ASan/UBSan核心122通过；500预热后作者步加入重复间隙/返回请求，项目普通堆分配仍为零。并发目录调查期间不报告计时收益。
+- 新增已构帧部件的只读span，过期/失败状态返回空，离线probe明确输出节点、资源与draw范围供残余像素定位，不收集每帧快照。
+- 原Debug目录调查因每型号115条时间线开销重启Release；首轮Release被并发构建替换可执行文件打断，不能作为完整结果。后续工具冻结二进制/hash并逐型号保存检查点。四组像素、局部继承、全素材/桌面与长期运行仍未闭合。详见 docs/validation/p6-expression-gap.json。
