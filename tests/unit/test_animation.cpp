@@ -464,8 +464,16 @@ TEST_CASE("Main timelines dispatch nonlinear expression transitions through thei
                                                 fixture.at("value_tolerance").get<double>()));
     }
     REQUIRE_FALSE(player.is_playing(timeline));
-    REQUIRE(player.play(timeline, runtime::TimelinePlayMode::AdditiveParallel).error ==
-            runtime::AnimationError::UnsupportedTimeline);
+    player.reset();
+    REQUIRE(player.play(timeline, runtime::TimelinePlayMode::AdditiveParallel));
+    REQUIRE(player.set_timeline_weight(timeline, 0.25f));
+    for (const auto& sample : fixture.at("cases")[0].at("samples"))
+    {
+        REQUIRE(player.step());
+        REQUIRE_THAT(value(player, reference.scene->find_variable("face_eyebrow")),
+                     Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                fixture.at("value_tolerance").get<double>()));
+    }
 }
 
 TEST_CASE("Automatic Eye blink timing, deterministic seeds and concurrent requests match reference",
@@ -738,6 +746,116 @@ TEST_CASE("External contributions follow the author clock across presentation ra
         {
             REQUIRE(at30.values()[i].value == at60.values()[i].value);
             REQUIRE(at30.values()[i].value == at144.values()[i].value);
+        }
+    }
+}
+
+TEST_CASE("Difference timeline typed controllers, weights and stopping match source caches",
+          "[animation]")
+{
+    const auto fixture = read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) /
+                              "timeline_controller_difference_reference.json");
+    Reference reference;
+    model::VariableControl selector;
+    selector.variable = fixture.at("selector").at("variable").get<std::string>();
+    selector.kind = model::VariableControlKind::Selector;
+    for (const auto& item : fixture.at("selector").at("options"))
+    {
+        const auto name = item.at("variable").get<std::string>();
+        selector.options.push_back(
+            {name, item.at("on_value").get<float>(), item.at("off_value").get<float>()});
+        reference.asset.variables.push_back({name, {}});
+        model::VariableControl linear;
+        linear.variable = name;
+        linear.kind = model::VariableControlKind::Linear;
+        reference.asset.variable_controls.push_back(linear);
+    }
+    reference.asset.variable_controls.push_back(selector);
+    for (const auto& item : fixture.at("timelines"))
+    {
+        model::Timeline timeline;
+        timeline.label = item.at("label").get<std::string>();
+        timeline.last_time = item.at("last_time").get<float>();
+        timeline.loop_begin = item.at("loop_begin").get<float>();
+        timeline.loop_end = item.at("loop_end").get<float>();
+        for (const auto& t : item.at("tracks"))
+        {
+            if (t.at("keys").empty())
+                continue;
+            model::VariableTrack track;
+            track.label = t.at("label").get<std::string>();
+            for (const auto& k : t.at("keys"))
+            {
+                model::VariableKey key;
+                key.time = k.at("time").get<float>();
+                key.type = k.at("type").get<int>();
+                key.value.state =
+                    static_cast<model::FieldState>(k.at("value").at("state").get<int>());
+                key.easing.state =
+                    static_cast<model::FieldState>(k.at("easing").at("state").get<int>());
+                if (key.value.has_value())
+                    key.value.data = k.at("value").at("value").get<float>();
+                if (key.easing.has_value())
+                    key.easing.data = k.at("easing").at("value").get<float>();
+                track.keys.push_back(key);
+            }
+            timeline.tracks.push_back(std::move(track));
+        }
+        reference.asset.timelines.push_back(std::move(timeline));
+    }
+    auto compiled =
+        runtime::compile_playback(reference.asset, runtime::PhysicsMode::DisabledDiagnostic);
+    REQUIRE(compiled.program);
+    const auto& program = *compiled.program;
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::PlaybackInstance player(program, {1});
+        const auto requests = [&](const Json& list)
+        {
+            for (const auto& r : list)
+            {
+                const auto id = program.animation().find_timeline(r.at("label").get<std::string>());
+                const auto kind = r.at("kind").get<std::string>();
+                if (kind == "stop")
+                    REQUIRE(player.stop(id));
+                else if (kind == "fade_out")
+                    REQUIRE(player.fade_out(id, r.at("frames").get<float>(),
+                                            r.at("easing").get<float>()));
+                else
+                    REQUIRE(player.set_timeline_weight(id, r.at("value").get<float>(),
+                                                       r.at("frames").get<float>(),
+                                                       r.at("easing").get<float>()));
+            }
+        };
+        for (const auto& p : experiment.at("plays"))
+            REQUIRE(player.play(program.animation().find_timeline(p.at("label").get<std::string>()),
+                                mode(p.at("flags").get<int>())));
+        requests(experiment.at("requests"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            if (sample.at("step") != 0)
+            {
+                for (const auto& event : experiment.at("events"))
+                    if (event.at("step") == sample.at("step"))
+                        requests(event.value("timeline_requests", Json::array()));
+                REQUIRE(player.step());
+                for (const auto& [name, expected] : sample.at("values").items())
+                {
+                    INFO(name);
+                    const auto id = program.scene().find_variable(name);
+                    REQUIRE_THAT(player.values()[id.value - 1].value,
+                                 Catch::Matchers::WithinAbs(expected.get<double>(),
+                                                            fixture.at("tolerance").get<double>()));
+                }
+            }
+            for (const auto& [label, ratio] : sample.at("weights").items())
+            {
+                const auto id = program.animation().find_timeline(label);
+                REQUIRE(player.timeline_weight(id) == ratio.get<float>());
+                REQUIRE(player.is_playing(id) == sample.at("playing").at(label).get<bool>());
+            }
         }
     }
 }

@@ -1,0 +1,6749 @@
+{
+  "tolerance": 1e-05,
+  "note": "Unmodified original SDK, public typed controller caches even under difference play flags. Ordinary numeric timeline tracks remain differences; Eye, Expression, Mouth, Selector and Immediate dispatch to primary controllers. Weight changes and stop do not rewind already dispatched base transitions.",
+  "selector": {
+    "begin_frame": 0.0,
+    "blink_enabled": false,
+    "blink_frames": 0.0,
+    "blink_interval_max": 0.0,
+    "blink_interval_min": 0.0,
+    "edges": [],
+    "enabled": true,
+    "end_frame": 0.0,
+    "junctions": [],
+    "kind": 5,
+    "options": [
+      {
+        "off_value": 1.0,
+        "on_value": 0.0,
+        "variable": "fade_a"
+      },
+      {
+        "off_value": 1.0,
+        "on_value": 0.0,
+        "variable": "fade_b"
+      },
+      {
+        "off_value": 1.0,
+        "on_value": 0.0,
+        "variable": "fade_c"
+      },
+      {
+        "off_value": 1.0,
+        "on_value": 0.0,
+        "variable": "fade_d"
+      },
+      {
+        "off_value": 1.0,
+        "on_value": 0.0,
+        "variable": "fade_e"
+      }
+    ],
+    "talk_variable": "",
+    "variable": "arm_type"
+  },
+  "timelines": [
+    {
+      "diff": 1,
+      "label": "差分用_waiting_loop",
+      "last_time": -1.0,
+      "loop_begin": 0.0,
+      "loop_end": 181.0,
+      "tracks": [
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 10.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 41.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -10.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 121.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 181.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_UD"
+        }
+      ]
+    },
+    {
+      "diff": 0,
+      "label": "喜ぶ00",
+      "last_time": -1.0,
+      "loop_begin": -1.0,
+      "loop_end": -1.0,
+      "tracks": [
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_slant"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_hitomi_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 1.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_open"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 40.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eyebrow"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eyebrow_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 30.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_mouth"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_mouth_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_hi"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_tears"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_cheek"
+        }
+      ]
+    },
+    {
+      "diff": 0,
+      "label": "喜ぶ02",
+      "last_time": -1.0,
+      "loop_begin": -1.0,
+      "loop_end": -1.0,
+      "tracks": [
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -3.200000047683716
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_slant"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_hitomi_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 20.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_open"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 35.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eyebrow"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eyebrow_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 30.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_mouth"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_mouth_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_hi"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_tears"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 31.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_cheek"
+        }
+      ]
+    },
+    {
+      "diff": 1,
+      "label": "うんうん",
+      "last_time": -1.0,
+      "loop_begin": -1.0,
+      "loop_end": -1.0,
+      "tracks": [
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": -0.5
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 25.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 13.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 27.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 30.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 41.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 80.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 13.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 80.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": -0.5
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -20.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 13.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 27.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -20.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.5
+              },
+              "time": 41.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 80.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "face_eye_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 6.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 13.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 6.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 41.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 80.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "act_sp"
+        }
+      ]
+    },
+    {
+      "diff": 1,
+      "label": "走行ループ",
+      "last_time": -1.0,
+      "loop_begin": 28.0,
+      "loop_end": 84.0,
+      "tracks": [
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": -0.5
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -8.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 8.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 8.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": -1.0
+              },
+              "time": 20.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": -1.0
+              },
+              "time": 28.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 36.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": -1.0
+              },
+              "time": 48.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": -1.0
+              },
+              "time": 56.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 64.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": -1.0
+              },
+              "time": 76.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 84.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "move_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 14.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 42.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 4.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 71.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 84.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "head_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -15.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 14.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 28.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -15.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 56.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 84.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_UD"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 1.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 1.0
+              },
+              "time": 14.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 42.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 5.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 71.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 0.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 84.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "body_LR"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -15.0
+              }
+            },
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 15.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": -15.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 84.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "act_sp"
+        },
+        {
+          "keys": [
+            {
+              "easing": {
+                "state": 2,
+                "value": 0.0
+              },
+              "time": 0.0,
+              "type": 2,
+              "value": {
+                "state": 2,
+                "value": 1.0
+              }
+            },
+            {
+              "easing": {
+                "state": 1
+              },
+              "time": 1.0,
+              "type": 0,
+              "value": {
+                "state": 1
+              }
+            }
+          ],
+          "label": "arm_type"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "case": "run20",
+      "plays": [
+        {
+          "label": "走行ループ",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "b94e914582b7512ee36ec34c15fb23d376c4438b75ca9d8dd2b6a3f9e76f9898"
+    },
+    {
+      "case": "expression10",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "c80647a88afa5b3b49cbe42c9724e85986d575535d78763f336fb39f8f9607fc"
+    },
+    {
+      "case": "expression-half10",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "喜ぶ00",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.5
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "688069ba58e65772f0ee5a85bd303c9089601ae5865a3c521bf252a80091eeab"
+    },
+    {
+      "case": "expression-stop10",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "stop",
+              "label": "喜ぶ00"
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        }
+      ],
+      "source_metadata_sha256": "107c0d650e8670ca8ceb9d5a177c6b1e4f957ff6ae3c9218a342a48b6a6367f1"
+    },
+    {
+      "case": "run-half20",
+      "plays": [
+        {
+          "label": "走行ループ",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "走行ループ",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 0.5
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "139e3433ea024d100093e4592e7d1a3f7cfeaa1077dba13bdbc999111d61e86d"
+    },
+    {
+      "case": "run-stop20",
+      "plays": [
+        {
+          "label": "走行ループ",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "stop",
+              "label": "走行ループ"
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0
+          },
+          "weights": {
+            "走行ループ": 1
+          },
+          "playing": {
+            "走行ループ": false
+          }
+        }
+      ],
+      "source_metadata_sha256": "28dd1efcb2cdf8c8f87a2a801734f15bb1c6d97add39b0535551bfdba4e0ed1f"
+    },
+    {
+      "case": "expression30",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0.36666667461395264,
+            "face_eyebrow": 6.9666666984558105,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.833333134651184,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0.4000000059604645,
+            "face_eyebrow": 7.599999904632568,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.999999761581421,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0.4333333373069763,
+            "face_eyebrow": 8.233333587646484,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.1666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0.46666666865348816,
+            "face_eyebrow": 8.866666793823242,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0.5,
+            "face_eyebrow": 9.5,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0.5333333611488342,
+            "face_eyebrow": 31.633333206176758,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.6666667461395264,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0.5666667222976685,
+            "face_eyebrow": 32.266666412353516,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.8333334922790527,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0.6000000834465027,
+            "face_eyebrow": 32.900001525878906,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.000000238418579,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0.6333334445953369,
+            "face_eyebrow": 33.5333366394043,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0.6666668057441711,
+            "face_eyebrow": 34.16667175292969,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 21,
+          "values": {
+            "face_eye_open": 0.7000001668930054,
+            "face_eyebrow": 34.80000686645508,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.500000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 22,
+          "values": {
+            "face_eye_open": 0.7333335280418396,
+            "face_eyebrow": 35.43334197998047,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.6666672229766846,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 23,
+          "values": {
+            "face_eye_open": 0.7666668891906738,
+            "face_eyebrow": 36.06667709350586,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.833333969116211,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 24,
+          "values": {
+            "face_eye_open": 0.8000002503395081,
+            "face_eyebrow": 36.70001220703125,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.000000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 25,
+          "values": {
+            "face_eye_open": 0.8333336114883423,
+            "face_eyebrow": 37.33334732055664,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 26,
+          "values": {
+            "face_eye_open": 0.8666669726371765,
+            "face_eyebrow": 37.96668243408203,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.333333492279053,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 27,
+          "values": {
+            "face_eye_open": 0.9000003337860107,
+            "face_eyebrow": 38.60001754760742,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 28,
+          "values": {
+            "face_eye_open": 0.933333694934845,
+            "face_eyebrow": 39.23335266113281,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.666666507720947,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 29,
+          "values": {
+            "face_eye_open": 0.9666670560836792,
+            "face_eyebrow": 39.8666877746582,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.8333330154418945,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 30,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "7cfe175d8f3a570d9401334013710b0ed979c39f403d34b0af7fdb88e702cbdb"
+    },
+    {
+      "case": "reaction36",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 1
+        },
+        {
+          "label": "うんうん",
+          "flags": 3
+        },
+        {
+          "label": "差分用_waiting_loop",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0.36666667461395264,
+            "face_eyebrow": 6.9666666984558105,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.833333134651184,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0.4000000059604645,
+            "face_eyebrow": 7.599999904632568,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.999999761581421,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0.4333333373069763,
+            "face_eyebrow": 8.233333587646484,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.1666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0.46666666865348816,
+            "face_eyebrow": 8.866666793823242,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0.5,
+            "face_eyebrow": 9.5,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0.5333333611488342,
+            "face_eyebrow": 31.633333206176758,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.6666667461395264,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0.5666667222976685,
+            "face_eyebrow": 32.266666412353516,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.8333334922790527,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0.6000000834465027,
+            "face_eyebrow": 32.900001525878906,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.000000238418579,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0.6333334445953369,
+            "face_eyebrow": 33.5333366394043,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0.6666668057441711,
+            "face_eyebrow": 34.16667175292969,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 21,
+          "values": {
+            "face_eye_open": 0.7000001668930054,
+            "face_eyebrow": 34.80000686645508,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.500000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 22,
+          "values": {
+            "face_eye_open": 0.7333335280418396,
+            "face_eyebrow": 35.43334197998047,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.6666672229766846,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 23,
+          "values": {
+            "face_eye_open": 0.7666668891906738,
+            "face_eyebrow": 36.06667709350586,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.833333969116211,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 24,
+          "values": {
+            "face_eye_open": 0.8000002503395081,
+            "face_eyebrow": 36.70001220703125,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.000000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 25,
+          "values": {
+            "face_eye_open": 0.8333336114883423,
+            "face_eyebrow": 37.33334732055664,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 26,
+          "values": {
+            "face_eye_open": 0.8666669726371765,
+            "face_eyebrow": 37.96668243408203,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.333333492279053,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 27,
+          "values": {
+            "face_eye_open": 0.9000003337860107,
+            "face_eyebrow": 38.60001754760742,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 28,
+          "values": {
+            "face_eye_open": 0.933333694934845,
+            "face_eyebrow": 39.23335266113281,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.666666507720947,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 29,
+          "values": {
+            "face_eye_open": 0.9666670560836792,
+            "face_eyebrow": 39.8666877746582,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.8333330154418945,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 30,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": true,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 31,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 32,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 33,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 34,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 35,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        },
+        {
+          "step": 36,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1,
+            "うんうん": 1,
+            "差分用_waiting_loop": 1
+          },
+          "playing": {
+            "喜ぶ00": false,
+            "うんうん": true,
+            "差分用_waiting_loop": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "8f563928172f67ae1d2d2fa0356152435137a8dd579720ce9b937e2e221d8d75"
+    },
+    {
+      "case": "expression-special30",
+      "plays": [
+        {
+          "label": "喜ぶ02",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.6666666865348816,
+            "face_eyebrow": 0.46666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 1.3333333730697632,
+            "face_eyebrow": 0.9333333969116211,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 2,
+            "face_eyebrow": 1.4000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 2.6666667461395264,
+            "face_eyebrow": 1.8666667938232422,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 3.3333334922790527,
+            "face_eyebrow": 2.3333334922790527,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 4,
+            "face_eyebrow": 2.8000001907348633,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 4.666666507720947,
+            "face_eyebrow": 3.266666889190674,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 5.3333330154418945,
+            "face_eyebrow": 3.7333335876464844,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 5.999999523162842,
+            "face_eyebrow": 4.200000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 6.666666030883789,
+            "face_eyebrow": 4.6666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 7.333332538604736,
+            "face_eyebrow": 5.133333683013916,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.833333134651184,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 7.999999046325684,
+            "face_eyebrow": 5.600000381469727,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.999999761581421,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 8.666666030883789,
+            "face_eyebrow": 6.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.1666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 9.333333015441895,
+            "face_eyebrow": 6.533333778381348,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 10,
+            "face_eyebrow": 7.000000476837158,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 10.666666984558105,
+            "face_eyebrow": 7.466667175292969,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.6666667461395264,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 11.333333969116211,
+            "face_eyebrow": 7.933333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.8333334922790527,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 12.000000953674316,
+            "face_eyebrow": 8.40000057220459,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.000000238418579,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 12.666667938232422,
+            "face_eyebrow": 8.866666793823242,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 13.333334922790527,
+            "face_eyebrow": 9.333333015441895,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 21,
+          "values": {
+            "face_eye_open": 14.000001907348633,
+            "face_eyebrow": 9.799999237060547,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.500000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 22,
+          "values": {
+            "face_eye_open": 14.666668891906738,
+            "face_eyebrow": 31.46666717529297,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.6666672229766846,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 23,
+          "values": {
+            "face_eye_open": 15.333335876464844,
+            "face_eyebrow": 31.933334350585938,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.833333969116211,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 24,
+          "values": {
+            "face_eye_open": 16.000001907348633,
+            "face_eyebrow": 32.400001525878906,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.000000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 25,
+          "values": {
+            "face_eye_open": 16.666667938232422,
+            "face_eyebrow": 32.866668701171875,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 26,
+          "values": {
+            "face_eye_open": 17.33333396911621,
+            "face_eyebrow": 33.333335876464844,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.333333492279053,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 27,
+          "values": {
+            "face_eye_open": 18,
+            "face_eyebrow": 33.80000305175781,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 28,
+          "values": {
+            "face_eye_open": 18.66666603088379,
+            "face_eyebrow": 34.26667022705078,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.666666507720947,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 29,
+          "values": {
+            "face_eye_open": 19.333332061767578,
+            "face_eyebrow": 34.73333740234375,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.8333330154418945,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        },
+        {
+          "step": 30,
+          "values": {
+            "face_eye_open": 20,
+            "face_eyebrow": 35,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ02": 1
+          },
+          "playing": {
+            "喜ぶ02": true
+          }
+        }
+      ],
+      "source_metadata_sha256": "24e6ea7d154c16cb943f0452e7f0239f02b9363b7d225ace3410069e9d0fc45f"
+    },
+    {
+      "case": "expression-fadeout30",
+      "plays": [
+        {
+          "label": "喜ぶ00",
+          "flags": 3
+        }
+      ],
+      "requests": [],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "fade_out",
+              "label": "喜ぶ00",
+              "frames": 5,
+              "easing": 0
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "face_eye_open": 0,
+            "face_eyebrow": 0,
+            "face_mouth": 0,
+            "face_mouth_sp": 0,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "face_eye_open": 0.03333333507180214,
+            "face_eyebrow": 0.6333333849906921,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.1666666716337204,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "face_eye_open": 0.06666667014360428,
+            "face_eyebrow": 1.2666667699813843,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.3333333432674408,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "face_eye_open": 0.10000000894069672,
+            "face_eyebrow": 1.9000000953674316,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "face_eye_open": 0.13333334028720856,
+            "face_eyebrow": 2.5333335399627686,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.6666666865348816,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 1
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "face_eye_open": 0.1666666716337204,
+            "face_eyebrow": 3.1666669845581055,
+            "face_mouth": 30,
+            "face_mouth_sp": 0.8333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.800000011920929
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "face_eye_open": 0.20000000298023224,
+            "face_eyebrow": 3.8000004291534424,
+            "face_mouth": 30,
+            "face_mouth_sp": 1,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.6000000238418579
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "face_eye_open": 0.23333333432674408,
+            "face_eyebrow": 4.433333873748779,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.1666666269302368,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.3999999761581421
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "face_eye_open": 0.2666666805744171,
+            "face_eyebrow": 5.066667079925537,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0.19999997317790985
+          },
+          "playing": {
+            "喜ぶ00": true
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "face_eye_open": 0.30000001192092896,
+            "face_eyebrow": 5.700000286102295,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.4999998807907104,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "face_eye_open": 0.3333333432674408,
+            "face_eyebrow": 6.333333492279053,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.6666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "face_eye_open": 0.36666667461395264,
+            "face_eyebrow": 6.9666666984558105,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.833333134651184,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "face_eye_open": 0.4000000059604645,
+            "face_eyebrow": 7.599999904632568,
+            "face_mouth": 30,
+            "face_mouth_sp": 1.999999761581421,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "face_eye_open": 0.4333333373069763,
+            "face_eyebrow": 8.233333587646484,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.1666665077209473,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "face_eye_open": 0.46666666865348816,
+            "face_eyebrow": 8.866666793823242,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.3333332538604736,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 15,
+          "values": {
+            "face_eye_open": 0.5,
+            "face_eyebrow": 9.5,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 16,
+          "values": {
+            "face_eye_open": 0.5333333611488342,
+            "face_eyebrow": 31.633333206176758,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.6666667461395264,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 17,
+          "values": {
+            "face_eye_open": 0.5666667222976685,
+            "face_eyebrow": 32.266666412353516,
+            "face_mouth": 30,
+            "face_mouth_sp": 2.8333334922790527,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 18,
+          "values": {
+            "face_eye_open": 0.6000000834465027,
+            "face_eyebrow": 32.900001525878906,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.000000238418579,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 19,
+          "values": {
+            "face_eye_open": 0.6333334445953369,
+            "face_eyebrow": 33.5333366394043,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 20,
+          "values": {
+            "face_eye_open": 0.6666668057441711,
+            "face_eyebrow": 34.16667175292969,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.333333730697632,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 21,
+          "values": {
+            "face_eye_open": 0.7000001668930054,
+            "face_eyebrow": 34.80000686645508,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.500000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 22,
+          "values": {
+            "face_eye_open": 0.7333335280418396,
+            "face_eyebrow": 35.43334197998047,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.6666672229766846,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 23,
+          "values": {
+            "face_eye_open": 0.7666668891906738,
+            "face_eyebrow": 36.06667709350586,
+            "face_mouth": 30,
+            "face_mouth_sp": 3.833333969116211,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 24,
+          "values": {
+            "face_eye_open": 0.8000002503395081,
+            "face_eyebrow": 36.70001220703125,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.000000476837158,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 25,
+          "values": {
+            "face_eye_open": 0.8333336114883423,
+            "face_eyebrow": 37.33334732055664,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.1666669845581055,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 26,
+          "values": {
+            "face_eye_open": 0.8666669726371765,
+            "face_eyebrow": 37.96668243408203,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.333333492279053,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 27,
+          "values": {
+            "face_eye_open": 0.9000003337860107,
+            "face_eyebrow": 38.60001754760742,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 28,
+          "values": {
+            "face_eye_open": 0.933333694934845,
+            "face_eyebrow": 39.23335266113281,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.666666507720947,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 29,
+          "values": {
+            "face_eye_open": 0.9666670560836792,
+            "face_eyebrow": 39.8666877746582,
+            "face_mouth": 30,
+            "face_mouth_sp": 4.8333330154418945,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        },
+        {
+          "step": 30,
+          "values": {
+            "face_eye_open": 1,
+            "face_eyebrow": 40,
+            "face_mouth": 30,
+            "face_mouth_sp": 5,
+            "face_eye_sp": 0,
+            "face_cheek": 0,
+            "face_tears": 0,
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1
+          },
+          "weights": {
+            "喜ぶ00": 0
+          },
+          "playing": {
+            "喜ぶ00": false
+          }
+        }
+      ],
+      "source_metadata_sha256": "f66566fbd22720ad0980bfe728c96c0a3aff73eb0e95680a5e8c06593dcf8ed9"
+    }
+  ]
+}

@@ -49,7 +49,7 @@ struct Clip
 {
     std::string label;
     std::uint32_t end{0}, loop_begin{0}, loop_end{0};
-    bool loop{false}, supported{true}, additive_supported{true};
+    bool loop{false}, supported{true};
     std::vector<Track> tracks;
 };
 struct ProgramData
@@ -393,7 +393,11 @@ bool update(Transition& state) noexcept
             (static_cast<double>(state.target) - static_cast<double>(state.start)) * amount);
     else
     {
-        const float distance = state.length / state.duration;
+        // The zero-easing expression step saves length times the Float32
+        // reciprocal, rather than rounding a direct quotient. Public SDK
+        // 0 -> 40/30 observations distinguish these at the first tick.
+        const float distance = static_cast<float>(static_cast<double>(state.length) *
+                                                  static_cast<double>(1.0f / state.duration));
         auto index = state.path_index;
         const auto& segment = state.path[index];
         const float direction = segment.end > segment.begin ? 1.0f : -1.0f;
@@ -567,8 +571,6 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 require(track.variable.valid(),
                         clip.label + "/" + source.label + ": missing variable");
                 const auto& controller = data->controllers[track.variable.value];
-                if (controller.kind != Kind::Linear)
-                    clip.additive_supported = false;
                 for (std::size_t i = 0; i < source.keys.size(); ++i)
                 {
                     const auto& key = source.keys[i];
@@ -878,7 +880,10 @@ struct AnimationInstance::Impl
                 continue;
             for (std::size_t j = 0; j < state.tracks.size(); ++j)
             {
-                auto& value = output[program.clips[i].tracks[j].variable.value - 1].value;
+                const auto id = program.clips[i].tracks[j].variable;
+                if (program.controllers[id.value].kind != Kind::Linear)
+                    continue;
+                auto& value = output[id.value - 1].value;
                 value = static_cast<float>(static_cast<double>(value) +
                                            static_cast<double>(state.tracks[j].value) *
                                                static_cast<double>(state.weight.value));
@@ -896,7 +901,9 @@ struct AnimationInstance::Impl
                 if (event.time == time && event.value)
                 {
                     const auto& controller = program.controllers[track.variable.value];
-                    const bool accepted = state.additive
+                    // Only ordinary numeric tracks create differences. The
+                    // source SDK dispatches typed controllers into the base graph.
+                    const bool accepted = state.additive && controller.kind == Kind::Linear
                                               ? request(controller, state.tracks[j], event.target,
                                                         event.duration, event.easing)
                                               : request_parameter(track.variable, event.target,
@@ -968,7 +975,7 @@ AnimationStatus AnimationInstance::play(TimelineId id, TimelinePlayMode mode) no
     if (!id.valid() || id.value >= data.clips.size())
         return {AnimationError::InvalidTimeline, id, {}};
     const auto& clip = data.program.clips[id.value];
-    if (!clip.supported || (mode == TimelinePlayMode::AdditiveParallel && !clip.additive_supported))
+    if (!clip.supported)
         return {AnimationError::UnsupportedTimeline, id, {}};
     if (mode == TimelinePlayMode::Replace)
     {

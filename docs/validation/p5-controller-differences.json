@@ -1,0 +1,206 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "implementation_base": "f68b93a",
+  "scope": "Difference-mode timeline dispatch of typed controllers; mixed numeric differences with Eye/Expression/Mouth/Immediate/Selector primary tracks. Complete player remains uncertified.",
+  "thresholds": {
+    "scalar": 1e-05,
+    "geometry_px": 0.001,
+    "image_8bit": 2
+  },
+  "semantics": [
+    "Difference play flags affect Linear numeric tracks; typed controllers continue through the base graph, and are visible in public GetVariable caches.",
+    "Weights and stop remove numeric contributions but do not scale, rewind or cancel dispatched primary controller transitions.",
+    "Zero-easing Expression increment is Float32(Double(routeLength)*Double(Float32(1/duration))), not a direct rounded routeLength/duration. All twenty 0->40/30 samples match exactly.",
+    "Previously rejected mixed running loop now initializes its arm selector and contributes movement/body numeric differences.",
+    "500 mixed selector/numeric play/fade/request/prepare operations allocate no ordinary project heap."
+  ],
+  "fixture": {
+    "path": "tests/fixtures/timeline_controller_difference_reference.json",
+    "sha256": "52342ed5194ec9a4e6de86e75808541003d3b3bf931066b39525ed6bf91c02f1",
+    "cases": 10,
+    "author_samples": 226,
+    "assertions": 2994
+  },
+  "formal": {
+    "inputs": "docs/validation/playback-controller-difference-inputs.json",
+    "reference": "build/evidence/p5-controller-differences/full-reference",
+    "report": "build/evidence/p5-controller-differences/verified/report.json",
+    "sha256": "f3b89dbdb8a93eb40ab3b7aad3e6e2a75e3aa790038f1720b817389efb467f17",
+    "total": 10,
+    "passed": 8,
+    "cases": [
+      {
+        "case": "run20",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 7.62939453125e-06,
+          "step": 14,
+          "variable": "hair_UD_front",
+          "reference": -32.212833404541016,
+          "native": -32.21284103393555
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.00019425013819082665,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "expression10",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 6.291359902370698e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "expression-half10",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 6.291359902370698e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "expression-stop10",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 6.291359902370698e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "run-half20",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 1.621246337890625e-05,
+          "step": 4,
+          "variable": "hair_UD",
+          "reference": 8.031002044677734,
+          "native": 8.030985832214355
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.0002729575167846423,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "run-stop20",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 2.86102294921875e-06,
+          "step": 15,
+          "variable": "bust_UD",
+          "reference": -5.317580223083496,
+          "native": -5.317583084106445
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.00012582719804741396,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "expression30",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 4.315837287515549e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "reaction36",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 6.198883056640625e-06,
+          "step": 30,
+          "variable": "bust_UD",
+          "reference": 7.572408676147461,
+          "native": 7.572414875030518
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.000244140625,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "expression-special30",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 7.62939453125e-06,
+          "step": 28,
+          "variable": "face_eye_open",
+          "reference": 18.66666603088379,
+          "native": 18.66667366027832
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.00024461699740419614,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "expression-fadeout30",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "timeline_weights_passed": true,
+        "geometry_passed": true,
+        "geometry_max_error_px": 4.315837287515549e-05,
+        "image_pixels_over_tolerance": 0
+      }
+    ]
+  },
+  "regression": {
+    "eye": "10/10 scalar/geometry/image passed",
+    "weights": {
+      "total": 20,
+      "passed": 12,
+      "report": "build/evidence/p5-controller-differences/weight-regression/report.json",
+      "double_diff": "Previously UnsupportedTimeline; now scalar/geometry pass, one image pixel remains failed."
+    }
+  },
+  "verification": {
+    "debug": 109,
+    "release": 109,
+    "asan_ubsan_core": 108,
+    "all_passed": true
+  },
+  "remaining": [
+    "run-half20 physical output hair_UD at step 4 error 1.621246337890625e-5; exact field recorded in retained formal report.",
+    "reaction36 one image pixel exceeds frozen threshold; geometry/physical scalar pass.",
+    "Previous geometric/physical weighted-session residuals remain; no entire P5/P6 completion claim.",
+    "Native input, reaction rules, audio, background and desktop lifecycle still required."
+  ]
+}

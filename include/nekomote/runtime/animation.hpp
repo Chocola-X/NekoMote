@@ -37,6 +37,8 @@ enum class TimelinePlayMode
 {
     Replace,
     Parallel,
+    // Linear numeric tracks add independently; typed controllers dispatch to
+    // the base graph, including Selector outputs and Eye/Expression routes.
     AdditiveParallel
 };
 enum class TimelineWeightCompletion

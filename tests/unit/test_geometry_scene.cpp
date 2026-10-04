@@ -2220,3 +2220,61 @@ TEST_CASE(
     bad[1].variables = {"pick", "pick"};
     REQUIRE_FALSE(runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, bad).program);
 }
+
+TEST_CASE("Mixed selector and numeric difference tracks stay allocation free through fades",
+          "[runtime][playback][allocation]")
+{
+    auto asset = rig();
+    asset.variables = {{"offset", {}}, {"left", {}}, {"right", {}}};
+    VariableControl selector;
+    selector.variable = "pick";
+    selector.kind = VariableControlKind::Selector;
+    selector.options = {{"left", 0, 1}, {"right", 0, 1}};
+    asset.variable_controls.push_back(selector);
+    for (const auto* name : {"offset", "left", "right"})
+    {
+        VariableControl control;
+        control.variable = name;
+        control.kind = VariableControlKind::Linear;
+        asset.variable_controls.push_back(control);
+    }
+    Timeline clip;
+    clip.label = "mixed";
+    clip.loop_begin = 0;
+    clip.loop_end = 30;
+    clip.tracks = {
+        {"pick",
+         {{0, 2, field(1.0f), field(0.0f)}, {15, 2, field(0.0f), field(0.0f)}, {30, 0, {}, {}}}},
+        {"offset",
+         {{0, 2, field(3.0f), field(0.0f)}, {15, 2, field(0.0f), field(0.0f)}, {30, 0, {}, {}}}}};
+    asset.timelines.push_back(clip);
+    auto compiled = runtime::compile_playback(asset);
+    REQUIRE(compiled.program);
+    runtime::PlaybackInstance player(*compiled.program);
+    const auto id = compiled.program->animation().find_timeline("mixed");
+    REQUIRE(player.play(id, runtime::TimelinePlayMode::AdditiveParallel));
+    REQUIRE(player.set_timeline_weight(id, 0));
+    REQUIRE(player.step());
+    const auto pick = compiled.program->scene().find_variable("pick");
+    const auto offset = compiled.program->scene().find_variable("offset");
+    REQUIRE(player.values()[pick.value - 1].value == 1.0f);
+    REQUIRE(player.values()[offset.value - 1].value == 0.0f);
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 500; ++i)
+    {
+        if (i % 17 == 0)
+            success &=
+                static_cast<bool>(player.play(id, runtime::TimelinePlayMode::AdditiveParallel));
+        if (i % 7 == 0)
+            success &= static_cast<bool>(player.fade_out(id, 6, -1));
+        if (i % 11 == 0)
+            success &= static_cast<bool>(player.fade_in(id, 10, 1));
+        success &= static_cast<bool>(player.step());
+        success &= static_cast<bool>(player.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+}
