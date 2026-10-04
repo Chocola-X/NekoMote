@@ -39,6 +39,14 @@ struct PlaybackStatus
         return error == PlaybackError::None;
     }
 };
+// Application schedulers may inject numeric events before each author tick.
+// The callback runs on the evaluation thread and may call play/transition, but
+// must not advance/reset this instance. Failed callbacks fault partial input.
+struct AuthorTickHandler
+{
+    void* context{nullptr};
+    PlaybackStatus (*before_tick)(void*, std::uint64_t) noexcept {nullptr};
+};
 class PlaybackInstance;
 struct PlaybackCompileResult;
 // Owns compiled scene, animation and physical bindings. The source asset may
@@ -101,7 +109,8 @@ class PlaybackInstance
     PlaybackStatus step(PhysicsInputs inputs = {}) noexcept;
     // Drop elapsed beyond 250 ms and bound catch-up to 15 ticks. Invalid elapsed
     // changes no state. Pause/resume clears the fractional clock accumulator.
-    PlaybackStatus advance(double elapsed_seconds, PhysicsInputs inputs = {}) noexcept;
+    PlaybackStatus advance(double elapsed_seconds, PhysicsInputs inputs = {},
+                           AuthorTickHandler handler = {}) noexcept;
     void set_playback_state(PlaybackState state) noexcept;
     void reset() noexcept; // zero parameters, reset physics/clock; preserve origin/scale
     PlaybackStatus prepare_frame() noexcept;

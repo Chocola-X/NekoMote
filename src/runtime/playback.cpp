@@ -232,7 +232,8 @@ PlaybackStatus PlaybackInstance::step(PhysicsInputs inputs) noexcept
     ++data.ticks;
     return {};
 }
-PlaybackStatus PlaybackInstance::advance(double elapsed_seconds, PhysicsInputs inputs) noexcept
+PlaybackStatus PlaybackInstance::advance(double elapsed_seconds, PhysicsInputs inputs,
+                                         AuthorTickHandler handler) noexcept
 {
     if (!std::isfinite(elapsed_seconds) || elapsed_seconds < 0)
         return {PlaybackError::InvalidElapsed, {}, {}, {}};
@@ -248,8 +249,13 @@ PlaybackStatus PlaybackInstance::advance(double elapsed_seconds, PhysicsInputs i
                                                                       kClockBoundaryTolerance)));
     data.accumulator -= static_cast<double>(count) / kAuthorHz;
     for (std::uint32_t i = 0; i < count; ++i)
+    {
+        if (handler.before_tick)
+            if (const auto status = handler.before_tick(handler.context, data.ticks + 1); !status)
+                return data.fail(status);
         if (const auto status = step(inputs); !status)
             return status;
+    }
     return {};
 }
 void PlaybackInstance::set_playback_state(PlaybackState state) noexcept

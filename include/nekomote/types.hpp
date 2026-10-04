@@ -73,6 +73,15 @@ struct MeshIdTag
 struct TimelineIdTag
 {
 };
+struct ReactionIdTag
+{
+};
+using ReactionId = Id<ReactionIdTag>;
+struct AudioClipIdTag
+{
+};
+using AudioClipId = Id<AudioClipIdTag>;
+
 struct VariableSourceIdTag
 {
 };

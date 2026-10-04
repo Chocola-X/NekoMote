@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "frame_json.hpp"
+
 namespace
 {
 using Json = nlohmann::ordered_json;
@@ -300,23 +302,7 @@ int run(int argc, char** argv)
                 {"frame_vertices", player.frame().vertices.size()},
                 {"frame_indices", player.frame().indices.size()}};
     if (request.value("dump_frame", false))
-    {
-        Json vertices = Json::array(), commands = Json::array(), textures = Json::array();
-        for (const auto& v : player.frame().vertices)
-            vertices.push_back({v.x, v.y, v.u, v.v});
-        for (const auto& command : player.frame().commands)
-            commands.push_back({{"texture", command.texture.value},
-                                {"first_index", command.first_index},
-                                {"index_count", command.index_count}});
-        for (const auto& texture : scene.textures())
-            textures.push_back(
-                {{"id", texture.id.value}, {"width", texture.width}, {"height", texture.height}});
-        report["frame"] = {{"vertices", vertices},
-                           {"indices", std::vector<std::uint32_t>(player.frame().indices.begin(),
-                                                                  player.frame().indices.end())},
-                           {"commands", commands},
-                           {"textures", textures}};
-    }
+        report["frame"] = diagnostics::frame_json(player.frame(), scene.textures());
     if (benchmark)
     {
         for (int i = 0; i < 120; ++i)

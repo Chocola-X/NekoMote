@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <nekomote/application/session.hpp>
 #include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/bend.hpp>
 #include <nekomote/runtime/chain.hpp>
@@ -2277,4 +2278,57 @@ TEST_CASE("Mixed selector and numeric difference tracks stay allocation free thr
     measure_allocations = false;
     REQUIRE(success);
     REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Application gaze, reaction and lip scheduling reuse storage in normal playback",
+          "[application][allocation]")
+{
+    auto asset = rig();
+    for (const auto* name : {"face_eye_LR", "face_eye_UD", "head_slant", "head_LR", "head_UD",
+                             "body_slant", "body_LR", "body_UD", "face_talk"})
+    {
+        asset.variables.push_back({name, {}});
+        VariableControl control;
+        control.variable = name;
+        control.kind = VariableControlKind::Linear;
+        asset.variable_controls.push_back(control);
+    }
+    SessionAsset definition;
+    definition.interaction.eye = 0;
+    definition.interaction.regions[static_cast<std::size_t>(TouchZone::Head)] =
+        TouchEllipse{{0, 0}, {20, 20}};
+    ReactionAsset reaction;
+    reaction.label = "touch";
+    reaction.zones = {TouchZone::Head};
+    reaction.action.variables = {{"pick", 1, 5, 0}};
+    reaction.recovery.variables = {{"pick", 0, 5, 0}};
+    reaction.duration_ticks = 15;
+    reaction.recovery_ticks = 10;
+    reaction.audio_path = "voice.wav";
+    definition.reactions.push_back(reaction);
+    auto compiled = application::compile_session(asset, definition);
+    REQUIRE(compiled.program);
+    application::SessionInstance player(
+        *compiled.program,
+        {{1}, 1, application::PointerScope::LocalSurface, application::AudioMode::Device});
+    REQUIRE(player.start());
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 500; ++i)
+    {
+        if (player.reaction_phase() == application::ReactionPhase::Idle)
+            success &= static_cast<bool>(player.touch({0, 0}));
+        success &= static_cast<bool>(player.pointer_move({i % 2 == 0 ? 150.0f : -150.0f, 20}));
+        success &= static_cast<bool>(player.set_audio_level(.1f));
+        success &= static_cast<bool>(player.advance(1.0 / 30));
+        success &= static_cast<bool>(player.prepare_frame());
+        while (player.pop_audio_command())
+        {
+        }
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(player.playback().tick_count() == std::uint64_t{1000});
 }

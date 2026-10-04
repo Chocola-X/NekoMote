@@ -70,6 +70,7 @@ class AnimationProgram
     AnimationProgram& operator=(const AnimationProgram&) = delete;
     TimelineId find_timeline(std::string_view label) const noexcept;
     std::string_view timeline_label(TimelineId id) const noexcept;
+    bool timeline_supported(TimelineId id) const noexcept;
     VariableSourceId find_variable_source(std::string_view label) const noexcept;
     std::span<const std::string> diagnostics() const noexcept;
 

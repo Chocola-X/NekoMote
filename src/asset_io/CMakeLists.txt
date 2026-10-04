@@ -8,7 +8,8 @@ target_sources(nekomote_asset_io
         ${CMAKE_CURRENT_SOURCE_DIR}/import_emote.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/asset_file.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/image.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/image.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/session_asset.cpp)
 
 target_include_directories(nekomote_asset_io
     PUBLIC
