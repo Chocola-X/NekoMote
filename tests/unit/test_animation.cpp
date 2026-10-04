@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <nekomote/asset_io/import_emote.hpp>
 #include <nekomote/runtime/animation.hpp>
+#include <nekomote/runtime/playback.hpp>
 #include <nlohmann/json.hpp>
 
 #include <chrono>
@@ -185,8 +186,11 @@ TEST_CASE("Author playback is independent of display partition and pause discard
 {
     Reference reference;
     const auto clip = reference.program->find_timeline("待機ループ00");
-    runtime::AnimationInstance at30(*reference.program), at60(*reference.program),
-        at144(*reference.program);
+    auto compiled =
+        runtime::compile_playback(reference.asset, runtime::PhysicsMode::DisabledDiagnostic);
+    REQUIRE(compiled.program);
+    runtime::PlaybackInstance at30(*compiled.program), at60(*compiled.program),
+        at144(*compiled.program);
     for (auto* player : {&at30, &at60, &at144})
         REQUIRE(player->play(clip, runtime::TimelinePlayMode::AdditiveParallel));
     for (int i = 0; i < 30; ++i)

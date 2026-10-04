@@ -1,0 +1,106 @@
+#pragma once
+
+#include <nekomote/runtime/animation.hpp>
+#include <nekomote/runtime/physics.hpp>
+
+#include <memory>
+#include <span>
+#include <vector>
+
+namespace nekomote::runtime
+{
+enum class PhysicsMode
+{
+    Enabled,
+    DisabledDiagnostic
+};
+enum class PlaybackState
+{
+    Running,
+    Paused
+};
+enum class PlaybackError
+{
+    None,
+    InvalidElapsed,
+    Animation,
+    Geometry,
+    Physics,
+    Faulted
+};
+struct PlaybackStatus
+{
+    PlaybackError error{PlaybackError::None};
+    AnimationStatus animation;
+    GeometryStatus geometry;
+    PhysicsStatus physics;
+    explicit operator bool() const noexcept
+    {
+        return error == PlaybackError::None;
+    }
+};
+class PlaybackInstance;
+struct PlaybackCompileResult;
+// Owns compiled scene, animation and physical bindings. The source asset may
+// unload; all instances borrow this program. GPU assets remain separate.
+class PlaybackProgram
+{
+  public:
+    ~PlaybackProgram();
+    PlaybackProgram(const PlaybackProgram&) = delete;
+    PlaybackProgram& operator=(const PlaybackProgram&) = delete;
+    const GeometryScene& scene() const noexcept;
+    const AnimationProgram& animation() const noexcept;
+    PhysicsMode physics_mode() const noexcept;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+    explicit PlaybackProgram(std::unique_ptr<Impl> impl);
+    friend class PlaybackInstance;
+    friend PlaybackCompileResult compile_playback(const model::ModelAsset&, PhysicsMode);
+};
+struct PlaybackCompileResult
+{
+    std::unique_ptr<const PlaybackProgram> program;
+    std::vector<std::string> errors;
+};
+PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
+                                       PhysicsMode mode = PhysicsMode::Enabled);
+// Single-threaded CPU session. Each 60 Hz author tick advances animation, binds
+// its parameters, evaluates native anchors and advances all physics once. Frame
+// preparation then evaluates final parameters and builds the render protocol.
+// Display partition never skips intermediate physical ticks. No steady heap/I/O.
+// Failures during stepping/preparation fault the session until reset: no stale
+// values/frame escape, and later calls cannot continue with inconsistent clocks.
+class PlaybackInstance
+{
+  public:
+    explicit PlaybackInstance(const PlaybackProgram& program);
+    ~PlaybackInstance();
+    PlaybackInstance(const PlaybackInstance&) = delete;
+    PlaybackInstance& operator=(const PlaybackInstance&) = delete;
+    PlaybackStatus transition(ParamId id, float target, float frames = 0,
+                              float easing = 0) noexcept;
+    PlaybackStatus play(TimelineId id, TimelinePlayMode mode) noexcept;
+    PlaybackStatus stop(TimelineId id) noexcept;
+    bool is_playing(TimelineId id) const noexcept;
+    PlaybackStatus set_origin(Vec2 origin) noexcept;
+    PlaybackStatus step(PhysicsInputs inputs = {}) noexcept;
+    // Drop elapsed beyond 250 ms and bound catch-up to 15 ticks. Invalid elapsed
+    // changes no state. Pause/resume clears the fractional clock accumulator.
+    PlaybackStatus advance(double elapsed_seconds, PhysicsInputs inputs = {}) noexcept;
+    void set_playback_state(PlaybackState state) noexcept;
+    void reset() noexcept; // zero parameters, reset physics/clock; preserve origin
+    PlaybackStatus prepare_frame() noexcept;
+    // Borrowed views expire at the next parameter/animation/physics mutation or
+    // preparation. frame() is empty until preparation succeeds after a mutation.
+    std::span<const ParameterValue> values() const noexcept;
+    RenderFrame frame() const noexcept;
+    std::uint64_t tick_count() const noexcept;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+} // namespace nekomote::runtime

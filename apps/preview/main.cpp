@@ -1,8 +1,8 @@
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
-#include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
+#include <nekomote/runtime/playback.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -28,7 +28,7 @@ struct Options
     std::string icon;
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
-    bool hidden{false}, geometry{false}, animation{false};
+    bool hidden{false}, geometry{false}, animation{false}, playback{false};
     int steps{0};
     std::vector<std::pair<std::string, runtime::TimelinePlayMode>> plays;
     std::vector<std::pair<std::string, float>> variables;
@@ -86,6 +86,8 @@ Options parse(int argc, char** argv)
             o.opacity = parse_number(next());
         else if (flag == "--steps")
             o.steps = parse_integer(next());
+        else if (flag == "--playback")
+            o.playback = true;
         else if (flag == "--animation-diagnostic")
             o.animation = true;
         else if (flag == "--play")
@@ -115,16 +117,22 @@ Options parse(int argc, char** argv)
         o.benchmark < 0 || o.steps < 0 || o.steps > 100000 || o.scale <= 0 || o.opacity < 0 ||
         o.opacity > 1)
         throw std::runtime_error("invalid output/diagnostic settings");
-    if ((o.geometry || o.animation) && (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
+    if ((o.geometry || o.animation || o.playback) &&
+        (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
         throw std::runtime_error(
             "geometry diagnostic requires an asset, no icon filter and opacity=1");
-    if (!o.geometry && !o.animation && !o.variables.empty())
+    if (!o.geometry && !o.animation && !o.playback && !o.variables.empty())
         throw std::runtime_error("--variable requires --geometry-diagnostic");
-    if (!o.geometry && !o.animation && !o.asset.empty() && o.icon.empty())
+    if (!o.geometry && !o.animation && !o.playback && !o.asset.empty() && o.icon.empty())
         throw std::runtime_error(
-            "P2 requires --icon texture/icon; complete model evaluation is not implemented");
-    if ((!o.animation && (o.steps || !o.plays.empty())) || (o.animation && o.geometry))
-        throw std::runtime_error("animation requests require --animation-diagnostic exclusively");
+            "whole-model output requires --playback or an explicit diagnostic mode");
+    if ((static_cast<int>(o.geometry) + static_cast<int>(o.animation) +
+             static_cast<int>(o.playback) >
+         1) ||
+        (!(o.animation || o.playback) && (o.steps || !o.plays.empty())))
+        throw std::runtime_error("select one geometry, animation diagnostic or playback mode");
+    if (o.playback && o.scale != 1)
+        throw std::runtime_error("model scaling in playback is not yet verified; use scale=1");
     if (o.asset.empty() && !o.icon.empty())
         throw std::runtime_error("--icon requires --asset");
     if (!o.screenshot.empty() && o.frames == 0)
@@ -176,58 +184,81 @@ int run(const Options& o)
     const std::array<std::uint32_t, 6> indices{0, 1, 2, 0, 2, 3};
     const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
     render_gl::View view{o.x, o.y, o.scale, {0, 0, 0, 0}};
-    std::unique_ptr<const runtime::GeometryScene> geometry_scene;
+    std::unique_ptr<const runtime::GeometryScene> static_scene;
+    const runtime::GeometryScene* geometry_scene = nullptr;
     std::unique_ptr<runtime::GeometryInstance> geometry_instance;
-    std::unique_ptr<const runtime::AnimationProgram> animation_program;
-    std::unique_ptr<runtime::AnimationInstance> animation_instance;
-    const auto animation_checked = [](runtime::AnimationStatus status)
+    std::unique_ptr<const runtime::PlaybackProgram> playback_program;
+    std::unique_ptr<runtime::PlaybackInstance> playback_instance;
+    const auto playback_checked = [](runtime::PlaybackStatus status)
     {
         if (!status)
             throw std::runtime_error(
-                "animation error=" + std::to_string(static_cast<int>(status.error)) +
-                " timeline=" + std::to_string(status.timeline.value) +
-                " parameter=" + std::to_string(status.parameter.value));
+                "playback error=" + std::to_string(static_cast<int>(status.error)) +
+                " animation=" + std::to_string(static_cast<int>(status.animation.error)) +
+                " geometry=" + std::to_string(static_cast<int>(status.geometry.error)) +
+                " node=" + std::to_string(status.geometry.node.value) +
+                " physics=" + std::to_string(static_cast<int>(status.physics.error)) +
+                " controller=" + std::to_string(status.physics.controller));
     };
-    if (o.geometry || o.animation)
+    if (o.geometry || o.animation || o.playback)
     {
         auto loaded = asset_io::load_asset(o.asset);
         if (!loaded.ok)
             throw std::runtime_error(loaded.errors.front());
-        auto compiled = runtime::compile_geometry_scene(loaded.asset);
-        if (!compiled.scene)
-            throw std::runtime_error(compiled.errors.front());
-        geometry_scene = std::move(compiled.scene);
-        geometry_instance = std::make_unique<runtime::GeometryInstance>(*geometry_scene);
-        const auto checked = [&](runtime::GeometryStatus status)
+        RenderFrame frame;
+        if (o.animation || o.playback)
         {
-            if (!status)
-                throw std::runtime_error("geometry error " +
-                                         std::to_string(static_cast<int>(status.error)) + ": " +
-                                         std::string(geometry_scene->node_label(status.node)));
-        };
-        for (const auto& [name, value] : o.variables)
-            checked(geometry_instance->set_parameter(geometry_scene->find_variable(name), value));
-        if (o.animation)
-        {
-            auto animation = runtime::compile_animation(loaded.asset, *geometry_scene);
-            if (!animation.program)
-                throw std::runtime_error(animation.errors.front());
-            animation_program = std::move(animation.program);
-            animation_instance = std::make_unique<runtime::AnimationInstance>(*animation_program);
+            auto compiled = runtime::compile_playback(
+                loaded.asset, o.playback ? runtime::PhysicsMode::Enabled
+                                         : runtime::PhysicsMode::DisabledDiagnostic);
+            if (!compiled.program)
+                throw std::runtime_error(compiled.errors.front());
+            playback_program = std::move(compiled.program);
+            geometry_scene = &playback_program->scene();
+            playback_instance = std::make_unique<runtime::PlaybackInstance>(*playback_program);
+            if (o.playback)
+            {
+                // Model placement participates in author-space Float32 matrices;
+                // the final view separately maps the centered canvas to pixels.
+                playback_checked(
+                    playback_instance->set_origin({o.x - static_cast<float>(o.width) * 0.5f,
+                                                   o.y - static_cast<float>(o.height) * 0.5f}));
+                view.origin_x = static_cast<float>(o.width) * 0.5f;
+                view.origin_y = static_cast<float>(o.height) * 0.5f;
+            }
             for (const auto& [name, value] : o.variables)
-                animation_checked(
-                    animation_instance->transition(geometry_scene->find_variable(name), value));
+                playback_checked(
+                    playback_instance->transition(geometry_scene->find_variable(name), value));
             for (const auto& [name, mode] : o.plays)
-                animation_checked(
-                    animation_instance->play(animation_program->find_timeline(name), mode));
+                playback_checked(playback_instance->play(
+                    playback_program->animation().find_timeline(name), mode));
             for (int i = 0; i < o.steps; ++i)
-                animation_checked(animation_instance->step());
-            for (const auto& value : animation_instance->values())
-                checked(geometry_instance->set_parameter(value.id, value.value));
+                playback_checked(playback_instance->step());
+            playback_checked(playback_instance->prepare_frame());
+            frame = playback_instance->frame();
         }
-        checked(geometry_instance->evaluate());
-        checked(geometry_instance->build_frame());
-        const auto frame = geometry_instance->frame();
+        else
+        {
+            auto compiled = runtime::compile_geometry_scene(loaded.asset);
+            if (!compiled.scene)
+                throw std::runtime_error(compiled.errors.front());
+            static_scene = std::move(compiled.scene);
+            geometry_scene = static_scene.get();
+            geometry_instance = std::make_unique<runtime::GeometryInstance>(*geometry_scene);
+            const auto checked = [&](runtime::GeometryStatus status)
+            {
+                if (!status)
+                    throw std::runtime_error("geometry error " +
+                                             std::to_string(static_cast<int>(status.error)) + ": " +
+                                             std::string(geometry_scene->node_label(status.node)));
+            };
+            for (const auto& [name, value] : o.variables)
+                checked(
+                    geometry_instance->set_parameter(geometry_scene->find_variable(name), value));
+            checked(geometry_instance->evaluate());
+            checked(geometry_instance->build_frame());
+            frame = geometry_instance->frame();
+        }
         const auto capacity = geometry_scene->frame_capacity();
         renderer.reserve({capacity.vertices, capacity.indices, capacity.commands,
                           geometry_scene->textures().size(), capacity.mask_commands,
@@ -242,9 +273,11 @@ int run(const Options& o)
             renderer.upload_texture(texture.id, decoded.image);
         }
         renderer.prepare(frame);
-        std::printf(
-            "%s DIAGNOSTIC: %zu sprites; physical controllers/auto blink are not integrated\n",
-            o.animation ? "ANIMATION" : "STATIC", geometry_instance->primitives().size());
+        std::printf("%s: %zu draw commands\n",
+                    o.playback    ? "PLAYBACK (validation in progress)"
+                    : o.animation ? "ANIMATION DIAGNOSTIC (physics disabled)"
+                                  : "STATIC DIAGNOSTIC",
+                    frame.commands.size());
         for (const auto& diagnostic : geometry_scene->diagnostics())
             std::printf("%s\n", diagnostic.c_str());
     }
@@ -320,7 +353,7 @@ int run(const Options& o)
         const auto now = std::chrono::steady_clock::now();
         const double elapsed = std::chrono::duration<double>(now - previous_frame).count();
         previous_frame = now;
-        if (animation_instance && o.screenshot.empty())
+        if (playback_instance && o.screenshot.empty())
         {
             const bool pressed = glfwGetKey(window.get(), GLFW_KEY_SPACE) == GLFW_PRESS;
             if (pressed && !space_down)
@@ -328,20 +361,16 @@ int run(const Options& o)
                 playback = playback == runtime::PlaybackState::Running
                                ? runtime::PlaybackState::Paused
                                : runtime::PlaybackState::Running;
-                animation_instance->set_playback_state(playback);
+                playback_instance->set_playback_state(playback);
             }
             space_down = pressed;
-            animation_checked(animation_instance->advance(elapsed));
-            for (const auto& value : animation_instance->values())
-                if (!geometry_instance->set_parameter(value.id, value.value))
-                    throw std::runtime_error("invalid animated parameter");
-            const auto evaluated = geometry_instance->evaluate();
-            const auto built = evaluated ? geometry_instance->build_frame() : evaluated;
-            if (!built)
-                throw std::runtime_error(
-                    "geometry error=" + std::to_string(static_cast<int>(built.error)) + ": " +
-                    std::string(geometry_scene->node_label(built.node)));
-            renderer.prepare(geometry_instance->frame());
+            const auto previous_tick = playback_instance->tick_count();
+            playback_checked(playback_instance->advance(elapsed));
+            if (playback_instance->tick_count() != previous_tick)
+            {
+                playback_checked(playback_instance->prepare_frame());
+                renderer.prepare(playback_instance->frame());
+            }
         }
         int w = 0, h = 0;
         glfwGetFramebufferSize(window.get(), &w, &h);

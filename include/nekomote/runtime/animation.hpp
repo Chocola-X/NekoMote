@@ -38,11 +38,6 @@ enum class TimelinePlayMode
     Parallel,
     AdditiveParallel
 };
-enum class PlaybackState
-{
-    Running,
-    Paused
-};
 class AnimationInstance;
 struct AnimationCompileResult;
 // Immutable variable/controller/clip data. Geometry IDs are bound at compile
@@ -88,10 +83,6 @@ class AnimationInstance
     AnimationStatus stop(TimelineId timeline) noexcept;
     bool is_playing(TimelineId timeline) const noexcept;
     AnimationStatus step() noexcept;
-    // Limits catch-up to 15 author ticks (250 ms). Excess elapsed time is dropped,
-    // preventing resume storms. Pause/resume discards the fractional accumulator.
-    AnimationStatus advance(double elapsed_seconds) noexcept;
-    void set_playback_state(PlaybackState state) noexcept;
     void reset() noexcept;
     std::span<const ParameterValue> values() const noexcept;
     std::uint64_t tick_count() const noexcept;

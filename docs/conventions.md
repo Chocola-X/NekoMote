@@ -22,10 +22,10 @@
 
 ## 3. 时间
 
-- 动画用单调时钟秒数。`Seconds` 是标量单位类型；AnimationInstance 的宿主 elapsed_seconds 用 double 保留累计精度，核心不假定显示 FPS。
+- 动画用单调时钟秒数。`Seconds` 是标量单位类型；PlaybackInstance 的宿主 elapsed_seconds 用 double 保留累计精度，核心不假定显示 FPS。
 - E-mote 的 60 帧基准由 runtime 的固定作者时钟换算，常量不放进 `model`。累计边界容差 1e−9 作者帧（避免 double 加法舍入漏步），不改变已冻结的 60 Hz 事件序列。
-- 物理可用独立固定步长（`FixedStep`，正数秒），与显示 FPS 解耦。
-- 暂停/恢复不补画历史帧；AnimationInstance 单次累计 delta 限 250 ms、追赶最多 15 作者步，超量丢弃，暂停/恢复清除余量（AGENTS.md §7）。
+- 当前物理与动画在 PlaybackInstance 的同一个作者步中推进，顺序为动画 → 参数绑定 → 锚点求值 → 物理。显示 FPS 不改变任何中间作者步。AnimationInstance 只提供一次作者步，不再拥有显示时钟或暂停状态。
+- 暂停/恢复不补画历史帧；PlaybackInstance 单次累计 delta 限 250 ms、追赶最多 15 作者步，超量丢弃，暂停/恢复清除余量（AGENTS.md §7）。
 
 ## 4. Alpha 与颜色
 

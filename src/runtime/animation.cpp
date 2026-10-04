@@ -11,9 +11,6 @@ namespace nekomote::runtime
 {
 namespace
 {
-constexpr double kAuthorHz = 60;
-constexpr double kClockBoundaryTolerance = 1e-9;
-constexpr std::uint32_t kMaximumCatchUpTicks = 15;
 constexpr float kInfinity = std::numeric_limits<float>::infinity();
 using Kind = model::VariableControlKind;
 struct Controller
@@ -469,8 +466,6 @@ struct AnimationInstance::Impl
     std::vector<ClipState> clips;
     std::vector<ParameterValue> output;
     std::vector<std::size_t> order;
-    PlaybackState playback{PlaybackState::Running};
-    double accumulator{0};
     std::uint64_t ticks{0};
     explicit Impl(const ProgramData& data) : program(data), clips(data.clips.size())
     {
@@ -583,8 +578,6 @@ bool AnimationInstance::is_playing(TimelineId id) const noexcept
 AnimationStatus AnimationInstance::step() noexcept
 {
     auto& data = *impl_;
-    if (data.playback == PlaybackState::Paused)
-        return {};
     for (const auto i : data.order)
     {
         auto& state = data.clips[i];
@@ -619,29 +612,6 @@ AnimationStatus AnimationInstance::step() noexcept
     ++data.ticks;
     return {};
 }
-AnimationStatus AnimationInstance::advance(double elapsed_seconds) noexcept
-{
-    if (!std::isfinite(elapsed_seconds) || elapsed_seconds < 0)
-        return {AnimationError::InvalidValue, {}, {}};
-    auto& data = *impl_;
-    if (data.playback == PlaybackState::Paused)
-        return {};
-    data.accumulator +=
-        std::min(elapsed_seconds, static_cast<double>(kMaximumCatchUpTicks) / kAuthorHz);
-    const auto count = std::min(kMaximumCatchUpTicks,
-                                static_cast<std::uint32_t>(std::floor(data.accumulator * kAuthorHz +
-                                                                      kClockBoundaryTolerance)));
-    data.accumulator -= static_cast<double>(count) / kAuthorHz;
-    for (std::uint32_t i = 0; i < count; ++i)
-        if (const auto status = step(); !status)
-            return status;
-    return {};
-}
-void AnimationInstance::set_playback_state(PlaybackState state) noexcept
-{
-    impl_->playback = state;
-    impl_->accumulator = 0;
-}
 void AnimationInstance::reset() noexcept
 {
     auto& data = *impl_;
@@ -655,9 +625,7 @@ void AnimationInstance::reset() noexcept
             track.reset();
     }
     data.order.clear();
-    data.accumulator = 0;
     data.ticks = 0;
-    data.playback = PlaybackState::Running;
     data.compose();
 }
 std::span<const ParameterValue> AnimationInstance::values() const noexcept

@@ -6,6 +6,7 @@
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/physics.hpp>
+#include <nekomote/runtime/playback.hpp>
 #include <nekomote/runtime/spring.hpp>
 #include <nlohmann/json.hpp>
 
@@ -1183,4 +1184,182 @@ TEST_CASE("Absent-anchor chain binding matches original exported-output observat
                                                fixture.at("value_tolerance").get<double>()));
         }
     }
+}
+
+TEST_CASE("Combined playback advances every animation and physics tick at any display rate",
+          "[runtime][playback]")
+{
+    using namespace runtime;
+    auto asset = chain_rig();
+    asset.spring_controls = spring_rig().spring_controls;
+    VariableControl control;
+    control.variable = "pick";
+    control.end_frame = 1;
+    asset.variable_controls.push_back(control);
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance at30(*compiled.program), at60(*compiled.program), at144(*compiled.program);
+    const auto pick = compiled.program->scene().find_variable("pick");
+    PhysicsInputs force;
+    force.hair_displacement = {0.125f, -0.0625f};
+    force.bust_displacement = {0.125f, -0.0625f};
+    for (auto* player : {&at30, &at60, &at144})
+    {
+        REQUIRE(player->set_origin({0, 400}));
+        REQUIRE(player->transition(pick, 1, 60));
+    }
+    for (const auto& [player, hz] :
+         {std::pair{&at30, 30}, std::pair{&at60, 60}, std::pair{&at144, 144}})
+        for (int i = 0; i < hz; ++i)
+        {
+            REQUIRE(player->advance(1.0 / hz, force));
+            REQUIRE(player->prepare_frame());
+        }
+    REQUIRE(at30.tick_count() == 60);
+    REQUIRE(at60.tick_count() == 60);
+    REQUIRE(at144.tick_count() == 60);
+    for (std::size_t i = 0; i < at30.values().size(); ++i)
+    {
+        REQUIRE(at30.values()[i].value == at60.values()[i].value);
+        REQUIRE(at30.values()[i].value == at144.values()[i].value);
+    }
+    REQUIRE(at30.values()[pick.value - 1].value == 1.0f);
+    REQUIRE(at30.values()[compiled.program->scene().find_variable("root").value - 1].value != 0.0f);
+    REQUIRE(at30.frame().vertices.size() == at144.frame().vertices.size());
+    for (std::size_t i = 0; i < at30.frame().vertices.size(); ++i)
+    {
+        REQUIRE(at30.frame().vertices[i].x == at144.frame().vertices[i].x);
+        REQUIRE(at30.frame().vertices[i].y == at144.frame().vertices[i].y);
+    }
+    // Explicit ticks through the public session also match the separately tested
+    // modules, using genuine moving anchors rather than a constant input pose.
+    auto geometry = compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto animation = compile_animation(asset, *geometry.scene);
+    REQUIRE(animation.program);
+    auto physics = compile_physics(asset, *geometry.scene);
+    REQUIRE(physics.program);
+    AnimationInstance animator(*animation.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance solver(*physics.program);
+    REQUIRE(anchors.set_origin({0, 400}));
+    REQUIRE(animator.transition(geometry.scene->find_variable("pick"), 1, 60));
+    for (int i = 0; i < 60; ++i)
+    {
+        REQUIRE(animator.step());
+        for (const auto parameter : animator.values())
+            REQUIRE(anchors.set_parameter(parameter.id, parameter.value));
+        REQUIRE(anchors.evaluate());
+        REQUIRE(solver.step(anchors, force));
+    }
+    for (const auto parameter : solver.values())
+        REQUIRE(at30.values()[parameter.id.value - 1].value == parameter.value);
+    at60.set_playback_state(PlaybackState::Paused);
+    REQUIRE(at60.advance(1000, force));
+    REQUIRE(at60.step(force));
+    REQUIRE(at60.tick_count() == 60);
+    for (std::size_t i = 0; i < at30.values().size(); ++i)
+        REQUIRE(at30.values()[i].value == at60.values()[i].value);
+    at60.set_playback_state(PlaybackState::Running);
+    REQUIRE(at60.advance(0, force));
+    REQUIRE(at60.tick_count() == 60);
+    REQUIRE(at60.advance(1000, force));
+    REQUIRE(at60.tick_count() == 75);
+    for (int i = 0; i < 15; ++i)
+        REQUIRE(at30.step(force));
+    for (std::size_t i = 0; i < at30.values().size(); ++i)
+        REQUIRE(at30.values()[i].value == at60.values()[i].value);
+}
+TEST_CASE("Playback owns compilation data and resets independent placed instances",
+          "[runtime][playback]")
+{
+    using namespace runtime;
+    auto asset = spring_rig();
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    asset = {};
+    PlaybackInstance first(*compiled.program), independent(*compiled.program);
+    REQUIRE(first.set_origin({0, 400}));
+    REQUIRE(first.prepare_frame());
+    REQUIRE_FALSE(first.frame().vertices.empty());
+    const auto initial_y = first.frame().vertices.front().y;
+    for (int i = 0; i < 20; ++i)
+        REQUIRE(first.step({1, {1, 2}}));
+    REQUIRE(first.frame().vertices.empty());
+    REQUIRE(independent.tick_count() == 0);
+    for (const auto parameter : independent.values())
+        REQUIRE(parameter.value == 0.0f);
+    first.reset();
+    REQUIRE(first.tick_count() == 0);
+    REQUIRE(first.prepare_frame());
+    REQUIRE(first.frame().vertices.front().y == initial_y);
+    for (int i = 0; i < 20; ++i)
+    {
+        REQUIRE(first.step({1, {1, 2}}));
+        REQUIRE(independent.step({1, {1, 2}}));
+    }
+    for (std::size_t i = 0; i < first.values().size(); ++i)
+        REQUIRE(first.values()[i].value == independent.values()[i].value);
+}
+TEST_CASE("Playback faults hide stale frames and require reset after a failed author tick",
+          "[runtime][playback]")
+{
+    using namespace runtime;
+    auto asset = spring_rig();
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance player(*compiled.program);
+    REQUIRE(player.prepare_frame());
+    REQUIRE_FALSE(player.frame().vertices.empty());
+    REQUIRE(player.step());
+    REQUIRE(player.prepare_frame());
+    REQUIRE(player.step({std::numeric_limits<float>::quiet_NaN(), {}}).error ==
+            PlaybackError::Physics);
+    REQUIRE(player.tick_count() == 1);
+    REQUIRE(player.values().empty());
+    REQUIRE(player.frame().vertices.empty());
+    REQUIRE(player.step().error == PlaybackError::Faulted);
+    REQUIRE(player.advance(1).error == PlaybackError::Faulted);
+    REQUIRE(player.prepare_frame().error == PlaybackError::Faulted);
+    REQUIRE(player.transition(compiled.program->scene().find_variable("pick"), 1).error ==
+            PlaybackError::Faulted);
+    player.reset();
+    REQUIRE(player.step());
+    REQUIRE(player.tick_count() == 1);
+    REQUIRE(player.prepare_frame());
+    REQUIRE_FALSE(player.values().empty());
+    REQUIRE_FALSE(player.frame().vertices.empty());
+    auto unsupported = asset;
+    unsupported.spring_controls[0].binding.unsupported_fields = {"unknown_force"};
+    REQUIRE_FALSE(compile_playback(unsupported).program);
+    REQUIRE(compile_playback(unsupported, PhysicsMode::DisabledDiagnostic).program);
+    REQUIRE_FALSE(compile_playback(asset, static_cast<PhysicsMode>(100)).program);
+}
+TEST_CASE("Combined playback reuses frame storage without allocating during catchup",
+          "[runtime][playback][allocation]")
+{
+    using namespace runtime;
+    auto asset = chain_rig();
+    asset.spring_controls = spring_rig().spring_controls;
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance player(*compiled.program);
+    for (int i = 0; i < 120; ++i)
+    {
+        REQUIRE(player.step());
+        REQUIRE(player.prepare_frame());
+    }
+    bool success = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(player.advance(1.0 / 30));
+        success &= static_cast<bool>(player.prepare_frame());
+        success &= static_cast<bool>(player.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(player.tick_count() == 520);
 }

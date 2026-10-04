@@ -74,7 +74,7 @@ struct LocatorSample
 {
     GeometryStatus status;
     LocatorState state{LocatorState::Inactive};
-    Vec2 position{}; // model space; independent of viewport placement or GPU state
+    Vec2 position{}; // placed model space; independent of final view/projection and GPU
 };
 class GeometryInstance;
 struct GeometryCompileResult;

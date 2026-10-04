@@ -35,3 +35,12 @@ build/dev/bin/nekomote_preview --animation-diagnostic --asset /path/to/model.nkm
 ```
 
 播放标志 0=替换、1=并行主动作、3=并行差分；这里明确隔离了物理和自动眨眼，不能当作完整壁纸产品。
+
+联合动画与物理会话（验证进行中，完整播放器未认证）：
+
+```sh
+build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
+  --origin 400 940 --play 首横振り 1
+```
+
+共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。当前联合播放只验证 scale=1；静止/转头的原版对照通过，跳跃和待机差分仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)。

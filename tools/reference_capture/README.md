@@ -62,3 +62,6 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 `--fixture-references '{"/metadata/eyeControl/0/blinkEnabled":"/metadata/eyeControl/0/beginFrame"}'` 将所选字典条目重指向同一字典中的既有数值标量，保持引用宽度，不插入资源或字段。此例使 blinkEnabled 引用已有的整数 0，而 enabled 仍为 1，允许独立核实眨眼与 Eye 过渡。它是显式地址表修改，记录 kind=field_reference、来源路径、原/新地址和改变的条目；不等同普通数值 fixture 的地址表不变承诺，不用于正式原模型验收。
 
 工具自身的无素材回归：`python3 -m unittest discover -s tests/reference_capture -v`。
+
+
+联合会话固定步进对照见 [P6 会话记录](../../docs/p6-playback-session.md)。validate_playback.py 使用独立冻结输入、原始素材与正式 PlaybackInstance/preview，验证 22 个实际物理输出、最终 RenderFrame 和截图；原 SDK GetVariable 的主通道缓存不能代表差分合成结果。几何工具 compare_playback_frame.py 只服务当前单图集 SDK texture 2 的冻结诊断，不是运行时兼容分支。已知完整跳跃/待机差分失败仍保留，命令退出 1。

@@ -16,7 +16,7 @@ AnimationProgram 编译控制图/轨道与 GeometryScene 的参数 ID，拥有�
 
 裸变量与已禁用的变量控制器在请求时直接赋值；启用控制器按自身规则覆盖。Mouth 的 talkLabel 是独立插值通道，不按裸变量处理。不能从 instantVariableList 推导整个模型的策略。Eye 的手动过渡与自动眨眼开关分开；自动眨眼调度仍未集成。
 
-作者时钟使用双精度秒累计，在 60 Hz 内步进，显示 FPS 不改变事件顺序。单次 catch-up 限 15 步（250 ms），丢弃超量 elapsed；暂停/恢复清除余量，不追赶休眠期间历史。step() 暂停时也不推进。调用者提供单调时间差。
+当前作者时钟由 PlaybackInstance 统一管理，AnimationInstance 只推进一次作者步。作者时钟使用双精度秒累计，在 60 Hz 内步进，显示 FPS 不改变事件顺序。单次 catch-up 限 15 步（250 ms），丢弃超量 elapsed；暂停/恢复清除余量，不追赶休眠期间历史。PlaybackInstance::step() 暂停时也不推进。调用者提供单调时间差。
 
 ## 对照与当前限制
 
