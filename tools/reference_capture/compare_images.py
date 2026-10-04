@@ -41,7 +41,7 @@ def main():
                   pixels_over_tolerance=errors, reference_bbox=r.getbbox(), native_bbox=n.getbbox(),
                   passed=errors == 0)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.with_suffix('.json').write_text(json.dumps(report, indent=2) + '\n')
+    pathlib.Path(str(args.output) + '.json').write_text(json.dumps(report, indent=2) + '\n')
     bbox = r.getbbox()
     box = (max(0, bbox[0]-8), max(0, bbox[1]-8), min(r.width, bbox[2]+8), min(r.height, bbox[3]+8))
     crops = [image.crop(box) for image in (r, n)]
@@ -53,7 +53,7 @@ def main():
         out.paste(panel, (i*panel.width, 0))
     if out.height < 128:
         out = out.resize((out.width*4, out.height*4), Image.Resampling.NEAREST)
-    out.save(args.output.with_suffix('.png'))
+    out.save(pathlib.Path(str(args.output) + '.png'))
     print(json.dumps(report))
     if errors:
         raise SystemExit(1)

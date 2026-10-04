@@ -38,6 +38,11 @@ enum class TimelinePlayMode
     Parallel,
     AdditiveParallel
 };
+enum class TimelineWeightCompletion
+{
+    KeepPlaying,
+    Stop
+};
 class AnimationInstance;
 struct AnimationCompileResult;
 struct AnimationConfig
@@ -87,6 +92,17 @@ class AnimationInstance
                                float easing = 0) noexcept;
     AnimationStatus play(TimelineId timeline, TimelinePlayMode mode) noexcept;
     AnimationStatus stop(TimelineId timeline) noexcept;
+    // Weight transitions act on difference timelines. Main timeline requests
+    // are inert, matching the observed SDK contract. No weight range clamp.
+    // The ratio cache updates on author ticks; play restores weight one.
+    AnimationStatus set_timeline_weight(
+        TimelineId timeline, float target, float author_frames = 0, float easing = 0,
+        TimelineWeightCompletion completion = TimelineWeightCompletion::KeepPlaying) noexcept;
+    float timeline_weight(TimelineId timeline) const noexcept;
+    AnimationStatus fade_in(TimelineId timeline, float author_frames = 0,
+                            float easing = 0) noexcept;
+    AnimationStatus fade_out(TimelineId timeline, float author_frames = 0,
+                             float easing = 0) noexcept;
     bool is_playing(TimelineId timeline) const noexcept;
     AnimationStatus step() noexcept;
     void reset() noexcept;

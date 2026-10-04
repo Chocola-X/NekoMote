@@ -84,6 +84,12 @@ class PlaybackInstance
                               float easing = 0) noexcept;
     PlaybackStatus play(TimelineId id, TimelinePlayMode mode) noexcept;
     PlaybackStatus stop(TimelineId id) noexcept;
+    PlaybackStatus set_timeline_weight(
+        TimelineId id, float target, float frames = 0, float easing = 0,
+        TimelineWeightCompletion completion = TimelineWeightCompletion::KeepPlaying) noexcept;
+    float timeline_weight(TimelineId id) const noexcept;
+    PlaybackStatus fade_in(TimelineId id, float frames = 0, float easing = 0) noexcept;
+    PlaybackStatus fade_out(TimelineId id, float frames = 0, float easing = 0) noexcept;
     bool is_playing(TimelineId id) const noexcept;
     PlaybackStatus set_origin(Vec2 origin) noexcept;
     PlaybackStatus set_scale(float scale) noexcept;

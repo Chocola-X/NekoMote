@@ -41,6 +41,76 @@ runtime::TimelinePlayMode play_mode(int flags)
             throw std::runtime_error("play flags must be 0, 1, 3");
     }
 }
+// Fixed-step diagnostic dispatch only; JSON sampling/replay is excluded from
+// the production author loop and benchmarks. Preserve frozen request order.
+void timeline_requests(nekomote::runtime::PlaybackInstance& player,
+                       const nekomote::runtime::AnimationProgram& program,
+                       const nlohmann::json& requests)
+{
+    using namespace nekomote::runtime;
+    if (!requests.is_array())
+        throw std::runtime_error("timeline requests must be an array");
+    for (const auto& request : requests)
+    {
+        const auto id = program.find_timeline(request.at("label").get<std::string>());
+        const auto kind = request.at("kind").get<std::string>();
+        const std::size_t expected_fields = kind == "blend"  ? 6
+                                            : kind == "play" ? 3
+                                            : kind == "stop" ? 2
+                                                             : 4;
+        if (!request.is_object() || request.size() != expected_fields)
+            throw std::runtime_error("unexpected or missing timeline request fields");
+        PlaybackStatus status;
+        if (kind == "play")
+        {
+            const int flags = request.at("flags").get<int>();
+            if (flags != 0 && flags != 1 && flags != 3)
+                throw std::runtime_error("invalid play flags");
+            status = player.play(id, flags == 0   ? TimelinePlayMode::Replace
+                                     : flags == 1 ? TimelinePlayMode::Parallel
+                                                  : TimelinePlayMode::AdditiveParallel);
+        }
+        else if (kind == "stop")
+            status = player.stop(id);
+        else if (kind == "fade_in")
+            status = player.fade_in(id, request.at("frames").get<float>(),
+                                    request.at("easing").get<float>());
+        else if (kind == "fade_out")
+            status = player.fade_out(id, request.at("frames").get<float>(),
+                                     request.at("easing").get<float>());
+        else if (kind == "blend")
+        {
+            const auto completion = request.at("completion").get<std::string>();
+            if (completion != "keep" && completion != "stop")
+                throw std::runtime_error("invalid weight completion");
+            status = player.set_timeline_weight(
+                id, request.at("value").get<float>(), request.at("frames").get<float>(),
+                request.at("easing").get<float>(),
+                completion == "stop" ? TimelineWeightCompletion::Stop
+                                     : TimelineWeightCompletion::KeepPlaying);
+        }
+        else
+            throw std::runtime_error("invalid timeline request kind");
+        if (!status)
+            throw std::runtime_error("timeline request failed animation=" +
+                                     std::to_string(static_cast<int>(status.animation.error)));
+    }
+}
+void validate_events(const nlohmann::json& events, int steps)
+{
+    if (!events.is_array())
+        throw std::runtime_error("events must be an array");
+    for (const auto& event : events)
+    {
+        if (!event.is_object() || event.size() != 2 || !event.contains("step") ||
+            !event.contains("timeline_requests") || !event.at("step").is_number_integer() ||
+            event.at("step").get<std::int64_t>() < 1 ||
+            event.at("step").get<std::int64_t>() > steps ||
+            !event.at("timeline_requests").is_array())
+            throw std::runtime_error(
+                "diagnostic events require an author step in 1..steps and timeline_requests");
+    }
+}
 int run(int argc, char** argv)
 {
     if (argc != 4)
@@ -53,6 +123,7 @@ int run(int argc, char** argv)
     const int benchmark = request.value("benchmark", 0);
     if (steps < 0 || steps > 100000 || benchmark < 0 || benchmark > 100000)
         throw std::runtime_error("invalid step/sample count");
+    validate_events(request.value("events", Json::array()), steps);
     auto loaded = asset_io::load_asset(argv[1]);
     if (!loaded.ok)
         throw std::runtime_error(loaded.errors.front());
@@ -85,6 +156,8 @@ int run(int argc, char** argv)
     for (const auto& play : request.value("plays", Json::array()))
         check(player.play(program.animation().find_timeline(play.at("label").get<std::string>()),
                           play_mode(play.at("flags").get<int>())));
+    timeline_requests(player, program.animation(),
+                      request.value("timeline_requests", Json::array()));
     runtime::PhysicsInputs physics;
     const auto amplitudes = request.value("amplitudes", Json::object());
     physics.bust_amplitude = amplitudes.value("bust", 1.0f);
@@ -109,11 +182,41 @@ int run(int argc, char** argv)
             result[scene.variables()[v.id.value - 1].name] = v.value;
         return result;
     };
-    samples.push_back({{"step", 0}, {"values", values()}});
+    const auto timeline_states = [&]()
+    {
+        Json weights = Json::object(), playing = Json::object();
+        const auto observe = [&](const Json& list)
+        {
+            for (const auto& r : list)
+            {
+                const auto name = r.at("label").get<std::string>();
+                const auto id = program.animation().find_timeline(name);
+                weights[name] = player.timeline_weight(id);
+                playing[name] = player.is_playing(id);
+            }
+        };
+        observe(request.value("plays", Json::array()));
+        observe(request.value("timeline_requests", Json::array()));
+        for (const auto& e : request.value("events", Json::array()))
+            observe(e.at("timeline_requests"));
+        return std::pair{weights, playing};
+    };
+    const auto sample = [&](int step)
+    {
+        const auto [weights, playing] = timeline_states();
+        samples.push_back({{"step", step},
+                           {"values", values()},
+                           {"blend_ratios", weights},
+                           {"playing", playing}});
+    };
+    sample(0);
     for (int i = 0; i < steps; ++i)
     {
+        for (const auto& event : request.value("events", Json::array()))
+            if (event.at("step").get<int>() == i + 1)
+                timeline_requests(player, program.animation(), event.at("timeline_requests"));
         check(player.step(physics));
-        samples.push_back({{"step", i + 1}, {"values", values()}});
+        sample(i + 1);
     }
     check(player.prepare_frame());
     Json report{{"production_playback_certified", false},

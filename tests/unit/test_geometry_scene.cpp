@@ -2028,3 +2028,97 @@ TEST_CASE("Selector state is independent, resettable and allocation free in play
         REQUIRE_FALSE(runtime::compile_playback(asset).program);
     }
 }
+
+TEST_CASE(
+    "Weighted difference playback remains independent and allocation free through pause and replay",
+    "[runtime][playback][allocation]")
+{
+    auto asset = rig();
+    VariableControl control;
+    control.variable = "pick";
+    control.kind = VariableControlKind::Linear;
+    asset.variable_controls = {control};
+    Timeline clip;
+    clip.label = "difference";
+    clip.loop_begin = 0;
+    clip.loop_end = 30;
+    clip.tracks = {
+        {"pick",
+         {{0, 2, field(1.0f), field(0.0f)}, {15, 2, field(0.0f), field(0.0f)}, {30, 0, {}, {}}}}};
+    asset.timelines = {clip};
+    auto compiled = runtime::compile_playback(asset);
+    REQUIRE(compiled.program);
+    const auto id = compiled.program->animation().find_timeline("difference");
+    runtime::PlaybackInstance player(*compiled.program), other(*compiled.program);
+    REQUIRE(player.play(id, runtime::TimelinePlayMode::AdditiveParallel));
+    REQUIRE(player.set_timeline_weight(id, 0, 10, 1));
+    for (int i = 0; i < 4; ++i)
+        REQUIRE(player.step());
+    const float saved = player.timeline_weight(id);
+    player.set_playback_state(runtime::PlaybackState::Paused);
+    REQUIRE(player.advance(20));
+    REQUIRE(player.step());
+    REQUIRE(player.timeline_weight(id) == saved);
+    REQUIRE(player.tick_count() == 4);
+    REQUIRE(other.timeline_weight(id) == 1.0f);
+    REQUIRE_FALSE(other.is_playing(id));
+    REQUIRE_FALSE(player.set_timeline_weight({}, 0));
+    REQUIRE_FALSE(player.set_timeline_weight(id, std::numeric_limits<float>::quiet_NaN()));
+    REQUIRE_FALSE(player.set_timeline_weight(id, 0, -1));
+    REQUIRE(player.timeline_weight(id) == saved);
+    player.set_playback_state(runtime::PlaybackState::Running);
+    player.reset();
+    REQUIRE(player.timeline_weight(id) == 1.0f);
+    REQUIRE_FALSE(player.is_playing(id));
+    for (int i = 0; i < 120; ++i)
+        REQUIRE(player.step());
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 500; ++i)
+    {
+        if (i % 13 == 0)
+            success &=
+                static_cast<bool>(player.play(id, runtime::TimelinePlayMode::AdditiveParallel));
+        if (i % 7 == 0)
+            success &= static_cast<bool>(player.fade_out(id, 6, -1));
+        if (i % 9 == 0)
+            success &= static_cast<bool>(player.fade_in(id, 10, 1));
+        success &= static_cast<bool>(player.step());
+        success &= static_cast<bool>(player.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(other.tick_count() == 0);
+}
+
+TEST_CASE("Weighted difference accumulation preserves observed transient products",
+          "[runtime][animation]")
+{
+    auto asset = rig();
+    VariableControl control;
+    control.variable = "pick";
+    control.kind = VariableControlKind::Linear;
+    asset.variable_controls = {control};
+    for (const auto& [label, target] :
+         {std::pair{"first", 0.12857143580913544f}, std::pair{"second", -0.9574467539787292f}})
+    {
+        Timeline clip;
+        clip.label = label;
+        clip.tracks = {{"pick", {{0, 2, field(target), field(0.0f)}, {2, 0, {}, {}}}}};
+        asset.timelines.push_back(clip);
+    }
+    auto compiled = runtime::compile_playback(asset);
+    REQUIRE(compiled.program);
+    runtime::PlaybackInstance player(*compiled.program);
+    const auto first = compiled.program->animation().find_timeline("first");
+    const auto second = compiled.program->animation().find_timeline("second");
+    REQUIRE(player.play(first, runtime::TimelinePlayMode::AdditiveParallel));
+    REQUIRE(player.play(second, runtime::TimelinePlayMode::AdditiveParallel));
+    REQUIRE(player.set_timeline_weight(first, 0.6000000238418579f));
+    REQUIRE(player.set_timeline_weight(second, 0.30000001192092896f));
+    REQUIRE(player.step());
+    const auto pick = compiled.program->scene().find_variable("pick");
+    REQUIRE(player.values()[pick.value - 1].value == -0.21009117364883423f);
+}

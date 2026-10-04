@@ -625,6 +625,8 @@ struct AnimationInstance::Impl
     {
         std::uint32_t time{0};
         bool playing{false}, additive{false}, skip_update{false}, sampled{false};
+        Transition weight;
+        TimelineWeightCompletion weight_completion{TimelineWeightCompletion::KeepPlaying};
         std::vector<Transition> tracks;
     };
     struct SelectorState
@@ -659,6 +661,7 @@ struct AnimationInstance::Impl
             output.push_back({ParamId{static_cast<std::uint32_t>(i)}, 0});
         for (std::size_t i = 1; i < clips.size(); ++i)
         {
+            clips[i].weight.value = 1;
             clips[i].tracks.reserve(data.clips[i].tracks.size());
             for (std::size_t j = 0; j < data.clips[i].tracks.size(); ++j)
                 clips[i].tracks.emplace_back(); // additive channels are linear
@@ -816,8 +819,12 @@ struct AnimationInstance::Impl
             if (!state.playing || !state.additive || !state.sampled)
                 continue;
             for (std::size_t j = 0; j < state.tracks.size(); ++j)
-                output[program.clips[i].tracks[j].variable.value - 1].value +=
-                    state.tracks[j].value;
+            {
+                auto& value = output[program.clips[i].tracks[j].variable.value - 1].value;
+                value = static_cast<float>(static_cast<double>(value) +
+                                           static_cast<double>(state.tracks[j].value) *
+                                               static_cast<double>(state.weight.value));
+            }
         }
     }
     bool dispatch(std::size_t index, std::uint32_t time) noexcept
@@ -881,6 +888,9 @@ AnimationStatus AnimationInstance::play(TimelineId id, TimelinePlayMode mode) no
     state.playing = true;
     state.sampled = false;
     state.additive = mode == TimelinePlayMode::AdditiveParallel;
+    state.weight.reset();
+    state.weight.value = 1;
+    state.weight_completion = TimelineWeightCompletion::KeepPlaying;
     for (auto& track : state.tracks)
         track.reset();
     if (!data.dispatch(id.value, 0))
@@ -896,6 +906,53 @@ AnimationStatus AnimationInstance::stop(TimelineId id) noexcept
     impl_->compose();
     return {};
 }
+AnimationStatus AnimationInstance::set_timeline_weight(TimelineId id, float target, float frames,
+                                                       float easing,
+                                                       TimelineWeightCompletion completion) noexcept
+{
+    if (!id.valid() || id.value >= impl_->clips.size())
+        return {AnimationError::InvalidTimeline, id, {}};
+    if (!std::isfinite(target) || !std::isfinite(frames) || !std::isfinite(easing) || frames < 0)
+        return {AnimationError::InvalidValue, id, {}};
+    auto& state = impl_->clips[id.value];
+    if (!state.additive)
+        return {};
+    auto& weight = state.weight;
+    weight.start = weight.value;
+    weight.target = target;
+    weight.duration = frames;
+    weight.easing = easing;
+    weight.elapsed = weight.progress = 0;
+    weight.active = true;
+    state.weight_completion = completion;
+    return {};
+}
+float AnimationInstance::timeline_weight(TimelineId id) const noexcept
+{
+    return id.valid() && id.value < impl_->clips.size() ? impl_->clips[id.value].weight.value : 0;
+}
+AnimationStatus AnimationInstance::fade_in(TimelineId id, float frames, float easing) noexcept
+{
+    if (!id.valid() || id.value >= impl_->clips.size())
+        return {AnimationError::InvalidTimeline, id, {}};
+    if (!std::isfinite(frames) || !std::isfinite(easing) || frames < 0)
+        return {AnimationError::InvalidValue, id, {}};
+    auto& state = impl_->clips[id.value];
+    const bool restart = !state.playing;
+    if (restart)
+        if (const auto status = play(id, TimelinePlayMode::AdditiveParallel); !status)
+            return status;
+    const auto status = set_timeline_weight(id, 1, frames, easing);
+    if (status && restart)
+        // Play resets the query cache to one, while the newly activated fade
+        // starts at zero on its first author update.
+        state.weight.start = 0;
+    return status;
+}
+AnimationStatus AnimationInstance::fade_out(TimelineId id, float frames, float easing) noexcept
+{
+    return set_timeline_weight(id, 0, frames, easing, TimelineWeightCompletion::Stop);
+}
 bool AnimationInstance::is_playing(TimelineId id) const noexcept
 {
     return id.valid() && id.value < impl_->clips.size() && impl_->clips[id.value].playing;
@@ -903,6 +960,19 @@ bool AnimationInstance::is_playing(TimelineId id) const noexcept
 AnimationStatus AnimationInstance::step() noexcept
 {
     auto& data = *impl_;
+    for (std::size_t i = 1; i < data.clips.size(); ++i)
+    {
+        auto& state = data.clips[i];
+        if (state.playing && state.weight.active)
+        {
+            if (!update(state.weight))
+                return {AnimationError::UnsupportedController,
+                        TimelineId{static_cast<std::uint32_t>(i)},
+                        {}};
+            if (!state.weight.active && state.weight_completion == TimelineWeightCompletion::Stop)
+                state.playing = false;
+        }
+    }
     for (const auto i : data.order)
     {
         auto& state = data.clips[i];
@@ -961,6 +1031,9 @@ void AnimationInstance::reset() noexcept
     {
         clip.time = 0;
         clip.playing = clip.additive = clip.skip_update = clip.sampled = false;
+        clip.weight.reset();
+        clip.weight.value = 1;
+        clip.weight_completion = TimelineWeightCompletion::KeepPlaying;
         for (auto& track : clip.tracks)
             track.reset();
     }

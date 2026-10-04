@@ -187,10 +187,23 @@ window.capture = async function(options) {
         }
     }
     const samples=[];
+    const timelineRequest=request=>{
+        if(!timelineInfo.some(t=>t.label===request.label)) throw new Error('unknown timeline: '+request.label);
+        switch(request.kind) {
+            case 'play': EmotePlayer_PlayTimeline(id,request.label,request.flags); break;
+            case 'stop': EmotePlayer_StopTimeline(id,request.label); break;
+            case 'blend': EmotePlayer_SetTimelineBlendRatio(id,request.label,request.value,request.frames,request.easing,request.completion==='stop'); break;
+            case 'fade_in': EmotePlayer_FadeInTimeline(id,request.label,request.frames,request.easing); break;
+            case 'fade_out': EmotePlayer_FadeOutTimeline(id,request.label,request.frames,request.easing); break;
+            default: throw new Error('unknown timeline request kind');
+        }
+    };
+    const hasBlendQuery=typeof EmotePlayer_GetTimelineBlendRatio==='function';
     const observeVariables=step=>{
         const values={};
         for(const name of Object.keys(variables)) values[name]=EmotePlayer_GetVariable(id,name);
         samples.push({step,frame:step*options.stepFrames,values,
+                      blendRatios:hasBlendQuery?Object.fromEntries((options.timelines||[]).map(name=>[name,EmotePlayer_GetTimelineBlendRatio(id,name)])):null,
                       playing:(options.timelines||[]).map(name=>EmotePlayer_IsTimelinePlaying(id,name))});
     };
     for(const request of options.plays||[]) {
@@ -198,10 +211,12 @@ window.capture = async function(options) {
         if(!timelineInfo.some(t=>t.label===name)) throw new Error('unknown timeline: '+name);
         EmotePlayer_PlayTimeline(id,name,request.flags);
     }
+    for(const request of options.timelineRequests||[]) timelineRequest(request);
     if(options.sampleVariables) observeVariables(0);
     for (let i=0;i<options.steps;++i) {
         window.authorStep=i+1;
         for(const event of options.events||[]) if(event.step===i+1) {
+            for(const request of event.timeline_requests||[]) timelineRequest(request);
             for(const [name,value] of Object.entries(event.variables||{}))
                 EmotePlayer_SetVariable(id,name,value,0,0);
             for(const [name,request] of Object.entries(event.transitions||{}))
@@ -232,6 +247,7 @@ window.capture = async function(options) {
         observedVariables[label]=EmotePlayer_GetVariable(id,label);
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
+        timelineBlendQueryAvailable:hasBlendQuery,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         clockTrace:window.clockTrace,clockTraceTruncated:window.clockTraceTruncated,
         randomTrace:window.randomTrace,randomTraceTruncated:window.randomTraceTruncated,

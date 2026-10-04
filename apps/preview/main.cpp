@@ -3,6 +3,7 @@
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/playback.hpp>
+#include <nlohmann/json.hpp>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -14,6 +15,7 @@
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -29,7 +31,7 @@ struct VariableTransition
 };
 struct Options
 {
-    std::filesystem::path asset, screenshot;
+    std::filesystem::path asset, screenshot, timeline_script;
     std::string icon;
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
@@ -41,6 +43,61 @@ struct Options
     std::vector<std::pair<std::string, float>> variables;
     std::vector<VariableTransition> transitions;
 };
+// Fixed-step diagnostic dispatch only; JSON sampling/replay is excluded from
+// the production author loop and benchmarks. Preserve frozen request order.
+void timeline_requests(nekomote::runtime::PlaybackInstance& player,
+                       const nekomote::runtime::AnimationProgram& program,
+                       const nlohmann::json& requests)
+{
+    using namespace nekomote::runtime;
+    if (!requests.is_array())
+        throw std::runtime_error("timeline requests must be an array");
+    for (const auto& request : requests)
+    {
+        const auto id = program.find_timeline(request.at("label").get<std::string>());
+        const auto kind = request.at("kind").get<std::string>();
+        const std::size_t expected_fields = kind == "blend"  ? 6
+                                            : kind == "play" ? 3
+                                            : kind == "stop" ? 2
+                                                             : 4;
+        if (!request.is_object() || request.size() != expected_fields)
+            throw std::runtime_error("unexpected or missing timeline request fields");
+        PlaybackStatus status;
+        if (kind == "play")
+        {
+            const int flags = request.at("flags").get<int>();
+            if (flags != 0 && flags != 1 && flags != 3)
+                throw std::runtime_error("invalid play flags");
+            status = player.play(id, flags == 0   ? TimelinePlayMode::Replace
+                                     : flags == 1 ? TimelinePlayMode::Parallel
+                                                  : TimelinePlayMode::AdditiveParallel);
+        }
+        else if (kind == "stop")
+            status = player.stop(id);
+        else if (kind == "fade_in")
+            status = player.fade_in(id, request.at("frames").get<float>(),
+                                    request.at("easing").get<float>());
+        else if (kind == "fade_out")
+            status = player.fade_out(id, request.at("frames").get<float>(),
+                                     request.at("easing").get<float>());
+        else if (kind == "blend")
+        {
+            const auto completion = request.at("completion").get<std::string>();
+            if (completion != "keep" && completion != "stop")
+                throw std::runtime_error("invalid weight completion");
+            status = player.set_timeline_weight(
+                id, request.at("value").get<float>(), request.at("frames").get<float>(),
+                request.at("easing").get<float>(),
+                completion == "stop" ? TimelineWeightCompletion::Stop
+                                     : TimelineWeightCompletion::KeepPlaying);
+        }
+        else
+            throw std::runtime_error("invalid timeline request kind");
+        if (!status)
+            throw std::runtime_error("timeline request failed animation=" +
+                                     std::to_string(static_cast<int>(status.animation.error)));
+    }
+}
 float parse_number(const std::string& value)
 {
     std::size_t end = 0;
@@ -57,6 +114,21 @@ int parse_integer(const std::string& text)
         throw std::runtime_error("invalid integer: " + text);
     return value;
 }
+void validate_events(const nlohmann::json& events, int steps)
+{
+    if (!events.is_array())
+        throw std::runtime_error("events must be an array");
+    for (const auto& event : events)
+    {
+        if (!event.is_object() || event.size() != 2 || !event.contains("step") ||
+            !event.contains("timeline_requests") || !event.at("step").is_number_integer() ||
+            event.at("step").get<std::int64_t>() < 1 ||
+            event.at("step").get<std::int64_t>() > steps ||
+            !event.at("timeline_requests").is_array())
+            throw std::runtime_error(
+                "diagnostic events require an author step in 1..steps and timeline_requests");
+    }
+}
 Options parse(int argc, char** argv)
 {
     Options o;
@@ -71,6 +143,8 @@ Options parse(int argc, char** argv)
         };
         if (flag == "--asset")
             o.asset = next();
+        else if (flag == "--timeline-script")
+            o.timeline_script = next();
         else if (flag == "--icon")
             o.icon = next();
         else if (flag == "--screenshot")
@@ -142,6 +216,8 @@ Options parse(int argc, char** argv)
         else
             throw std::runtime_error("unknown argument: " + flag);
     }
+    if (!o.timeline_script.empty() && (!(o.playback || o.animation) || o.screenshot.empty()))
+        throw std::runtime_error("timeline script requires fixed-step playback screenshot");
     if (o.width <= 0 || o.height <= 0 || o.width > 16384 || o.height > 16384 || o.frames < 0 ||
         o.benchmark < 0 || o.steps < 0 || o.steps > 100000 || o.scale <= 0 || o.opacity < 0 ||
         o.opacity > 1)
@@ -275,8 +351,26 @@ int run(const Options& o)
             for (const auto& [name, mode] : o.plays)
                 playback_checked(playback_instance->play(
                     playback_program->animation().find_timeline(name), mode));
+            nlohmann::json script = nlohmann::json::object();
+            if (!o.timeline_script.empty())
+            {
+                std::ifstream input(o.timeline_script);
+                if (!input)
+                    throw std::runtime_error("cannot open timeline script");
+                script = nlohmann::json::parse(input);
+            }
+            timeline_requests(*playback_instance, playback_program->animation(),
+                              script.value("timeline_requests", nlohmann::json::array()));
+            const auto events = script.value("events", nlohmann::json::array());
+            validate_events(events, o.steps);
             for (int i = 0; i < o.steps; ++i)
+            {
+                for (const auto& event : events)
+                    if (event.at("step").get<int>() == i + 1)
+                        timeline_requests(*playback_instance, playback_program->animation(),
+                                          event.at("timeline_requests"));
                 playback_checked(playback_instance->step());
+            }
             playback_checked(playback_instance->prepare_frame());
             frame = playback_instance->frame();
         }

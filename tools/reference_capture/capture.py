@@ -79,6 +79,8 @@ def main():
                         help='explicit SDK controller scales; zero does not disable integration')
     parser.add_argument('--events', type=json.loads, default=[],
                         help='diagnostic requests before numbered updates: step, variables and/or forces')
+    parser.add_argument('--timeline-requests', type=json.loads, default=[],
+                        help='ordered SDK timeline blend, fade, play or stop requests after initial plays')
     parser.add_argument('--steps', type=int, default=0)
     parser.add_argument('--step-frames', type=float, default=1)
     parser.add_argument('--timeline', action='append', default=[],
@@ -130,6 +132,31 @@ def main():
         plays.append({'label': name, 'flags': value})
     def finite_number(value):
         return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    def validate_timeline_requests(requests):
+        if not isinstance(requests, list):
+            parser.error('timeline requests must be an array')
+        for request in requests:
+            if not isinstance(request, dict) or not isinstance(request.get('label'), str) or not request['label']:
+                parser.error('timeline requests require a nonempty label')
+            kind = request.get('kind')
+            fields = {'kind', 'label'}
+            if kind == 'play':
+                fields.add('flags')
+                if type(request.get('flags')) is not int or not 0 <= request['flags'] <= 0xffffffff:
+                    parser.error('timeline play requires UInt32 flags')
+            elif kind in ('blend', 'fade_in', 'fade_out'):
+                fields |= {'frames', 'easing'}
+                if not finite_number(request.get('frames')) or request['frames'] < 0 or not finite_number(request.get('easing')):
+                    parser.error('timeline transitions require finite frames >= 0 and easing')
+                if kind == 'blend':
+                    fields |= {'value', 'completion'}
+                    if not finite_number(request.get('value')) or request.get('completion') not in ('keep', 'stop'):
+                        parser.error('timeline blend requires finite value and keep/stop completion')
+            elif kind != 'stop':
+                parser.error('unknown timeline request kind')
+            if set(request) != fields:
+                parser.error('unexpected or missing timeline request fields')
+    validate_timeline_requests(args.timeline_requests)
     if not isinstance(args.variables, dict) or any(
             not name or not finite_number(value) for name, value in args.variables.items()):
         parser.error('variables must be an object mapping nonempty labels to finite numbers')
@@ -155,10 +182,11 @@ def main():
     if not isinstance(args.events, list):
         parser.error('events must be an array')
     for event in args.events:
-        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces', 'transitions'}:
+        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces', 'transitions', 'timeline_requests'}:
             parser.error('each event requires step and optional variables/forces/transitions')
         if type(event['step']) is not int or not 1 <= event['step'] <= args.steps:
             parser.error('event step must identify an update in this capture')
+        validate_timeline_requests(event.get('timeline_requests', []))
         transitions = event.get('transitions', {})
         if not isinstance(transitions, dict):
             parser.error('event transitions must be an object')
@@ -251,8 +279,11 @@ def main():
                    traceIntegerStores=args.trace_integer_stores, traceIntegerStack=args.trace_integer_stack,
                    traceIntegerStep=args.trace_integer_step, traceIntegerLimit=args.trace_integer_limit,
                    traceIntegerIndices=args.trace_integer_index,
-                   timelines=[p['label'] for p in plays], plays=plays,
+                   timelines=list(dict.fromkeys([p['label'] for p in plays] +
+                       [r['label'] for r in args.timeline_requests] +
+                       [r['label'] for e in args.events for r in e.get('timeline_requests', [])])), plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
+                   timelineRequests=args.timeline_requests,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={**args.physics_scales, 'wind': False},

@@ -135,6 +135,37 @@ bool PlaybackInstance::is_playing(TimelineId id) const noexcept
 {
     return !impl_->faulted && impl_->animation.is_playing(id);
 }
+PlaybackStatus PlaybackInstance::set_timeline_weight(TimelineId id, float target, float frames,
+                                                     float easing,
+                                                     TimelineWeightCompletion completion) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status = data.animation.set_timeline_weight(id, target, frames, easing, completion);
+    if (!status)
+        return {PlaybackError::Animation, status, {}, {}};
+    return {};
+}
+float PlaybackInstance::timeline_weight(TimelineId id) const noexcept
+{
+    return impl_->faulted ? 0 : impl_->animation.timeline_weight(id);
+}
+PlaybackStatus PlaybackInstance::fade_in(TimelineId id, float frames, float easing) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status = data.animation.fade_in(id, frames, easing);
+    if (!status)
+        return data.fail({PlaybackError::Animation, status, {}, {}});
+    data.compose();
+    return {};
+}
+PlaybackStatus PlaybackInstance::fade_out(TimelineId id, float frames, float easing) noexcept
+{
+    return set_timeline_weight(id, 0, frames, easing, TimelineWeightCompletion::Stop);
+}
 PlaybackStatus PlaybackInstance::set_origin(Vec2 origin) noexcept
 {
     auto& data = *impl_;

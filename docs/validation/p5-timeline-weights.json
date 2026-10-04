@@ -1,0 +1,572 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "implementation_base": "55ec118",
+  "scope": "Independent difference timeline weights, fade-in/out and completion policies. Main-mode requests inert; unsupported nonlinear-controller differences remain rejected. No whole-player certification.",
+  "thresholds": {
+    "scalar": 1e-05,
+    "geometry_px": 0.001,
+    "image_8bit": 2
+  },
+  "semantics": [
+    "Weight query cache changes only on author tick, including zero duration; signed values outside [0,1] accepted.",
+    "Difference-mode weight uses the observed scalar transient progress curve. Each difference contributes Float32(base + Double(track)*Double(weight)); never accumulate into next frame.",
+    "Main-mode weight/fade requests remain unchanged; fade-in on stopped/unplayed timeline starts difference mode.",
+    "Fade-out stops on completion tick, including zero-duration first author tick. Stop freezes query ratio and removes contribution.",
+    "Replay resets ratio to one and clears fade. Active fade-in starts at saved ratio; stopped fade-in replays with a zero interpolation start but initial query cache one.",
+    "Set ratio on stopped timeline does not resume or advance it.",
+    "Nonlinear Expression/Eye/Selector difference timelines are unverified and still explicitly rejected."
+  ],
+  "scalar_fixture": {
+    "path": "tests/fixtures/timeline_weight_reference.json",
+    "sha256": "16d46ccc0793a65b15bc8213169e13e82778b69059c23f58250b2ffe17fe19b9",
+    "cases": 19,
+    "samples": 573
+  },
+  "formal": {
+    "inputs": "docs/validation/playback-timeline-weight-inputs.json",
+    "reference": "build/evidence/p5-timeline-blends/full-reference",
+    "report": "build/evidence/p5-timeline-blends/formal-20/report.json",
+    "sha256": "852a9d3d24c458941b495d14351c157779da104e87f51d5df16e146c4027cc7f",
+    "total": 20,
+    "passed": 12,
+    "cases": [
+      {
+        "case": "diff-fade_in",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 1.7881393432617188e-06,
+          "step": 27,
+          "variable": "bust_UD",
+          "reference": -0.27781587839126587,
+          "native": -0.27781766653060913
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.0003662109375,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-fade_out",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 3.039836883544922e-06,
+          "step": 30,
+          "variable": "bust_UD",
+          "reference": 0.8544812202453613,
+          "native": 0.8544781804084778
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012680641280055741,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-fadein-half",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 3.159046173095703e-06,
+          "step": 23,
+          "variable": "bust_UD",
+          "reference": -0.8654718399047852,
+          "native": -0.8654749989509583
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00026074230179802034,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-interrupt",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 3.993511199951172e-06,
+          "step": 17,
+          "variable": "bust_UD",
+          "reference": 0.689620852470398,
+          "native": 0.6896248459815979
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00030517578125,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-out-ease-1",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 1.6689300537109375e-06,
+          "step": 12,
+          "variable": "bust_UD",
+          "reference": -1.4762778282165527,
+          "native": -1.4762794971466064
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012582719804741396,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-out-ease0",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 3.039836883544922e-06,
+          "step": 30,
+          "variable": "bust_UD",
+          "reference": 0.8544812202453613,
+          "native": 0.8544781804084778
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012680641280055741,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-out-ease1",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 2.0265579223632812e-06,
+          "step": 5,
+          "variable": "bust_UD",
+          "reference": -1.4661964178085327,
+          "native": -1.4661943912506104
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012582719804741396,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "diff-stop-half",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 2.3245811462402344e-06,
+          "step": 18,
+          "variable": "bust_UD",
+          "reference": -0.5172750949859619,
+          "native": -0.5172774195671082
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012582719804741396,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "diff-stop-zero",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 3.411968959808029e-05,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-stopped-fadein",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 2.6226043701171875e-06,
+          "step": 12,
+          "variable": "bust_UD",
+          "reference": 1.2546616792678833,
+          "native": 1.2546590566635132
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.0003662109375,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-stopped-weight",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 2.4437904357910156e-06,
+          "step": 17,
+          "variable": "bust_UD",
+          "reference": 0.5501620173454285,
+          "native": 0.5501595735549927
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00012582719804741396,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-weight--1",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 3.5762786865234375e-06,
+          "step": 8,
+          "variable": "bust_UD",
+          "reference": 0.9007769823074341,
+          "native": 0.9007805585861206
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.0003662109375,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-weight-0.5",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 2.592802047729492e-06,
+          "step": 13,
+          "variable": "bust_UD",
+          "reference": -0.26109960675239563,
+          "native": -0.2610970139503479
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.000244140625,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-weight-0",
+        "passed": true,
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 3.411968959808029e-05,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "diff-weight-2",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 4.231929779052734e-06,
+          "step": 28,
+          "variable": "bust_UD",
+          "reference": -0.5352869033813477,
+          "native": -0.5352911353111267
+        },
+        "scalar_passed": true,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.000244140625,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "main-fadeout",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 0.000118255615234375,
+          "step": 15,
+          "variable": "bust_UD",
+          "reference": 8.469581604003906,
+          "native": 8.469463348388672
+        },
+        "scalar_passed": false,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "sample_05",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00024604058069758756,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "main-half",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 1.1146068572998047e-05,
+          "step": 9,
+          "variable": "hair_LR_M",
+          "reference": -0.9454703330993652,
+          "native": -0.9454814791679382
+        },
+        "scalar_passed": false,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "sample_05",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.000244140625,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "main-stop-blend",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 0.000118255615234375,
+          "step": 15,
+          "variable": "bust_UD",
+          "reference": 8.469581604003906,
+          "native": 8.469463348388672
+        },
+        "scalar_passed": false,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "sample_05",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.00024604058069758756,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "double-diff",
+        "passed": false,
+        "native_failure": {
+          "phase": "evaluate",
+          "error": "command failed (1); see build/evidence/p5-timeline-blends/formal-20/double-diff-evaluate.log",
+          "log": "nekomote_playback_probe: playback error=2 animation=4 geometry=0 node=0 node_path= physics=0 controller=18446744073709551615\n"
+        }
+      },
+      {
+        "case": "double-supported",
+        "passed": false,
+        "scalar_maximum": {
+          "error": 1.7523765563964844e-05,
+          "step": 3,
+          "variable": "hair_UD",
+          "reference": -0.7893368005752563,
+          "native": -0.7893192768096924
+        },
+        "scalar_passed": false,
+        "weight_maximum": {
+          "step": 0,
+          "timeline": "待機ループ00",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "weights_passed": true,
+        "playing_errors": [],
+        "geometry_max_error_px": 0.0003662109375,
+        "geometry_passed": true,
+        "image_pixels_over_tolerance": 1
+      }
+    ]
+  },
+  "mixing_observer": {
+    "metadata": "build/evidence/p5-timeline-blends/double-mixing.json",
+    "sha256": "218a20a0b802643c92ef75fa1bdae93ea8e6f8715e2b389ee681fdaf1589f496",
+    "float_stores": 14,
+    "truncated": false,
+    "parameter_samples_and_png_identical_to_unobserved": true,
+    "native_source_final_head_slant": -0.21009117364883423,
+    "source_transient": -0.21009117314156,
+    "old_saved_accumulation": 0.0771428644657135,
+    "other_verified_values": {
+      "body_LR": 0.030000001192092896,
+      "body_UD": -5.205882549285889,
+      "body_slant": -0.12857143580913544
+    },
+    "scope": "Observed caller Ll writes and final products only; no core source reading. Broad 100000-store initial capture truncated, retained and not used as complete evidence."
+  },
+  "verification": {
+    "debug_ctest": 103,
+    "release_ctest": 103,
+    "asan_ubsan_core_ctest": 102,
+    "python_tools": 7,
+    "allocation": "500 active play/fade-in/out requests, author/physics/final evaluation/frame: ordinary C++ new count zero. Independent instance/reset/pause/invalid input covered.",
+    "regressions": "Four original Chocola and three original Fraise sessions all scalar/geometry/image PASS."
+  },
+  "benchmarks": {
+    "chocola": {
+      "report": "build/evidence/p5-timeline-blends/chocola-weighted-standalone.json",
+      "sha256": "ee09e98ace8e469df3cee65e33f8e68dadf5274302453964162822923fc45520",
+      "p50_ms": 0.377913,
+      "p95_ms": 0.408783,
+      "p99_ms": 0.42764,
+      "samples": 2000,
+      "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback",
+      "warmup_ticks": 120
+    },
+    "fraise": {
+      "report": "build/evidence/p5-timeline-blends/fraise-weighted-standalone.json",
+      "sha256": "7faa402b518c8870a83d9a1e902b0ec4c2d2ed941f89d13849f7e669c9c001ae",
+      "p50_ms": 0.726003,
+      "p95_ms": 0.798429,
+      "p99_ms": 0.827692,
+      "samples": 2000,
+      "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback",
+      "warmup_ticks": 120
+    }
+  },
+  "environment": {
+    "cpu": "AMD Ryzen 7 5800H",
+    "gpu": "NVIDIA RTX 3060 Laptop 6GB",
+    "driver": "575.64.03",
+    "desktop": "KDE/X11",
+    "compiler": "GCC 15.1.1",
+    "mode": "Release/LTO",
+    "scale": 1,
+    "random_seed": 0,
+    "clip": "待機ループ00 flags3",
+    "weight_request": {
+      "value": 0.25,
+      "frames": 2400,
+      "easing": 1
+    },
+    "steps_before_benchmark": 60,
+    "scope": "Author animation/anchors/physics/final geometry/frame; no GPU/presentation/readback/JSON/memory/power; no performance-improvement claim"
+  },
+  "remaining": [
+    "Three single-weight final images each have one pixel FAIL; ratio, raw physical outputs, geometry/topology PASS.",
+    "sample_05 main-mode tests keep ratio one but long trajectories have physical maxima 1.114606857e-5/0.000118255615; one/two pictures FAIL. Not attributed to weight requests.",
+    "Two supported weighted difference clips match final source controls and geometry, but hair_UD maximum 1.752376556e-5 and one pixel FAIL.",
+    "走行ループ has nonlinear-controller tracks and difference mode explicitly fails; no silent fallback.",
+    "Previous static/isolated/scaled pixel FAILs remain. Application interaction/audio/background, host, corpus and long-run certification pending."
+  ]
+}

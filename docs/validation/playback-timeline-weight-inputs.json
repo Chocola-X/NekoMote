@@ -1,0 +1,1441 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "scalar_tolerance": 1e-05,
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "diff-fade_in",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_in",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "9a678456cb1a4396f0e791a5613bb617f8308b70add16794d5deb444b39281cc",
+      "reference_png_sha256": "a0d037943209805801d7b2e592d341b0610ce6708601a19842419053557b27fe",
+      "reference_trace_sha256": "7f315c829e7f7a5f187e612a98a25b7a347409155915bdc7862f0251eb76779b"
+    },
+    {
+      "case": "diff-fade_out",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "5dd6aeea78757610d00b53898c36834193896d0b9767d363128bac0f0ca2e6af",
+      "reference_png_sha256": "39d75b4def947d4bb228e9883252febdd7df2f389abe24158476a233c79d1c6a",
+      "reference_trace_sha256": "e325f7426d06247cc7d329521aa7e55497d005c9e00673331e8cad9a2f12e88c"
+    },
+    {
+      "case": "diff-fadein-half",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "fade_in",
+              "label": "待機ループ00",
+              "frames": 10,
+              "easing": -1
+            }
+          ]
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "9b4ba265de10e3e3ae69ab5fbdc8be311b83f99bd3ad680d1308e11893ac5037",
+      "reference_png_sha256": "c3fb27781968ef2b53084e5d83f149194d2d1d33a524f98a5d3a159e61bd4563",
+      "reference_trace_sha256": "edb65476a9d125c5ecbcea91006644f54c4ddf3d6eee7d730cb5a08e9a5553ea"
+    },
+    {
+      "case": "diff-interrupt",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "blend",
+              "label": "待機ループ00",
+              "value": 0.8,
+              "frames": 6,
+              "easing": 1,
+              "completion": "keep"
+            }
+          ]
+        },
+        {
+          "step": 10,
+          "timeline_requests": [
+            {
+              "kind": "play",
+              "label": "待機ループ00",
+              "flags": 3
+            }
+          ]
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "67489750433fac561b1bd656bfb0822e11cb5383d245f58a8b027f2b142234b3",
+      "reference_png_sha256": "fadb79f553eff2de2c8314d3ce86050516e671d871b946948656dde4fd799af6",
+      "reference_trace_sha256": "ab12e2028d2c1c68fa0902110745e643135c60def5b65d4ec97f8d5419f7d974"
+    },
+    {
+      "case": "diff-out-ease-1",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": -1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "9e6f24dffaac716ccb3cfacb0735d4ce297072176eeef603fe394baaf51c7080",
+      "reference_png_sha256": "577aecbee4c6a7ffb7eeb94ffb07c16e30f2566dcd5d32e87d0adc4bebb2586b",
+      "reference_trace_sha256": "e5e7c80a1383b13b6d5d598f12e72e086808885be9acf9adc692767866c3483b"
+    },
+    {
+      "case": "diff-out-ease0",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "c8b12a26be0bc43e014193af69560851303b50755221ce53ab56cf64efe8ca85",
+      "reference_png_sha256": "39d75b4def947d4bb228e9883252febdd7df2f389abe24158476a233c79d1c6a",
+      "reference_trace_sha256": "e325f7426d06247cc7d329521aa7e55497d005c9e00673331e8cad9a2f12e88c"
+    },
+    {
+      "case": "diff-out-ease1",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "63bac762dfbe75ea77166f8b24446acdb166668cee8ccf1a1503034c226efabb",
+      "reference_png_sha256": "55608b5cc6417f92213814a1d5f8ec99048a210b776bd64e748cf94c2aa544d2",
+      "reference_trace_sha256": "de4fdde178873f19b56260bc4d5f1994a86231bef17234e5fa2afb45671c772d"
+    },
+    {
+      "case": "diff-stop-half",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 10,
+          "easing": 0,
+          "completion": "stop"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "05b95424e1b1f32452e37bbcb9c5a466cfccd3d072aaf13c42a77a415caba085",
+      "reference_png_sha256": "c15cf9ac77af3b1787bbf3135463b09c304fd0dff8449ad9b643e786fb63ad86",
+      "reference_trace_sha256": "d921e2ba51731ec629aa1df00139fb53ab8957b46e4c66848c3e2967781906a1"
+    },
+    {
+      "case": "diff-stop-zero",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 0,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "63b97050616faf19bc47eaa7f9e7a6f77aa64fbe5e75b89fe92055b0264fb7d0",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "reference_trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    },
+    {
+      "case": "diff-stopped-fadein",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 5,
+          "easing": 0
+        }
+      ],
+      "events": [
+        {
+          "step": 8,
+          "timeline_requests": [
+            {
+              "kind": "fade_in",
+              "label": "待機ループ00",
+              "frames": 10,
+              "easing": 0
+            }
+          ]
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "b1ef96adb4cdbb423ea6d52ea3a255c362e382b504b5096530406b00b22041ee",
+      "reference_png_sha256": "70a567acae2e535085538c2d85af6bc34e7e8d7097bb41af1d1dea00231fb9ee",
+      "reference_trace_sha256": "d9a43258cecb399e19e910e29530b440383731c7773f02325e76fe97e7082ebe"
+    },
+    {
+      "case": "diff-stopped-weight",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "stop",
+              "label": "待機ループ00"
+            }
+          ]
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "3ad539619eea3112a79440cdbe24c67146e2fccfd3bbfaa961c0e9383c17e4cf",
+      "reference_png_sha256": "fe16c0c735b238874afa2e944e021c608134b57695a5a75bfd7ba9a1aa5b2474",
+      "reference_trace_sha256": "adc91f5bbe1be2fd4fbe89fe3505c3f2a20fdd3a7852fd0226b04f828bbbb449"
+    },
+    {
+      "case": "diff-weight--1",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": -1,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "d60ab397be3c920a808e99f26c8df9954f4347fd237e35ddcdcf0a1b58bbde4a",
+      "reference_png_sha256": "7964220de95aa5715400dd965a0c3238f75f1a3617460b02c9c2ecbdd73ecae0",
+      "reference_trace_sha256": "10b08321eeabea2f0329df3f14c4dc5563cde9157bfa73906daa092b8be2ad0f"
+    },
+    {
+      "case": "diff-weight-0.5",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "7c314aafe6d7d2baa44e19abc004852a57b4c4c5f02c23423d75f6cc16455d39",
+      "reference_png_sha256": "f690ec50217fb396b9f83cb3cdcd28e10bc78792fedc263459407b2d0c6ec8bd",
+      "reference_trace_sha256": "6a8ef04b23fdc886525e0927d35235a4f77a34aa22fd69c542ad8dcdad5c517f"
+    },
+    {
+      "case": "diff-weight-0",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "80d5248c0f8a5c66a9bd28f1a43d62af9a43861e4b0835147f2676364a9c773a",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "reference_trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    },
+    {
+      "case": "diff-weight-2",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 2,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "10c3bb2b743c55a559416035c64d3a5c53c4d1c7ab3ace61af8b4aa533616ecf",
+      "reference_png_sha256": "208a5877d60853e903f6a8373e0e574f0dc715b636e577d06aa4311627a0fdb6",
+      "reference_trace_sha256": "3f44bf8b5d882fd9c251e883f43d68c9498e52fcf5ce8a39f99d1e74d1f37cfc"
+    },
+    {
+      "case": "main-fadeout",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "fade_out",
+          "label": "sample_05",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "sample_05"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "b26b8fe1960cfac6d5809971b6d97e93d2da9a6f73cf89d84c9360881fc8b0e6",
+      "reference_png_sha256": "364ea65937c20f96759baa61250cbce5e00654b748e54bdc0341204f69400206",
+      "reference_trace_sha256": "16d3181f59f5e05fdbec7aab78aca40c47c400798267ba13c4ac143c445b669d"
+    },
+    {
+      "case": "main-half",
+      "model": "chocola-date-a",
+      "steps": 14,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "sample_05",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "sample_05"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "af4f77a6c0c05e77324404d6fb51a0b22e6a6c8bf53ff47fe541be8d70edb7c7",
+      "reference_png_sha256": "0721d2ebc8c26330f54dc8ae34f6fb97bca08e240b38104fc51be9b77f8f620c",
+      "reference_trace_sha256": "ad7be4363930b79a4c8423c89943398c51cb7f4d104c1eff6a30a2c8d3501f4d"
+    },
+    {
+      "case": "main-stop-blend",
+      "model": "chocola-date-a",
+      "steps": 30,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "sample_05",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "stop"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "sample_05"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "7d5b1ffcaf8a03776bc83695d1320573880c07f1a8986af896fb7caefe91a381",
+      "reference_png_sha256": "364ea65937c20f96759baa61250cbce5e00654b748e54bdc0341204f69400206",
+      "reference_trace_sha256": "16d3181f59f5e05fdbec7aab78aca40c47c400798267ba13c4ac143c445b669d"
+    },
+    {
+      "case": "double-diff",
+      "model": "chocola-date-a",
+      "steps": 9,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        },
+        {
+          "label": "走行ループ",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.6,
+          "frames": 7,
+          "easing": 1,
+          "completion": "keep"
+        },
+        {
+          "kind": "blend",
+          "label": "走行ループ",
+          "value": 0.3,
+          "frames": 9,
+          "easing": -1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00",
+        "走行ループ"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "9a8dc0d65f29d122786046ec492b15d20c4b53d08aba03f16712ea23ce93e6c7",
+      "reference_png_sha256": "a2fbb4d351e2e227e502614bc1e5b8feedd84d1f1fc80e4c3f9deaace3163492",
+      "reference_trace_sha256": "3377937561d86d50be065cfc759849628787bd7075d3d2af8d43ed5fc475da76"
+    },
+    {
+      "case": "double-supported",
+      "model": "chocola-date-a",
+      "steps": 9,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        },
+        {
+          "label": "待機ループ01",
+          "flags": 3
+        }
+      ],
+      "timeline_requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.6,
+          "frames": 7,
+          "easing": 1,
+          "completion": "keep"
+        },
+        {
+          "kind": "blend",
+          "label": "待機ループ01",
+          "value": 0.3,
+          "frames": 9,
+          "easing": -1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_timeline_weights": [
+        "待機ループ00",
+        "待機ループ01"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "9380faba55af9378a9bd7250d5d7102cecb5a8e3622ca425197d80e3b11b14d5",
+      "reference_png_sha256": "ebcd1f060a12e6604a5e477207d24542500ce76f12aed2ef2390572f4b3086eb",
+      "reference_trace_sha256": "c04a660f347ec1c5325afb2c91a6b7af7e85513f1c13492c1b2a114d89f72e4a"
+    }
+  ]
+}

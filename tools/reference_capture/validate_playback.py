@@ -54,15 +54,17 @@ def main():
         for suffix, field in [('.json', 'metadata'), ('.png', 'png'), ('.trace.json', 'trace')]:
             if sha(pathlib.Path(str(reference) + suffix)) != case['reference_' + field + '_sha256']:
                 raise ValueError('reference changed: ' + name + suffix)
-        metadata = json.loads(reference.with_suffix('.json').read_text())
+        metadata = json.loads(pathlib.Path(str(reference) + '.json').read_text())
         expected = dict(width=800, height=1080, x=case['origin'][0], y=case['origin'][1],
                         scale=case.get("scale", 1), opacity=1, stepFrames=1, steps=case['steps'],
-                        variables=case['variables'], plays=case['plays'], transitions=case.get('transitions', {}), events=[],
+                        variables=case['variables'], plays=case['plays'], transitions=case.get('transitions', {}), events=case.get('events', []),
                         physics=dict(hair=1, parts=1, bust=1, wind=False))
         if any(metadata.get(k) != v for k, v in expected.items()) or metadata['diagnostic_fixture_edits']:
             raise ValueError('reference is not the frozen, unmodified request: ' + name)
         if metadata.get('fixedClockMs') != case.get('fixed_clock_ms'):
             raise ValueError('reference initialization clock changed: ' + name)
+        if metadata.get('timelineRequests', []) != case.get('timeline_requests', []):
+            raise ValueError('reference timeline requests changed: ' + name)
         if 'fixed_clock_ms' in case and case['random_seed'] != case['fixed_clock_ms'] // 1000:
             raise ValueError('native seed differs from source initialization clock: ' + name)
         if metadata['source_hashes'] != case['source_hashes']:
@@ -72,7 +74,8 @@ def main():
                 raise ValueError('reference driver changed')
         request = dict(steps=case['steps'], origin=case['origin'], scale=case.get('scale', 1),
                        variables=case['variables'], transitions=case.get('transitions', {}),
-                       plays=case['plays'], dump_frame=True)
+                       plays=case['plays'], timeline_requests=case.get('timeline_requests', []),
+                       events=case.get('events', []), dump_frame=True)
         if 'random_seed' in case:
             request['random_seed'] = case['random_seed']
         input_path = args.output / (name + '-inputs.json')
@@ -97,6 +100,8 @@ def main():
             command += ['--variable', key, value]
         if 'random_seed' in case:
             command += ['--random-seed', case['random_seed']]
+        if request['timeline_requests'] or request['events']:
+            command += ['--timeline-script', input_path]
         for key, transition in case.get('transitions', {}).items():
             command += ['--transition', key, transition['value'], transition['frames'], transition['easing']]
         for play in case['plays']:
@@ -124,6 +129,22 @@ def main():
                                    reference=a['values'][key], native=b['values'][key]))
         maximum = max(errors, key=lambda e: e['error'])
         scalar_passed = maximum['error'] <= baseline['scalar_tolerance']
+        weight_errors, playing_errors = [], []
+        observed_timelines = case.get('observed_timeline_weights', [])
+        if observed_timelines and not metadata.get('timelineBlendQueryAvailable'):
+            raise ValueError('SDK timeline weight query unavailable')
+        for a, b in zip(source_samples, native['samples']):
+            for label in observed_timelines:
+                weight_errors.append(dict(step=a['step'], timeline=label,
+                    reference=a['blendRatios'][label], native=b['blend_ratios'][label],
+                    error=abs(a['blendRatios'][label] - b['blend_ratios'][label])))
+                reference_playing = bool(a['playing'][metadata['timelines'].index(label)])
+                if reference_playing != b['playing'][label]:
+                    playing_errors.append(dict(step=a['step'], timeline=label,
+                        reference=reference_playing, native=b['playing'][label]))
+        weight_maximum = max(weight_errors, key=lambda e: e['error']) if weight_errors else None
+        weights_passed = not playing_errors and (weight_maximum is None or
+            weight_maximum['error'] <= baseline['scalar_tolerance'])
         geometry = compare(native, json.loads(pathlib.Path(str(reference) + '.trace.json').read_text()))
         (args.output / (name + '-geometry.json')).write_text(json.dumps(geometry, indent=2) + '\n')
         comparison = args.output / (name + '-comparison')
@@ -132,11 +153,14 @@ def main():
                 str(reference) + '.png', str(args.output / (name + '-native.png')),
                 '--output', str(comparison), '--tolerance', str(baseline['image_tolerance'])],
                 stdout=log, stderr=subprocess.STDOUT).returncode
-        image = json.loads(comparison.with_suffix('.json').read_text())
-        passed = scalar_passed and geometry['passed'] and status == 0 and image['passed']
+        image = json.loads(pathlib.Path(str(comparison) + '.json').read_text())
+        passed = scalar_passed and weights_passed and geometry['passed'] and status == 0 and image['passed']
         results.append(dict(case=name, model=model, source_hashes=case['source_hashes'],
                             asset_sha256=case['asset_sha256'], scalar_samples=len(errors),
                             scalar_maximum=maximum, scalar_passed=scalar_passed,
+                            timeline_weight_samples=len(weight_errors),
+                            timeline_weight_maximum=weight_maximum, playing_errors=playing_errors,
+                            timeline_weights_passed=weights_passed,
                             geometry=geometry, image=image, passed=passed))
         save_report()
         print(name, 'PASS' if passed else 'FAIL', 'scalar=', maximum['error'],

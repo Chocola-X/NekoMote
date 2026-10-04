@@ -80,3 +80,8 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 `--trace-clock` 记录真实 Date.now/getTime/performance.now 调用与返回值，上限 10000；`--trace-integer-stores` 观察完整 Int32/Uint32 堆视图的数值索引写入（包含加载），保留真实写入。可用 `--trace-integer-index`（最多 128 项）、`--trace-integer-stack`、`--trace-integer-step` 过滤，上限 `--trace-integer-limit` 为 1..100000，元数据明确记录截断。诊断索引不进入资产或运行时。眨眼的 400 步有/无观察数据与 PNG 完全相同，见 `docs/validation/p5-automatic-blink.json`。
 
 旧隔离动画 PSB 的眨眼字节与 Eye enabled 共用地址。原生 `--animation-diagnostic --disable-eye-controller` 显式重现这一 fixture，不能用于正式 `--playback`；正式矩阵仍以未修改 PSB 和物理幅度全 1 验收。不能将旧 fixture 解释为只关闭自动眨眼。
+
+
+时间线诊断支持 `--timeline-requests '<数组>'`：初始 plays 后按数组顺序执行 SDK 调用。每项有 `kind`/`label`；play 加 flags，stop 无额外字段，fade_in/fade_out 加 frames/easing，blend 加 value/frames/easing/completion（keep 或 stop）。events 项的 timeline_requests 在指定作者步更新前执行。所有额外观察时间线也纳入状态采样；原 SDK `EmotePlayer_GetTimelineBlendRatio` 返回真实比率，不能调用原包装中错误绑定总帧数的 getter。未知请求/非法字段明确失败。
+
+preview `--timeline-script <JSON>` 仅允许固定步数截图诊断，执行同样 timeline_requests/events；正式实时应用通过数值/ID API 调用。playback probe 输入接收同样两字段并输出 blend_ratios/playing；诊断脚本、JSON 采样和截图不计入稳态性能。完整矩阵入口使用 `docs/validation/playback-timeline-weight-inputs.json`。证据输出后缀添加到完整名称，带小数点的权重 case 不会覆盖或错误读取另一个 case。

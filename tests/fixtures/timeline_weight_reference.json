@@ -1,0 +1,5650 @@
+{
+  "tolerance": 1e-05,
+  "note": "Independent SDK GetTimelineBlendRatio and IsTimelinePlaying observations from original PSB. No source output feeds runtime. Geometry separately verifies difference values.",
+  "cases": [
+    {
+      "case": "diff-fade_in",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_in",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-fade_out",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.4000000059604645
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.29999998211860657
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.19999995827674866
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.09999992698431015
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-fadein-half",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "fade_in",
+              "label": "待機ループ00",
+              "frames": 10,
+              "easing": -1
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.6581138968467712
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.7236068248748779
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.773861289024353
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.8162277936935425
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.8535534143447876
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.8872983455657959
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.9183300137519836
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.9472135901451111
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.9743416905403137
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-interrupt",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "blend",
+              "label": "待機ループ00",
+              "value": 0.8,
+              "frames": 6,
+              "easing": 1,
+              "completion": "keep"
+            }
+          ]
+        },
+        {
+          "step": 10,
+          "timeline_requests": [
+            {
+              "kind": "play",
+              "label": "待機ループ00",
+              "flags": 3
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.605555534362793
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.6222221851348877
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.6499999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.6888888478279114
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.7388889193534851
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-out-ease-1",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": -1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.6837722063064575
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.5527864098548889
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.45227745175361633
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.3675444722175598
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.2928932011127472
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.2254033237695694
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.16333995759487152
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.10557278245687485
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.05131666362285614
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-out-ease0",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.4000000059604645
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.29999998211860657
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.19999995827674866
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.09999992698431015
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-out-ease1",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 1,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.9900000095367432
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.9599999785423279
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.9100000262260437
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.8399999737739563
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.75
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.6399999856948853
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.5099999904632568
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.3599999248981476
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.18999986350536346
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-stop-half",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 10,
+          "easing": 0,
+          "completion": "stop"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.949999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.8500000238418579
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.75
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.6499999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.5499999523162842
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-stop-zero",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 0,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-stopped-fadein",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_out",
+          "label": "待機ループ00",
+          "frames": 5,
+          "easing": 0
+        }
+      ],
+      "events": [
+        {
+          "step": 8,
+          "timeline_requests": [
+            {
+              "kind": "fade_in",
+              "label": "待機ループ00",
+              "frames": 10,
+              "easing": 0
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.6000000238418579
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.3999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.19999997317790985
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.10000000149011612
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.20000000298023224
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.30000001192092896
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.4000000059604645
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.6000000238418579
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0.7000000476837158
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0.8000000715255737
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0.9000000953674316
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-stopped-weight",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "stop",
+              "label": "待機ループ00"
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-weight--1",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": -1,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": -1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-weight-0.5",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0.5
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-weight-0",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-weight-2",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 2,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 2
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "main-fadeout",
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "requests": [
+        {
+          "kind": "fade_out",
+          "label": "sample_05",
+          "frames": 10,
+          "easing": 0
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "main-half",
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "sample_05",
+          "value": 0.5,
+          "frames": 0,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "main-stop-blend",
+      "plays": [
+        {
+          "label": "sample_05",
+          "flags": 1
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "sample_05",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "stop"
+        }
+      ],
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "sample_05": 1
+          },
+          "playing": {
+            "sample_05": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "diff-stopped-blend",
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "requests": [
+        {
+          "kind": "blend",
+          "label": "待機ループ00",
+          "value": 0,
+          "frames": 10,
+          "easing": 0,
+          "completion": "keep"
+        }
+      ],
+      "events": [
+        {
+          "step": 5,
+          "timeline_requests": [
+            {
+              "kind": "stop",
+              "label": "待機ループ00"
+            }
+          ]
+        },
+        {
+          "step": 8,
+          "timeline_requests": [
+            {
+              "kind": "blend",
+              "label": "待機ループ00",
+              "value": 0.7,
+              "frames": 10,
+              "easing": 0,
+              "completion": "keep"
+            }
+          ]
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "weights": {
+            "待機ループ00": 1
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 1,
+          "weights": {
+            "待機ループ00": 0.8999999761581421
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 2,
+          "weights": {
+            "待機ループ00": 0.800000011920929
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 3,
+          "weights": {
+            "待機ループ00": 0.699999988079071
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 4,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": true
+          }
+        },
+        {
+          "step": 5,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 6,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 7,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 8,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 9,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 10,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 11,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 12,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 13,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 14,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 15,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 16,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 17,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 18,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 19,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 20,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 21,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 22,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 23,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 24,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 25,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 26,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 27,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 28,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 29,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        },
+        {
+          "step": 30,
+          "weights": {
+            "待機ループ00": 0.5999999642372131
+          },
+          "playing": {
+            "待機ループ00": false
+          }
+        }
+      ]
+    }
+  ]
+}

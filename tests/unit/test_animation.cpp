@@ -105,6 +105,68 @@ TEST_CASE("Native variable transitions and author events match frozen SDK trajec
         }
     }
 }
+TEST_CASE("Difference weights, fades and replay match public SDK ratio and playing samples",
+          "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "timeline_weight_reference.json");
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::AnimationInstance player(*reference.program);
+        const auto requests = [&](const Json& list)
+        {
+            for (const auto& r : list)
+            {
+                const auto id = reference.program->find_timeline(r.at("label").get<std::string>());
+                const auto kind = r.at("kind").get<std::string>();
+                if (kind == "play")
+                    REQUIRE(player.play(id, mode(r.at("flags").get<int>())));
+                else if (kind == "stop")
+                    REQUIRE(player.stop(id));
+                else if (kind == "fade_in")
+                    REQUIRE(player.fade_in(id, r.at("frames").get<float>(),
+                                           r.at("easing").get<float>()));
+                else if (kind == "fade_out")
+                    REQUIRE(player.fade_out(id, r.at("frames").get<float>(),
+                                            r.at("easing").get<float>()));
+                else
+                    REQUIRE(player.set_timeline_weight(
+                        id, r.at("value").get<float>(), r.at("frames").get<float>(),
+                        r.at("easing").get<float>(),
+                        r.at("completion") == "stop"
+                            ? runtime::TimelineWeightCompletion::Stop
+                            : runtime::TimelineWeightCompletion::KeepPlaying));
+            }
+        };
+        for (const auto& play : experiment.at("plays"))
+            REQUIRE(
+                player.play(reference.program->find_timeline(play.at("label").get<std::string>()),
+                            mode(play.at("flags").get<int>())));
+        requests(experiment.at("requests"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            if (sample.at("step") != 0)
+            {
+                for (const auto& event : experiment.at("events"))
+                    if (event.at("step") == sample.at("step"))
+                        requests(event.value("timeline_requests", Json::array()));
+                REQUIRE(player.step());
+            }
+            for (const auto& [name, weight] : sample.at("weights").items())
+            {
+                const auto id = reference.program->find_timeline(name);
+                REQUIRE_THAT(player.timeline_weight(id),
+                             Catch::Matchers::WithinAbs(weight.get<double>(),
+                                                        fixture.at("tolerance").get<double>()));
+                REQUIRE(player.is_playing(id) == sample.at("playing").at(name).get<bool>());
+            }
+        }
+    }
+}
+
 TEST_CASE("Disabling automatic blinking preserves the enabled eye transition graph", "[animation]")
 {
     Reference reference;
