@@ -5,13 +5,13 @@
 
 namespace nekomote::runtime
 {
-float ease_progress(float progress, float amount) noexcept
+double ease_progress(double progress, float amount) noexcept
 {
     const double t = std::clamp(static_cast<double>(progress), 0.0, 1.0);
     if (t == 0 || t == 1 || amount == 0)
-        return static_cast<float>(t);
+        return t;
     const double easing = amount;
     const double exponent = easing > 0 ? 1 + easing : 1 / (1 - easing);
-    return static_cast<float>(std::pow(t, exponent));
+    return std::pow(t, exponent);
 }
 } // namespace nekomote::runtime

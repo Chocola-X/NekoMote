@@ -55,16 +55,6 @@ bool finite(Vec2 value) noexcept
 {
     return std::isfinite(value.x) && std::isfinite(value.y);
 }
-bool normalized(Vec2 value, float scale, Vec2& result) noexcept
-{
-    const double x = static_cast<double>(value.x) / static_cast<double>(scale);
-    const double y = static_cast<double>(value.y) / static_cast<double>(scale);
-    constexpr double maximum = std::numeric_limits<float>::max();
-    if (!std::isfinite(x) || !std::isfinite(y) || std::abs(x) > maximum || std::abs(y) > maximum)
-        return false;
-    result = {static_cast<float>(x), static_cast<float>(y)};
-    return true;
-}
 } // namespace
 struct PhysicsProgram::Impl
 {
@@ -295,7 +285,15 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         !std::isfinite(inputs.parts_amplitude) || inputs.parts_amplitude < 0 ||
         !finite(inputs.parts_displacement))
         return {PhysicsError::InvalidInput, kNoPhysicsController, {}};
-    const double inverse_scale = 1.0f / geometry.scale();
+    // Save the reciprocal of the author and instance scale, then save each
+    // absolute anchor before subtraction. Dividing a delta changes its bits.
+    // Source observations: docs/validation/p6-transform-precision.json.
+    const double physical_scale =
+        static_cast<double>(geometry.scale()) * static_cast<double>(program.author_scale);
+    const double inverse_scale = static_cast<float>(1.0 / physical_scale);
+    if (!std::isfinite(physical_scale) || physical_scale <= 0 || !std::isfinite(inverse_scale) ||
+        inverse_scale <= 0)
+        return {PhysicsError::InvalidInput, kNoPhysicsController, {}};
     for (std::size_t i = 0; i < instance.anchors.size(); ++i)
     {
         const auto& nodes = i < program.springs.size()
@@ -333,9 +331,8 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         const auto& spring = program.springs[i];
         if (state.initialized)
         {
-            Vec2 delta;
-            if (!normalized(instance.anchors[i] - state.previous_anchor, program.author_scale,
-                            delta))
+            const Vec2 delta = instance.anchors[i] - state.previous_anchor;
+            if (!finite(delta))
                 return {PhysicsError::InvalidInput, i, {}};
             advance_spring(state.spring, spring.coefficients, delta, inputs.bust_displacement);
         }
@@ -360,9 +357,12 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         state = instance.chain_states[i];
         const auto& chain = program.chains[i];
         Vec2 delta;
-        if (state.initialized && !normalized(instance.anchors[controller] - state.previous_anchor,
-                                             program.author_scale, delta))
-            return {PhysicsError::InvalidInput, controller, {}};
+        if (state.initialized)
+        {
+            delta = instance.anchors[controller] - state.previous_anchor;
+            if (!finite(delta))
+                return {PhysicsError::InvalidInput, controller, {}};
+        }
         const bool hair = chain.kind == model::ChainKind::Hair;
         const auto displacement = hair ? inputs.hair_displacement : inputs.parts_displacement;
         const auto pose =

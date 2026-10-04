@@ -1409,6 +1409,175 @@ TEST_CASE("Scene key weights retain the original blend rounding at a patch corne
     REQUIRE(sample.x == reference.at("expected").get<float>());
 }
 
+TEST_CASE("Rigid angles retain source degree interpolation and wrapped Float32 coefficients",
+          "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/transform_precision_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input);
+    for (const auto& observation : reference.at("rotation"))
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.icons["atlas/a"] = {"atlas", 0, 0, 1, 1, 0, 0};
+        auto content = sprite();
+        content.angle = field(observation.value("degrees", 0.0f));
+        auto node = layer("rotation", 0, content);
+        if (observation.contains("parameter"))
+        {
+            node.parameterize = field(0);
+            node.parameter = {{"angle", -30, 30, 60, 0, true}};
+            node.frame_list = {{30, 3, field(content)}};
+            content.angle = field(8.0f);
+            node.frame_list.push_back({60, 2, field(content)});
+        }
+        asset.parts[0].layers = {node};
+        auto compiled = compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        GeometryInstance instance(*compiled.scene);
+        if (observation.contains("parameter"))
+            REQUIRE(instance.set_parameter(compiled.scene->find_variable("angle"),
+                                           observation.at("parameter").get<float>()));
+        REQUIRE(instance.evaluate());
+        const auto point = instance.sample_atlas_point(instance.primitives()[0].node, {0, 1});
+        REQUIRE(point.x == -observation.at("sine").get<float>());
+        REQUIRE(point.y == observation.at("cosine").get<float>());
+    }
+}
+
+TEST_CASE("Combined helpers accumulate from the leaf toward the nearest parent", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/transform_precision_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input).at("combination");
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 1, 1, 0, 0};
+    auto child = layer("sprite", 0, sprite());
+    const auto& controls = reference.at("ancestors_root_to_leaf");
+    for (std::size_t i = controls.size(); i-- > 0;)
+    {
+        auto patch = identity_patch();
+        // The same observed scalar arithmetic at a corner is directly visible
+        // in a synthetic one-pixel domain, without the original model images.
+        patch[12].y = controls[i][1].get<float>();
+        std::array<float, 32> points{};
+        for (std::size_t j = 0; j < patch.size(); ++j)
+        {
+            points[j * 2] = patch[j].x;
+            points[j * 2 + 1] = patch[j].y;
+        }
+        MeshData mesh;
+        mesh.bp = field(points);
+        FrameContent content;
+        content.src = field(std::string{"blank"});
+        content.icon = field(std::string{"1:1:0:0"});
+        content.mesh = field(mesh);
+        auto parent = layer("helper", 0, content);
+        parent.mesh_combine = i == 0 ? 0 : 1;
+        parent.mesh_sync_child_mask = 8;
+        parent.children = {child};
+        child = std::move(parent);
+    }
+    asset.parts[0].layers = {child};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.primitives().size() == 1);
+    const auto point = instance.sample_atlas_point(instance.primitives()[0].node, {0, 1});
+    REQUIRE(point.x == 0.0f);
+    REQUIRE(point.y == reference.at("expected")[1].get<float>());
+}
+
+TEST_CASE("Canonical unit curves preserve the observed world locator rounding", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/transform_precision_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input).at("identity_domain");
+    auto asset = rig();
+    asset.parts.resize(1);
+    FrameContent content;
+    content.src = field(std::string{"blank"});
+    content.icon = field(std::string{"928:1123:464:561"});
+    content.coord = field(std::array<float, 3>{1, 169, 0});
+    MeshData mesh;
+    std::array<float, 32> points{};
+    const auto patch = identity_patch();
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        points[i * 2] = patch[i].x;
+        points[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    auto parent = layer("unit curve", 0, content);
+    parent.mesh_sync_child_mask = 8;
+    FrameContent marker_content;
+    marker_content.coord = field(std::array<float, 3>{
+        reference.at("point")[0].get<float>() - 1, reference.at("point")[1].get<float>() - 169, 0});
+    auto marker = layer("anchor", 1, marker_content);
+    marker.export_self = 1;
+    parent.children = {marker};
+    asset.parts[0].layers = {parent};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(compiled.scene->locators().size() == 1);
+    const auto sample = instance.sample_locator(compiled.scene->locators()[0].node);
+    REQUIRE(sample.status);
+    REQUIRE(sample.position.x == reference.at("expected")[0].get<float>());
+    REQUIRE(sample.position.y == reference.at("expected")[1].get<float>());
+}
+
+TEST_CASE("Physical anchor differences consume saved absolute author coordinates", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/transform_precision_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input).at("physics_anchor");
+    auto asset = spring_rig();
+    asset.author_scale = field(reference.at("author_scale").get<float>());
+    auto& frames = asset.parts[0].layers[0].frame_list;
+    for (std::size_t i = 0; i < 2; ++i)
+    {
+        const auto& point = reference.at(i == 0 ? "first" : "second");
+        frames[i].content.data.coord =
+            field(std::array<float, 3>{point[0].get<float>(), point[1].get<float>(), 0});
+    }
+    auto geometry = compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto program = compile_physics(asset, *geometry.scene);
+    REQUIRE(program.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(*program.program);
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    REQUIRE(anchors.set_parameter(geometry.scene->find_variable("pick"), 1));
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    SpringState isolated;
+    advance_spring(isolated, {0.5f, 0.125f},
+                   {reference.at("delta")[0].get<float>(), reference.at("delta")[1].get<float>()},
+                   {});
+    const auto expected = spring_output(isolated, {{1, 2}, 0, 1});
+    REQUIRE(physics.values()[0].value == expected.x);
+    REQUIRE(physics.values()[1].value == expected.y);
+    asset.author_scale = field(std::numeric_limits<float>::denorm_min());
+    auto extreme = compile_physics(asset, *geometry.scene);
+    REQUIRE(extreme.program);
+    PhysicsInstance extreme_physics(*extreme.program);
+    REQUIRE(anchors.set_scale(0.5f));
+    REQUIRE(anchors.evaluate());
+    REQUIRE(extreme_physics.step(anchors).error == PhysicsError::InvalidInput);
+    REQUIRE(extreme_physics.tick_count() == 0);
+    REQUIRE(physics.tick_count() == 2);
+}
+
 TEST_CASE("Placed nested curves preserve the observed physical locator coordinates", "[runtime]")
 {
     using namespace runtime;

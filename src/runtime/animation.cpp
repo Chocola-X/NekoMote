@@ -273,21 +273,32 @@ void update(Transition& state) noexcept
         state.active = false;
         return;
     }
-    state.progress = std::min(1.0f, state.progress + 1.0f / state.duration);
-    const float amount = ease_progress(state.progress, state.easing);
+    // The Float32 progress cache is saved for the next tick; this tick
+    // consumes the transient sum in the double curve and final value.
+    // Public Math/storage observations: p6-transform-precision.json.
+    const double progress = std::min(1.0, static_cast<double>(state.progress) +
+                                              static_cast<double>(1.0f / state.duration));
+    state.progress = static_cast<float>(progress);
+    const double amount = ease_progress(progress, state.easing);
     if (state.path.empty())
-        state.value = state.start + (state.target - state.start) * amount;
+        state.value = static_cast<float>(
+            static_cast<double>(state.start) +
+            (static_cast<double>(state.target) - static_cast<double>(state.start)) * amount);
     else
     {
-        const float distance = state.easing == 0 ? state.length / state.duration
-                                                 : state.length * (amount - state.previous_curve);
-        state.previous_curve = amount;
+        const float distance =
+            state.easing == 0
+                ? state.length / state.duration
+                : static_cast<float>(static_cast<double>(state.length) *
+                                     (amount - static_cast<double>(state.previous_curve)));
+        state.previous_curve = static_cast<float>(amount);
         auto index = state.path_index;
         const auto& segment = state.path[index];
         const float direction = segment.end > segment.begin ? 1.0f : -1.0f;
         float value = state.value + direction * distance;
         if ((value - segment.end) * direction >= 0 ||
-            state.length * amount >= state.traversed_length + std::abs(segment.end - segment.begin))
+            static_cast<double>(state.length) * amount >=
+                static_cast<double>(state.traversed_length + std::abs(segment.end - segment.begin)))
         {
             if (index + 1 < state.path.size())
             {

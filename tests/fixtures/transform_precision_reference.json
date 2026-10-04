@@ -1,0 +1,131 @@
+{
+  "scope": "Public Math calls and Float32 stores from unmodified Fraise PSB; synthetic native rigs reuse only the observed numeric inputs.",
+  "source_hashes": {
+    "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+    "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "observations": [
+    {
+      "path": "build/evidence/p6-author-scaling/turn2-amp0-math.json",
+      "sha256": "1d17314aa4802e6ab193e678fcafe3c8d9f5af2e5b4edbfcd66376d9bb51ee62",
+      "float_store_count": 0,
+      "float_stores_truncated": false
+    },
+    {
+      "path": "build/evidence/p6-author-scaling/turn20-amp0-world.json",
+      "sha256": "f3e071fc91a5a6766b2e5dc0192df571b5ab9bdcae03e1b194d88be12113e45e",
+      "float_store_count": 97223,
+      "float_stores_truncated": false
+    },
+    {
+      "path": "build/evidence/p6-author-scaling/additive2-amp0-world.json",
+      "sha256": "c2ae57e13dbba79d0e507973057a7016599905a764464399642d947b8c0bc84d",
+      "float_store_count": 67538,
+      "float_stores_truncated": false
+    },
+    {
+      "path": "build/evidence/p6-author-scaling/turn2-full-Pn.json",
+      "sha256": "045e31a7e05f26f3184ffc9f9ede8957698eed168217eeec29c391565a4ba7e1",
+      "float_store_count": 20,
+      "float_stores_truncated": false
+    },
+    {
+      "path": "build/evidence/p6-author-scaling/turn2-full-Ap.json",
+      "sha256": "2da4324d9d3e0b17ddf64459197b7171ae9edcfc807ac71dda5ab24f42c87ff4",
+      "float_store_count": 324,
+      "float_stores_truncated": false
+    },
+    {
+      "path": "build/evidence/p6-author-scaling/turn9-scale125-controller.json",
+      "sha256": "81867cbd968bf44224af690735dc861bceb2323ab6f5236296221ac64fb2c87a",
+      "float_store_count": 10,
+      "float_stores_truncated": false
+    }
+  ],
+  "rotation": [
+    {
+      "degrees": -0.23999999463558197,
+      "radians": 6.27899668741711,
+      "cosine": 0.999991238117218,
+      "sine": -0.004188607446849346
+    },
+    {
+      "parameter": 1.1600000858306885,
+      "radians": 0.005398884477336079,
+      "cosine": 0.99998539686203,
+      "sine": 0.005398858338594437
+    }
+  ],
+  "combination": {
+    "ancestors_root_to_leaf": [
+      [
+        0.36789897084236145,
+        1.015526294708252
+      ],
+      [
+        0.318587988615036,
+        0.9998300075531006
+      ],
+      [
+        0.252754271030426,
+        0.9982759356498718
+      ],
+      [
+        0.3372264802455902,
+        0.9991206526756287
+      ]
+    ],
+    "expected": [
+      0.2764676809310913,
+      1.012752890586853
+    ]
+  },
+  "identity_domain": {
+    "size": [
+      928,
+      1123
+    ],
+    "origin": [
+      464,
+      561
+    ],
+    "translation": [
+      1,
+      169
+    ],
+    "point": [
+      1.0058599710464478,
+      174.00086975097656
+    ],
+    "expected": [
+      1.0058746337890625,
+      174.0009307861328
+    ]
+  },
+  "physics_anchor": {
+    "author_scale": 0.8799999952316284,
+    "first": [
+      0.8974943161010742,
+      372.02587890625
+    ],
+    "second": [
+      -1.2049438953399658,
+      372.0587158203125
+    ],
+    "delta": [
+      -2.389134407043457,
+      0.037322998046875
+    ]
+  },
+  "transition": {
+    "target": 30,
+    "frames": 10,
+    "step": 9,
+    "stored_progress": 0.9000000953674316,
+    "transient_progress": 0.9000000730156898,
+    "transient_value": 27.000002190470695,
+    "expected": 27.000001907348633
+  }
+}

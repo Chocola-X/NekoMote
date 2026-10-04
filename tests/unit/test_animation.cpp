@@ -224,6 +224,21 @@ TEST_CASE("Author playback is independent of display partition and pause discard
     for (const auto& parameter : at60.values())
         REQUIRE(parameter.value == 0.0f);
 }
+TEST_CASE("Transition curves consume transient progress before its Float32 save", "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "transform_precision_reference.json")
+            .at("transition");
+    runtime::AnimationInstance player(*reference.program);
+    const auto parameter = reference.scene->find_variable("head_LR");
+    REQUIRE(player.transition(parameter, fixture.at("target").get<float>(),
+                              fixture.at("frames").get<float>()));
+    for (int i = 0; i < fixture.at("step").get<int>(); ++i)
+        REQUIRE(player.step());
+    REQUIRE(value(player, parameter) == fixture.at("expected").get<float>());
+}
+
 TEST_CASE("Animation rejects unknown IDs and selected unsupported controllers", "[animation]")
 {
     Reference reference;

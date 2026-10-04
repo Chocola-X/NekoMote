@@ -48,3 +48,5 @@ build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
 模型比例、无效请求及重置契约、八组冻结缩放对照见 [缩放证据](docs/validation/p6-model-scaling.json)。
 
 Fraise 已补齐子部件原点同步、细小发片细分和透明辅助遮罩，初态/横向转头/组合姿态通过；完整待机通过。纵向转头耳尖像素与两个完整差分会话的物理数值仍有 FAIL，详见 [跨型号证据与后续任务](docs/validation/p6-child-synchronization.json)。
+
+最新精度复核：Chocola 四组与 Fraise 三组未修改源素材的完整会话均通过物理数值、最终几何和截图；不同作者/模型比例组合仍有明确 FAIL，参见 [当前证据](docs/validation/p6-transform-precision.json)。完整动画引擎与应用仍在开发中，不能将这七组对照视为全部能力验收。

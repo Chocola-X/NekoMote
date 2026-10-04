@@ -195,3 +195,13 @@
 - Release/LTO 独立完整 CPU 差分会话 chocola，120 预热/2000 步，P50/P95/P99=0.27196/0.293122/0.312468ms；不包含 GPU、呈现、JSON 样本、读回、内存或功耗，不声称性能改善。
 - Release/LTO 独立完整 CPU 差分会话 fraise，120 预热/2000 步，P50/P95/P99=0.630663/0.693031/0.729488ms；不包含 GPU、呈现、JSON 样本、读回、内存或功耗，不声称性能改善。
 - 最新证据见 docs/validation/p6-child-synchronization.json 与 playback-fraise-inputs.json。P3/P4/P5/P6 仍进行中；下一步核实 Fraise author_scale=0.88 的绝对物理坐标归一化保存顺序，再闭合既有像素、行为与宿主。
+
+## P6 旋转与多曲面精度子步骤
+
+- 接续 dae444f 时保留未验证角度候选。公开 Math 调用确认负角度先包装为 Float32 度数再以 double 计算三角函数，正角度先插值度数；第 2 步八个锚点改后逐位相同。仅 double 三角函数、绝对作者除法及顺序加法候选未闭合，保留失败记录。
+- 未修改 Fraise 的第 20 步、待机第 2 步和物理 Pn/Ap 完整 Float32 记录确认：同域 BP 从当前 helper 向最近父级逐层保存相加，不能复用父级聚合；显式单位 BP 仍通过世界曲面求值。修复转头后发单个控制点与待机两级锚点舍入差；不增加型号特判。
+- 物理绝对锚点先按作者/实例总比例倒数保存 Float32，再求差分。总比例保留 double 乘积到逆值保存，旧仅 model normalize + delta/author 路径删除。源 Ro 第 9 步保存前进度 0.9000000730156898，用它得到 27.000001907348633；提前读取保存进度会误得 27.000003814697266。曲线 API 保留 double 过渡值，迁移全部调用者与相关测试。
+- Fraise 三组原版完整会话（22 个物理输出、真正顶点/UV/三角形与图片）全部 PASS：idle24 0，turn24 2.890825272e−6，additive60 5.960464478e−8；转头并列图已目视查看。Chocola 原版四组仍全部 PASS，阈值不变。新作者0.88×实例0.8/1.25三组几何通过，两组1.25标量通过；0.8转头1.573562622e−5仍 FAIL，图片1/6/1像素FAIL。不把比例1通过当成缩放通过。
+- 静态30组25图通过、五像素FAIL；隔离动画7组2图通过、九像素FAIL；Chocola八组缩放标量/几何通过、六图通过，差分图2/1像素FAIL。完整历史记录未覆盖；P3/P4/P5/P6与成品认证保持进行中。
+- 增加四项合成数值/生命周期回归与一项保存前进度回归，Debug/Release 88、ASan/UBSan核心87入口全部通过，稳态普通C++ new仍为零。Release/LTO 120预热/2000步完整CPU差分会话：Chocola P50/P95/P99=0.39614/0.42254/0.443213ms；Fraise=0.767905/0.816305/0.842705ms。此次正确性计算增加，未声称性能提升；不含GPU、呈现、JSON、读回、内存/功耗。
+- 当前证据与最小数值样例见 docs/validation/p6-transform-precision.json、tests/fixtures/transform_precision_reference.json；新的原版缩放输入保存在 playback-fraise-scale-inputs.json。继续闭合比例/边缘像素，再完善动作选择、表情/眨眼及应用体验。

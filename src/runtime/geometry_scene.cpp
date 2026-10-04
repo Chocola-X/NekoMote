@@ -38,7 +38,7 @@ struct Resource
 struct Pose
 {
     Vec2 translation;
-    float angle{0}, depth{0}, opacity{1}; // radians; source depth; straight opacity
+    float angle_degrees{0}, depth{0}, opacity{1}; // source degrees; depth; straight opacity
     Patch patch{identity_patch()};
     ResourceId resource;
     bool mesh{false}, active{false}, unsupported{false};
@@ -190,7 +190,7 @@ struct Compiler
         const auto coord = field_or(c.coord, std::array<float, 3>{});
         p.translation = {coord[0], coord[1]};
         p.depth = coord[2];
-        p.angle = field_or(c.angle, 0.0f) * std::numbers::pi_v<float> / 180;
+        p.angle_degrees = field_or(c.angle, 0.0f);
         p.opacity = field_or(c.opa, 255.0f) / 255;
         p.resource = resource(c, path);
         if (c.mesh.has_value())
@@ -210,7 +210,8 @@ struct Compiler
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
                         (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0);
         require(std::isfinite(p.translation.x) && std::isfinite(p.translation.y) &&
-                    std::isfinite(p.depth) && std::isfinite(p.angle) && std::isfinite(p.opacity),
+                    std::isfinite(p.depth) && std::isfinite(p.angle_degrees) &&
+                    std::isfinite(p.opacity),
                 path, "nonfinite pose");
         for (const auto point : p.patch)
             require(std::isfinite(point.x) && std::isfinite(point.y), path, "nonfinite patch");
@@ -381,7 +382,7 @@ Pose interpolate(const Key& a, const Key& b, double time) noexcept
     };
     p.translation = {blend(a.pose.translation.x, b.pose.translation.x),
                      blend(a.pose.translation.y, b.pose.translation.y)};
-    p.angle = blend(a.pose.angle, b.pose.angle);
+    p.angle_degrees = blend(a.pose.angle_degrees, b.pose.angle_degrees);
     p.depth = blend(a.pose.depth, b.pose.depth);
     p.opacity = blend(a.pose.opacity, b.pose.opacity);
     for (std::size_t i = 0; i < p.patch.size(); ++i)
@@ -784,7 +785,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const auto& parent_domain = scene.resources[parent.transform.resource.value];
         if (n.combine && n.parent.valid() && same_domain(r, parent_domain))
         {
-            if (state.pose.translation != Vec2{} || state.pose.angle != 0)
+            if (state.pose.translation != Vec2{} || state.pose.angle_degrees != 0)
                 return {GeometryError::UnsupportedCombination, id, {}};
             // A position-synchronized parent has already changed the helper's
             // rigid origin. Its patch must not also be added to the helper.
@@ -793,22 +794,31 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             {
                 state.transform = parent.transform;
                 state.child_sync = parent.child_sync;
-                add_patch_displacement(state.transform.patch, state.pose.patch);
+                // The source saves each sum from the current helper toward
+                // its nearest parent, rather than reusing the parent aggregate.
+                // Different Float32 addition order changes physical anchors.
+                // See docs/validation/p6-transform-precision.json.
+                state.transform.patch = state.pose.patch;
+                for (NodeId ancestor = n.parent; ancestor != parent.transform_parent;
+                     ancestor = scene.nodes[ancestor.value].parent)
+                    add_patch_displacement(state.transform.patch,
+                                           instance.states[ancestor.value].pose.patch);
                 state.transform.mesh = state.transform.mesh || state.pose.mesh;
                 state.transform_parent = parent.transform_parent;
             }
         }
-        // A canonical identity BP still requests tessellation/density, but its
-        // coordinate map is exactly neutral. Avoid polynomial roundoff shifting
-        // integer pixel bounds across a mask-region floor/ceil boundary.
-        if (state.transform.patch == identity_patch())
-            state.transform.mesh = false;
         // Rigid parents accumulate before any curve. Curves are evaluated in
         // placed world coordinates, with saved control points and saved UVs.
         // Local deformation followed by Float32 translations changes physics
         // anchors. See docs/validation/p6-world-deformation.json.
-        const float cosine = std::cos(state.transform.angle);
-        const float sine = std::sin(state.transform.angle);
+        // Interpolate degrees first; the source saves negative-angle wrapping
+        // before double trigonometry and the final Float32 matrix coefficients.
+        float degrees = std::fmod(state.transform.angle_degrees, 360.0f);
+        if (degrees < 0)
+            degrees += 360.0f;
+        const double radians = static_cast<double>(degrees) * (std::numbers::pi / 180.0);
+        const float cosine = static_cast<float>(std::cos(radians));
+        const float sine = static_cast<float>(std::sin(radians));
         const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
         const auto& transform_parent = instance.states[state.transform_parent.value];
         state.world = compose(transform_parent.world, local);
@@ -943,7 +953,7 @@ LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
         const auto& n = instance.scene.nodes[ancestor.value];
         const auto& pose = instance.states[ancestor.value].pose;
         const bool known_partial_origin = ancestor == node && n.partial_locator_origin &&
-                                          pose.translation == Vec2{} && pose.angle == 0 &&
+                                          pose.translation == Vec2{} && pose.angle_degrees == 0 &&
                                           !pose.mesh;
         if ((n.unsupported && !known_partial_origin) || pose.unsupported)
             return {{GeometryError::UnsupportedTransform, ancestor, {}}};

@@ -20,7 +20,7 @@ build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
 # 空格暂停/恢复，Esc 关闭；固定步骤用 --steps 24 --hidden --screenshot frame.png
 ```
 
---origin 表示初始输出像素放置，转换为模型中心坐标参与 Float32 父矩阵，而最终 view 单独映射画布。联合播放的 --scale 进入模型世界矩阵，物理锚点先按保存的 Float32 逆模型比例归一化，再处理作者比例；放置不跟随模型比例。0.8/1.25 的八组物理与几何通过，六张截图通过，两张差分图仍有 2/1 个失败像素，见 [缩放证据](validation/p6-model-scaling.json)。静态/动画隔离诊断仍明确隔离物理。自动眨眼、selector、部分表情路由及既有几何/遮罩缺口仍未完成，此入口不代表最终壁纸应用。
+--origin 表示初始输出像素放置，转换为模型中心坐标参与 Float32 父矩阵，而最终 view 单独映射画布。联合播放的 --scale 进入模型世界矩阵，物理绝对锚点先乘保存 Float32 的总比例倒数（instance 与 author 在 double 中相乘），保存 Float32 后再求差分；放置不跟随模型比例。0.8/1.25 的八组物理与几何通过，六张截图通过，两张差分图仍有 2/1 个失败像素，见 [缩放证据](validation/p6-model-scaling.json)。静态/动画隔离诊断仍明确隔离物理。自动眨眼、selector、部分表情路由及既有几何/遮罩缺口仍未完成，此入口不代表最终壁纸应用。
 
 无显示服务器下可用 nekomote_playback_probe ASSET INPUT_JSON OUTPUT_JSON 逐步采样相同正式会话。输入为 steps、origin、scale、variables、transitions、plays、amplitudes、displacement；dump_frame 显式输出实际帧的几何协议，benchmark 只计 CPU 作者步/准备、不含 JSON 采样。正常热路径不包含 JSON、磁盘、窗口或 GPU。
 
@@ -46,4 +46,6 @@ python3 tools/reference_capture/validate_playback.py \
 
 2026-10-04 后续放置后曲面修正已使四组未修改原版联合会话全部通过标量、实际几何和图片。旧失败记录保留，当前状态和未通过的扩展矩阵见 [最新证据](validation/p6-world-deformation.json)。
 
-Fraise 扩展已接入 `meshSyncChildMask=1`、透明 stencil 辅助层和小图细分。原版完整 idle24 的 22 个物理输出、实际几何/拓扑和图像通过。右向き差分 24 步与待机差分 60 步全部几何通过，但 hair_UD 数值最大偏差分别为 0.000386029482 / 0.000105287880；前者还有四个失败像素，后者图像通过。不能仅凭图片把这两个会话记为通过。Fraise author_scale=0.88 的归一化顺序是下一项调查，冻结输入见 [Fraise 会话矩阵](validation/playback-fraise-inputs.json)，完整证据见 [子同步记录](validation/p6-child-synchronization.json)。
+Fraise 已接入子原点同步、透明 stencil 辅助层和小图细分，并修复度数插值、同域从叶到父叠加、显式单位曲面和过渡临时进度的保存顺序。原版完整 idle24、右向き24 和待机差分60 的 22 个物理输出、实际几何/拓扑与图片全部通过，最大标量误差分别为 0 / 2.890825272e−6 / 5.960464478e−8。冻结输入仍为 [Fraise 会话矩阵](validation/playback-fraise-inputs.json)，历史 FAIL 保留于 [子同步记录](validation/p6-child-synchronization.json)，新结果见 [精度记录](validation/p6-transform-precision.json)。
+
+新增作者比例 0.88 与模型比例 0.8/1.25 的三组复核：1.25 的转头/待机标量通过，但截图分别六/一个像素 FAIL；0.8 转头还保留标量 1.573562622e−5 与一个像素 FAIL。全部几何通过。不能用比例 1 的结果认证这些组合；继续独立核实锚点/缓存精度。[缩放矩阵](validation/playback-fraise-scale-inputs.json) 保存新输入与源 hash。

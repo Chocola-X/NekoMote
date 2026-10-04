@@ -25,6 +25,6 @@ TEST_CASE("Transition curves match frozen original variable trajectories", "[run
                          Catch::Matchers::WithinAbs(expected, tolerance));
         }
     }
-    REQUIRE(nekomote::runtime::ease_progress(-1.0f, -2.5f) == 0.0f);
-    REQUIRE(nekomote::runtime::ease_progress(2.0f, 2.5f) == 1.0f);
+    REQUIRE(nekomote::runtime::ease_progress(-1.0f, -2.5f) == 0.0);
+    REQUIRE(nekomote::runtime::ease_progress(2.0f, 2.5f) == 1.0);
 }
