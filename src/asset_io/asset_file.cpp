@@ -465,7 +465,7 @@ inline void to_json(Json& j, const ChainControl& v)
              {"variable_middle", v.variable_middle},
              {"stretch_stiffness", v.stretch_stiffness},
              {"gravity", v.gravity},
-             {"velocity_retention", v.velocity_retention},
+             {"normal_velocity_damping", v.normal_velocity_damping},
              {"friction", v.friction},
              {"length", v.length},
              {"scale_x", v.scale_x},
@@ -491,8 +491,8 @@ inline void from_json(const Json& j, ChainControl& v)
     v.variable_middle = checked_value<decltype(v.variable_middle)>(j.at("variable_middle"));
     v.stretch_stiffness = checked_value<decltype(v.stretch_stiffness)>(j.at("stretch_stiffness"));
     v.gravity = checked_value<decltype(v.gravity)>(j.at("gravity"));
-    v.velocity_retention =
-        checked_value<decltype(v.velocity_retention)>(j.at("velocity_retention"));
+    v.normal_velocity_damping =
+        checked_value<decltype(v.normal_velocity_damping)>(j.at("normal_velocity_damping"));
     v.friction = checked_value<decltype(v.friction)>(j.at("friction"));
     v.length = checked_value<decltype(v.length)>(j.at("length"));
     v.scale_x = checked_value<decltype(v.scale_x)>(j.at("scale_x"));

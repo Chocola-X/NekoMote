@@ -1,5 +1,5 @@
 {
-  "asset_schema": 4,
+  "asset_schema": 5,
   "coordinate_tolerance_px": 0.001,
   "reference_condition": "zero author steps, SDK hair/parts/bust scales 0, no integration; no PSB fixture",
   "cases": [
@@ -16,7 +16,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "226fe63babcc8aee310d7173984d0a010fbd208d09280c162b43d9570ca0ad53"
     },
     {
@@ -33,7 +33,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "8530b060c951ff90dd67604a498fb9de470e4e53b4bc1d39fcafae158a833abe"
     },
     {
@@ -49,7 +49,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "e0ab5125af44522a9add58f62448c4a92f67f53f581c51e275bf4cc681d09b8a"
     },
     {
@@ -69,7 +69,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "612ec4b4f7a457eb27b9f44055be98bda97c0fd8e6fbbd1099e6856901f1ca3d"
     },
     {
@@ -83,7 +83,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "226fe63babcc8aee310d7173984d0a010fbd208d09280c162b43d9570ca0ad53"
     },
     {
@@ -99,7 +99,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "90ac15c6da481afb34eac551b46253954ec3f3a0c4d20da9bbdcbb185eaa4b78"
     },
     {
@@ -116,7 +116,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "ba3e910660e6505054957d6d21e1d94c180d4c482afaaa988e3ce6b950e9b4d1"
     },
     {
@@ -132,7 +132,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "86ded690060add908eee4d2b61225a80fe1edbbd96eb8aa8338f887d60f69f8d"
     },
     {
@@ -148,7 +148,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "999d72b42efe8abdf42b876d69f0297c6a1af485e2105608b8eca86a7c453318"
     },
     {
@@ -165,7 +165,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "36f94ac416484b2a1c9a826dce6969d8a6ef8aa0ee33e791d95b8b48e3411237"
     },
     {
@@ -181,7 +181,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "58f164078309ec8c26eeefcc765bde565e02352f6f465a6ae979fbef1769b8b1"
     },
     {
@@ -197,7 +197,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "90f909a0362e272b1b57026eb604385f253602ac903adaf44e7610b75f6b228a"
     },
     {
@@ -213,7 +213,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "772ebc764954fc253ee235ada46efc409c1962caec9db16c62f160e68ae1f76a"
     },
     {
@@ -230,7 +230,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "aecf44c01a27c854fc9a14f3ac7c0b0abb73bbbb9938b2e9591c8ce64fdb62ab"
     },
     {
@@ -246,7 +246,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "ea07a975d7c1093b792551bddaf01d33beeb496d5abada0943ff14873a9e1e78"
     },
     {
@@ -262,7 +262,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "2b72060b49f00e0d1a16310bf4c2f9ee309b1ae22f6d60cc759b4a08609e1ea4"
     },
     {
@@ -278,7 +278,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "c093f53cb6e001d1ac02c34d668bc09fd9eb282534872fc4dc970ebdaa58816f"
     },
     {
@@ -294,7 +294,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "d73e463211c5b612bb4b976200180c38d1780a150948138bbd5273292c6f5a18"
     },
     {
@@ -311,7 +311,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "681a39d46d8cf43fdf37524df9a3962a586517a59243d945cc6ecf5baf1abf66"
     },
     {
@@ -328,7 +328,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "d002d4aa00a636688c5f9c28fee033c9a184dffc69150329fa31a9500d0656e0"
     },
     {
@@ -345,7 +345,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "9a8a023bd58eaf962de21c122d10c16a95ff9e95b94c121ce2546a6f0007b46b"
     },
     {
@@ -362,7 +362,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "95be898e340ede6832ca0202e933f4216cd9ca937147ad38a2c18a5e979bc1dd"
     },
     {
@@ -379,7 +379,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "44e48db81f4dc701e7594ba2cb59f10972a7a612b1c06f14a417efe7e2303a97"
     },
     {
@@ -396,7 +396,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
       "reference_trace_sha256": "fb096b011484391443d59d1e286ebf4f3bf80239c9a40296ce70b428a7649430"
     },
     {
@@ -411,7 +411,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "46532556e285a6db9dcd47f9fcced7b9a3a33948918edff927d34e49c57ce352",
+      "asset_sha256": "d7c022d7f549cefa428edeb1ae60a4b160c727220a5c711220e2f37dfd9e8e5f",
       "reference_trace_sha256": "365c8bce7f97f746a5956fb8a961a7689b1676ba58f5caac44558f959cf8dadc"
     },
     {
@@ -432,7 +432,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "46532556e285a6db9dcd47f9fcced7b9a3a33948918edff927d34e49c57ce352",
+      "asset_sha256": "d7c022d7f549cefa428edeb1ae60a4b160c727220a5c711220e2f37dfd9e8e5f",
       "reference_trace_sha256": "d883d6eb658b49088d05caf9b89a5f9616cbfaad1b5a28542c467ec32ae314f1"
     },
     {
@@ -447,7 +447,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "4b8a0bc392abd85233233203a1f49dcdd60d6ae9080c48f704dea8dbacda92c1",
+      "asset_sha256": "fe3ae8adf96190ca5d6178fd25e516dc13d1e0e2df28d51946f569c5a2822371",
       "reference_trace_sha256": "21ac659947c0e2a2e07cdb7a85d288a85ca8b912f04f05c81c0527e815b23f35"
     },
     {
@@ -468,7 +468,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "4b8a0bc392abd85233233203a1f49dcdd60d6ae9080c48f704dea8dbacda92c1",
+      "asset_sha256": "fe3ae8adf96190ca5d6178fd25e516dc13d1e0e2df28d51946f569c5a2822371",
       "reference_trace_sha256": "3b2dd6902dbbbdde04630975fc8e212fdfacc509b4e7836a7fa16b63a27e6b3c"
     },
     {
@@ -483,7 +483,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "9d76c7a16ac9a09f4b18b1c2841dbeb437057bf316e52ab41481e3d78849d2b9",
+      "asset_sha256": "d88643018ff0ba3f1c0b4c5bb40a74b04b49ab4f1db594aa7b5cbf30a45c0772",
       "reference_trace_sha256": "be7273d0dce8adb986509ed1be05d491d390e1a323ae6f6e9c41dbb6b2138c71"
     },
     {
@@ -504,7 +504,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "9d76c7a16ac9a09f4b18b1c2841dbeb437057bf316e52ab41481e3d78849d2b9",
+      "asset_sha256": "d88643018ff0ba3f1c0b4c5bb40a74b04b49ab4f1db594aa7b5cbf30a45c0772",
       "reference_trace_sha256": "b920816b7da9ff6d2b9b9b123b47db76d054ceead8979fd2725281e5a3415cbc"
     }
   ]

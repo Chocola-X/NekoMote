@@ -42,11 +42,17 @@ struct PhysicsInputs
     // using author_scale. First anchor initialization skips displacement.
     float bust_amplitude{1};
     Vec2 bust_displacement{};
+    float hair_amplitude{1};
+    Vec2 hair_displacement{};
+    float parts_amplitude{1};
+    Vec2 parts_displacement{};
 };
 class PhysicsInstance;
 struct PhysicsCompileResult;
 // Compiles enabled physical controllers and binds scene IDs once. Currently
-// supports the verified springs; enabled chains explicitly reject compilation.
+// supports verified springs and vertical_effect=0 two-particle chains. Chains
+// without an exported anchor use a fixed zero anchor, as observed in source
+// models. Existing anchors require one active branch. Ambiguous anchors reject.
 // Scene must outlive this program and all instances. Source assets may unload.
 class PhysicsProgram
 {

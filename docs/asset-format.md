@@ -9,7 +9,7 @@ build/dev/bin/nekomote_import model.json model.resx.json --output build/assets/m
 
 输出目录必须不存在。写入先在本项目指定输出目录旁创建临时目录，成功后重命名；失败只清理本次临时目录。输出只复制引用的图集，不复制全素材。
 
-- `model.nkm.json`：`schema=4` 与强类型模型数据。只支持当前 schema；不支持的版本要求重新导入。
+- `model.nkm.json`：`schema=5` 与强类型模型数据。只支持当前 schema；不支持的版本要求重新导入。
 - `textures/N.png`：相对于 bundle 的 PNG 路径。
 - `report.json`：结构导入状态、尚未支持的字段及警告。`playback_certified=false`，不是完整模型运行时能力声明。
 - `source.json`：完整源模型离线调查归档，不作为运行时输入。后续增加规范化字段时从原素材重新构建。
@@ -24,7 +24,7 @@ Schema 2 增加 `paired_clamps`，保存成对变量控制的类型、变量、�
 
 加入 variable_controls：显式 kind（Linear/Immediate/Expression/Eye/Mouth/Selector）、enabled、变量/口型绑定、edge 区间和 junction 拓扑、眨眼参数、选择器 on/off 输出。字段名与类型已规范化，运行时不读 source.json。它们的结构保留不代表全部行为已认证；当前 nonlinear expression routing、selector fade 和自动控制器仍未通过。
 
-当前只支持 schema 4，schema 1/2/3 明确拒绝；用相同 `nekomote_import <源 JSON> <resx> --output <新目录>` 重建。四型号新旧 model 对象除新增 variable_controls 外逐字段相同；当前固定输入 hash 见 docs/validation/static-inputs.json，历史阶段材料不改写。
+当前只支持 schema 5，schema 1/2/3/4 明确拒绝；用相同 `nekomote_import <源 JSON> <resx> --output <新目录>` 重建。四型号新旧 model 对象除新增 variable_controls 外逐字段相同；当前固定输入 hash 见 docs/validation/static-inputs.json，历史阶段材料不改写。
 
 ## Schema 4 物理数据
 
@@ -35,3 +35,9 @@ Schema 2 增加 `paired_clamps`，保存成对变量控制的类型、变量、�
 存在物理控制器时要求 author_scale 为有限正数；必需系数与保存快照不得缺省或 null。校验两个粒子及三分量向量形状、非负系数、正长度、摩擦范围、数值有限和不同输出绑定。`velocity_retention` 不限制为 <=1：真实素材有 `v_bound=2`。这只认证规范化和结构，不认证该边界值的求值公式或完整播放器。
 
 schema 3 及更早资产需用页面开头命令重新导入到新目录；不提供历史读取或隐式迁移。四型号的新旧 model 对象除上述三个新增字段外逐字段相同，迁移与 hash 见 [记录](validation/p6-schema4-migration.json)。当前静态/动态基线更新为 schema 4 资产 hash，原 PSB/驱动/输入/参考图片与历史阶段报告保持原记录。
+
+## Schema 5 链条法向阻尼命名
+
+独立物理验证确认源 v_bound 是末端约束的法向速度阻尼，1 去除法向速度、2 反射；schema 5 使用 `normal_velocity_damping`，删除 schema 4 中含义不准确的 velocity_retention。无旧字段别名/回退，旧资产用同一导入命令重建。五型号迁移除该字段名称和 schema 外逐字段相同；见 docs/validation/p6-chain-binding.json。当前静态/动态资产 hash 更新为 schema 5，原 PSB、驱动、输入和旧截图 hash 不修改。
+
+GeometryInstance 在场景编译时声明物理输出参数，包含没有 drawable 使用的绑定。启用的 vertical_effect=0 链条已可绑定原生锚点；没有导出锚点的链条仍围绕固定零点积分，不暗中禁用。所选资源内的零局部原点导出标记在显示空帧时仍可提供锚点；资源未被选中与该情况不同。模型放置原点参加 Float32 父矩阵累计，渲染投影/输出尺寸独立。复杂动作的完整精度验收仍进行中。

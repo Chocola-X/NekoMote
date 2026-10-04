@@ -74,7 +74,7 @@ void validate_physics(const model::ModelAsset& asset)
         require(std::isfinite(value.stretch_stiffness) && value.stretch_stiffness >= 0,
                 path + "/b_rate");
         require(std::isfinite(value.gravity) && value.gravity >= 0, path + "/gravity");
-        require(std::isfinite(value.velocity_retention) && value.velocity_retention >= 0,
+        require(std::isfinite(value.normal_velocity_damping) && value.normal_velocity_damping >= 0,
                 path + "/v_bound");
         for (float f : value.friction)
             friction(f, path + "/friction");

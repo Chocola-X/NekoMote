@@ -70,7 +70,7 @@ struct Node
     int type{0}, division{0}, priority{0}, maximum_division{0};
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false};
-    bool exported_locator{false}, partial_locator_origin{false};
+    bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
 };
 struct Clamp
 {
@@ -244,6 +244,20 @@ struct Compiler
         n.guard = guard;
         n.type = layer.type;
         n.exported_locator = layer.type == 1 && layer.export_self == 1;
+        n.neutral_locator_origin =
+            n.exported_locator && layer.children.empty() &&
+            std::all_of(layer.frame_list.begin(), layer.frame_list.end(),
+                        [](const auto& frame)
+                        {
+                            if (!frame.content.has_value())
+                                return true;
+                            const auto& c = frame.content.data;
+                            return field_or(c.coord, std::array<float, 3>{}) ==
+                                       std::array<float, 3>{} &&
+                                   field_or(c.angle, 0.0f) == 0 && !c.mesh.has_value() &&
+                                   !c.src.has_value() && !c.icon.has_value() && !c.zx.has_value() &&
+                                   !c.zy.has_value() && !c.ox.has_value() && !c.oy.has_value();
+                        });
         require(n.type == 0 || n.type == 1 || n.type == 2 || n.type == 3 || n.type == 12, n.label,
                 "unsupported layer type");
         n.division = layer.mesh_division;
@@ -332,6 +346,7 @@ struct State
     NodeId rigid_parent;
     float depth{0}, opacity{0};
     bool mesh_path{false};
+    bool branch_selected{false};
     float density{0};
 };
 Pose interpolate(const Key& a, const Key& b, float time) noexcept
@@ -455,6 +470,17 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             data->clamps.push_back({compiler.variable(c.variable_x),
                                     compiler.variable(c.variable_y), c.range_begin, c.range_end,
                                     c.type, c.enabled});
+        for (const auto& control : asset.spring_controls)
+        {
+            compiler.variable(control.binding.variable_x);
+            compiler.variable(control.binding.variable_y);
+        }
+        for (const auto& control : asset.chain_controls)
+        {
+            compiler.variable(control.binding.variable_x);
+            compiler.variable(control.binding.variable_y);
+            compiler.variable(control.variable_middle);
+        }
         const auto base = compiler.resources.find(asset.base_group + "/" + asset.base_motion);
         require(base != compiler.resources.end(), "base", "missing base motion");
         require(data->resources[base->second.value].kind == ResourceKind::Motion, "base",
@@ -568,6 +594,7 @@ struct GeometryInstance::Impl
     std::vector<std::uint32_t> node_commands;
     std::vector<bool> used_masks;
     bool evaluated{false}, frame_ready{false};
+    Vec2 origin{};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
         : owner(scene_owner), scene(data), input(data.variables.size() + 1),
           parameters(input.size()), states(data.nodes.size()), node_commands(data.nodes.size()),
@@ -617,6 +644,15 @@ GeometryStatus GeometryInstance::set_parameter(ParamId id, float value) noexcept
     impl_->frame_ready = false;
     return {};
 }
+GeometryStatus GeometryInstance::set_origin(Vec2 origin) noexcept
+{
+    if (!std::isfinite(origin.x) || !std::isfinite(origin.y))
+        return {GeometryError::NonfiniteParameter, {}, {}};
+    impl_->origin = origin;
+    impl_->evaluated = false;
+    impl_->frame_ready = false;
+    return {};
+}
 GeometryStatus GeometryInstance::evaluate() noexcept
 {
     auto& instance = *impl_;
@@ -633,6 +669,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     instance.frame_ready = false;
     std::copy(instance.input.begin(), instance.input.end(), instance.parameters.begin());
     const auto& scene = instance.scene;
+    instance.states[0] = {};
+    instance.states[0].rigid.translation = instance.origin;
     for (const auto& c : scene.clamps)
     {
         if (!c.enabled)
@@ -656,6 +694,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         if (n.parent.valid() &&
             (!parent.pose.active || (n.guard.valid() && n.guard != parent.pose.resource)))
             continue;
+        state.branch_selected = true;
         float time = 0;
         if (n.binding.variable.valid() && n.binding.enabled)
         {
@@ -708,6 +747,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const float sine = std::sin(state.transform.angle);
         state.rigid = {cosine, sine, -sine, cosine, state.transform.translation};
         state.rigid_parent = state.transform_parent;
+        if (!state.transform_parent.valid())
+            state.rigid = compose(instance.states[0].rigid, state.rigid);
         if (state.transform_parent.valid())
         {
             const auto& transform_parent = instance.states[state.transform_parent.value];
@@ -759,8 +800,15 @@ LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
         return {{GeometryError::InvalidLocator, node, {}}};
     if (!instance.evaluated)
         return {{GeometryError::UnsupportedTransform, node, {}}};
-    if (!instance.states[node.value].pose.active)
+    const auto& state = instance.states[node.value];
+    if (!state.branch_selected)
         return {};
+    // A zero-origin exported marker remains a locator when its own display
+    // frame is empty. Resource-branch selection is a separate condition.
+    const bool empty_origin =
+        !state.pose.active && instance.scene.nodes[node.value].neutral_locator_origin;
+    if (!state.pose.active && !empty_origin)
+        return {{GeometryError::UnsupportedTransform, node, {}}};
     for (NodeId ancestor = node; ancestor.valid();
          ancestor = instance.scene.nodes[ancestor.value].parent)
     {
@@ -772,7 +820,9 @@ LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
         if ((n.unsupported && !known_partial_origin) || pose.unsupported)
             return {{GeometryError::UnsupportedTransform, ancestor, {}}};
     }
-    return {{}, LocatorState::Active, instance.transform(node, {})};
+    return {{},
+            LocatorState::Active,
+            instance.transform(empty_origin ? instance.scene.nodes[node.value].parent : node, {})};
 }
 GeometryStatus GeometryInstance::build_frame() noexcept
 {

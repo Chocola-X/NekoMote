@@ -220,7 +220,7 @@ struct ChainControl
     PhysicsBinding binding;
     ChainKind kind{ChainKind::Hair};
     std::string variable_middle;
-    float stretch_stiffness{0}, gravity{0}, velocity_retention{0};
+    float stretch_stiffness{0}, gravity{0}, normal_velocity_damping{0};
     std::array<float, 2> friction{}, length{}, scale_x{}, scale_y{};
     float bend_speed{0}, bend_volume{0};
     int vertical_effect{0};

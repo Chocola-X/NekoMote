@@ -119,6 +119,10 @@ class GeometryInstance
     GeometryInstance& operator=(const GeometryInstance&) = delete;
     const GeometryScene& scene() const noexcept;
     GeometryStatus set_parameter(ParamId id, float value) noexcept;
+    // Model placement, in model units (Y down), participates in Float32 parent
+    // matrix accumulation. Rendering view/projection remains a separate step.
+    // Changes invalidate geometry and locator samples; default is zero.
+    GeometryStatus set_origin(Vec2 origin) noexcept;
     GeometryStatus evaluate() noexcept; // fixed variable pose, time=0; no heap allocation
     std::span<const GeometryPrimitive> primitives() const noexcept;
     // node must come from this instance's current primitives(). Samples an icon

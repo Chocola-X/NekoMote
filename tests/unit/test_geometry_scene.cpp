@@ -7,11 +7,14 @@
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/physics.hpp>
 #include <nekomote/runtime/spring.hpp>
+#include <nlohmann/json.hpp>
 
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 #include <limits>
 #include <new>
+#include <string>
 
 namespace
 {
@@ -128,6 +131,29 @@ ModelAsset spring_rig()
     spring.friction = 0.125f;
     spring.axis_scale = {1, 2};
     result.spring_controls.push_back(spring);
+    return result;
+}
+ModelAsset chain_rig()
+{
+    auto result = spring_rig();
+    result.spring_controls.clear();
+    result.author_scale = field(1.0f);
+    ChainControl chain;
+    chain.binding = {
+        "/metadata/hairControl/0", "hair", "anchor", "standard", "tip", "vertical", true, {}};
+    chain.variable_middle = "root";
+    chain.stretch_stiffness = 0.00371093745f;
+    chain.gravity = 0.2f;
+    chain.normal_velocity_damping = 0.5f;
+    chain.friction = {0.03125f, 0.03125f};
+    chain.length = {64, 48};
+    chain.scale_x = {0.75f, 0.25f};
+    chain.scale_y = {2, 1};
+    chain.rest_position = {{{0, 64, 0}, {0, 112, 0}}};
+    chain.position = {{{0, 117.894691f, 0}, {0, 166.270462f, 0}}};
+    chain.velocity = {{{0, 1.36992894e-5f, 0}, {0, 0.375757635f, 0}}};
+    chain.vertical_offset = -53.89473f;
+    result.chain_controls.push_back(chain);
     return result;
 }
 void near(Vec2 actual, Vec2 expected)
@@ -898,4 +924,263 @@ TEST_CASE("Two-particle state is independent, resettable and allocation free", "
     REQUIRE(std::isfinite(value.tip_x));
     REQUIRE(independent.position == snapshot.position);
     REQUIRE(independent.velocity == snapshot.velocity);
+}
+
+TEST_CASE("Empty display frames retain neutral exported origins in selected branches", "[runtime]")
+{
+    auto asset = chain_rig();
+    asset.parts[1].layers.back().frame_list[0].type = 0;
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    const auto first = compiled.scene->locators()[0].node;
+    const auto second = compiled.scene->locators()[1].node;
+    REQUIRE(instance.sample_locator(first).state == runtime::LocatorState::Active);
+    near(instance.sample_locator(first).position, {10, 20});
+    REQUIRE(instance.sample_locator(second).state == runtime::LocatorState::Inactive);
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("pick"), 1));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.sample_locator(first).state == runtime::LocatorState::Inactive);
+    REQUIRE(instance.sample_locator(second).state == runtime::LocatorState::Active);
+
+    asset.parts[1].layers.back().frame_list[0].content.data.coord =
+        field(std::array<float, 3>{1, 0, 0});
+    compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance unknown(*compiled.scene);
+    REQUIRE(unknown.evaluate());
+    REQUIRE(unknown.sample_locator(compiled.scene->locators()[0].node).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+}
+
+TEST_CASE("Bound chains preserve isolated trajectories and compile fixed absent anchors",
+          "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto asset = chain_rig();
+    SECTION("fixed absent anchor")
+    {
+        asset.chain_controls[0].binding.anchor = "missing";
+    }
+    SECTION("parts input routing")
+    {
+        asset.chain_controls[0].kind = ChainKind::Parts;
+    }
+    const bool parts = asset.chain_controls[0].kind == ChainKind::Parts;
+    auto geometry = compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(asset, *geometry.scene);
+    REQUIRE(compiled.program);
+    asset = {}; // compiled programs own coefficients; the scene owns IDs
+    GeometryInstance instance(*geometry.scene);
+    REQUIRE(instance.evaluate());
+    PhysicsInstance player(*compiled.program), independent(*compiled.program);
+    REQUIRE(player.step(instance));
+    REQUIRE(player.values().size() == 3);
+    for (auto v : player.values())
+        REQUIRE(v.value == 0.0f);
+    PhysicsInputs inputs;
+    if (parts)
+        inputs.parts_displacement = {0, 50};
+    else
+        inputs.hair_displacement = {0, 50};
+    REQUIRE(player.step(instance, inputs));
+    REQUIRE_THAT(player.values()[1].value, Catch::Matchers::WithinAbs(-34.4314079284668, 1e-5));
+    REQUIRE(player.values()[0].id == geometry.scene->find_variable("root"));
+    REQUIRE(player.values()[1].id == geometry.scene->find_variable("vertical"));
+    REQUIRE(player.values()[2].id == geometry.scene->find_variable("tip"));
+    REQUIRE(player.step(instance));
+    REQUIRE_THAT(player.values()[1].value, Catch::Matchers::WithinAbs(-34.39291000366211, 1e-5));
+    REQUIRE(independent.step(instance));
+    REQUIRE(independent.values()[1].value == 0.0f);
+    player.reset();
+    REQUIRE(player.tick_count() == 0);
+    REQUIRE(player.values().empty());
+    REQUIRE(player.step(instance));
+    REQUIRE(player.values()[1].value == 0.0f);
+    for (int i = 0; i < 120; ++i)
+        REQUIRE(player.step(instance));
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(player.step(instance, inputs));
+        for (auto v : player.values())
+            success &= static_cast<bool>(instance.set_parameter(v.id, v.value));
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(instance.build_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("A failed chain step cannot partially advance mixed spring and chain state", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto asset = chain_rig();
+    auto spring = spring_rig().spring_controls[0];
+    asset.spring_controls.push_back(spring);
+    auto& chain = asset.chain_controls[0];
+    const float maximum = std::numeric_limits<float>::max();
+    chain.position = {};
+    chain.velocity = {};
+    chain.gravity = 0;
+    chain.stretch_stiffness = maximum;
+    chain.binding.anchor = "fixed-zero";
+    auto geometry = compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(asset, *geometry.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance instance(*geometry.scene);
+    REQUIRE(instance.evaluate());
+    PhysicsInstance player(*compiled.program), control(*compiled.program);
+    REQUIRE(player.step(instance));
+    REQUIRE(control.step(instance));
+    PhysicsInputs overflowing;
+    overflowing.hair_displacement = {maximum * 0.25f, 0};
+    REQUIRE(player.step(instance, overflowing).error == PhysicsError::NonfiniteState);
+    REQUIRE(player.tick_count() == 1);
+    REQUIRE(player.values().empty());
+    PhysicsInputs inputs;
+    REQUIRE(player.step(instance, inputs));
+    REQUIRE(control.step(instance, inputs));
+    REQUIRE(player.tick_count() == 2);
+    REQUIRE(player.values().size() == 5);
+    for (std::size_t i = 0; i < player.values().size(); ++i)
+    {
+        REQUIRE(player.values()[i].id == control.values()[i].id);
+        REQUIRE(player.values()[i].value == control.values()[i].value);
+    }
+}
+
+TEST_CASE("Chain compilation rejects unverified snapshots and invalid mapping", "[runtime]")
+{
+    auto asset = chain_rig();
+    auto geometry = runtime::compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto& chain = asset.chain_controls[0];
+    SECTION("vertical effect")
+    {
+        chain.vertical_effect = 1;
+    }
+    SECTION("saved anchor")
+    {
+        chain.previous_anchor[0] = 1;
+    }
+    SECTION("rest geometry")
+    {
+        chain.rest_position[0][0] = 1;
+    }
+    SECTION("saved z")
+    {
+        chain.position[1][2] = 1;
+    }
+    SECTION("friction")
+    {
+        chain.friction[1] = 1.1f;
+    }
+    SECTION("mapping")
+    {
+        chain.scale_x[1] = std::numeric_limits<float>::quiet_NaN();
+    }
+    SECTION("bend")
+    {
+        chain.bend_gain = 1.1f;
+    }
+    SECTION("unknown field")
+    {
+        chain.binding.unsupported_fields = {"future"};
+    }
+    SECTION("shared output")
+    {
+        chain.variable_middle = chain.binding.variable_x;
+    }
+    auto compiled = runtime::compile_physics(asset, *geometry.scene);
+    REQUIRE_FALSE(compiled.program);
+    REQUIRE_FALSE(compiled.errors.empty());
+}
+
+TEST_CASE("Placed model origins participate in parent matrix rounding and invalidation",
+          "[runtime]")
+{
+    auto asset = chain_rig();
+    auto& root = asset.parts[0].layers[0];
+    root.frame_list[0].content.data.coord = field(std::array<float, 3>{0, -409, 4});
+    root.frame_list[1].content.data.coord = field(std::array<float, 3>{0, -400, 4});
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene), independent(*compiled.scene);
+    REQUIRE(instance.set_origin({0, 400}));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.sample_locator(compiled.scene->locators()[0].node).position == Vec2{0, -9});
+    REQUIRE(independent.evaluate());
+    REQUIRE(independent.sample_locator(compiled.scene->locators()[0].node).position ==
+            Vec2{0, -409});
+    REQUIRE(instance.set_origin({7, 405}));
+    REQUIRE(instance.sample_locator(compiled.scene->locators()[0].node).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.frame().vertices.empty());
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.sample_locator(compiled.scene->locators()[0].node).position == Vec2{7, -4});
+    REQUIRE(instance.build_frame());
+    REQUIRE_FALSE(instance.frame().vertices.empty());
+    REQUIRE_FALSE(instance.set_origin({std::numeric_limits<float>::infinity(), 0}));
+    REQUIRE(instance.sample_locator(compiled.scene->locators()[0].node).position == Vec2{7, -4});
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(instance.set_origin({0, static_cast<float>(i)}));
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(instance.build_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Absent-anchor chain binding matches original exported-output observations", "[runtime]")
+{
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/chain_binding_reference.json");
+    REQUIRE(input.good());
+    const auto fixture = nlohmann::json::parse(input);
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        const auto name = experiment.at("case").get<std::string>();
+        if (name != "absent-side-enabled" && name != "absent-side-move")
+            continue;
+        INFO(name);
+        auto asset = chain_rig();
+        asset.chain_controls[0].binding.anchor = "missing";
+        auto geometry = runtime::compile_geometry_scene(asset);
+        REQUIRE(geometry.scene);
+        auto compiled = runtime::compile_physics(asset, *geometry.scene);
+        REQUIRE(compiled.program);
+        runtime::GeometryInstance instance(*geometry.scene);
+        REQUIRE(instance.set_origin({0, 400}));
+        REQUIRE(instance.evaluate());
+        runtime::PhysicsInstance player(*compiled.program);
+        runtime::PhysicsInputs inputs;
+        for (const auto& sample : experiment.at("samples"))
+        {
+            for (const auto& event : experiment.at("inputs").at("events"))
+                if (event.at("step") == sample.at("step") && event.contains("forces"))
+                {
+                    const auto& force = event.at("forces").at("hair");
+                    inputs.hair_displacement = {force.at(0).get<float>(), force.at(1).get<float>()};
+                }
+            REQUIRE(player.step(instance, inputs));
+            const auto& expected = sample.at("values"); // tip, vertical, root in source order
+            for (std::size_t i = 0; i < 3; ++i)
+                REQUIRE_THAT(
+                    player.values()[i].value,
+                    Catch::Matchers::WithinAbs(expected.at(2 - i).get<double>(),
+                                               fixture.at("value_tolerance").get<double>()));
+        }
+    }
 }

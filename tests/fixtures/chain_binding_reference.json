@@ -1,0 +1,1694 @@
+{
+  "value_tolerance": 1e-05,
+  "scope": "Isolated original SDK fixed author steps; translation origin y=400 is accumulated before child matrices. Empty marker is exported origin; absent anchor is fixed zero. No complete player certification.",
+  "cases": [
+    {
+      "case": "absent-side-enabled",
+      "inputs": {
+        "steps": 24,
+        "events": [
+          {
+            "step": 2,
+            "forces": {
+              "hair": [
+                20,
+                -10
+              ]
+            }
+          },
+          {
+            "step": 3,
+            "forces": {
+              "hair": [
+                0,
+                0
+              ]
+            }
+          }
+        ],
+        "variables": {
+          "hair_LR_sideL": 5,
+          "hair_UD_sideL": 7,
+          "hair_LR_M_sideL": 6
+        },
+        "chain_index": 1,
+        "enabled": true,
+        "empty_marker": false,
+        "observe_variables": [
+          "hair_LR_sideL",
+          "hair_UD_sideL",
+          "hair_LR_M_sideL"
+        ]
+      },
+      "samples": [
+        {
+          "step": 1,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "values": [
+            -5.655114650726318,
+            18.656888961791992,
+            -15.140249252319336
+          ]
+        },
+        {
+          "step": 3,
+          "values": [
+            -5.654693126678467,
+            18.559892654418945,
+            -15.097887992858887
+          ]
+        },
+        {
+          "step": 4,
+          "values": [
+            -5.653750896453857,
+            18.4158878326416,
+            -15.035273551940918
+          ]
+        },
+        {
+          "step": 5,
+          "values": [
+            -5.652027130126953,
+            18.225513458251953,
+            -14.952974319458008
+          ]
+        },
+        {
+          "step": 6,
+          "values": [
+            -5.649228572845459,
+            17.989154815673828,
+            -14.851527214050293
+          ]
+        },
+        {
+          "step": 7,
+          "values": [
+            -5.645035266876221,
+            17.706987380981445,
+            -14.731444358825684
+          ]
+        },
+        {
+          "step": 8,
+          "values": [
+            -5.639110088348389,
+            17.379051208496094,
+            -14.593216896057129
+          ]
+        },
+        {
+          "step": 9,
+          "values": [
+            -5.631103515625,
+            17.005264282226562,
+            -14.4373197555542
+          ]
+        },
+        {
+          "step": 10,
+          "values": [
+            -5.620659351348877,
+            16.58548927307129,
+            -14.264220237731934
+          ]
+        },
+        {
+          "step": 11,
+          "values": [
+            -5.607423305511475,
+            16.11958885192871,
+            -14.074377059936523
+          ]
+        },
+        {
+          "step": 12,
+          "values": [
+            -5.591047286987305,
+            15.6074800491333,
+            -13.868249893188477
+          ]
+        },
+        {
+          "step": 13,
+          "values": [
+            -5.571192741394043,
+            15.049177169799805,
+            -13.646300315856934
+          ]
+        },
+        {
+          "step": 14,
+          "values": [
+            -5.547539234161377,
+            14.44493579864502,
+            -13.4089994430542
+          ]
+        },
+        {
+          "step": 15,
+          "values": [
+            -5.519784450531006,
+            13.7952299118042,
+            -13.156828880310059
+          ]
+        },
+        {
+          "step": 16,
+          "values": [
+            -5.487651348114014,
+            13.10091495513916,
+            -12.890284538269043
+          ]
+        },
+        {
+          "step": 17,
+          "values": [
+            -5.450887680053711,
+            12.363256454467773,
+            -12.609883308410645
+          ]
+        },
+        {
+          "step": 18,
+          "values": [
+            -5.409270763397217,
+            11.584028244018555,
+            -12.316161155700684
+          ]
+        },
+        {
+          "step": 19,
+          "values": [
+            -5.362607479095459,
+            10.765575408935547,
+            -12.00968074798584
+          ]
+        },
+        {
+          "step": 20,
+          "values": [
+            -5.310736656188965,
+            9.91085433959961,
+            -11.691028594970703
+          ]
+        },
+        {
+          "step": 21,
+          "values": [
+            -5.253528594970703,
+            9.023504257202148,
+            -11.360820770263672
+          ]
+        },
+        {
+          "step": 22,
+          "values": [
+            -5.190887451171875,
+            8.107772827148438,
+            -11.019702911376953
+          ]
+        },
+        {
+          "step": 23,
+          "values": [
+            -5.122746467590332,
+            7.168560981750488,
+            -10.668349266052246
+          ]
+        },
+        {
+          "step": 24,
+          "values": [
+            -5.049071788787842,
+            6.21133279800415,
+            -10.307464599609375
+          ]
+        }
+      ],
+      "output_variables": [
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL"
+      ],
+      "source_hashes": {
+        "psb": "47b4b70c3ff02864b4d1112a630fa7b6fc1a3f3d5dff0198b0682a01512b0244",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 1,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "a87537f671f980798c092b0b5e89268fdc3f111493405d9f647ae6df6aeace8f",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793"
+    },
+    {
+      "case": "absent-side-disabled",
+      "inputs": {
+        "steps": 24,
+        "events": [
+          {
+            "step": 2,
+            "forces": {
+              "hair": [
+                20,
+                -10
+              ]
+            }
+          },
+          {
+            "step": 3,
+            "forces": {
+              "hair": [
+                0,
+                0
+              ]
+            }
+          }
+        ],
+        "variables": {
+          "hair_LR_sideL": 5,
+          "hair_UD_sideL": 7,
+          "hair_LR_M_sideL": 6
+        },
+        "chain_index": 1,
+        "enabled": false,
+        "empty_marker": false,
+        "observe_variables": [
+          "hair_LR_sideL",
+          "hair_UD_sideL",
+          "hair_LR_M_sideL"
+        ]
+      },
+      "samples": [
+        {
+          "step": 1,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 2,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 3,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 4,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 5,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 6,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 7,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 8,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 9,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 10,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 11,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 12,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 13,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 14,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 15,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 16,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 17,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 18,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 19,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 20,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 21,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 22,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 23,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        },
+        {
+          "step": 24,
+          "values": [
+            5,
+            7,
+            6
+          ]
+        }
+      ],
+      "output_variables": [
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL"
+      ],
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "ec3f00bd9c675623c65102e33a4625f0baa315d0176b1f7a96752dc44b2a897a",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793"
+    },
+    {
+      "case": "absent-side-move",
+      "inputs": {
+        "steps": 24,
+        "events": [
+          {
+            "step": 2,
+            "variables": {
+              "move_LR": 5,
+              "move_UD": 3
+            }
+          },
+          {
+            "step": 8,
+            "variables": {
+              "move_LR": -4,
+              "move_UD": -2
+            }
+          },
+          {
+            "step": 16,
+            "variables": {
+              "move_LR": 0,
+              "move_UD": 0
+            }
+          }
+        ],
+        "variables": {},
+        "chain_index": 1,
+        "enabled": true,
+        "empty_marker": false,
+        "observe_variables": [
+          "hair_LR_sideL",
+          "hair_UD_sideL",
+          "hair_LR_M_sideL"
+        ]
+      },
+      "samples": [
+        {
+          "step": 1,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 3,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 4,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 5,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 6,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 7,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 8,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 9,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 10,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 11,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 12,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 13,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 14,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 15,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 16,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 17,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 18,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 19,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 20,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 21,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 22,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 23,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 24,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "output_variables": [
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL"
+      ],
+      "source_hashes": {
+        "psb": "47b4b70c3ff02864b4d1112a630fa7b6fc1a3f3d5dff0198b0682a01512b0244",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 1,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 1
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "1e65b0754e52678a6d2e89c4449f41ae467cc44cc8bddbfcbd9ba98df0ce544c",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793"
+    },
+    {
+      "case": "inactive-front-move",
+      "inputs": {
+        "steps": 24,
+        "events": [
+          {
+            "step": 2,
+            "variables": {
+              "move_LR": 5,
+              "move_UD": 3
+            }
+          },
+          {
+            "step": 8,
+            "variables": {
+              "move_LR": -4,
+              "move_UD": -2
+            }
+          },
+          {
+            "step": 16,
+            "variables": {
+              "move_LR": 0,
+              "move_UD": 0
+            }
+          }
+        ],
+        "variables": {},
+        "chain_index": 0,
+        "enabled": true,
+        "empty_marker": true,
+        "observe_variables": [
+          "hair_LR_front",
+          "hair_UD_front",
+          "hair_LR_M_front"
+        ]
+      },
+      "samples": [
+        {
+          "step": 1,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "values": [
+            -4.9807939529418945,
+            -19.318660736083984,
+            -13.639718055725098
+          ]
+        },
+        {
+          "step": 3,
+          "values": [
+            -4.980474948883057,
+            -19.235427856445312,
+            -13.607094764709473
+          ]
+        },
+        {
+          "step": 4,
+          "values": [
+            -4.979850769042969,
+            -19.11193084716797,
+            -13.55887508392334
+          ]
+        },
+        {
+          "step": 5,
+          "values": [
+            -4.978855609893799,
+            -18.948759078979492,
+            -13.495494842529297
+          ]
+        },
+        {
+          "step": 6,
+          "values": [
+            -4.977388381958008,
+            -18.746273040771484,
+            -13.417363166809082
+          ]
+        },
+        {
+          "step": 7,
+          "values": [
+            -4.975335121154785,
+            -18.50470542907715,
+            -13.324868202209473
+          ]
+        },
+        {
+          "step": 8,
+          "values": [
+            3.9666030406951904,
+            15.600492477416992,
+            11.631171226501465
+          ]
+        },
+        {
+          "step": 9,
+          "values": [
+            3.9704017639160156,
+            15.785000801086426,
+            11.689400672912598
+          ]
+        },
+        {
+          "step": 10,
+          "values": [
+            3.9750797748565674,
+            15.916705131530762,
+            11.727731704711914
+          ]
+        },
+        {
+          "step": 11,
+          "values": [
+            3.9805824756622314,
+            15.9978666305542,
+            11.74678897857666
+          ]
+        },
+        {
+          "step": 12,
+          "values": [
+            3.986807107925415,
+            16.030412673950195,
+            11.747173309326172
+          ]
+        },
+        {
+          "step": 13,
+          "values": [
+            3.9936087131500244,
+            16.016029357910156,
+            11.729466438293457
+          ]
+        },
+        {
+          "step": 14,
+          "values": [
+            4.000804424285889,
+            15.956121444702148,
+            11.694230079650879
+          ]
+        },
+        {
+          "step": 15,
+          "values": [
+            4.008177280426025,
+            15.851872444152832,
+            11.642010688781738
+          ]
+        },
+        {
+          "step": 16,
+          "values": [
+            0.058797214180231094,
+            2.1476950645446777,
+            0.49231189489364624
+          ]
+        },
+        {
+          "step": 17,
+          "values": [
+            0.06617947667837143,
+            1.9842933416366577,
+            0.42969274520874023
+          ]
+        },
+        {
+          "step": 18,
+          "values": [
+            0.07331244647502899,
+            1.8187376260757446,
+            0.3683132827281952
+          ]
+        },
+        {
+          "step": 19,
+          "values": [
+            0.08009883016347885,
+            1.651673436164856,
+            0.30823779106140137
+          ]
+        },
+        {
+          "step": 20,
+          "values": [
+            0.08644918352365494,
+            1.483784794807434,
+            0.24952618777751923
+          ]
+        },
+        {
+          "step": 21,
+          "values": [
+            0.0922819972038269,
+            1.3156707286834717,
+            0.19223405420780182
+          ]
+        },
+        {
+          "step": 22,
+          "values": [
+            0.09752368927001953,
+            1.147984504699707,
+            0.13641272485256195
+          ]
+        },
+        {
+          "step": 23,
+          "values": [
+            0.10210862755775452,
+            0.9813288450241089,
+            0.08210925757884979
+          ]
+        },
+        {
+          "step": 24,
+          "values": [
+            0.1059790700674057,
+            0.8162806630134583,
+            0.029366519302129745
+          ]
+        }
+      ],
+      "output_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front"
+      ],
+      "source_hashes": {
+        "psb": "9608ac93659a750df1b1f65d991af86a6d6b93586b2a861601f1beee38818b40",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 1,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 1
+        },
+        {
+          "path": "/object/head_parts/motion/\u982d\u90e8\u5909\u5f62\u57fa\u790e/layer/0/children/1/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/frameList/0/type",
+          "offset": 311010,
+          "before": 2,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/object/head_parts/motion/\u982d\u90e8\u5909\u5f62\u57fa\u790e/layer/0/children/1/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/children/0/frameList/0/type"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "eabfaa3524433a0a4bf039cf3d33222241322afdbe3965f8a2425323766bf2aa",
+      "reference_png_sha256": "be0c5741110405d805cb8abcb30e9108f0a539658401378c056087f5667872ee"
+    },
+    {
+      "case": "active-front-move",
+      "inputs": {
+        "steps": 24,
+        "events": [
+          {
+            "step": 2,
+            "variables": {
+              "move_LR": 5,
+              "move_UD": 3
+            }
+          },
+          {
+            "step": 8,
+            "variables": {
+              "move_LR": -4,
+              "move_UD": -2
+            }
+          },
+          {
+            "step": 16,
+            "variables": {
+              "move_LR": 0,
+              "move_UD": 0
+            }
+          }
+        ],
+        "variables": {},
+        "chain_index": 0,
+        "enabled": true,
+        "empty_marker": false,
+        "observe_variables": [
+          "hair_LR_front",
+          "hair_UD_front",
+          "hair_LR_M_front"
+        ]
+      },
+      "samples": [
+        {
+          "step": 1,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "step": 2,
+          "values": [
+            -4.9807939529418945,
+            -19.318660736083984,
+            -13.639718055725098
+          ]
+        },
+        {
+          "step": 3,
+          "values": [
+            -4.980474948883057,
+            -19.235427856445312,
+            -13.607094764709473
+          ]
+        },
+        {
+          "step": 4,
+          "values": [
+            -4.979850769042969,
+            -19.11193084716797,
+            -13.55887508392334
+          ]
+        },
+        {
+          "step": 5,
+          "values": [
+            -4.978855609893799,
+            -18.948759078979492,
+            -13.495494842529297
+          ]
+        },
+        {
+          "step": 6,
+          "values": [
+            -4.977388381958008,
+            -18.746273040771484,
+            -13.417363166809082
+          ]
+        },
+        {
+          "step": 7,
+          "values": [
+            -4.975335121154785,
+            -18.50470542907715,
+            -13.324868202209473
+          ]
+        },
+        {
+          "step": 8,
+          "values": [
+            3.9666030406951904,
+            15.600492477416992,
+            11.631171226501465
+          ]
+        },
+        {
+          "step": 9,
+          "values": [
+            3.9704017639160156,
+            15.785000801086426,
+            11.689400672912598
+          ]
+        },
+        {
+          "step": 10,
+          "values": [
+            3.9750797748565674,
+            15.916705131530762,
+            11.727731704711914
+          ]
+        },
+        {
+          "step": 11,
+          "values": [
+            3.9805824756622314,
+            15.9978666305542,
+            11.74678897857666
+          ]
+        },
+        {
+          "step": 12,
+          "values": [
+            3.986807107925415,
+            16.030412673950195,
+            11.747173309326172
+          ]
+        },
+        {
+          "step": 13,
+          "values": [
+            3.9936087131500244,
+            16.016029357910156,
+            11.729466438293457
+          ]
+        },
+        {
+          "step": 14,
+          "values": [
+            4.000804424285889,
+            15.956121444702148,
+            11.694230079650879
+          ]
+        },
+        {
+          "step": 15,
+          "values": [
+            4.008177280426025,
+            15.851872444152832,
+            11.642010688781738
+          ]
+        },
+        {
+          "step": 16,
+          "values": [
+            0.058797214180231094,
+            2.1476950645446777,
+            0.49231189489364624
+          ]
+        },
+        {
+          "step": 17,
+          "values": [
+            0.06617947667837143,
+            1.9842933416366577,
+            0.42969274520874023
+          ]
+        },
+        {
+          "step": 18,
+          "values": [
+            0.07331244647502899,
+            1.8187376260757446,
+            0.3683132827281952
+          ]
+        },
+        {
+          "step": 19,
+          "values": [
+            0.08009883016347885,
+            1.651673436164856,
+            0.30823779106140137
+          ]
+        },
+        {
+          "step": 20,
+          "values": [
+            0.08644918352365494,
+            1.483784794807434,
+            0.24952618777751923
+          ]
+        },
+        {
+          "step": 21,
+          "values": [
+            0.0922819972038269,
+            1.3156707286834717,
+            0.19223405420780182
+          ]
+        },
+        {
+          "step": 22,
+          "values": [
+            0.09752368927001953,
+            1.147984504699707,
+            0.13641272485256195
+          ]
+        },
+        {
+          "step": 23,
+          "values": [
+            0.10210862755775452,
+            0.9813288450241089,
+            0.08210925757884979
+          ]
+        },
+        {
+          "step": 24,
+          "values": [
+            0.1059790700674057,
+            0.8162806630134583,
+            0.029366519302129745
+          ]
+        }
+      ],
+      "output_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front"
+      ],
+      "source_hashes": {
+        "psb": "c24342e13fdc89cc205dc369a1fa0168b62b4dee9c992e06c2bf089ff5186bc1",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 1,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 1
+        }
+      ],
+      "reference_metadata_sha256": "d3e300988af5ca2826d06d4d8894c6eea0c894154e25fbe1a92ac269053a6d0c",
+      "reference_png_sha256": "be0c5741110405d805cb8abcb30e9108f0a539658401378c056087f5667872ee"
+    }
+  ]
+}

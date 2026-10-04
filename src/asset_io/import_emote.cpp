@@ -269,7 +269,7 @@ void physical_controls(const Json& md, ModelAsset& asset, ImportReport& report)
             result.variable_middle = required(j, "var_lrm", path, string);
             result.stretch_stiffness = required(j, "b_rate", path, number);
             result.gravity = required(j, "gravity", path, number);
-            result.velocity_retention = required(j, "v_bound", path, number);
+            result.normal_velocity_damping = required(j, "v_bound", path, number);
             result.friction = {required(j, "friction_x", path, number),
                                required(j, "friction_y", path, number)};
             result.length = required(j, "length", path, float_array<2>);

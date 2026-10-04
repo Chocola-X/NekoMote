@@ -26,7 +26,7 @@ ctest --preset dev              # 运行单元测试
 
 开发阶段以性能与代码规范性为优先约束，允许直接演进 API 和资产格式，不维护兼容层。
 
-动画诊断（当前资产需重导入为 schema 4）：
+动画诊断（当前资产需重导入为 schema 5）：
 
 ```sh
 build/dev/bin/nekomote_preview --animation-diagnostic --asset /path/to/model.nkm.json \

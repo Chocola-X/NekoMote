@@ -337,7 +337,7 @@ TEST_CASE("Physical snapshots and categories survive portable offline compilatio
     REQUIRE(chain.binding.enabled);
     REQUIRE(chain.binding.variable_x == "cx");
     REQUIRE(chain.variable_middle == "middle");
-    REQUIRE(chain.velocity_retention == 2.0f);
+    REQUIRE(chain.normal_velocity_damping == 2.0f);
     REQUIRE(chain.friction[1] == 0.125f);
     REQUIRE(chain.length[1] == 7.0f);
     REQUIRE(chain.rest_position[1][2] == 2.0f);
@@ -352,7 +352,7 @@ TEST_CASE("Physical snapshots and categories survive portable offline compilatio
     auto compiled = read(file);
     SECTION("unsupported old schema")
     {
-        compiled["schema"] = 3;
+        compiled["schema"] = 4;
     }
     SECTION("invalid category")
     {
