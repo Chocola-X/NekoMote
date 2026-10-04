@@ -417,4 +417,4 @@ GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必�
 
 ### 2026-10-04 当前接续点
 
-P6 两节链条数值内核 27 组/1106 步已闭合，五张真实物理截图通过。参考工具共享字段审计和 Eye 过渡更正已验证；链条锚点已接入，schema 5 完成字段更正；共同作者时钟已接入 PlaybackInstance，静止/转头通过正式会话帧对照；真实跳跃/差分锚点精度、模型缩放仍待闭合。Fraise face_UD 变换、既有静态/动态像素、selector/表达式/嵌套遮罩等缺口保留，P3/P4/P5/P6 继续进行中。证据入口：docs/validation/p6-playback-session.json、p6-chain-binding.json、p6-chain-kernel.json、p6-eye-controller.json 和 docs/development-log.md。
+P6 两节链条数值内核 27 组/1106 步已闭合，五张真实物理截图通过。参考工具共享字段审计和 Eye 过渡更正已验证；链条锚点已接入，schema 5 完成字段更正；共同作者时钟已接入 PlaybackInstance，静止/转头/24 步跳跃通过正式会话数值与画面对照；待机差分锚点精度、模型缩放仍待闭合。Fraise face_UD 变换、既有静态/动态像素、selector/表达式/嵌套遮罩等缺口保留，P3/P4/P5/P6 继续进行中。证据入口：docs/validation/p6-scene-blending.json、p6-playback-session.json、p6-chain-binding.json、p6-chain-kernel.json、p6-eye-controller.json 和 docs/development-log.md。

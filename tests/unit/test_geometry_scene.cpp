@@ -10,6 +10,7 @@
 #include <nekomote/runtime/spring.hpp>
 #include <nlohmann/json.hpp>
 
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -1362,4 +1363,46 @@ TEST_CASE("Combined playback reuses frame storage without allocating during catc
     REQUIRE(success);
     REQUIRE(measured_allocations == 0);
     REQUIRE(player.tick_count() == 520);
+}
+
+TEST_CASE("Scene key weights retain the original blend rounding at a patch corner", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/scene_blend_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input);
+    REQUIRE_FALSE(reference.at("source_stores_truncated").get<bool>());
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 1, 1, 0, 0};
+    auto content = sprite();
+    MeshData mesh;
+    const auto patch = identity_patch();
+    std::array<float, 32> points{};
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        points[i * 2] = patch[i].x;
+        points[i * 2 + 1] = patch[i].y;
+    }
+    points[0] = reference.at("left").get<float>();
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    auto warp = layer("warp", 0, content);
+    warp.frame_list[0].type = 3;
+    warp.parameterize = field(0);
+    warp.parameter = {{"blend", 0, 30, 30, 0, true}};
+    points[0] = reference.at("right").get<float>();
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    warp.frame_list.push_back({30, 2, field(content)});
+    asset.parts[0].layers = {warp};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("blend"),
+                                   reference.at("parameter").get<float>()));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.primitives().size() == 1);
+    const auto sample = instance.sample_atlas_point(instance.primitives()[0].node, {0, 0});
+    REQUIRE(sample.x == reference.at("expected").get<float>());
 }

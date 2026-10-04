@@ -1,0 +1,21 @@
+{
+  "scope": "Unmodified SDK Jt blend Float32 store; scalar fixture used by a synthetic native one-pixel patch corner",
+  "source_hashes": {
+    "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "source_metadata_sha256": "894d4453a6748dd452543bf65841e5dcacabfc1900402b636336725847b3496f",
+  "source_png_sha256": "77a4d09fe0da0c9b1258043d0d288bb144dcec9c54b8bc71e671982648b799fb",
+  "source_stores_truncated": false,
+  "left": -0.003539822995662689,
+  "right": 0.0,
+  "parameter": 28.5,
+  "range_begin": 0,
+  "range_end": 30,
+  "division": 30,
+  "expected": -0.00017699114687275141,
+  "observed_input": -0.0001769911497831346,
+  "source_step": 1
+}

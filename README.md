@@ -43,4 +43,4 @@ build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
   --origin 400 940 --play 首横振り 1
 ```
 
-共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。当前联合播放只验证 scale=1；静止/转头的原版对照通过，跳跃和待机差分仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)。
+共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。当前联合播放只验证 scale=1；静止/转头/24 步跳跃的原版对照通过，待机差分仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)；后续关键帧权重修正见 [最新数值/画面证据](docs/validation/p6-scene-blending.json)。

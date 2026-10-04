@@ -349,18 +349,29 @@ struct State
     bool branch_selected{false};
     float density{0};
 };
-Pose interpolate(const Key& a, const Key& b, float time) noexcept
+Pose interpolate(const Key& a, const Key& b, double time) noexcept
 {
     Pose p = a.pose;
     if (a.type != 3 || !b.pose.active || b.time <= a.time)
         return p;
-    const float t = (time - a.time) / (b.time - a.time);
-    p.translation += (b.pose.translation - p.translation) * t;
-    p.angle += (b.pose.angle - p.angle) * t;
-    p.depth += (b.pose.depth - p.depth) * t;
-    p.opacity += (b.pose.opacity - p.opacity) * t;
+    // SDK store observations preserve double left/right weighted sums until
+    // one Float32 save; subtracting the keys first loses verified corner bits.
+    // Evidence: tests/fixtures/scene_blend_reference.json and full jump frames.
+    const double t = (static_cast<double>(time) - static_cast<double>(a.time)) /
+                     (static_cast<double>(b.time) - static_cast<double>(a.time));
+    const auto blend = [t](float left, float right) noexcept
+    {
+        return static_cast<float>(static_cast<double>(left) * (1.0 - t) +
+                                  static_cast<double>(right) * t);
+    };
+    p.translation = {blend(a.pose.translation.x, b.pose.translation.x),
+                     blend(a.pose.translation.y, b.pose.translation.y)};
+    p.angle = blend(a.pose.angle, b.pose.angle);
+    p.depth = blend(a.pose.depth, b.pose.depth);
+    p.opacity = blend(a.pose.opacity, b.pose.opacity);
     for (std::size_t i = 0; i < p.patch.size(); ++i)
-        p.patch[i] += (b.pose.patch[i] - p.patch[i]) * t;
+        p.patch[i] = {blend(a.pose.patch[i].x, b.pose.patch[i].x),
+                      blend(a.pose.patch[i].y, b.pose.patch[i].y)};
     p.mesh = p.mesh || (t > 0 && b.pose.mesh);
     p.unsupported = p.unsupported || (t > 0 && b.pose.unsupported);
     return p;
