@@ -27,7 +27,9 @@ struct Options
     std::filesystem::path asset, trace, output;
     Json variables = Json::object();
     int benchmark{0}, steps{0};
+    std::uint32_t random_seed{0};
     bool animation{false}, dump_frame{false};
+    bool disable_eye_controller{false};
     Json transitions = Json::object(), plays = Json::array();
 };
 Json read(const std::filesystem::path& path)
@@ -56,6 +58,11 @@ Options parse(int argc, char** argv)
             o.animation = true;
             continue;
         }
+        if (flag == "--disable-eye-controller")
+        {
+            o.disable_eye_controller = true;
+            continue;
+        }
         if (flag == "--dump-frame")
         {
             o.dump_frame = true;
@@ -74,6 +81,13 @@ Options parse(int argc, char** argv)
             o.variables = Json::parse(value);
         else if (flag == "--steps")
             o.steps = parse_integer(value);
+        else if (flag == "--random-seed")
+        {
+            const auto parsed =
+                std::from_chars(value.data(), value.data() + value.size(), o.random_seed);
+            if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size())
+                throw std::runtime_error("random seed must be an unsigned 32-bit integer");
+        }
         else if (flag == "--transitions")
             o.transitions = Json::parse(value);
         else if (flag == "--plays")
@@ -103,6 +117,14 @@ int run(const Options& o)
     auto loaded = asset_io::load_asset(o.asset);
     if (!loaded.ok)
         throw std::runtime_error(loaded.errors.front());
+    if (o.disable_eye_controller)
+    {
+        if (!o.animation)
+            throw std::runtime_error("Eye controller fixture requires --animation-diagnostic");
+        for (auto& control : loaded.asset.variable_controls)
+            if (control.kind == model::VariableControlKind::Eye)
+                control.enabled = false;
+    }
     auto compiled = runtime::compile_geometry_scene(loaded.asset);
     if (!compiled.scene)
         throw std::runtime_error(compiled.errors.front());
@@ -124,7 +146,8 @@ int run(const Options& o)
         if (!animation.program)
             throw std::runtime_error(animation.errors.front());
         animation_program = std::move(animation.program);
-        animation_player = std::make_unique<runtime::AnimationInstance>(*animation_program);
+        animation_player = std::make_unique<runtime::AnimationInstance>(
+            *animation_program, runtime::AnimationConfig{o.random_seed});
         auto& player = *animation_player;
         const auto& checked = animation_checked;
         for (const auto& [name, value] : o.variables.items())
@@ -235,6 +258,7 @@ int run(const Options& o)
                 {"variables", o.animation ? animated_variables : o.variables},
                 {"animation_samples", animation_samples},
                 {"manual_controllers", o.animation},
+                {"eye_controller_disabled_fixture", o.disable_eye_controller},
                 {"nodes", scene.node_count()},
                 {"primitives", instance.primitives().size()},
                 {"diagnostics", scene.diagnostics()}};

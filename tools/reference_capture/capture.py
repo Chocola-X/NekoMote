@@ -40,6 +40,19 @@ def main():
     parser.add_argument('--trace-math', action='store_true')
     parser.add_argument('--trace-math-step', type=int,
                         help='observe Math calls only during one numbered author update')
+    parser.add_argument('--trace-clock', action='store_true',
+                        help='observe public Date/performance calls; preserves timestamps')
+    parser.add_argument('--trace-integer-stores', action='store_true',
+                        help='diagnostic Int32/UInt32 numeric indexed stores, including load')
+    parser.add_argument('--trace-integer-index', action='append', type=int, default=[],
+                        help='restrict integer indexed stores to explicit diagnostic heap positions')
+    parser.add_argument('--trace-integer-stack', default='',
+                        help='optional observed caller for integer storage filtering')
+    parser.add_argument('--trace-integer-step', type=int,
+                        help='optional author step (zero includes initialization)')
+    parser.add_argument('--trace-integer-limit', type=int, default=5000)
+    parser.add_argument('--fixed-clock-ms', type=int,
+                        help='diagnostic deterministic Date.now input for initialization seed')
     parser.add_argument('--trace-random', action='store_true',
                         help='observe public Math.random from initialization; preserves results')
     parser.add_argument('--trace-float-stores', action='store_true',
@@ -76,6 +89,19 @@ def main():
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if args.trace_integer_index and (not args.trace_integer_stores or
+            len(args.trace_integer_index) > 128 or
+            any(i < 0 or i > 0xffffffff for i in args.trace_integer_index)):
+        parser.error('integer indices require stores and up to 128 unsigned indices')
+    if not 1 <= args.trace_integer_limit <= 100000:
+        parser.error('--trace-integer-limit requires 1..100000 records')
+    if args.trace_integer_stack and not args.trace_integer_stores:
+        parser.error('--trace-integer-stack requires --trace-integer-stores')
+    if args.trace_integer_step is not None and (not args.trace_integer_stores or
+            not 0 <= args.trace_integer_step <= args.steps):
+        parser.error('--trace-integer-step requires stores and an update in 0..steps')
+    if args.fixed_clock_ms is not None and not 0 <= args.fixed_clock_ms <= 0xffffffff * 1000:
+        parser.error('--fixed-clock-ms requires nonnegative milliseconds within UInt32 seconds')
     if args.trace_math_step is not None and (not args.trace_math or
             not 0 <= args.trace_math_step <= args.steps):
         parser.error('--trace-math-step requires math tracing and an update in 0..steps')
@@ -176,8 +202,15 @@ def main():
                                  references=args.fixture_references)
     here = pathlib.Path(__file__).resolve().parent
     html = (here / 'reference.html').read_text()
+    if args.fixed_clock_ms is not None:
+        html = html.replace('window.fixedClockMs=null;',
+                            'window.fixedClockMs=' + str(args.fixed_clock_ms) + ';')
     if args.trace_math:
         html = html.replace('window.enableMathTrace=false;', 'window.enableMathTrace=true;')
+    if args.trace_clock:
+        html = html.replace('window.enableClockTrace=false;', 'window.enableClockTrace=true;')
+    if args.trace_integer_stores:
+        html = html.replace('window.enableIntegerStores=false;', 'window.enableIntegerStores=true;')
     if args.trace_random:
         html = html.replace('window.enableRandomTrace=false;', 'window.enableRandomTrace=true;')
     if args.trace_float_stores:
@@ -213,7 +246,11 @@ def main():
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
                    traceFloatReadIndices=args.trace_float_read_index,
-                   traceRandom=args.trace_random,
+                   traceRandom=args.trace_random, traceClock=args.trace_clock,
+                   fixedClockMs=args.fixed_clock_ms,
+                   traceIntegerStores=args.trace_integer_stores, traceIntegerStack=args.trace_integer_stack,
+                   traceIntegerStep=args.trace_integer_step, traceIntegerLimit=args.trace_integer_limit,
+                   traceIntegerIndices=args.trace_integer_index,
                    timelines=[p['label'] for p in plays], plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,

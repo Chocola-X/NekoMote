@@ -7,6 +7,20 @@
 window.ready = false;
 window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
 window.mathTrace=[];
+window.fixedClockMs=null;
+if(window.fixedClockMs!==null) Date.now=()=>window.fixedClockMs;
+window.enableClockTrace=false;
+window.clockTrace=[];
+window.clockTraceTruncated=false;
+if(window.enableClockTrace) for(const [owner,name] of [[Date,"now"],[Date.prototype,"getTime"],[performance,"now"]]) {
+    const native=owner[name];
+    owner[name]=function(...args) {
+        const result=native.apply(this,args);
+        if(window.clockTrace.length<10000) window.clockTrace.push({step:window.authorStep||0,name,result,stack:new Error().stack});
+        else window.clockTraceTruncated=true;
+        return result;
+    };
+}
 window.enableRandomTrace=false;
 window.randomTrace=[];
 window.randomTraceTruncated=false;
@@ -75,6 +89,38 @@ if(window.enableFloatStores) {
         });
     }});
 }
+window.enableIntegerStores=false;
+window.integerStores=[];
+window.integerStoresTruncated=false;
+window.traceIntegerIndices=new Set();
+if(window.enableIntegerStores) for(const kind of ['Int32Array','Uint32Array']) {
+    const Native=window[kind];
+    window[kind]=new Proxy(Native,{construct(target,args) {
+        const view=Reflect.construct(target,args);
+        if(!(args[0] instanceof ArrayBuffer) || args.length!==1) return view;
+        return new Proxy(view,{
+            get(target,key) {
+                const value=Reflect.get(target,key,target);
+                return typeof value==='function' && key!=='constructor'?value.bind(target):value;
+            },
+            set(target,key,input) {
+                const old=target[key], success=Reflect.set(target,key,input,target);
+                if(window.traceIntegerStores &&
+                   (window.traceIntegerStep==null || window.traceIntegerStep===(window.authorStep||0)) &&
+                   typeof key==='string' && /^[0-9]+$/.test(key) &&
+                   (!window.traceIntegerIndices.size || window.traceIntegerIndices.has(key))) {
+                    if(window.integerStores.length>=window.traceIntegerLimit) window.integerStoresTruncated=true;
+                    else {
+                        const stack=new Error().stack;
+                        if(!window.traceIntegerStack || stack.includes(' at '+window.traceIntegerStack+' ('))
+                            window.integerStores.push({step:window.authorStep||0,kind,index:Number(key),old,input,stored:target[key],stack});
+                    }
+                }
+                return success;
+            }
+        });
+    }});
+}
 var Module = {onRuntimeInitialized() { window.ready = true; }};
 </script>
 <script src="/trace.js"></script>
@@ -82,6 +128,11 @@ var Module = {onRuntimeInitialized() { window.ready = true; }};
 <script src="/driver/emoteplayer.js"></script>
 <script>
 window.capture = async function(options) {
+    window.traceIntegerStores=options.traceIntegerStores;
+    window.traceIntegerStack=options.traceIntegerStack;
+    window.traceIntegerStep=options.traceIntegerStep;
+    window.traceIntegerLimit=options.traceIntegerLimit;
+    window.traceIntegerIndices=new Set((options.traceIntegerIndices||[]).map(String));
     const canvas = document.getElementById('canvas');
     canvas.width = options.width; canvas.height = options.height;
     EmotePlayer.setRenderCanvas(canvas);
@@ -170,6 +221,7 @@ window.capture = async function(options) {
     window.traceEnabled=false;
     window.traceMath=false;
     window.traceFloatStores=false;
+    window.traceIntegerStores=false;
     const pixels=new Uint8Array(canvas.width*canvas.height*4);
     gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
     let visiblePixels=0;
@@ -181,9 +233,15 @@ window.capture = async function(options) {
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
+        clockTrace:window.clockTrace,clockTraceTruncated:window.clockTraceTruncated,
         randomTrace:window.randomTrace,randomTraceTruncated:window.randomTraceTruncated,
+        randomInterfaces:options.traceRandom?{
+            global:Object.keys(window).filter(name=>/random|seed|srand/i.test(name) && typeof window[name]==='function'),
+            module:Object.keys(Module).filter(name=>/random|seed|srand/i.test(name) && typeof Module[name]==='function')
+        }:null,
         floatStores:window.floatStores,floatStoresTruncated:window.floatStoresTruncated,
         floatReads:window.floatReads,floatReadsTruncated:window.floatReadsTruncated,
+        integerStores:window.integerStores,integerStoresTruncated:window.integerStoresTruncated,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
     return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace,stateTrace:window.stateTrace,maskPixels:window.maskPixels};

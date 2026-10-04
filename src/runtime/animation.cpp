@@ -12,9 +12,19 @@ namespace nekomote::runtime
 namespace
 {
 constexpr float kInfinity = std::numeric_limits<float>::infinity();
+constexpr double kBlinkCloseRate = 2.5;
+constexpr double kBlinkHoldFraction = 0.2;
+constexpr int kMaximumBlinkPhaseChanges = 5;
+constexpr std::uint32_t kRandomMantissaMask = 0x7fffff;
+constexpr double kRandomMantissaRange = 8388608.0;
 using Kind = model::VariableControlKind;
 struct Controller
 {
+    struct BlinkRule
+    {
+        bool enabled{false};
+        float open{0}, frames{0}, interval_min{0}, interval_max{0};
+    } blink;
     Kind kind{Kind::Immediate};
     float eye_closed{0};
     int eye_interval{-1};
@@ -453,6 +463,15 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 c.eye_interval = edge_at(c, control.begin_frame);
                 require(c.eye_interval >= 0 && edge_at(c, c.eye_closed) == c.eye_interval,
                         control.variable + ": invalid Eye open/closed interval");
+                c.blink = {control.blink_enabled, control.begin_frame, control.blink_frames,
+                           control.blink_interval_min, control.blink_interval_max};
+                if (c.blink.enabled)
+                    require(std::isfinite(c.blink.frames) && c.blink.frames > 0 &&
+                                std::isfinite(c.blink.interval_min) && c.blink.interval_min >= 1 &&
+                                std::isfinite(c.blink.interval_max) &&
+                                c.blink.interval_max >= c.blink.interval_min &&
+                                c.blink.open < c.eye_closed && c.eye_closed > 0,
+                            control.variable + ": invalid automatic blink timing/range");
             }
             for (const auto& option : control.options)
             {
@@ -569,6 +588,39 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
 }
 struct AnimationInstance::Impl
 {
+    struct BlinkState
+    {
+        enum class Phase
+        {
+            Waiting,
+            Closing,
+            Holding,
+            Opening
+        } phase{Phase::Waiting};
+        std::array<std::uint32_t, 4> random{};
+        float value{0}, timer{0};
+        void reset(std::uint32_t seed) noexcept
+        {
+            random = {123456789, 362436069, 521288629, seed};
+            phase = Phase::Waiting;
+        }
+        float interval(const Controller::BlinkRule& rule) noexcept
+        {
+            // Independent integer-state observations certify the four-word
+            // xorshift and the low 23-bit mantissa projection, not rand()/RAND_MAX.
+            const auto t = random[0] ^ (random[0] << 11);
+            random[0] = random[1];
+            random[1] = random[2];
+            random[2] = random[3];
+            random[3] = random[3] ^ (random[3] >> 19) ^ t ^ (t >> 8);
+            const double unit =
+                static_cast<double>(random[3] & kRandomMantissaMask) / kRandomMantissaRange;
+            return static_cast<float>(
+                static_cast<double>(rule.interval_min) +
+                (static_cast<double>(rule.interval_max) - static_cast<double>(rule.interval_min)) *
+                    unit);
+        }
+    };
     struct ClipState
     {
         std::uint32_t time{0};
@@ -584,12 +636,15 @@ struct AnimationInstance::Impl
     const ProgramData& program;
     std::vector<Transition> base;
     std::vector<SelectorState> selectors;
+    std::vector<BlinkState> blinks;
     std::vector<ClipState> clips;
     std::vector<ParameterValue> output;
     std::vector<std::size_t> order;
     std::uint64_t ticks{0};
-    explicit Impl(const ProgramData& data)
-        : program(data), selectors(data.controllers.size()), clips(data.clips.size())
+    std::uint32_t random_seed;
+    explicit Impl(const ProgramData& data, AnimationConfig config)
+        : program(data), selectors(data.controllers.size()), blinks(data.controllers.size()),
+          clips(data.clips.size()), random_seed(config.random_seed)
     {
         order.reserve(clips.size());
         base.reserve(data.controllers.size());
@@ -608,6 +663,79 @@ struct AnimationInstance::Impl
             for (std::size_t j = 0; j < data.clips[i].tracks.size(); ++j)
                 clips[i].tracks.emplace_back(); // additive channels are linear
         }
+        reset_blinks();
+    }
+    void reset_blinks() noexcept
+    {
+        for (std::size_t i = 1; i < blinks.size(); ++i)
+        {
+            const auto& rule = program.controllers[i].blink;
+            auto& state = blinks[i];
+            state.reset(random_seed);
+            state.value = 0;
+            state.timer = rule.enabled ? state.interval(rule) : 0;
+        }
+    }
+    AnimationStatus update_blinks() noexcept
+    {
+        using Phase = BlinkState::Phase;
+        for (std::size_t i = 1; i < blinks.size(); ++i)
+        {
+            const auto& control = program.controllers[i];
+            const auto& rule = control.blink;
+            if (!rule.enabled)
+                continue;
+            auto& state = blinks[i];
+            const double distance = static_cast<double>(control.eye_closed) * kBlinkCloseRate /
+                                    static_cast<double>(rule.frames);
+            bool settled = false;
+            // A boundary continues into the next phase during this same tick:
+            // close -> hold decrements once; open -> wait decrements once too.
+            for (int phase_changes = 0; phase_changes < kMaximumBlinkPhaseChanges; ++phase_changes)
+            {
+                switch (state.phase)
+                {
+                    case Phase::Waiting:
+                        state.timer -= 1;
+                        if (state.timer > 0)
+                            break;
+                        state.phase = Phase::Closing;
+                        continue;
+                    case Phase::Closing:
+                        state.value =
+                            static_cast<float>(static_cast<double>(state.value) + distance);
+                        if (state.value < control.eye_closed)
+                            break;
+                        state.value = control.eye_closed;
+                        state.timer = static_cast<float>(static_cast<double>(rule.frames) *
+                                                         kBlinkHoldFraction);
+                        state.phase = Phase::Holding;
+                        continue;
+                    case Phase::Holding:
+                        state.timer -= 1;
+                        if (state.timer > 0)
+                            break;
+                        state.timer = state.interval(rule);
+                        state.phase = Phase::Opening;
+                        continue;
+                    case Phase::Opening:
+                        state.value =
+                            static_cast<float>(static_cast<double>(state.value) - distance);
+                        if (state.value > 0)
+                            break;
+                        state.value = 0;
+                        state.phase = Phase::Waiting;
+                        continue;
+                }
+                settled = true;
+                break;
+            }
+            if (!settled)
+                return {AnimationError::UnsupportedController,
+                        {},
+                        ParamId{static_cast<std::uint32_t>(i)}};
+        }
+        return {};
     }
     bool request_parameter(ParamId id, float target, float duration, float easing) noexcept
     {
@@ -669,6 +797,19 @@ struct AnimationInstance::Impl
     {
         for (auto& value : output)
             value.value = base[value.id.value].value;
+        for (std::size_t i = 1; i < blinks.size(); ++i)
+        {
+            const auto& control = program.controllers[i];
+            const auto& rule = control.blink;
+            const float value = base[i].value;
+            if (!rule.enabled || value < rule.open || value > control.eye_closed)
+                continue;
+            const double amount =
+                static_cast<double>(blinks[i].value) / static_cast<double>(control.eye_closed);
+            output[i - 1].value = static_cast<float>(
+                static_cast<double>(value) +
+                (static_cast<double>(control.eye_closed) - static_cast<double>(value)) * amount);
+        }
         for (std::size_t i = 1; i < clips.size(); ++i)
         {
             const auto& state = clips[i];
@@ -702,8 +843,8 @@ struct AnimationInstance::Impl
         return true;
     }
 };
-AnimationInstance::AnimationInstance(const AnimationProgram& program)
-    : impl_(std::make_unique<Impl>(*program.impl_))
+AnimationInstance::AnimationInstance(const AnimationProgram& program, AnimationConfig config)
+    : impl_(std::make_unique<Impl>(*program.impl_, config))
 {
 }
 AnimationInstance::~AnimationInstance() = default;
@@ -798,6 +939,8 @@ AnimationStatus AnimationInstance::step() noexcept
                             TimelineId{static_cast<std::uint32_t>(i)},
                             {}};
     data.update_selectors();
+    if (const auto blinked = data.update_blinks(); !blinked)
+        return blinked;
     data.compose();
     ++data.ticks;
     return {};
@@ -823,6 +966,7 @@ void AnimationInstance::reset() noexcept
     }
     data.order.clear();
     data.ticks = 0;
+    data.reset_blinks();
     data.compose();
 }
 std::span<const ParameterValue> AnimationInstance::values() const noexcept

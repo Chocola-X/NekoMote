@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -63,7 +64,11 @@ int run(int argc, char** argv)
     const auto& scene = program.scene();
     const auto check = [&](runtime::PlaybackStatus status)
     { check_status(status, scene.node_label(status.geometry.node)); };
-    runtime::PlaybackInstance player(program);
+    const auto seed = request.value("random_seed", Json(std::uint32_t{0}));
+    if (!seed.is_number_integer() || seed.get<std::int64_t>() < 0 ||
+        seed.get<std::uint64_t>() > std::numeric_limits<std::uint32_t>::max())
+        throw std::runtime_error("random seed must be an unsigned 32-bit integer");
+    runtime::PlaybackInstance player(program, runtime::AnimationConfig{seed.get<std::uint32_t>()});
     const auto origin = request.value("origin", Json::array({0, 0}));
     if (!origin.is_array() || origin.size() != 2)
         throw std::runtime_error("origin must contain exactly two author-space coordinates");

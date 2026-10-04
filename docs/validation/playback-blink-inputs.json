@@ -1,0 +1,332 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "scalar_tolerance": 1e-05,
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "seed1-400",
+      "model": "chocola-date-a",
+      "steps": 400,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "eb8438654698ec7074a168f70b8dfd7b862b7fd43fa6b048f666b954bcbef8ff",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "reference_trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    },
+    {
+      "case": "seed1-first155",
+      "model": "chocola-date-a",
+      "steps": 155,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "10c630652ec5d86e69b8299b3245fb194a492f948afd69c76d8bf9fe1894704c",
+      "reference_png_sha256": "2e1f06d19e845dc3885d8fa9fc017598f3f1a4eb31bcccee804e930be4a721bc",
+      "reference_trace_sha256": "b157bd1ca4b8f93bf00cf96223a984bc837e8481ac7659280b8707fcaefcc898"
+    },
+    {
+      "case": "seed1-peak161",
+      "model": "chocola-date-a",
+      "steps": 161,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "5ef6c6942eb6cc0c89fba004f4564ecca738a59ac43a39fadcb13460707b0d0b",
+      "reference_png_sha256": "db64690f7c79ebcd4e85c6310ab61d393215cfa2e60483ded77d165fb0e53652",
+      "reference_trace_sha256": "524e7c6bc83f9be23352a59a717a03dc337d0ec9415c933ef1743fcdd4ae30e1"
+    },
+    {
+      "case": "seed1-open164",
+      "model": "chocola-date-a",
+      "steps": 164,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "2a61290b7c9fcd4e49267bbe564eac4dfbe8ca4d4fccaeabcb59f297704183f2",
+      "reference_png_sha256": "077ae2ce98a21d1b3dcb637462a8757887544e80b59fb7f3460bda7cdbedbcbe",
+      "reference_trace_sha256": "832b60ad2d5db6d687011a9759ae5014c65d478ffbb4a381c0061d5b812ce519"
+    },
+    {
+      "case": "seed1-second228",
+      "model": "chocola-date-a",
+      "steps": 228,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "52716cf6782f6e71802000fba68be8885343270027be8ec80b0603476173af87",
+      "reference_png_sha256": "2e1f06d19e845dc3885d8fa9fc017598f3f1a4eb31bcccee804e930be4a721bc",
+      "reference_trace_sha256": "b157bd1ca4b8f93bf00cf96223a984bc837e8481ac7659280b8707fcaefcc898"
+    },
+    {
+      "case": "fraise-seed1-first155",
+      "model": "fraise-casual-a",
+      "steps": 155,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "reference_metadata_sha256": "8d673739cb80ea1606a7eb9173506deca0dcda3b8b073328e1a084e4da8a771b",
+      "reference_png_sha256": "05aeae2b7e4c0217b483236983986d2dd331eb301e07c4e6583b9f64cfa5570c",
+      "reference_trace_sha256": "f3a6ea92850191da9f90b007617d7594266dee227c43b9c01ee48ae1c525999b"
+    },
+    {
+      "case": "clock-large-first78",
+      "model": "chocola-date-a",
+      "steps": 78,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1791113005000,
+      "random_seed": 1791113005,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "0fae18b1a066546546432d342f645f79f970f2e28db6a332fb8e5a48c45ce340",
+      "reference_png_sha256": "2e1f06d19e845dc3885d8fa9fc017598f3f1a4eb31bcccee804e930be4a721bc",
+      "reference_trace_sha256": "b157bd1ca4b8f93bf00cf96223a984bc837e8481ac7659280b8707fcaefcc898"
+    },
+    {
+      "case": "chocola-idle155",
+      "model": "chocola-date-a",
+      "steps": 155,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "4743ca9002934adbc01b33f53368abd04207fd7a27c121a4438c24a5bc12b331",
+      "reference_png_sha256": "e9c2dff258e78d9d619ac40de8c08836787266948fb12bcb17874131b49d2b22",
+      "reference_trace_sha256": "466115e77ebdbf21a48058cc8d40cac02ed0e81dddb88eadd17a222879b71f26"
+    },
+    {
+      "case": "fraise-idle155",
+      "model": "fraise-casual-a",
+      "steps": 155,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "reference_metadata_sha256": "26639c58ba155791badd5db3a3f6bd17559971496e4c5d13e87a37215f3bc2a7",
+      "reference_png_sha256": "aedf381588abbd896b3487494288dcff390312ee828f720302a663ced1b14d2d",
+      "reference_trace_sha256": "58a38a2896aff4ef8de93786523f3aa1b9259dd1dd02f347021e828007131735"
+    },
+    {
+      "case": "fraise-seed1-closed161",
+      "model": "fraise-casual-a",
+      "steps": 161,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "reference_metadata_sha256": "6575fc69c3ec041629a42738dbe16f42381d5120a9e5682a49526b6bbfda85d2",
+      "reference_png_sha256": "e5bb841d039e5f5c12d7cc6687677a8f2c527d8bb81b5ee8fe3bac06941330c7",
+      "reference_trace_sha256": "7ad1f2950f3e85fe93bfb04cb628abd0b17e307baa8856d1e23ca66e4616d08c"
+    },
+    {
+      "case": "fraise-seed1-long400",
+      "model": "fraise-casual-a",
+      "steps": 400,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "face_eye_open"
+      ],
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "reference_metadata_sha256": "1a8cda471e3718a939848e8b8c02a6577b42cca9df2ca4fefc8b4dc4bfebe66b",
+      "reference_png_sha256": "c9f5552b038c0104858019de08875788b801806de159ea8676c129e90a8b9557",
+      "reference_trace_sha256": "ff1822833f42f88f845c2727ac59918643fc34811deb2f10692d1f884a7637f5"
+    }
+  ]
+}

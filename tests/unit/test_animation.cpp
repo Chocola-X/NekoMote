@@ -402,6 +402,115 @@ TEST_CASE("Main timelines dispatch nonlinear expression transitions through thei
             runtime::AnimationError::UnsupportedTimeline);
 }
 
+TEST_CASE("Automatic Eye blink timing, deterministic seeds and concurrent requests match reference",
+          "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "automatic_blink_reference.json");
+    const auto parameter =
+        reference.scene->find_variable(fixture.at("variable").get<std::string>());
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        auto asset = reference.asset;
+        const auto& blink = experiment.at("blink");
+        for (auto& control : asset.variable_controls)
+            if (control.kind == model::VariableControlKind::Eye)
+            {
+                control.blink_enabled = true;
+                control.begin_frame = blink.at("begin_frame").get<float>();
+                control.end_frame = blink.at("end_frame").get<float>();
+                control.blink_frames = blink.at("blink_frames").get<float>();
+                control.blink_interval_min = blink.at("blink_interval_min").get<float>();
+                control.blink_interval_max = blink.at("blink_interval_max").get<float>();
+            }
+        auto compiled = runtime::compile_animation(asset, *reference.scene);
+        REQUIRE(compiled.program);
+        runtime::AnimationInstance player(
+            *compiled.program,
+            runtime::AnimationConfig{experiment.at("random_seed").get<std::uint32_t>()});
+        const auto requests = [&](const Json& transitions)
+        {
+            for (const auto& [name, transition] : transitions.items())
+                REQUIRE(player.transition(
+                    reference.scene->find_variable(name), transition.at("value").get<float>(),
+                    transition.at("frames").get<float>(), transition.at("easing").get<float>()));
+        };
+        for (const auto& [name, initial] : experiment.at("variables").items())
+            REQUIRE(player.transition(reference.scene->find_variable(name), initial.get<float>()));
+        requests(experiment.at("transitions"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            for (const auto& event : experiment.at("events"))
+                if (event.at("step") == sample.at("step"))
+                {
+                    const auto variables = event.value("variables", Json::object());
+                    for (const auto& [name, initial] : variables.items())
+                        REQUIRE(player.transition(reference.scene->find_variable(name),
+                                                  initial.get<float>()));
+                    requests(event.value("transitions", Json::object()));
+                }
+            REQUIRE(player.step());
+            REQUIRE_THAT(value(player, parameter),
+                         Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                    fixture.at("value_tolerance").get<double>()));
+        }
+    }
+}
+
+TEST_CASE(
+    "Blink seeds reset independently and follow the shared clock through pause and display rates",
+    "[animation]")
+{
+    Reference reference;
+    auto compiled =
+        runtime::compile_playback(reference.asset, runtime::PhysicsMode::DisabledDiagnostic);
+    REQUIRE(compiled.program);
+    const auto eye = reference.scene->find_variable("face_eye_open");
+    runtime::PlaybackInstance at30(*compiled.program, {1}), at60(*compiled.program, {1}),
+        at144(*compiled.program, {1}), independent(*compiled.program, {1});
+    for (int group = 0; group < 16; ++group)
+    {
+        for (int i = 0; i < 5; ++i)
+            REQUIRE(at30.advance(1.0 / 30));
+        for (int i = 0; i < 10; ++i)
+            REQUIRE(at60.advance(1.0 / 60));
+        for (int i = 0; i < 24; ++i)
+            REQUIRE(at144.advance(1.0 / 144));
+        REQUIRE(at30.tick_count() == at60.tick_count());
+        REQUIRE(at30.tick_count() == at144.tick_count());
+        for (std::size_t i = 0; i < at30.values().size(); ++i)
+        {
+            REQUIRE(at30.values()[i].value == at60.values()[i].value);
+            REQUIRE(at30.values()[i].value == at144.values()[i].value);
+        }
+    }
+    REQUIRE(at60.values()[eye.value - 1].value == 9.375f);
+    REQUIRE(independent.values()[eye.value - 1].value == 0.0f);
+    at60.set_playback_state(runtime::PlaybackState::Paused);
+    REQUIRE(at60.advance(20));
+    REQUIRE(at60.step());
+    REQUIRE(at60.tick_count() == std::uint64_t{160});
+    REQUIRE(at60.values()[eye.value - 1].value == 9.375f);
+    at60.set_playback_state(runtime::PlaybackState::Running);
+    REQUIRE(at60.step());
+    REQUIRE(at60.values()[eye.value - 1].value == 10.0f);
+    at60.reset();
+    REQUIRE(at60.values()[eye.value - 1].value == 0.0f);
+    for (int i = 0; i < 160; ++i)
+        REQUIRE(at60.step());
+    REQUIRE(at60.values()[eye.value - 1].value == 9.375f);
+
+    for (auto& control : reference.asset.variable_controls)
+        if (control.kind == model::VariableControlKind::Eye)
+            control.blink_frames = 0;
+    auto invalid = runtime::compile_animation(reference.asset, *reference.scene);
+    REQUIRE_FALSE(invalid.program);
+    REQUIRE_FALSE(invalid.errors.empty());
+}
+
 TEST_CASE("Selector requests match original deferred choice and independent fade trajectories",
           "[animation]")
 {

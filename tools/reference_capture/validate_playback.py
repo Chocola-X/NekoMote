@@ -61,6 +61,10 @@ def main():
                         physics=dict(hair=1, parts=1, bust=1, wind=False))
         if any(metadata.get(k) != v for k, v in expected.items()) or metadata['diagnostic_fixture_edits']:
             raise ValueError('reference is not the frozen, unmodified request: ' + name)
+        if metadata.get('fixedClockMs') != case.get('fixed_clock_ms'):
+            raise ValueError('reference initialization clock changed: ' + name)
+        if 'fixed_clock_ms' in case and case['random_seed'] != case['fixed_clock_ms'] // 1000:
+            raise ValueError('native seed differs from source initialization clock: ' + name)
         if metadata['source_hashes'] != case['source_hashes']:
             raise ValueError('reference source hashes changed')
         for driver in ('FreeMoteDriver.js', 'emoteplayer.js'):
@@ -69,6 +73,8 @@ def main():
         request = dict(steps=case['steps'], origin=case['origin'], scale=case.get('scale', 1),
                        variables=case['variables'], transitions=case.get('transitions', {}),
                        plays=case['plays'], dump_frame=True)
+        if 'random_seed' in case:
+            request['random_seed'] = case['random_seed']
         input_path = args.output / (name + '-inputs.json')
         input_path.write_text(json.dumps(request, ensure_ascii=False, indent=2) + '\n')
         native_path = args.output / (name + '-native.json')
@@ -89,6 +95,8 @@ def main():
                    '--hidden', '--screenshot', args.output / (name + '-native.png')]
         for key, value in case['variables'].items():
             command += ['--variable', key, value]
+        if 'random_seed' in case:
+            command += ['--random-seed', case['random_seed']]
         for key, transition in case.get('transitions', {}).items():
             command += ['--transition', key, transition['value'], transition['frames'], transition['easing']]
         for play in case['plays']:

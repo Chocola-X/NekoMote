@@ -446,6 +446,42 @@ TEST_CASE("Atlas packing changes UV without changing deformed model geometry", "
     }
 }
 
+TEST_CASE("Parameterized nested motion roots retain their own time despite reference offsets",
+          "[runtime]")
+{
+    auto asset = rig();
+    auto& root = asset.parts[1].layers[0];
+    root.parameterize = field(0);
+    root.parameter = {{"pose", 0, 1, 1, 0, true}};
+    auto baseline = runtime::compile_geometry_scene(asset);
+    REQUIRE(baseline.scene);
+    runtime::GeometryInstance original(*baseline.scene);
+    REQUIRE(original.evaluate());
+    REQUIRE(original.build_frame());
+    const auto expected = original.frame();
+    auto& reference = asset.parts[0].layers[0].frame_list[0].content.data;
+    MotionContent offset;
+    offset.mask = field(std::uint64_t{0});
+    offset.time_offset = field(40.0f);
+    reference.motion = field(offset);
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    REQUIRE(instance.frame().vertices.size() == expected.vertices.size());
+    for (std::size_t i = 0; i < expected.vertices.size(); ++i)
+    {
+        REQUIRE(instance.frame().vertices[i].x == expected.vertices[i].x);
+        REQUIRE(instance.frame().vertices[i].y == expected.vertices[i].y);
+    }
+    root.parameterize = {};
+    auto unverified = runtime::compile_geometry_scene(asset);
+    REQUIRE(unverified.scene);
+    runtime::GeometryInstance free_clock(*unverified.scene);
+    REQUIRE(free_clock.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+}
+
 TEST_CASE("Warmed animation, expression and Eye routing allocate no project heap",
           "[runtime][animation][allocation]")
 {
@@ -466,6 +502,9 @@ TEST_CASE("Warmed animation, expression and Eye routing allocate no project heap
     asset.variable_controls.push_back(std::move(expression));
     VariableControl eye;
     eye.kind = VariableControlKind::Eye;
+    eye.blink_enabled = true;
+    eye.blink_frames = 16;
+    eye.blink_interval_min = eye.blink_interval_max = 30;
     eye.variable = "eye";
     eye.begin_frame = 0;
     eye.end_frame = 10;
@@ -1896,6 +1935,34 @@ TEST_CASE("Opacity-zero sprites still supply mask geometry without color draws",
     REQUIRE(inactive.primitives().empty());
     REQUIRE(inactive.frame().commands.empty());
     REQUIRE(inactive.frame().mask_commands.empty());
+}
+
+TEST_CASE("Blank mask sources produce empty coverage while retaining their visible target",
+          "[runtime][scene]")
+{
+    auto asset = rig();
+    asset.parts.resize(1);
+    FrameContent blank;
+    blank.src = field(std::string{"blank"});
+    blank.icon = field(std::string{"32:32:16:16"});
+    auto source = layer("blank source", 0, blank);
+    auto mask = layer("mask", 12, blank);
+    mask.inherit_mask = 0x24007fc;
+    mask.stencil_type = 5;
+    mask.stencil_composite_mask_layers = {"blank source"};
+    mask.children = {layer("target", 0, sprite())};
+    asset.parts[0].layers = {source, mask};
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    const auto frame = instance.frame();
+    REQUIRE(frame.commands.size() == 1);
+    REQUIRE(frame.commands[0].mask == MaskId{1});
+    REQUIRE(frame.mask_commands.empty());
+    REQUIRE(frame.masks.size() == 1);
+    REQUIRE(frame.masks[0].command_count == 0);
 }
 
 TEST_CASE("Selector state is independent, resettable and allocation free in playback",

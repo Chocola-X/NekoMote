@@ -76,7 +76,7 @@ PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
 class PlaybackInstance
 {
   public:
-    explicit PlaybackInstance(const PlaybackProgram& program);
+    explicit PlaybackInstance(const PlaybackProgram& program, AnimationConfig animation = {});
     ~PlaybackInstance();
     PlaybackInstance(const PlaybackInstance&) = delete;
     PlaybackInstance& operator=(const PlaybackInstance&) = delete;

@@ -255,3 +255,13 @@
 - 验证工具将原生求值/渲染失败写入 report，保留阶段、完整日志和来源，再继续其余 case；最后仍以非零退出。来源/资产/输入 hash 失败仍立即中止。原生 probe 错误新增 node_path，截图或渲染失败不伪装为数值成功。
 - Debug/Release 96、ASan/UBSan 95 核心和 PSB 工具 6 项通过。500 作者步同时反复 Expression/Eye 跨区间正/负缓动，普通 C++ new 为零；分配扩展后核心三种 preset 定向复测。既有 Chocola 四组原版完整会话继续通过。证据 docs/validation/p5-eye-routing.json、playback-eye-inputs.json、tests/fixtures/eye_route_reference.json。
 - 自动眨眼原版 400 步与定间隔 PSB fixture 已采样。公开 Math.random 无调用，Float32 读写给出关闭/保持/打开和间隔重采样；随机间隔有细小跨进程变化，尚未归因，不认证调度。增加显式 --trace-random 和 --trace-math-step 仅返回真实公开调用结果，默认不启用，不进入性能/运行时。继续眨眼和嵌套偏移，阶段仍进行中。
+
+
+## P5 自动眨眼、参数根层瞳孔偏移与空遮罩
+
+- 公开 Date/Math 调用和 Int32/Float32 数值观察定位初始化 Unix 秒种子、四字 UInt32 xorshift 与低 23 位投影；不读取核心实现。固定 Date.now 为显式外部初始化输入，PSB 不变；400 步有/无整数观察的参数/PNG 完全相同，24 条存储不截断，诊断地址不进入运行时。
+- 独立眨眼 Float32 状态包含等待/关闭/保持/打开，跨阶段同作者步继续。普通区间基于手动基础值投影，特殊眼形仍推进隐含调度；显式每实例 seed/reset，无核心墙钟/全局随机。23 组 3480 标量样本、30/60/144 Hz 分区、暂停/重置/独立实例通过；500 活跃 Expression/Eye/眨眼作者步及构帧普通 C++ new 为零。
+- Fraise 非零瞳孔 timeOffset 的参数根层拥有采样时钟，偏移归零和自由 helper 终点61→21 双重受控 PSB 协议/PNG相同。仅所有根层合法启用参数化时不让引用偏移覆盖，非参数化自由动作仍拒绝。空白遮罩源的原 GPU 记录为两次清零、零次源绘制；保持解析成功但覆盖为空。旧 Eye 十组完整矩阵现全部标量/几何/拓扑/图片 PASS，历史 FAIL 记录保留。
+- 自动眨眼完整十一组全部原始眼数值误差0、真正几何/UV/拓扑通过，八组图片 PASS；Chocola/Fraise idle155 各一个像素 FAIL、Fraise idle400 三个像素 FAIL。Fraise 完全闭眼161 图片通过，连续多轮眨眼可播放；严格门槛不变，未将整个播放器或阶段认证为完成。闭眼并列图已目视查看。
+- Debug/Release100、ASan/UBSan核心99、PSB工具6项通过，格式/diff检查通过。Release/LTO完整CPU待机差分会话两角色均完成120预热+2000采样（包含自动眨眼）；实际百分位、硬件、输入和不包含GPU/呈现/JSON/读回/功耗范围见 docs/validation/p5-automatic-blink.json，不宣称性能改善。
+- 旧隔离动画 fixture 同时禁用 Eye 与 blink，原生新增显式 animation-diagnostic 限定的 disable-eye-controller 与冻结 fixture 对齐，既有七组几何通过，图片2/7通过、九像素FAIL。正式播放不提供这一开关。继续时间线权重/停止淡出、残余画面、交互/音频与完整应用及宿主。

@@ -72,16 +72,22 @@ def main():
         native = args.output / stem
         command = [args.preview, '--animation-diagnostic', '--asset', asset, '--origin', 400, 940,
                    '--steps', case['steps'], '--hidden', '--screenshot', str(native)+'.png']
+        if case['disable_blink']:
+            # The frozen PSB aliases blinkEnabled and Eye enabled. Match the
+            # actual controller fixture, not just its historically named flag.
+            command += ['--disable-eye-controller']
         for request in case['plays']:
             command += ['--play', request['label'], request['flags']]
         for key, value in case['initial'].items():
             command += ['--variable', key, value]
         run(command, native.with_suffix('.log'))
         geometry_path = args.output / (stem+'-geometry.json')
-        run([args.evaluator, '--animation-diagnostic', '--asset', asset, '--steps', case['steps'],
+        command = [args.evaluator, '--animation-diagnostic', '--asset', asset, '--steps', case['steps'],
              '--variables', json.dumps(case['initial']), '--plays', json.dumps(case['plays']),
-             '--sample-trace', str(reference)+'.trace.json', '--output', geometry_path],
-            args.output / (stem+'-geometry.log'))
+             '--sample-trace', str(reference)+'.trace.json', '--output', geometry_path]
+        if case['disable_blink']:
+            command += ['--disable-eye-controller']
+        run(command, args.output / (stem+'-geometry.log'))
         geometry = json.loads(geometry_path.read_text())
         geometry_passed = (geometry['frame_error'] == 0 and not geometry['missing_primitives'] and
             geometry['frame_max_error_px'] <= baseline['coordinate_tolerance_px'] and all(

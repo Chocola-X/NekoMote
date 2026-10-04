@@ -40,9 +40,15 @@ enum class TimelinePlayMode
 };
 class AnimationInstance;
 struct AnimationCompileResult;
+struct AnimationConfig
+{
+    // Explicit per-instance seed. Zero is deterministic; a session owner may
+    // provide its wall-clock Unix seconds. Author advancement stays monotonic.
+    std::uint32_t random_seed{0};
+};
 // Immutable variable/controller/clip data. Geometry IDs are bound at compile
 // time; neither source assets nor the GeometryScene must outlive this program.
-// This module does not integrate physical controllers or automatic blinking.
+// Eye blinking shares the author clock; physical controllers remain separate.
 class AnimationProgram
 {
   public:
@@ -73,7 +79,7 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset,
 class AnimationInstance
 {
   public:
-    explicit AnimationInstance(const AnimationProgram& program);
+    explicit AnimationInstance(const AnimationProgram& program, AnimationConfig config = {});
     ~AnimationInstance();
     AnimationInstance(const AnimationInstance&) = delete;
     AnimationInstance& operator=(const AnimationInstance&) = delete;

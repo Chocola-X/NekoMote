@@ -73,3 +73,10 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 非线性 Expression 完整矩阵：`validate_playback.py --inputs docs/validation/playback-expression-inputs.json --reuse-reference build/evidence/p5-expression-easing`（其余 importer/preview/evaluator/reference-root/output 参数同上）。参考保持原 PSB、物理全 1；中途过渡的原 SDK 数值 fixture 另存 tests/fixtures/expression_easing_reference.json，不向原生输入源曲线值。快速跨段产生 NaN 的原始捕获保留，原生对应作者步明确失败。
 
 `--trace-random` 只观察公开 Math.random 的原始结果与调用栈，从初始化起有界最多 10000 条，保留 randomTraceTruncated，不设置随机种子或替换输出。`--trace-math-step N` 将 Math 观察限制为单个作者步（需要 --trace-math）；用于避免长轨迹的前 2000 条覆盖眨眼所在步骤。两项都只用于诊断；原生完整矩阵记录评估/渲染失败及 node_path，并继续剩余输入、最终返回失败。Eye 原版矩阵见 docs/validation/playback-eye-inputs.json。
+
+
+自动眨眼的初始化由外部时钟决定。`--fixed-clock-ms 1000` 在驱动加载前固定 `Date.now()`，记录 `fixedClockMs`；完整对照输入同时冻结原生 `random_seed=1`（毫秒向下取整为 Unix 秒）。这是显式初始化输入，不修改 PSB，不属于只读观察器。默认不固定时钟。原生 `AnimationConfig` 默认种子 0，可由会话所有者传入显式种子；reset 重放同一序列。预览和 pose probe 的 `--random-seed`、playback probe JSON 的 `random_seed` 接受 UInt32。
+
+`--trace-clock` 记录真实 Date.now/getTime/performance.now 调用与返回值，上限 10000；`--trace-integer-stores` 观察完整 Int32/Uint32 堆视图的数值索引写入（包含加载），保留真实写入。可用 `--trace-integer-index`（最多 128 项）、`--trace-integer-stack`、`--trace-integer-step` 过滤，上限 `--trace-integer-limit` 为 1..100000，元数据明确记录截断。诊断索引不进入资产或运行时。眨眼的 400 步有/无观察数据与 PNG 完全相同，见 `docs/validation/p5-automatic-blink.json`。
+
+旧隔离动画 PSB 的眨眼字节与 Eye enabled 共用地址。原生 `--animation-diagnostic --disable-eye-controller` 显式重现这一 fixture，不能用于正式 `--playback`；正式矩阵仍以未修改 PSB 和物理幅度全 1 验收。不能将旧 fixture 解释为只关闭自动眨眼。

@@ -34,7 +34,9 @@ struct Options
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
     bool hidden{false}, geometry{false}, animation{false}, playback{false};
+    bool disable_eye_controller{false};
     int steps{0};
+    std::uint32_t random_seed{0};
     std::vector<std::pair<std::string, runtime::TimelinePlayMode>> plays;
     std::vector<std::pair<std::string, float>> variables;
     std::vector<VariableTransition> transitions;
@@ -92,10 +94,20 @@ Options parse(int argc, char** argv)
             o.opacity = parse_number(next());
         else if (flag == "--steps")
             o.steps = parse_integer(next());
+        else if (flag == "--random-seed")
+        {
+            const auto seed = next();
+            const auto parsed =
+                std::from_chars(seed.data(), seed.data() + seed.size(), o.random_seed);
+            if (parsed.ec != std::errc{} || parsed.ptr != seed.data() + seed.size())
+                throw std::runtime_error("random seed must be an unsigned 32-bit integer");
+        }
         else if (flag == "--playback")
             o.playback = true;
         else if (flag == "--animation-diagnostic")
             o.animation = true;
+        else if (flag == "--disable-eye-controller")
+            o.disable_eye_controller = true;
         else if (flag == "--play")
         {
             const auto name = next();
@@ -148,6 +160,8 @@ Options parse(int argc, char** argv)
          1) ||
         (!(o.animation || o.playback) && (o.steps || !o.plays.empty() || !o.transitions.empty())))
         throw std::runtime_error("select one geometry, animation diagnostic or playback mode");
+    if (o.disable_eye_controller && !o.animation)
+        throw std::runtime_error("Eye controller fixture requires --animation-diagnostic");
     if (o.asset.empty() && !o.icon.empty())
         throw std::runtime_error("--icon requires --asset");
     if (!o.screenshot.empty() && o.frames == 0)
@@ -220,6 +234,14 @@ int run(const Options& o)
         auto loaded = asset_io::load_asset(o.asset);
         if (!loaded.ok)
             throw std::runtime_error(loaded.errors.front());
+        if (o.disable_eye_controller)
+        {
+            if (!o.animation)
+                throw std::runtime_error("Eye controller fixture requires --animation-diagnostic");
+            for (auto& control : loaded.asset.variable_controls)
+                if (control.kind == model::VariableControlKind::Eye)
+                    control.enabled = false;
+        }
         RenderFrame frame;
         if (o.animation || o.playback)
         {
@@ -230,7 +252,8 @@ int run(const Options& o)
                 throw std::runtime_error(compiled.errors.front());
             playback_program = std::move(compiled.program);
             geometry_scene = &playback_program->scene();
-            playback_instance = std::make_unique<runtime::PlaybackInstance>(*playback_program);
+            playback_instance = std::make_unique<runtime::PlaybackInstance>(
+                *playback_program, runtime::AnimationConfig{o.random_seed});
             {
                 // Model placement participates in author-space Float32 matrices;
                 // the final view separately maps the centered canvas to pixels.

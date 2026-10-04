@@ -34,6 +34,7 @@ struct Resource
     TextureId texture;
     model::IconRect rect;
     const model::Part* motion{nullptr}; // compile-only; cleared before returning the scene
+    bool parameter_driven{false};
 };
 struct Pose
 {
@@ -208,7 +209,8 @@ struct Compiler
                         c.ox.has_value() || c.oy.has_value() || field_or(c.flip, 0) != 0 ||
                         field_or(c.bm, 0) != 0 ||
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
-                        (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0);
+                        (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0 &&
+                         !data.resources[p.resource.value].parameter_driven);
         require(std::isfinite(p.translation.x) && std::isfinite(p.translation.y) &&
                     std::isfinite(p.depth) && std::isfinite(p.angle_degrees) &&
                     std::isfinite(p.opacity),
@@ -478,7 +480,24 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             const auto name = m.group + "/" + m.name;
             const ResourceId id{static_cast<std::uint32_t>(data->resources.size())};
             require(compiler.resources.emplace(name, id).second, name, "duplicate resource");
-            data->resources.push_back({name, ResourceKind::Motion, {}, {}, &m});
+            const bool parameter_driven =
+                !m.layers.empty() &&
+                std::all_of(m.layers.begin(), m.layers.end(),
+                            [&](const auto& layer)
+                            {
+                                const auto binding = layer.parameterize.has_value()
+                                                         ? layer.parameterize
+                                                         : m.parameterize;
+                                const auto& parameters =
+                                    layer.parameter.empty() ? m.parameter : layer.parameter;
+                                return binding.has_value() && binding.data >= 0 &&
+                                       static_cast<std::size_t>(binding.data) < parameters.size() &&
+                                       parameters[static_cast<std::size_t>(binding.data)].enabled;
+                            });
+            // A parameterized motion root owns its sample time; the reference's
+            // authored offset must not overwrite it. Fraise pupil offsets 20/40
+            // are inert in controlled source captures. Free clocks stay rejected.
+            data->resources.push_back({name, ResourceKind::Motion, {}, {}, &m, parameter_driven});
         }
         for (const auto& v : asset.variables)
             compiler.variable(v.label);
@@ -1042,14 +1061,9 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         for (const auto node : source.members)
         {
             auto command = instance.node_commands[node.value];
-            const auto& state = instance.states[node.value];
-            const auto& resource = instance.scene.resources[state.pose.resource.value];
-            if (state.pose.active && state.opacity > 0 && resource.kind == ResourceKind::Blank &&
-                instance.scene.nodes[node.value].type == 0)
-            {
-                instance.commands.clear();
-                return {GeometryError::UnsupportedMask, node, {}};
-            }
+            // Blank helpers contribute no sampled alpha. A resolved source
+            // with no sprite commands remains an empty, cleared mask, as in
+            // Fraise's special Eye poses; it is not an unresolved source.
             if (command.index_count == 0)
                 continue;
             if (command.mask.valid())

@@ -68,8 +68,8 @@ struct PlaybackInstance::Impl
     double accumulator{0};
     std::uint64_t ticks{0};
     bool faulted{false}, dirty{true}, frame_ready{false};
-    explicit Impl(const PlaybackProgram::Impl& data)
-        : geometry(*data.scene), animation(*data.animation)
+    explicit Impl(const PlaybackProgram::Impl& data, AnimationConfig config)
+        : geometry(*data.scene), animation(*data.animation, config)
     {
         if (data.physics)
             physics = std::make_unique<PhysicsInstance>(*data.physics);
@@ -92,8 +92,8 @@ struct PlaybackInstance::Impl
         return status;
     }
 };
-PlaybackInstance::PlaybackInstance(const PlaybackProgram& program)
-    : impl_(std::make_unique<Impl>(*program.impl_))
+PlaybackInstance::PlaybackInstance(const PlaybackProgram& program, AnimationConfig animation)
+    : impl_(std::make_unique<Impl>(*program.impl_, animation))
 {
 }
 PlaybackInstance::~PlaybackInstance() = default;
