@@ -34,11 +34,11 @@ python3 tools/reference_capture/validate_static.py --reference-root ../NekoWebSh
 
 P5 时间线诊断支持 `--timeline LABEL`（可重复，按指定顺序播放）、`--timeline-flags N`、`--sample-variables` 和 `--observe-variable LABEL`。逐步记录原始变量与播放状态；额外 observe 用于 CountVariables 未列出的物理绑定。`timelineInfo.reportedLoop/reportedFrames` 仅保留 SDK 查询原值，目前它们与实际播放终点不一致，不能作为时长/循环真值。
 
-`--transitions '{"body_UD":{"value":30,"frames":14,"easing":2.5}}'` 调用原 SDK 的变量过渡入口。`--disable-physics --disable-auto-blink` 仅在内存 PSB fixture 把相应控制器 enabled/blinkEnabled 从 1 改成 0，每个修改字节都有记录。它们用于分别验证时间线与控制器，不能宣称为完整原模型动画验收。源 PSB 始终只读。步进大小和初态必须一致：原 SDK 的半帧步进与整帧步进存在事件/过渡顺序差异。
+`--transitions '{"body_UD":{"value":30,"frames":14,"easing":2.5}}'` 调用原 SDK 的变量过渡入口。`--disable-physics --disable-auto-blink` 在内存 PSB fixture 把相应控制器 enabled/blinkEnabled 从 1 改成 0，每个修改字节及所有共享该标量的字段都有记录。它们用于分别验证时间线与控制器，不能宣称为完整原模型动画验收。源 PSB 始终只读。步进大小和初态必须一致：原 SDK 的半帧步进与整帧步进存在事件/过渡顺序差异。
 
 `--play LABEL FLAGS` 可重复，用于同次采样中逐动作指定标志（与 --timeline 互斥）。资产 diff 标签不替代播放标志：原 SDK 的 1=parallel、2=difference，所以典型主动作用 1、差分用 3。普通 GetVariable 不包含差分；必须以实际几何/画面对照。
 
-`blinkEnabled=0` fixture 还改变 Eye 变量过渡行为（当前观察为立即切换），不能把 --disable-auto-blink 的截图当作只去掉随机眨眼的原始时间线轨迹。涉及 Eye 轨道时使用仅 --disable-physics 的隔离对照；不涉及 Eye 的轨道可保留该 fixture，并记录限定范围。
+该模型的 `blinkEnabled` 和 Eye `enabled` 共享标量地址，因此旧 `--disable-auto-blink` fixture 同时关闭 Eye 控制器，导致立即赋值。不能将其解释为眨眼开关改变过渡。涉及 Eye 轨道时使用仅 `--disable-physics`，或下述显式字段引用实验，独立保留 Eye enabled=1。旧数值和 hash 不重写，实际影响范围见 `docs/validation/p6-fixture-alias-audit.json`。
 
 动画截图矩阵：
 
@@ -54,3 +54,11 @@ python3 tools/reference_capture/validate_animation.py --reference-root ../NekoWe
 P6 支持 `--physics-scales '{"hair":1,"parts":1,"bust":1}'`，默认仍为全零；这不是 enabled 开关。`--events '[{"step":2,"forces":{"bust":[1,0]}},{"step":3,"forces":{"bust":[0,0]}}]'` 在对应 Update 之前执行显式 SDK 外力请求；force 标签是 `bust`/`hair`/`parts`，不是控制器的日文名称。也可使用 `variables` 在指定步骤立即写变量。逐步 Math trace 包含作者步号。
 
 `--fixture-numbers '{"/metadata/bustControl/0/spring":0.5}'` 和 `--fixture-strings '{"/metadata/bustControl/0/baseLayer":"center_fronthair"}'` 仅在内存改写同长度的 PSB 数字/现有字符串引用。限于明确 metadata/object JSON Pointer，拒绝插入字段、扩大数值宽度或不存在的字符串；地址表和资源保持原样，每次记录字段、字节范围、值和 hash。仅用于隔离语义，不能作为未经修改的完整模型验收。禁止把采样结果或此类修改加入正式播放路径。
+
+`--trace-float-stores --trace-float-stack <已观察到的调用者名称>` 可显式记录完整 Float32 堆视图的数值写入前/后和调用栈，最多 5000 条，达到上限后 `floatStoresTruncated=true`。通过原生 typed-array 执行实际存储，方法绑定原视图，WebGL 的 subarray 仍为原生视图；不读取核心源码。只有诊断入口代理构造器，默认不改变 Float32Array。用于区分临时 double 和保存 Float32 的舍入顺序；必须对照未启用观测的同输入参数/截图确认无扰动，不能用于性能或作为原生帧输入。调用者过滤需显式指定，未指定时采集全部符合条件的写入。
+
+PSB 字典可能共享标量存储，修改一个路径可能同时改变其它字段。每条 fixture 现记录 `affected_paths`（所有实际别名路径）和 `stored_after`（编码后的实际数值）；同一字节有冲突请求时拒绝，不能让后一次写入静默覆盖。分析或建立数值 fixture 时必须应用完整 affected_paths，而不是只使用 requested path。旧采样需要按原 PSB 地址审计，不能由单字段描述推断其隔离范围。
+
+`--fixture-references '{"/metadata/eyeControl/0/blinkEnabled":"/metadata/eyeControl/0/beginFrame"}'` 将所选字典条目重指向同一字典中的既有数值标量，保持引用宽度，不插入资源或字段。此例使 blinkEnabled 引用已有的整数 0，而 enabled 仍为 1，允许独立核实眨眼与 Eye 过渡。它是显式地址表修改，记录 kind=field_reference、来源路径、原/新地址和改变的条目；不等同普通数值 fixture 的地址表不变承诺，不用于正式原模型验收。
+
+工具自身的无素材回归：`python3 -m unittest discover -s tests/reference_capture -v`。

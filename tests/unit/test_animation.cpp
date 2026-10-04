@@ -104,6 +104,82 @@ TEST_CASE("Native variable transitions and author events match frozen SDK trajec
         }
     }
 }
+TEST_CASE("Disabling automatic blinking preserves the enabled eye transition graph", "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "eye_blink_reference.json");
+    const double tolerance = fixture.at("value_tolerance").get<double>();
+    const auto eye = reference.scene->find_variable("face_eye_open");
+    REQUIRE(eye.valid());
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        for (auto& control : reference.asset.variable_controls)
+            if (control.kind == model::VariableControlKind::Eye)
+            {
+                control.enabled = experiment.at("controller_enabled").get<bool>();
+                control.blink_enabled = experiment.at("blink_enabled").get<bool>();
+            }
+        auto compiled = runtime::compile_animation(reference.asset, *reference.scene);
+        REQUIRE(compiled.program);
+        runtime::AnimationInstance player(*compiled.program);
+        REQUIRE(player.transition(eye, experiment.at("target").get<float>(),
+                                  experiment.at("frames").get<float>(),
+                                  experiment.at("easing").get<float>()));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            if (sample.at("step").get<int>() > 0)
+                REQUIRE(player.step());
+            REQUIRE_THAT(value(player, eye),
+                         Catch::Matchers::WithinAbs(sample.at("value").get<double>(), tolerance));
+        }
+    }
+}
+
+TEST_CASE("Unbound and disabled variable controllers apply requests immediately", "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "control_transition_reference.json");
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        const auto name = experiment.at("variable").get<std::string>();
+        INFO(name);
+        auto asset = reference.asset;
+        model::VariableControl control;
+        control.variable = name;
+        control.kind = model::VariableControlKind::Linear;
+        control.enabled = false;
+        if (!experiment.at("linear_controller_enabled").is_null())
+            asset.variable_controls.push_back(control);
+        // A disabled control declares the variable; the unbound case obtains its
+        // ID from the asset's variable catalogue, independently of a controller.
+        model::VariableDef variable;
+        variable.label = name;
+        asset.variables.push_back(variable);
+        auto geometry = runtime::compile_geometry_scene(asset);
+        REQUIRE(geometry.scene);
+        auto animation = runtime::compile_animation(asset, *geometry.scene);
+        REQUIRE(animation.program);
+        runtime::AnimationInstance player(*animation.program);
+        const auto id = geometry.scene->find_variable(name);
+        const auto& request = experiment.at("request");
+        REQUIRE(player.transition(id, request.at("value").get<float>(),
+                                  request.at("frames").get<float>(),
+                                  request.at("easing").get<float>()));
+        REQUIRE(value(player, id) == request.at("value").get<float>());
+        for (const auto& sample : experiment.at("samples"))
+        {
+            if (sample.at("step").get<int>() > 0)
+                REQUIRE(player.step());
+            REQUIRE_THAT(value(player, id),
+                         Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                    fixture.at("value_tolerance").get<double>()));
+        }
+    }
+}
+
 TEST_CASE("Author playback is independent of display partition and pause discards catchup",
           "[animation]")
 {

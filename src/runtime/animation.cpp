@@ -18,7 +18,7 @@ constexpr float kInfinity = std::numeric_limits<float>::infinity();
 using Kind = model::VariableControlKind;
 struct Controller
 {
-    Kind kind{Kind::Linear};
+    Kind kind{Kind::Immediate};
     std::vector<std::array<float, 2>> edges;
     std::vector<float> points, distance;
     std::vector<int> next, jumps;
@@ -342,16 +342,14 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
         std::vector<bool> assigned(data->controllers.size());
         for (const auto& control : asset.variable_controls)
         {
-            if (!control.enabled)
-                continue;
             const auto id = scene.find_variable(control.variable);
             require(id.valid(), control.variable + ": missing controller variable");
-            require(!assigned[id.value],
-                    control.variable + ": duplicate enabled variable controller");
+            require(!assigned[id.value], control.variable + ": duplicate variable controller");
             assigned[id.value] = true;
             auto& c = data->controllers[id.value];
-            c.kind = control.kind == Kind::Eye && !control.blink_enabled ? Kind::Immediate
-                                                                         : control.kind;
+            c.kind = control.enabled ? control.kind : Kind::Immediate;
+            if (!control.enabled)
+                continue;
             if (c.kind == Kind::Expression || c.kind == Kind::Eye)
                 compile_graph(c, control);
             for (const auto& option : control.options)
@@ -361,6 +359,16 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 c.options.emplace_back(variable, option);
             }
         }
+        // Mouth controllers create a separate interpolated talk channel. A bare
+        // variable is immediate; talkLabel is not an ordinary unbound variable.
+        for (const auto& control : asset.variable_controls)
+            if (control.enabled && control.kind == Kind::Mouth && !control.talk_variable.empty())
+            {
+                const auto id = scene.find_variable(control.talk_variable);
+                require(id.valid(), control.talk_variable + ": missing talk variable");
+                if (!assigned[id.value])
+                    data->controllers[id.value].kind = Kind::Linear;
+            }
         for (const auto& timeline : asset.timelines)
         {
             Clip clip;

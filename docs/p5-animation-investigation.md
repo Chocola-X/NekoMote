@@ -13,7 +13,7 @@
 
 ## 控制器与隔离实验
 
-SDK hair/parts/bust scale=0 **不停止控制器积分**。初态零步的 P2/P3/P4 基线有效；带步进不能据此声称禁用物理。新增 --disable-physics/--disable-auto-blink 内存 PSB fixture 仅修改对应 enabled/blinkEnabled 字节并记录 hash，不改外部文件。
+SDK hair/parts/bust scale=0 **不停止控制器积分**。初态零步的 P2/P3/P4 基线有效；带步进不能据此声称禁用物理。新增 --disable-physics/--disable-auto-blink 内存 PSB fixture 修改对应标量字节并记录 hash，不改外部文件。后续审计发现 blinkEnabled/eyeControl.enabled 共享同一标量，旧九字节实验同时禁用了 Eye 控制器；不能称为仅关闭眨眼。数值与截图仍是实际 fixture 的观察，限定范围更正见 docs/validation/p6-fixture-alias-audit.json。
 
 原 PSB sample_05 在 60 帧时 bust_UD=−18.189874649（CountVariables 没列出此绑定，需要 --observe-variable）。相同普通变量、零步静态参考与原生几何最大差 0.000371263px；关闭物理/眨眼的九字节 fixture 在 60 帧时也为此误差；原始动态参考则胸部两资源达到 7.78026px。该差异定位为控制器，不能改变形公式掩盖。type=1 bust clamp 非零仍明确拒绝，尚未验证。
 

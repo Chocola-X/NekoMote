@@ -35,7 +35,13 @@ def main():
                         help='diagnostic same-width PSB numeric overrides by JSON Pointer')
     parser.add_argument('--fixture-strings', type=json.loads, default={},
                         help='diagnostic same-width references to existing PSB strings by JSON Pointer')
+    parser.add_argument('--fixture-references', type=json.loads, default={},
+                        help='diagnostic numeric field references within one PSB dictionary')
     parser.add_argument('--trace-math', action='store_true')
+    parser.add_argument('--trace-float-stores', action='store_true',
+                        help='diagnostic Float32 storage observations; not for benchmarks')
+    parser.add_argument('--trace-float-stack', default='',
+                        help='optional observed caller name for Float32 storage filtering')
     parser.add_argument('--disable-clamp', action='store_true',
                         help='diagnostic PSB fixture; original files are never modified')
     parser.add_argument('--disable-physics', action='store_true',
@@ -60,6 +66,8 @@ def main():
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if args.trace_float_stack and not args.trace_float_stores:
+        parser.error('--trace-float-stack requires --trace-float-stores')
     if args.steps < 0 or args.steps > 100000 or not math.isfinite(args.step_frames) or args.step_frames <= 0:
         parser.error('requires 0..100000 steps and a positive finite step size')
     if args.timeline_flags < 0 or args.timeline_flags > 0xffffffff:
@@ -85,6 +93,9 @@ def main():
     if not isinstance(args.fixture_strings, dict) or any(
             not name or not isinstance(value, str) for name, value in args.fixture_strings.items()):
         parser.error('string fixtures require paths mapped to strings')
+    if not isinstance(args.fixture_references, dict) or any(
+            not name or not isinstance(value, str) for name, value in args.fixture_references.items()):
+        parser.error('field references require paths mapped to paths')
     for name, request in args.transitions.items():
         if not name or not isinstance(request, dict) or set(request) != {'value', 'frames', 'easing'}:
             parser.error('each transition requires exactly value, frames and easing')
@@ -128,15 +139,18 @@ def main():
         sizes[name] = [float(v) for v in dimensions.split(',')]
         if len(sizes[name]) != 2:
             raise ValueError('fixture icon size requires width,height')
-    if args.disable_clamp or args.disable_physics or args.disable_auto_blink or sizes or args.fixture_numbers or args.fixture_strings:
+    if args.disable_clamp or args.disable_physics or args.disable_auto_blink or sizes or args.fixture_numbers or args.fixture_strings or args.fixture_references:
         psb, edits = make_fixture(psb, disable_clamp=args.disable_clamp,
                                  disable_physics=args.disable_physics,
                                  disable_auto_blink=args.disable_auto_blink, icon_sizes=sizes,
-                                 numbers=args.fixture_numbers, strings=args.fixture_strings)
+                                 numbers=args.fixture_numbers, strings=args.fixture_strings,
+                                 references=args.fixture_references)
     here = pathlib.Path(__file__).resolve().parent
     html = (here / 'reference.html').read_text()
     if args.trace_math:
         html = html.replace('window.enableMathTrace=false;', 'window.enableMathTrace=true;')
+    if args.trace_float_stores:
+        html = html.replace('window.enableFloatStores=false;', 'window.enableFloatStores=true;')
     routes = {'/': html.encode(), '/model.psb': psb, '/trace.js': (here / 'trace.js').read_bytes()}
     hashes = {'psb': hashlib.sha256(psb).hexdigest(), 'original_psb': original_psb_hash}
     for name in ('FreeMoteDriver.js', 'emoteplayer.js'):
@@ -164,6 +178,7 @@ def main():
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
+                   traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    timelines=[p['label'] for p in plays], plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,

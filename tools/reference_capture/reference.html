@@ -17,6 +17,37 @@ if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','tan','atan','a
         return result;
     };
 }
+window.enableFloatStores=false;
+window.floatStores=[];
+window.floatStoresTruncated=false;
+if(window.enableFloatStores) {
+    const NativeFloat32Array=window.Float32Array;
+    // Observe full heap views only. Methods use the original typed-array receiver;
+    // subarrays passed to WebGL remain native views. No source core is inspected.
+    window.Float32Array=new Proxy(NativeFloat32Array, {construct(target,args) {
+        const view=Reflect.construct(target,args);
+        if(!(args[0] instanceof ArrayBuffer) || args.length!==1) return view;
+        return new Proxy(view, {
+            get(target,key) {
+                const value=Reflect.get(target,key,target);
+                return typeof value==='function' && key!=='constructor'?value.bind(target):value;
+            },
+            set(target,key,input) {
+                const old=target[key], success=Reflect.set(target,key,input,target);
+                if(window.traceFloatStores && typeof key==='string' && /^[0-9]+$/.test(key)) {
+                    if(window.floatStores.length>=5000) window.floatStoresTruncated=true;
+                    else {
+                        const stack=new Error().stack;
+                        if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' ('))
+                            window.floatStores.push({step:window.authorStep||0,index:Number(key),
+                                                     old,input,stored:target[key],stack});
+                    }
+                }
+                return success;
+            }
+        });
+    }});
+}
 var Module = {onRuntimeInitialized() { window.ready = true; }};
 </script>
 <script src="/trace.js"></script>
@@ -45,6 +76,8 @@ window.capture = async function(options) {
     }
     for(const label of options.observeVariables||[]) variables[label]=EmotePlayer_GetVariable(id,label);
     window.traceMath=options.traceMath;
+    window.traceFloatStores=options.traceFloatStores;
+    window.traceFloatStack=options.traceFloatStack;
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
     for(const [label,request] of Object.entries(options.transitions||{}))
@@ -103,6 +136,7 @@ window.capture = async function(options) {
     device.drawAnimation(0);
     window.traceEnabled=false;
     window.traceMath=false;
+    window.traceFloatStores=false;
     const pixels=new Uint8Array(canvas.width*canvas.height*4);
     gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
     let visiblePixels=0;
@@ -114,6 +148,7 @@ window.capture = async function(options) {
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
+        floatStores:window.floatStores,floatStoresTruncated:window.floatStoresTruncated,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
     return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace,stateTrace:window.stateTrace,maskPixels:window.maskPixels};

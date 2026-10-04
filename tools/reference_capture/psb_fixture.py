@@ -9,7 +9,8 @@ import struct
 
 
 def make_fixture(data, *, disable_clamp=False, disable_physics=False,
-                 disable_auto_blink=False, icon_sizes=None, numbers=None, strings=None):
+                 disable_auto_blink=False, icon_sizes=None, numbers=None, strings=None,
+                 references=None):
     if data[:4] != b'PSB\0' or struct.unpack_from('<HH', data, 4) != (4, 0):
         raise ValueError('diagnostic fixture requires an unencrypted PSB v4')
     result = bytearray(data)
@@ -17,7 +18,7 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
     def integer(pos, width):
         if not 1 <= width <= 4 or pos < 0 or pos+width > len(data):
             raise ValueError('invalid PSB address width/bounds')
-        return int.from_bytes(data[pos:pos+width], 'little')
+        return int.from_bytes(result[pos:pos+width], 'little')
 
     def table(pos):
         count_width = data[pos]-12
@@ -57,6 +58,16 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
 
     root = dictionary(struct.unpack_from('<I', data, 36)[0])
     edits = []
+    written = {}
+
+    def write(pos, payload, edit):
+        for index, byte in enumerate(payload, pos):
+            if index in written and written[index][0] != byte:
+                raise ValueError('conflicting aliased fixture writes: ' +
+                                 written[index][1] + ' and ' + edit['path'])
+            written[index] = (byte, edit['path'])
+        result[pos:pos+len(payload)] = payload
+        edits.append(edit)
     metadata = dictionary(root['metadata'])
     for collection, field in ([('bustControl', 'enabled'), ('hairControl', 'enabled'),
                                 ('partsControl', 'enabled')] if disable_physics else []) + (
@@ -71,9 +82,8 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
                 continue
             if data[pos:pos+2] != b'\x05\x01':
                 raise ValueError('fixture expects integer controller flag encoded in one byte')
-            result[pos+1] = 0
-            edits.append(dict(path=f'/metadata/{collection}/{index}/{field}',
-                              offset=pos+1, before=1, after=0))
+            write(pos+1, b'\0', dict(path=f'/metadata/{collection}/{index}/{field}',
+                                    offset=pos+1, before=1, after=0))
     if disable_clamp:
         controls = dictionary(root['metadata'])['clampControl']
         if data[controls] != 0x20:
@@ -83,9 +93,8 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
             pos = dictionary(begin+offset)['enabled']
             if data[pos:pos+2] != b'\x05\x01':
                 raise ValueError('fixture expects enabled=1 encoded in one byte')
-            result[pos+1] = 0
-            edits.append(dict(path=f'/metadata/clampControl/{index}/enabled',
-                              offset=pos+1, before=1, after=0))
+            write(pos+1, b'\0', dict(path=f'/metadata/clampControl/{index}/enabled',
+                                    offset=pos+1, before=1, after=0))
     for qualified, size in (icon_sizes or {}).items():
         texture, icon = qualified.split('/')
         icons = dictionary(dictionary(dictionary(root['source'])[texture])['icon'])
@@ -97,9 +106,9 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
             if data[pos] != 0x1e:
                 raise ValueError('fixture icon size must be float32')
             before = struct.unpack_from('<f', data, pos+1)[0]
-            struct.pack_into('<f', result, pos+1, value)
-            edits.append(dict(path=f'/source/{texture}/icon/{icon}/{name}',
-                              offset=pos+1, before=before, after=value, bytes=4))
+            write(pos+1, struct.pack('<f', value),
+                  dict(path=f'/source/{texture}/icon/{icon}/{name}',
+                       offset=pos+1, before=before, after=value, bytes=4))
 
     def resolve(path):
         # JSON Pointer paths identify source fields; never insert a value or
@@ -120,6 +129,31 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
                 raise ValueError('fixture path traverses a scalar: '+path)
         return pos
 
+    for path, source_path in (references or {}).items():
+        parent_path, _, key = path.rpartition('/')
+        source_parent, _, source_key = source_path.rpartition('/')
+        if parent_path != source_parent:
+            raise ValueError('field references require the same parent dictionary')
+        parent = resolve(parent_path)
+        fields = dictionary(parent)
+        key = key.replace('~1', '/').replace('~0', '~')
+        source_key = source_key.replace('~1', '/').replace('~0', '~')
+        old_pos, new_pos = fields[key], fields[source_key]
+        numeric = lambda tag: 0x04 <= tag <= 0x0c or tag in (0x1d, 0x1e, 0x1f)
+        if not numeric(data[old_pos]) or not numeric(data[new_pos]):
+            raise ValueError('field reference requires existing numeric scalars')
+        keys, end = table(parent+1)
+        count_width = data[end]-12
+        width = data[end+1+count_width]-12
+        entry_begin = end+2+count_width
+        _, begin = table(end)
+        index = keys.index(names.index(key))
+        entry = entry_begin+index*width
+        write(entry, (new_pos-begin).to_bytes(width, 'little'),
+              dict(kind='field_reference', path=path, source_path=source_path,
+                   offset=entry, bytes=width, before_reference=old_pos,
+                   after_reference=new_pos, affected_paths=[path]))
+
     for path, value in (numbers or {}).items():
         pos = resolve(path)
         tag = data[pos]
@@ -135,8 +169,8 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
             continue
         else:
             raise ValueError('numeric fixture requires a representable same-width number: '+path)
-        result[pos+1:pos+1+len(payload)] = payload
-        edits.append(dict(path=path, offset=pos+1, before=before, after=value, bytes=len(payload)))
+        write(pos+1, payload, dict(path=path, offset=pos+1, before=before,
+                                   after=value, bytes=len(payload)))
     offsets, _ = table(struct.unpack_from('<I', data, 16)[0])
     strings_begin = struct.unpack_from('<I', data, 20)[0]
     labels = [data[strings_begin+offset:data.index(0, strings_begin+offset)].decode('utf-8')
@@ -149,8 +183,46 @@ def make_fixture(data, *, disable_clamp=False, disable_physics=False,
         index = labels.index(value)
         payload = index.to_bytes(width, 'little')
         before = labels[integer(pos+1, width)]
-        result[pos+1:pos+1+width] = payload
-        edits.append(dict(path=path, offset=pos+1, before=before, after=value, bytes=width))
+        write(pos+1, payload, dict(path=path, offset=pos+1, before=before, after=value, bytes=width))
+    # Compact dictionaries can reference the same scalar from several fields.
+    # Byte-range checks alone cannot certify a single-field semantic change.
+    aliases = {edit['offset']-1: [] for edit in edits if edit.get('kind') != 'field_reference'}
+    walked = 0
+
+    def walk(pos, path, ancestors):
+        nonlocal walked
+        walked += 1
+        if walked > 1000000 or len(ancestors) > 256 or pos in ancestors:
+            raise ValueError('invalid or excessive PSB fixture graph')
+        if pos in aliases:
+            aliases[pos].append(path)
+        tag = data[pos]
+        if tag == 0x21:
+            children = dictionary(pos).items()
+        elif tag == 0x20:
+            offsets, begin = table(pos+1)
+            children = ((str(i), begin+offset) for i, offset in enumerate(offsets))
+        else:
+            return
+        ancestors.add(pos)
+        for key, child in children:
+            walk(child, path+'/'+key.replace('~', '~0').replace('/', '~1'), ancestors)
+        ancestors.remove(pos)
+
+    if edits:
+        walk(struct.unpack_from('<I', data, 36)[0], '', set())
+    for edit in edits:
+        if edit.get('kind') == 'field_reference':
+            continue
+        pos = edit['offset']-1
+        edit['affected_paths'] = sorted(aliases[pos])
+        tag = data[pos]
+        if tag in (0x1e, 0x1f):
+            edit['stored_after'] = struct.unpack_from('<f' if tag == 0x1e else '<d', result, pos+1)[0]
+        elif 0x05 <= tag <= 0x0c:
+            edit['stored_after'] = int.from_bytes(result[pos+1:pos+1+tag-4], 'little', signed=True)
+        else:
+            edit['stored_after'] = edit['after']
     allowed = {edit['offset']+i for edit in edits for i in range(edit.get('bytes', 1))}
     if any(a != b and pos not in allowed for pos, (a, b) in enumerate(zip(result, data))):
         raise ValueError('unexpected diagnostic fixture difference')

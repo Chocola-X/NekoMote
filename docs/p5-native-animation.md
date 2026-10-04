@@ -14,6 +14,8 @@ AnimationProgram 编译控制图/轨道与 GeometryScene 的参数 ID，拥有�
 
 表达式路径先减少区间跳转，再选择靠近目标的连接点，不能按全局数值距离最短路径拟合；跨区间在当前作者步跳转并推进新段，不保留跨界余量。线性路径已用 11 组正反向/不同起点 SDK 数值轨迹验证。非线性跨段 easing、selector fade、非零跨区间 Eye 路径仍明确拒绝，不把候选公式作为正式支持。
 
+裸变量与已禁用的变量控制器在请求时直接赋值；启用控制器按自身规则覆盖。Mouth 的 talkLabel 是独立插值通道，不按裸变量处理。不能从 instantVariableList 推导整个模型的策略。Eye 的手动过渡与自动眨眼开关分开；自动眨眼调度仍未集成。
+
 作者时钟使用双精度秒累计，在 60 Hz 内步进，显示 FPS 不改变事件顺序。单次 catch-up 限 15 步（250 ms），丢弃超量 elapsed；暂停/恢复清除余量，不追赶休眠期间历史。step() 暂停时也不推进。调用者提供单调时间差。
 
 ## 对照与当前限制
@@ -22,7 +24,7 @@ AnimationProgram 编译控制图/轨道与 GeometryScene 的参数 ID，拥有�
 
 新增实际原生动态截图矩阵保留 0.001px 几何与 2/255 图像阈值。7/7 几何/UV/拓扑通过，最大 0.000367481px；严格图片 2 PASS/5 FAIL，共 18 个像素，RGB 最大 3/255，alpha 最大 1/255。已目视查看 sample_05-14 与 additive-422 的原/新/16 倍差异并列图。FAIL 详见 docs/validation/p5-dynamic-images.json；不以数值测试替代画面通过。
 
-源物理隔离用 8 个 enabled 字节 fixture。Eye 轨道使用保留 blinkEnabled 的物理隔离参考；不含 Eye 轨道的样例可另改 blinkEnabled=0。该字段不仅影响自动眨眼，也改变过渡（观察为立即切换），早期九字节 fixture 不能用来验证原 Eye 轨迹。原 PSB、外部驱动与原仓库文件均只读。
+源物理隔离用 8 个 enabled 字节 fixture。2026-10-04 字段别名审计纠正此前解释：该 PSB 的 blinkEnabled 与 Eye enabled 共享标量，早期九字节 fixture 同时关闭了整个 Eye 控制器；并非 blinkEnabled 本身改变过渡。17 组旧轨迹的实际输入范围已更正，原数值、PSB 和截图 hash 保留。只关闭眨眼、保持 Eye enabled=1 的独立地址引用 fixture 与正常 Eye 具有相同的 14 步渐变，第 7 步原生截图通过 2/255、几何通过 0.001px。工具、输入与证据见 docs/validation/p6-fixture-alias-audit.json、p6-eye-controller.json。原 PSB、外部驱动与原仓库文件均只读。
 
 重新导入 schema 3 后，原静态矩阵仍为 23/30 图片 PASS、10 个失败像素，全部几何通过；没有新增静态回归。当前输入与资产/来源/截图/trace hash 分别冻结在 static-inputs.json、animation-inputs.json，历史阶段记录不覆写。
 

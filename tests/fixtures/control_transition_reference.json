@@ -1,0 +1,281 @@
+{
+  "value_tolerance": 1e-05,
+  "note": "Original SDK observations. Unbound GetVariable cache is stale before the first Update; separate zero-step geometry with bust_LR=30 proves immediate application, rejecting bust_LR=0 by 8.593796086 pixels. Disabling an explicit transition controller applies immediately. Mouth talkLabel remains interpolated; covered in animation_reference.json.",
+  "cases": [
+    {
+      "case": "noninstant-unbound",
+      "variable": "bust_LR",
+      "linear_controller_enabled": null,
+      "request": {
+        "value": 3,
+        "frames": 14,
+        "easing": 0
+      },
+      "samples": [
+        {
+          "step": 1,
+          "value": 3
+        },
+        {
+          "step": 2,
+          "value": 3
+        },
+        {
+          "step": 3,
+          "value": 3
+        },
+        {
+          "step": 4,
+          "value": 3
+        },
+        {
+          "step": 5,
+          "value": 3
+        },
+        {
+          "step": 6,
+          "value": 3
+        },
+        {
+          "step": 7,
+          "value": 3
+        }
+      ],
+      "source_hashes": {
+        "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "b088f7dd1f5b0a00a96bfca859f58b49839bb90261a0774752c46c34dd42d4b2",
+      "reference_png_sha256": "7864c49ba00a6999f5b1e033ea9a60ed9949536ef93f6ed11e2818941bcc5aae"
+    },
+    {
+      "case": "disabled-transition-linear",
+      "variable": "fade_q",
+      "linear_controller_enabled": false,
+      "request": {
+        "value": 3,
+        "frames": 14,
+        "easing": 0
+      },
+      "samples": [
+        {
+          "step": 0,
+          "value": 3
+        },
+        {
+          "step": 1,
+          "value": 3
+        },
+        {
+          "step": 2,
+          "value": 3
+        },
+        {
+          "step": 3,
+          "value": 3
+        },
+        {
+          "step": 4,
+          "value": 3
+        },
+        {
+          "step": 5,
+          "value": 3
+        },
+        {
+          "step": 6,
+          "value": 3
+        },
+        {
+          "step": 7,
+          "value": 3
+        }
+      ],
+      "source_hashes": {
+        "psb": "c5a93e7e3b1c986ca870f017a1c2dc3a85a7564f81861a5ce7df23ca2c9d6be9",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture_edits": [
+        {
+          "path": "/metadata/bustControl/0/enabled",
+          "offset": 284169,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/bustControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/bustControl/1/enabled",
+          "offset": 284325,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/bustControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/0/enabled",
+          "offset": 281654,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/1/enabled",
+          "offset": 282006,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/2/enabled",
+          "offset": 282358,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/2/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/hairControl/3/enabled",
+          "offset": 282715,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/hairControl/3/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/0/enabled",
+          "offset": 280776,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/partsControl/0/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/partsControl/1/enabled",
+          "offset": 281129,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/partsControl/1/enabled"
+          ],
+          "stored_after": 0
+        },
+        {
+          "path": "/metadata/transitionControl/18/enabled",
+          "offset": 13145,
+          "before": 1,
+          "after": 0,
+          "bytes": 1,
+          "affected_paths": [
+            "/metadata/transitionControl/18/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "reference_metadata_sha256": "84c471c65e83cec53500accf74ba62df360309f6d50c8bba43ff2aa357ca5bc2",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793"
+    }
+  ]
+}
