@@ -17,12 +17,17 @@ Vec2 evaluate_patch(const Patch& patch, Vec2 uv) noexcept;
 // Independent nested domains are applied from child to parent. Evidence and
 // scope restrictions: docs/semantics.md (P3 experiments).
 void add_patch_displacement(Patch& destination, const Patch& helper) noexcept;
+struct ParameterPair
+{
+    double x{0}, y{0};
+};
+// Keep transient paired values until each binding saves its normalized time.
 // Symmetric type=0 paired control. Input and output are in variable units;
 // extent must be positive and finite. Inputs clamp to [-extent,+extent].
 // This maps the pair radially, preserving direction.
-Vec2 clamp_pair(Vec2 input, float extent) noexcept;
+ParameterPair clamp_pair(ParameterPair input, double extent) noexcept;
 // Type-one hard circular limit. Preserve both components inside the radius;
 // outside, normalize the original vector, without first clamping either axis.
 // Finite input and a positive finite extent are required.
-Vec2 clamp_circle(Vec2 input, float extent) noexcept;
+ParameterPair clamp_circle(ParameterPair input, double extent) noexcept;
 } // namespace nekomote::runtime

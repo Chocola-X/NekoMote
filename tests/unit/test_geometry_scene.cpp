@@ -562,15 +562,15 @@ TEST_CASE("Spring advancement has independent state and no project heap", "[runt
     measure_allocations = true;
     for (int i = 0; i < 1000; ++i)
     {
-        advance_spring(first, coefficients, {}, {0.1f, 0});
-        observed = spring_output(first, output);
+        const auto deformation = advance_spring(first, coefficients, {}, {0.1f, 0});
+        observed = spring_output(deformation, output);
     }
     measure_allocations = false;
     REQUIRE(measured_allocations == 0);
     REQUIRE(std::isfinite(observed.x));
     REQUIRE(std::isfinite(observed.y));
-    REQUIRE(second.position == std::array<double, 2>{});
-    REQUIRE(second.velocity == std::array<double, 2>{});
+    REQUIRE(second.position == std::array<float, 2>{});
+    REQUIRE(second.velocity == std::array<float, 2>{});
     second = snapshot;
     for (int i = 0; i < 1000; ++i)
         advance_spring(second, coefficients, {}, {0.1f, 0});
@@ -865,7 +865,7 @@ TEST_CASE("Physical anchor selection requires exactly one active branch", "[runt
     REQUIRE(physics.values().empty());
 }
 
-TEST_CASE("Nonfinite physical output leaves the last valid state intact", "[runtime]")
+TEST_CASE("Nonfinite physical state is transactional and requires reset", "[runtime]")
 {
     using namespace nekomote::runtime;
     auto input = spring_rig();
@@ -894,10 +894,13 @@ TEST_CASE("Nonfinite physical output leaves the last valid state intact", "[runt
     REQUIRE(status.controller == 0);
     REQUIRE(physics.tick_count() == last_tick);
     REQUIRE(physics.values().empty());
-    // The failed overflow was in output mapping, not in the integrator. A new
-    // amplitude can retry that step from the last successfully committed state.
+    // Float32 particle storage overflows before the output map. Changing the
+    // amplitude cannot repair an integrator overflow or partially advance it.
+    REQUIRE(physics.step(anchors, {0, {}}).error == PhysicsError::NonfiniteState);
+    REQUIRE(physics.tick_count() == last_tick);
+    physics.reset();
     REQUIRE(physics.step(anchors, {0, {}}));
-    REQUIRE(physics.tick_count() == last_tick + 1);
+    REQUIRE(physics.tick_count() == 1);
     REQUIRE(physics.values()[0].value == 0.0f);
 }
 
@@ -1614,10 +1617,11 @@ TEST_CASE("Physical anchor differences consume saved absolute author coordinates
     REQUIRE(anchors.evaluate());
     REQUIRE(physics.step(anchors));
     SpringState isolated;
-    advance_spring(isolated, {0.5f, 0.125f},
-                   {reference.at("delta")[0].get<float>(), reference.at("delta")[1].get<float>()},
-                   {});
-    const auto expected = spring_output(isolated, {{1, 2}, 0, 1});
+    advance_spring(isolated, {0.5f, 0.125f}, {}, {});
+    const auto deformation = advance_spring(
+        isolated, {0.5f, 0.125f},
+        {reference.at("delta")[0].get<float>(), reference.at("delta")[1].get<float>()}, {});
+    const auto expected = spring_output(deformation, {{1, 2}, 0, 1});
     REQUIRE(physics.values()[0].value == expected.x);
     REQUIRE(physics.values()[1].value == expected.y);
     asset.author_scale = field(std::numeric_limits<float>::denorm_min());
@@ -2400,4 +2404,36 @@ TEST_CASE("Tessellation retains local doubles until the observed world Float32 b
     REQUIRE(instance.observe_node(NodeId{1}));
     // Copies remain valid independently of the next instance mutation.
     REQUIRE(observed->world[4] == world[4]);
+}
+
+TEST_CASE("Paired clamp preserves transient values until each binding time is saved", "[runtime]")
+{
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/paired_binding_reference.json");
+    REQUIRE(input.good());
+    const auto reference = nlohmann::json::parse(input);
+    auto asset = spring_rig();
+    asset.spring_controls.clear();
+    asset.variables = {{"body_x", {}}, {"body_y", {}}};
+    asset.paired_clamps = {{"body", "body_x", "body_y", -30, 30, 0, true}};
+    FrameContent content;
+    content.coord = field(std::array<float, 3>{0, 0, 0});
+    auto marker = layer("paired marker", 1, content);
+    marker.export_self = 1;
+    marker.parameterize = field(0);
+    marker.parameter = {{"body_y", -30, 30, 60, 0, true}};
+    marker.frame_list[0].type = 3;
+    content.coord = field(std::array<float, 3>{60, 0, 0});
+    marker.frame_list.push_back({60, 3, field(content)});
+    asset.parts[0].layers = {marker};
+    const auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("body_x"),
+                                   reference.at("input")[0].get<float>()));
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("body_y"),
+                                   reference.at("input")[1].get<float>()));
+    REQUIRE(instance.evaluate());
+    const auto sample = instance.sample_locator(compiled.scene->locators()[0].node);
+    REQUIRE(sample.status);
+    REQUIRE(sample.position.x == reference.at("binding_stores")[0].at("stored").get<float>());
 }

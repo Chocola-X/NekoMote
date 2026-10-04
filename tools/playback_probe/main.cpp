@@ -286,9 +286,12 @@ int run(int argc, char** argv)
                 const auto s = player.observe_spring(i);
                 if (!s)
                     break;
-                list.push_back({{"position", s->state.position},
-                                {"velocity", s->state.velocity},
-                                {"anchor", {s->anchor.x, s->anchor.y}}});
+                list.push_back(
+                    {{"position", s->state.position},
+                     {"velocity", s->state.velocity},
+                     {"origin_offset", {s->state.origin_offset.x, s->state.origin_offset.y}},
+                     {"anchor_offset", {s->state.anchor_offset.x, s->state.anchor_offset.y}},
+                     {"anchor", {s->anchor.x, s->anchor.y}}});
             }
         }
     };

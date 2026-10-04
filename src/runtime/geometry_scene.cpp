@@ -632,7 +632,8 @@ struct GeometryInstance::Impl
 {
     const GeometryScene& owner;
     const CompiledData& scene;
-    std::vector<float> input, parameters;
+    std::vector<float> input;
+    std::vector<double> parameters;
     std::vector<State> states;
     std::vector<GeometryPrimitive> primitives;
     std::vector<RenderVertex> vertices;
@@ -745,8 +746,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     {
         if (!c.enabled)
             continue;
-        const Vec2 input{instance.parameters[c.x.value], instance.parameters[c.y.value]};
-        if (input == Vec2{})
+        const ParameterPair input{instance.parameters[c.x.value], instance.parameters[c.y.value]};
+        if (input.x == 0 && input.y == 0)
             continue;
         if ((c.type != 0 && c.type != 1) || c.begin != -c.end || c.end <= 0)
             return {GeometryError::UnsupportedClamp, {}, c.x};
@@ -768,12 +769,13 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         float time = 0;
         if (n.binding.variable.valid() && n.binding.enabled)
         {
-            const float value = instance.parameters[n.binding.variable.value];
+            const double value = instance.parameters[n.binding.variable.value];
             if (n.binding.discretization != 0 && value != std::floor(value))
                 return {GeometryError::UnsupportedDiscretization, id, n.binding.variable};
             if (n.binding.end > n.binding.begin)
                 time = static_cast<float>(
-                    (static_cast<double>(std::clamp(value, n.binding.begin, n.binding.end)) -
+                    (static_cast<double>(std::clamp(value, static_cast<double>(n.binding.begin),
+                                                    static_cast<double>(n.binding.end))) -
                      static_cast<double>(n.binding.begin)) *
                     static_cast<double>(n.binding.division) /
                     (static_cast<double>(n.binding.end) - static_cast<double>(n.binding.begin)));

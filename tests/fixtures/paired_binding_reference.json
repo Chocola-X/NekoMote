@@ -1,0 +1,29 @@
+{
+  "scope": "Black-box transient paired body clamp values and normalized binding time from original Chocola step15; source capture truncated later, these bounded records were retained before truncation",
+  "source_hashes": {
+    "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "observation_sha256": "d7e01ff5b4c77d7d986f587933584ea4c6df9028717b4efb2647a6cd9c580614",
+  "input": [
+    16.071430206298828,
+    22.85714340209961
+  ],
+  "range": [
+    -30,
+    30
+  ],
+  "division": 60,
+  "binding_stores": [
+    {
+      "input": 50.98007683969331,
+      "stored": 50.98007583618164
+    },
+    {
+      "input": 50.98007683969331,
+      "stored": 50.98007583618164
+    }
+  ]
+}

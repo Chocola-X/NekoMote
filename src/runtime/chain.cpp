@@ -110,7 +110,8 @@ ChainVariables unbent_chain_output(const ChainDeformation& deformation,
                                    const ChainOutput& mapping) noexcept
 {
     constexpr double kSlope = 0.045160394715788144;
-    constexpr double kExtent = 80.0 / std::numbers::pi;
+    // Black-box atan result/output ratios use the stored Float32 pi.
+    constexpr double kExtent = 80.0 / static_cast<double>(std::numbers::pi_v<float>);
     const auto& root = deformation.displacement[0];
     const auto& tip = deformation.displacement[1];
     const double amplitude = mapping.amplitude;

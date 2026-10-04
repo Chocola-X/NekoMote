@@ -41,8 +41,7 @@ struct BoundChainState
 struct ControllerState
 {
     SpringState spring;
-    Vec2 previous_anchor{};
-    bool initialized{false};
+    Vec2 sampled_anchor{};
 };
 void require(bool value, const std::string& path, std::string_view reason)
 {
@@ -246,7 +245,7 @@ struct PhysicsInstance::Impl
         ticks = 0;
         has_output = false;
         for (std::size_t i = 0; i < states.size(); ++i)
-            states[i] = {program.springs[i].snapshot, {}, false};
+            states[i] = {program.springs[i].snapshot, {}};
         for (std::size_t i = 0; i < chain_states.size(); ++i)
             chain_states[i] = {program.chains[i].snapshot, program.chains[i].bend_snapshot};
     }
@@ -274,7 +273,7 @@ std::optional<SpringObservation> PhysicsInstance::observe_spring(std::size_t ind
     if (!impl_->has_output || index >= impl_->states.size())
         return std::nullopt;
     const auto& value = impl_->states[index];
-    return SpringObservation{value.spring, value.previous_anchor};
+    return SpringObservation{value.spring, value.sampled_anchor};
 }
 PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInputs inputs) noexcept
 {
@@ -333,22 +332,18 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         auto& state = instance.next[i];
         state = instance.states[i];
         const auto& spring = program.springs[i];
-        if (state.initialized)
-        {
-            const Vec2 delta = instance.anchors[i] - state.previous_anchor;
-            if (!finite(delta))
-                return {PhysicsError::InvalidInput, i, {}};
-            advance_spring(state.spring, spring.coefficients, delta, inputs.bust_displacement);
-        }
+        const auto deformation = advance_spring(state.spring, spring.coefficients,
+                                                instance.anchors[i], inputs.bust_displacement);
+        if (!finite(state.spring.origin_offset) || !finite(state.spring.anchor_offset))
+            return {PhysicsError::NonfiniteState, i, {}};
         for (std::size_t axis = 0; axis < 2; ++axis)
             if (!std::isfinite(state.spring.position[axis]) ||
                 !std::isfinite(state.spring.velocity[axis]))
                 return {PhysicsError::NonfiniteState, i, {}};
-        state.previous_anchor = instance.anchors[i];
-        state.initialized = true;
+        state.sampled_anchor = instance.anchors[i];
         auto mapping = spring.mapping;
         mapping.amplitude = inputs.bust_amplitude;
-        const auto value = spring_output(state.spring, mapping);
+        const auto value = spring_output(deformation, mapping);
         if (!finite(value))
             return {PhysicsError::NonfiniteState, i, {}};
         instance.output[i * 2] = {spring.x, value.x};

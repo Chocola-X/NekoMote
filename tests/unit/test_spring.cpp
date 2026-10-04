@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 TEST_CASE("Spring response matches isolated original physical controller trajectories", "[runtime]")
@@ -46,9 +47,8 @@ TEST_CASE("Spring response matches isolated original physical controller traject
                     const auto& force = event.at("forces").at("bust");
                     outer = {force.at(0).get<float>(), force.at(1).get<float>()};
                 }
-            if (step > 1)
-                advance_spring(state, coefficients, {}, outer);
-            const auto actual = spring_output(state, output);
+            const auto deformation = advance_spring(state, coefficients, {}, outer);
+            const auto actual = spring_output(deformation, output);
             if (!sample.at("value").at(0).is_null())
                 REQUIRE_THAT(actual.x, Catch::Matchers::WithinAbs(
                                            sample.at("value").at(0).get<double>(), tolerance));
@@ -57,4 +57,44 @@ TEST_CASE("Spring response matches isolated original physical controller traject
                                            sample.at("value").at(1).get<double>(), tolerance));
         }
     }
+}
+
+TEST_CASE("Spring particle storage and transient output match observed author step", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/spring_storage_reference.json");
+    REQUIRE(input.good());
+    const auto reference = nlohmann::json::parse(input);
+    const auto read = [&](std::size_t index)
+    {
+        for (const auto& entry : reference.at("reads"))
+            if (entry.at("index").get<std::size_t>() == index)
+                return entry.at("value").get<float>();
+        throw std::runtime_error("missing observed spring input");
+    };
+    const auto stored = [&](std::size_t index)
+    {
+        for (const auto& entry : reference.at("stores"))
+            if (entry.at("index").get<std::size_t>() == index)
+                return entry.at("stored").get<float>();
+        throw std::runtime_error("missing observed spring output");
+    };
+    SpringState state;
+    state.position = {read(18489667), read(18489668)};
+    state.velocity = {read(18489670), read(18489671)};
+    state.origin_offset = {read(18489664), read(18489665)};
+    state.initialized = true;
+    const auto deformation = advance_spring(
+        state, {read(18489656), read(18489657), read(18489655)},
+        {stored(18489661) - state.origin_offset.x, stored(18489662) - state.origin_offset.y}, {});
+    REQUIRE(state.anchor_offset.x == stored(18489661));
+    REQUIRE(state.anchor_offset.y == stored(18489662));
+    REQUIRE(state.position[0] == stored(18489667));
+    REQUIRE(state.position[1] == stored(18489668));
+    REQUIRE(state.velocity[0] == stored(18489670));
+    REQUIRE(state.velocity[1] == stored(18489671));
+    const auto output =
+        spring_output(deformation, {{read(18489658), read(18489659)}, read(18489673), 1});
+    REQUIRE(output.x == stored(10073));
+    REQUIRE(output.y == stored(10072));
 }

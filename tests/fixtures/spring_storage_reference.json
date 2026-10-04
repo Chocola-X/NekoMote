@@ -1,0 +1,134 @@
+{
+  "scope": "Black-box Float32 reads/stores and Math.atan output mapping; unmodified Chocola original PSB, fixed seed 1, Parallel sample_05 with initial FadeOut(10,0), author step15",
+  "source_hashes": {
+    "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "observation_sha256": "4b3fece3e106c6ba840468737bcda488be87b9d2310da08f15577e6fcb8e5e58",
+  "stores": [
+    {
+      "index": 18489661,
+      "input": 7.1580891609191895,
+      "stored": 7.1580891609191895
+    },
+    {
+      "index": 18489662,
+      "input": 33.998779296875,
+      "stored": 33.998779296875
+    },
+    {
+      "index": 18489670,
+      "input": 0.5683137560263276,
+      "stored": 0.5683137774467468
+    },
+    {
+      "index": 18489671,
+      "input": 4.53746173530817,
+      "stored": 4.537461757659912
+    },
+    {
+      "index": 18489672,
+      "input": 0,
+      "stored": 0
+    },
+    {
+      "index": 18489667,
+      "input": 4.327639498747885,
+      "stored": 4.327639579772949
+    },
+    {
+      "index": 18489668,
+      "input": 47.42305514961481,
+      "stored": 47.42305374145508
+    },
+    {
+      "index": 18489669,
+      "input": 0,
+      "stored": 0
+    },
+    {
+      "index": 10073,
+      "input": -3.237460892797745,
+      "stored": -3.2374608516693115
+    },
+    {
+      "index": 10072,
+      "input": 8.469581529964582,
+      "stored": 8.469581604003906
+    }
+  ],
+  "reads": [
+    {
+      "index": 18489664,
+      "value": 0.4105720520019531
+    },
+    {
+      "index": 18489665,
+      "value": -520.175048828125
+    },
+    {
+      "index": 18489667,
+      "value": 3.7593257427215576
+    },
+    {
+      "index": 18489668,
+      "value": 42.88559341430664
+    },
+    {
+      "index": 18489669,
+      "value": 0
+    },
+    {
+      "index": 18489656,
+      "value": 0.03125
+    },
+    {
+      "index": 18489655,
+      "value": 0.30000001192092896
+    },
+    {
+      "index": 18489670,
+      "value": 0.5432900786399841
+    },
+    {
+      "index": 18489671,
+      "value": 5.163383483886719
+    },
+    {
+      "index": 18489663,
+      "value": 0
+    },
+    {
+      "index": 18489672,
+      "value": 0
+    },
+    {
+      "index": 18489657,
+      "value": 0.125
+    },
+    {
+      "index": 18489658,
+      "value": 1
+    },
+    {
+      "index": 18489673,
+      "value": 9.599772453308105
+    },
+    {
+      "index": 18489659,
+      "value": 2
+    }
+  ],
+  "atan": [
+    {
+      "argument": -0.1278242239668253,
+      "result": -0.1271347955015685
+    },
+    {
+      "argument": 0.3454321662204188,
+      "result": 0.33259969817438617
+    }
+  ]
+}

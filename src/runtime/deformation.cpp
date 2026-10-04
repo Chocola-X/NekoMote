@@ -46,7 +46,7 @@ void add_patch_displacement(Patch& destination, const Patch& helper) noexcept
     for (std::size_t i = 0; i < destination.size(); ++i)
         destination[i] += helper[i] - neutral[i];
 }
-Vec2 clamp_pair(Vec2 input, float extent) noexcept
+ParameterPair clamp_pair(ParameterPair input, double extent) noexcept
 {
     // Use double intermediates: the reference controller uses double math even
     // though its final pose and vertex buffers contain floats.
@@ -61,15 +61,15 @@ Vec2 clamp_pair(Vec2 input, float extent) noexcept
     const double radius =
         major + (std::sin(major * kHalfPi) - major) * (1 - std::cos(ratio * kHalfPi));
     const double scale = radius / (major * std::sqrt(1 + ratio * ratio));
-    return {static_cast<float>(x * scale * limit), static_cast<float>(y * scale * limit)};
+    return {x * scale * limit, y * scale * limit};
 }
-Vec2 clamp_circle(Vec2 input, float extent) noexcept
+ParameterPair clamp_circle(ParameterPair input, double extent) noexcept
 {
     const double x = input.x, y = input.y, radius = extent;
     const double squared = x * x + y * y;
     if (squared <= radius * radius)
         return input;
     const double scale = radius / std::sqrt(squared);
-    return {static_cast<float>(x * scale), static_cast<float>(y * scale)};
+    return {x * scale, y * scale};
 }
 } // namespace nekomote::runtime

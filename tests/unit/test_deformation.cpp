@@ -7,7 +7,7 @@
 
 namespace
 {
-void near(nekomote::Vec2 actual, nekomote::Vec2 expected, float tolerance = 0.0001f)
+void near(auto actual, nekomote::Vec2 expected, float tolerance = 0.0001f)
 {
     REQUIRE_THAT(actual.x, Catch::Matchers::WithinAbs(expected.x, tolerance));
     REQUIRE_THAT(actual.y, Catch::Matchers::WithinAbs(expected.y, tolerance));
@@ -46,7 +46,7 @@ TEST_CASE("Paired control matches original WebGL position observations", "[runti
     }};
     for (const auto& [input, expected] : observations)
     {
-        near(clamp_pair(input, 30), expected);
+        near(clamp_pair({input.x, input.y}, 30), expected);
         near(clamp_pair({-input.y, input.x}, 30), {-expected.y, expected.x});
     }
     near(clamp_pair({0, 0}, 30), {0, 0});

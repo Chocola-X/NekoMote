@@ -12,25 +12,31 @@ struct SpringCoefficients
 };
 struct SpringState
 {
-    // Position relative to the current anchor, in author units (Y down).
-    // Velocity is author units per 60 Hz author step. No shared instance state.
-    std::array<double, 2> position{}, velocity{};
+    // Float32 particle state in initial-anchor author space, Y down.
+    // Velocity is author units per 60 Hz author step. Instance-owned.
+    std::array<float, 2> position{}, velocity{};
+    Vec2 origin_offset{}, anchor_offset{};
+    bool initialized{false};
+};
+struct SpringDeformation
+{
+    // Displacement uses this step's transient doubles, before particle storage.
+    std::array<double, 2> displacement{};
 };
 struct SpringOutput
 {
     Vec2 axis_scale{1, 1};
     float vertical_offset{0}, amplitude{1};
 };
-// One fixed author step. Coefficients must be finite, stiffness/gravity >= 0,
-// friction in [0,1]. Anchor delta and outer displacement are already in author
-// units; convert model placement/scale at the scene boundary. Outer displacement
-// is a position disturbance, not a force integrated into velocity.
-// Initialize the first anchor without advancing the saved particle snapshot.
-// Source experiments and limits: docs/p6-physics-investigation.md.
-void advance_spring(SpringState& state, SpringCoefficients coefficients, Vec2 anchor_delta,
-                    Vec2 outer_displacement) noexcept;
+// One author tick. Finite coefficients, stiffness/gravity >= 0, friction in [0,1].
+// Absolute anchor and persistent external displacement are author units. First
+// call initializes the negative anchor offset without advancing the snapshot.
+// Subsequent calls accumulate external position disturbance in that Float32 offset.
+// Source observations: docs/p6-physics-investigation.md.
+SpringDeformation advance_spring(SpringState& state, SpringCoefficients coefficients,
+                                 Vec2 anchor_position, Vec2 outer_displacement) noexcept;
 // Verified paired scalar map and dead zone. Amplitude scales particle position
 // before subtracting the saved vertical offset; zero amplitude isn't disabling.
 // Inputs must be finite, amplitude >= 0. No geometry or implicit controller IDs.
-Vec2 spring_output(const SpringState& state, SpringOutput output) noexcept;
+Vec2 spring_output(const SpringDeformation& deformation, SpringOutput output) noexcept;
 } // namespace nekomote::runtime

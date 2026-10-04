@@ -1,0 +1,100 @@
+{
+  "scope": "Float32 spring storage, absolute anchors, observed angle extent, transient paired parameter binding; final engine/stages remain in progress",
+  "scalar_tolerance": 1e-05,
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "reports": {
+    "external": {
+      "path": "build/evidence/p6-paired-precision/external/report.json",
+      "sha256": "8488458df61980c027fcb517d7d92391cb5618159cda72bcb2ecd70396eae976",
+      "passed": 9,
+      "total": 9,
+      "failures": []
+    },
+    "base": {
+      "path": "build/evidence/p6-paired-precision/base/report.json",
+      "sha256": "798f82cf854474074c8a754d8b3dc71dc4ef23e496f3cad548871a1c9c9daba3",
+      "passed": 4,
+      "total": 4,
+      "failures": []
+    },
+    "fraise": {
+      "path": "build/evidence/p6-paired-precision/fraise/report.json",
+      "sha256": "54ee3fb431f984316c430f4456709e111caea96b51b67d929205fe514ba0f554",
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "weights": {
+      "path": "build/evidence/p6-paired-precision/weights/report.json",
+      "sha256": "a38d67662cb3f81a00c7eceaf197770adcb30cb70dc88e15151a273a341bd138",
+      "passed": 20,
+      "total": 20,
+      "failures": []
+    },
+    "hybrid": {
+      "path": "build/evidence/p6-paired-precision/hybrid/report.json",
+      "sha256": "33e28367878b253f3b4a6262176df7b3a6c59b580ba945625ec0a1e619f8c6bb",
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "eye": {
+      "path": "build/evidence/p6-paired-precision/eye/report.json",
+      "sha256": "409f7d7a7a5d6398c1b79a8f601993901c45a216ff09151e4909891ea84e99b3",
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "blink": {
+      "path": "build/evidence/p6-paired-precision/blink/report.json",
+      "sha256": "4de3e502d00b72c567b6aacc1a92737813af486c691b1a55f89a8f93a0eebfaf",
+      "passed": 10,
+      "total": 11,
+      "failures": [
+        "fraise-seed1-long400"
+      ]
+    },
+    "static": {
+      "path": "build/evidence/p6-paired-precision/static/report.json",
+      "sha256": "09400350b8f479ec59b44bbaff3b6a646190f39fc98d780e8dca3e3c95e50d59",
+      "passed": 29,
+      "total": 30,
+      "failures": [
+        "combination"
+      ]
+    },
+    "scale": {
+      "path": "build/evidence/p6-paired-precision/scale/report.json",
+      "sha256": "bfd449313eaef54ab49a50dd2ac2f2f4f9b25f298450f2b2c08546a0cc720860",
+      "passed": 7,
+      "total": 8,
+      "failures": [
+        "additive08"
+      ]
+    },
+    "fraise-scale": {
+      "path": "build/evidence/p6-paired-precision/fraise-scale/report.json",
+      "sha256": "8a43663981f0c4d3dc666187ff1b08d5a54418224ad149dc28414ebbc57f18b7",
+      "passed": 2,
+      "total": 3,
+      "failures": [
+        "fraise-additive125"
+      ]
+    }
+  },
+  "tests": {
+    "debug": 122,
+    "release": 122,
+    "asan_ubsan_headless": 121
+  },
+  "cpu_benchmark": {
+    "p50_ms": 0.429534,
+    "p95_ms": 0.457262,
+    "p99_ms": 0.473955,
+    "warmup_ticks": 120,
+    "samples": 2000,
+    "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback"
+  },
+  "remaining": "Four edge images fail frozen image tolerance; Fraise diagnostic source-XY substitution alone gives zero composed RGB/alpha error. No substitution enters native evaluator."
+}

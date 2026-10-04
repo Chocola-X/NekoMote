@@ -314,3 +314,11 @@
 - Debug/Release 120、ASan/UBSan 核心 119、Python 9 全通过；Release 2,000 样本 CPU 求值/构帧 P50/P95/P99 .438195/.469135/.544356 ms，不包含 GPU/呈现/功耗。
 - 新增只读几何/弹簧观察，诊断 Float32/整数读取和 GPU buffer 偏移均不参与运行时；双精度/all-view 观察无有效证据已删除。早先静态复用目录错误和错误比例目录的失败保留，最终使用 p3-native-reproduction/reference。证据 docs/validation/p6-tessellation-precision.json。
 - P3/P4/P5/P6 仍进行中。下一步按已观察的绝对锚点、粒子 Float32 保存与暂态积分修正弹簧，并继续剩余画面。
+
+## 2026-10-05 P6 粒子保存与成对绑定精度
+
+- 弹簧改为初始锚点空间的 Float32 粒子/速度/偏移，独立暂态 double 积分；移除旧的相对 double 状态。真实 step15 的全部观察状态和输出逐位相等；外力/隔离轨迹保留。Float32 溢出显式失败、事务状态不变、reset 恢复。
+- 原 atan 输出/结果比率证明弹簧及18个链条分量使用 Float32 pi；统一角度幅度。GeometryInstance 成对限制保留 double，直到归一化 binding time 才保存 Float32，严格数字样例验证提前保存会改变时间/控制点/锚点。
+- 权重20/20、混合10/10、Chocola4/4、Fraise3/3、Eye10/10、外部差分9/9，标量/几何/图像全部通过；所有过去 FAIL 材料保留。眨眼10/11、静态29/30、Chocola比例7/8、Fraise比例2/3，四个 FAIL 都只剩画面边缘（1–2像素），没有放宽阈值。
+- Debug/Release122、ASan/UBSan核心121通过；现有热路径零分配回归仍通过。Release2,000样本 CPU P50/P95/P99 .429534/.457262/.473955 ms，仅求值/构帧，不作 GPU/功耗或网页收益结论。
+- Fraise400诊断只替换XY即可使alpha/黑白合成误差均为0；UV替换不改变FAIL。昂贵的初始化全读取诊断已停止并标为无效，改用有界step15/400记录。继续原生曲面精度与播放器节流。阶段保持进行中，证据 docs/validation/p6-paired-precision.json。
