@@ -269,6 +269,13 @@ std::uint64_t PhysicsInstance::tick_count() const noexcept
 {
     return impl_->ticks;
 }
+std::optional<SpringObservation> PhysicsInstance::observe_spring(std::size_t index) const noexcept
+{
+    if (!impl_->has_output || index >= impl_->states.size())
+        return std::nullopt;
+    const auto& value = impl_->states[index];
+    return SpringObservation{value.spring, value.previous_anchor};
+}
 PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInputs inputs) noexcept
 {
     auto& instance = *impl_;

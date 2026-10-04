@@ -306,3 +306,11 @@
 - 36 步播放器 h01 与 session probe 像素一致；原 WebGL 的单像素 FAIL 保留并目视核实。真实窗口按 PID 重新验证 pause/resize/fit/touch/reset/退出；标题匹配误选的截图作废、文件管理器窗口尺寸恢复。
 - Release 显示 300 帧测量 CPU P50/P95/P99 .267056/1.045319/1.099373 ms，swap cadence164.839fps；不包含 GPU 计时/真实呈现/显存/功耗结论，不声称性能改善。详细依赖、操作、生命周期和证据见 docs/native-player.md。
 - 普通窗口功能可用，但语义 FAIL、桌面接入、全素材/长期验收尚未闭合，仍继续最终引擎任务。
+
+## 2026-10-04 P3/P4 网格与图集浮点边界
+
+- 网格细分比例/局部坐标/原点减法保留 double，世界坐标存入 Float32；图集 V 先从下边缘存 Float32，再转换到顶边 UV。后髪真实 108 对 XY/UV 逐项相等；独立数字 fixture 的 477 条断言通过。源数字未进入正式播放。
+- 外部差分 9/9、Chocola 4/4、Fraise 3/3；混合动作 9/10、权重 16/20。reaction36、零时长输入、双差分的原有单像素失败已消除，剩余混合/权重失败为物理标量。眨眼 10/11（Fraise 400 步两像素失败），静态 29/30（Vanilla 组合一像素失败），冻结阈值保持不变。
+- Debug/Release 120、ASan/UBSan 核心 119、Python 9 全通过；Release 2,000 样本 CPU 求值/构帧 P50/P95/P99 .438195/.469135/.544356 ms，不包含 GPU/呈现/功耗。
+- 新增只读几何/弹簧观察，诊断 Float32/整数读取和 GPU buffer 偏移均不参与运行时；双精度/all-view 观察无有效证据已删除。早先静态复用目录错误和错误比例目录的失败保留，最终使用 p3-native-reproduction/reference。证据 docs/validation/p6-tessellation-precision.json。
+- P3/P4/P5/P6 仍进行中。下一步按已观察的绝对锚点、粒子 Float32 保存与暂态积分修正弹簧，并继续剩余画面。

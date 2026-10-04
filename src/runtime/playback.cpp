@@ -306,4 +306,16 @@ std::uint64_t PlaybackInstance::tick_count() const noexcept
 {
     return impl_->ticks;
 }
+std::optional<GeometryNodeObservation> PlaybackInstance::observe_node(NodeId id) const noexcept
+{
+    if (!impl_->frame_ready || impl_->faulted)
+        return std::nullopt;
+    return impl_->geometry.observe_node(id);
+}
+std::optional<SpringObservation> PlaybackInstance::observe_spring(std::size_t index) const noexcept
+{
+    if (impl_->faulted || !impl_->physics)
+        return std::nullopt;
+    return impl_->physics->observe_spring(index);
+}
 } // namespace nekomote::runtime

@@ -119,6 +119,10 @@ class PlaybackInstance
     std::span<const ParameterValue> values() const noexcept;
     RenderFrame frame() const noexcept;
     std::uint64_t tick_count() const noexcept;
+    // Offline inspection of the last prepared frame only. No source values are
+    // accepted and no snapshots are gathered in advance/prepare_frame.
+    std::optional<GeometryNodeObservation> observe_node(NodeId id) const noexcept;
+    std::optional<SpringObservation> observe_spring(std::size_t index) const noexcept;
 
   private:
     struct Impl;

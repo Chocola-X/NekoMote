@@ -55,8 +55,12 @@ def main():
                         help='diagnostic deterministic Date.now input for initialization seed')
     parser.add_argument('--trace-random', action='store_true',
                         help='observe public Math.random from initialization; preserves results')
+    parser.add_argument('--trace-integer-reads', action='store_true',
+                        help='observe bounded numeric heap reads, filtered by caller/step/indices')
     parser.add_argument('--trace-float-stores', action='store_true',
                         help='diagnostic Float32 storage observations; not for benchmarks')
+    parser.add_argument('--trace-float-reads', action='store_true',
+                        help='observe all numeric Float32 reads; use caller/step filter and bounded limit')
     parser.add_argument('--trace-float-read-index', action='append', type=int, default=[],
                         help='also observe reads at explicit Float32 heap indices; requires stores')
     parser.add_argument('--trace-float-stack', default='',
@@ -93,6 +97,8 @@ def main():
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if args.trace_integer_reads and not args.trace_integer_stores:
+        parser.error('--trace-integer-reads requires --trace-integer-stores')
     if args.trace_integer_index and (not args.trace_integer_stores or
             len(args.trace_integer_index) > 128 or
             any(i < 0 or i > 0xffffffff for i in args.trace_integer_index)):
@@ -109,6 +115,8 @@ def main():
     if args.trace_math_step is not None and (not args.trace_math or
             not 0 <= args.trace_math_step <= args.steps):
         parser.error('--trace-math-step requires math tracing and an update in 0..steps')
+    if args.trace_float_reads and not args.trace_float_stores:
+        parser.error('--trace-float-reads requires --trace-float-stores')
     if args.trace_float_stack and not args.trace_float_stores:
         parser.error('--trace-float-stack requires --trace-float-stores')
     if not 1 <= args.trace_float_limit <= 100000:
@@ -286,10 +294,10 @@ def main():
                    traceMathStep=args.trace_math_step,
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
-                   traceFloatReadIndices=args.trace_float_read_index,
+                   traceFloatReadIndices=args.trace_float_read_index, traceFloatAllReads=args.trace_float_reads,
                    traceRandom=args.trace_random, traceClock=args.trace_clock,
                    fixedClockMs=args.fixed_clock_ms,
-                   traceIntegerStores=args.trace_integer_stores, traceIntegerStack=args.trace_integer_stack,
+                   traceIntegerStores=args.trace_integer_stores, traceIntegerReads=args.trace_integer_reads, traceIntegerStack=args.trace_integer_stack,
                    traceIntegerStep=args.trace_integer_step, traceIntegerLimit=args.trace_integer_limit,
                    traceIntegerIndices=args.trace_integer_index,
                    timelines=list(dict.fromkeys([p['label'] for p in plays] +

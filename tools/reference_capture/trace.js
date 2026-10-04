@@ -5,6 +5,7 @@ window.maskPixels = [];
 (() => {
     const proto=WebGLRenderingContext.prototype;
     const buffers=new Map();
+    const bufferOffsets=new Map();
     const textures=new Map();
     const framebuffers=new Map();
     const original={};
@@ -27,11 +28,15 @@ window.maskPixels = [];
     proto.bufferData=function(target,data,usage) {
         const binding=this.getParameter(target===this.ARRAY_BUFFER?this.ARRAY_BUFFER_BINDING:this.ELEMENT_ARRAY_BUFFER_BINDING);
         buffers.set(binding,typeof data==='number'?new Uint8Array(data):new Uint8Array(data.buffer,data.byteOffset,data.byteLength).slice());
+        bufferOffsets.set(binding,typeof data==='number'?null:data.byteOffset);
         return original.bufferData.call(this,target,data,usage);
     };
     proto.bufferSubData=function(target,offset,data) {
         const binding=this.getParameter(target===this.ARRAY_BUFFER?this.ARRAY_BUFFER_BINDING:this.ELEMENT_ARRAY_BUFFER_BINDING);
         buffers.get(binding).set(new Uint8Array(data.buffer,data.byteOffset,data.byteLength),offset);
+        const base=data.byteOffset-offset;
+        const previous=bufferOffsets.get(binding);
+        bufferOffsets.set(binding,previous===null || previous===base?base:null);
         return original.bufferSubData.call(this,target,offset,data);
     };
     proto.createTexture=function() {
@@ -100,7 +105,8 @@ window.maskPixels = [];
                     type===gl.UNSIGNED_BYTE?view.getUint8(offset+i*stride+c):view.getInt16(offset+i*stride+c*2,true));
                 data.push(values);
             }
-            attributes[info.name]={type,size,stride,offset,data};
+            attributes[info.name]={type,size,stride,offset,data,
+                bufferByteOffset:bufferOffsets.get(buffer)};
         }
         const uniforms={};
         for(let u=0;u<gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);u++) {

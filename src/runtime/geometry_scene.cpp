@@ -330,13 +330,11 @@ struct RigidTransform
 {
     float a{1}, b{0}, c{0}, d{1};
     Vec2 translation{};
-    Vec2 apply(Vec2 point) const noexcept
+    Vec2 apply(double x, double y) const noexcept
     {
-        return {static_cast<float>(static_cast<double>(a) * static_cast<double>(point.x) +
-                                   static_cast<double>(c) * static_cast<double>(point.y) +
+        return {static_cast<float>(static_cast<double>(a) * x + static_cast<double>(c) * y +
                                    static_cast<double>(translation.x)),
-                static_cast<float>(static_cast<double>(b) * static_cast<double>(point.x) +
-                                   static_cast<double>(d) * static_cast<double>(point.y) +
+                static_cast<float>(static_cast<double>(b) * x + static_cast<double>(d) * y +
                                    static_cast<double>(translation.y))};
     }
 };
@@ -350,7 +348,8 @@ RigidTransform compose(const RigidTransform& parent, const RigidTransform& local
     return {product(parent.a, local.a, parent.c, local.b),
             product(parent.b, local.a, parent.d, local.b),
             product(parent.a, local.c, parent.c, local.d),
-            product(parent.b, local.c, parent.d, local.d), parent.apply(local.translation)};
+            product(parent.b, local.c, parent.d, local.d),
+            parent.apply(local.translation.x, local.translation.y)};
 }
 struct State
 {
@@ -657,9 +656,9 @@ struct GeometryInstance::Impl
         mask_commands.reserve(data.mask_command_capacity);
         masks.resize(data.masks.size());
     }
-    Vec2 transform(NodeId id, Vec2 p) const noexcept
+    Vec2 transform(NodeId id, double x, double y) const noexcept
     {
-        p = states[id.value].world.apply(p);
+        auto p = states[id.value].world.apply(x, y);
         while (id.valid())
         {
             const auto& s = states[id.value];
@@ -946,8 +945,11 @@ Vec2 GeometryInstance::sample_atlas_point(NodeId node, Vec2 atlas_pixel) const n
     const auto& state = impl_->states[node.value];
     const auto& r = impl_->scene.resources[state.pose.resource.value];
     assert(state.pose.active && r.kind == ResourceKind::Sprite);
-    return impl_->transform(node, {atlas_pixel.x - r.rect.left - r.rect.origin_x,
-                                   atlas_pixel.y - r.rect.top - r.rect.origin_y});
+    return impl_->transform(node,
+                            static_cast<double>(atlas_pixel.x) - static_cast<double>(r.rect.left) -
+                                static_cast<double>(r.rect.origin_x),
+                            static_cast<double>(atlas_pixel.y) - static_cast<double>(r.rect.top) -
+                                static_cast<double>(r.rect.origin_y));
 }
 LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
 {
@@ -977,9 +979,36 @@ LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
         if ((n.unsupported && !known_partial_origin) || pose.unsupported)
             return {{GeometryError::UnsupportedTransform, ancestor, {}}};
     }
-    return {{},
-            LocatorState::Active,
-            instance.transform(empty_origin ? instance.scene.nodes[node.value].parent : node, {})};
+    return {
+        {},
+        LocatorState::Active,
+        instance.transform(empty_origin ? instance.scene.nodes[node.value].parent : node, 0, 0)};
+}
+std::optional<GeometryNodeObservation> GeometryInstance::observe_node(NodeId id) const noexcept
+{
+    const auto& instance = *impl_;
+    if (!instance.evaluated || !id.valid() || id.value >= instance.states.size())
+        return std::nullopt;
+    const auto& s = instance.states[id.value];
+    GeometryNodeObservation result;
+    result.parent = instance.scene.nodes[id.value].parent;
+    result.transform_parent = s.transform_parent;
+    result.curve_parent = s.curve_parent;
+    result.active = s.pose.active;
+    result.mesh = s.transform.mesh;
+    result.world = {
+        s.world.a, s.world.b, s.world.c, s.world.d, s.world.translation.x, s.world.translation.y};
+    result.domain_corner = s.domain_corner;
+    result.domain_inverse = s.domain_inverse;
+    result.unit_patch = s.transform.patch;
+    result.world_patch = s.world_patch;
+    if (s.transform.resource.valid())
+    {
+        const auto& r = instance.scene.resources[s.transform.resource.value].rect;
+        result.domain_size = {r.width, r.height};
+        result.domain_origin = {r.origin_x, r.origin_y};
+    }
+    return result;
 }
 GeometryStatus GeometryInstance::build_frame() noexcept
 {
@@ -1009,14 +1038,24 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         for (int y = 0; y <= ny; ++y)
             for (int x = 0; x <= nx; ++x)
             {
-                const float local_x = static_cast<float>(x) / static_cast<float>(nx) * r.width;
-                const float local_y = static_cast<float>(y) / static_cast<float>(ny) * r.height;
-                const float u = r.left + local_x;
-                const float v = r.top + local_y;
+                // Keep author tessellation and origin subtraction in double
+                // until the rigid world point is saved. Saving ratio/local XY
+                // first loses subpixel precision, including visible edge pixels.
+                // UV packing has a separate Float32 boundary.
+                const double local_x = static_cast<double>(x) / nx * static_cast<double>(r.width);
+                const double local_y = static_cast<double>(y) / ny * static_cast<double>(r.height);
+                const float u = static_cast<float>(static_cast<double>(r.left) + local_x);
+                // Source atlas V is saved from the lower edge before converting
+                // to our top-origin UV. Reversing the save order changes the
+                // texture sample along translucent edges.
+                const float bottom_v = static_cast<float>(static_cast<double>(texture.height) -
+                                                          static_cast<double>(r.top) - local_y);
+                const float v = static_cast<float>(texture.height) - bottom_v;
                 // Atlas packing affects UV only. Adding a large atlas offset and
                 // subtracting it before deformation loses local subpixel precision.
                 const auto point =
-                    instance.transform(p.node, {local_x - r.origin_x, local_y - r.origin_y});
+                    instance.transform(p.node, local_x - static_cast<double>(r.origin_x),
+                                       local_y - static_cast<double>(r.origin_y));
                 instance.vertices.push_back({point.x,
                                              point.y,
                                              u / static_cast<float>(texture.width),

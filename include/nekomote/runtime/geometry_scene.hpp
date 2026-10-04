@@ -3,9 +3,11 @@
 #include <nekomote/math.hpp>
 #include <nekomote/model/asset.hpp>
 #include <nekomote/render_frame.hpp>
+#include <nekomote/runtime/deformation.hpp>
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -80,6 +82,17 @@ struct LocatorSample
     LocatorState state{LocatorState::Inactive};
     Vec2 position{}; // placed model space; independent of final view/projection and GPU
 };
+// Read-only diagnostic snapshot, copied on explicit request. Does not feed
+// evaluation or expose imported JSON/GPU state. Invalid/unevaluated IDs reject.
+struct GeometryNodeObservation
+{
+    NodeId parent, transform_parent, curve_parent;
+    bool active{false}, mesh{false};
+    std::array<float, 6> world{}; // a,b,c,d,translation.x,translation.y
+    Vec2 domain_corner{}, domain_size{}, domain_origin{};
+    std::array<float, 4> domain_inverse{};
+    Patch unit_patch{}, world_patch{};
+};
 class GeometryInstance;
 struct GeometryCompileResult;
 // Diagnostic static scene, not a certified player. Source bindings/resources
@@ -146,6 +159,7 @@ class GeometryInstance
     // Unknown automatic tessellation explicitly fails instead of drawing a quad.
     GeometryStatus build_frame() noexcept;
     RenderFrame frame() const noexcept;
+    std::optional<GeometryNodeObservation> observe_node(NodeId id) const noexcept;
 
   private:
     struct Impl;

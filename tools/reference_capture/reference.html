@@ -60,7 +60,8 @@ if(window.enableFloatStores) {
         return new Proxy(view, {
             get(target,key) {
                 const value=Reflect.get(target,key,target);
-                if(window.traceFloatStores && window.traceFloatReadIndices.has(key) &&
+                if(window.traceFloatStores && (window.traceFloatReadIndices.has(key) ||
+                   (window.traceFloatAllReads && typeof key==='string' && /^[0-9]+$/.test(key))) &&
                    (window.traceFloatStep===null || window.traceFloatStep===(window.authorStep||0))) {
                     if(window.floatReads.length>=window.traceFloatLimit) window.floatReadsTruncated=true;
                     else {
@@ -90,6 +91,8 @@ if(window.enableFloatStores) {
     }});
 }
 window.enableIntegerStores=false;
+window.integerReads=[];
+window.integerReadsTruncated=false;
 window.integerStores=[];
 window.integerStoresTruncated=false;
 window.traceIntegerIndices=new Set();
@@ -101,6 +104,16 @@ if(window.enableIntegerStores) for(const kind of ['Int32Array','Uint32Array']) {
         return new Proxy(view,{
             get(target,key) {
                 const value=Reflect.get(target,key,target);
+                if(window.traceIntegerReads &&
+                   (window.traceIntegerStep==null || window.traceIntegerStep===(window.authorStep||0)) &&
+                   typeof key==='string' && /^[0-9]+$/.test(key) &&
+                   (!window.traceIntegerIndices.size || window.traceIntegerIndices.has(key))) {
+                    const stack=new Error().stack;
+                    if(!window.traceIntegerStack || stack.includes(' at '+window.traceIntegerStack+' (')) {
+                        if(window.integerReads.length>=window.traceIntegerLimit) window.integerReadsTruncated=true;
+                        else window.integerReads.push({step:window.authorStep||0,kind,index:Number(key),value,stack});
+                    }
+                }
                 return typeof value==='function' && key!=='constructor'?value.bind(target):value;
             },
             set(target,key,input) {
@@ -128,6 +141,7 @@ var Module = {onRuntimeInitialized() { window.ready = true; }};
 <script src="/driver/emoteplayer.js"></script>
 <script>
 window.capture = async function(options) {
+    window.traceIntegerReads=options.traceIntegerReads;
     window.traceIntegerStores=options.traceIntegerStores;
     window.traceIntegerStack=options.traceIntegerStack;
     window.traceIntegerStep=options.traceIntegerStep;
@@ -159,6 +173,7 @@ window.capture = async function(options) {
     window.traceFloatStack=options.traceFloatStack;
     window.traceFloatStep=options.traceFloatStep;
     window.traceFloatLimit=options.traceFloatLimit;
+    window.traceFloatAllReads=options.traceFloatAllReads;
     window.traceFloatReadIndices=new Set((options.traceFloatReadIndices||[]).map(String));
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
@@ -252,6 +267,7 @@ window.capture = async function(options) {
     window.traceMath=false;
     window.traceFloatStores=false;
     window.traceIntegerStores=false;
+    window.traceIntegerReads=false;
     const pixels=new Uint8Array(canvas.width*canvas.height*4);
     gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
     let visiblePixels=0;
@@ -272,6 +288,7 @@ window.capture = async function(options) {
         }:null,
         floatStores:window.floatStores,floatStoresTruncated:window.floatStoresTruncated,
         floatReads:window.floatReads,floatReadsTruncated:window.floatReadsTruncated,
+        integerReads:window.integerReads,integerReadsTruncated:window.integerReadsTruncated,
         integerStores:window.integerStores,integerStoresTruncated:window.integerStoresTruncated,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};

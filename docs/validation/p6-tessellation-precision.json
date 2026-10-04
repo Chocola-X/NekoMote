@@ -1,0 +1,83 @@
+{
+  "scope": "Native double tessellation and observed Float32 atlas packing; stages remain incomplete",
+  "coordinate_tolerance_px": 0.001,
+  "scalar_tolerance": 1e-05,
+  "image_tolerance": 2,
+  "reports": {
+    "external": {
+      "path": "build/evidence/p6-grid-precision/uv-final/external/report.json",
+      "sha256": "23fdfc97b65a8d4f57738d3e68e0fc872b640012542a33314e7bc6ca897a6c5c",
+      "passed": 9,
+      "total": 9,
+      "failures": []
+    },
+    "base": {
+      "path": "build/evidence/p6-grid-precision/uv-final/base/report.json",
+      "sha256": "8ba98c3ba8570d757161f65b74b158b20d7baf543ffd13ad97c5d661a6ff29e1",
+      "passed": 4,
+      "total": 4,
+      "failures": []
+    },
+    "fraise": {
+      "path": "build/evidence/p6-grid-precision/uv-final/fraise/report.json",
+      "sha256": "fb29f4332e6dea300f3cecc288f7ac5dc6cc614f37dfeaa7ecae511e1f03ae5a",
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "weights": {
+      "path": "build/evidence/p6-grid-precision/uv-final/weights/report.json",
+      "sha256": "f82cfeaac66ca0884e6f426947a3a225e4451742e89bf50263b40d42da236aa0",
+      "passed": 16,
+      "total": 20,
+      "failures": [
+        "main-fadeout",
+        "main-half",
+        "main-stop-blend",
+        "double-supported"
+      ]
+    },
+    "hybrid": {
+      "path": "build/evidence/p6-grid-precision/uv-final/hybrid/report.json",
+      "sha256": "a0e1c98e97dc14cae44420e344349e689e4f73f625cf166237ec7b82e85aedf8",
+      "passed": 9,
+      "total": 10,
+      "failures": [
+        "run-half20"
+      ]
+    },
+    "blink": {
+      "path": "build/evidence/p6-grid-precision/uv-final/blink/report.json",
+      "sha256": "c2a1bacd49d1bfe8dffbf23c68dd24342f59473bc209e97c9e77b6752eeff82e",
+      "passed": 10,
+      "total": 11,
+      "failures": [
+        "fraise-seed1-long400"
+      ]
+    },
+    "static": {
+      "path": "build/evidence/p6-grid-precision/uv-final/static/report.json",
+      "sha256": "d33c00f79928a7dd3f95ba71e3448543bf6efb1f20390f2f2e475627fe5a3954",
+      "passed": 29,
+      "total": 30,
+      "failures": [
+        "combination"
+      ]
+    }
+  },
+  "tests": {
+    "debug": 120,
+    "release": 120,
+    "asan_ubsan_headless": 119,
+    "python": 9
+  },
+  "cpu_benchmark": {
+    "p50_ms": 0.438195,
+    "p95_ms": 0.469135,
+    "p99_ms": 0.544356,
+    "warmup_ticks": 120,
+    "samples": 2000,
+    "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback"
+  },
+  "pending": "Physics scalar trajectories and remaining Vanilla static/Fraise long-run edge pixels; desktop/corpus/stability remain incomplete"
+}

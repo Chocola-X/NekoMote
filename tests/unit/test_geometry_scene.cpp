@@ -2332,3 +2332,72 @@ TEST_CASE("Application gaze, reaction and lip scheduling reuse storage in normal
     REQUIRE(measured_allocations == 0);
     REQUIRE(player.playback().tick_count() == std::uint64_t{1000});
 }
+
+TEST_CASE("Tessellation retains local doubles until the observed world Float32 boundary",
+          "[runtime][scene]")
+{
+    using namespace runtime;
+    std::ifstream file(std::string(NEKOMOTE_FIXTURES_DIR) +
+                       "/tessellation_precision_reference.json");
+    const auto r = nlohmann::json::parse(file);
+    auto asset = rig();
+    asset.parts.resize(1);
+    const auto sprite_size = r.at("sprite_size").get<std::array<float, 2>>();
+    const auto origin = r.at("sprite_origin").get<std::array<float, 2>>();
+    asset.textures[0].width = 4096;
+    asset.textures[0].height = 2048;
+    asset.icons["atlas/a"] = {"atlas",        1514,      1,        sprite_size[0],
+                              sprite_size[1], origin[0], origin[1]};
+    auto child = layer("sprite", 0, sprite());
+    child.mesh_division = 20;
+    child.obj_tri_priority = 2;
+    std::array<float, 32> controls{};
+    for (std::size_t i = 0; i < 16; ++i)
+    {
+        controls[i * 2] = r.at("unit_patch")[i][0].get<float>();
+        controls[i * 2 + 1] = r.at("unit_patch")[i][1].get<float>();
+    }
+    FrameContent content;
+    content.src = field(std::string{"blank"});
+    content.icon = field(std::string{"496:1730:248:865"});
+    const auto world = r.at("world").get<std::array<float, 6>>();
+    content.coord = field(std::array<float, 3>{world[4], world[5], 0});
+    MeshData mesh;
+    mesh.bp = field(controls);
+    content.mesh = field(mesh);
+    auto parent = layer("domain", 0, content);
+    parent.mesh_sync_child_mask = 8;
+    parent.children = {child};
+    asset.parts[0].layers = {parent};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE_FALSE(instance.observe_node(NodeId{1}));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    const auto frame = instance.frame();
+    REQUIRE(frame.vertices.size() == r.at("expected").size());
+    for (std::size_t i = 0; i < frame.vertices.size(); ++i)
+    {
+        INFO(i);
+        REQUIRE(frame.vertices[i].x == r.at("expected")[i][0].get<float>());
+        REQUIRE(frame.vertices[i].y == r.at("expected")[i][1].get<float>());
+        REQUIRE(frame.vertices[i].u == r.at("expected_uv")[i][0].get<float>());
+        REQUIRE(frame.vertices[i].v == r.at("expected_uv")[i][1].get<float>());
+    }
+    REQUIRE_FALSE(instance.observe_node({}));
+    const auto observed = instance.observe_node(NodeId{1});
+    REQUIRE(observed);
+    REQUIRE(observed->mesh);
+    for (std::size_t i = 0; i < observed->world_patch.size(); ++i)
+    {
+        REQUIRE(observed->world_patch[i].x == r.at("world_patch")[i][0].get<float>());
+        REQUIRE(observed->world_patch[i].y == r.at("world_patch")[i][1].get<float>());
+    }
+    REQUIRE(instance.set_origin({10, 20}));
+    REQUIRE_FALSE(instance.observe_node(NodeId{1}));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.observe_node(NodeId{1}));
+    // Copies remain valid independently of the next instance mutation.
+    REQUIRE(observed->world[4] == world[4]);
+}

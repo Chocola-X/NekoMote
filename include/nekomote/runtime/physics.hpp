@@ -2,11 +2,13 @@
 
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/parameter.hpp>
+#include <nekomote/runtime/spring.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -77,6 +79,11 @@ struct PhysicsCompileResult
     std::unique_ptr<const PhysicsProgram> program;
     std::vector<std::string> errors;
 };
+struct SpringObservation
+{
+    SpringState state;
+    Vec2 anchor;
+};
 PhysicsCompileResult compile_physics(const model::ModelAsset& asset, const GeometryScene& scene);
 // Instance owns all integrator/anchor/output state, program must outlive it.
 // Caller advances animation, binds parameters and evaluates anchors first, then
@@ -95,6 +102,7 @@ class PhysicsInstance
     void reset() noexcept;
     std::span<const ParameterValue> values() const noexcept;
     std::uint64_t tick_count() const noexcept;
+    std::optional<SpringObservation> observe_spring(std::size_t index) const noexcept;
 
   private:
     struct Impl;

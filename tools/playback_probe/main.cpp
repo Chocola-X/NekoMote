@@ -277,6 +277,20 @@ int run(int argc, char** argv)
                            {"values", values()},
                            {"blend_ratios", weights},
                            {"playing", playing}});
+        if (request.value("observe_springs", false))
+        {
+            auto& list = samples.back()["springs"];
+            list = Json::array();
+            for (std::size_t i = 0;; ++i)
+            {
+                const auto s = player.observe_spring(i);
+                if (!s)
+                    break;
+                list.push_back({{"position", s->state.position},
+                                {"velocity", s->state.velocity},
+                                {"anchor", {s->anchor.x, s->anchor.y}}});
+            }
+        }
     };
     sample(0);
     for (int i = 0; i < steps; ++i)
@@ -303,6 +317,36 @@ int run(int argc, char** argv)
                 {"frame_indices", player.frame().indices.size()}};
     if (request.value("dump_frame", false))
         report["frame"] = diagnostics::frame_json(player.frame(), scene.textures());
+    if (request.value("observe_nodes", false))
+    {
+        report["nodes"] = Json::array();
+        for (std::uint32_t i = 1; i <= scene.node_count(); ++i)
+        {
+            const auto value = player.observe_node(NodeId{i});
+            if (!value)
+                throw std::runtime_error("invalid node observation");
+            const auto& n = *value;
+            Json unit = Json::array(), world = Json::array();
+            for (const auto p : n.unit_patch)
+                unit.push_back({p.x, p.y});
+            for (const auto p : n.world_patch)
+                world.push_back({p.x, p.y});
+            report["nodes"].push_back({{"id", i},
+                                       {"label", scene.node_label(NodeId{i})},
+                                       {"parent", n.parent.value},
+                                       {"transform_parent", n.transform_parent.value},
+                                       {"curve_parent", n.curve_parent.value},
+                                       {"active", n.active},
+                                       {"mesh", n.mesh},
+                                       {"world", n.world},
+                                       {"domain_corner", {n.domain_corner.x, n.domain_corner.y}},
+                                       {"domain_size", {n.domain_size.x, n.domain_size.y}},
+                                       {"domain_origin", {n.domain_origin.x, n.domain_origin.y}},
+                                       {"domain_inverse", n.domain_inverse},
+                                       {"unit_patch", unit},
+                                       {"world_patch", world}});
+        }
+    }
     if (benchmark)
     {
         for (int i = 0; i < 120; ++i)
