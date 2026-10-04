@@ -205,3 +205,12 @@
 - 静态30组25图通过、五像素FAIL；隔离动画7组2图通过、九像素FAIL；Chocola八组缩放标量/几何通过、六图通过，差分图2/1像素FAIL。完整历史记录未覆盖；P3/P4/P5/P6与成品认证保持进行中。
 - 增加四项合成数值/生命周期回归与一项保存前进度回归，Debug/Release 88、ASan/UBSan核心87入口全部通过，稳态普通C++ new仍为零。Release/LTO 120预热/2000步完整CPU差分会话：Chocola P50/P95/P99=0.39614/0.42254/0.443213ms；Fraise=0.767905/0.816305/0.842705ms。此次正确性计算增加，未声称性能提升；不含GPU、呈现、JSON、读回、内存/功耗。
 - 当前证据与最小数值样例见 docs/validation/p6-transform-precision.json、tests/fixtures/transform_precision_reference.json；新的原版缩放输入保存在 playback-fraise-scale-inputs.json。继续闭合比例/边缘像素，再完善动作选择、表情/眨眼及应用体验。
+
+
+## 帧导出与残余精度复查
+
+- pose probe 新增显式 `--dump-frame --output`，输出真正 RenderFrame 的顶点/UV/索引和部件范围，包含 mask-only 几何；不修改运行时、GPU 或稳态帧路径。
+- Fraise head_UD=30 耳尖 (561,207) 覆盖 tex/0068 与 tex/0067 的三角形。前者三个顶点/UV 逐位一致，后者差 0.000045776px / UV 0.000000029802；暂未定位末位差来源，不将几何阈值通过视为图片通过。
+- Fraise 0.8 转头第 10 步四个头发锚点与源 hu 世界坐标逐位一致，Il 的绝对归一化 Float32 值也相同；Ap 累计位移首次偏差仍待确认。第 18 步 hair_UD_front 的 1.573562622e−5 FAIL 保留。
+- 细分保存时机、图集坐标、链条 transient rest、世界 delta 归一化均没有消除失败或引入回归，正式候选全部撤回，材料在 build/evidence/p6-author-scaling 中。源 PSB/PNG 不变，标量/几何/图片门槛不变。
+- Debug 88 项（含 GPU）通过，格式与 diff 检查通过。低风险离线 JSON 导出不新增镜像测试；实际复杂模型输出已与三角形/UV 匹配脚本核对。P3/P4/P5/P6 仍进行中，继续残余数值观察与 selector 语义采样。

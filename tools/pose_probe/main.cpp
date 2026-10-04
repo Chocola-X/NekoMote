@@ -27,7 +27,7 @@ struct Options
     std::filesystem::path asset, trace, output;
     Json variables = Json::object();
     int benchmark{0}, steps{0};
-    bool animation{false};
+    bool animation{false}, dump_frame{false};
     Json transitions = Json::object(), plays = Json::array();
 };
 Json read(const std::filesystem::path& path)
@@ -56,6 +56,11 @@ Options parse(int argc, char** argv)
             o.animation = true;
             continue;
         }
+        if (flag == "--dump-frame")
+        {
+            o.dump_frame = true;
+            continue;
+        }
         if (i + 1 == argc)
             throw std::runtime_error("missing value for " + flag);
         const std::string value = argv[++i];
@@ -78,9 +83,9 @@ Options parse(int argc, char** argv)
         else
             throw std::runtime_error("unknown option: " + flag);
     }
-    if (o.asset.empty() || (!o.trace.empty() && o.output.empty()) || o.benchmark < 0 ||
-        !o.variables.is_object() || o.steps < 0 || o.steps > 100000 || !o.transitions.is_object() ||
-        !o.plays.is_array() ||
+    if (o.asset.empty() || ((!o.trace.empty() || o.dump_frame) && o.output.empty()) ||
+        o.benchmark < 0 || !o.variables.is_object() || o.steps < 0 || o.steps > 100000 ||
+        !o.transitions.is_object() || !o.plays.is_array() ||
         (!o.animation && (o.steps || !o.transitions.empty() || !o.plays.empty())))
         throw std::runtime_error("requires --asset; trace diagnostics require --output");
     return o;
@@ -233,6 +238,22 @@ int run(const Options& o)
                 {"nodes", scene.node_count()},
                 {"primitives", instance.primitives().size()},
                 {"diagnostics", scene.diagnostics()}};
+    if (o.dump_frame)
+    {
+        check(frame_status);
+        Json vertices = Json::array(), primitives = Json::array();
+        for (const auto& vertex : instance.frame().vertices)
+            vertices.push_back({vertex.x, vertex.y, vertex.u, vertex.v});
+        for (const auto& primitive : instance.primitives())
+            primitives.push_back({{"node", primitive.node.value},
+                                  {"source", primitive.source},
+                                  {"first_index", primitive.draw.first_index},
+                                  {"index_count", primitive.draw.index_count}});
+        report["frame"] = {{"vertices", std::move(vertices)},
+                           {"indices", std::vector<std::uint32_t>(instance.frame().indices.begin(),
+                                                                  instance.frame().indices.end())},
+                           {"primitives", std::move(primitives)}};
+    }
     report["locators"] = Json::array();
     for (const auto& locator : scene.locators())
     {
