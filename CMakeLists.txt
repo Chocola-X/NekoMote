@@ -55,6 +55,7 @@ if(NEKOMOTE_BUILD_TOOLS)
     add_subdirectory(tools/pose_probe)
     add_subdirectory(tools/playback_probe)
     add_subdirectory(tools/session_probe)
+    add_subdirectory(tools/runtime_audit)
 endif()
 
 if(NEKOMOTE_BUILD_PREVIEW)

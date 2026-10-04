@@ -339,3 +339,10 @@
 - Debug/Release123、ASan/UBSan核心122通过；500预热后作者步加入重复间隙/返回请求，项目普通堆分配仍为零。并发目录调查期间不报告计时收益。
 - 新增已构帧部件的只读span，过期/失败状态返回空，离线probe明确输出节点、资源与draw范围供残余像素定位，不收集每帧快照。
 - 原Debug目录调查因每型号115条时间线开销重启Release；首轮Release被并发构建替换可执行文件打断，不能作为完整结果。后续工具冻结二进制/hash并逐型号保存检查点。四组像素、局部继承、全素材/桌面与长期运行仍未闭合。详见 docs/validation/p6-expression-gap.json。
+
+## 2026-10-05 全目录实际 CPU 求值基线
+
+- 新增独立 nekomote_runtime_audit；直接导入外部JSON/resx并编译真实物理，每条时间线独立reset/play，逐作者步构帧；不复制纹理、不把运行时依赖加入asset_io。错误保留节点来源/控制器/失败步数。
+- 目录工具冻结Release执行文件及SHA256，逐型号原子保存检查点，异常中断不丢已完成结果，也不混用并发构建的不同版本。完整195条：193结构导入、192编译、170型号通过初态+全部时间线120步，21931时间线中19427条CPU采样通过。
+- 主要缺口：15型号忽略父变形手臂、4型号选中嵌套眼白mask、3型号额外配件/胸部pose、Fraise france-maid-b一个非整数图集矩形。milk-winter源JSON缺失，vanilla-lolita原icon0034越界。全部真实失败保留，未将CPU通过计为画面认证。
+- 工具Debug/Release/无窗口ASan可构建；与本次基础提交一同运行的测试123/123/122均通过。负例minimal.json保留missing base motion错误，无伪成功。具体型号状态、原数据及执行文件hash见 docs/validation/p6-runtime-catalog.json；采样不覆盖长动作120步之后、完整交互或最终截图。
