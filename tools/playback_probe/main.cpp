@@ -66,6 +66,8 @@ int run(int argc, char** argv)
     if (!origin.is_array() || origin.size() != 2)
         throw std::runtime_error("origin must contain exactly two author-space coordinates");
     check(player.set_origin({origin[0].get<float>(), origin[1].get<float>()}));
+    const float scale = request.value("scale", 1.0f);
+    check(player.set_scale(scale));
     const auto variables = request.value("variables", Json::object());
     const auto transitions = request.value("transitions", Json::object());
     for (const auto& [name, value] : variables.items())
@@ -110,6 +112,7 @@ int run(int argc, char** argv)
     Json report{{"production_playback_certified", false},
                 {"physics_enabled", true},
                 {"origin", origin},
+                {"scale", scale},
                 {"steps", player.tick_count()},
                 {"samples", samples},
                 {"variables", values()},

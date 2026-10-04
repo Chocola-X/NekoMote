@@ -618,6 +618,7 @@ struct GeometryInstance::Impl
     std::vector<bool> used_masks;
     bool evaluated{false}, frame_ready{false};
     Vec2 origin{};
+    float scale{1};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
         : owner(scene_owner), scene(data), input(data.variables.size() + 1),
           parameters(input.size()), states(data.nodes.size()), node_commands(data.nodes.size()),
@@ -680,6 +681,20 @@ GeometryStatus GeometryInstance::set_origin(Vec2 origin) noexcept
     impl_->frame_ready = false;
     return {};
 }
+GeometryStatus GeometryInstance::set_scale(float scale) noexcept
+{
+    const float inverse = 1.0f / scale;
+    if (!std::isfinite(scale) || scale <= 0 || !std::isfinite(inverse) || inverse <= 0)
+        return {GeometryError::InvalidScale, {}, {}};
+    impl_->scale = scale;
+    impl_->evaluated = false;
+    impl_->frame_ready = false;
+    return {};
+}
+float GeometryInstance::scale() const noexcept
+{
+    return impl_->scale;
+}
 GeometryStatus GeometryInstance::evaluate() noexcept
 {
     auto& instance = *impl_;
@@ -698,6 +713,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     const auto& scene = instance.scene;
     instance.states[0] = {};
     instance.states[0].world.translation = instance.origin;
+    instance.states[0].world.a = instance.scale;
+    instance.states[0].world.d = instance.scale;
     for (const auto& c : scene.clamps)
     {
         if (!c.enabled)

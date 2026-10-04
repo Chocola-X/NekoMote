@@ -38,8 +38,9 @@ struct PhysicsStatus
 struct PhysicsInputs
 {
     // SDK amplitude is an output parameter, not an enable flag. External
-    // displacement uses author units; only scene anchor deltas are normalized
-    // using author_scale. First anchor initialization skips displacement.
+    // displacement uses author units. Placed scene anchors first use the saved
+    // inverse model scale; their deltas then use author_scale. First anchor
+    // initialization skips displacement.
     float bust_amplitude{1};
     Vec2 bust_displacement{};
     float hair_amplitude{1};

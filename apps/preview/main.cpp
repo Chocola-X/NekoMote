@@ -131,8 +131,6 @@ Options parse(int argc, char** argv)
          1) ||
         (!(o.animation || o.playback) && (o.steps || !o.plays.empty())))
         throw std::runtime_error("select one geometry, animation diagnostic or playback mode");
-    if (o.playback && o.scale != 1)
-        throw std::runtime_error("model scaling in playback is not yet verified; use scale=1");
     if (o.asset.empty() && !o.icon.empty())
         throw std::runtime_error("--icon requires --asset");
     if (!o.screenshot.empty() && o.frames == 0)
@@ -223,6 +221,8 @@ int run(const Options& o)
                 playback_checked(
                     playback_instance->set_origin({o.x - static_cast<float>(o.width) * 0.5f,
                                                    o.y - static_cast<float>(o.height) * 0.5f}));
+                playback_checked(playback_instance->set_scale(o.scale));
+                view.scale = 1;
                 view.origin_x = static_cast<float>(o.width) * 0.5f;
                 view.origin_y = static_cast<float>(o.height) * 0.5f;
             }

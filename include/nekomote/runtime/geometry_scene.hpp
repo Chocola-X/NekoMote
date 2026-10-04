@@ -49,7 +49,8 @@ enum class GeometryError
     UnsupportedCombination,
     UnsupportedTessellation,
     UnsupportedMask,
-    InvalidLocator
+    InvalidLocator,
+    InvalidScale
 };
 struct GeometryStatus
 {
@@ -123,6 +124,10 @@ class GeometryInstance
     // matrix accumulation. Rendering view/projection remains a separate step.
     // Changes invalidate geometry and locator samples; default is zero.
     GeometryStatus set_origin(Vec2 origin) noexcept;
+    // Uniform model scale participates in world matrices, independently of
+    // placement and the render view. Positive finite scale/inverse required.
+    GeometryStatus set_scale(float scale) noexcept;
+    float scale() const noexcept;
     GeometryStatus evaluate() noexcept; // fixed variable pose, time=0; no heap allocation
     std::span<const GeometryPrimitive> primitives() const noexcept;
     // node must come from this instance's current primitives(). Samples an icon

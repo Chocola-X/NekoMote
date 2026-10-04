@@ -86,12 +86,13 @@ class PlaybackInstance
     PlaybackStatus stop(TimelineId id) noexcept;
     bool is_playing(TimelineId id) const noexcept;
     PlaybackStatus set_origin(Vec2 origin) noexcept;
+    PlaybackStatus set_scale(float scale) noexcept;
     PlaybackStatus step(PhysicsInputs inputs = {}) noexcept;
     // Drop elapsed beyond 250 ms and bound catch-up to 15 ticks. Invalid elapsed
     // changes no state. Pause/resume clears the fractional clock accumulator.
     PlaybackStatus advance(double elapsed_seconds, PhysicsInputs inputs = {}) noexcept;
     void set_playback_state(PlaybackState state) noexcept;
-    void reset() noexcept; // zero parameters, reset physics/clock; preserve origin
+    void reset() noexcept; // zero parameters, reset physics/clock; preserve origin/scale
     PlaybackStatus prepare_frame() noexcept;
     // Borrowed views expire at the next parameter/animation/physics mutation or
     // preparation. frame() is empty until preparation succeeds after a mutation.

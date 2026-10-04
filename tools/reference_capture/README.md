@@ -64,4 +64,4 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 工具自身的无素材回归：`python3 -m unittest discover -s tests/reference_capture -v`。
 
 
-联合会话固定步进对照见 [P6 会话记录](../../docs/p6-playback-session.md)。validate_playback.py 使用独立冻结输入、原始素材与正式 PlaybackInstance/preview，验证 22 个实际物理输出、最终 RenderFrame 和截图；原 SDK GetVariable 的主通道缓存不能代表差分合成结果。几何工具 compare_playback_frame.py 只服务当前单图集 SDK texture 2 的冻结诊断，不是运行时兼容分支。已知完整跳跃/待机差分失败仍保留，命令退出 1。
+联合会话固定步进对照见 [P6 会话记录](../../docs/p6-playback-session.md)。validate_playback.py 使用独立冻结输入、原始素材与正式 PlaybackInstance/preview，验证 22 个实际物理输出、最终 RenderFrame 和截图；原 SDK GetVariable 的主通道缓存不能代表差分合成结果。几何工具 compare_playback_frame.py 只服务当前单图集 SDK texture 2 的冻结诊断，不是运行时兼容分支。原始四组 scale=1 的完整对照现已通过。用 `--inputs docs/validation/playback-scale-inputs.json --reuse-reference build/evidence/p6-world-scale-reference` 验证冻结八组缩放输入，当前两组差分图片仍 FAIL，命令退出 1。

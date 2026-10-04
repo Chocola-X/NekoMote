@@ -2,7 +2,7 @@
 
 面向 Linux 原生动态壁纸的独立二维模型运行时项目。目标是复用已有模型素材，将动画求值、GPU 渲染与桌面环境接入解耦。
 
-当前 P0/P1 已复核，P2 静态 GPU 基础已验证。原生固定姿态场景、网格、union 遮罩与透明颜色保护已实现：四型号初态及主模型缩放后的完整可见身体通过原 WebGL 图像对照。30 组网格/拓扑通过，严格图像对照为 23 PASS、7 FAIL（共 10 个轮廓像素）；现已接入原生主动作、线性表情路径、待机差分、固定作者时钟和实时窗口，仍为诊断入口；完整播放器尚未完成。时间线范围与剩余语义见 [P5 播放记录](docs/p5-native-animation.md)。当前进展、失败输入及性能范围见 [P4 静态合成记录](docs/p4-static-composition.md)，此前验证见 [原生场景记录](docs/p3-native-scene.md) 与 [P2 交接](docs/p2-handoff.md)。
+当前 P0/P1 已复核，P2 静态 GPU 基础已验证。原生固定姿态场景、网格、union 遮罩与透明颜色保护已实现：四型号初态及主模型缩放后的完整可见身体通过原 WebGL 图像对照。30 组网格/拓扑通过，最新严格图像对照为 25 PASS、5 FAIL（共 5 个轮廓像素）；现已接入原生主动作、线性表情路径、待机差分、固定作者时钟和实时窗口，仍为诊断入口；完整播放器尚未完成。时间线范围与剩余语义见 [P5 播放记录](docs/p5-native-animation.md)。当前进展、失败输入及性能范围见 [P4 静态合成记录](docs/p4-static-composition.md)，此前验证见 [原生场景记录](docs/p3-native-scene.md) 与 [P2 交接](docs/p2-handoff.md)。
 
 ## 快速构建
 
@@ -43,4 +43,6 @@ build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
   --origin 400 940 --play 首横振り 1
 ```
 
-共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。当前联合播放只验证 scale=1；静止/转头/24 步跳跃/60 步待机差分的原版完整物理、几何和截图对照通过；其他姿态仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)；后续关键帧权重修正见 [最新数值/画面证据](docs/validation/p6-world-deformation.json)。
+共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。联合播放已支持模型比例（例如 `--scale 0.8`），缩放物理与几何通过、两组缩放差分截图仍有 2/1 个失败像素；静止/转头/24 步跳跃/60 步待机差分的原版完整物理、几何和截图对照通过；其他姿态仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)；后续关键帧权重修正见 [最新数值/画面证据](docs/validation/p6-world-deformation.json)。
+
+模型比例、无效请求及重置契约、八组冻结缩放对照见 [缩放证据](docs/validation/p6-model-scaling.json)。

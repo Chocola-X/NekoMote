@@ -1503,3 +1503,67 @@ TEST_CASE("Parameterized scene time has one Float32 save before key weighting", 
     REQUIRE(instance.sample_atlas_point(instance.primitives()[0].node, {0, 0}).x ==
             reference.at("expected_weight").get<float>());
 }
+
+TEST_CASE("Model scaling preserves author physics and independent resettable sessions",
+          "[runtime][playback]")
+{
+    using namespace runtime;
+    auto asset = chain_rig();
+    asset.spring_controls = spring_rig().spring_controls;
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance original(*compiled.program), scaled(*compiled.program);
+    REQUIRE(scaled.set_scale(2));
+    const auto pick = compiled.program->scene().find_variable("pick");
+    for (int tick = 0; tick < 72; ++tick)
+    {
+        const float target = tick % 6 == 0 ? 1.0f : 0.0f;
+        REQUIRE(original.transition(pick, target));
+        REQUIRE(scaled.transition(pick, target));
+        REQUIRE(original.step());
+        REQUIRE(scaled.step());
+        REQUIRE(original.values().size() == scaled.values().size());
+        for (std::size_t i = 0; i < original.values().size(); ++i)
+            REQUIRE(original.values()[i].value == scaled.values()[i].value);
+    }
+    original.reset();
+    scaled.reset();
+    REQUIRE(original.prepare_frame());
+    REQUIRE(scaled.prepare_frame());
+    REQUIRE(original.frame().vertices.size() == scaled.frame().vertices.size());
+    for (std::size_t i = 0; i < original.frame().vertices.size(); ++i)
+    {
+        REQUIRE(scaled.frame().vertices[i].x == original.frame().vertices[i].x * 2);
+        REQUIRE(scaled.frame().vertices[i].y == original.frame().vertices[i].y * 2);
+    }
+    const auto previous = scaled.frame().vertices[0];
+    for (const float invalid :
+         {0.0f, -1.0f, std::numeric_limits<float>::infinity(),
+          std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::denorm_min()})
+    {
+        REQUIRE(scaled.set_scale(invalid).geometry.error == GeometryError::InvalidScale);
+        REQUIRE_FALSE(scaled.frame().vertices.empty());
+        REQUIRE(scaled.frame().vertices[0].x == previous.x);
+        REQUIRE(scaled.frame().vertices[0].y == previous.y);
+    }
+    REQUIRE(scaled.set_scale(0.5f));
+    REQUIRE(scaled.frame().vertices.empty());
+    REQUIRE(scaled.prepare_frame());
+    for (std::size_t i = 0; i < original.frame().vertices.size(); ++i)
+    {
+        REQUIRE(scaled.frame().vertices[i].x == original.frame().vertices[i].x * 0.5f);
+        REQUIRE(scaled.frame().vertices[i].y == original.frame().vertices[i].y * 0.5f);
+    }
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(scaled.set_scale(i % 2 == 0 ? 0.5f : 2.0f));
+        success &= static_cast<bool>(scaled.step());
+        success &= static_cast<bool>(scaled.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+}

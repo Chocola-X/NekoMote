@@ -147,6 +147,18 @@ PlaybackStatus PlaybackInstance::set_origin(Vec2 origin) noexcept
     data.frame_ready = false;
     return {};
 }
+PlaybackStatus PlaybackInstance::set_scale(float scale) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status = data.geometry.set_scale(scale);
+    if (!status)
+        return {PlaybackError::Geometry, {}, status, {}};
+    data.dirty = true;
+    data.frame_ready = false;
+    return {};
+}
 PlaybackStatus PlaybackInstance::step(PhysicsInputs inputs) noexcept
 {
     auto& data = *impl_;

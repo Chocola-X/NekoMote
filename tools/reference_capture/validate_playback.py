@@ -23,9 +23,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('reference-root', 'importer', 'preview', 'evaluator', 'reuse-reference', 'output'):
         p.add_argument('--' + name, type=pathlib.Path, required=True)
+    p.add_argument("--inputs", type=pathlib.Path,
+                   help="explicit frozen input matrix; defaults to playback-inputs.json")
     args = p.parse_args()
     repo = pathlib.Path(__file__).resolve().parents[2]
-    baseline = json.loads((repo / 'docs/validation/playback-inputs.json').read_text())
+    baseline = json.loads((args.inputs or repo / 'docs/validation/playback-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
     for case in baseline['cases']:
@@ -50,7 +52,7 @@ def main():
                 raise ValueError('reference changed: ' + name + suffix)
         metadata = json.loads(reference.with_suffix('.json').read_text())
         expected = dict(width=800, height=1080, x=case['origin'][0], y=case['origin'][1],
-                        scale=1, opacity=1, stepFrames=1, steps=case['steps'],
+                        scale=case.get("scale", 1), opacity=1, stepFrames=1, steps=case['steps'],
                         variables=case['variables'], plays=case['plays'], transitions={}, events=[],
                         physics=dict(hair=1, parts=1, bust=1, wind=False))
         if any(metadata.get(k) != v for k, v in expected.items()) or metadata['diagnostic_fixture_edits']:
@@ -60,7 +62,8 @@ def main():
         for driver in ('FreeMoteDriver.js', 'emoteplayer.js'):
             if sha(args.reference_root / 'driver' / driver) != case['source_hashes'][driver]:
                 raise ValueError('reference driver changed')
-        request = dict(steps=case['steps'], origin=case['origin'], variables=case['variables'],
+        request = dict(steps=case['steps'], origin=case['origin'], scale=case.get('scale', 1),
+                       variables=case['variables'],
                        plays=case['plays'], dump_frame=True)
         input_path = args.output / (name + '-inputs.json')
         input_path.write_text(json.dumps(request, ensure_ascii=False, indent=2) + '\n')
@@ -69,6 +72,7 @@ def main():
         native = json.loads(native_path.read_text())
         command = [args.preview, '--playback', '--asset', asset, '--origin',
                    case['origin'][0] + 400, case['origin'][1] + 540, '--steps', case['steps'],
+                   '--scale', case.get('scale', 1),
                    '--hidden', '--screenshot', args.output / (name + '-native.png')]
         for key, value in case['variables'].items():
             command += ['--variable', key, value]

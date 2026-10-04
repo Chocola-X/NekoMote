@@ -295,6 +295,7 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         !std::isfinite(inputs.parts_amplitude) || inputs.parts_amplitude < 0 ||
         !finite(inputs.parts_displacement))
         return {PhysicsError::InvalidInput, kNoPhysicsController, {}};
+    const double inverse_scale = 1.0f / geometry.scale();
     for (std::size_t i = 0; i < instance.anchors.size(); ++i)
     {
         const auto& nodes = i < program.springs.size()
@@ -315,7 +316,11 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
                 return {PhysicsError::AmbiguousAnchor, i, {}};
             if (!finite(sample.position))
                 return {PhysicsError::InvalidAnchor, i, {}};
-            instance.anchors[i] = sample.position;
+            instance.anchors[i] = {
+                static_cast<float>(static_cast<double>(sample.position.x) * inverse_scale),
+                static_cast<float>(static_cast<double>(sample.position.y) * inverse_scale)};
+            if (!finite(instance.anchors[i]))
+                return {PhysicsError::InvalidAnchor, i, {}};
             active = true;
         }
         if (!active)
