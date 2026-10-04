@@ -193,6 +193,42 @@ struct VariableControl
     std::vector<SelectorOption> options;
 };
 
+// Offline-normalized physical data. Preserving it does not certify the solver.
+// All coordinates, lengths and saved vectors use author units (Y down). Source
+// z components and previous anchors are retained until their semantics close.
+struct PhysicsBinding
+{
+    std::string source_path, label, anchor, preset, variable_x, variable_y;
+    bool enabled{true};
+    std::vector<std::string> unsupported_fields;
+};
+struct SpringControl
+{
+    PhysicsBinding binding;
+    float stiffness{0}, friction{0}, gravity{0};
+    std::array<float, 2> axis_scale{};
+    float vertical_offset{0};
+    std::array<float, 3> position{}, velocity{}, previous_anchor{};
+};
+enum class ChainKind
+{
+    Hair,
+    Parts
+};
+struct ChainControl
+{
+    PhysicsBinding binding;
+    ChainKind kind{ChainKind::Hair};
+    std::string variable_middle;
+    float stretch_stiffness{0}, gravity{0}, velocity_retention{0};
+    std::array<float, 2> friction{}, length{}, scale_x{}, scale_y{};
+    float bend_speed{0}, bend_volume{0};
+    int vertical_effect{0};
+    std::array<std::array<float, 3>, 2> rest_position{}, position{}, velocity{};
+    std::array<float, 3> previous_anchor{};
+    float vertical_offset{0}, bend_phase{0}, bend_gain{0};
+};
+
 // No filesystem, JSON, window or graphics types cross this boundary. Source
 // archives and unsupported-field diagnostics are owned by the offline importer.
 struct ModelAsset
@@ -209,6 +245,9 @@ struct ModelAsset
     std::vector<Timeline> timelines;
     std::vector<VariableControl> variable_controls;
     std::vector<PairedClamp> paired_clamps;
+    Field<float> author_scale;
+    std::vector<SpringControl> spring_controls;
+    std::vector<ChainControl> chain_controls;
     std::vector<std::string> parts_order; // meaning unverified; not draw order
     int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};
 };

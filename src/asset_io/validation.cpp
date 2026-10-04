@@ -15,7 +15,7 @@ namespace
 void require(bool condition, const std::string& path)
 {
     if (!condition)
-        throw std::runtime_error("invalid asset: " + path);
+        throw AssetValidationError("invalid asset: " + path);
 }
 template <typename T>
 void finite_field(const model::Field<T>& f, const std::string& p)
@@ -29,8 +29,77 @@ void finite_field(const model::Field<T>& f, const std::string& p)
             require(std::isfinite(value), p);
 }
 } // namespace
+void validate_physics(const model::ModelAsset& asset)
+{
+    finite_field(asset.author_scale, "/metadata/scale");
+    if (asset.author_scale.has_value())
+        require(asset.author_scale.data > 0, "/metadata/scale");
+    if (!asset.spring_controls.empty() || !asset.chain_controls.empty())
+        require(asset.author_scale.has_value(), "/metadata/scale required for physical data");
+    const auto binding = [](const model::PhysicsBinding& value)
+    {
+        require(!value.source_path.empty() && !value.label.empty() && !value.anchor.empty() &&
+                    !value.variable_x.empty() && !value.variable_y.empty() &&
+                    value.variable_x != value.variable_y,
+                value.source_path + "/physical binding");
+    };
+    const auto vector = [](const auto& value, const std::string& path)
+    {
+        for (float component : value)
+            require(std::isfinite(component), path);
+    };
+    const auto friction = [](float value, const std::string& path)
+    { require(std::isfinite(value) && value >= 0 && value <= 1, path); };
+    for (const auto& value : asset.spring_controls)
+    {
+        binding(value.binding);
+        const auto& path = value.binding.source_path;
+        require(std::isfinite(value.stiffness) && value.stiffness >= 0, path + "/spring");
+        friction(value.friction, path + "/friction");
+        require(std::isfinite(value.gravity) && value.gravity >= 0, path + "/gravity");
+        vector(value.axis_scale, path + "/axis scale");
+        vector(value.position, path + "/param/p");
+        vector(value.velocity, path + "/param/pv");
+        vector(value.previous_anchor, path + "/param/op");
+        require(std::isfinite(value.vertical_offset), path + "/param/ofs");
+    }
+    for (const auto& value : asset.chain_controls)
+    {
+        binding(value.binding);
+        const auto& path = value.binding.source_path;
+        require(!value.variable_middle.empty() &&
+                    value.variable_middle != value.binding.variable_x &&
+                    value.variable_middle != value.binding.variable_y,
+                path + "/var_lrm");
+        require(std::isfinite(value.stretch_stiffness) && value.stretch_stiffness >= 0,
+                path + "/b_rate");
+        require(std::isfinite(value.gravity) && value.gravity >= 0, path + "/gravity");
+        require(std::isfinite(value.velocity_retention) && value.velocity_retention >= 0,
+                path + "/v_bound");
+        for (float f : value.friction)
+            friction(f, path + "/friction");
+        for (float length : value.length)
+            require(std::isfinite(length) && length > 0, path + "/length");
+        vector(value.scale_x, path + "/scale_x");
+        vector(value.scale_y, path + "/scale_y");
+        for (std::size_t i = 0; i < 2; ++i)
+        {
+            vector(value.rest_position[i], path + "/param/bp");
+            vector(value.position[i], path + "/param/p");
+            vector(value.velocity[i], path + "/param/pv");
+        }
+        vector(value.previous_anchor, path + "/param/op");
+        for (float number : {value.bend_speed, value.bend_volume, value.vertical_offset,
+                             value.bend_phase, value.bend_gain})
+            require(std::isfinite(number), path + "/bend/offset");
+        require(value.bend_speed >= 0 && value.bend_volume >= 0 && value.bend_gain >= 0 &&
+                    value.bend_gain <= 1,
+                path + "/bend ranges");
+    }
+}
 void validate_asset(const model::ModelAsset& a)
 {
+    validate_physics(a);
     require(a.spec == "ems" && std::isfinite(a.version), "spec/version");
     require(a.screen_width > 0 && a.screen_height > 0 && a.screen_width <= 32768 &&
                 a.screen_height <= 32768,

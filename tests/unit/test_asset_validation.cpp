@@ -45,6 +45,56 @@ nekomote::asset_io::ImportResult import_modified(Workspace& w, const Json& sourc
     return nekomote::asset_io::import_emote(
         {w.path / "model.json", fs::path(NEKOMOTE_FIXTURES_DIR) / "minimal.resx.json", {}, {}});
 }
+Json physics_source()
+{
+    auto source = read(fs::path(NEKOMOTE_FIXTURES_DIR) / "minimal.json");
+    auto& md = source["metadata"];
+    const auto vector = [](float x, float y, float z)
+    { return Json{{"x", x}, {"y", y}, {"z", z}}; };
+    md["scale"] = 2;
+    const Json binding{{"baseLayer", "anchor"}, {"label", "spring"}, {"parameter", "preset"},
+                       {"var_lr", "sx"},        {"var_ud", "sy"},    {"enabled", 1}};
+    auto spring = binding;
+    spring.update(Json{{"friction", 0.125},
+                       {"gravity", 0.3},
+                       {"spring", 0.03125},
+                       {"scale_x", 1},
+                       {"scale_y", 2},
+                       {"param",
+                        {{"p", vector(0, 3, 4)},
+                         {"pv", vector(1, 2, 3)},
+                         {"op", vector(6, 7, 8)},
+                         {"ofs", 2.5}}}});
+    md["bustControl"] = Json::array({spring});
+    auto chain = binding;
+    chain.update(Json{{"label", "chain"},
+                      {"var_lr", "cx"},
+                      {"var_lrm", "middle"},
+                      {"var_ud", "cy"},
+                      {"b_rate", 0.01},
+                      {"gravity", 0.2},
+                      {"v_bound", 2},
+                      {"friction_x", 0.03125},
+                      {"friction_y", 0.125},
+                      {"length", {8, 7}},
+                      {"scale_x", {0.75, 0.25}},
+                      {"scale_y", {2, 3}},
+                      {"bend_spd", 0.2},
+                      {"bend_vol", 3},
+                      {"ud_eft", 0},
+                      {"param",
+                       {{"p", {vector(0, 9, 1), vector(3, 16, 2)}},
+                        {"pv", {vector(0, 1, 2), vector(3, 4, 5)}},
+                        {"bp", {vector(0, 8, 1), vector(3, 15, 2)}},
+                        {"op", vector(6, 7, 8)},
+                        {"ofs", -1},
+                        {"bendR", 0.5},
+                        {"bendS", 0.25}}}});
+    md["hairControl"] = Json::array({chain});
+    chain["enabled"] = 0;
+    md["partsControl"] = Json::array({chain});
+    return source;
+}
 } // namespace
 TEST_CASE("Invalid mesh, numeric types and resource references fail with a field path", "[import]")
 {
@@ -253,4 +303,125 @@ TEST_CASE("Expression and selector rules survive offline compilation", "[asset][
         source["metadata"]["selectorControl"][0]["enabled"] = 2;
         REQUIRE_FALSE(import_modified(w, source).ok);
     }
+}
+
+TEST_CASE("Physical snapshots and categories survive portable offline compilation",
+          "[asset][import]")
+{
+    Workspace w;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    auto source = physics_source();
+    source["metadata"]["hairControl"][0]["futureConstraint"] = 9;
+    const auto imported = import_modified(w, source);
+    REQUIRE(imported.ok);
+    REQUIRE(nekomote::asset_io::write_bundle(imported, root, w.path / "bundle").empty());
+    const auto file = w.path / "bundle/model.nkm.json";
+    const auto loaded = nekomote::asset_io::load_asset(file);
+    REQUIRE(loaded.ok);
+    const auto& model = loaded.asset;
+    REQUIRE(model.author_scale.has_value());
+    REQUIRE(model.author_scale.data == 2.0f);
+    REQUIRE(model.spring_controls.size() == 1);
+    REQUIRE(model.chain_controls.size() == 2);
+    const auto& spring = model.spring_controls[0];
+    REQUIRE(spring.binding.source_path == "/metadata/bustControl/0");
+    REQUIRE(spring.binding.anchor == "anchor");
+    REQUIRE(spring.binding.preset == "preset");
+    REQUIRE(spring.position[2] == 4.0f);
+    REQUIRE(spring.velocity[1] == 2.0f);
+    REQUIRE(spring.previous_anchor[0] == 6.0f);
+    REQUIRE(spring.vertical_offset == 2.5f);
+    REQUIRE(spring.stiffness == 0.03125f);
+    const auto& chain = model.chain_controls[0];
+    REQUIRE(chain.kind == nekomote::model::ChainKind::Hair);
+    REQUIRE(chain.binding.enabled);
+    REQUIRE(chain.binding.variable_x == "cx");
+    REQUIRE(chain.variable_middle == "middle");
+    REQUIRE(chain.velocity_retention == 2.0f);
+    REQUIRE(chain.friction[1] == 0.125f);
+    REQUIRE(chain.length[1] == 7.0f);
+    REQUIRE(chain.rest_position[1][2] == 2.0f);
+    REQUIRE(chain.position[1][1] == 16.0f);
+    REQUIRE(chain.velocity[1][2] == 5.0f);
+    REQUIRE(chain.bend_gain == 0.25f);
+    REQUIRE(chain.binding.unsupported_fields ==
+            std::vector<std::string>{"/metadata/hairControl/0/futureConstraint"});
+    REQUIRE(model.chain_controls[1].kind == nekomote::model::ChainKind::Parts);
+    REQUIRE_FALSE(model.chain_controls[1].binding.enabled);
+
+    auto compiled = read(file);
+    SECTION("unsupported old schema")
+    {
+        compiled["schema"] = 3;
+    }
+    SECTION("invalid category")
+    {
+        compiled["model"]["chain_controls"][0]["kind"] = 2;
+    }
+    SECTION("invalid snapshot length")
+    {
+        compiled["model"]["chain_controls"][0]["position"] = {{0, 0, 0}};
+    }
+    SECTION("invalid coefficient")
+    {
+        compiled["model"]["spring_controls"][0]["friction"] = 1.5;
+    }
+    write(file, compiled);
+    REQUIRE_FALSE(nekomote::asset_io::load_asset(file).ok);
+}
+
+TEST_CASE("Malformed physical source data fails with the original field path", "[import]")
+{
+    Workspace w;
+    auto source = physics_source();
+    std::string expected;
+    SECTION("missing required coefficient")
+    {
+        source["metadata"]["bustControl"][0].erase("spring");
+        expected = "/metadata/bustControl/0/spring";
+    }
+    SECTION("null saved snapshot")
+    {
+        source["metadata"]["hairControl"][0]["param"] = nullptr;
+        expected = "/metadata/hairControl/0/param";
+    }
+    SECTION("missing author units")
+    {
+        source["metadata"].erase("scale");
+        expected = "/metadata/scale";
+    }
+    SECTION("zero author scale")
+    {
+        source["metadata"]["scale"] = 0;
+        expected = "/metadata/scale";
+    }
+    SECTION("wrong particle count")
+    {
+        source["metadata"]["hairControl"][0]["param"]["p"].erase(1);
+        expected = "/metadata/hairControl/0/param/p";
+    }
+    SECTION("null vector component")
+    {
+        source["metadata"]["bustControl"][0]["param"]["op"]["z"] = nullptr;
+        expected = "/metadata/bustControl/0/param/op/z";
+    }
+    SECTION("negative length")
+    {
+        source["metadata"]["hairControl"][0]["length"][1] = -1;
+        expected = "/metadata/hairControl/0/length";
+    }
+    SECTION("invalid enabled flag")
+    {
+        source["metadata"]["partsControl"][0]["enabled"] = 2;
+        expected = "/metadata/partsControl/0/enabled";
+    }
+    SECTION("bad binding")
+    {
+        source["metadata"]["hairControl"][0]["var_lrm"] = "cy";
+        expected = "/metadata/hairControl/0/var_lrm";
+    }
+    const auto imported = import_modified(w, source);
+    REQUIRE_FALSE(imported.ok);
+    REQUIRE_FALSE(imported.report.errors.empty());
+    REQUIRE(imported.report.errors[0].find(expected) != std::string::npos);
 }

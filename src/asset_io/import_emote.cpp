@@ -10,6 +10,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include "validation.hpp"
+
 namespace nekomote::asset_io
 {
 namespace
@@ -17,15 +19,10 @@ namespace
 using Json = nlohmann::json;
 using namespace model;
 
-struct InputError : std::runtime_error
-{
-    using std::runtime_error::runtime_error;
-};
-
 void check(bool condition, const std::string& path, std::string_view message)
 {
     if (!condition)
-        throw InputError(path + ": " + std::string(message));
+        throw AssetValidationError(path + ": " + std::string(message));
 }
 
 Json read_json(const std::filesystem::path& path)
@@ -162,6 +159,146 @@ void unknown_fields(const Json& j, const std::string& path,
         if (std::find(known.begin(), known.end(), it.key()) == known.end() && !it->is_null())
             report.unsupported_fields.push_back(path + "/" + it.key());
     }
+}
+
+template <typename Parse>
+auto required(const Json& j, const char* key, const std::string& path, Parse parse)
+{
+    check(j.contains(key) && !j[key].is_null(), path + "/" + key, "required physical field");
+    return parse(j[key], path + "/" + key);
+}
+std::array<float, 3> physical_vector(const Json& j, const std::string& path)
+{
+    object(j, path);
+    return {required(j, "x", path, number), required(j, "y", path, number),
+            required(j, "z", path, number)};
+}
+std::array<std::array<float, 3>, 2> physical_pair(const Json& j, const std::string& path)
+{
+    array(j, path);
+    check(j.size() == 2, path, "physical chain requires two particles");
+    return {physical_vector(j[0], path + "/0"), physical_vector(j[1], path + "/1")};
+}
+PhysicsBinding physical_binding(const Json& j, const std::string& path)
+{
+    PhysicsBinding result;
+    result.source_path = path;
+    result.label = required(j, "label", path, string);
+    result.anchor = required(j, "baseLayer", path, string);
+    result.preset = required(j, "parameter", path, string);
+    result.variable_x = required(j, "var_lr", path, string);
+    result.variable_y = required(j, "var_ud", path, string);
+    const int enabled = required(j, "enabled", path, integer<int>);
+    check(enabled == 0 || enabled == 1, path + "/enabled", "expected 0 or 1");
+    result.enabled = enabled == 1;
+    return result;
+}
+void physical_fields(const Json& j, const Json& param, PhysicsBinding& binding,
+                     std::initializer_list<std::string_view> known,
+                     std::initializer_list<std::string_view> known_param, ImportReport& report)
+{
+    const auto begin = report.unsupported_fields.size();
+    unknown_fields(j, binding.source_path, known, report);
+    const auto path = binding.source_path + "/param";
+    unknown_fields(param, path, known_param, report);
+    // Unknown vector members can also affect the solver. Preserve their paths
+    // inside the asset, so runtime compilation cannot silently drop them.
+    for (const auto* key : {"p", "pv", "op", "bp"})
+    {
+        if (!param.contains(key))
+            continue;
+        const auto& vectors = param[key];
+        if (vectors.is_object())
+            unknown_fields(vectors, path + "/" + key, {"x", "y", "z"}, report);
+        else if (vectors.is_array())
+            for (std::size_t i = 0; i < vectors.size(); ++i)
+                unknown_fields(vectors[i], path + "/" + key + "/" + std::to_string(i),
+                               {"x", "y", "z"}, report);
+    }
+    binding.unsupported_fields.assign(report.unsupported_fields.begin() +
+                                          static_cast<std::ptrdiff_t>(begin),
+                                      report.unsupported_fields.end());
+}
+void physical_controls(const Json& md, ModelAsset& asset, ImportReport& report)
+{
+    asset.author_scale = field<float>(md, "scale", "/metadata", number);
+    if (md.contains("bustControl"))
+    {
+        std::size_t index = 0;
+        for (const auto& j : array(md["bustControl"], "/metadata/bustControl"))
+        {
+            const auto path = "/metadata/bustControl/" + std::to_string(index++);
+            object(j, path);
+            SpringControl result;
+            result.binding = physical_binding(j, path);
+            result.stiffness = required(j, "spring", path, number);
+            result.friction = required(j, "friction", path, number);
+            result.gravity = required(j, "gravity", path, number);
+            result.axis_scale = {required(j, "scale_x", path, number),
+                                 required(j, "scale_y", path, number)};
+            check(j.contains("param"), path + "/param", "required physical snapshot");
+            const auto& param = j["param"];
+            const auto pp = path + "/param";
+            object(param, pp);
+            result.vertical_offset = required(param, "ofs", pp, number);
+            result.position = required(param, "p", pp, physical_vector);
+            result.velocity = required(param, "pv", pp, physical_vector);
+            result.previous_anchor = required(param, "op", pp, physical_vector);
+            physical_fields(j, param, result.binding,
+                            {"label", "baseLayer", "parameter", "var_lr", "var_ud", "enabled",
+                             "spring", "friction", "gravity", "scale_x", "scale_y", "param",
+                             "comment"},
+                            {"ofs", "p", "pv", "op"}, report);
+            asset.spring_controls.push_back(std::move(result));
+        }
+    }
+    for (const auto& [collection, kind] :
+         {std::pair{"hairControl", ChainKind::Hair}, {"partsControl", ChainKind::Parts}})
+    {
+        if (!md.contains(collection))
+            continue;
+        std::size_t index = 0;
+        for (const auto& j : array(md[collection], std::string("/metadata/") + collection))
+        {
+            const auto path =
+                std::string("/metadata/") + collection + "/" + std::to_string(index++);
+            object(j, path);
+            ChainControl result;
+            result.binding = physical_binding(j, path);
+            result.kind = kind;
+            result.variable_middle = required(j, "var_lrm", path, string);
+            result.stretch_stiffness = required(j, "b_rate", path, number);
+            result.gravity = required(j, "gravity", path, number);
+            result.velocity_retention = required(j, "v_bound", path, number);
+            result.friction = {required(j, "friction_x", path, number),
+                               required(j, "friction_y", path, number)};
+            result.length = required(j, "length", path, float_array<2>);
+            result.scale_x = required(j, "scale_x", path, float_array<2>);
+            result.scale_y = required(j, "scale_y", path, float_array<2>);
+            result.bend_speed = required(j, "bend_spd", path, number);
+            result.bend_volume = required(j, "bend_vol", path, number);
+            result.vertical_effect = required(j, "ud_eft", path, integer<int>);
+            check(j.contains("param"), path + "/param", "required physical snapshot");
+            const auto& param = j["param"];
+            const auto pp = path + "/param";
+            object(param, pp);
+            result.rest_position = required(param, "bp", pp, physical_pair);
+            result.position = required(param, "p", pp, physical_pair);
+            result.velocity = required(param, "pv", pp, physical_pair);
+            result.previous_anchor = required(param, "op", pp, physical_vector);
+            result.vertical_offset = required(param, "ofs", pp, number);
+            result.bend_phase = required(param, "bendR", pp, number);
+            result.bend_gain = required(param, "bendS", pp, number);
+            physical_fields(j, param, result.binding,
+                            {"label",      "baseLayer",  "parameter", "var_lr",  "var_lrm",
+                             "var_ud",     "enabled",    "b_rate",    "gravity", "v_bound",
+                             "friction_x", "friction_y", "length",    "scale_x", "scale_y",
+                             "bend_spd",   "bend_vol",   "ud_eft",    "param",   "comment"},
+                            {"bp", "p", "pv", "op", "ofs", "bendR", "bendS"}, report);
+            asset.chain_controls.push_back(std::move(result));
+        }
+    }
+    validate_physics(asset);
 }
 
 MeshData mesh(const Json& j, const std::string& p)
@@ -662,10 +799,12 @@ ImportResult parse(const ImportOptions& opts)
                            result.report);
         }
     }
+    physical_controls(md, a, result.report);
     unknown_fields(md, "/metadata",
                    {"variableList", "instantVariableList", "customPartsOrder", "timelineControl",
                     "base", "clampControl", "transitionControl", "immediateControl",
-                    "eyebrowControl", "eyeControl", "mouthControl", "selectorControl"},
+                    "eyebrowControl", "eyeControl", "mouthControl", "selectorControl", "scale",
+                    "bustControl", "hairControl", "partsControl"},
                    result.report);
     unknown_fields(d, "",
                    {"spec", "version", "screenSize", "source", "object", "metadata", "id", "label"},
@@ -693,7 +832,7 @@ ImportResult import_emote(const ImportOptions& opts)
     {
         return parse(opts);
     }
-    catch (const InputError& e)
+    catch (const AssetValidationError& e)
     {
         ImportResult r;
         r.report.errors.push_back(opts.json_path.string() + ": " + e.what());

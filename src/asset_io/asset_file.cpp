@@ -415,6 +415,100 @@ inline void from_json(const Json& j, VariableControl& v)
     v.options = checked_value<decltype(v.options)>(j.at("options"));
 }
 
+inline void to_json(Json& j, const PhysicsBinding& v)
+{
+    j = Json{{"source_path", v.source_path}, {"label", v.label},
+             {"anchor", v.anchor},           {"preset", v.preset},
+             {"variable_x", v.variable_x},   {"variable_y", v.variable_y},
+             {"enabled", v.enabled},         {"unsupported_fields", v.unsupported_fields}};
+}
+inline void from_json(const Json& j, PhysicsBinding& v)
+{
+    v.source_path = checked_value<decltype(v.source_path)>(j.at("source_path"));
+    v.label = checked_value<decltype(v.label)>(j.at("label"));
+    v.anchor = checked_value<decltype(v.anchor)>(j.at("anchor"));
+    v.preset = checked_value<decltype(v.preset)>(j.at("preset"));
+    v.variable_x = checked_value<decltype(v.variable_x)>(j.at("variable_x"));
+    v.variable_y = checked_value<decltype(v.variable_y)>(j.at("variable_y"));
+    v.enabled = checked_value<decltype(v.enabled)>(j.at("enabled"));
+    v.unsupported_fields =
+        checked_value<decltype(v.unsupported_fields)>(j.at("unsupported_fields"));
+}
+inline void to_json(Json& j, const SpringControl& v)
+{
+    j = Json{{"binding", v.binding},
+             {"stiffness", v.stiffness},
+             {"friction", v.friction},
+             {"gravity", v.gravity},
+             {"axis_scale", v.axis_scale},
+             {"vertical_offset", v.vertical_offset},
+             {"position", v.position},
+             {"velocity", v.velocity},
+             {"previous_anchor", v.previous_anchor}};
+}
+inline void from_json(const Json& j, SpringControl& v)
+{
+    v.binding = checked_value<decltype(v.binding)>(j.at("binding"));
+    v.stiffness = checked_value<decltype(v.stiffness)>(j.at("stiffness"));
+    v.friction = checked_value<decltype(v.friction)>(j.at("friction"));
+    v.gravity = checked_value<decltype(v.gravity)>(j.at("gravity"));
+    v.axis_scale = checked_value<decltype(v.axis_scale)>(j.at("axis_scale"));
+    v.vertical_offset = checked_value<decltype(v.vertical_offset)>(j.at("vertical_offset"));
+    v.position = checked_value<decltype(v.position)>(j.at("position"));
+    v.velocity = checked_value<decltype(v.velocity)>(j.at("velocity"));
+    v.previous_anchor = checked_value<decltype(v.previous_anchor)>(j.at("previous_anchor"));
+}
+inline void to_json(Json& j, const ChainControl& v)
+{
+    j = Json{{"kind", static_cast<int>(v.kind)},
+             {"binding", v.binding},
+             {"variable_middle", v.variable_middle},
+             {"stretch_stiffness", v.stretch_stiffness},
+             {"gravity", v.gravity},
+             {"velocity_retention", v.velocity_retention},
+             {"friction", v.friction},
+             {"length", v.length},
+             {"scale_x", v.scale_x},
+             {"scale_y", v.scale_y},
+             {"bend_speed", v.bend_speed},
+             {"bend_volume", v.bend_volume},
+             {"vertical_effect", v.vertical_effect},
+             {"rest_position", v.rest_position},
+             {"position", v.position},
+             {"velocity", v.velocity},
+             {"previous_anchor", v.previous_anchor},
+             {"vertical_offset", v.vertical_offset},
+             {"bend_phase", v.bend_phase},
+             {"bend_gain", v.bend_gain}};
+}
+inline void from_json(const Json& j, ChainControl& v)
+{
+    const auto kind = checked_value<int>(j.at("kind"));
+    if (kind < 0 || kind > static_cast<int>(ChainKind::Parts))
+        throw std::runtime_error("invalid physical chain kind");
+    v.kind = static_cast<ChainKind>(kind);
+    v.binding = checked_value<decltype(v.binding)>(j.at("binding"));
+    v.variable_middle = checked_value<decltype(v.variable_middle)>(j.at("variable_middle"));
+    v.stretch_stiffness = checked_value<decltype(v.stretch_stiffness)>(j.at("stretch_stiffness"));
+    v.gravity = checked_value<decltype(v.gravity)>(j.at("gravity"));
+    v.velocity_retention =
+        checked_value<decltype(v.velocity_retention)>(j.at("velocity_retention"));
+    v.friction = checked_value<decltype(v.friction)>(j.at("friction"));
+    v.length = checked_value<decltype(v.length)>(j.at("length"));
+    v.scale_x = checked_value<decltype(v.scale_x)>(j.at("scale_x"));
+    v.scale_y = checked_value<decltype(v.scale_y)>(j.at("scale_y"));
+    v.bend_speed = checked_value<decltype(v.bend_speed)>(j.at("bend_speed"));
+    v.bend_volume = checked_value<decltype(v.bend_volume)>(j.at("bend_volume"));
+    v.vertical_effect = checked_value<decltype(v.vertical_effect)>(j.at("vertical_effect"));
+    v.rest_position = checked_value<decltype(v.rest_position)>(j.at("rest_position"));
+    v.position = checked_value<decltype(v.position)>(j.at("position"));
+    v.velocity = checked_value<decltype(v.velocity)>(j.at("velocity"));
+    v.previous_anchor = checked_value<decltype(v.previous_anchor)>(j.at("previous_anchor"));
+    v.vertical_offset = checked_value<decltype(v.vertical_offset)>(j.at("vertical_offset"));
+    v.bend_phase = checked_value<decltype(v.bend_phase)>(j.at("bend_phase"));
+    v.bend_gain = checked_value<decltype(v.bend_gain)>(j.at("bend_gain"));
+}
+
 inline void to_json(Json& j, const ModelAsset& v)
 {
     j = Json{{"spec", v.spec},
@@ -433,6 +527,9 @@ inline void to_json(Json& j, const ModelAsset& v)
              {"timelines", v.timelines},
              {"variable_controls", v.variable_controls},
              {"paired_clamps", v.paired_clamps},
+             {"author_scale", v.author_scale},
+             {"spring_controls", v.spring_controls},
+             {"chain_controls", v.chain_controls},
              {"parts_order", v.parts_order},
              {"total_layers", v.total_layers},
              {"total_frames", v.total_frames},
@@ -457,6 +554,10 @@ inline void from_json(const Json& j, ModelAsset& v)
     v.timelines = checked_value<decltype(v.timelines)>(j.at("timelines"));
     v.variable_controls = checked_value<decltype(v.variable_controls)>(j.at("variable_controls"));
     v.paired_clamps = checked_value<decltype(v.paired_clamps)>(j.at("paired_clamps"));
+    v.author_scale = checked_value<decltype(v.author_scale)>(j.at("author_scale"));
+    v.spring_controls = checked_value<decltype(v.spring_controls)>(j.at("spring_controls"));
+    v.chain_controls = checked_value<decltype(v.chain_controls)>(j.at("chain_controls"));
+
     v.parts_order = checked_value<decltype(v.parts_order)>(j.at("parts_order"));
     v.total_layers = checked_value<decltype(v.total_layers)>(j.at("total_layers"));
     v.total_frames = checked_value<decltype(v.total_frames)>(j.at("total_frames"));

@@ -1,0 +1,88 @@
+{
+  "rebuild_required": true,
+  "physics_playback_certified": false,
+  "models": [
+    {
+      "model": "chocola-date-a",
+      "old_schema": 3,
+      "new_schema": 4,
+      "existing_model_fields_unchanged": true,
+      "added_fields": [
+        "author_scale",
+        "chain_controls",
+        "spring_controls"
+      ],
+      "spring_controls": 2,
+      "chain_controls": 6,
+      "asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+      "source_json_sha256": "a6496ba68886430df2e7911f30c10297f71f4d7ddfcb9e51d2a9c0fe815fb2a6",
+      "old_asset_bytes": 9690384,
+      "new_asset_bytes": 9702410
+    },
+    {
+      "model": "vanilla-date-a",
+      "old_schema": 3,
+      "new_schema": 4,
+      "existing_model_fields_unchanged": true,
+      "added_fields": [
+        "author_scale",
+        "chain_controls",
+        "spring_controls"
+      ],
+      "spring_controls": 2,
+      "chain_controls": 6,
+      "asset_sha256": "46532556e285a6db9dcd47f9fcced7b9a3a33948918edff927d34e49c57ce352",
+      "source_json_sha256": "b5597aa8185aa7f8b75e6ecc4ed21e38fe388776e53a3d505c540b4f6b955680",
+      "old_asset_bytes": 9783326,
+      "new_asset_bytes": 9795356
+    },
+    {
+      "model": "chocola-teenage",
+      "old_schema": 3,
+      "new_schema": 4,
+      "existing_model_fields_unchanged": true,
+      "added_fields": [
+        "author_scale",
+        "chain_controls",
+        "spring_controls"
+      ],
+      "spring_controls": 2,
+      "chain_controls": 6,
+      "asset_sha256": "4b8a0bc392abd85233233203a1f49dcdd60d6ae9080c48f704dea8dbacda92c1",
+      "source_json_sha256": "e1c7e019b2295f56fb4ad4554dee379026bddbfe5467a60dcad1ff3b3d2f6864",
+      "old_asset_bytes": 9881308,
+      "new_asset_bytes": 9893358
+    },
+    {
+      "model": "azuki-maid-a",
+      "old_schema": 3,
+      "new_schema": 4,
+      "existing_model_fields_unchanged": true,
+      "added_fields": [
+        "author_scale",
+        "chain_controls",
+        "spring_controls"
+      ],
+      "spring_controls": 2,
+      "chain_controls": 6,
+      "asset_sha256": "9d76c7a16ac9a09f4b18b1c2841dbeb437057bf316e52ab41481e3d78849d2b9",
+      "source_json_sha256": "b15a8ca235d47c7d76c15f6dcf5c3e25c663ca68794f60ba8a370e46c527bf2c",
+      "old_asset_bytes": 10567180,
+      "new_asset_bytes": 10579230
+    }
+  ],
+  "validation": {
+    "dev_ctest": 54,
+    "release_ctest": 54,
+    "asan_core_ctest": 53,
+    "catalog_records": 195,
+    "structural_imports": 193,
+    "static_images_passed": 23,
+    "static_images_failed": 7,
+    "static_pixels_over_tolerance": 10,
+    "dynamic_images_passed": 2,
+    "dynamic_images_failed": 5,
+    "dynamic_pixels_over_tolerance": 18,
+    "new_image_regressions": 0
+  }
+}
