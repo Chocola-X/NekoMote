@@ -1,0 +1,1581 @@
+{
+  "tolerance": 1e-05,
+  "note": "Public SDK GetVariableDiff observations; original PSB, explicit seed 1, all physical amplitudes one. Composition is verified separately against GPU geometry and images. No SDK outputs serve as native playback inputs.",
+  "cases": [
+    {
+      "case": "gaze-lip10",
+      "initial": {
+        "head_LR": -10
+      },
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 30,
+            "frames": 10,
+            "easing": 0
+          }
+        },
+        "lipSync": {
+          "face_talk": {
+            "value": 5,
+            "frames": 10,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            },
+            "lipSync": {
+              "face_talk": 0
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "gaze": {
+              "head_LR": 3
+            },
+            "lipSync": {
+              "face_talk": 0.5
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "gaze": {
+              "head_LR": 6
+            },
+            "lipSync": {
+              "face_talk": 1
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "gaze": {
+              "head_LR": 9
+            },
+            "lipSync": {
+              "face_talk": 1.5
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "gaze": {
+              "head_LR": 12
+            },
+            "lipSync": {
+              "face_talk": 2
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "gaze": {
+              "head_LR": 15
+            },
+            "lipSync": {
+              "face_talk": 2.5
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "gaze": {
+              "head_LR": 18
+            },
+            "lipSync": {
+              "face_talk": 3
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "gaze": {
+              "head_LR": 21
+            },
+            "lipSync": {
+              "face_talk": 3.500000238418579
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "gaze": {
+              "head_LR": 24.000001907348633
+            },
+            "lipSync": {
+              "face_talk": 4.000000476837158
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "gaze": {
+              "head_LR": 27.000001907348633
+            },
+            "lipSync": {
+              "face_talk": 4.500000476837158
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "gaze": {
+              "head_LR": 30
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "a453e4de2842182e938046b52b0706aac35706fffbc810f8a28430f9c09f6c17"
+    },
+    {
+      "case": "zero-duration",
+      "initial": {},
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 10,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "lipSync": {
+          "face_talk": {
+            "value": 5,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 11,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 13,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 14,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 15,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 16,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 17,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 18,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 19,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        },
+        {
+          "step": 20,
+          "differences": {
+            "gaze": {
+              "head_LR": 10
+            },
+            "lipSync": {
+              "face_talk": 5
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "bb1c7e5dbb789e3c040a7c82f4118937d0dd37747e176f2bb695525eec6c260b"
+    },
+    {
+      "case": "interrupted",
+      "initial": {
+        "head_LR": -10
+      },
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 30,
+            "frames": 10,
+            "easing": 1
+          }
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "differences": {
+            "gaze": {
+              "head_LR": {
+                "value": -5,
+                "frames": 8,
+                "easing": -1
+              }
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "gaze": {
+              "head_LR": {
+                "value": 0,
+                "frames": 0,
+                "easing": 0
+              }
+            }
+          }
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "gaze": {
+              "head_LR": 0.30000001192092896
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "gaze": {
+              "head_LR": 1.2000000476837158
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "gaze": {
+              "head_LR": 2.700000047683716
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "gaze": {
+              "head_LR": 4.800000190734863
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "gaze": {
+              "head_LR": 1.335176944732666
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "gaze": {
+              "head_LR": -0.09999990463256836
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "gaze": {
+              "head_LR": -1.2012498378753662
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "gaze": {
+              "head_LR": -2.1296463012695312
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "gaze": {
+              "head_LR": -2.947580337524414
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "gaze": {
+              "head_LR": -3.68704891204834
+            }
+          }
+        },
+        {
+          "step": 11,
+          "differences": {
+            "gaze": {
+              "head_LR": -4.367060661315918
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 13,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 14,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 15,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 16,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 17,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 18,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 19,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        },
+        {
+          "step": 20,
+          "differences": {
+            "gaze": {
+              "head_LR": 0
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "5354fdfcc4c2e40236e8af90a9b00a90a9641b7d21369a0858d20adfbe60f0f4"
+    },
+    {
+      "case": "nonlinear-controls",
+      "initial": {},
+      "differences": {
+        "input": {
+          "face_eye_open": {
+            "value": 30,
+            "frames": 10,
+            "easing": 0
+          },
+          "face_mouth": {
+            "value": 40,
+            "frames": 10,
+            "easing": 0
+          },
+          "arm_type": {
+            "value": 1,
+            "frames": 10,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "input": {
+              "face_eye_open": 0,
+              "face_mouth": 0,
+              "arm_type": 0
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "input": {
+              "face_eye_open": 3,
+              "face_mouth": 4,
+              "arm_type": 0.10000000149011612
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "input": {
+              "face_eye_open": 6,
+              "face_mouth": 8,
+              "arm_type": 0.20000000298023224
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "input": {
+              "face_eye_open": 9,
+              "face_mouth": 12,
+              "arm_type": 0.30000001192092896
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "input": {
+              "face_eye_open": 12,
+              "face_mouth": 16,
+              "arm_type": 0.4000000059604645
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "input": {
+              "face_eye_open": 15,
+              "face_mouth": 20,
+              "arm_type": 0.5
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "input": {
+              "face_eye_open": 18,
+              "face_mouth": 24,
+              "arm_type": 0.6000000238418579
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "input": {
+              "face_eye_open": 21,
+              "face_mouth": 28.000001907348633,
+              "arm_type": 0.7000000476837158
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "input": {
+              "face_eye_open": 24.000001907348633,
+              "face_mouth": 32.000003814697266,
+              "arm_type": 0.8000000715255737
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "input": {
+              "face_eye_open": 27.000001907348633,
+              "face_mouth": 36.000003814697266,
+              "arm_type": 0.9000000953674316
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 11,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 13,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 14,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 15,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 16,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 17,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 18,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 19,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        },
+        {
+          "step": 20,
+          "differences": {
+            "input": {
+              "face_eye_open": 30,
+              "face_mouth": 40,
+              "arm_type": 1
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "d86c79786d74cd28fcef457d71f40da673e58d658ebbf24d5c3c15899decb799"
+    },
+    {
+      "case": "alpha-first",
+      "initial": {},
+      "differences": {
+        "alpha": {
+          "head_LR": {
+            "value": 1,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "beta": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 11,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 13,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 14,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 15,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 16,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 17,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 18,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 19,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        },
+        {
+          "step": 20,
+          "differences": {
+            "alpha": {
+              "head_LR": 1
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "bb5b8ad63036c11c84d0eb5e39bf9ea4ed0a96affce69f93c7a50c2552615296"
+    },
+    {
+      "case": "zeta-first",
+      "initial": {},
+      "differences": {
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "beta": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "alpha": {
+          "head_LR": {
+            "value": 1,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 1,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 2,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 3,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 4,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 5,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 6,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 7,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 8,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 9,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 10,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 11,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 13,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 14,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 15,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 16,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 17,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 18,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 19,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        },
+        {
+          "step": 20,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "beta": {
+              "head_LR": 16777216
+            },
+            "alpha": {
+              "head_LR": 1
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "d1814d02e82a66e8744f58b373249c619f6b3473f286c0c50b63048711ad5825"
+    },
+    {
+      "case": "base-addition-order",
+      "initial": {
+        "head_LR": 1
+      },
+      "differences": {
+        "alpha": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "alpha": {
+              "head_LR": 16777216
+            },
+            "zeta": {
+              "head_LR": -16777216
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "54a8e52e9ccb0cfd3e509e8765204f25a1110038eab3973b724839ab1c3518a9"
+    },
+    {
+      "case": "base-addition-order-reversed",
+      "initial": {
+        "head_LR": 1
+      },
+      "differences": {
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "alpha": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "samples": [
+        {
+          "step": 0,
+          "differences": {
+            "zeta": {
+              "head_LR": -16777216
+            },
+            "alpha": {
+              "head_LR": 16777216
+            }
+          }
+        }
+      ],
+      "source_metadata_sha256": "dd9d7a846315ac33761fbcc79170ce2b2a44b111526ff9a668640ffcc120aa12"
+    }
+  ]
+}

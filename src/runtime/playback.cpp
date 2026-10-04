@@ -35,14 +35,15 @@ PhysicsMode PlaybackProgram::physics_mode() const noexcept
 {
     return impl_->mode;
 }
-PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMode mode)
+PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMode mode,
+                                       std::span<const VariableSourceDefinition> sources)
 {
     if (mode != PhysicsMode::Enabled && mode != PhysicsMode::DisabledDiagnostic)
         return {{}, {"unsupported playback physics mode"}};
     auto geometry = compile_geometry_scene(asset);
     if (!geometry.scene)
         return {{}, std::move(geometry.errors)};
-    auto animation = compile_animation(asset, *geometry.scene);
+    auto animation = compile_animation(asset, *geometry.scene, sources);
     if (!animation.program)
         return {{}, std::move(animation.errors)};
     auto data = std::make_unique<PlaybackProgram::Impl>();
@@ -108,6 +109,23 @@ PlaybackStatus PlaybackInstance::transition(ParamId id, float target, float fram
         return {PlaybackError::Animation, status, {}, {}};
     data.compose();
     return {};
+}
+PlaybackStatus PlaybackInstance::transition_difference(VariableSourceId source, ParamId id,
+                                                       float target, float frames,
+                                                       float easing) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status = data.animation.transition_difference(source, id, target, frames, easing);
+    if (!status)
+        return {PlaybackError::Animation, status, {}, {}};
+    data.compose();
+    return {};
+}
+float PlaybackInstance::difference_value(VariableSourceId source, ParamId id) const noexcept
+{
+    return impl_->faulted ? 0 : impl_->animation.difference_value(source, id);
 }
 PlaybackStatus PlaybackInstance::play(TimelineId id, TimelinePlayMode mode) noexcept
 {

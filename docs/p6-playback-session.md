@@ -49,3 +49,5 @@ python3 tools/reference_capture/validate_playback.py \
 Fraise 已接入子原点同步、透明 stencil 辅助层和小图细分，并修复度数插值、同域从叶到父叠加、显式单位曲面和过渡临时进度的保存顺序。原版完整 idle24、右向き24 和待机差分60 的 22 个物理输出、实际几何/拓扑与图片全部通过，最大标量误差分别为 0 / 2.890825272e−6 / 5.960464478e−8。冻结输入仍为 [Fraise 会话矩阵](validation/playback-fraise-inputs.json)，历史 FAIL 保留于 [子同步记录](validation/p6-child-synchronization.json)，新结果见 [精度记录](validation/p6-transform-precision.json)。
 
 新增作者比例 0.88 与模型比例 0.8/1.25 的三组复核：1.25 的转头/待机标量通过，但截图分别六/一个像素 FAIL；0.8 转头还保留标量 1.573562622e−5 与一个像素 FAIL。全部几何通过。不能用比例 1 的结果认证这些组合；继续独立核实锚点/缓存精度。[缩放矩阵](validation/playback-fraise-scale-inputs.json) 保存新输入与源 hash。
+
+外部视线/口型差分已建立独立通道，见 [证据](validation/p6-variable-differences.json)。编译时传入 `VariableSourceDefinition`，加载后通过 `find_variable_source` 取得强类型 ID；实例 `transition_difference` 和 `difference_value` 持有独立数值过渡。SDK 的源模块逆激活顺序和主通道叠加边界已通过消去实验及实际几何核对。完整矩阵 9 组标量/几何通过、8 张截图通过；即时叠加保留一个失败像素。此项不是 P6 退出验收，也不代表反应/音频/壁纸宿主已经完成。

@@ -84,4 +84,6 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 
 时间线诊断支持 `--timeline-requests '<数组>'`：初始 plays 后按数组顺序执行 SDK 调用。每项有 `kind`/`label`；play 加 flags，stop 无额外字段，fade_in/fade_out 加 frames/easing，blend 加 value/frames/easing/completion（keep 或 stop）。events 项的 timeline_requests 在指定作者步更新前执行。所有额外观察时间线也纳入状态采样；原 SDK `EmotePlayer_GetTimelineBlendRatio` 返回真实比率，不能调用原包装中错误绑定总帧数的 getter。未知请求/非法字段明确失败。
 
-preview `--timeline-script <JSON>` 仅允许固定步数截图诊断，执行同样 timeline_requests/events；正式实时应用通过数值/ID API 调用。playback probe 输入接收同样两字段并输出 blend_ratios/playing；诊断脚本、JSON 采样和截图不计入稳态性能。完整矩阵入口使用 `docs/validation/playback-timeline-weight-inputs.json`。证据输出后缀添加到完整名称，带小数点的权重 case 不会覆盖或错误读取另一个 case。
+preview `--playback-script <JSON>` 仅允许固定步数截图诊断，执行同样 timeline_requests/events；正式实时应用通过数值/ID API 调用。playback probe 输入接收同样两字段并输出 blend_ratios/playing；诊断脚本、JSON 采样和截图不计入稳态性能。完整矩阵入口使用 `docs/validation/playback-timeline-weight-inputs.json`。证据输出后缀添加到完整名称，带小数点的权重 case 不会覆盖或错误读取另一个 case。
+
+外部参数差分使用 `--differences '{"eye":{"head_LR":{"value":30,"frames":60,"easing":-1}}}'`；模块和变量的 JSON 顺序参与参考语义，诊断工具保留输入顺序。事件可包含同样的 `differences` 字段，公开 SDK 的 `GetVariableDiff` 逐步查询每个已定义绑定。正式运行时用编译后的 `VariableSourceId` 和 `ParamId`，不在帧路径解析字符串或 JSON。`--playback-script` 接收初始差分与事件。完整物理、几何和截图矩阵为 `docs/validation/playback-variable-difference-inputs.json`，当前 8/9 截图通过，失败像素及证据保留在 `docs/validation/p6-variable-differences.json`。

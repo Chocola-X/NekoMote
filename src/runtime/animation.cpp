@@ -54,8 +54,14 @@ struct Clip
 };
 struct ProgramData
 {
+    struct VariableSource
+    {
+        std::string label;
+        std::vector<ParamId> parameters;
+    };
     std::vector<Controller> controllers{1};
     std::vector<Clip> clips{1};
+    std::vector<VariableSource> sources{1};
     std::vector<std::string> diagnostics;
 };
 void require(bool condition, const std::string& message)
@@ -437,12 +443,42 @@ std::span<const std::string> AnimationProgram::diagnostics() const noexcept
 {
     return impl_->diagnostics;
 }
-AnimationCompileResult compile_animation(const model::ModelAsset& asset, const GeometryScene& scene)
+VariableSourceId AnimationProgram::find_variable_source(std::string_view label) const noexcept
+{
+    for (std::size_t i = 1; i < impl_->sources.size(); ++i)
+        if (impl_->sources[i].label == label)
+            return VariableSourceId{static_cast<std::uint32_t>(i)};
+    return {};
+}
+AnimationCompileResult compile_animation(const model::ModelAsset& asset, const GeometryScene& scene,
+                                         std::span<const VariableSourceDefinition> sources)
 {
     AnimationCompileResult result;
     try
     {
         auto data = std::make_unique<AnimationProgram::Impl>();
+        require(sources.size() <= 64, "too many variable difference sources");
+        for (const auto& definition : sources)
+        {
+            require(!definition.label.empty() && !definition.variables.empty() &&
+                        definition.variables.size() <= 1024,
+                    "invalid variable source definition");
+            require(std::none_of(data->sources.begin() + 1, data->sources.end(),
+                                 [&](const auto& s) { return s.label == definition.label; }),
+                    definition.label + ": duplicate variable source");
+            ProgramData::VariableSource source;
+            source.label = definition.label;
+            for (const auto& name : definition.variables)
+            {
+                const auto id = scene.find_variable(name);
+                require(id.valid(), definition.label + "/" + name + ": unknown variable");
+                require(std::find(source.parameters.begin(), source.parameters.end(), id) ==
+                            source.parameters.end(),
+                        definition.label + "/" + name + ": duplicate binding");
+                source.parameters.push_back(id);
+            }
+            data->sources.push_back(std::move(source));
+        }
         data->controllers.resize(scene.variables().size() + 1);
         std::vector<bool> assigned(data->controllers.size());
         for (const auto& control : asset.variable_controls)
@@ -640,6 +676,8 @@ struct AnimationInstance::Impl
     std::vector<SelectorState> selectors;
     std::vector<BlinkState> blinks;
     std::vector<ClipState> clips;
+    std::vector<std::vector<Transition>> differences;
+    std::vector<std::size_t> source_order;
     std::vector<ParameterValue> output;
     std::vector<std::size_t> order;
     std::uint64_t ticks{0};
@@ -648,6 +686,10 @@ struct AnimationInstance::Impl
         : program(data), selectors(data.controllers.size()), blinks(data.controllers.size()),
           clips(data.clips.size()), random_seed(config.random_seed)
     {
+        differences.resize(data.sources.size());
+        source_order.reserve(data.sources.size());
+        for (std::size_t i = 1; i < differences.size(); ++i)
+            differences[i].resize(data.sources[i].parameters.size());
         order.reserve(clips.size());
         base.reserve(data.controllers.size());
         for (std::size_t i = 0; i < data.controllers.size(); ++i)
@@ -799,19 +841,35 @@ struct AnimationInstance::Impl
     void compose() noexcept
     {
         for (auto& value : output)
-            value.value = base[value.id.value].value;
-        for (std::size_t i = 1; i < blinks.size(); ++i)
+            value.value = 0;
+        // Newly created SDK modules precede older modules. Activation is per
+        // instance and independent of definition order; reserve storage once.
+        for (const auto i : source_order)
+            for (std::size_t j = 0; j < differences[i].size(); ++j)
+            {
+                auto& value = output[program.sources[i].parameters[j].value - 1].value;
+                value = static_cast<float>(static_cast<double>(value) +
+                                           static_cast<double>(differences[i][j].value));
+            }
+        // The SDK saves module sums before adding the base channel, including
+        // its eye-controller contribution. External sources never enter that graph.
+        for (auto& value : output)
         {
+            const auto i = value.id.value;
             const auto& control = program.controllers[i];
             const auto& rule = control.blink;
-            const float value = base[i].value;
-            if (!rule.enabled || value < rule.open || value > control.eye_closed)
-                continue;
-            const double amount =
-                static_cast<double>(blinks[i].value) / static_cast<double>(control.eye_closed);
-            output[i - 1].value = static_cast<float>(
-                static_cast<double>(value) +
-                (static_cast<double>(control.eye_closed) - static_cast<double>(value)) * amount);
+            float primary = base[i].value;
+            if (rule.enabled && primary >= rule.open && primary <= control.eye_closed)
+            {
+                const double amount =
+                    static_cast<double>(blinks[i].value) / static_cast<double>(control.eye_closed);
+                primary = static_cast<float>(
+                    static_cast<double>(primary) +
+                    (static_cast<double>(control.eye_closed) - static_cast<double>(primary)) *
+                        amount);
+            }
+            value.value =
+                static_cast<float>(static_cast<double>(value.value) + static_cast<double>(primary));
         }
         for (std::size_t i = 1; i < clips.size(); ++i)
         {
@@ -866,6 +924,43 @@ AnimationStatus AnimationInstance::transition(ParamId id, float target, float fr
         return {AnimationError::UnsupportedController, {}, id};
     impl_->compose();
     return {};
+}
+AnimationStatus AnimationInstance::transition_difference(VariableSourceId source, ParamId id,
+                                                         float target, float frames,
+                                                         float easing) noexcept
+{
+    auto& data = *impl_;
+    if (!source.valid() || source.value >= data.differences.size())
+        return {AnimationError::InvalidVariableSource, {}, id};
+    const auto& bindings = data.program.sources[source.value].parameters;
+    const auto found = std::find(bindings.begin(), bindings.end(), id);
+    if (found == bindings.end())
+        return {AnimationError::InvalidParameter, {}, id};
+    if (!std::isfinite(target) || !std::isfinite(frames) || !std::isfinite(easing) || frames < 0)
+        return {AnimationError::InvalidValue, {}, id};
+    auto& transition =
+        data.differences[source.value][static_cast<std::size_t>(found - bindings.begin())];
+    Controller linear;
+    linear.kind = Kind::Linear;
+    if (!request(linear, transition, target, frames, easing))
+        return {AnimationError::UnsupportedController, {}, id};
+    if (std::find(data.source_order.begin(), data.source_order.end(), source.value) ==
+        data.source_order.end())
+        data.source_order.insert(data.source_order.begin(), source.value);
+    data.compose();
+    return {};
+}
+float AnimationInstance::difference_value(VariableSourceId source, ParamId id) const noexcept
+{
+    if (!source.valid() || source.value >= impl_->differences.size())
+        return 0;
+    const auto& bindings = impl_->program.sources[source.value].parameters;
+    const auto found = std::find(bindings.begin(), bindings.end(), id);
+    return found == bindings.end()
+               ? 0
+               : impl_
+                     ->differences[source.value][static_cast<std::size_t>(found - bindings.begin())]
+                     .value;
 }
 AnimationStatus AnimationInstance::play(TimelineId id, TimelinePlayMode mode) noexcept
 {
@@ -1009,6 +1104,10 @@ AnimationStatus AnimationInstance::step() noexcept
                             TimelineId{static_cast<std::uint32_t>(i)},
                             {}};
     data.update_selectors();
+    for (const auto i : data.source_order)
+        for (auto& transition : data.differences[i])
+            if (!update(transition))
+                return {AnimationError::UnsupportedController, {}, {}};
     if (const auto blinked = data.update_blinks(); !blinked)
         return blinked;
     data.compose();
@@ -1038,6 +1137,10 @@ void AnimationInstance::reset() noexcept
             track.reset();
     }
     data.order.clear();
+    for (auto& source : data.differences)
+        for (auto& transition : source)
+            transition.reset();
+    data.source_order.clear();
     data.ticks = 0;
     data.reset_blinks();
     data.compose();

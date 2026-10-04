@@ -1,0 +1,725 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "scalar_tolerance": 1e-05,
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "gaze-lip10",
+      "model": "chocola-date-a",
+      "steps": 10,
+      "variables": {
+        "head_LR": -10
+      },
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 30,
+            "frames": 10,
+            "easing": 0
+          }
+        },
+        "lipSync": {
+          "face_talk": {
+            "value": 5,
+            "frames": 10,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "gaze": [
+          "head_LR"
+        ],
+        "lipSync": [
+          "face_talk"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "a453e4de2842182e938046b52b0706aac35706fffbc810f8a28430f9c09f6c17",
+      "reference_png_sha256": "6118b971e1faa5587640f920b5352b72236ab8621785320a41a10aa13d65dffb",
+      "reference_trace_sha256": "d1f767d083621efea2a442435bdde983747ab52f9d410bda7eb74e946ce58d3e"
+    },
+    {
+      "case": "zero-duration",
+      "model": "chocola-date-a",
+      "steps": 20,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 10,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "lipSync": {
+          "face_talk": {
+            "value": 5,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "gaze": [
+          "head_LR"
+        ],
+        "lipSync": [
+          "face_talk"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "bb1c7e5dbb789e3c040a7c82f4118937d0dd37747e176f2bb695525eec6c260b",
+      "reference_png_sha256": "f839758279e6c1d3c10053fb2778a0d181cf81b040cbb60e0e50ed1b5d113844",
+      "reference_trace_sha256": "a518c814168d1636513a141d6724eadcb6c902f63b624454e523b5308df88c97"
+    },
+    {
+      "case": "interrupted",
+      "model": "chocola-date-a",
+      "steps": 20,
+      "variables": {
+        "head_LR": -10
+      },
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "gaze": {
+          "head_LR": {
+            "value": 30,
+            "frames": 10,
+            "easing": 1
+          }
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "differences": {
+            "gaze": {
+              "head_LR": {
+                "value": -5,
+                "frames": 8,
+                "easing": -1
+              }
+            }
+          }
+        },
+        {
+          "step": 12,
+          "differences": {
+            "gaze": {
+              "head_LR": {
+                "value": 0,
+                "frames": 0,
+                "easing": 0
+              }
+            }
+          }
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "gaze": [
+          "head_LR"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "5354fdfcc4c2e40236e8af90a9b00a90a9641b7d21369a0858d20adfbe60f0f4",
+      "reference_png_sha256": "212c33e8b6090bf0b577d291dbbdc9ca6872f2a77782dbd6bb47dc0e28f78cd4",
+      "reference_trace_sha256": "207a472f773c633d58d3fbabae0ea474547f7654ad1f6bd4496ee40f6de60bce"
+    },
+    {
+      "case": "nonlinear-controls",
+      "model": "chocola-date-a",
+      "steps": 20,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "input": {
+          "face_eye_open": {
+            "value": 30,
+            "frames": 10,
+            "easing": 0
+          },
+          "face_mouth": {
+            "value": 40,
+            "frames": 10,
+            "easing": 0
+          },
+          "arm_type": {
+            "value": 1,
+            "frames": 10,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "input": [
+          "face_eye_open",
+          "face_mouth",
+          "arm_type"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "d86c79786d74cd28fcef457d71f40da673e58d658ebbf24d5c3c15899decb799",
+      "reference_png_sha256": "c60e92067ec1f7002be2481602f73732c50e5234ca37292c0549385d1d56c3ac",
+      "reference_trace_sha256": "dbb1ccd53d1eee371d3e3f2e1b845182385ce8a32f3832a73d7cd2fdd2d786ff"
+    },
+    {
+      "case": "alpha-first",
+      "model": "chocola-date-a",
+      "steps": 20,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "alpha": {
+          "head_LR": {
+            "value": 1,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "beta": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "alpha": [
+          "head_LR"
+        ],
+        "beta": [
+          "head_LR"
+        ],
+        "zeta": [
+          "head_LR"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "bb5b8ad63036c11c84d0eb5e39bf9ea4ed0a96affce69f93c7a50c2552615296",
+      "reference_png_sha256": "28b31dcdaf2a94fa87965d3dea5f3f740c07584a7c8313ccc079352dc11540a8",
+      "reference_trace_sha256": "71349b46fe79ff86f0a18d3e2bd76af9b0a9f6a99d63a0dec8789971103e0220"
+    },
+    {
+      "case": "zeta-first",
+      "model": "chocola-date-a",
+      "steps": 20,
+      "variables": {},
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "beta": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "alpha": {
+          "head_LR": {
+            "value": 1,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "zeta": [
+          "head_LR"
+        ],
+        "beta": [
+          "head_LR"
+        ],
+        "alpha": [
+          "head_LR"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "d1814d02e82a66e8744f58b373249c619f6b3473f286c0c50b63048711ad5825",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "reference_trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    },
+    {
+      "case": "base-addition-order",
+      "model": "chocola-date-a",
+      "steps": 0,
+      "variables": {
+        "head_LR": 1
+      },
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "alpha": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "alpha": [
+          "head_LR"
+        ],
+        "zeta": [
+          "head_LR"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "54a8e52e9ccb0cfd3e509e8765204f25a1110038eab3973b724839ab1c3518a9",
+      "reference_png_sha256": "28b31dcdaf2a94fa87965d3dea5f3f740c07584a7c8313ccc079352dc11540a8",
+      "reference_trace_sha256": "71349b46fe79ff86f0a18d3e2bd76af9b0a9f6a99d63a0dec8789971103e0220"
+    },
+    {
+      "case": "base-addition-order-reversed",
+      "model": "chocola-date-a",
+      "steps": 0,
+      "variables": {
+        "head_LR": 1
+      },
+      "transitions": {},
+      "plays": [],
+      "differences": {
+        "zeta": {
+          "head_LR": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "alpha": {
+          "head_LR": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "zeta": [
+          "head_LR"
+        ],
+        "alpha": [
+          "head_LR"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "dd9d7a846315ac33761fbcc79170ce2b2a44b111526ff9a668640ffcc120aa12",
+      "reference_png_sha256": "28b31dcdaf2a94fa87965d3dea5f3f740c07584a7c8313ccc079352dc11540a8",
+      "reference_trace_sha256": "71349b46fe79ff86f0a18d3e2bd76af9b0a9f6a99d63a0dec8789971103e0220"
+    },
+    {
+      "case": "timeline-addition-order",
+      "model": "chocola-date-a",
+      "steps": 1,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "differences": {
+        "zeta": {
+          "head_slant": {
+            "value": -16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        },
+        "alpha": {
+          "head_slant": {
+            "value": 16777216,
+            "frames": 0,
+            "easing": 0
+          }
+        }
+      },
+      "events": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "fixed_clock_ms": 1000,
+      "random_seed": 1,
+      "observed_variables": [
+        "hair_LR_front",
+        "hair_UD_front",
+        "hair_LR_M_front",
+        "hair_LR",
+        "hair_UD",
+        "hair_LR_M",
+        "bust_LR",
+        "bust_UD",
+        "bust_LR_spare",
+        "bust_UD_spare",
+        "quake_LR",
+        "quake_UD",
+        "quake_LR_M",
+        "quake_LR_spare",
+        "quake_UD_spare",
+        "quake_LR_M_spare",
+        "hair_LR_sideL",
+        "hair_UD_sideL",
+        "hair_LR_M_sideL",
+        "hair_LR_sideR",
+        "hair_UD_sideR",
+        "hair_LR_M_sideR"
+      ],
+      "observed_differences": {
+        "zeta": [
+          "head_slant"
+        ],
+        "alpha": [
+          "head_slant"
+        ]
+      },
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "1eb718acf59d9108db3bd2372405fd4528544a255d109ab4e8ed8c4a437af9eb",
+      "reference_png_sha256": "4c9c987447aac44a6bbc4bd14a4af5fa05c225ec5e47e712759ab570d747fc15",
+      "reference_trace_sha256": "621dfcc6b8efa2c897de8915ab7e279b59056abe662dd87708a86372fdea98b2"
+    }
+  ]
+}

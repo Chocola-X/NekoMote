@@ -75,6 +75,8 @@ def main():
                         help='observe additional source binding labels omitted by CountVariables')
     parser.add_argument('--transitions', type=json.loads, default={},
                         help='explicit original SetVariable requests: name -> {value,frames,easing}')
+    parser.add_argument('--differences', type=json.loads, default={},
+                        help='explicit SetVariableDiff: source -> variable -> {value,frames,easing}')
     parser.add_argument('--physics-scales', type=json.loads, default={'hair': 0, 'parts': 0, 'bust': 0},
                         help='explicit SDK controller scales; zero does not disable integration')
     parser.add_argument('--events', type=json.loads, default=[],
@@ -132,6 +134,16 @@ def main():
         plays.append({'label': name, 'flags': value})
     def finite_number(value):
         return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    def validate_differences(sources):
+        if not isinstance(sources, dict):
+            parser.error('differences must be an object')
+        for source, variables in sources.items():
+            if not source or not isinstance(variables, dict):
+                parser.error('difference source requires a nonempty label and variable object')
+            for name, r in variables.items():
+                if not name or not isinstance(r, dict) or set(r) != {'value', 'frames', 'easing'} or any(not finite_number(v) for v in r.values()) or r['frames'] < 0:
+                    parser.error('difference transition requires finite value, frames >= 0 and easing')
+    validate_differences(args.differences)
     def validate_timeline_requests(requests):
         if not isinstance(requests, list):
             parser.error('timeline requests must be an array')
@@ -182,11 +194,12 @@ def main():
     if not isinstance(args.events, list):
         parser.error('events must be an array')
     for event in args.events:
-        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces', 'transitions', 'timeline_requests'}:
+        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces', 'transitions', 'differences', 'timeline_requests'}:
             parser.error('each event requires step and optional variables/forces/transitions')
         if type(event['step']) is not int or not 1 <= event['step'] <= args.steps:
             parser.error('event step must identify an update in this capture')
         validate_timeline_requests(event.get('timeline_requests', []))
+        validate_differences(event.get('differences', {}))
         transitions = event.get('transitions', {})
         if not isinstance(transitions, dict):
             parser.error('event transitions must be an object')
@@ -285,6 +298,7 @@ def main():
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    timelineRequests=args.timeline_requests,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,
+                   differences=args.differences,
                    url=f'http://127.0.0.1:{server.server_port}/', source_hashes=hashes,
                    physics={**args.physics_scales, 'wind': False},
                    diagnostic_fixture_edits=edits)

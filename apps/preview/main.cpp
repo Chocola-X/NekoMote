@@ -31,7 +31,7 @@ struct VariableTransition
 };
 struct Options
 {
-    std::filesystem::path asset, screenshot, timeline_script;
+    std::filesystem::path asset, screenshot, playback_script;
     std::string icon;
     int width{800}, height{1080}, frames{0}, benchmark{0};
     float x{400}, y{540}, scale{1}, opacity{1};
@@ -47,7 +47,7 @@ struct Options
 // the production author loop and benchmarks. Preserve frozen request order.
 void timeline_requests(nekomote::runtime::PlaybackInstance& player,
                        const nekomote::runtime::AnimationProgram& program,
-                       const nlohmann::json& requests)
+                       const nlohmann::ordered_json& requests)
 {
     using namespace nekomote::runtime;
     if (!requests.is_array())
@@ -114,19 +114,77 @@ int parse_integer(const std::string& text)
         throw std::runtime_error("invalid integer: " + text);
     return value;
 }
-void validate_events(const nlohmann::json& events, int steps)
+std::vector<nekomote::runtime::VariableSourceDefinition>
+variable_sources(const nlohmann::ordered_json& script)
+{
+    std::vector<nekomote::runtime::VariableSourceDefinition> result;
+    const auto collect = [&](const nlohmann::ordered_json& sources)
+    {
+        if (!sources.is_object())
+            throw std::runtime_error("differences must be an object");
+        for (const auto& [label, parameters] : sources.items())
+        {
+            if (!parameters.is_object())
+                throw std::runtime_error("source parameters must be an object");
+            auto found = std::find_if(result.begin(), result.end(),
+                                      [&](const auto& s) { return s.label == label; });
+            if (found == result.end())
+            {
+                result.push_back({label, {}});
+                found = result.end() - 1;
+            }
+            for (const auto& [name, r] : parameters.items())
+            {
+                static_cast<void>(r);
+                if (std::find(found->variables.begin(), found->variables.end(), name) ==
+                    found->variables.end())
+                    found->variables.push_back(name);
+            }
+        }
+    };
+    collect(script.value("differences", nlohmann::ordered_json::object()));
+    for (const auto& e : script.value("events", nlohmann::ordered_json::array()))
+        collect(e.value("differences", nlohmann::ordered_json::object()));
+    return result;
+}
+void difference_requests(nekomote::runtime::PlaybackInstance& player,
+                         const nekomote::runtime::PlaybackProgram& program,
+                         const nlohmann::ordered_json& sources)
+{
+    if (!sources.is_object())
+        throw std::runtime_error("differences must be an object");
+    for (const auto& [label, parameters] : sources.items())
+        for (const auto& [name, r] : parameters.items())
+        {
+            if (!r.is_object() || r.size() != 3)
+                throw std::runtime_error("difference request requires value, frames and easing");
+            const auto status = player.transition_difference(
+                program.animation().find_variable_source(label),
+                program.scene().find_variable(name), r.at("value").get<float>(),
+                r.at("frames").get<float>(), r.at("easing").get<float>());
+            if (!status)
+                throw std::runtime_error("difference request failed animation=" +
+                                         std::to_string(static_cast<int>(status.animation.error)));
+        }
+}
+void validate_events(const nlohmann::ordered_json& events, int steps)
 {
     if (!events.is_array())
         throw std::runtime_error("events must be an array");
     for (const auto& event : events)
     {
-        if (!event.is_object() || event.size() != 2 || !event.contains("step") ||
-            !event.contains("timeline_requests") || !event.at("step").is_number_integer() ||
-            event.at("step").get<std::int64_t>() < 1 ||
-            event.at("step").get<std::int64_t>() > steps ||
-            !event.at("timeline_requests").is_array())
-            throw std::runtime_error(
-                "diagnostic events require an author step in 1..steps and timeline_requests");
+        if (!event.is_object() || !event.contains("step") ||
+            !event.at("step").is_number_integer() || event.at("step").get<std::int64_t>() < 1 ||
+            event.at("step").get<std::int64_t>() > steps)
+            throw std::runtime_error("diagnostic events require an author step in 1..steps");
+        for (const auto& [key, value] : event.items())
+        {
+            if (key != "step" && key != "timeline_requests" && key != "differences")
+                throw std::runtime_error("unsupported diagnostic event field");
+            if ((key == "timeline_requests" && !value.is_array()) ||
+                (key == "differences" && !value.is_object()))
+                throw std::runtime_error("invalid diagnostic event payload");
+        }
     }
 }
 Options parse(int argc, char** argv)
@@ -143,8 +201,8 @@ Options parse(int argc, char** argv)
         };
         if (flag == "--asset")
             o.asset = next();
-        else if (flag == "--timeline-script")
-            o.timeline_script = next();
+        else if (flag == "--playback-script")
+            o.playback_script = next();
         else if (flag == "--icon")
             o.icon = next();
         else if (flag == "--screenshot")
@@ -216,7 +274,7 @@ Options parse(int argc, char** argv)
         else
             throw std::runtime_error("unknown argument: " + flag);
     }
-    if (!o.timeline_script.empty() && (!(o.playback || o.animation) || o.screenshot.empty()))
+    if (!o.playback_script.empty() && (!(o.playback || o.animation) || o.screenshot.empty()))
         throw std::runtime_error("timeline script requires fixed-step playback screenshot");
     if (o.width <= 0 || o.height <= 0 || o.width > 16384 || o.height > 16384 || o.frames < 0 ||
         o.benchmark < 0 || o.steps < 0 || o.steps > 100000 || o.scale <= 0 || o.opacity < 0 ||
@@ -321,9 +379,20 @@ int run(const Options& o)
         RenderFrame frame;
         if (o.animation || o.playback)
         {
-            auto compiled = runtime::compile_playback(
-                loaded.asset, o.playback ? runtime::PhysicsMode::Enabled
-                                         : runtime::PhysicsMode::DisabledDiagnostic);
+            nlohmann::ordered_json script = nlohmann::ordered_json::object();
+            if (!o.playback_script.empty())
+            {
+                std::ifstream input(o.playback_script);
+                if (!input)
+                    throw std::runtime_error("cannot open timeline script");
+                script = nlohmann::ordered_json::parse(input);
+            }
+            const auto sources = variable_sources(script);
+            auto compiled =
+                runtime::compile_playback(loaded.asset,
+                                          o.playback ? runtime::PhysicsMode::Enabled
+                                                     : runtime::PhysicsMode::DisabledDiagnostic,
+                                          sources);
             if (!compiled.program)
                 throw std::runtime_error(compiled.errors.front());
             playback_program = std::move(compiled.program);
@@ -351,24 +420,24 @@ int run(const Options& o)
             for (const auto& [name, mode] : o.plays)
                 playback_checked(playback_instance->play(
                     playback_program->animation().find_timeline(name), mode));
-            nlohmann::json script = nlohmann::json::object();
-            if (!o.timeline_script.empty())
-            {
-                std::ifstream input(o.timeline_script);
-                if (!input)
-                    throw std::runtime_error("cannot open timeline script");
-                script = nlohmann::json::parse(input);
-            }
             timeline_requests(*playback_instance, playback_program->animation(),
-                              script.value("timeline_requests", nlohmann::json::array()));
-            const auto events = script.value("events", nlohmann::json::array());
+                              script.value("timeline_requests", nlohmann::ordered_json::array()));
+            difference_requests(*playback_instance, *playback_program,
+                                script.value("differences", nlohmann::ordered_json::object()));
+            const auto events = script.value("events", nlohmann::ordered_json::array());
             validate_events(events, o.steps);
             for (int i = 0; i < o.steps; ++i)
             {
                 for (const auto& event : events)
                     if (event.at("step").get<int>() == i + 1)
-                        timeline_requests(*playback_instance, playback_program->animation(),
-                                          event.at("timeline_requests"));
+                    {
+                        timeline_requests(
+                            *playback_instance, playback_program->animation(),
+                            event.value("timeline_requests", nlohmann::ordered_json::array()));
+                        difference_requests(
+                            *playback_instance, *playback_program,
+                            event.value("differences", nlohmann::ordered_json::object()));
+                    }
                 playback_checked(playback_instance->step());
             }
             playback_checked(playback_instance->prepare_frame());

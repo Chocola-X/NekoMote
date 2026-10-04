@@ -73,6 +73,9 @@ struct MeshIdTag
 struct TimelineIdTag
 {
 };
+struct VariableSourceIdTag
+{
+};
 struct SurfaceIdTag
 {
 }; // output surface / render target
@@ -83,6 +86,7 @@ using ParamId = Id<ParamIdTag>;
 using InstanceId = Id<InstanceIdTag>;
 using MeshId = Id<MeshIdTag>;
 using TimelineId = Id<TimelineIdTag>;
+using VariableSourceId = Id<VariableSourceIdTag>;
 using SurfaceId = Id<SurfaceIdTag>;
 
 // Monotonic id generator. Not thread-safe; owners are single-threaded by

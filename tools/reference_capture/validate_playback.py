@@ -63,6 +63,8 @@ def main():
             raise ValueError('reference is not the frozen, unmodified request: ' + name)
         if metadata.get('fixedClockMs') != case.get('fixed_clock_ms'):
             raise ValueError('reference initialization clock changed: ' + name)
+        if metadata.get('differences', {}) != case.get('differences', {}):
+            raise ValueError('reference difference requests changed: ' + name)
         if metadata.get('timelineRequests', []) != case.get('timeline_requests', []):
             raise ValueError('reference timeline requests changed: ' + name)
         if 'fixed_clock_ms' in case and case['random_seed'] != case['fixed_clock_ms'] // 1000:
@@ -74,7 +76,8 @@ def main():
                 raise ValueError('reference driver changed')
         request = dict(steps=case['steps'], origin=case['origin'], scale=case.get('scale', 1),
                        variables=case['variables'], transitions=case.get('transitions', {}),
-                       plays=case['plays'], timeline_requests=case.get('timeline_requests', []),
+                       plays=case['plays'], differences=case.get('differences', {}),
+                       timeline_requests=case.get('timeline_requests', []),
                        events=case.get('events', []), dump_frame=True)
         if 'random_seed' in case:
             request['random_seed'] = case['random_seed']
@@ -100,8 +103,8 @@ def main():
             command += ['--variable', key, value]
         if 'random_seed' in case:
             command += ['--random-seed', case['random_seed']]
-        if request['timeline_requests'] or request['events']:
-            command += ['--timeline-script', input_path]
+        if request['timeline_requests'] or request['events'] or request['differences']:
+            command += ['--playback-script', input_path]
         for key, transition in case.get('transitions', {}).items():
             command += ['--transition', key, transition['value'], transition['frames'], transition['easing']]
         for play in case['plays']:
@@ -127,7 +130,7 @@ def main():
                 errors.append(dict(error=abs(a['values'][key] - b['values'][key]),
                                    step=a['step'], variable=key,
                                    reference=a['values'][key], native=b['values'][key]))
-        maximum = max(errors, key=lambda e: e['error'])
+        maximum = max(errors, key=lambda e: e['error']) if errors else dict(error=0, step=None, variable=None, reference=None, native=None)
         scalar_passed = maximum['error'] <= baseline['scalar_tolerance']
         weight_errors, playing_errors = [], []
         observed_timelines = case.get('observed_timeline_weights', [])
@@ -145,6 +148,17 @@ def main():
         weight_maximum = max(weight_errors, key=lambda e: e['error']) if weight_errors else None
         weights_passed = not playing_errors and (weight_maximum is None or
             weight_maximum['error'] <= baseline['scalar_tolerance'])
+        difference_errors = []
+        for a, b in zip(source_samples, native['samples']):
+            for source, variables in case.get('observed_differences', {}).items():
+                for variable in variables:
+                    expected_value = a['differences'][source][variable]
+                    actual_value = b['differences'][source][variable]
+                    difference_errors.append(dict(step=a['step'], source=source, variable=variable,
+                        reference=expected_value, native=actual_value,
+                        error=abs(expected_value - actual_value)))
+        difference_maximum = max(difference_errors, key=lambda e: e['error']) if difference_errors else None
+        differences_passed = difference_maximum is None or difference_maximum['error'] <= baseline['scalar_tolerance']
         geometry = compare(native, json.loads(pathlib.Path(str(reference) + '.trace.json').read_text()))
         (args.output / (name + '-geometry.json')).write_text(json.dumps(geometry, indent=2) + '\n')
         comparison = args.output / (name + '-comparison')
@@ -154,10 +168,12 @@ def main():
                 '--output', str(comparison), '--tolerance', str(baseline['image_tolerance'])],
                 stdout=log, stderr=subprocess.STDOUT).returncode
         image = json.loads(pathlib.Path(str(comparison) + '.json').read_text())
-        passed = scalar_passed and weights_passed and geometry['passed'] and status == 0 and image['passed']
+        passed = scalar_passed and differences_passed and weights_passed and geometry['passed'] and status == 0 and image['passed']
         results.append(dict(case=name, model=model, source_hashes=case['source_hashes'],
                             asset_sha256=case['asset_sha256'], scalar_samples=len(errors),
                             scalar_maximum=maximum, scalar_passed=scalar_passed,
+                            difference_samples=len(difference_errors),
+                            difference_maximum=difference_maximum, differences_passed=differences_passed,
                             timeline_weight_samples=len(weight_errors),
                             timeline_weight_maximum=weight_maximum, playing_errors=playing_errors,
                             timeline_weights_passed=weights_passed,

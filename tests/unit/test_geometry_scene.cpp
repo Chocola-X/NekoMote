@@ -2122,3 +2122,101 @@ TEST_CASE("Weighted difference accumulation preserves observed transient product
     const auto pick = compiled.program->scene().find_variable("pick");
     REQUIRE(player.values()[pick.value - 1].value == -0.21009117364883423f);
 }
+
+TEST_CASE("External contributions preserve source activation order before the base channel",
+          "[runtime][animation]")
+{
+    auto asset = rig();
+    const std::array<runtime::VariableSourceDefinition, 3> sources{
+        runtime::VariableSourceDefinition{"alpha", {"pick"}},
+        runtime::VariableSourceDefinition{"beta", {"pick"}},
+        runtime::VariableSourceDefinition{"zeta", {"pick"}}};
+    auto compiled = runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, sources);
+    REQUIRE(compiled.program);
+    const auto parameter = compiled.program->scene().find_variable("pick");
+    const auto alpha = compiled.program->animation().find_variable_source("alpha");
+    const auto beta = compiled.program->animation().find_variable_source("beta");
+    const auto zeta = compiled.program->animation().find_variable_source("zeta");
+    runtime::PlaybackInstance player(*compiled.program);
+    REQUIRE(player.transition_difference(alpha, parameter, 1));
+    REQUIRE(player.transition_difference(beta, parameter, 16777216));
+    REQUIRE(player.transition_difference(zeta, parameter, -16777216));
+    REQUIRE(player.values()[parameter.value - 1].value == 1.0f);
+    player.reset();
+    REQUIRE(player.transition_difference(zeta, parameter, -16777216));
+    REQUIRE(player.transition_difference(beta, parameter, 16777216));
+    REQUIRE(player.transition_difference(alpha, parameter, 1));
+    REQUIRE(player.values()[parameter.value - 1].value == 0.0f);
+    // Updating a source does not change its first activation priority.
+    REQUIRE(player.transition_difference(zeta, parameter, -16777216));
+    REQUIRE(player.values()[parameter.value - 1].value == 0.0f);
+    player.reset();
+    REQUIRE(player.transition(parameter, 1));
+    REQUIRE(player.transition_difference(alpha, parameter, 16777216));
+    REQUIRE(player.transition_difference(zeta, parameter, -16777216));
+    REQUIRE(player.values()[parameter.value - 1].value == 1.0f);
+    player.reset();
+    REQUIRE(player.transition(parameter, 1));
+    REQUIRE(player.transition_difference(zeta, parameter, -16777216));
+    REQUIRE(player.transition_difference(alpha, parameter, 16777216));
+    REQUIRE(player.values()[parameter.value - 1].value == 1.0f);
+}
+
+TEST_CASE(
+    "External channels validate bindings and reuse storage during paused independent playback",
+    "[runtime][playback][allocation]")
+{
+    auto asset = rig();
+    const std::array<runtime::VariableSourceDefinition, 2> sources{
+        runtime::VariableSourceDefinition{"gaze", {"pick"}},
+        runtime::VariableSourceDefinition{"voice", {"pick"}}};
+    auto compiled = runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, sources);
+    REQUIRE(compiled.program);
+    const auto parameter = compiled.program->scene().find_variable("pick");
+    const auto gaze = compiled.program->animation().find_variable_source("gaze");
+    const auto voice = compiled.program->animation().find_variable_source("voice");
+    runtime::PlaybackInstance player(*compiled.program), other(*compiled.program);
+    REQUIRE(player.transition_difference(gaze, parameter, 1, 10, -1));
+    REQUIRE(player.transition_difference(voice, parameter, -0.25f));
+    REQUIRE(player.step());
+    const float saved = player.difference_value(gaze, parameter);
+    player.set_playback_state(runtime::PlaybackState::Paused);
+    REQUIRE(player.advance(1));
+    REQUIRE(player.step());
+    REQUIRE(player.difference_value(gaze, parameter) == saved);
+    REQUIRE(other.difference_value(gaze, parameter) == 0.0f);
+    REQUIRE_FALSE(player.transition_difference({}, parameter, 1));
+    REQUIRE_FALSE(player.transition_difference(gaze, {}, 1));
+    REQUIRE_FALSE(player.transition_difference(gaze, parameter, 1, -1));
+    REQUIRE_FALSE(
+        player.transition_difference(gaze, parameter, std::numeric_limits<float>::quiet_NaN()));
+    REQUIRE(player.difference_value(gaze, parameter) == saved);
+    player.reset();
+    REQUIRE(player.difference_value(gaze, parameter) == 0.0f);
+    REQUIRE(player.difference_value(voice, parameter) == 0.0f);
+    player.set_playback_state(runtime::PlaybackState::Running);
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 500; ++i)
+    {
+        success &= static_cast<bool>(player.transition_difference(gaze, parameter, 0.5f, 30, -1));
+        success &=
+            static_cast<bool>(player.transition_difference(voice, parameter, -0.25f, 4.2f, -1));
+        success &= static_cast<bool>(player.step());
+        success &= static_cast<bool>(player.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(other.tick_count() == 0);
+    REQUIRE(other.difference_value(voice, parameter) == 0.0f);
+    auto bad = sources;
+    bad[1].label = "gaze";
+    REQUIRE_FALSE(runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, bad).program);
+    bad = sources;
+    bad[1].variables = {"missing"};
+    REQUIRE_FALSE(runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, bad).program);
+    bad[1].variables = {"pick", "pick"};
+    REQUIRE_FALSE(runtime::compile_playback(asset, runtime::PhysicsMode::Enabled, bad).program);
+}

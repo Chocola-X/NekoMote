@@ -187,6 +187,18 @@ window.capture = async function(options) {
         }
     }
     const samples=[];
+    const differenceVariables=new Map();
+    for(const sources of [options.differences||{},...(options.events||[]).map(e=>e.differences||{})])
+        for(const [source,requests] of Object.entries(sources)) {
+            const names=differenceVariables.get(source)||new Set();
+            for(const name of Object.keys(requests)) names.add(name);
+            differenceVariables.set(source,names);
+        }
+    const differenceRequests=sources=>{
+        for(const [source,requests] of Object.entries(sources))
+            for(const [name,r] of Object.entries(requests))
+                EmotePlayer_SetVariableDiff(id,source,name,r.value,r.frames,r.easing);
+    };
     const timelineRequest=request=>{
         if(!timelineInfo.some(t=>t.label===request.label)) throw new Error('unknown timeline: '+request.label);
         switch(request.kind) {
@@ -204,6 +216,7 @@ window.capture = async function(options) {
         for(const name of Object.keys(variables)) values[name]=EmotePlayer_GetVariable(id,name);
         samples.push({step,frame:step*options.stepFrames,values,
                       blendRatios:hasBlendQuery?Object.fromEntries((options.timelines||[]).map(name=>[name,EmotePlayer_GetTimelineBlendRatio(id,name)])):null,
+                      differences:Object.fromEntries(Array.from(differenceVariables,([source,names])=>[source,Object.fromEntries(Array.from(names,name=>[name,EmotePlayer_GetVariableDiff(id,source,name)]))])),
                       playing:(options.timelines||[]).map(name=>EmotePlayer_IsTimelinePlaying(id,name))});
     };
     for(const request of options.plays||[]) {
@@ -212,11 +225,13 @@ window.capture = async function(options) {
         EmotePlayer_PlayTimeline(id,name,request.flags);
     }
     for(const request of options.timelineRequests||[]) timelineRequest(request);
+    differenceRequests(options.differences||{});
     if(options.sampleVariables) observeVariables(0);
     for (let i=0;i<options.steps;++i) {
         window.authorStep=i+1;
         for(const event of options.events||[]) if(event.step===i+1) {
             for(const request of event.timeline_requests||[]) timelineRequest(request);
+            differenceRequests(event.differences||{});
             for(const [name,value] of Object.entries(event.variables||{}))
                 EmotePlayer_SetVariable(id,name,value,0,0);
             for(const [name,request] of Object.entries(event.transitions||{}))

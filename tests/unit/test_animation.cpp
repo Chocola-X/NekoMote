@@ -5,6 +5,7 @@
 #include <nekomote/runtime/playback.hpp>
 #include <nlohmann/json.hpp>
 
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -25,7 +26,7 @@ struct Reference
     model::ModelAsset asset;
     std::unique_ptr<const runtime::GeometryScene> scene;
     std::unique_ptr<const runtime::AnimationProgram> program;
-    Reference()
+    Reference(std::span<const runtime::VariableSourceDefinition> sources = {})
     {
         const std::filesystem::path root{NEKOMOTE_FIXTURES_DIR};
         input = read(root / "animation_reference.json");
@@ -47,11 +48,14 @@ struct Reference
         if (!imported.ok)
             throw std::runtime_error(imported.report.errors.front());
         asset = std::move(imported.asset);
+        // The controller fixture is a subset of the source model. The extra
+        // selector binding has no geometry here; SDK source curves are independent.
+        asset.variables.push_back({"arm_type", {}});
         auto geometry = runtime::compile_geometry_scene(asset);
         if (!geometry.scene)
             throw std::runtime_error(geometry.errors.front());
         scene = std::move(geometry.scene);
-        auto animation = runtime::compile_animation(asset, *scene);
+        auto animation = runtime::compile_animation(asset, *scene, sources);
         if (!animation.program)
             throw std::runtime_error(animation.errors.front());
         program = std::move(animation.program);
@@ -641,6 +645,99 @@ TEST_CASE("Selector requests match original deferred choice and independent fade
                              Catch::Matchers::WithinAbs(expected.get<double>(),
                                                         fixture.at("raw_tolerance").get<double>()));
             }
+        }
+    }
+}
+
+TEST_CASE("External variable differences match frozen SDK source trajectories", "[animation]")
+{
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "variable_difference_reference.json");
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        std::vector<runtime::VariableSourceDefinition> sources;
+        for (const auto& [label, variables] :
+             experiment.at("samples").back().at("differences").items())
+        {
+            sources.push_back({label, {}});
+            for (const auto& [name, v] : variables.items())
+            {
+                static_cast<void>(v);
+                sources.back().variables.push_back(name);
+            }
+        }
+        Reference reference(sources);
+        runtime::AnimationInstance player(*reference.program);
+        const auto requests = [&](const Json& diffs)
+        {
+            for (const auto& [label, variables] : diffs.items())
+                for (const auto& [name, r] : variables.items())
+                    REQUIRE(player.transition_difference(
+                        reference.program->find_variable_source(label),
+                        reference.scene->find_variable(name), r.at("value").get<float>(),
+                        r.at("frames").get<float>(), r.at("easing").get<float>()));
+        };
+        for (const auto& [name, v] : experiment.at("initial").items())
+            REQUIRE(player.transition(reference.scene->find_variable(name), v.get<float>()));
+        requests(experiment.at("differences"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            if (sample.at("step") != 0)
+            {
+                for (const auto& event : experiment.at("events"))
+                    if (event.at("step") == sample.at("step"))
+                        requests(event.value("differences", Json::object()));
+                REQUIRE(player.step());
+            }
+            for (const auto& [label, variables] : sample.at("differences").items())
+                for (const auto& [name, expected] : variables.items())
+                    REQUIRE_THAT(
+                        player.difference_value(reference.program->find_variable_source(label),
+                                                reference.scene->find_variable(name)),
+                        Catch::Matchers::WithinAbs(expected.get<double>(),
+                                                   fixture.at("tolerance").get<double>()));
+        }
+    }
+}
+
+TEST_CASE("External contributions follow the author clock across presentation rates", "[animation]")
+{
+    const std::array<runtime::VariableSourceDefinition, 2> sources{
+        runtime::VariableSourceDefinition{"eye", {"head_LR", "face_eye_open"}},
+        runtime::VariableSourceDefinition{"lipSync", {"face_talk"}}};
+    Reference reference(sources);
+    auto compiled = runtime::compile_playback(reference.asset,
+                                              runtime::PhysicsMode::DisabledDiagnostic, sources);
+    REQUIRE(compiled.program);
+    runtime::PlaybackInstance at30(*compiled.program, {1}), at60(*compiled.program, {1}),
+        at144(*compiled.program, {1});
+    for (int group = 0; group < 20; ++group)
+    {
+        for (auto* player : {&at30, &at60, &at144})
+        {
+            REQUIRE(player->transition_difference(
+                compiled.program->animation().find_variable_source("eye"),
+                reference.scene->find_variable("head_LR"), group % 2 == 0 ? 30.0f : -30.0f, 60,
+                -1));
+            REQUIRE(player->transition_difference(
+                compiled.program->animation().find_variable_source("lipSync"),
+                reference.scene->find_variable("face_talk"), group % 2 == 0 ? 5.0f : 0.0f, 4.2f,
+                -1));
+        }
+        for (int i = 0; i < 5; ++i)
+            REQUIRE(at30.advance(1.0 / 30));
+        for (int i = 0; i < 10; ++i)
+            REQUIRE(at60.advance(1.0 / 60));
+        for (int i = 0; i < 24; ++i)
+            REQUIRE(at144.advance(1.0 / 144));
+        REQUIRE(at30.tick_count() == at60.tick_count());
+        REQUIRE(at30.tick_count() == at144.tick_count());
+        for (std::size_t i = 0; i < at30.values().size(); ++i)
+        {
+            REQUIRE(at30.values()[i].value == at60.values()[i].value);
+            REQUIRE(at30.values()[i].value == at144.values()[i].value);
         }
     }
 }

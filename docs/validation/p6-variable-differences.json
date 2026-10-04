@@ -1,0 +1,280 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "implementation_base": "aa8a29b",
+  "scope": "Independent external numeric source channels for gaze and PCM lip input; does not certify the complete model corpus, application or desktop host.",
+  "thresholds": {
+    "scalar": 1e-05,
+    "geometry_px": 0.001,
+    "image_8bit": 2
+  },
+  "semantics": [
+    "SetVariableDiff interpolates a separate numeric channel with ordinary scalar curves, including nonlinear base variable bindings. Zero-duration updates are immediate.",
+    "Source activation is per instance; newest activated modules accumulate first, saving Float32 after each addition. Updating an existing module leaves its priority unchanged.",
+    "The saved source sum precedes the base/eye-controller contribution; supported difference timelines are added afterward. All input and definition order is preserved by ordered diagnostic JSON.",
+    "Source labels and parameter IDs resolve at compilation; source bindings and transition storage are owned by the program/instance. Invalid requests preserve values.",
+    "Pause, reset, independent instances, 30/60/144 Hz presentation partition and 500 warm frame requests pass; no ordinary project new calls in the measured frame path."
+  ],
+  "scalar_fixture": {
+    "path": "tests/fixtures/variable_difference_reference.json",
+    "sha256": "99b6b781fafa3bd26cc670f2e35ef9f1dce7d448b9047f191d20dca2b903275e",
+    "cases": 8,
+    "samples": 118
+  },
+  "formal": {
+    "inputs": "docs/validation/playback-variable-difference-inputs.json",
+    "reference": "build/evidence/p6-input-differences/full-reference",
+    "report": "build/evidence/p6-input-differences/verified-final/report.json",
+    "report_sha256": "79da68e7ba0e8f4b5cd54b6abb8928badac2fd4cfd4177e839137518334e94d8",
+    "total": 9,
+    "passed": 8,
+    "cases": [
+      {
+        "case": "gaze-lip10",
+        "passed": true,
+        "difference_samples": 22,
+        "difference_maximum": {
+          "step": 0,
+          "source": "gaze",
+          "variable": "head_LR",
+          "reference": 0,
+          "native": 0.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 7.666531018912792e-07,
+          "step": 8,
+          "variable": "bust_UD",
+          "reference": 0.0006474874680861831,
+          "native": 0.0006467208149842918
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.000152587890625,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "zero-duration",
+        "passed": false,
+        "difference_samples": 42,
+        "difference_maximum": {
+          "step": 0,
+          "source": "gaze",
+          "variable": "head_LR",
+          "reference": 10,
+          "native": 10.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.0001400570659689775,
+        "image_pixels_over_tolerance": 1
+      },
+      {
+        "case": "interrupted",
+        "passed": true,
+        "difference_samples": 21,
+        "difference_maximum": {
+          "step": 0,
+          "source": "gaze",
+          "variable": "head_LR",
+          "reference": 0,
+          "native": 0.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 1.124048139899969e-06,
+          "step": 18,
+          "variable": "bust_UD",
+          "reference": 0.0005204712506383657,
+          "native": 0.0005193472024984658
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.00018310546875,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "nonlinear-controls",
+        "passed": true,
+        "difference_samples": 63,
+        "difference_maximum": {
+          "step": 0,
+          "source": "input",
+          "variable": "face_eye_open",
+          "reference": 0,
+          "native": 0.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 3.411968959808029e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "alpha-first",
+        "passed": true,
+        "difference_samples": 63,
+        "difference_maximum": {
+          "step": 0,
+          "source": "alpha",
+          "variable": "head_LR",
+          "reference": 1,
+          "native": 1.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.0001400570659689775,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "zeta-first",
+        "passed": true,
+        "difference_samples": 63,
+        "difference_maximum": {
+          "step": 0,
+          "source": "zeta",
+          "variable": "head_LR",
+          "reference": -16777216,
+          "native": -16777216.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 3.411968959808029e-05,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "base-addition-order",
+        "passed": true,
+        "difference_samples": 2,
+        "difference_maximum": {
+          "step": 0,
+          "source": "alpha",
+          "variable": "head_LR",
+          "reference": 16777216,
+          "native": 16777216.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0,
+          "step": null,
+          "variable": null,
+          "reference": null,
+          "native": null
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.0001400570659689775,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "base-addition-order-reversed",
+        "passed": true,
+        "difference_samples": 2,
+        "difference_maximum": {
+          "step": 0,
+          "source": "zeta",
+          "variable": "head_LR",
+          "reference": -16777216,
+          "native": -16777216.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0,
+          "step": null,
+          "variable": null,
+          "reference": null,
+          "native": null
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.0001400570659689775,
+        "image_pixels_over_tolerance": 0
+      },
+      {
+        "case": "timeline-addition-order",
+        "passed": true,
+        "difference_samples": 4,
+        "difference_maximum": {
+          "step": 0,
+          "source": "zeta",
+          "variable": "head_slant",
+          "reference": -16777216,
+          "native": -16777216.0,
+          "error": 0.0
+        },
+        "scalar_maximum": {
+          "error": 0.0,
+          "step": 1,
+          "variable": "hair_LR_front",
+          "reference": 0,
+          "native": 0.0
+        },
+        "geometry_passed": true,
+        "geometry_max_error_px": 0.000244140625,
+        "image_pixels_over_tolerance": 0
+      }
+    ]
+  },
+  "regression": {
+    "chocola": 4,
+    "fraise": 3,
+    "all_passed": true
+  },
+  "verification": {
+    "debug": 107,
+    "release": 107,
+    "asan_ubsan_core": 106,
+    "python": 7,
+    "all_passed": true
+  },
+  "benchmark": {
+    "build": "Release + LTO",
+    "cpu": "Ryzen 7 5800H",
+    "gpu": "RTX 3060 Laptop",
+    "driver": "NVIDIA 575.64.03",
+    "desktop": "KDE/X11",
+    "model": "chocola-date-a",
+    "resolution": [
+      800,
+      1080
+    ],
+    "author_hz": 60,
+    "session": "base head_LR -10, gaze head_LR ->30/10, lipSync face_talk ->5/10; 120 initial author steps then 120 warm steps",
+    "result": {
+      "p50_ms": 0.31722,
+      "p95_ms": 0.349696,
+      "p99_ms": 0.376096,
+      "warmup_ticks": 120,
+      "samples": 2000,
+      "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback"
+    },
+    "limitation": "CPU-only; no GPU, present timing, allocation profiler, memory, power or system improvement claim."
+  },
+  "remaining": [
+    "zero-duration complete frame retains one failed pixel (76,692), source RGBA [209,180,196,254], native [210,181,198,255]; all scalar and geometry checks pass. Frozen tolerance is unchanged.",
+    "Nonlinear difference timelines, broader geometry/mask semantics, application rules, audio device lifecycle and desktop integration remain pending."
+  ]
+}

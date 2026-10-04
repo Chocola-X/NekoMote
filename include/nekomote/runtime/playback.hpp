@@ -58,7 +58,8 @@ class PlaybackProgram
     std::unique_ptr<Impl> impl_;
     explicit PlaybackProgram(std::unique_ptr<Impl> impl);
     friend class PlaybackInstance;
-    friend PlaybackCompileResult compile_playback(const model::ModelAsset&, PhysicsMode);
+    friend PlaybackCompileResult compile_playback(const model::ModelAsset&, PhysicsMode,
+                                                  std::span<const VariableSourceDefinition>);
 };
 struct PlaybackCompileResult
 {
@@ -66,7 +67,8 @@ struct PlaybackCompileResult
     std::vector<std::string> errors;
 };
 PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
-                                       PhysicsMode mode = PhysicsMode::Enabled);
+                                       PhysicsMode mode = PhysicsMode::Enabled,
+                                       std::span<const VariableSourceDefinition> sources = {});
 // Single-threaded CPU session. Each 60 Hz author tick advances animation, binds
 // its parameters, evaluates native anchors and advances all physics once. Frame
 // preparation then evaluates final parameters and builds the render protocol.
@@ -82,6 +84,9 @@ class PlaybackInstance
     PlaybackInstance& operator=(const PlaybackInstance&) = delete;
     PlaybackStatus transition(ParamId id, float target, float frames = 0,
                               float easing = 0) noexcept;
+    PlaybackStatus transition_difference(VariableSourceId source, ParamId id, float target,
+                                         float frames = 0, float easing = 0) noexcept;
+    float difference_value(VariableSourceId source, ParamId id) const noexcept;
     PlaybackStatus play(TimelineId id, TimelinePlayMode mode) noexcept;
     PlaybackStatus stop(TimelineId id) noexcept;
     PlaybackStatus set_timeline_weight(
