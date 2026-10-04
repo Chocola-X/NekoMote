@@ -1,5 +1,5 @@
 {
-  "asset_schema": 3,
+  "asset_schema": 4,
   "coordinate_tolerance_px": 0.001,
   "reference_condition": "zero author steps, SDK hair/parts/bust scales 0, no integration; no PSB fixture",
   "cases": [

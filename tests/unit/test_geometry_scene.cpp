@@ -4,6 +4,7 @@
 #include <nekomote/runtime/bend.hpp>
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
+#include <nekomote/runtime/physics.hpp>
 #include <nekomote/runtime/spring.hpp>
 
 #include <cmath>
@@ -103,6 +104,29 @@ ModelAsset rig()
     content.coord = field(std::array<float, 3>{-5, -6, 6});
     b.layers.push_back(layer("sprite", 0, content));
     result.parts = {std::move(main), std::move(a), std::move(b)};
+    return result;
+}
+ModelAsset spring_rig()
+{
+    auto result = rig();
+    result.author_scale = field(2.0f);
+    result.variables = {{"spring_x", {}}, {"spring_y", {}}};
+    result.parts[0].layers[0].frame_list[1].content.data.coord =
+        field(std::array<float, 3>{12, 20, 4});
+    auto marker = layer("anchor", 1, FrameContent{});
+    marker.inherit_mask = 0x200020c;
+    result.parts[1].layers.push_back(marker);
+    result.parts[2].layers.push_back(marker);
+    SpringControl spring;
+    spring.binding.source_path = "/metadata/bustControl/0";
+    spring.binding.label = "spring";
+    spring.binding.anchor = "anchor";
+    spring.binding.variable_x = "spring_x";
+    spring.binding.variable_y = "spring_y";
+    spring.stiffness = 0.5f;
+    spring.friction = 0.125f;
+    spring.axis_scale = {1, 2};
+    result.spring_controls.push_back(spring);
     return result;
 }
 void near(Vec2 actual, Vec2 expected)
@@ -563,4 +587,267 @@ TEST_CASE("Warmed bending output retains independent resettable state without he
         advance_bend(second, coefficients, unbent);
     REQUIRE(first.phase == second.phase);
     REQUIRE(first.gain == second.gain);
+}
+
+TEST_CASE("Bound physical instances normalize anchors and preserve state on failed steps",
+          "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE(compiled.program);
+    input = {}; // both programs own normalized data; scene owns borrowed IDs
+    const auto& program = *compiled.program;
+    REQUIRE(program.controller_count() == 1);
+    REQUIRE(program.controller_source(0) == "/metadata/bustControl/0");
+    REQUIRE(program.controller_source(1).empty());
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(program), independent(program);
+    REQUIRE(physics.values().empty());
+    REQUIRE(physics.step(anchors).error == PhysicsError::InvalidAnchor);
+    REQUIRE(physics.tick_count() == 0);
+    REQUIRE(anchors.evaluate());
+    // Initial anchor initialization skips even a large external displacement.
+    REQUIRE(physics.step(anchors, {1, {100, 200}}));
+    REQUIRE(physics.values().size() == 2);
+    REQUIRE(physics.values()[0].value == 0.0f);
+    REQUIRE(physics.values()[1].value == 0.0f);
+    const auto pick = geometry.scene->find_variable("pick");
+    REQUIRE(anchors.set_parameter(pick, 1));
+    REQUIRE(physics.step(anchors).error == PhysicsError::InvalidAnchor);
+    REQUIRE(physics.values().empty());
+    REQUIRE(physics.tick_count() == 1);
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    // 2 model pixels / author_scale 2 = 1 unit; isolated SDK half-spring step 2.
+    REQUIRE_THAT(physics.values()[0].value, Catch::Matchers::WithinAbs(-0.6467359066009521, 1e-5));
+    REQUIRE(physics.step(anchors));
+    REQUIRE_THAT(physics.values()[0].value, Catch::Matchers::WithinAbs(0.07636695355176926, 1e-5));
+    REQUIRE(physics.tick_count() == 3);
+    REQUIRE(physics.step(anchors, {std::numeric_limits<float>::quiet_NaN(), {}}).error ==
+            PhysicsError::InvalidInput);
+    REQUIRE(physics.values().empty());
+    REQUIRE(physics.tick_count() == 3);
+    REQUIRE(physics.step(anchors));
+    REQUIRE_THAT(physics.values()[0].value, Catch::Matchers::WithinAbs(0.6756348609924316, 1e-5));
+    REQUIRE(independent.tick_count() == 0);
+    REQUIRE(independent.values().empty());
+    REQUIRE(independent.step(anchors));
+    REQUIRE(independent.values()[0].value == 0.0f);
+    // SDK external displacements already use author units, independent of scale.
+    REQUIRE(independent.step(anchors, {1, {1, 0}}));
+    REQUIRE_THAT(independent.values()[0].value,
+                 Catch::Matchers::WithinAbs(-0.6467359066009521, 1e-5));
+    physics.reset();
+    REQUIRE(physics.tick_count() == 0);
+    REQUIRE(physics.values().empty());
+    REQUIRE(physics.step(anchors));
+    REQUIRE(physics.values()[0].value == 0.0f);
+
+    auto foreign = compile_geometry_scene(spring_rig());
+    REQUIRE(foreign.scene);
+    GeometryInstance foreign_geometry(*foreign.scene);
+    REQUIRE(foreign_geometry.evaluate());
+    REQUIRE(physics.step(foreign_geometry).error == PhysicsError::ForeignScene);
+    REQUIRE(physics.tick_count() == 1);
+    REQUIRE(physics.values().empty());
+}
+
+TEST_CASE("Physical compilation rejects unsupported or unresolved selected semantics", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto& spring = input.spring_controls[0];
+    SECTION("enabled chain")
+    {
+        ChainControl chain;
+        chain.binding.source_path = "/metadata/hairControl/0";
+        input.chain_controls.push_back(chain);
+    }
+    SECTION("unknown physical field")
+    {
+        spring.binding.unsupported_fields = {"/metadata/bustControl/0/newForce"};
+    }
+    SECTION("unknown saved anchor")
+    {
+        spring.previous_anchor[0] = 1;
+    }
+    SECTION("unverified z")
+    {
+        spring.position[2] = 1;
+    }
+    SECTION("nonfinite snapshot")
+    {
+        spring.velocity[0] = std::numeric_limits<float>::infinity();
+    }
+    SECTION("missing anchor")
+    {
+        spring.binding.anchor = "missing";
+    }
+    SECTION("missing output")
+    {
+        spring.binding.variable_x = "missing";
+    }
+    SECTION("shared output")
+    {
+        auto second = spring;
+        second.binding.source_path = "/metadata/bustControl/1";
+        input.spring_controls.push_back(second);
+    }
+    SECTION("invalid author scale")
+    {
+        input.author_scale.data = 0;
+    }
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE_FALSE(compiled.program);
+    REQUIRE_FALSE(compiled.errors.empty());
+    REQUIRE(compiled.errors[0].find("/metadata/") != std::string::npos);
+}
+
+TEST_CASE("Physical anchor failure cannot partially advance earlier controllers", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    input.variables.push_back({"second_x", {}});
+    input.variables.push_back({"second_y", {}});
+    auto second = input.spring_controls[0];
+    second.binding.source_path = "/metadata/bustControl/1";
+    second.binding.variable_x = "second_x";
+    second.binding.variable_y = "second_y";
+    second.binding.anchor = "second_anchor";
+    input.spring_controls.push_back(second);
+    auto marker = layer("second_anchor", 1, FrameContent{});
+    input.parts[1].layers.push_back(marker);
+    marker.inherit_mask = 0; // only branch B has the unverified transform
+    input.parts[2].layers.push_back(marker);
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(*compiled.program);
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    const auto pick = geometry.scene->find_variable("pick");
+    REQUIRE(anchors.set_parameter(pick, 1));
+    REQUIRE(anchors.evaluate());
+    auto status = physics.step(anchors);
+    REQUIRE(status.error == PhysicsError::InvalidAnchor);
+    REQUIRE(status.controller == 1);
+    REQUIRE(status.geometry.error == GeometryError::UnsupportedTransform);
+    REQUIRE(physics.tick_count() == 1);
+    REQUIRE(physics.values().empty());
+    REQUIRE(anchors.set_parameter(pick, 0));
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    REQUIRE(physics.tick_count() == 2);
+    REQUIRE(physics.values()[0].value == 0.0f);
+    REQUIRE(physics.values()[1].value == 0.0f);
+}
+
+TEST_CASE("Physical anchor selection requires exactly one active branch", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    PhysicsError expected = PhysicsError::None;
+    SECTION("missing active anchor")
+    {
+        input.parts[2].layers.pop_back();
+        expected = PhysicsError::InactiveAnchor;
+    }
+    SECTION("ambiguous active anchors")
+    {
+        input.parts[2].layers.push_back(input.parts[2].layers.back());
+        expected = PhysicsError::AmbiguousAnchor;
+    }
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(*compiled.program);
+    REQUIRE(anchors.evaluate());
+    REQUIRE(physics.step(anchors));
+    REQUIRE(anchors.set_parameter(geometry.scene->find_variable("pick"), 1));
+    REQUIRE(anchors.evaluate());
+    auto status = physics.step(anchors);
+    REQUIRE(status.error == expected);
+    REQUIRE(status.controller == 0);
+    REQUIRE(physics.tick_count() == 1);
+    REQUIRE(physics.values().empty());
+}
+
+TEST_CASE("Nonfinite physical output leaves the last valid state intact", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    auto& spring = input.spring_controls[0];
+    spring.stiffness = std::numeric_limits<float>::max();
+    spring.position[0] = 1;
+    spring.axis_scale[0] = 0;
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(*compiled.program);
+    REQUIRE(anchors.evaluate());
+    const PhysicsInputs inputs{std::numeric_limits<float>::max(), {}};
+    PhysicsStatus status;
+    std::uint64_t last_tick = 0;
+    for (int i = 0; i < 16; ++i)
+    {
+        last_tick = physics.tick_count();
+        status = physics.step(anchors, inputs);
+        if (!status)
+            break;
+    }
+    REQUIRE(status.error == PhysicsError::NonfiniteState);
+    REQUIRE(status.controller == 0);
+    REQUIRE(physics.tick_count() == last_tick);
+    REQUIRE(physics.values().empty());
+    // The failed overflow was in output mapping, not in the integrator. A new
+    // amplitude can retry that step from the last successfully committed state.
+    REQUIRE(physics.step(anchors, {0, {}}));
+    REQUIRE(physics.tick_count() == last_tick + 1);
+    REQUIRE(physics.values()[0].value == 0.0f);
+}
+
+TEST_CASE("Warmed physical binding and anchor sampling allocate no project heap", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    auto input = spring_rig();
+    auto geometry = compile_geometry_scene(input);
+    REQUIRE(geometry.scene);
+    auto compiled = compile_physics(input, *geometry.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance anchors(*geometry.scene);
+    PhysicsInstance physics(*compiled.program);
+    const auto pick = geometry.scene->find_variable("pick");
+    for (int i = 0; i < 120; ++i)
+    {
+        REQUIRE(anchors.set_parameter(pick, static_cast<float>(i % 2)));
+        REQUIRE(anchors.evaluate());
+        REQUIRE(physics.step(anchors));
+    }
+    bool success = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(anchors.set_parameter(pick, static_cast<float>(i % 2)));
+        success &= static_cast<bool>(anchors.evaluate());
+        success &= static_cast<bool>(physics.step(anchors));
+        for (const auto value : physics.values())
+            success &= static_cast<bool>(anchors.set_parameter(value.id, value.value));
+        success &= static_cast<bool>(anchors.evaluate());
+        success &= static_cast<bool>(anchors.build_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
 }

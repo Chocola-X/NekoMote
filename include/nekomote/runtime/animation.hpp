@@ -2,6 +2,7 @@
 
 #include <nekomote/model/asset.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
+#include <nekomote/runtime/parameter.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -41,11 +42,6 @@ enum class PlaybackState
 {
     Running,
     Paused
-};
-struct ParameterValue
-{
-    ParamId id;
-    float value{0};
 };
 class AnimationInstance;
 struct AnimationCompileResult;

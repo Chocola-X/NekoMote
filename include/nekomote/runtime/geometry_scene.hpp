@@ -117,6 +117,7 @@ class GeometryInstance
     ~GeometryInstance();
     GeometryInstance(const GeometryInstance&) = delete;
     GeometryInstance& operator=(const GeometryInstance&) = delete;
+    const GeometryScene& scene() const noexcept;
     GeometryStatus set_parameter(ParamId id, float value) noexcept;
     GeometryStatus evaluate() noexcept; // fixed variable pose, time=0; no heap allocation
     std::span<const GeometryPrimitive> primitives() const noexcept;

@@ -1,5 +1,5 @@
 {
-  "asset_schema": 3,
+  "asset_schema": 4,
   "coordinate_tolerance_px": 0.001,
   "note": "Manual animation/controller isolation only; physics fixture always, blinkEnabled=0 fixture only for clips without eye tracks. Exact source requests and hashes are frozen; full model playback is not certified.",
   "cases": [

@@ -307,11 +307,29 @@ struct Compiler
             node(child, part, id, {}, path, depth + 1, scope);
     }
 };
+struct RigidTransform
+{
+    float a{1}, b{0}, c{0}, d{1};
+    Vec2 translation{};
+    Vec2 apply(Vec2 point) const noexcept
+    {
+        return {a * point.x + c * point.y + translation.x,
+                b * point.x + d * point.y + translation.y};
+    }
+};
+RigidTransform compose(const RigidTransform& parent, const RigidTransform& local) noexcept
+{
+    return {parent.a * local.a + parent.c * local.b, parent.b * local.a + parent.d * local.b,
+            parent.a * local.c + parent.c * local.d, parent.b * local.c + parent.d * local.d,
+            parent.apply(local.translation)};
+}
 struct State
 {
     Pose pose;
     Pose transform;
     NodeId transform_parent;
+    RigidTransform rigid;
+    NodeId rigid_parent;
     float depth{0}, opacity{0};
     bool mesh_path{false};
     float density{0};
@@ -538,6 +556,7 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
 }
 struct GeometryInstance::Impl
 {
+    const GeometryScene& owner;
     const CompiledData& scene;
     std::vector<float> input, parameters;
     std::vector<State> states;
@@ -549,9 +568,10 @@ struct GeometryInstance::Impl
     std::vector<std::uint32_t> node_commands;
     std::vector<bool> used_masks;
     bool evaluated{false}, frame_ready{false};
-    explicit Impl(const CompiledData& data)
-        : scene(data), input(data.variables.size() + 1), parameters(input.size()),
-          states(data.nodes.size()), node_commands(data.nodes.size()), used_masks(data.masks.size())
+    Impl(const GeometryScene& scene_owner, const CompiledData& data)
+        : owner(scene_owner), scene(data), input(data.variables.size() + 1),
+          parameters(input.size()), states(data.nodes.size()), node_commands(data.nodes.size()),
+          used_masks(data.masks.size())
     {
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
@@ -571,19 +591,21 @@ struct GeometryInstance::Impl
                 p = deform_point(
                     pose.patch, {{r.rect.width, r.rect.height}, {r.rect.origin_x, r.rect.origin_y}},
                     p);
-            const float cosine = std::cos(pose.angle), sine = std::sin(pose.angle);
-            p = {p.x * cosine - p.y * sine + pose.translation.x,
-                 p.x * sine + p.y * cosine + pose.translation.y};
-            id = s.transform_parent;
+            p = s.rigid.apply(p);
+            id = s.rigid_parent;
         }
         return p;
     }
 };
 GeometryInstance::GeometryInstance(const GeometryScene& scene)
-    : impl_(std::make_unique<Impl>(*scene.impl_))
+    : impl_(std::make_unique<Impl>(scene, *scene.impl_))
 {
 }
 GeometryInstance::~GeometryInstance() = default;
+const GeometryScene& GeometryInstance::scene() const noexcept
+{
+    return impl_->owner;
+}
 GeometryStatus GeometryInstance::set_parameter(ParamId id, float value) noexcept
 {
     if (!id.valid() || id.value >= impl_->input.size())
@@ -679,6 +701,22 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         // integer pixel bounds across a mask-region floor/ceil boundary.
         if (state.transform.patch == identity_patch())
             state.transform.mesh = false;
+        // Source locator observations distinguish parent-first Float32 rigid
+        // accumulation from repeated point translations. Cache each rigid run
+        // once; a nonlinear mesh is a boundary and must never be crossed.
+        const float cosine = std::cos(state.transform.angle);
+        const float sine = std::sin(state.transform.angle);
+        state.rigid = {cosine, sine, -sine, cosine, state.transform.translation};
+        state.rigid_parent = state.transform_parent;
+        if (state.transform_parent.valid())
+        {
+            const auto& transform_parent = instance.states[state.transform_parent.value];
+            if (!transform_parent.transform.mesh)
+            {
+                state.rigid = compose(transform_parent.rigid, state.rigid);
+                state.rigid_parent = transform_parent.rigid_parent;
+            }
+        }
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)
             // Priority-two automatic density is the maximum active ancestor
