@@ -1,0 +1,468 @@
+{
+  "scope": "Native bending output with own zero-stiffness/gravity constant-displacement input calculation, no source variable/geometry replay. Does not certify full particle integration.",
+  "native_inputs": [
+    {
+      "case": "flat-up24",
+      "steps": 24,
+      "amplitude": 1,
+      "volume": 3,
+      "phase": 0.355883569,
+      "speed": 0.3926991,
+      "initial_y": 64,
+      "rest_y": 64,
+      "axis_scale": 2,
+      "events": [
+        {
+          "step": 2,
+          "y": -50
+        },
+        {
+          "step": 3,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "case": "flat-up48",
+      "steps": 48,
+      "amplitude": 1,
+      "volume": 3,
+      "phase": 0.355883569,
+      "speed": 0.3926991,
+      "initial_y": 64,
+      "rest_y": 64,
+      "axis_scale": 2,
+      "events": [
+        {
+          "step": 2,
+          "y": -50
+        },
+        {
+          "step": 3,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "case": "flat-down24",
+      "steps": 24,
+      "amplitude": 1,
+      "volume": 3,
+      "phase": 0.355883569,
+      "speed": 0.3926991,
+      "initial_y": 64,
+      "rest_y": 64,
+      "axis_scale": 2,
+      "events": [
+        {
+          "step": 2,
+          "y": 50
+        },
+        {
+          "step": 3,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "case": "flat-amp2-up24",
+      "steps": 24,
+      "amplitude": 2,
+      "volume": 4,
+      "phase": 0.355883569,
+      "speed": 0.3926991,
+      "initial_y": 64,
+      "rest_y": 64,
+      "axis_scale": 2,
+      "events": [
+        {
+          "step": 2,
+          "y": -50
+        },
+        {
+          "step": 3,
+          "y": 0
+        }
+      ]
+    }
+  ],
+  "native_asset_sha256": "c50d92aeebaa7b8b57692d38d60e9e562d98919d7d5b6856cfd656b0b44498e4",
+  "cases": [
+    {
+      "case": "flat-up24",
+      "native_variables": {
+        "hair_LR_M_front": 1.2198597192764282,
+        "hair_LR_front": -1.2198597192764282,
+        "hair_UD_front": 34.45079803466797
+      },
+      "reference_variables": {
+        "hair_LR_M_front": 1.2198597192764282,
+        "hair_LR_front": -1.2198597192764282,
+        "hair_UD_front": 34.4507942199707
+      },
+      "image": {
+        "reference_sha256": "05311afdafa77eb91c6d166ef63f58253121711d7115c8a9f4f80a138e1ebdaf",
+        "native_sha256": "87752c51dfc44fdc8342cdca448a1fcc5857be0289b78af0e3b360045b8f5622",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          64,
+          2,
+          2,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "passed": true
+      },
+      "geometry_passed": true,
+      "frame_max_error_px": 8.217109385886389e-05,
+      "source_hashes": {
+        "psb": "22c2b34142ad4ebab6e0bec765b571ca0687bac8b063dc174df271b5f8342d8f",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/bend_vol",
+          "offset": 281886,
+          "before": 3,
+          "after": 3,
+          "bytes": 4
+        }
+      ],
+      "native_png_sha256": "87752c51dfc44fdc8342cdca448a1fcc5857be0289b78af0e3b360045b8f5622",
+      "reference_png_sha256": "05311afdafa77eb91c6d166ef63f58253121711d7115c8a9f4f80a138e1ebdaf",
+      "reference_metadata_sha256": "3f189156532282d82b27976be4143f18a3003d99876e7203d131e5ee1c627fc9"
+    },
+    {
+      "case": "flat-up48",
+      "native_variables": {
+        "hair_LR_M_front": -0.47657719254493713,
+        "hair_LR_front": 0.47657719254493713,
+        "hair_UD_front": 34.45079803466797
+      },
+      "reference_variables": {
+        "hair_LR_M_front": -0.47657719254493713,
+        "hair_LR_front": 0.47657719254493713,
+        "hair_UD_front": 34.4507942199707
+      },
+      "image": {
+        "reference_sha256": "1e967bb96579a5728f65373b3aaebd0651be4dbcca836e1195b433f1e83f1809",
+        "native_sha256": "8784e5d8bb669649c68a3bdfab2d3fa6f4776d347375c769ed61aec9b6862dfa",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          2,
+          2,
+          2,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "passed": true
+      },
+      "geometry_passed": true,
+      "frame_max_error_px": 6.823937919616058e-05,
+      "source_hashes": {
+        "psb": "22c2b34142ad4ebab6e0bec765b571ca0687bac8b063dc174df271b5f8342d8f",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/bend_vol",
+          "offset": 281886,
+          "before": 3,
+          "after": 3,
+          "bytes": 4
+        }
+      ],
+      "native_png_sha256": "8784e5d8bb669649c68a3bdfab2d3fa6f4776d347375c769ed61aec9b6862dfa",
+      "reference_png_sha256": "1e967bb96579a5728f65373b3aaebd0651be4dbcca836e1195b433f1e83f1809",
+      "reference_metadata_sha256": "cafda07f601b044031c6401baf40847ee126f8f9142b985d644e8c59bb47c706"
+    },
+    {
+      "case": "flat-down24",
+      "native_variables": {
+        "hair_LR_M_front": 1.2198597192764282,
+        "hair_LR_front": -1.2198597192764282,
+        "hair_UD_front": -34.45079803466797
+      },
+      "reference_variables": {
+        "hair_LR_M_front": 1.2198597192764282,
+        "hair_LR_front": -1.2198597192764282,
+        "hair_UD_front": -34.4507942199707
+      },
+      "image": {
+        "reference_sha256": "666bf821693b27dbe9d7fbd216b2b37c9185d578b1e26404ecff475d7f3f404c",
+        "native_sha256": "6a66b4ede2e19385a7d209dea15048b36ec59a4fe65e1ebca915da0019409bd8",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "passed": true
+      },
+      "geometry_passed": true,
+      "frame_max_error_px": 6.291359902370698e-05,
+      "source_hashes": {
+        "psb": "22c2b34142ad4ebab6e0bec765b571ca0687bac8b063dc174df271b5f8342d8f",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/bend_vol",
+          "offset": 281886,
+          "before": 3,
+          "after": 3,
+          "bytes": 4
+        }
+      ],
+      "native_png_sha256": "6a66b4ede2e19385a7d209dea15048b36ec59a4fe65e1ebca915da0019409bd8",
+      "reference_png_sha256": "666bf821693b27dbe9d7fbd216b2b37c9185d578b1e26404ecff475d7f3f404c",
+      "reference_metadata_sha256": "ab734e525284337bd9fad2ca20540db5ad6957bdb8ae0207b9216c36b2799e9b"
+    },
+    {
+      "case": "flat-amp2-up24",
+      "native_variables": {
+        "hair_LR_M_front": 1.6264796257019043,
+        "hair_LR_front": -1.6264796257019043,
+        "hair_UD_front": 37.19206237792969
+      },
+      "reference_variables": {
+        "hair_LR_M_front": 1.6264796257019043,
+        "hair_LR_front": -1.6264796257019043,
+        "hair_UD_front": 37.19206237792969
+      },
+      "image": {
+        "reference_sha256": "6416f284c2e6fe19d10a92bd3ef2beb7c9a41de2935efb84c48cc857baf6c185",
+        "native_sha256": "ee9a3de5e8594886f915e8bb03bc7520fa29bd75361255280db299a40ff787ad",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          2,
+          1,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "passed": true
+      },
+      "geometry_passed": true,
+      "frame_max_error_px": 6.823937919616058e-05,
+      "source_hashes": {
+        "psb": "57f80da3605c361e52e52ccd45dedd6ee5a299b64eb7eba22c11984e03b83000",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "fixture": [
+        {
+          "path": "/metadata/hairControl/0/bend_vol",
+          "offset": 281886,
+          "before": 3,
+          "after": 4,
+          "bytes": 4
+        }
+      ],
+      "native_png_sha256": "ee9a3de5e8594886f915e8bb03bc7520fa29bd75361255280db299a40ff787ad",
+      "reference_png_sha256": "6416f284c2e6fe19d10a92bd3ef2beb7c9a41de2935efb84c48cc857baf6c185",
+      "reference_metadata_sha256": "3eb12b338fca5cfe9df17acf00cfc621c53b19fe9d3629b9a0efc4b567d8f156"
+    }
+  ],
+  "stage_complete": false,
+  "production_physics_certified": false,
+  "common_fixture": [
+    {
+      "path": "/metadata/bustControl/0/enabled",
+      "offset": 284169,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/bustControl/1/enabled",
+      "offset": 284325,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/partsControl/0/enabled",
+      "offset": 280776,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/partsControl/1/enabled",
+      "offset": 281129,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/1/enabled",
+      "offset": 282006,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/2/enabled",
+      "offset": 282358,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/3/enabled",
+      "offset": 282715,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/0/gravity",
+      "offset": 281675,
+      "before": 0.20000000298023224,
+      "after": 0,
+      "bytes": 4
+    },
+    {
+      "path": "/metadata/hairControl/0/param/ofs",
+      "offset": 281767,
+      "before": -53.89473,
+      "after": 0,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/hairControl/0/param/p/0/y",
+      "offset": 281810,
+      "before": 117.894691,
+      "after": 64,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/hairControl/0/param/p/1/y",
+      "offset": 281833,
+      "before": 166.270462,
+      "after": 112,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/hairControl/0/param/pv/0/y",
+      "offset": 281862,
+      "before": 1.3699289411306381e-05,
+      "after": 0,
+      "bytes": 4
+    },
+    {
+      "path": "/metadata/hairControl/0/param/pv/1/y",
+      "offset": 281881,
+      "before": 0.37575763463974,
+      "after": 0,
+      "bytes": 4
+    },
+    {
+      "path": "/metadata/hairControl/0/b_rate",
+      "offset": 281933,
+      "before": 0.0037109374534338713,
+      "after": 0,
+      "bytes": 4
+    }
+  ],
+  "validation": {
+    "dev_ctest": 56,
+    "release_ctest": 56,
+    "asan_core_ctest": 55,
+    "frozen_numeric_cases": 17,
+    "frozen_numeric_steps": 331,
+    "numeric_value_assertions": 1324,
+    "warmed_bend_heap_allocations": 0,
+    "benchmark": {
+      "configuration": "Release + LTO, GCC 15.1.1; primary bend coefficients, synthetic constant unbent {0.01,35,-0.01}; no particle/scene/GPU work",
+      "cpu": "Ryzen 7 5800H",
+      "gpu": "RTX 3060 Laptop",
+      "driver": "575.64.03",
+      "desktop": "KDE/X11",
+      "warmup_steps": 120,
+      "batches": 9,
+      "steps_per_batch": 1000000,
+      "minimum_ns_per_step": 12.112,
+      "median_ns_per_step": 12.449,
+      "maximum_ns_per_step": 12.9657
+    }
+  }
+}

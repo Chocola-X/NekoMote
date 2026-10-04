@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <nekomote/runtime/animation.hpp>
+#include <nekomote/runtime/bend.hpp>
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/spring.hpp>
@@ -534,4 +535,32 @@ TEST_CASE("Exported locators report inactive branches and reject unknown transfo
     REQUIRE(unknown.evaluate());
     REQUIRE(unknown.sample_locator(compiled.scene->locators()[0].node).status.error ==
             runtime::GeometryError::UnsupportedTransform);
+}
+
+TEST_CASE("Warmed bending output retains independent resettable state without heap", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    BendState first{0.355883569f, 0}, second;
+    const BendCoefficients coefficients{0.3926991f, 3};
+    const ChainVariables unbent{1, 35, -1};
+    for (int i = 0; i < 120; ++i)
+        advance_bend(first, coefficients, unbent);
+    const auto snapshot = first;
+    ChainVariables observed;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 1000; ++i)
+        observed = advance_bend(first, coefficients, unbent);
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(std::isfinite(observed.root_x));
+    REQUIRE(std::isfinite(observed.vertical));
+    REQUIRE(std::isfinite(observed.tip_x));
+    REQUIRE(second.phase == 0.0f);
+    REQUIRE(second.gain == 0.0f);
+    second = snapshot;
+    for (int i = 0; i < 1000; ++i)
+        advance_bend(second, coefficients, unbent);
+    REQUIRE(first.phase == second.phase);
+    REQUIRE(first.gain == second.gain);
 }
