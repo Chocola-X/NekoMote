@@ -26,7 +26,8 @@ build/release/bin/nekomote_player --model build/assets/chocola-date-a/model.nkm.
 
 - 鼠标：窗口内视线。左键：按作者区域/优先级触摸。右键拖动：移动角色。滚轮：以指针位置缩放。
 - F：完整模型适配窗口；`--fit` 在启动时适配。R：重置会话。空格：暂停/继续。Esc：关闭。
-- 窗口最小化或没有可用输出尺寸时暂停，恢复不追赶历史时间。窗口缩放保留用户模型位置与比例，F 可重新适配。
+- 默认显示 30 FPS；`--fps 60` 可选择 60 FPS（接受5–240）。作者时钟始终60 Hz，帧率只限制绘制。
+- 窗口最小化或没有可用输出尺寸时暂停并停止绘制，恢复不追赶历史时间。窗口缩放保留用户模型位置与比例，F 可重新适配。
 - `--mute` 关闭声音和声音口型；`--reaction chocola/h01` 可选择已导入反应。触摸忙状态不会重入同一反应。
 - `--scale`、`--origin-x/--origin-y` 为中心原点坐标（Y 向下）；`--width/--height` 设置初始窗口尺寸。输入按实际 framebuffer 比例换算，核心不查询全局指针。
 - PNG 背景采用居中 cover。后端显式 `TargetContents::Preserve` 在宿主已有内容上合成；角色独立中间目标每帧仍清空。
@@ -53,7 +54,7 @@ build/release/bin/nekomote_player --model build/assets/chocola-date-a/model.nkm.
 ```sh
 # 无截图、真实时钟、vsync；测量结束后自动退出
 build/release/bin/nekomote_player --model /path/model.nkm.json \
-  --session /path/session.nks.json --fit --measure-frames 300
+  --session /path/session.nks.json --fit --fps 30 --measure-frames 300
 # 独立固定作者步截图入口，必须显式静音，不计入性能采样
 build/release/bin/nekomote_player --model /path/model.nkm.json \
   --session /path/session.nks.json --mute --transparent --seed 1 \
@@ -61,3 +62,20 @@ build/release/bin/nekomote_player --model /path/model.nkm.json \
 ```
 
 截图仍由独立求值结果产生，没有使用参考引擎顶点或帧观察替代 runtime。Plasma 适配、全素材/长期稳定性、性能冻结及已记录几何/物理精度继续按 ROADMAP 推进。
+
+## 显示节流与安全窗口自检（2026-10-05）
+
+新默认30FPS，60FPS可选。相同硬件/输出/背景/声音/反应、120帧预热后300帧的最终清理版测量：30FPS实际29.807，CPU提交 P50/P95/P99 1.211471/1.593922/1.743453ms；60FPS实际59.360，1.044061/1.452983/1.543428ms。节奏包含swap和事件等待；没有实际呈现时间戳、GPU计时或功耗结论。首测约1FPS并被中止的条件尚未解释，原始失败保留，诊断及最终复测均正常，不将该异常宣称已修复。
+
+固定36作者步在30/60FPS参数下逐像素相同；h01与原WebGL在alpha及黑白背景合成上误差为0（PNG直通RGB量化最多1/255）。全局按键测试曾影响Codex终端，已作废；从此不使用系统键鼠注入或标题选择窗口。
+
+```sh
+# 诊断：直接调用此应用绑定的回调，控制自有窗口，不发送系统按键/鼠标事件
+build/dev/bin/nekomote_player --model /path/model.nkm.json \
+  --session /path/session.nks.json --mute --fit \
+  --check-window build/evidence/owned-window-check
+```
+
+该入口不抢占初始焦点，等待六次初始swap后独立保存暂停/resize/恢复截图，验证暂停像素相等、异步resize/fit、minimize/restore、reset/resume和退出。截图读回与分配仅发生在显式诊断模式；与性能测量互斥。证据见 docs/validation/p6-player-pacing.json。
+
+Debug/Release 的窗口自检均通过。Release 曾在EGL初始drawable分配前取到仅1×1有效内容的800×1080截图；失败材料保留，自检先预热实际surface再比较暂停像素。

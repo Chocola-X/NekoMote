@@ -13,9 +13,11 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -27,9 +29,9 @@ using namespace nekomote;
 using Clock = std::chrono::steady_clock;
 struct Options
 {
-    std::filesystem::path model, session, background, capture;
+    std::filesystem::path model, session, background, capture, check_window;
     std::string reaction;
-    int width{800}, height{1080}, steps{0}, measure{0};
+    int width{800}, height{1080}, steps{0}, measure{0}, fps{30};
     bool mute{false}, transparent{false}, fit{false};
     std::uint32_t seed{1};
     float scale{1};
@@ -69,10 +71,20 @@ Options options(int argc, char** argv)
             o.width = std::stoi(value());
         else if (key == "--height")
             o.height = std::stoi(value());
+        else if (key == "--check-window")
+            o.check_window = value();
         else if (key == "--capture")
             o.capture = value();
         else if (key == "--steps")
             o.steps = std::stoi(value());
+        else if (key == "--fps")
+        {
+            const auto text = value();
+            std::size_t consumed = 0;
+            o.fps = std::stoi(text, &consumed);
+            if (consumed != text.size())
+                throw std::runtime_error("--fps requires an integer in 5..240");
+        }
         else if (key == "--measure-frames")
             o.measure = std::stoi(value());
         else if (key == "--reaction")
@@ -92,8 +104,9 @@ Options options(int argc, char** argv)
                 "nekomote_player --model model.nkm.json --session session.nks.json\n"
                 "  [--background image.png] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y "
                 "400]\n"
-                "  [--width 800 --height 1080] [--seed 1] [--reaction label]\n"
+                "  [--width 800 --height 1080] [--fps 30] [--seed 1] [--reaction label]\n"
                 "  [--capture output.png --steps N --mute --transparent] [--measure-frames N]\n"
+                "  Diagnostic: --check-window output-directory --mute (no OS input injection)\n"
                 "Mouse: gaze; left click: touch; right drag: move; wheel: zoom.\n"
                 "Space: pause/resume; F: fit whole model; R: reset; Escape: close. Pointer is "
                 "local to this window.");
@@ -105,12 +118,16 @@ Options options(int argc, char** argv)
     if (o.model.empty() || o.session.empty())
         throw std::runtime_error("--model and --session required; see --help");
     if (o.width < 64 || o.width > 8192 || o.height < 64 || o.height > 8192 || o.steps < 0 ||
-        o.steps > 100000 || o.measure < 0 || o.measure > 1000000 || !std::isfinite(o.scale) ||
-        o.scale <= 0 || !std::isfinite(o.origin.x) || !std::isfinite(o.origin.y))
-        throw std::runtime_error("invalid dimensions, step count, measurement count or placement");
+        o.steps > 100000 || o.fps < 5 || o.fps > 240 || o.measure < 0 || o.measure > 1000000 ||
+        !std::isfinite(o.scale) || o.scale <= 0 || !std::isfinite(o.origin.x) ||
+        !std::isfinite(o.origin.y))
+        throw std::runtime_error(
+            "invalid dimensions, FPS (5..240), step count, measurement count or placement");
     if (!o.capture.empty() && (!o.mute || o.measure != 0))
         throw std::runtime_error(
             "fixed-step screenshot requires --mute and excludes presentation measurement");
+    if (!o.check_window.empty() && (!o.mute || o.measure || !o.capture.empty()))
+        throw std::runtime_error("--check-window requires --mute and excludes capture/measurement");
     if (o.capture.empty() && o.steps != 0)
         throw std::runtime_error("--steps requires --capture");
     return o;
@@ -342,12 +359,17 @@ int run(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
     glfwWindowHint(GLFW_VISIBLE, o.capture.empty() ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_ALPHA_BITS, 8);
+    if (!o.check_window.empty())
+    {
+        glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+    }
     std::unique_ptr<GLFWwindow, DestroyWindow> window(
         glfwCreateWindow(o.width, o.height, "NekoMote", nullptr, nullptr));
     if (!window)
         throw std::runtime_error("OpenGL window creation failed");
     glfwMakeContextCurrent(window.get());
-    glfwSwapInterval(o.capture.empty() ? 1 : 0);
+    glfwSwapInterval(o.capture.empty() && o.check_window.empty() ? 1 : 0);
     application::SessionInstance session(
         program, {{o.seed},
                   o.seed,
@@ -412,6 +434,14 @@ int run(int argc, char** argv)
     int warmup = 120, last_width = 0, last_height = 0;
     auto previous = Clock::now();
     bool captured = false;
+    int check_frame = 0;
+    std::vector<std::uint8_t> paused_pixels;
+    std::optional<Clock::time_point> minimized_check;
+    bool window_check_passed = false;
+    std::optional<Clock::time_point> resize_check;
+    if (!o.check_window.empty())
+        std::filesystem::create_directories(o.check_window);
+
     if (!o.capture.empty())
         for (int i = 0; i < o.steps; ++i)
             check(session.advance(1.0 / 60));
@@ -422,6 +452,13 @@ int run(int argc, char** argv)
     while (!glfwWindowShouldClose(window.get()))
     {
         glfwPollEvents();
+        if (minimized_check && Clock::now() - *minimized_check >= std::chrono::milliseconds(300))
+        {
+            if (!surface.minimized)
+                throw std::runtime_error("owned-window iconify callback was not delivered");
+            glfwRestoreWindow(window.get());
+            minimized_check.reset();
+        }
         check(surface.error);
         const auto now = Clock::now();
         const auto elapsed = std::chrono::duration<double>(now - previous).count();
@@ -449,7 +486,7 @@ int run(int argc, char** argv)
         const auto begin = Clock::now();
         if (o.capture.empty())
             check(session.advance(elapsed));
-        if (w <= 0 || h <= 0)
+        if (w <= 0 || h <= 0 || surface.minimized)
         {
             glfwWaitEventsTimeout(.1);
             continue;
@@ -486,10 +523,88 @@ int run(int argc, char** argv)
             captured = true;
             break;
         }
+        if (!o.check_window.empty())
+        {
+            ++check_frame;
+            const auto save = [&](const char* name)
+            {
+                const auto image = renderer.capture(target);
+                const auto error = asset_io::write_png(o.check_window / name, image);
+                if (!error.empty())
+                    throw std::runtime_error(error);
+                return image;
+            };
+            // Six startup swaps let the native EGL drawable finish mapping
+            // before comparing stable paused pixels. Intended GLFW dimensions
+            // can precede allocation of the actual default framebuffer.
+            // Direct calls exercise the callbacks bound to this exact window.
+            // Never send keyboard/mouse events to the display server or focus
+            // another application, including the terminal running this tool.
+            if (check_frame == 7)
+                Surface::key(window.get(), GLFW_KEY_SPACE, 0, GLFW_PRESS, 0);
+            else if (check_frame == 8)
+                paused_pixels = save("paused-a.png").pixels;
+            else if (check_frame == 14)
+            {
+                if (save("paused-b.png").pixels != paused_pixels)
+                    throw std::runtime_error("paused image changed");
+                glfwSetWindowSize(window.get(), 640, 800);
+                resize_check = Clock::now();
+            }
+            else if (check_frame == 15)
+            {
+                int logical_width = 0, logical_height = 0;
+                glfwGetWindowSize(window.get(), &logical_width, &logical_height);
+                if (logical_width == 640 && logical_height == 800)
+                {
+                    resize_check.reset();
+                    Surface::key(window.get(), GLFW_KEY_F, 0, GLFW_PRESS, 0);
+                }
+                else if (resize_check && Clock::now() - *resize_check < std::chrono::seconds(2))
+                    --check_frame; // host resize acknowledgement is asynchronous
+                else
+                    throw std::runtime_error(
+                        "owned window resize failed: " + std::to_string(logical_width) + "x" +
+                        std::to_string(logical_height));
+            }
+            else if (check_frame == 16)
+            {
+                save("resized-fit.png");
+                glfwIconifyWindow(window.get());
+                minimized_check = Clock::now();
+            }
+            else if (check_frame == 17)
+            {
+                if (surface.minimized)
+                    throw std::runtime_error("owned window restore failed");
+                Surface::key(window.get(), GLFW_KEY_R, 0, GLFW_PRESS, 0);
+                Surface::key(window.get(), GLFW_KEY_SPACE, 0, GLFW_PRESS, 0);
+            }
+            else if (check_frame == 26)
+            {
+                save("restored.png");
+                window_check_passed = true;
+                Surface::key(window.get(), GLFW_KEY_ESCAPE, 0, GLFW_PRESS, 0);
+            }
+            check(surface.error);
+        }
         // CPU submission time excludes vsync and GPU readback. Presentation
         // pacing is reported separately; this is not a GPU/power benchmark.
         const auto cpu_ms = std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
         glfwSwapBuffers(window.get());
+        // Rendering cadence is independent of the fixed 60 Hz author clock.
+        // Event waits keep callbacks responsive and avoid rendering faster than
+        // the selected wall-clock budget. Late frames skip waiting, never spin
+        // or queue a backlog of renders after sleep/resize.
+        const auto deadline = now + std::chrono::duration_cast<Clock::duration>(
+                                        std::chrono::duration<double>(1.0 / o.fps));
+        while (!glfwWindowShouldClose(window.get()))
+        {
+            const auto remaining = std::chrono::duration<double>(deadline - Clock::now()).count();
+            if (remaining <= 0)
+                break;
+            glfwWaitEventsTimeout(remaining);
+        }
         if (o.measure != 0 && !surface.minimized)
         {
             if (warmup > 0)
@@ -522,10 +637,17 @@ int run(int argc, char** argv)
                     measured, percentile(.5), percentile(.95), percentile(.99));
         const auto pacing = [&](double p)
         { return cadence[static_cast<std::size_t>(p * static_cast<double>(measured - 1))]; };
-        std::printf(
-            "Swap-call cadence: %.3f fps P50=%.6f P95=%.6f P99=%.6f ms; audio RMS max %.6f\n",
-            static_cast<double>(measured) / measure_seconds, pacing(.5), pacing(.95), pacing(.99),
-            static_cast<double>(maximum_audio_rms));
+        std::printf("Frame loop cadence (swap+wait), target %d: %.3f fps P50=%.6f P95=%.6f "
+                    "P99=%.6f ms; audio RMS max %.6f\n",
+                    o.fps, static_cast<double>(measured) / measure_seconds, pacing(.5), pacing(.95),
+                    pacing(.99), static_cast<double>(maximum_audio_rms));
+    }
+    if (!o.check_window.empty())
+    {
+        if (!window_check_passed)
+            throw std::runtime_error("owned-window check interrupted");
+        std::puts("Owned-window callbacks: pause pixel equality, resize/fit, minimize/restore, "
+                  "reset/resume and close PASS; no OS keyboard/mouse injection.");
     }
     if (!o.capture.empty() && !captured)
         throw std::runtime_error("capture interrupted");
