@@ -377,3 +377,42 @@ TEST_CASE("Opacity-zero source vertices retain full texture mask coverage", "[gp
             std::array<unsigned char, 4>{255, 0, 0, 255});
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
+
+TEST_CASE("Model compositing preserves a host background in both composition modes", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.resize_output(64, 64);
+    renderer.reserve({4, 6, 1, 1});
+    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
+    const auto vertices = quad(0, 0, 1, 1);
+    std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    for (const auto composition :
+         {ColorComposition::PremultipliedOver, ColorComposition::ProtectedStraight})
+    {
+        commands[0].protection = composition == ColorComposition::ProtectedStraight
+                                     ? ColorProtection::PreserveTranslucent
+                                     : ColorProtection::None;
+        renderer.prepare({vertices, std::span(kIndices).first(6), commands, composition});
+        renderer.resize_output(64, 64);
+        glBindFramebuffer(GL_FRAMEBUFFER, output.framebuffer);
+        glDisable(GL_SCISSOR_TEST);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glClearColor(0, 0, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.render({output.framebuffer, 64, 64}, {}, render_gl::TargetContents::Preserve);
+        auto p = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+        REQUIRE(p[0] >= 127);
+        REQUIRE(p[0] <= 129);
+        REQUIRE(p[1] == 0);
+        REQUIRE(p[2] >= 126);
+        REQUIRE(p[2] <= 128);
+        REQUIRE(p[3] == 255);
+        renderer.render({output.framebuffer, 64, 64}, {});
+        p = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+        REQUIRE(p[2] == 0);
+        REQUIRE(p[3] == 128);
+    }
+}

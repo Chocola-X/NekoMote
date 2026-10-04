@@ -7,7 +7,8 @@
 - C++20 编译器（GCC ≥ 13 或 Clang ≥ 16；开发机验证 GCC 15.1.1 / Clang 20.1.8）
 - 首次配置需联网（FetchContent 拉取依赖）
 - 图形 loader 生成需要 Python 3 与 Jinja2。
-- 预览额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
+- 图形宿主额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
+- 普通播放器额外需要：pkg-config 和 libpulse 17.x 开发包（`NEKOMOTE_BUILD_PLAYER=OFF` 可关闭）
 
 ## Presets
 
@@ -42,7 +43,8 @@ clang-format --dry-run --Werror $(git ls-files '*.hpp' '*.cpp')
 
 ```
 build/<preset>/
-  bin/nekomote_preview      # 预览可执行
+  bin/nekomote_player       # 普通交互播放器
+  bin/nekomote_preview      # 诊断预览
   bin/nekomote_unit_tests   # 单元测试可执行
   lib/libnekomote_model.a   # 核心静态库
   compile_commands.json     # IDE/clangd 索引
@@ -53,7 +55,7 @@ build/<preset>/
 核心库与单元测试不需要显示服务器：
 
 ```bash
-cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF
+cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
 cmake --build --preset dev
 ctest --preset dev
 ```
@@ -72,4 +74,4 @@ build/dev/bin/nekomote_preview --asset build/assets/chocola-date-a/model.nkm.jso
 ctest --preset dev -L gpu  # 需要显示服务器，执行真实 GPU 像素/生命周期回归
 ```
 
-P2 只具备图集部件诊断，未实现整模型求值；不传 --icon 时明确拒绝整模型播放。无显示环境运行 `ctest --preset dev -LE gpu`；`asan` 不构建 GPU 测试。参考截图命令见 [reference_capture/README.md](../tools/reference_capture/README.md)。
+上述入口为部件诊断。当前整模型普通窗口入口为 `nekomote_player`；导入会话、真实声音、完整适配和交互见 [原生播放器](native-player.md)。无显示环境运行 `ctest --preset dev -LE gpu`；`asan` 不构建 GPU 测试。参考截图命令见 [reference_capture/README.md](../tools/reference_capture/README.md)。

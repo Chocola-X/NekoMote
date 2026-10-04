@@ -467,8 +467,10 @@ void Renderer::resize_output(int width, int height)
     p.color_target = std::move(color);
     p.mask_target = std::move(mask);
 }
-void Renderer::render(Target target, const View& view)
+void Renderer::render(Target target, const View& view, TargetContents contents)
 {
+    if (contents != TargetContents::Clear && contents != TargetContents::Preserve)
+        throw std::runtime_error("invalid target contents policy");
     if (target.width <= 0 || target.height <= 0)
         return; // minimized output
     if (!std::isfinite(view.origin_x) || !std::isfinite(view.origin_y) ||
@@ -494,7 +496,8 @@ void Renderer::render(Target target, const View& view)
         glClearColor(0, 0, 0, 0);
     else
         glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
-    glClear(GL_COLOR_BUFFER_BIT);
+    if (straight || contents == TargetContents::Clear)
+        glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(p.program);
     glBindVertexArray(p.vao);
     glActiveTexture(GL_TEXTURE0);
@@ -587,8 +590,11 @@ void Renderer::render(Target target, const View& view)
     {
         glDisable(GL_SCISSOR_TEST);
         glBindFramebuffer(GL_FRAMEBUFFER, target.framebuffer);
-        glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if (contents == TargetContents::Clear)
+        {
+            glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
         glUseProgram(p.blit_program);
         glBindTexture(GL_TEXTURE_2D, p.color_target->texture);
         glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

@@ -9,7 +9,8 @@ target_sources(nekomote_asset_io
         ${CMAKE_CURRENT_SOURCE_DIR}/asset_file.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/image.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/session_asset.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/session_asset.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/audio.cpp)
 
 target_include_directories(nekomote_asset_io
     PUBLIC

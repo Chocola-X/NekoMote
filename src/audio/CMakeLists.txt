@@ -1,0 +1,7 @@
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PULSE REQUIRED IMPORTED_TARGET "libpulse>=17" "libpulse<18")
+find_package(Threads REQUIRED)
+add_library(nekomote_audio STATIC device.cpp)
+add_library(nekomote::audio ALIAS nekomote_audio)
+target_include_directories(nekomote_audio PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(nekomote_audio PUBLIC nekomote::application PRIVATE PkgConfig::PULSE Threads::Threads)

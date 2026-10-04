@@ -28,6 +28,11 @@ struct View
     float origin_x{0}, origin_y{0}, scale{1};
     std::array<float, 4> clear{0, 0, 0, 0}; // premultiplied target clear
 };
+enum class TargetContents
+{
+    Clear,
+    Preserve
+};
 struct Capacity
 {
     std::size_t vertices{0}, indices{0}, commands{0}, textures{0};
@@ -47,7 +52,9 @@ class Renderer
     // Explicit loading/resize boundary. ProtectedStraight needs a matching
     // RGBA8 intermediate. Repeated unchanged dimensions retain GPU storage.
     void resize_output(int width, int height);
-    void render(Target target, const View& view);
+    // Preserve composites over existing target pixels. The protected model
+    // intermediate is always independently cleared, regardless of this choice.
+    void render(Target target, const View& view, TargetContents contents = TargetContents::Clear);
     // Diagnostic GPU readback only; omitted from render/benchmark paths.
     ImageRgba8 capture(Target target);
     std::string diagnostics() const;

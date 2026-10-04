@@ -297,3 +297,12 @@
 - Chocola/Vanilla/Fraise 实际会话 20/21/18 反应均编译。Debug/Release 116/116、ASan/UBSan 115/115、Python 9/9。
 - 新增完整 GPU 帧观察和独立帧重放诊断。reaction-h01 与零时长输入仍有原来的单像素 FAIL；仅替换诊断后髪位置可消除后者，UV 替换无效。错误颜色解释实验被拒绝，源数值没有进入正式播放。
 - 详细入口、证据和限制见 docs/p6-application-plan.md。P3–P6 退出条件仍未满足；下一步真实 PCM 设备、窗口应用、背景及残留几何/物理精度。
+
+## 2026-10-04 P6 原生播放器与真实声音
+
+- 独立 WAVE 加载器和加载时 PCM/RMS 缓存；PulseAudio 17.x 异步设备 worker、有界 SPSC 控制和实际设备时钟快照。声音不进入 application/runtime 依赖，连接/播放失败明确报告。
+- 普通窗口 nekomote_player：本地视线、触摸/反应、拖动/缩放、F 完整模型适配、暂停、最小化恢复、reset、PNG cover 背景和正常声音/口型。后端 TargetContents::Preserve 让宿主背景不被角色的最终 pass 清除，GPU 回归覆盖两种 composition。
+- Debug/Release 119/119、ASan/UBSan 118/118。真实 h01 音频 pause-before-play、resume、stop/replay 验证通过，PCM RMS 最大 0.416465。
+- 36 步播放器 h01 与 session probe 像素一致；原 WebGL 的单像素 FAIL 保留并目视核实。真实窗口按 PID 重新验证 pause/resize/fit/touch/reset/退出；标题匹配误选的截图作废、文件管理器窗口尺寸恢复。
+- Release 显示 300 帧测量 CPU P50/P95/P99 .267056/1.045319/1.099373 ms，swap cadence164.839fps；不包含 GPU 计时/真实呈现/显存/功耗结论，不声称性能改善。详细依赖、操作、生命周期和证据见 docs/native-player.md。
+- 普通窗口功能可用，但语义 FAIL、桌面接入、全素材/长期验收尚未闭合，仍继续最终引擎任务。
