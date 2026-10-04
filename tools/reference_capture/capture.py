@@ -40,6 +40,8 @@ def main():
     parser.add_argument('--trace-math', action='store_true')
     parser.add_argument('--trace-float-stores', action='store_true',
                         help='diagnostic Float32 storage observations; not for benchmarks')
+    parser.add_argument('--trace-float-read-index', action='append', type=int, default=[],
+                        help='also observe reads at explicit Float32 heap indices; requires stores')
     parser.add_argument('--trace-float-stack', default='',
                         help='optional observed caller name for Float32 storage filtering')
     parser.add_argument('--trace-float-step', type=int,
@@ -77,6 +79,10 @@ def main():
     if args.trace_float_step is not None and (not args.trace_float_stores or
             not 0 <= args.trace_float_step <= args.steps):
         parser.error('--trace-float-step requires stores and an update in 0..steps')
+    if args.trace_float_read_index and (not args.trace_float_stores or
+            len(args.trace_float_read_index) > 128 or
+            any(i < 0 or i > 0xffffffff for i in args.trace_float_read_index)):
+        parser.error('Float32 reads require stores and up to 128 unsigned indices')
     if args.steps < 0 or args.steps > 100000 or not math.isfinite(args.step_frames) or args.step_frames <= 0:
         parser.error('requires 0..100000 steps and a positive finite step size')
     if args.timeline_flags < 0 or args.timeline_flags > 0xffffffff:
@@ -189,6 +195,7 @@ def main():
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
+                   traceFloatReadIndices=args.trace_float_read_index,
                    timelines=[p['label'] for p in plays], plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,

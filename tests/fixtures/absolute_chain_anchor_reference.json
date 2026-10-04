@@ -1,0 +1,73 @@
+{
+  "scope": "Original Fraise right turn step 10, model scale 0.8, absolute normalized author anchors; publicly observed Float32 heap reads/stores, no core source inspection.",
+  "source_hashes": {
+    "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+    "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "author_scale": 0.88,
+  "model_scale": 0.8,
+  "anchor": [
+    43.04595184326172,
+    -2.1120691299438477
+  ],
+  "origin_offset": [
+    -5.331071853637695,
+    5.361157417297363
+  ],
+  "position": [
+    [
+      0.7801685333251953,
+      117.95953369140625
+    ],
+    [
+      0.03627905622124672,
+      166.3306427001953
+    ]
+  ],
+  "velocity": [
+    [
+      0.23015820980072021,
+      0.013935425318777561
+    ],
+    [
+      0.007866386324167252,
+      0.3770045042037964
+    ]
+  ],
+  "next_position": [
+    [
+      1.0653976202011108,
+      117.9734115600586
+    ],
+    [
+      0.055616091936826706,
+      166.3390655517578
+    ]
+  ],
+  "next_velocity": [
+    [
+      0.2852291166782379,
+      0.01387485396116972
+    ],
+    [
+      0.011503341607749462,
+      0.37652528285980225
+    ]
+  ],
+  "next_anchor_offset": [
+    37.714881896972656,
+    3.2490882873535156
+  ],
+  "rest_saved": [
+    [
+      37.714881896972656,
+      67.24908447265625
+    ],
+    [
+      37.714881896972656,
+      115.24908447265625
+    ]
+  ]
+}

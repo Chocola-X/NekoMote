@@ -63,3 +63,58 @@ TEST_CASE("Two-particle chains match isolated original physical trajectories", "
         }
     }
 }
+
+TEST_CASE("Absolute chain anchors preserve the observed origin and rest precision", "[runtime]")
+{
+    using namespace nekomote;
+    using namespace nekomote::runtime;
+    using Json = nlohmann::json;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) +
+                        "/absolute_chain_anchor_reference.json");
+    REQUIRE(input.good());
+    const auto fixture = Json::parse(input);
+    const auto vec = [](const Json& v) { return Vec2{v.at(0).get<float>(), v.at(1).get<float>()}; };
+    ChainState state;
+    state.initialized = true;
+    state.origin_offset = vec(fixture.at("origin_offset"));
+    for (std::size_t i = 0; i < 2; ++i)
+    {
+        state.position[i] = vec(fixture.at("position").at(i));
+        state.velocity[i] = vec(fixture.at("velocity").at(i));
+    }
+    const ChainCoefficients coefficients{
+        0.00371093745f, 0.2f, {0.03125f, 0.03125f}, {64, 48}, 0.5f};
+    const ChainRest rest{{{{0, 64}, {0, 112}}}};
+    advance_chain(state, coefficients, rest, vec(fixture.at("anchor")), {});
+    REQUIRE(state.anchor_offset == vec(fixture.at("next_anchor_offset")));
+    REQUIRE(state.origin_offset == vec(fixture.at("origin_offset")));
+    for (std::size_t i = 0; i < 2; ++i)
+    {
+        const auto expected_position = vec(fixture.at("next_position").at(i));
+        const auto expected_velocity = vec(fixture.at("next_velocity").at(i));
+        INFO(i);
+        REQUIRE(state.position[i].x == expected_position.x);
+        REQUIRE(state.position[i].y == expected_position.y);
+        REQUIRE(state.velocity[i].x == expected_velocity.x);
+        REQUIRE(state.velocity[i].y == expected_velocity.y);
+    }
+}
+
+TEST_CASE("Returning an absolute chain anchor removes accumulated placement drift", "[runtime]")
+{
+    using namespace nekomote;
+    using namespace nekomote::runtime;
+    const ChainCoefficients coefficients{0, 0, {}, {64, 48}, 0};
+    const ChainRest rest{{{{0, 64}, {0, 112}}}};
+    ChainState state;
+    state.position = rest.position;
+    constexpr Vec2 initial{5.331071853637695f, -5.361157417297363f};
+    advance_chain(state, coefficients, rest, initial, {1, 1});
+    for (int i = 0; i < 1000; ++i)
+    {
+        advance_chain(state, coefficients, rest, {43.04595184326172f, -2.1120691299438477f}, {});
+        REQUIRE(state.anchor_offset == Vec2{37.714881896972656f, 3.2490882873535156f});
+        advance_chain(state, coefficients, rest, initial, {});
+        REQUIRE(state.anchor_offset == Vec2{});
+    }
+}

@@ -20,6 +20,9 @@ if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','tan','atan','a
 window.enableFloatStores=false;
 window.floatStores=[];
 window.floatStoresTruncated=false;
+window.floatReads=[];
+window.floatReadsTruncated=false;
+window.traceFloatReadIndices=new Set();
 if(window.enableFloatStores) {
     const NativeFloat32Array=window.Float32Array;
     // Observe full heap views only. Methods use the original typed-array receiver;
@@ -30,6 +33,15 @@ if(window.enableFloatStores) {
         return new Proxy(view, {
             get(target,key) {
                 const value=Reflect.get(target,key,target);
+                if(window.traceFloatStores && window.traceFloatReadIndices.has(key) &&
+                   (window.traceFloatStep===null || window.traceFloatStep===(window.authorStep||0))) {
+                    if(window.floatReads.length>=window.traceFloatLimit) window.floatReadsTruncated=true;
+                    else {
+                        const stack=new Error().stack;
+                        if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' ('))
+                            window.floatReads.push({step:window.authorStep||0,index:Number(key),value,stack});
+                    }
+                }
                 return typeof value==='function' && key!=='constructor'?value.bind(target):value;
             },
             set(target,key,input) {
@@ -82,6 +94,7 @@ window.capture = async function(options) {
     window.traceFloatStack=options.traceFloatStack;
     window.traceFloatStep=options.traceFloatStep;
     window.traceFloatLimit=options.traceFloatLimit;
+    window.traceFloatReadIndices=new Set((options.traceFloatReadIndices||[]).map(String));
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
     for(const [label,request] of Object.entries(options.transitions||{}))
@@ -153,6 +166,7 @@ window.capture = async function(options) {
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         floatStores:window.floatStores,floatStoresTruncated:window.floatStoresTruncated,
+        floatReads:window.floatReads,floatReadsTruncated:window.floatReadsTruncated,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),
         version:gl.getParameter(gl.VERSION),glError:gl.getError(),visiblePixels};
     return {png:canvas.toDataURL('image/png'),metadata,trace:window.drawTrace,stateTrace:window.stateTrace,maskPixels:window.maskPixels};

@@ -40,19 +40,24 @@ Point integrate(Vec2 position, Vec2& velocity, const ChainCoefficients& coeffici
 }
 } // namespace
 ChainDeformation advance_chain(ChainState& state, const ChainCoefficients& coefficients,
-                               const ChainRest& rest, Vec2 anchor_delta,
+                               const ChainRest& rest, Vec2 anchor_position,
                                Vec2 external_displacement) noexcept
 {
     const bool advance = state.initialized;
     const std::array<double, 2> lengths{coefficients.length[0], coefficients.length[1]};
-    const Point delta = point(anchor_delta), outer = point(external_displacement);
-    if (advance)
-        state.anchor_offset =
-            stored({static_cast<double>(state.anchor_offset.x) + delta[0] + outer[0],
-                    static_cast<double>(state.anchor_offset.y) + delta[1] + outer[1]});
+    const Point position = point(anchor_position), outer = point(external_displacement);
+    if (!advance)
+        state.origin_offset = {-anchor_position.x, -anchor_position.y};
+    else
+        state.origin_offset = stored({static_cast<double>(state.origin_offset.x) + outer[0],
+                                      static_cast<double>(state.origin_offset.y) + outer[1]});
+    const Point anchor{position[0] + static_cast<double>(state.origin_offset.x),
+                       position[1] + static_cast<double>(state.origin_offset.y)};
+    state.anchor_offset = stored(anchor);
     std::array<Vec2, 2> current_rest;
     for (std::size_t i = 0; i < current_rest.size(); ++i)
-        current_rest[i] = rest.position[i] + state.anchor_offset;
+        current_rest[i] = stored({static_cast<double>(rest.position[i].x) + anchor[0],
+                                  static_cast<double>(rest.position[i].y) + anchor[1]});
     auto raw_root = point(state.position[0]);
     const Vec2 root_direction = state.anchor_offset - state.position[0];
     const double root_distance = length(root_direction);
@@ -75,9 +80,9 @@ ChainDeformation advance_chain(ChainState& state, const ChainCoefficients& coeff
     if (tip_distance > lengths[1])
     {
         const auto unit = point(normalized(tip_direction, tip_distance));
-        state.position[1] =
-            stored({static_cast<double>(state.position[0].x) - unit[0] * lengths[1],
-                    static_cast<double>(state.position[0].y) - unit[1] * lengths[1]});
+        const double excess = tip_distance - lengths[1];
+        state.position[1] = stored({static_cast<double>(state.position[1].x) + unit[0] * excess,
+                                    static_cast<double>(state.position[1].y) + unit[1] * excess});
         if (advance)
         {
             const double normal_velocity = static_cast<double>(state.velocity[1].x) * unit[0] +

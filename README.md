@@ -61,3 +61,5 @@ build/dev/bin/nekomote_pose --asset /path/to/model.nkm.json \
 `frame` 包含最终顶点 `[x,y,u,v]`、索引及部件的资源/索引范围，包含仅供遮罩使用的部件。
 坐标是放置后的中心原点空间，UV 是纹理归一化坐标；用 `--sample-trace` 可采用冻结网页输入的位置与比例。
 该导出仅属于离线诊断，不参与正式帧路径或性能采样。
+
+链条绝对锚点已修复，Fraise 三组缩放物理数值均通过；图片失败仍保留，参见 [当前链条证据](docs/validation/p6-absolute-chain-anchors.json)。

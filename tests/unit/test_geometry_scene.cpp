@@ -901,7 +901,7 @@ TEST_CASE("Two-particle state is independent, resettable and allocation free", "
     REQUIRE_FALSE(independent.initialized);
     REQUIRE(independent.position == snapshot.position);
     // Actual saved source state after a +50 vertical external displacement.
-    advance_chain(state, coefficients, rest, {}, {0, 50});
+    advance_chain(state, coefficients, rest, {100, 200}, {0, 50});
     REQUIRE(state.position[0].y == 118.07445526123047f);
     REQUIRE(state.velocity[0].y == 0.17976197600364685f);
     state = snapshot;

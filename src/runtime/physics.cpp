@@ -37,8 +37,6 @@ struct BoundChainState
 {
     ChainState chain;
     BendState bend;
-    Vec2 previous_anchor{};
-    bool initialized{false};
 };
 struct ControllerState
 {
@@ -250,8 +248,7 @@ struct PhysicsInstance::Impl
         for (std::size_t i = 0; i < states.size(); ++i)
             states[i] = {program.springs[i].snapshot, {}, false};
         for (std::size_t i = 0; i < chain_states.size(); ++i)
-            chain_states[i] = {
-                program.chains[i].snapshot, program.chains[i].bend_snapshot, {}, false};
+            chain_states[i] = {program.chains[i].snapshot, program.chains[i].bend_snapshot};
     }
 };
 PhysicsInstance::PhysicsInstance(const PhysicsProgram& program)
@@ -356,21 +353,14 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         auto& state = instance.chain_next[i];
         state = instance.chain_states[i];
         const auto& chain = program.chains[i];
-        Vec2 delta;
-        if (state.initialized)
-        {
-            delta = instance.anchors[controller] - state.previous_anchor;
-            if (!finite(delta))
-                return {PhysicsError::InvalidInput, controller, {}};
-        }
         const bool hair = chain.kind == model::ChainKind::Hair;
         const auto displacement = hair ? inputs.hair_displacement : inputs.parts_displacement;
-        const auto pose =
-            advance_chain(state.chain, chain.coefficients, chain.rest, delta, displacement);
+        const auto pose = advance_chain(state.chain, chain.coefficients, chain.rest,
+                                        instance.anchors[controller], displacement);
         for (std::size_t particle = 0; particle < 2; ++particle)
             if (!finite(state.chain.position[particle]) || !finite(state.chain.velocity[particle]))
                 return {PhysicsError::NonfiniteState, controller, {}};
-        if (!finite(state.chain.anchor_offset))
+        if (!finite(state.chain.anchor_offset) || !finite(state.chain.origin_offset))
             return {PhysicsError::NonfiniteState, controller, {}};
         auto mapping = chain.mapping;
         mapping.amplitude = hair ? inputs.hair_amplitude : inputs.parts_amplitude;
@@ -386,8 +376,6 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
             instance.output[program.springs.size() * 2 + i * 3 + component] = {
                 chain.outputs[component], values[component]};
         }
-        state.previous_anchor = instance.anchors[controller];
-        state.initialized = true;
     }
     instance.states.swap(instance.next);
     instance.chain_states.swap(instance.chain_next);

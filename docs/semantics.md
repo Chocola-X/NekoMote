@@ -60,4 +60,4 @@ Fraise `add_mask` 的 opa=0 不抑制 stencil 贡献。源 mask shader 从纹理
 
 ### 2026-10-04 旋转、叠加与作者归一化精度
 
-源曲面为显式单位 BP 时仍经过逆域 UV 和世界控制点的 Float32 保存，不能作为数学恒等变换跳过。Fraise 待机差分的两级实际锚点记录把这个差异分离出来。物理绝对坐标先乘保存 Float32 的 `1/(double(instance_scale)*double(author_scale))`，再次保存 Float32 后求差分，外部位移仍为作者单位。动作过渡的进度缓存保存 Float32，当前曲线和线性值使用保存前的 double 临时进度；`Ro` 第 9 步的 27.000001907348633 与提前舍入得到的 27.000003814697266 可区分。证据和剩余 FAIL 见 [精度记录](validation/p6-transform-precision.json)。
+源曲面为显式单位 BP 时仍经过逆域 UV 和世界控制点的 Float32 保存，不能作为数学恒等变换跳过。Fraise 待机差分的两级实际锚点记录把这个差异分离出来。物理绝对坐标先乘保存 Float32 的 `1/(double(instance_scale)*double(author_scale))`，再次保存 Float32；弹簧对保存锚点求差分，链条使用当前绝对锚点加保存的初始/外力偏移，禁止以逐步位移累计替代。链条 current rest 使用相加后的 double 临时位移再保存 Float32，最大长度投影从末端沿归一化方向移动超出长度；外部位移仍为作者单位。最新链条证据见 [绝对锚点记录](validation/p6-absolute-chain-anchors.json)。动作过渡的进度缓存保存 Float32，当前曲线和线性值使用保存前的 double 临时进度；`Ro` 第 9 步的 27.000001907348633 与提前舍入得到的 27.000003814697266 可区分。证据和剩余 FAIL 见 [精度记录](validation/p6-transform-precision.json)。

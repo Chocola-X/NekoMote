@@ -17,9 +17,9 @@ struct ChainCoefficients
 struct ChainState
 {
     // Float32 positions in the initial anchor's author space, Y downward. Anchor
-    // movement accumulates separately; rebasing positions each tick changes rounding.
+    // placement is evaluated from the absolute anchor and a saved origin/force offset.
     std::array<Vec2, 2> position{}, velocity{};
-    Vec2 anchor_offset{};
+    Vec2 anchor_offset{}, origin_offset{};
     bool initialized{false};
 };
 struct ChainRest
@@ -39,11 +39,12 @@ struct ChainOutput
 };
 // One author tick, no time scaling. First call initializes the anchor, projects
 // the tip's maximum length, and skips velocity integration/external displacement.
-// Subsequent ticks move the anchor by delta + external displacement (author units).
+// Subsequent ticks use the absolute anchor plus the saved origin/force offset.
+// External displacement accumulates in that offset (author units).
 // Coefficients/rest/state are validated by the caller; lengths must be positive.
 // Evidence and remaining binding scope: docs/p6-physics-investigation.md.
 ChainDeformation advance_chain(ChainState& state, const ChainCoefficients& coefficients,
-                               const ChainRest& rest, Vec2 anchor_delta,
+                               const ChainRest& rest, Vec2 anchor_position,
                                Vec2 external_displacement) noexcept;
 // Verified vertical_effect=0 mapping; the tip contributes horizontal displacement.
 // Apply advance_bend afterward, including its final three-component dead zone.
