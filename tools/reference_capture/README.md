@@ -67,3 +67,5 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 联合会话固定步进对照见 [P6 会话记录](../../docs/p6-playback-session.md)。validate_playback.py 使用独立冻结输入、原始素材与正式 PlaybackInstance/preview，验证 22 个实际物理输出、最终 RenderFrame 和截图；原 SDK GetVariable 的主通道缓存不能代表差分合成结果。几何工具 compare_playback_frame.py 只服务当前单图集 SDK texture 2 的冻结诊断，不是运行时兼容分支。原始四组 scale=1 的完整对照现已通过。用 `--inputs docs/validation/playback-scale-inputs.json --reuse-reference build/evidence/p6-world-scale-reference` 验证冻结八组缩放输入，当前两组差分图片仍 FAIL，命令退出 1。
 
 可追加 `--trace-float-read-index N`（最多 128 个显式无符号索引），只记录这些堆位置的读取，另存 `floatReads` / `floatReadsTruncated`；需要同时启用 stores，与调用者/作者步过滤共享配置，读写各自受记录上限约束。索引只对当前驱动、模型和加载初态有效，不能写入运行时或作为资产语义。用于区分旧状态、初始偏移和新状态；不读取核心源码，原生视图和真实读写值保持不变。参考截图必须与无观察同输入逐位对照。
+
+完整播放冻结矩阵现在使用 `observed_variables` 指定要比较的通道；四个现有输入矩阵已迁移，不读取旧字段。新增可选 `transitions`，由 preview `--transition NAME VALUE FRAMES EASING` 和 PlaybackInstance 直接执行，不输入参考输出。选择器原版矩阵见 `docs/validation/playback-selector-inputs.json`，仍保留所有图片 FAIL。受控采样的 `--events` 可包含 `transitions`，格式同开场请求，发生在指定作者 Update 之前；用于中途改选与重复触发的数值验证。

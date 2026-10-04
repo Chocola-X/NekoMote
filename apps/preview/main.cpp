@@ -22,6 +22,11 @@
 namespace
 {
 using namespace nekomote;
+struct VariableTransition
+{
+    std::string label;
+    float value{0}, frames{0}, easing{0};
+};
 struct Options
 {
     std::filesystem::path asset, screenshot;
@@ -32,6 +37,7 @@ struct Options
     int steps{0};
     std::vector<std::pair<std::string, runtime::TimelinePlayMode>> plays;
     std::vector<std::pair<std::string, float>> variables;
+    std::vector<VariableTransition> transitions;
 };
 float parse_number(const std::string& value)
 {
@@ -108,6 +114,17 @@ Options parse(int argc, char** argv)
             const auto name = next();
             o.variables.emplace_back(name, parse_number(next()));
         }
+        else if (flag == "--transition")
+        {
+            VariableTransition request;
+            request.label = next();
+            request.value = parse_number(next());
+            request.frames = parse_number(next());
+            request.easing = parse_number(next());
+            if (request.frames < 0)
+                throw std::runtime_error("transition frames must be nonnegative");
+            o.transitions.push_back(std::move(request));
+        }
         else if (flag == "--hidden")
             o.hidden = true;
         else
@@ -129,7 +146,7 @@ Options parse(int argc, char** argv)
     if ((static_cast<int>(o.geometry) + static_cast<int>(o.animation) +
              static_cast<int>(o.playback) >
          1) ||
-        (!(o.animation || o.playback) && (o.steps || !o.plays.empty())))
+        (!(o.animation || o.playback) && (o.steps || !o.plays.empty() || !o.transitions.empty())))
         throw std::runtime_error("select one geometry, animation diagnostic or playback mode");
     if (o.asset.empty() && !o.icon.empty())
         throw std::runtime_error("--icon requires --asset");
@@ -228,6 +245,10 @@ int run(const Options& o)
             for (const auto& [name, value] : o.variables)
                 playback_checked(
                     playback_instance->transition(geometry_scene->find_variable(name), value));
+            for (const auto& request : o.transitions)
+                playback_checked(
+                    playback_instance->transition(geometry_scene->find_variable(request.label),
+                                                  request.value, request.frames, request.easing));
             for (const auto& [name, mode] : o.plays)
                 playback_checked(playback_instance->play(
                     playback_program->animation().find_timeline(name), mode));

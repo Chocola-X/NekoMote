@@ -63,3 +63,12 @@ build/dev/bin/nekomote_pose --asset /path/to/model.nkm.json \
 该导出仅属于离线诊断，不参与正式帧路径或性能采样。
 
 链条绝对锚点已修复，Fraise 三组缩放物理数值均通过；图片失败仍保留，参见 [当前链条证据](docs/validation/p6-absolute-chain-anchors.json)。
+
+选择器和变量过渡可通过普通窗口验证：
+
+```sh
+build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
+  --origin 400 940 --transition arm_type 1 10 0
+```
+
+`--transition` 后依次是变量、目标、作者帧数与 easing。两个角色的半程淡入淡出已通过完整画面对照；跑步图片仍有一个失败像素，详情见 [选择器记录](docs/validation/p5-selector.json)。

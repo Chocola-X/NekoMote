@@ -21,7 +21,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "bust_LR",
         "bust_UD",
         "bust_LR_spare",
@@ -71,7 +71,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "bust_LR",
         "bust_UD",
         "bust_LR_spare",
@@ -121,7 +121,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "bust_LR",
         "bust_UD",
         "bust_LR_spare",

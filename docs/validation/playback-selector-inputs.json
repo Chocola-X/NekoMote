@@ -1,0 +1,119 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "scalar_tolerance": 1e-05,
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "to1-half-original",
+      "model": "chocola-date-a",
+      "steps": 5,
+      "variables": {},
+      "transitions": {
+        "arm_type": {
+          "value": 1,
+          "frames": 10,
+          "easing": 0
+        }
+      },
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "arm_type",
+        "fade_a",
+        "fade_b",
+        "fade_c",
+        "fade_d",
+        "fade_e"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "19d90e2185aadc2d24f15b165b2e88aaa24c86e6a1710d943894a666a1c6842e",
+      "reference_png_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "reference_trace_sha256": "c0dbc5fecd6bd30eb089befaa23af75eb9da82d48a51dac93a9567fb57eea321"
+    },
+    {
+      "case": "fraise-half-original",
+      "model": "fraise-casual-a",
+      "steps": 5,
+      "variables": {},
+      "transitions": {
+        "arm_type": {
+          "value": 3,
+          "frames": 10,
+          "easing": 1
+        }
+      },
+      "plays": [],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "arm_type",
+        "fade_a",
+        "fade_b",
+        "fade_c",
+        "fade_d",
+        "fade_e"
+      ],
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "reference_metadata_sha256": "2580b44f0fce7c4468ee18679782dce8a3bd74795f2005cd10f393fee2dbe9a2",
+      "reference_png_sha256": "1edd83484c54e29fcf8980da122f0e19012e1daee39efd3f30f68c2d9e9ae902",
+      "reference_trace_sha256": "2b5a224dd8137818c1d6f8cd36f9f8f42910fd5c96efef936da145cc589dff27"
+    },
+    {
+      "case": "run12-original",
+      "model": "chocola-date-a",
+      "steps": 12,
+      "variables": {},
+      "transitions": {},
+      "plays": [
+        {
+          "label": "走行ループ",
+          "flags": 1
+        }
+      ],
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "observed_variables": [
+        "arm_type",
+        "fade_a",
+        "fade_b",
+        "fade_c",
+        "fade_d",
+        "fade_e"
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "reference_metadata_sha256": "65e5c08d726498a62527a3c1040732c82985e82b67ae3a0da57245695a5790ae",
+      "reference_png_sha256": "5dd525eaaf1afd39c8a0338db1de6be88da2860b1bdcd9b9cae79fd755efd9a0",
+      "reference_trace_sha256": "1ac4d014062f5dd9c975523ece750400a890e48d8b36d81c429e149752e0252c"
+    }
+  ]
+}

@@ -13,7 +13,7 @@
       "scale": 0.8,
       "variables": {},
       "plays": [],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -64,7 +64,7 @@
           "flags": 1
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -115,7 +115,7 @@
           "flags": 1
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -166,7 +166,7 @@
           "flags": 1
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -217,7 +217,7 @@
           "flags": 1
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -268,7 +268,7 @@
           "flags": 1
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -319,7 +319,7 @@
           "flags": 3
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -370,7 +370,7 @@
           "flags": 3
         }
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",

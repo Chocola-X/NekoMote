@@ -4,7 +4,7 @@
 
 ## 数据和运行时契约
 
-Schema 3 加入强类型 variable_controls，保留区间/连接点、眼/口型/选择器规则。运行时不解析 source.json，不根据变量名或 instantVariableList 猜测行为。四型号除新增控制数据外与 schema 2 model 对象逐字段相同，迁移证据见 docs/validation/p5-schema3-migration.json；必须重导入旧 bundle，无兼容读取。
+当前资产为 schema 5；最初在 schema 3 加入强类型 variable_controls，保留区间/连接点、眼/口型/选择器规则。运行时不解析 source.json，不根据变量名或 instantVariableList 猜测行为。四型号除新增控制数据外与 schema 2 model 对象逐字段相同，迁移证据见 docs/validation/p5-schema3-migration.json；必须重导入旧 bundle，无兼容读取。
 
 AnimationProgram 编译控制图/轨道与 GeometryScene 的参数 ID，拥有全部只读数据；原资产与几何场景不必继续存活。AnimationInstance 借用 Program，后者须更晚销毁；独立实例不共享变量、播放游标或差分状态。所有操作同一求值线程。
 
@@ -12,7 +12,7 @@ AnimationProgram 编译控制图/轨道与 GeometryScene 的参数 ID，拥有�
 
 关键帧 type=2 启动目标过渡，duration=next_time−time−1；type=0 终止轨道。只支持经验证的整数作者帧、终端与循环形态，未知类型、非整数时刻、选中的未验证控制器明确失败。主时间线与差分循环首帧的更新边界不同，差分在回绕帧不推进通道，下一帧恢复；真实 420/421/422/430 帧几何对照支持该规则。
 
-表达式路径先减少区间跳转，再选择靠近目标的连接点，不能按全局数值距离最短路径拟合；跨区间在当前作者步跳转并推进新段，不保留跨界余量。线性路径已用 11 组正反向/不同起点 SDK 数值轨迹验证。非线性跨段 easing、selector fade、非零跨区间 Eye 路径仍明确拒绝，不把候选公式作为正式支持。
+表达式路径先减少区间跳转，再选择靠近目标的连接点，不能按全局数值距离最短路径拟合；跨区间在当前作者步跳转并推进新段，不保留跨界余量。线性路径已用 11 组正反向/不同起点 SDK 数值轨迹验证。非线性跨段 easing、非零跨区间 Eye 路径仍明确拒绝，不把候选公式作为正式支持。
 
 裸变量与已禁用的变量控制器在请求时直接赋值；启用控制器按自身规则覆盖。Mouth 的 talkLabel 是独立插值通道，不按裸变量处理。不能从 instantVariableList 推导整个模型的策略。Eye 的手动过渡与自动眨眼开关分开；自动眨眼调度仍未集成。
 
@@ -47,3 +47,10 @@ build/dev/bin/nekomote_pose --animation-diagnostic --asset /path/to/model.nkm.js
 发布态 CPU 作者步进+参数绑定+几何求值+构帧基线见下方独立记录；不包含 GPU、swap、音频/物理或桌面，不声称完整方案 FPS/功耗收益。
 
 基线（2026-10-04，Release，Ryzen 7 5800H / NVIDIA RTX 3060 Laptop / 驱动 575.64.03 / KDE X11，同 P4 环境）：chocola-date-a，待機ループ00 difference，431 节点/33 sprite，120 步预热、2000 步采样，P50/P95/P99 = 0.530580/0.570250/0.714820 ms。每样本推进一个作者帧，变姿态，无截图、无 GPU 读回。日志 build/evidence/p5-animation-cpu-benchmark.log；可用上述命令复现。该数值与旧固定姿态基线的输入不同，不能直接宣称提速。
+
+
+## Selector 子步骤
+
+选择值在下一作者步向零截断为整数，选项权重独立过渡。初态第一个选项权重为 1，其他为 0；每作者步写入选项参数，因此单独写 fade 参数会在下次作者步被覆盖。改选或重复触发从保存权重继续，以完整权重区间的速度过渡；不能按剩余值差重新插值。控制器仅接受当前素材已经验证的 on=0/off=1 与 Linear 输出，重复/共享/循环输出明确拒绝；差分 Selector 尚未验收，继续拒绝。
+
+数值轨迹包括延迟零时长、十帧过渡、分数/越界、中途改选/重复、平方缓动；fixture 不包含模型纹理或几何。原版物理启用的 Chocola/Fraise 半程淡入淡出图片、UV/顶点/拓扑通过；Chocola 跑步 12 步的参数/几何通过但 (186,365) 一个蓝色 3/255 像素 FAIL。九组控制器与运行时生命周期回归、完整失败和复现矩阵见 docs/validation/p5-selector.json、playback-selector-inputs.json。完整播放器未认证。

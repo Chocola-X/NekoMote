@@ -122,10 +122,17 @@ def main():
     if not isinstance(args.events, list):
         parser.error('events must be an array')
     for event in args.events:
-        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces'}:
-            parser.error('each event requires step and optional variables/forces')
+        if not isinstance(event, dict) or not {'step'} <= set(event) <= {'step', 'variables', 'forces', 'transitions'}:
+            parser.error('each event requires step and optional variables/forces/transitions')
         if type(event['step']) is not int or not 1 <= event['step'] <= args.steps:
             parser.error('event step must identify an update in this capture')
+        transitions = event.get('transitions', {})
+        if not isinstance(transitions, dict):
+            parser.error('event transitions must be an object')
+        for name, request in transitions.items():
+            if not name or not isinstance(request, dict) or set(request) != {'value', 'frames', 'easing'} or \
+                    any(not finite_number(v) for v in request.values()) or request['frames'] < 0:
+                parser.error('event transitions require finite value, frames >= 0 and easing')
         for category in ('variables', 'forces'):
             values = event.get(category, {})
             if not isinstance(values, dict) or any(not name for name in values):

@@ -417,6 +417,8 @@ GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必�
 
 ### 2026-10-04 当前接续点
 
-P6 两节链条内核、共同作者时钟、世界曲面与模型比例已接入。Chocola 原版四组、Fraise 原版三组完整动作的原始物理输出、实际几何/拓扑与图片全部通过。最新修复包括源度数包装、从叶到父曲面叠加、显式单位曲面求值、绝对作者坐标归一化和保存前过渡进度。Chocola 八组缩放全部数值/几何通过、六图通过；Fraise 三组缩放全部几何通过、两组标量通过但图片六/一个像素 FAIL，0.8 转头标量已由绝对链条锚点修复为 2.801418305e−6 PASS、一个像素 FAIL。静态/隔离动画像素、selector/表达式/嵌套遮罩、交互/音频/背景与宿主仍未闭合，P3/P4/P5/P6 保持进行中。当前继续核实非单位比例与像素，再补齐完整会话功能。证据：docs/validation/p6-transform-precision.json、playback-fraise-scale-inputs.json 与 docs/development-log.md。
+P6 两节链条内核、共同作者时钟、世界曲面与模型比例已接入。Chocola 原版四组、Fraise 原版三组完整动作的原始物理输出、实际几何/拓扑与图片全部通过。最新修复包括源度数包装、从叶到父曲面叠加、显式单位曲面求值、绝对作者坐标归一化和保存前过渡进度。Chocola 八组缩放全部数值/几何通过、六图通过；Fraise 三组缩放全部几何通过、两组标量通过但图片六/一个像素 FAIL，0.8 转头标量已由绝对链条锚点修复为 2.801418305e−6 PASS、一个像素 FAIL。静态/隔离动画像素、表达式/嵌套遮罩、交互/音频/背景与宿主仍未闭合，P3/P4/P5/P6 保持进行中。当前继续核实非单位比例与像素，再补齐完整会话功能。证据：docs/validation/p6-transform-precision.json、playback-fraise-scale-inputs.json 与 docs/development-log.md。
 
 绝对链条锚点的初始/外力偏移、临时 rest 与旧末端最大长度投影已经逐位状态回归；Debug/Release 90、ASan/UBSan 89 项通过。当前数字与未闭合像素见 docs/validation/p6-absolute-chain-anchors.json，下一步继续像素与 selector。
+
+Selector 独立权重已接入，九组控制轨迹、两个原版完整半程图片通过；走行ループ 数值/几何通过、一个像素 FAIL，隔离动画仍 2/7 PASS（11 像素 FAIL）。Debug/Release 92、ASan/UBSan 核心 91 通过，当前输入矩阵已改为 observed_variables。见 docs/validation/p5-selector.json；继续非线性 Expression/Eye/眨眼与剩余像素，所有下游阶段保持进行中。

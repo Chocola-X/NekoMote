@@ -15,7 +15,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -65,7 +65,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -115,7 +115,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",
@@ -165,7 +165,7 @@
         0,
         400
       ],
-      "observed_physics": [
+      "observed_variables": [
         "hair_LR_front",
         "hair_UD_front",
         "hair_LR_M_front",

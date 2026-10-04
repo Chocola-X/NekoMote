@@ -1884,3 +1884,67 @@ TEST_CASE("Opacity-zero sprites still supply mask geometry without color draws",
     REQUIRE(inactive.frame().commands.empty());
     REQUIRE(inactive.frame().mask_commands.empty());
 }
+
+TEST_CASE("Selector state is independent, resettable and allocation free in playback",
+          "[runtime][playback]")
+{
+    auto asset = rig();
+    asset.variables = {{"choice", {}}, {"first_option", {}}, {"second_option", {}}};
+    VariableControl first, second, selector;
+    first.variable = "first_option";
+    second.variable = "second_option";
+    selector.kind = VariableControlKind::Selector;
+    selector.variable = "choice";
+    selector.options = {{"first_option", 0, 1}, {"second_option", 0, 1}};
+    asset.variable_controls = {first, second, selector};
+    auto compiled = runtime::compile_playback(asset);
+    REQUIRE(compiled.program);
+    const auto choice = compiled.program->scene().find_variable("choice");
+    const auto option = compiled.program->scene().find_variable("second_option");
+    runtime::PlaybackInstance player(*compiled.program), independent(*compiled.program);
+    REQUIRE(player.transition(choice, 1.5f, 10));
+    REQUIRE(player.step());
+    REQUIRE(player.values()[choice.value - 1].value == 1.0f);
+    REQUIRE(player.values()[option.value - 1].value == 0.8999999761581421f);
+    REQUIRE(independent.tick_count() == 0);
+    REQUIRE(independent.values()[option.value - 1].value == 0.0f);
+    player.reset();
+    REQUIRE(player.values()[option.value - 1].value == 0.0f);
+    REQUIRE(player.step());
+    REQUIRE(player.values()[option.value - 1].value == 1.0f);
+    for (int i = 0; i < 120; ++i)
+    {
+        REQUIRE(player.step());
+        REQUIRE(player.prepare_frame());
+    }
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(player.transition(choice, static_cast<float>(i % 2), 10, 1));
+        success &= static_cast<bool>(player.step());
+        success &= static_cast<bool>(player.prepare_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(independent.tick_count() == 0);
+    REQUIRE(independent.values()[option.value - 1].value == 0.0f);
+
+    SECTION("Repeated output assignment is rejected")
+    {
+        asset.variable_controls.back().options.push_back(selector.options[0]);
+        REQUIRE_FALSE(runtime::compile_playback(asset).program);
+    }
+    SECTION("Selector output cycles are rejected")
+    {
+        asset.variable_controls.back().options[0].variable = "choice";
+        REQUIRE_FALSE(runtime::compile_playback(asset).program);
+    }
+    SECTION("Unverified on/off ranges are rejected")
+    {
+        asset.variable_controls.back().options[0].on_value = 0.5f;
+        REQUIRE_FALSE(runtime::compile_playback(asset).program);
+    }
+}

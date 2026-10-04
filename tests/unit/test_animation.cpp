@@ -269,3 +269,75 @@ TEST_CASE("Animation rejects unknown IDs and selected unsupported controllers", 
         REQUIRE(player.step());
     REQUIRE(value(player, reference.scene->find_variable("head_LR")) == -30.0f);
 }
+
+TEST_CASE("Selector requests match original deferred choice and independent fade trajectories",
+          "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "selector_reference.json");
+    auto asset = reference.asset;
+    model::VariableControl selector;
+    selector.variable = fixture.at("variable").get<std::string>();
+    selector.kind = model::VariableControlKind::Selector;
+    model::VariableDef choice;
+    choice.label = selector.variable;
+    asset.variables.push_back(choice);
+    for (const auto& option : fixture.at("options"))
+    {
+        const auto name = option.at("variable").get<std::string>();
+        model::VariableDef variable;
+        variable.label = name;
+        asset.variables.push_back(variable);
+        model::VariableControl linear;
+        linear.variable = name;
+        asset.variable_controls.push_back(linear);
+        selector.options.push_back(
+            {name, option.at("on_value").get<float>(), option.at("off_value").get<float>()});
+    }
+    asset.variable_controls.push_back(selector);
+    auto geometry = runtime::compile_geometry_scene(asset);
+    REQUIRE(geometry.scene);
+    auto animation = runtime::compile_animation(asset, *geometry.scene);
+    REQUIRE(animation.program);
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::AnimationInstance player(*animation.program);
+        const auto request = [&](const Json& requests)
+        {
+            for (const auto& [name, transition] : requests.items())
+                REQUIRE(player.transition(
+                    geometry.scene->find_variable(name), transition.at("value").get<float>(),
+                    transition.at("frames").get<float>(), transition.at("easing").get<float>()));
+        };
+        for (const auto& [name, initial] : experiment.at("initial").items())
+            REQUIRE(player.transition(geometry.scene->find_variable(name), initial.get<float>()));
+        request(experiment.at("transitions"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            const int step = sample.at("step").get<int>();
+            INFO(step);
+            if (step)
+            {
+                for (const auto& event : experiment.at("events"))
+                    if (event.at("step").get<int>() == step)
+                    {
+                        const auto variables = event.value("variables", Json::object());
+                        for (const auto& [name, initial] : variables.items())
+                            REQUIRE(player.transition(geometry.scene->find_variable(name),
+                                                      initial.get<float>()));
+                        request(event.value("transitions", Json::object()));
+                    }
+                REQUIRE(player.step());
+            }
+            for (const auto& [name, expected] : sample.at("values").items())
+            {
+                INFO(name);
+                REQUIRE_THAT(value(player, geometry.scene->find_variable(name)),
+                             Catch::Matchers::WithinAbs(expected.get<double>(),
+                                                        fixture.at("raw_tolerance").get<double>()));
+            }
+        }
+    }
+}

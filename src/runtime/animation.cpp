@@ -237,8 +237,6 @@ bool route(const Controller& c, Transition& state, float target) noexcept
 bool request(const Controller& c, Transition& state, float target, float duration,
              float easing) noexcept
 {
-    if (c.kind == Kind::Selector)
-        return false; // selector fade outputs have not yet been independently verified
     if (c.kind == Kind::Expression && easing != 0)
         return false; // nonlinear expression routing has independent, unverified timing
     if (!route(c, state, target))
@@ -246,7 +244,7 @@ bool request(const Controller& c, Transition& state, float target, float duratio
     if (c.kind == Kind::Eye && state.path.size() <= 1)
         state.path.clear();
     state.start = state.value;
-    state.target = target;
+    state.target = c.kind == Kind::Selector ? std::trunc(target) : target;
     state.duration = duration;
     state.easing = easing;
     state.progress = state.elapsed = state.previous_curve = 0;
@@ -367,6 +365,19 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 c.options.emplace_back(variable, option);
             }
         }
+        std::vector<bool> selector_outputs(data->controllers.size());
+        for (std::size_t i = 1; i < data->controllers.size(); ++i)
+            if (data->controllers[i].kind == Kind::Selector)
+                for (const auto& [id, option] : data->controllers[i].options)
+                {
+                    require(id.value != i && !selector_outputs[id.value],
+                            option.variable + ": repeated or cyclic selector output");
+                    require(data->controllers[id.value].kind == Kind::Linear,
+                            option.variable + ": unverified selector output controller");
+                    require(option.on_value == 0 && option.off_value == 1,
+                            option.variable + ": unverified selector value range");
+                    selector_outputs[id.value] = true;
+                }
         // Mouth controllers create a separate interpolated talk channel. A bare
         // variable is immediate; talkLabel is not an ordinary unbound variable.
         for (const auto& control : asset.variable_controls)
@@ -424,9 +435,8 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                     e.value = key.type == 2;
                     if (e.value)
                     {
-                        if (controller.kind == Kind::Selector ||
-                            (controller.kind == Kind::Expression && key.easing.has_value() &&
-                             key.easing.data != 0))
+                        if (controller.kind == Kind::Expression && key.easing.has_value() &&
+                            key.easing.data != 0)
                             clip.supported = false;
                         e.target = key.value.data;
                         e.easing = key.easing.has_value() ? key.easing.data : 0;
@@ -472,18 +482,31 @@ struct AnimationInstance::Impl
         bool playing{false}, additive{false}, skip_update{false}, sampled{false};
         std::vector<Transition> tracks;
     };
+    struct SelectorState
+    {
+        std::vector<float> weights, starts;
+        float progress{0}, elapsed{0};
+        bool initialized{false}, pending{false};
+    };
     const ProgramData& program;
     std::vector<Transition> base;
+    std::vector<SelectorState> selectors;
     std::vector<ClipState> clips;
     std::vector<ParameterValue> output;
     std::vector<std::size_t> order;
     std::uint64_t ticks{0};
-    explicit Impl(const ProgramData& data) : program(data), clips(data.clips.size())
+    explicit Impl(const ProgramData& data)
+        : program(data), selectors(data.controllers.size()), clips(data.clips.size())
     {
         order.reserve(clips.size());
         base.reserve(data.controllers.size());
-        for (const auto& c : data.controllers)
+        for (std::size_t i = 0; i < data.controllers.size(); ++i)
+        {
+            const auto& c = data.controllers[i];
             base.emplace_back(c.points.size() + 2);
+            selectors[i].weights.resize(c.options.size());
+            selectors[i].starts.resize(c.options.size());
+        }
         for (std::size_t i = 1; i < data.controllers.size(); ++i)
             output.push_back({ParamId{static_cast<std::uint32_t>(i)}, 0});
         for (std::size_t i = 1; i < clips.size(); ++i)
@@ -491,6 +514,62 @@ struct AnimationInstance::Impl
             clips[i].tracks.reserve(data.clips[i].tracks.size());
             for (std::size_t j = 0; j < data.clips[i].tracks.size(); ++j)
                 clips[i].tracks.emplace_back(); // additive channels are linear
+        }
+    }
+    bool request_parameter(ParamId id, float target, float duration, float easing) noexcept
+    {
+        if (!request(program.controllers[id.value], base[id.value], target, duration, easing))
+            return false;
+        if (program.controllers[id.value].kind == Kind::Selector)
+            selectors[id.value].pending = true;
+        return true;
+    }
+    void update_selectors() noexcept
+    {
+        for (std::size_t i = 1; i < selectors.size(); ++i)
+        {
+            const auto& control = program.controllers[i];
+            if (control.kind != Kind::Selector)
+                continue;
+            auto& state = selectors[i];
+            const auto& transition = base[i];
+            if (!state.initialized)
+            {
+                const float initial = state.pending ? transition.start : transition.value;
+                for (std::size_t j = 0; j < state.weights.size(); ++j)
+                    state.weights[j] = initial == static_cast<float>(j) ? 1.0f : 0.0f;
+                state.initialized = true;
+                std::copy(state.weights.begin(), state.weights.end(), state.starts.begin());
+                state.elapsed = transition.duration;
+            }
+            if (state.pending)
+            {
+                std::copy(state.weights.begin(), state.weights.end(), state.starts.begin());
+                state.elapsed = state.progress = 0;
+                state.pending = false;
+            }
+            state.elapsed += 1;
+            double amount = 1;
+            if (state.elapsed < transition.duration)
+            {
+                const double progress =
+                    std::min(1.0, static_cast<double>(state.progress) +
+                                      static_cast<double>(1.0f / transition.duration));
+                state.progress = static_cast<float>(progress);
+                amount = ease_progress(progress, transition.easing);
+            }
+            for (std::size_t j = 0; j < control.options.size(); ++j)
+            {
+                const double direction = transition.value == static_cast<float>(j) ? 1 : -1;
+                const double weight =
+                    std::clamp(static_cast<double>(state.starts[j]) + direction * amount, 0.0, 1.0);
+                state.weights[j] = static_cast<float>(weight);
+                const auto& [id, option] = control.options[j];
+                base[id.value].value = static_cast<float>(
+                    static_cast<double>(option.off_value) +
+                    (static_cast<double>(option.on_value) - static_cast<double>(option.off_value)) *
+                        weight);
+            }
         }
     }
     void compose() noexcept
@@ -518,10 +597,12 @@ struct AnimationInstance::Impl
                 if (event.time == time && event.value)
                 {
                     const auto& controller = program.controllers[track.variable.value];
-                    auto& transition =
-                        state.additive ? state.tracks[j] : base[track.variable.value];
-                    if (!request(controller, transition, event.target, event.duration,
-                                 event.easing))
+                    const bool accepted = state.additive
+                                              ? request(controller, state.tracks[j], event.target,
+                                                        event.duration, event.easing)
+                                              : request_parameter(track.variable, event.target,
+                                                                  event.duration, event.easing);
+                    if (!accepted)
                         return false;
                 }
         }
@@ -540,8 +621,7 @@ AnimationStatus AnimationInstance::transition(ParamId id, float target, float fr
         return {AnimationError::InvalidParameter, {}, id};
     if (!std::isfinite(target) || !std::isfinite(frames) || !std::isfinite(easing) || frames < 0)
         return {AnimationError::InvalidValue, {}, id};
-    if (!request(impl_->program.controllers[id.value], impl_->base[id.value], target, frames,
-                 easing))
+    if (!impl_->request_parameter(id, target, frames, easing))
         return {AnimationError::UnsupportedController, {}, id};
     impl_->compose();
     return {};
@@ -619,6 +699,7 @@ AnimationStatus AnimationInstance::step() noexcept
         if (data.clips[i].playing && data.clips[i].additive && !data.clips[i].skip_update)
             for (auto& transition : data.clips[i].tracks)
                 update(transition);
+    data.update_selectors();
     data.compose();
     ++data.ticks;
     return {};
@@ -628,6 +709,13 @@ void AnimationInstance::reset() noexcept
     auto& data = *impl_;
     for (auto& transition : data.base)
         transition.reset();
+    for (auto& selector : data.selectors)
+    {
+        std::fill(selector.weights.begin(), selector.weights.end(), 0);
+        std::fill(selector.starts.begin(), selector.starts.end(), 0);
+        selector.progress = selector.elapsed = 0;
+        selector.initialized = selector.pending = false;
+    }
     for (auto& clip : data.clips)
     {
         clip.time = 0;

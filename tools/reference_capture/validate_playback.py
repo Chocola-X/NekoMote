@@ -3,7 +3,7 @@
 
 Native input is independently frozen events/assets, never source output values.
 GetVariable caches for additive animation exclude differences, so raw comparison
-covers the explicitly observed physical outputs; final geometry tests composition.
+covers only explicitly observed base or controller outputs; final geometry tests composition.
 """
 import argparse
 import hashlib
@@ -53,7 +53,7 @@ def main():
         metadata = json.loads(reference.with_suffix('.json').read_text())
         expected = dict(width=800, height=1080, x=case['origin'][0], y=case['origin'][1],
                         scale=case.get("scale", 1), opacity=1, stepFrames=1, steps=case['steps'],
-                        variables=case['variables'], plays=case['plays'], transitions={}, events=[],
+                        variables=case['variables'], plays=case['plays'], transitions=case.get('transitions', {}), events=[],
                         physics=dict(hair=1, parts=1, bust=1, wind=False))
         if any(metadata.get(k) != v for k, v in expected.items()) or metadata['diagnostic_fixture_edits']:
             raise ValueError('reference is not the frozen, unmodified request: ' + name)
@@ -63,7 +63,7 @@ def main():
             if sha(args.reference_root / 'driver' / driver) != case['source_hashes'][driver]:
                 raise ValueError('reference driver changed')
         request = dict(steps=case['steps'], origin=case['origin'], scale=case.get('scale', 1),
-                       variables=case['variables'],
+                       variables=case['variables'], transitions=case.get('transitions', {}),
                        plays=case['plays'], dump_frame=True)
         input_path = args.output / (name + '-inputs.json')
         input_path.write_text(json.dumps(request, ensure_ascii=False, indent=2) + '\n')
@@ -76,6 +76,8 @@ def main():
                    '--hidden', '--screenshot', args.output / (name + '-native.png')]
         for key, value in case['variables'].items():
             command += ['--variable', key, value]
+        for key, transition in case.get('transitions', {}).items():
+            command += ['--transition', key, transition['value'], transition['frames'], transition['easing']]
         for play in case['plays']:
             command += ['--play', play['label'], play['flags']]
         run(command, args.output / (name + '-render.log'))
@@ -86,7 +88,7 @@ def main():
         for a, b in zip(source_samples[1:], native['samples'][1:]):
             if a['step'] != b['step']:
                 raise ValueError('author step differs')
-            for key in case['observed_physics']:
+            for key in case['observed_variables']:
                 errors.append(dict(error=abs(a['values'][key] - b['values'][key]),
                                    step=a['step'], variable=key,
                                    reference=a['values'][key], native=b['values'][key]))

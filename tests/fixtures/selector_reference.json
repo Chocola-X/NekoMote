@@ -1,0 +1,1354 @@
+{
+  "raw_tolerance": 1e-05,
+  "scope": "Isolated selector scalar trajectories; auto blink disabled in read-only PSB fixture. Source body and textures are not bundled. Not whole player certification.",
+  "variable": "arm_type",
+  "options": [
+    {
+      "variable": "fade_a",
+      "on_value": 0,
+      "off_value": 1
+    },
+    {
+      "variable": "fade_b",
+      "on_value": 0,
+      "off_value": 1
+    },
+    {
+      "variable": "fade_c",
+      "on_value": 0,
+      "off_value": 1
+    },
+    {
+      "variable": "fade_d",
+      "on_value": 0,
+      "off_value": 1
+    },
+    {
+      "variable": "fade_e",
+      "on_value": 0,
+      "off_value": 1
+    }
+  ],
+  "cases": [
+    {
+      "case": "to1-ten",
+      "model": "chocola-date-a",
+      "initial": {},
+      "transitions": {
+        "arm_type": {
+          "value": 1,
+          "frames": 10,
+          "easing": 0
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.10000000149011612,
+            "fade_b": 0.8999999761581421,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.20000000298023224,
+            "fade_b": 0.800000011920929,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.30000001192092896,
+            "fade_b": 0.699999988079071,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.4000000059604645,
+            "fade_b": 0.5999999642372131,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.5,
+            "fade_b": 0.5,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.6000000238418579,
+            "fade_b": 0.4000000059604645,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.7000000476837158,
+            "fade_b": 0.29999998211860657,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.8000000715255737,
+            "fade_b": 0.19999995827674866,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.9000000953674316,
+            "fade_b": 0.09999992698431015,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "to2-zero",
+      "model": "chocola-date-a",
+      "initial": {
+        "arm_type": 2
+      },
+      "transitions": {},
+      "events": [],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "interrupt",
+      "model": "chocola-date-a",
+      "initial": {},
+      "transitions": {
+        "arm_type": {
+          "value": 1,
+          "frames": 10,
+          "easing": 0
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "variables": {
+            "arm_type": 2
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.10000000149011612,
+            "fade_b": 0.8999999761581421,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.20000000298023224,
+            "fade_b": 0.800000011920929,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.30000001192092896,
+            "fade_b": 0.699999988079071,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.4000000059604645,
+            "fade_b": 0.5999999642372131,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "fractional",
+      "model": "chocola-date-a",
+      "initial": {
+        "arm_type": 1.5
+      },
+      "transitions": {},
+      "events": [
+        {
+          "step": 3,
+          "variables": {
+            "arm_type": -0.5
+          }
+        },
+        {
+          "step": 5,
+          "variables": {
+            "arm_type": 5
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 5,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 5,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "to3-ease",
+      "model": "fraise-casual-a",
+      "initial": {},
+      "transitions": {
+        "arm_type": {
+          "value": 3,
+          "frames": 10,
+          "easing": 1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "06bb1e950a39ad024072105d146c1d51e23e0d3a9ae6a58eb9dbc1fd748a4d14",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 284938,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.010000000707805157,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.9900000095367432,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.04000000283122063,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.9599999785423279,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.09000000357627869,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.9100000262260437,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.1600000113248825,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.8399999737739563,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.25,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.75,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.36000001430511475,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.6399999856948853,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.49000003933906555,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.5099999904632568,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.6400001049041748,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.3599999248981476,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 0.8100001215934753,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0.18999986350536346,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "arm_type": 3,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 0,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "retransition",
+      "model": "chocola-date-a",
+      "initial": {},
+      "transitions": {
+        "arm_type": {
+          "value": 1,
+          "frames": 10,
+          "easing": 0
+        }
+      },
+      "events": [
+        {
+          "step": 5,
+          "transitions": {
+            "arm_type": {
+              "value": 2,
+              "frames": 6,
+              "easing": 0
+            }
+          }
+        },
+        {
+          "step": 12,
+          "variables": {
+            "fade_a": 0.3
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.10000000149011612,
+            "fade_b": 0.8999999761581421,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.20000000298023224,
+            "fade_b": 0.800000011920929,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.30000001192092896,
+            "fade_b": 0.699999988079071,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.4000000059604645,
+            "fade_b": 0.5999999642372131,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 0.5666666626930237,
+            "fade_b": 0.7666667103767395,
+            "fade_c": 0.8333333134651184,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 0.7333333492279053,
+            "fade_b": 0.9333333373069763,
+            "fade_c": 0.6666666269302368,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 0.9000000357627869,
+            "fade_b": 1,
+            "fade_c": 0.5,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0.3333333134651184,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0.166666641831398,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 11,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 12,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 13,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 14,
+          "values": {
+            "arm_type": 2,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 0,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "default-and-repeat",
+      "model": "chocola-date-a",
+      "initial": {},
+      "transitions": {},
+      "events": [
+        {
+          "step": 2,
+          "transitions": {
+            "arm_type": {
+              "value": 0,
+              "frames": 10,
+              "easing": 0
+            }
+          }
+        },
+        {
+          "step": 5,
+          "variables": {
+            "fade_a": 0.3
+          }
+        },
+        {
+          "step": 6,
+          "transitions": {
+            "arm_type": {
+              "value": 0,
+              "frames": 6,
+              "easing": 0
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "repeat-active",
+      "model": "chocola-date-a",
+      "initial": {},
+      "transitions": {
+        "arm_type": {
+          "value": 1,
+          "frames": 10,
+          "easing": 0
+        }
+      },
+      "events": [
+        {
+          "step": 4,
+          "transitions": {
+            "arm_type": {
+              "value": 1,
+              "frames": 2,
+              "easing": 0
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.10000000149011612,
+            "fade_b": 0.8999999761581421,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.20000000298023224,
+            "fade_b": 0.800000011920929,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 3,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.30000001192092896,
+            "fade_b": 0.699999988079071,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 4,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 0.800000011920929,
+            "fade_b": 0.19999998807907104,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 5,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 6,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 7,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 8,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 9,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 10,
+          "values": {
+            "arm_type": 1,
+            "fade_a": 1,
+            "fade_b": 0,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    },
+    {
+      "case": "negative-index",
+      "model": "chocola-date-a",
+      "initial": {
+        "arm_type": -1
+      },
+      "transitions": {},
+      "events": [],
+      "source_hashes": {
+        "psb": "2f60faefeafae462ace24ebaa5c4229418feec7c1b8c48fbb12a8245347de68d",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "diagnostic_fixture_edits": [
+        {
+          "path": "/metadata/eyeControl/0/blinkEnabled",
+          "offset": 283665,
+          "before": 1,
+          "after": 0,
+          "affected_paths": [
+            "/metadata/eyeControl/0/blinkEnabled",
+            "/metadata/eyeControl/0/enabled"
+          ],
+          "stored_after": 0
+        }
+      ],
+      "samples": [
+        {
+          "step": 0,
+          "values": {
+            "arm_type": 0,
+            "fade_a": 0,
+            "fade_b": 0,
+            "fade_c": 0,
+            "fade_d": 0,
+            "fade_e": 0
+          }
+        },
+        {
+          "step": 1,
+          "values": {
+            "arm_type": -1,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        },
+        {
+          "step": 2,
+          "values": {
+            "arm_type": -1,
+            "fade_a": 1,
+            "fade_b": 1,
+            "fade_c": 1,
+            "fade_d": 1,
+            "fade_e": 1
+          }
+        }
+      ]
+    }
+  ]
+}

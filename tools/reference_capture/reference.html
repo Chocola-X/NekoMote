@@ -139,6 +139,8 @@ window.capture = async function(options) {
         for(const event of options.events||[]) if(event.step===i+1) {
             for(const [name,value] of Object.entries(event.variables||{}))
                 EmotePlayer_SetVariable(id,name,value,0,0);
+            for(const [name,request] of Object.entries(event.transitions||{}))
+                EmotePlayer_SetVariable(id,name,request.value,request.frames,request.easing);
             for(const [name,force] of Object.entries(event.forces||{}))
                 EmotePlayer_SetOuterForce(id,name,force[0],force[1],0,0);
         }
