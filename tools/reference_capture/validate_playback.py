@@ -30,6 +30,10 @@ def main():
     baseline = json.loads((args.inputs or repo / 'docs/validation/playback-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
+    def save_report():
+        (args.output / 'report.json').write_text(json.dumps(dict(
+            stage_complete=False, production_playback_certified=False,
+            passed=all(c['passed'] for c in results), cases=results), indent=2) + '\n')
     for case in baseline['cases']:
         name, model = case['case'], case['model']
         asset = args.output / model / 'model.nkm.json'
@@ -68,7 +72,16 @@ def main():
         input_path = args.output / (name + '-inputs.json')
         input_path.write_text(json.dumps(request, ensure_ascii=False, indent=2) + '\n')
         native_path = args.output / (name + '-native.json')
-        run([args.evaluator, asset, input_path, native_path], args.output / (name + '-evaluate.log'))
+        try:
+            run([args.evaluator, asset, input_path, native_path], args.output / (name + '-evaluate.log'))
+        except RuntimeError as error:
+            results.append(dict(case=name, model=model, passed=False,
+                                native_failure=dict(phase='evaluate', error=str(error),
+                                    log=(args.output / (name + '-evaluate.log')).read_text()),
+                                source_hashes=case['source_hashes'], asset_sha256=case['asset_sha256']))
+            save_report()
+            print(name, 'FAIL native evaluation; see retained log', flush=True)
+            continue
         native = json.loads(native_path.read_text())
         command = [args.preview, '--playback', '--asset', asset, '--origin',
                    case['origin'][0] + 400, case['origin'][1] + 540, '--steps', case['steps'],
@@ -80,7 +93,16 @@ def main():
             command += ['--transition', key, transition['value'], transition['frames'], transition['easing']]
         for play in case['plays']:
             command += ['--play', play['label'], play['flags']]
-        run(command, args.output / (name + '-render.log'))
+        try:
+            run(command, args.output / (name + '-render.log'))
+        except RuntimeError as error:
+            results.append(dict(case=name, model=model, passed=False,
+                                native_failure=dict(phase='render', error=str(error),
+                                    log=(args.output / (name + '-render.log')).read_text()),
+                                source_hashes=case['source_hashes'], asset_sha256=case['asset_sha256']))
+            save_report()
+            print(name, 'FAIL native rendering; see retained log', flush=True)
+            continue
         source_samples = metadata['variableSamples']
         if len(source_samples) != len(native['samples']) or native['steps'] != case['steps']:
             raise ValueError('sample count differs')
@@ -108,9 +130,7 @@ def main():
                             asset_sha256=case['asset_sha256'], scalar_samples=len(errors),
                             scalar_maximum=maximum, scalar_passed=scalar_passed,
                             geometry=geometry, image=image, passed=passed))
-        (args.output / 'report.json').write_text(json.dumps(dict(
-            stage_complete=False, production_playback_certified=False,
-            passed=all(c['passed'] for c in results), cases=results), indent=2) + '\n')
+        save_report()
         print(name, 'PASS' if passed else 'FAIL', 'scalar=', maximum['error'],
               'geometry=', geometry['frame_max_error_px'], 'image pixels=',
               image['pixels_over_tolerance'], flush=True)

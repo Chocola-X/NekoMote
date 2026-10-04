@@ -341,6 +341,35 @@ TEST_CASE("Expression transitions report an inverse curve domain failure without
     REQUIRE(playback.tick_count() == std::uint64_t{1});
 }
 
+TEST_CASE("Eye expression routes close before switching and reopen from the nearest junction",
+          "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "eye_route_reference.json");
+    const auto parameter =
+        reference.scene->find_variable(fixture.at("variable").get<std::string>());
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::AnimationInstance player(*reference.program);
+        for (const auto& [name, initial] : experiment.at("variables").items())
+            REQUIRE(player.transition(reference.scene->find_variable(name), initial.get<float>()));
+        for (const auto& [name, transition] : experiment.at("transitions").items())
+            REQUIRE(player.transition(
+                reference.scene->find_variable(name), transition.at("value").get<float>(),
+                transition.at("frames").get<float>(), transition.at("easing").get<float>()));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            REQUIRE(player.step());
+            REQUIRE_THAT(value(player, parameter),
+                         Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                    fixture.at("value_tolerance").get<double>()));
+        }
+    }
+}
+
 TEST_CASE("Main timelines dispatch nonlinear expression transitions through their control graph",
           "[animation]")
 {

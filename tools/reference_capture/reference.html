@@ -7,12 +7,25 @@
 window.ready = false;
 window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
 window.mathTrace=[];
+window.enableRandomTrace=false;
+window.randomTrace=[];
+window.randomTraceTruncated=false;
+if(window.enableRandomTrace) {
+    const nativeRandom=Math.random;
+    Math.random=function() {
+        const result=nativeRandom();
+        if(window.randomTrace.length<10000)
+            window.randomTrace.push({step:window.authorStep||0,result,stack:new Error().stack});
+        else window.randomTraceTruncated=true;
+        return result;
+    };
+}
 window.enableMathTrace=false;
 if(window.enableMathTrace) for(const name of ['sqrt','sin','cos','tan','atan','atan2','asin','acos','pow']) {
     const fn=Math[name];
     Math[name]=function(...args) {
         const result=fn(...args);
-        if(window.traceMath && window.mathTrace.length<2000)
+        if(window.traceMath && (window.traceMathStep==null || window.authorStep===window.traceMathStep) && window.mathTrace.length<2000)
             window.mathTrace.push({step:window.authorStep||0,name,args,result,stack:new Error().stack});
         return result;
     };
@@ -90,6 +103,7 @@ window.capture = async function(options) {
     }
     for(const label of options.observeVariables||[]) variables[label]=EmotePlayer_GetVariable(id,label);
     window.traceMath=options.traceMath;
+    window.traceMathStep=options.traceMathStep;
     window.traceFloatStores=options.traceFloatStores;
     window.traceFloatStack=options.traceFloatStack;
     window.traceFloatStep=options.traceFloatStep;
@@ -167,6 +181,7 @@ window.capture = async function(options) {
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
+        randomTrace:window.randomTrace,randomTraceTruncated:window.randomTraceTruncated,
         floatStores:window.floatStores,floatStoresTruncated:window.floatStoresTruncated,
         floatReads:window.floatReads,floatReadsTruncated:window.floatReadsTruncated,
         renderer:renderer?gl.getParameter(renderer.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),

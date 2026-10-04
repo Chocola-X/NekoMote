@@ -446,7 +446,7 @@ TEST_CASE("Atlas packing changes UV without changing deformed model geometry", "
     }
 }
 
-TEST_CASE("Warmed animation, expression routing and geometry allocate no project heap",
+TEST_CASE("Warmed animation, expression and Eye routing allocate no project heap",
           "[runtime][animation][allocation]")
 {
     auto asset = rig();
@@ -464,6 +464,14 @@ TEST_CASE("Warmed animation, expression routing and geometry allocate no project
     expression.edges = {{{0, 1}}, {{2, 3}}};
     expression.junctions = {{1, 2}};
     asset.variable_controls.push_back(std::move(expression));
+    VariableControl eye;
+    eye.kind = VariableControlKind::Eye;
+    eye.variable = "eye";
+    eye.begin_frame = 0;
+    eye.end_frame = 10;
+    eye.edges = {{{-10, 20}}, {{30, 30}}};
+    eye.junctions = {{10, 30, 0}};
+    asset.variable_controls.push_back(std::move(eye));
     auto compiled = runtime::compile_geometry_scene(asset);
     REQUIRE(compiled.scene);
     auto animation = runtime::compile_animation(asset, *compiled.scene);
@@ -472,11 +480,15 @@ TEST_CASE("Warmed animation, expression routing and geometry allocate no project
     runtime::GeometryInstance geometry(*compiled.scene);
     const auto cycle = animation.program->find_timeline("cycle");
     const auto parameter = compiled.scene->find_variable("expression");
+    const auto eye_parameter = compiled.scene->find_variable("eye");
     REQUIRE(player.play(cycle, runtime::TimelinePlayMode::Parallel));
     const auto update = [&](int frame)
     {
         if (frame % 20 == 0 && !player.transition(parameter, frame % 40 == 0 ? 3.0f : 0.0f, 10,
                                                   frame % 40 == 0 ? 1.0f : -0.5f))
+            return false;
+        if (frame % 20 == 0 && !player.transition(eye_parameter, frame % 40 == 0 ? 30.0f : 5.0f, 10,
+                                                  frame % 40 == 0 ? 1.0f : -1.0f))
             return false;
         if (!player.step())
             return false;

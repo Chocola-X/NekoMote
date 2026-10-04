@@ -38,6 +38,10 @@ def main():
     parser.add_argument('--fixture-references', type=json.loads, default={},
                         help='diagnostic numeric field references within one PSB dictionary')
     parser.add_argument('--trace-math', action='store_true')
+    parser.add_argument('--trace-math-step', type=int,
+                        help='observe Math calls only during one numbered author update')
+    parser.add_argument('--trace-random', action='store_true',
+                        help='observe public Math.random from initialization; preserves results')
     parser.add_argument('--trace-float-stores', action='store_true',
                         help='diagnostic Float32 storage observations; not for benchmarks')
     parser.add_argument('--trace-float-read-index', action='append', type=int, default=[],
@@ -72,6 +76,9 @@ def main():
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if args.trace_math_step is not None and (not args.trace_math or
+            not 0 <= args.trace_math_step <= args.steps):
+        parser.error('--trace-math-step requires math tracing and an update in 0..steps')
     if args.trace_float_stack and not args.trace_float_stores:
         parser.error('--trace-float-stack requires --trace-float-stores')
     if not 1 <= args.trace_float_limit <= 100000:
@@ -171,6 +178,8 @@ def main():
     html = (here / 'reference.html').read_text()
     if args.trace_math:
         html = html.replace('window.enableMathTrace=false;', 'window.enableMathTrace=true;')
+    if args.trace_random:
+        html = html.replace('window.enableRandomTrace=false;', 'window.enableRandomTrace=true;')
     if args.trace_float_stores:
         html = html.replace('window.enableFloatStores=false;', 'window.enableFloatStores=true;')
     routes = {'/': html.encode(), '/model.psb': psb, '/trace.js': (here / 'trace.js').read_bytes()}
@@ -200,9 +209,11 @@ def main():
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
+                   traceMathStep=args.trace_math_step,
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
                    traceFloatReadIndices=args.trace_float_read_index,
+                   traceRandom=args.trace_random,
                    timelines=[p['label'] for p in plays], plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,

@@ -15,14 +15,14 @@ namespace
 {
 using Json = nlohmann::json;
 using namespace nekomote;
-void check(runtime::PlaybackStatus status)
+void check_status(runtime::PlaybackStatus status, std::string_view node_label)
 {
     if (!status)
         throw std::runtime_error(
             "playback error=" + std::to_string(static_cast<int>(status.error)) +
             " animation=" + std::to_string(static_cast<int>(status.animation.error)) +
-            " geometry=" + std::to_string(static_cast<int>(status.geometry.error)) +
-            " node=" + std::to_string(status.geometry.node.value) +
+            " geometry=" + std::to_string(static_cast<int>(status.geometry.error)) + " node=" +
+            std::to_string(status.geometry.node.value) + " node_path=" + std::string(node_label) +
             " physics=" + std::to_string(static_cast<int>(status.physics.error)) +
             " controller=" + std::to_string(status.physics.controller));
 }
@@ -61,6 +61,8 @@ int run(int argc, char** argv)
     loaded = {}; // program must retain everything the source asset provided
     const auto& program = *compiled.program;
     const auto& scene = program.scene();
+    const auto check = [&](runtime::PlaybackStatus status)
+    { check_status(status, scene.node_label(status.geometry.node)); };
     runtime::PlaybackInstance player(program);
     const auto origin = request.value("origin", Json::array({0, 0}));
     if (!origin.is_array() || origin.size() != 2)

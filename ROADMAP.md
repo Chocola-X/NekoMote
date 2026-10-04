@@ -424,3 +424,5 @@ P6 两节链条内核、共同作者时钟、世界曲面与模型比例已接�
 Selector 独立权重已接入，九组控制轨迹、两个原版完整半程图片通过；走行ループ 数值/几何通过、一个像素 FAIL，隔离动画仍 2/7 PASS（11 像素 FAIL）。Debug/Release 92、ASan/UBSan 核心 91 通过，当前输入矩阵已改为 observed_variables。见 docs/validation/p5-selector.json；继续非线性 Expression/Eye/眨眼与剩余像素，所有下游阶段保持进行中。
 
 非线性 Expression 距离缓存/逆缓动/跨段进度已验证，目标区间路径避免绕行。九组 216 标量、七组原版完整数值/几何/图片通过，两帧 NaN 边界明确失败；Debug/Release 95、ASan/UBSan 核心 94 通过。当前证据 docs/validation/p5-expression-easing.json，继续 Eye/眨眼/动画权重与像素，阶段未标记完成。
+
+Eye 跨区间闭眼/返回连接点已接入：十二组数值通过，十组完整矩阵九图通过、Fraise eye=34 嵌套 motion.timeOffset=40 明确 FAIL（node 272）。Debug/Release 96、ASan/UBSan 核心 95 通过，参见 docs/validation/p5-eye-routing.json。继续眨眼/嵌套偏移，不认证最终引擎。

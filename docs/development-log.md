@@ -245,3 +245,13 @@
 - 两帧 0→40 缓动第 2 步参考返回 NaN（JSON null），源逆曲线输入为负。原生明确 UnsupportedController，保留有限动画输出，联合 PlaybackInstance fault 后隐藏旧帧并要求 reset；不把 clamp 后候选当成正常播放。主时间线可分发非线性表情，差分 Expression 仍未验收，继续拒绝。
 - Debug/Release 95、ASan/UBSan 核心 94、PSB 工具 6 项通过；500 作者步重复正/负非线性路径请求、几何/构帧普通 C++ new 为零。Release/LTO 120 预热/2000 完整 CPU 差分样本：Chocola P50/P95/P99=0.387205/0.417864/0.4685ms；Fraise=0.728732/0.795012/0.841736ms。不含 GPU/呈现/读回/JSON/内存/功耗，也不作为单独活跃 Expression 曲线成本或性能提升证据。
 - 证据与复现见 docs/validation/p5-expression-easing.json、playback-expression-inputs.json、tests/fixtures/expression_easing_reference.json。P3/P4/P5/P6 仍进行中，接下来核实 Eye 跨区间/自动眨眼、动作权重与剩余像素，再补完整会话及宿主。
+
+
+## P5 Eye 跨区间子步骤
+
+- Eye 普通区间退出时选择配置 end_frame（闭眼连接点）；返回普通区间选择最近连接点，等距偏向闭眼点。点间和零距离路径即时赋值；跨段首/末端跳转保留，曲线距离求值覆盖线性 Eye 路径，普通区间仍直接插值。无变量名或型号分支。
+- 十二组原 PSB、固定作者步 288 个原变量值在 1e−5 下全部 PASS，含正反向、负初态、线性/非线性、点间和等距连接点。十组完整矩阵九组标量/几何/拓扑/图片全 PASS；Fraise 第五步回归并列图已目视检查。
+- Fraise eye=34 激活 face_parts/目L/le/ステンシル(shirome)/瞳l_le/eye_pos/瞳L（展开 node=272），motion.timeOffset=40 仍 UnsupportedTransform，完整矩阵保留这一项 FAIL。将左右瞳嵌套偏移在内存设为 0 的 PSB fixture 与原版零步协议/PNG 相同，只是后续字段隔离证据，不能据此忽略全部 motion 偏移。
+- 验证工具将原生求值/渲染失败写入 report，保留阶段、完整日志和来源，再继续其余 case；最后仍以非零退出。来源/资产/输入 hash 失败仍立即中止。原生 probe 错误新增 node_path，截图或渲染失败不伪装为数值成功。
+- Debug/Release 96、ASan/UBSan 95 核心和 PSB 工具 6 项通过。500 作者步同时反复 Expression/Eye 跨区间正/负缓动，普通 C++ new 为零；分配扩展后核心三种 preset 定向复测。既有 Chocola 四组原版完整会话继续通过。证据 docs/validation/p5-eye-routing.json、playback-eye-inputs.json、tests/fixtures/eye_route_reference.json。
+- 自动眨眼原版 400 步与定间隔 PSB fixture 已采样。公开 Math.random 无调用，Float32 读写给出关闭/保持/打开和间隔重采样；随机间隔有细小跨进程变化，尚未归因，不认证调度。增加显式 --trace-random 和 --trace-math-step 仅返回真实公开调用结果，默认不启用，不进入性能/运行时。继续眨眼和嵌套偏移，阶段仍进行中。

@@ -56,3 +56,7 @@ build/dev/bin/nekomote_pose --animation-diagnostic --asset /path/to/model.nkm.js
 选择值在下一作者步向零截断为整数，选项权重独立过渡。初态第一个选项权重为 1，其他为 0；每作者步写入选项参数，因此单独写 fade 参数会在下次作者步被覆盖。改选或重复触发从保存权重继续，以完整权重区间的速度过渡；不能按剩余值差重新插值。控制器仅接受当前素材已经验证的 on=0/off=1 与 Linear 输出，重复/共享/循环输出明确拒绝；差分 Selector 尚未验收，继续拒绝。
 
 数值轨迹包括延迟零时长、十帧过渡、分数/越界、中途改选/重复、平方缓动；fixture 不包含模型纹理或几何。原版物理启用的 Chocola/Fraise 半程淡入淡出图片、UV/顶点/拓扑通过；Chocola 跑步 12 步的参数/几何通过但 (186,365) 一个蓝色 3/255 像素 FAIL。九组控制器与运行时生命周期回归、完整失败和复现矩阵见 docs/validation/p5-selector.json、playback-selector-inputs.json。完整播放器未认证。
+
+## Eye 跨区间子步骤
+
+普通区间离开时先到 end_frame 闭眼连接点；返回时走最近连接点，等距选择闭眼点。十二组 288 个源数值通过。十组原版完整矩阵九组图片/几何/标量通过，Fraise eye=34 激活嵌套 motion.timeOffset=40 后仍明确失败，不计完整播放通过；字段路径和保留日志见 [Eye 验证](validation/p5-eye-routing.json)。自动眨眼调度尚未集成。

@@ -71,3 +71,5 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 完整播放冻结矩阵现在使用 `observed_variables` 指定要比较的通道；四个现有输入矩阵已迁移，不读取旧字段。新增可选 `transitions`，由 preview `--transition NAME VALUE FRAMES EASING` 和 PlaybackInstance 直接执行，不输入参考输出。选择器原版矩阵见 `docs/validation/playback-selector-inputs.json`，仍保留所有图片 FAIL。受控采样的 `--events` 可包含 `transitions`，格式同开场请求，发生在指定作者 Update 之前；用于中途改选与重复触发的数值验证。
 
 非线性 Expression 完整矩阵：`validate_playback.py --inputs docs/validation/playback-expression-inputs.json --reuse-reference build/evidence/p5-expression-easing`（其余 importer/preview/evaluator/reference-root/output 参数同上）。参考保持原 PSB、物理全 1；中途过渡的原 SDK 数值 fixture 另存 tests/fixtures/expression_easing_reference.json，不向原生输入源曲线值。快速跨段产生 NaN 的原始捕获保留，原生对应作者步明确失败。
+
+`--trace-random` 只观察公开 Math.random 的原始结果与调用栈，从初始化起有界最多 10000 条，保留 randomTraceTruncated，不设置随机种子或替换输出。`--trace-math-step N` 将 Math 观察限制为单个作者步（需要 --trace-math）；用于避免长轨迹的前 2000 条覆盖眨眼所在步骤。两项都只用于诊断；原生完整矩阵记录评估/渲染失败及 node_path，并继续剩余输入、最终返回失败。Eye 原版矩阵见 docs/validation/playback-eye-inputs.json。

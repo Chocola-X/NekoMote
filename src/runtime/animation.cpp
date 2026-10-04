@@ -16,6 +16,8 @@ using Kind = model::VariableControlKind;
 struct Controller
 {
     Kind kind{Kind::Immediate};
+    float eye_closed{0};
+    int eye_interval{-1};
     std::vector<std::array<float, 2>> edges;
     std::vector<float> points, distance;
     std::vector<int> next, jumps;
@@ -164,6 +166,7 @@ struct Segment
 };
 struct Transition
 {
+    Kind controller_kind{Kind::Immediate};
     float value{0}, start{0}, target{0}, duration{0}, easing{0}, progress{0}, elapsed{0}, length{0};
     bool active{false}, deferred{false};
     std::size_t path_index{0};
@@ -212,12 +215,18 @@ bool route(const Controller& c, Transition& state, float target) noexcept
             {
                 if (c.points[i] < a[0] || c.points[i] > a[1])
                     continue;
+                if (c.kind == Kind::Eye && start_edge == c.eye_interval &&
+                    c.points[i] != c.eye_closed)
+                    continue;
                 const float cost =
                     std::abs(c.points[i] - state.value) + c.distance[i * n + j] + target_distance;
                 const int jumps = c.jumps[i * n + j];
                 if (std::isfinite(cost) &&
                     (jumps < best_jumps ||
                      (jumps == best_jumps && target_distance < nearest_target) ||
+                     (jumps == best_jumps && target_distance == nearest_target &&
+                      c.kind == Kind::Eye && c.points[j] == c.eye_closed &&
+                      static_cast<int>(j) != last) ||
                      (jumps == best_jumps && target_distance == nearest_target &&
                       static_cast<int>(j) == last && cost < best)))
                 {
@@ -231,8 +240,6 @@ bool route(const Controller& c, Transition& state, float target) noexcept
         }
     if (!std::isfinite(best))
         return false;
-    if (c.kind == Kind::Eye && start_edge != end_edge && best > 0)
-        return false; // nonzero eye paths through another expression interval remain unverified
     state.path.clear();
     const auto segment = [&](float begin, float end)
     {
@@ -273,8 +280,9 @@ bool request(const Controller& c, Transition& state, float target, float duratio
 {
     if (!route(c, state, target))
         return false;
-    if (c.kind == Kind::Eye && state.path.size() <= 1)
+    if (c.kind == Kind::Eye && edge_at(c, state.value) == edge_at(c, target))
         state.path.clear();
+    state.controller_kind = c.kind;
     state.start = state.value;
     state.target = c.kind == Kind::Selector ? std::trunc(target) : target;
     state.duration = duration;
@@ -346,7 +354,7 @@ bool update(Transition& state) noexcept
     if (!state.active)
         return true;
     state.elapsed += 1;
-    if (!state.path.empty() && state.easing != 0)
+    if (!state.path.empty() && (state.easing != 0 || state.controller_kind == Kind::Eye))
     {
         return update_expression_curve(state);
     }
@@ -439,6 +447,13 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                 continue;
             if (c.kind == Kind::Expression || c.kind == Kind::Eye)
                 compile_graph(c, control);
+            if (c.kind == Kind::Eye)
+            {
+                c.eye_closed = control.end_frame;
+                c.eye_interval = edge_at(c, control.begin_frame);
+                require(c.eye_interval >= 0 && edge_at(c, c.eye_closed) == c.eye_interval,
+                        control.variable + ": invalid Eye open/closed interval");
+            }
             for (const auto& option : control.options)
             {
                 const auto variable = scene.find_variable(option.variable);
