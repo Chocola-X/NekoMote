@@ -42,6 +42,10 @@ def main():
                         help='diagnostic Float32 storage observations; not for benchmarks')
     parser.add_argument('--trace-float-stack', default='',
                         help='optional observed caller name for Float32 storage filtering')
+    parser.add_argument('--trace-float-step', type=int,
+                        help='optional single author update for Float32 storage observations')
+    parser.add_argument('--trace-float-limit', type=int, default=5000,
+                        help='bounded diagnostic storage count, 1..100000 (default 5000)')
     parser.add_argument('--disable-clamp', action='store_true',
                         help='diagnostic PSB fixture; original files are never modified')
     parser.add_argument('--disable-physics', action='store_true',
@@ -68,6 +72,11 @@ def main():
     args = parser.parse_args()
     if args.trace_float_stack and not args.trace_float_stores:
         parser.error('--trace-float-stack requires --trace-float-stores')
+    if not 1 <= args.trace_float_limit <= 100000:
+        parser.error('--trace-float-limit requires 1..100000 records')
+    if args.trace_float_step is not None and (not args.trace_float_stores or
+            not 0 <= args.trace_float_step <= args.steps):
+        parser.error('--trace-float-step requires stores and an update in 0..steps')
     if args.steps < 0 or args.steps > 100000 or not math.isfinite(args.step_frames) or args.step_frames <= 0:
         parser.error('requires 0..100000 steps and a positive finite step size')
     if args.timeline_flags < 0 or args.timeline_flags > 0xffffffff:
@@ -179,6 +188,7 @@ def main():
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
                    variables=args.variables, trace=args.trace, traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
+                   traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
                    timelines=[p['label'] for p in plays], plays=plays,
                    timelineFlags=args.timeline_flags, sampleVariables=args.sample_variables,
                    observeVariables=args.observe_variable, transitions=args.transitions, events=args.events,

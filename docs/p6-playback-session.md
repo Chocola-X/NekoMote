@@ -43,3 +43,5 @@ python3 tools/reference_capture/validate_playback.py \
 ```
 
 工具需要 Pillow/numpy；冻结截图位于本地显式 evidence 路径，可按 tools/reference_capture/README.md 重新采样，重采样后的元数据 hash 需审计。已有两组 FAIL 时验证命令退出 1，属于保留的失败证据。几何比较限于该冻结单图集、SDK texture 2 的诊断协议，不能宣称整个型号目录支持。正式构建和测试不依赖这些素材。
+
+2026-10-04 后续放置后曲面修正已使四组未修改原版联合会话全部通过标量、实际几何和图片。旧失败记录保留，当前状态和未通过的扩展矩阵见 [最新证据](validation/p6-world-deformation.json)。

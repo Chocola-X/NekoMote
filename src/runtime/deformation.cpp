@@ -40,19 +40,6 @@ Vec2 evaluate_patch(const Patch& patch, Vec2 uv) noexcept
     const auto result = evaluate_precise(patch, uv.x, uv.y);
     return {static_cast<float>(result[0]), static_cast<float>(result[1])};
 }
-Vec2 deform_point(const Patch& patch, PatchDomain domain, Vec2 point) noexcept
-{
-    const auto p =
-        evaluate_precise(patch,
-                         (static_cast<double>(point.x) + static_cast<double>(domain.origin.x)) /
-                             static_cast<double>(domain.size.x),
-                         (static_cast<double>(point.y) + static_cast<double>(domain.origin.y)) /
-                             static_cast<double>(domain.size.y));
-    return {static_cast<float>(p[0] * static_cast<double>(domain.size.x) -
-                               static_cast<double>(domain.origin.x)),
-            static_cast<float>(p[1] * static_cast<double>(domain.size.y) -
-                               static_cast<double>(domain.origin.y))};
-}
 void add_patch_displacement(Patch& destination, const Patch& helper) noexcept
 {
     const auto neutral = identity_patch();

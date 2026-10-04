@@ -1406,3 +1406,100 @@ TEST_CASE("Scene key weights retain the original blend rounding at a patch corne
     const auto sample = instance.sample_atlas_point(instance.primitives()[0].node, {0, 0});
     REQUIRE(sample.x == reference.at("expected").get<float>());
 }
+
+TEST_CASE("Placed nested curves preserve the observed physical locator coordinates", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/world_patch_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input);
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 1, 1, 0, 0};
+    const auto domain_layer = [&](std::size_t index)
+    {
+        const auto& source = reference.at("domains")[index];
+        const auto& domain = source.at("domain");
+        FrameContent content;
+        content.src = field(std::string{"blank"});
+        content.icon = field(std::to_string(domain[0].get<int>()) + ":" +
+                             std::to_string(domain[1].get<int>()) + ":" +
+                             std::to_string(domain[2].get<int>()) + ":" +
+                             std::to_string(domain[3].get<int>()));
+        content.coord = field(std::array<float, 3>{source.at("translation")[0].get<float>(),
+                                                   source.at("translation")[1].get<float>(), 0});
+        MeshData mesh;
+        std::array<float, 32> points{};
+        for (std::size_t i = 0; i < 16; ++i)
+        {
+            points[i * 2] = source.at("patch")[i][0].get<float>();
+            points[i * 2 + 1] = source.at("patch")[i][1].get<float>();
+        }
+        mesh.bp = field(points);
+        content.mesh = field(mesh);
+        return layer("domain" + std::to_string(index), 2, content);
+    };
+    auto outer = domain_layer(0), inner = domain_layer(1);
+    auto marker = layer("anchor", 1, FrameContent{});
+    marker.export_self = 1;
+    inner.children = {marker, layer("pixel", 0, sprite())};
+    outer.children = {inner};
+    asset.parts[0].layers = {outer};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    REQUIRE(compiled.scene->locators().size() == 1);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.set_origin(
+        {reference.at("origin")[0].get<float>(), reference.at("origin")[1].get<float>()}));
+    REQUIRE(instance.evaluate());
+    const auto sample = instance.sample_locator(compiled.scene->locators()[0].node);
+    REQUIRE(sample.status);
+    REQUIRE(sample.state == LocatorState::Active);
+    REQUIRE(sample.position.x == reference.at("expected")[0].get<float>());
+    REQUIRE(sample.position.y == reference.at("expected")[1].get<float>());
+    REQUIRE(instance.build_frame());
+    REQUIRE_FALSE(instance.frame().vertices.empty());
+    REQUIRE(instance.frame().vertices[0].x == sample.position.x);
+    REQUIRE(instance.frame().vertices[0].y == sample.position.y);
+}
+
+TEST_CASE("Parameterized scene time has one Float32 save before key weighting", "[runtime]")
+{
+    using namespace runtime;
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/world_patch_reference.json");
+    REQUIRE(input);
+    const auto reference = nlohmann::json::parse(input).at("parameter_time");
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 1, 1, 0, 0};
+    auto content = sprite();
+    MeshData mesh;
+    auto patch = identity_patch();
+    std::array<float, 32> points{};
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        points[i * 2] = patch[i].x;
+        points[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    auto warp = layer("warp", 0, content);
+    warp.frame_list[0].time = reference.at("left_time").get<float>();
+    warp.frame_list[0].type = 3;
+    warp.parameterize = field(0);
+    warp.parameter = {{"blend", -30, 30, 60, 0, true}};
+    points[0] = 1;
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    warp.frame_list.push_back({reference.at("right_time").get<float>(), 2, field(content)});
+    asset.parts[0].layers = {warp};
+    auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("blend"),
+                                   reference.at("parameter").get<float>()));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.primitives().size() == 1);
+    REQUIRE(instance.sample_atlas_point(instance.primitives()[0].node, {0, 0}).x ==
+            reference.at("expected_weight").get<float>());
+}

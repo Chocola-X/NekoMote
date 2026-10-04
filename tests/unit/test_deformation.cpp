@@ -13,23 +13,22 @@ void near(nekomote::Vec2 actual, nekomote::Vec2 expected, float tolerance = 0.00
     REQUIRE_THAT(actual.y, Catch::Matchers::WithinAbs(expected.y, tolerance));
 }
 } // namespace
-TEST_CASE("Patch domain origins and extrapolated points retain model coordinates", "[runtime]")
+TEST_CASE("Patch evaluation preserves neutral and extrapolated normalized points", "[runtime]")
 {
     using namespace nekomote::runtime;
-    const PatchDomain domain{{128, 64}, {64, 16}};
     const auto neutral = identity_patch();
-    near(deform_point(neutral, domain, {-96, 64}), {-96, 64});
-    near(deform_point(neutral, domain, {96, -32}), {96, -32});
+    near(evaluate_patch(neutral, {-0.25f, 1.25f}), {-0.25f, 1.25f});
+    near(evaluate_patch(neutral, {1.25f, -0.25f}), {1.25f, -0.25f});
     auto curve = neutral;
     curve[0].x += 0.64f;
     // The top-left control has weight 1/64 at the domain center.
-    near(deform_point(curve, domain, {0, 16}), {1.28f, 16});
-    near(deform_point(curve, domain, {-64, -16}), {17.92f, -16});
+    near(evaluate_patch(curve, {0.5f, 0.5f}), {0.51f, 0.5f});
+    near(evaluate_patch(curve, {0, 0}), {0.64f, 0});
     auto helper = neutral;
     for (auto& point : helper)
         point.y += 0.25f;
     add_patch_displacement(curve, helper);
-    near(deform_point(curve, domain, {0, 16}), {1.28f, 32});
+    near(evaluate_patch(curve, {0.5f, 0.5f}), {0.51f, 0.75f});
 }
 TEST_CASE("Paired control matches original WebGL position observations", "[runtime]")
 {

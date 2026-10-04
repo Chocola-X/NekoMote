@@ -327,23 +327,35 @@ struct RigidTransform
     Vec2 translation{};
     Vec2 apply(Vec2 point) const noexcept
     {
-        return {a * point.x + c * point.y + translation.x,
-                b * point.x + d * point.y + translation.y};
+        return {static_cast<float>(static_cast<double>(a) * static_cast<double>(point.x) +
+                                   static_cast<double>(c) * static_cast<double>(point.y) +
+                                   static_cast<double>(translation.x)),
+                static_cast<float>(static_cast<double>(b) * static_cast<double>(point.x) +
+                                   static_cast<double>(d) * static_cast<double>(point.y) +
+                                   static_cast<double>(translation.y))};
     }
 };
 RigidTransform compose(const RigidTransform& parent, const RigidTransform& local) noexcept
 {
-    return {parent.a * local.a + parent.c * local.b, parent.b * local.a + parent.d * local.b,
-            parent.a * local.c + parent.c * local.d, parent.b * local.c + parent.d * local.d,
-            parent.apply(local.translation)};
+    const auto product = [](float a, float b, float c, float d) noexcept
+    {
+        return static_cast<float>(static_cast<double>(a) * static_cast<double>(b) +
+                                  static_cast<double>(c) * static_cast<double>(d));
+    };
+    return {product(parent.a, local.a, parent.c, local.b),
+            product(parent.b, local.a, parent.d, local.b),
+            product(parent.a, local.c, parent.c, local.d),
+            product(parent.b, local.c, parent.d, local.d), parent.apply(local.translation)};
 }
 struct State
 {
     Pose pose;
     Pose transform;
     NodeId transform_parent;
-    RigidTransform rigid;
-    NodeId rigid_parent;
+    RigidTransform world;
+    Patch world_patch{};
+    Vec2 domain_corner{};
+    std::array<float, 4> domain_inverse{};
     float depth{0}, opacity{0};
     bool mesh_path{false};
     bool branch_selected{false};
@@ -620,17 +632,21 @@ struct GeometryInstance::Impl
     }
     Vec2 transform(NodeId id, Vec2 p) const noexcept
     {
+        p = states[id.value].world.apply(p);
         while (id.valid())
         {
             const auto& s = states[id.value];
-            const auto& pose = s.transform;
-            const auto& r = scene.resources[pose.resource.value];
-            if (pose.mesh && r.rect.width > 0)
-                p = deform_point(
-                    pose.patch, {{r.rect.width, r.rect.height}, {r.rect.origin_x, r.rect.origin_y}},
-                    p);
-            p = s.rigid.apply(p);
-            id = s.rigid_parent;
+            if (s.transform.mesh)
+            {
+                const double x = static_cast<double>(p.x) - static_cast<double>(s.domain_corner.x);
+                const double y = static_cast<double>(p.y) - static_cast<double>(s.domain_corner.y);
+                const Vec2 uv{static_cast<float>(x * static_cast<double>(s.domain_inverse[0]) +
+                                                 y * static_cast<double>(s.domain_inverse[2])),
+                              static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
+                                                 y * static_cast<double>(s.domain_inverse[3]))};
+                p = evaluate_patch(s.world_patch, uv);
+            }
+            id = s.transform_parent;
         }
         return p;
     }
@@ -681,7 +697,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     std::copy(instance.input.begin(), instance.input.end(), instance.parameters.begin());
     const auto& scene = instance.scene;
     instance.states[0] = {};
-    instance.states[0].rigid.translation = instance.origin;
+    instance.states[0].world.translation = instance.origin;
     for (const auto& c : scene.clamps)
     {
         if (!c.enabled)
@@ -713,11 +729,15 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             if (n.binding.discretization != 0 && value != std::floor(value))
                 return {GeometryError::UnsupportedDiscretization, id, n.binding.variable};
             if (n.binding.end > n.binding.begin)
-                time = (std::clamp(value, n.binding.begin, n.binding.end) - n.binding.begin) *
-                       static_cast<float>(n.binding.division) / (n.binding.end - n.binding.begin);
+                time = static_cast<float>(
+                    (static_cast<double>(std::clamp(value, n.binding.begin, n.binding.end)) -
+                     static_cast<double>(n.binding.begin)) *
+                    static_cast<double>(n.binding.division) /
+                    (static_cast<double>(n.binding.end) - static_cast<double>(n.binding.begin)));
         }
-        const auto key = std::upper_bound(n.keys.begin(), n.keys.end(), time,
-                                          [](float t, const Key& k) { return t < k.time; });
+        const auto key =
+            std::upper_bound(n.keys.begin(), n.keys.end(), time, [](double t, const Key& k)
+                             { return t < static_cast<double>(k.time); });
         if (key == n.keys.begin())
             continue;
         const auto& left = *(key - 1);
@@ -751,23 +771,58 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         // integer pixel bounds across a mask-region floor/ceil boundary.
         if (state.transform.patch == identity_patch())
             state.transform.mesh = false;
-        // Source locator observations distinguish parent-first Float32 rigid
-        // accumulation from repeated point translations. Cache each rigid run
-        // once; a nonlinear mesh is a boundary and must never be crossed.
+        // Rigid parents accumulate before any curve. Curves are evaluated in
+        // placed world coordinates, with saved control points and saved UVs.
+        // Local deformation followed by Float32 translations changes physics
+        // anchors. See docs/validation/p6-world-deformation.json.
         const float cosine = std::cos(state.transform.angle);
         const float sine = std::sin(state.transform.angle);
-        state.rigid = {cosine, sine, -sine, cosine, state.transform.translation};
-        state.rigid_parent = state.transform_parent;
-        if (!state.transform_parent.valid())
-            state.rigid = compose(instance.states[0].rigid, state.rigid);
-        if (state.transform_parent.valid())
+        const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
+        state.world = compose(instance.states[state.transform_parent.value].world, local);
+        if (state.transform.mesh)
         {
-            const auto& transform_parent = instance.states[state.transform_parent.value];
-            if (!transform_parent.transform.mesh)
+            const auto& domain = scene.resources[state.transform.resource.value].rect;
+            const double a = static_cast<double>(state.world.a) * static_cast<double>(domain.width);
+            const double b = static_cast<double>(state.world.b) * static_cast<double>(domain.width);
+            const double c =
+                static_cast<double>(state.world.c) * static_cast<double>(domain.height);
+            const double d =
+                static_cast<double>(state.world.d) * static_cast<double>(domain.height);
+            const double determinant = a * d - b * c;
+            state.domain_inverse = {
+                static_cast<float>(d / determinant), static_cast<float>(-b / determinant),
+                static_cast<float>(-c / determinant), static_cast<float>(a / determinant)};
+            const auto world_point = [&](double x, double y) noexcept
             {
-                state.rigid = compose(transform_parent.rigid, state.rigid);
-                state.rigid_parent = transform_parent.rigid_parent;
-            }
+                return Vec2{static_cast<float>(static_cast<double>(state.world.a) * x +
+                                               static_cast<double>(state.world.c) * y +
+                                               static_cast<double>(state.world.translation.x)),
+                            static_cast<float>(static_cast<double>(state.world.b) * x +
+                                               static_cast<double>(state.world.d) * y +
+                                               static_cast<double>(state.world.translation.y))};
+            };
+            state.domain_corner = world_point(-static_cast<double>(domain.origin_x),
+                                              -static_cast<double>(domain.origin_y));
+            const double offset_x =
+                -static_cast<double>(state.world.a) * static_cast<double>(domain.origin_x) -
+                static_cast<double>(state.world.c) * static_cast<double>(domain.origin_y) +
+                static_cast<double>(state.world.translation.x);
+            const double offset_y =
+                -static_cast<double>(state.world.b) * static_cast<double>(domain.origin_x) -
+                static_cast<double>(state.world.d) * static_cast<double>(domain.origin_y) +
+                static_cast<double>(state.world.translation.y);
+            // The domain matrix is saved before transforming controls, while
+            // its corner translation retains the transient double value.
+            const double saved_a = static_cast<float>(a), saved_b = static_cast<float>(b);
+            const double saved_c = static_cast<float>(c), saved_d = static_cast<float>(d);
+            for (std::size_t j = 0; j < state.world_patch.size(); ++j)
+                state.world_patch[j] = {
+                    static_cast<float>(saved_a * static_cast<double>(state.transform.patch[j].x) +
+                                       saved_c * static_cast<double>(state.transform.patch[j].y) +
+                                       offset_x),
+                    static_cast<float>(saved_b * static_cast<double>(state.transform.patch[j].x) +
+                                       saved_d * static_cast<double>(state.transform.patch[j].y) +
+                                       offset_y)};
         }
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)

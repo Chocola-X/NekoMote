@@ -1,0 +1,1358 @@
+{
+  "stage_complete": false,
+  "production_playback_certified": false,
+  "full_frozen_session_cases_passed": true,
+  "implementation_base_commit": "c2dfbb7",
+  "geometry_source_sha256": "1925eca17c061589ac1601793446c380bbf705009c0f2325cf6c68d6f09bad24",
+  "scalar_tolerance": 1e-05,
+  "geometry_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "cases": [
+    {
+      "case": "full-idle24",
+      "model": "chocola-date-a",
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "scalar_samples": 528,
+      "scalar_maximum": {
+        "error": 0.0,
+        "step": 1,
+        "variable": "hair_LR_front",
+        "reference": 0,
+        "native": 0.0
+      },
+      "scalar_passed": true,
+      "passed": true,
+      "geometry_max_error_px": 3.411968959808029e-05,
+      "geometry_passed": true,
+      "image": {
+        "reference_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+        "native_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "alpha_max_error": 0,
+        "composed_max_rgb_black_white": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      }
+    },
+    {
+      "case": "full-head24",
+      "model": "chocola-date-a",
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "scalar_samples": 528,
+      "scalar_maximum": {
+        "error": 2.86102294921875e-06,
+        "step": 19,
+        "variable": "hair_LR_M",
+        "reference": -9.669544219970703,
+        "native": -9.669547080993652
+      },
+      "scalar_passed": true,
+      "passed": true,
+      "geometry_max_error_px": 0.00019301011109426145,
+      "geometry_passed": true,
+      "image": {
+        "reference_sha256": "1bf0aea01f42b92aa2d26df08d79a1431461a8f0f0a7a165c665965070dbc8d5",
+        "native_sha256": "381903a77304ffacac089d68a7df8ffeb6dbc629a8a87b650453e4f8d23fa25b",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          2,
+          5,
+          4,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            2,
+            1,
+            2
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          196,
+          800,
+          1080
+        ],
+        "passed": true
+      }
+    },
+    {
+      "case": "full-jump24",
+      "model": "chocola-date-a",
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "scalar_samples": 528,
+      "scalar_maximum": {
+        "error": 3.814697265625e-06,
+        "step": 20,
+        "variable": "hair_UD_front",
+        "reference": 32.98604202270508,
+        "native": 32.986045837402344
+      },
+      "scalar_passed": true,
+      "passed": true,
+      "geometry_max_error_px": 0.00012582719804741396,
+      "geometry_passed": true,
+      "image": {
+        "reference_sha256": "4c6b3c79489b84ae6eadbbe5817b26bf4bbb0215b386744d5177b6d074325e7f",
+        "native_sha256": "92491762466a222a4866b0549d54918644cb215ffadd9e55459f84a745173633",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          3,
+          2,
+          2,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            2,
+            1
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          159,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          159,
+          800,
+          1080
+        ],
+        "passed": true
+      }
+    },
+    {
+      "case": "full-additive60",
+      "model": "chocola-date-a",
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "asset_sha256": "06f96e8d8b63e928bc62b69f10b6a15c3a4caf2b46ef28edefa41758cec36d77",
+      "scalar_samples": 1320,
+      "scalar_maximum": {
+        "error": 2.2649765014648438e-06,
+        "step": 52,
+        "variable": "bust_UD",
+        "reference": -0.320736289024353,
+        "native": -0.32073402404785156
+      },
+      "scalar_passed": true,
+      "passed": true,
+      "geometry_max_error_px": 0.00026074230179802034,
+      "geometry_passed": true,
+      "image": {
+        "reference_sha256": "d6ff48837f8d3d3a198e137bb388d257766f2d8c96e6187a7e083007b560cc8a",
+        "native_sha256": "dc06d38aeaabc06b60461fe24f66dbc228263a1274032cd8505d44ebe38a4a63",
+        "size": [
+          800,
+          1080
+        ],
+        "raw_max_rgba": [
+          8,
+          2,
+          4,
+          1
+        ],
+        "alpha_max_error": 1,
+        "composed_max_rgb_black_white": [
+          [
+            1,
+            1,
+            2
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ],
+        "tolerance": 2,
+        "pixels_over_tolerance": 0,
+        "reference_bbox": [
+          0,
+          195,
+          800,
+          1080
+        ],
+        "native_bbox": [
+          0,
+          195,
+          800,
+          1080
+        ],
+        "passed": true
+      }
+    }
+  ],
+  "observers": [
+    {
+      "capture": "build/evidence/p6-deformation-rounding/frozen-world-1",
+      "metadata_sha256": "d583dab4e4958c6b6bc3a2c2466addc7ac7ece33abbd11233b4bdc0a45aa0072",
+      "control_metadata_sha256": "f1fae4c4e14bc6ff054a462a8f985cad98e09f684674ccc8fa81d550ba3b3def",
+      "png_sha256": "7497b609dfbfc5740dbbeec03bce64e3cd798a39b173743656641362a9011ec3",
+      "records": 65342,
+      "truncated": false,
+      "variables_unchanged": true,
+      "png_unchanged": true,
+      "step_filter": 1,
+      "record_limit": 100000,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "physics": {
+        "hair": 0,
+        "parts": 0,
+        "bust": 0,
+        "wind": false
+      }
+    },
+    {
+      "capture": "build/evidence/p6-deformation-rounding/frozen-world-48",
+      "metadata_sha256": "fada57abdfae8ad5c6012d9be97ae83d67045faceb303b6e427165c91e684212",
+      "control_metadata_sha256": "448e7fb81265b2a82cce673803b8c5940eadb5a5de7e2c78220e8a0af54a469b",
+      "png_sha256": "f5a416699750d8527c36324460a3de0b464422a65635b309ace47ebdf594c96f",
+      "records": 57412,
+      "truncated": false,
+      "variables_unchanged": true,
+      "png_unchanged": true,
+      "step_filter": 48,
+      "record_limit": 100000,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "physics": {
+        "hair": 0,
+        "parts": 0,
+        "bust": 0,
+        "wind": false
+      }
+    },
+    {
+      "capture": "build/evidence/p6-deformation-rounding/frozen-binding-48",
+      "metadata_sha256": "f2e5bed0bfe64229d77f1772b428d73a410c0f188c52818017e030d5fdb7a0a3",
+      "control_metadata_sha256": "448e7fb81265b2a82cce673803b8c5940eadb5a5de7e2c78220e8a0af54a469b",
+      "png_sha256": "f5a416699750d8527c36324460a3de0b464422a65635b309ace47ebdf594c96f",
+      "records": 1547,
+      "truncated": false,
+      "variables_unchanged": true,
+      "png_unchanged": true,
+      "step_filter": 48,
+      "record_limit": 5000,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "plays": [
+        {
+          "label": "待機ループ00",
+          "flags": 3
+        }
+      ],
+      "physics": {
+        "hair": 0,
+        "parts": 0,
+        "bust": 0,
+        "wind": false
+      }
+    }
+  ],
+  "input_audit": {
+    "numeric_fields": 54026,
+    "counts_by_psb_tag": {
+      "5": 20626,
+      "30": 8934,
+      "31": 4016,
+      "29": 2450,
+      "6": 2019,
+      "4": 14143,
+      "7": 45,
+      "8": 1741,
+      "9": 52
+    },
+    "float32_mismatches": 0,
+    "audit_script_sha256": "b10599ba85c51e017545c743b9e0a6df00e1056b2f9c7f3c79837c2c84fec105",
+    "source_json_sha256": "a6496ba68886430df2e7911f30c10297f71f4d7ddfcb9e51d2a9c0fe815fb2a6"
+  },
+  "static": {
+    "report_sha256": "ec652c6533a2bf6f40a11f55a8532ab3ebcb5f530d50fdaf5b185c73b9db38c3",
+    "total": 30,
+    "passed": 25,
+    "failed_pixels": 5,
+    "all_geometry_passed": true,
+    "remaining_failures": [
+      {
+        "model": "chocola-date-a",
+        "case": "body-lr-ud",
+        "variables": {
+          "body_LR": -15,
+          "body_UD": 20
+        },
+        "passed": false,
+        "reference_sources": {
+          "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "image": {
+          "reference_sha256": "fb1a2a0ef70abe91c91b3a2af3cc1084bce32cd44e7303282e3b29dc01ab5073",
+          "native_sha256": "f6d17676a7018b810f234a2262f79f5a0d757be79254b07efe4d60db99318a9a",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            2,
+            5,
+            6,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              2,
+              3,
+              2
+            ],
+            [
+              1,
+              2,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            0,
+            203,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            203,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "geometry_passed": true,
+        "frame_max_error_px": 0.000244140625
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "combination",
+        "variables": {
+          "head_LR": 15,
+          "head_UD": -20,
+          "head_slant": 10,
+          "body_LR": -15,
+          "body_UD": 20
+        },
+        "passed": false,
+        "reference_sources": {
+          "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "image": {
+          "reference_sha256": "cd5b3ff8d43431d771026be739464d65cb524f7bf3dcfc91cd2190be740e2344",
+          "native_sha256": "756bfcedb5553841e0b1a7e9903488cbb03694bbcd1ac857802938447a2db9e8",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            7,
+            2,
+            3,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              3,
+              1,
+              2
+            ],
+            [
+              2,
+              1,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            0,
+            201,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            201,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "geometry_passed": true,
+        "frame_max_error_px": 0.00030517578125
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "head-ud30",
+        "variables": {
+          "head_UD": 30
+        },
+        "passed": false,
+        "reference_sources": {
+          "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "image": {
+          "reference_sha256": "b8b100cd1e7b02208a61e01ebb81da45b629900bb3a68bec042dd9e6d3aca3fa",
+          "native_sha256": "d81eea7ee95541cad5936813631bc1b2c9077aee1622ad60013dde50571a99bd",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            4,
+            4,
+            4,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              2,
+              3,
+              2
+            ],
+            [
+              1,
+              2,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            0,
+            208,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            208,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "geometry_passed": true,
+        "frame_max_error_px": 0.00015334893220704483
+      },
+      {
+        "model": "vanilla-date-a",
+        "case": "combination",
+        "variables": {
+          "head_LR": 13,
+          "head_UD": -17,
+          "head_slant": 11,
+          "body_LR": -9,
+          "body_UD": 19
+        },
+        "passed": false,
+        "reference_sources": {
+          "psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+          "original_psb": "3dc898e93e8d03ef58a6ac6f44edc679964dc9fbac45b2db118dd6424a2f8971",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "image": {
+          "reference_sha256": "d9a8e22ea77bcbbab2c240ba514c23573e8497372e8c1390eebca253b29dcbb4",
+          "native_sha256": "953967d65edfae90deee62aa161a5efcbc3970ca46f7834c20ec08d94da19758",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            13,
+            128,
+            128,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              3,
+              2,
+              2
+            ],
+            [
+              2,
+              1,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            0,
+            199,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            199,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "geometry_passed": true,
+        "frame_max_error_px": 0.0002729575167846423
+      },
+      {
+        "model": "chocola-teenage",
+        "case": "combination",
+        "variables": {
+          "head_LR": 13,
+          "head_UD": -17,
+          "head_slant": 11,
+          "body_LR": -9,
+          "body_UD": 19
+        },
+        "passed": false,
+        "reference_sources": {
+          "psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+          "original_psb": "0a7f2e7c644806338e28df158abc682328ab50e381ef9bc048fba023e16ccb47",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "image": {
+          "reference_sha256": "9b601cf88e036ae13cb1d609f50916580387df4814491bf70556c378f81fa132",
+          "native_sha256": "57b2802cf6944d3e3ee0b7722c099c140418a159bcaecb4eecb29d3f9195f98a",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            3,
+            2,
+            3,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              2,
+              1,
+              3
+            ],
+            [
+              1,
+              1,
+              2
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            33,
+            205,
+            761,
+            1080
+          ],
+          "native_bbox": [
+            33,
+            205,
+            761,
+            1080
+          ],
+          "passed": false
+        },
+        "geometry_passed": true,
+        "frame_max_error_px": 0.00012582719804741396
+      }
+    ]
+  },
+  "dynamic": {
+    "report_sha256": "918f35e27d9cc70c2dcd038d2a157775a0e25b7f58cf8027f835fb2aeb5a26da",
+    "total": 7,
+    "passed": 2,
+    "failed_pixels": 9,
+    "all_geometry_passed": true,
+    "remaining_failures": [
+      {
+        "model": "chocola-date-a",
+        "case": "sample05-14",
+        "steps": 14,
+        "initial": {},
+        "plays": [
+          {
+            "label": "sample_05",
+            "flags": 0
+          }
+        ],
+        "passed": false,
+        "geometry_passed": true,
+        "frame_max_error_px": 0.0002442598051999225,
+        "image": {
+          "reference_sha256": "fe94f2538f4dbd21a104ab20ea30d1f5f0ad8ab78a2461cb43ded231e797df59",
+          "native_sha256": "056351088bb1b92a2bda2276fc5fc00d9fe69ee0272bcb49bad087f12b344322",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            4,
+            6,
+            6,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              3,
+              2,
+              2
+            ],
+            [
+              2,
+              1,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 1,
+          "reference_bbox": [
+            0,
+            229,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            229,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "source_hashes": {
+          "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "diagnostic_fixture_edits": [
+          {
+            "path": "/metadata/bustControl/0/enabled",
+            "offset": 284169,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/bustControl/1/enabled",
+            "offset": 284325,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/0/enabled",
+            "offset": 281654,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/1/enabled",
+            "offset": 282006,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/2/enabled",
+            "offset": 282358,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/3/enabled",
+            "offset": 282715,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/0/enabled",
+            "offset": 280776,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/1/enabled",
+            "offset": 281129,
+            "before": 1,
+            "after": 0
+          }
+        ]
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "sample05-29",
+        "steps": 29,
+        "initial": {},
+        "plays": [
+          {
+            "label": "sample_05",
+            "flags": 0
+          }
+        ],
+        "passed": false,
+        "geometry_passed": true,
+        "frame_max_error_px": 0.000244140625,
+        "image": {
+          "reference_sha256": "169e0f2e1f9fd3a4f23345a8b43ef9421f732641cdea2b738650d96b282e4270",
+          "native_sha256": "2c3ddb75ce6b3b1f2a853b6f1bafd95a38030e94393250c294368818fc0b7f60",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            4,
+            5,
+            6,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              3,
+              3,
+              2
+            ],
+            [
+              2,
+              2,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 2,
+          "reference_bbox": [
+            0,
+            170,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            170,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "source_hashes": {
+          "psb": "6d4f30d1f4b793a467c04ac28e5008771ea70df1dc286904b298b4fea2b467aa",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "diagnostic_fixture_edits": [
+          {
+            "path": "/metadata/bustControl/0/enabled",
+            "offset": 284169,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/bustControl/1/enabled",
+            "offset": 284325,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/0/enabled",
+            "offset": 281654,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/1/enabled",
+            "offset": 282006,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/2/enabled",
+            "offset": 282358,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/3/enabled",
+            "offset": 282715,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/0/enabled",
+            "offset": 280776,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/1/enabled",
+            "offset": 281129,
+            "before": 1,
+            "after": 0
+          }
+        ]
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "head-21",
+        "steps": 21,
+        "initial": {
+          "head_LR": 10
+        },
+        "plays": [
+          {
+            "label": "首横振り",
+            "flags": 1
+          }
+        ],
+        "passed": false,
+        "geometry_passed": true,
+        "frame_max_error_px": 0.0001556097263669673,
+        "image": {
+          "reference_sha256": "95cddb6555352c165e23f413837e7bc01c5a9bd46375a5fd0747040dc91b5794",
+          "native_sha256": "8e1cd09292b597c883dde87e666fce153a758787d162d28b27a9e968e06535f8",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            2,
+            2,
+            2,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              3,
+              3,
+              2
+            ],
+            [
+              2,
+              2,
+              1
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 2,
+          "reference_bbox": [
+            0,
+            195,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            195,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "source_hashes": {
+          "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "diagnostic_fixture_edits": [
+          {
+            "path": "/metadata/bustControl/0/enabled",
+            "offset": 284169,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/bustControl/1/enabled",
+            "offset": 284325,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/0/enabled",
+            "offset": 281654,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/1/enabled",
+            "offset": 282006,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/2/enabled",
+            "offset": 282358,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/3/enabled",
+            "offset": 282715,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/0/enabled",
+            "offset": 280776,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/1/enabled",
+            "offset": 281129,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/eyeControl/0/blinkEnabled",
+            "offset": 283665,
+            "before": 1,
+            "after": 0
+          }
+        ]
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "additive-422",
+        "steps": 422,
+        "initial": {
+          "body_UD": 12,
+          "head_slant": 5
+        },
+        "plays": [
+          {
+            "label": "待機ループ00",
+            "flags": 3
+          }
+        ],
+        "passed": false,
+        "geometry_passed": true,
+        "frame_max_error_px": 0.00024604058069758756,
+        "image": {
+          "reference_sha256": "d2b666a9049a1eba3dcdf034676fa591c99d7ded8a940f174276fe839bbdd642",
+          "native_sha256": "711bf97301cec75f7843e031b225f38bd26db208370d6cc0e91f85f005f6cc13",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            7,
+            5,
+            6,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              6,
+              4,
+              6
+            ],
+            [
+              6,
+              4,
+              6
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 2,
+          "reference_bbox": [
+            0,
+            195,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            195,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "source_hashes": {
+          "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "diagnostic_fixture_edits": [
+          {
+            "path": "/metadata/bustControl/0/enabled",
+            "offset": 284169,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/bustControl/1/enabled",
+            "offset": 284325,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/0/enabled",
+            "offset": 281654,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/1/enabled",
+            "offset": 282006,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/2/enabled",
+            "offset": 282358,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/3/enabled",
+            "offset": 282715,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/0/enabled",
+            "offset": 280776,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/1/enabled",
+            "offset": 281129,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/eyeControl/0/blinkEnabled",
+            "offset": 283665,
+            "before": 1,
+            "after": 0
+          }
+        ]
+      },
+      {
+        "model": "chocola-date-a",
+        "case": "parallel-20",
+        "steps": 20,
+        "initial": {
+          "head_LR": 10,
+          "body_UD": 10
+        },
+        "plays": [
+          {
+            "label": "首横振り",
+            "flags": 1
+          },
+          {
+            "label": "移動",
+            "flags": 3
+          }
+        ],
+        "passed": false,
+        "geometry_passed": true,
+        "frame_max_error_px": 0.000244140625,
+        "image": {
+          "reference_sha256": "7d7e018c798a24917a11a7e845c1bcef673a72789164289cc6b76ce575caed14",
+          "native_sha256": "4df8fbe38311aba02a4a294bb48c760d63d5eb7bcc9b844006330f5d230e5259",
+          "size": [
+            800,
+            1080
+          ],
+          "raw_max_rgba": [
+            9,
+            9,
+            7,
+            1
+          ],
+          "alpha_max_error": 1,
+          "composed_max_rgb_black_white": [
+            [
+              2,
+              2,
+              3
+            ],
+            [
+              1,
+              2,
+              2
+            ]
+          ],
+          "tolerance": 2,
+          "pixels_over_tolerance": 2,
+          "reference_bbox": [
+            0,
+            194,
+            800,
+            1080
+          ],
+          "native_bbox": [
+            0,
+            194,
+            800,
+            1080
+          ],
+          "passed": false
+        },
+        "source_hashes": {
+          "psb": "2f42894fd4c47eb654ae8bc73462dc6c2a4753f7df1aa9a6da294d668fad05d1",
+          "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+          "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+          "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+        },
+        "diagnostic_fixture_edits": [
+          {
+            "path": "/metadata/bustControl/0/enabled",
+            "offset": 284169,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/bustControl/1/enabled",
+            "offset": 284325,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/0/enabled",
+            "offset": 281654,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/1/enabled",
+            "offset": 282006,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/2/enabled",
+            "offset": 282358,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/hairControl/3/enabled",
+            "offset": 282715,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/0/enabled",
+            "offset": 280776,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/partsControl/1/enabled",
+            "offset": 281129,
+            "before": 1,
+            "after": 0
+          },
+          {
+            "path": "/metadata/eyeControl/0/blinkEnabled",
+            "offset": 283665,
+            "before": 1,
+            "after": 0
+          }
+        ]
+      }
+    ]
+  },
+  "checks": {
+    "dev_ctest": {
+      "passed": 79,
+      "total": 79
+    },
+    "release_ctest": {
+      "passed": 79,
+      "total": 79
+    },
+    "asan_ubsan_ctest": {
+      "passed": 78,
+      "total": 78
+    },
+    "ordinary_cpp_new_after_warmup": 0,
+    "new_regressions": [
+      "nested placed domains preserve locator and actual vertices bit-exactly",
+      "mapped parameter time saves once before observed key weighting"
+    ],
+    "observed_source_core": "No source code read, copied or translated; controlled Float32 stores only."
+  },
+  "cpu_benchmark": {
+    "hardware": "AMD Ryzen 7 5800H; NVIDIA RTX 3060 Laptop 6GB; NVIDIA 575.64.03; KDE X11",
+    "build": "Release+LTO GCC 15.1.1",
+    "model": "chocola-date-a",
+    "plays": [
+      {
+        "label": "待機ループ00",
+        "flags": 3
+      }
+    ],
+    "origin": [
+      0,
+      400
+    ],
+    "author_step_hz": 60,
+    "resolution": "no GPU/presentation measured",
+    "samples_begin_after_authored_ticks": 180,
+    "p50_ms": 0.326928,
+    "p95_ms": 0.386084,
+    "p99_ms": 0.426592,
+    "samples": 2000,
+    "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback",
+    "warmup_ticks": 120,
+    "ordinary_cpp_new_after_warmup": 0,
+    "previous_runs_comparison": "No same-action isolated before/after performance comparison; no whole-player CPU/GPU/power claim."
+  },
+  "withdrawn_candidates": [
+    "normalized-curve Float32 before domain multiply",
+    "row de Casteljau Float32",
+    "fused local curve/rigid stage",
+    "identity-relative displacement polynomial",
+    "double parameter time retained through interpolation",
+    "domain compilation without stored Float32 matrix",
+    "placed curves with old two-round Float32 parameter time"
+  ],
+  "remaining": [
+    "Five static failure pixels and nine dynamic diagnostic failure pixels under unchanged thresholds",
+    "Model scale !=1 still explicitly rejected by formal preview until verified",
+    "Partial inheritance, nonuniform transforms, unknown controllers and additional catalog models",
+    "Application reaction/gaze/touch/audio/background and Plasma host; final engine not delivered"
+  ]
+}

@@ -34,8 +34,10 @@ if(window.enableFloatStores) {
             },
             set(target,key,input) {
                 const old=target[key], success=Reflect.set(target,key,input,target);
-                if(window.traceFloatStores && typeof key==='string' && /^[0-9]+$/.test(key)) {
-                    if(window.floatStores.length>=5000) window.floatStoresTruncated=true;
+                if(window.traceFloatStores &&
+                   (window.traceFloatStep===null || window.traceFloatStep===(window.authorStep||0)) &&
+                   typeof key==='string' && /^[0-9]+$/.test(key)) {
+                    if(window.floatStores.length>=window.traceFloatLimit) window.floatStoresTruncated=true;
                     else {
                         const stack=new Error().stack;
                         if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' ('))
@@ -78,6 +80,8 @@ window.capture = async function(options) {
     window.traceMath=options.traceMath;
     window.traceFloatStores=options.traceFloatStores;
     window.traceFloatStack=options.traceFloatStack;
+    window.traceFloatStep=options.traceFloatStep;
+    window.traceFloatLimit=options.traceFloatLimit;
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);
     for(const [label,request] of Object.entries(options.transitions||{}))

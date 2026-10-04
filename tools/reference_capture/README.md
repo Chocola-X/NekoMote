@@ -55,7 +55,7 @@ P6 支持 `--physics-scales '{"hair":1,"parts":1,"bust":1}'`，默认仍为全�
 
 `--fixture-numbers '{"/metadata/bustControl/0/spring":0.5}'` 和 `--fixture-strings '{"/metadata/bustControl/0/baseLayer":"center_fronthair"}'` 仅在内存改写同长度的 PSB 数字/现有字符串引用。限于明确 metadata/object JSON Pointer，拒绝插入字段、扩大数值宽度或不存在的字符串；地址表和资源保持原样，每次记录字段、字节范围、值和 hash。仅用于隔离语义，不能作为未经修改的完整模型验收。禁止把采样结果或此类修改加入正式播放路径。
 
-`--trace-float-stores --trace-float-stack <已观察到的调用者名称>` 可显式记录完整 Float32 堆视图的数值写入前/后和调用栈，最多 5000 条，达到上限后 `floatStoresTruncated=true`。通过原生 typed-array 执行实际存储，方法绑定原视图，WebGL 的 subarray 仍为原生视图；不读取核心源码。只有诊断入口代理构造器，默认不改变 Float32Array。用于区分临时 double 和保存 Float32 的舍入顺序；必须对照未启用观测的同输入参数/截图确认无扰动，不能用于性能或作为原生帧输入。调用者过滤需显式指定，未指定时采集全部符合条件的写入。
+`--trace-float-stores --trace-float-stack <已观察到的调用者名称>` 可显式记录完整 Float32 堆视图的数值写入前/后和调用栈，默认最多 5000 条，可用 `--trace-float-limit 1..100000` 显式调整，`--trace-float-step N` 只观察指定作者步；达到上限后 `floatStoresTruncated=true`。通过原生 typed-array 执行实际存储，方法绑定原视图，WebGL 的 subarray 仍为原生视图；不读取核心源码。只有诊断入口代理构造器，默认不改变 Float32Array。用于区分临时 double 和保存 Float32 的舍入顺序；必须对照未启用观测的同输入参数/截图确认无扰动，不能用于性能或作为原生帧输入。调用者过滤需显式指定，未指定时采集全部符合条件的写入。
 
 PSB 字典可能共享标量存储，修改一个路径可能同时改变其它字段。每条 fixture 现记录 `affected_paths`（所有实际别名路径）和 `stored_after`（编码后的实际数值）；同一字节有冲突请求时拒绝，不能让后一次写入静默覆盖。分析或建立数值 fixture 时必须应用完整 affected_paths，而不是只使用 requested path。旧采样需要按原 PSB 地址审计，不能由单字段描述推断其隔离范围。
 
