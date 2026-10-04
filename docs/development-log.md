@@ -235,3 +235,13 @@
 - 新无分配/实例隔离/重置/非法输出结构回归，200 次实际过渡/作者步/构帧普通 C++ new 为零。Debug/Release 92、ASan/UBSan 91 核心、PSB 工具 6 项全部通过；负索引 fixture 后续扩展在三种 preset 单独复核通过。格式/diff 检查通过。
 - 两角色七组原版完整动作继续数值/几何/图片全 PASS，新矩阵字段下四组 Chocola 再次全 PASS。隔离动画仍 2/7 图片 PASS，11 个失败像素（此前 9）；没有原先通过的 case 变成失败，全部真实几何/拓扑保持通过，新增像素也保留用于下一步精度复查。既有静态/缩放图片仍未闭合。
 - Release/LTO 独立完整 CPU 差分会话 120 预热/2000 样本：Chocola P50/P95/P99=0.38734/0.416883/0.438604ms；Fraise=0.753448/0.809461/0.841728ms；范围排除 JSON/GPU/呈现/读回/内存/功耗，不宣称性能改善。证据见 docs/validation/p5-selector.json、playback-selector-inputs.json。继续非线性表达式与剩余像素，再补完整应用/宿主。
+
+
+## P5 非线性 Expression 曲线距离与目标区间路径
+
+- 正/逆缓动围绕独立 Float32 距离缓存计算，当前场景值消费 double 临时位移。跨段时舍弃超出量，用累计长度减临时位移保存后重算同一步；初始/末尾零距离连接点分别对齐第一段/最终目标，按端点终止而非无条件 duration 终止。
+- 反向 35→5 揭示旧线性路径会先进入目标区间再绕行折返；编译连接图时禁止通过目标区间内部建立路径。34/35/36 三起点与新增线性轨迹支持该规则，既有 11 组表情回归全部保持通过。九组共 216 标量观察包括中途改向，固定 1e−5 门槛下最大 4.768371582e−7。
+- 七组原 PSB、物理全 1 完整对照包括 Chocola 第 15 步/Fraise 第 11 步跨段当步，标量、真正几何/UV/拓扑及图片全部 PASS，最大几何误差 0.000081102px。已目视查看 Chocola 跨段并列图。Chocola 四/Fraise 三组原版完整动作再次全部 PASS；不覆盖或删除既有静态/隔离/缩放图片 FAIL。
+- 两帧 0→40 缓动第 2 步参考返回 NaN（JSON null），源逆曲线输入为负。原生明确 UnsupportedController，保留有限动画输出，联合 PlaybackInstance fault 后隐藏旧帧并要求 reset；不把 clamp 后候选当成正常播放。主时间线可分发非线性表情，差分 Expression 仍未验收，继续拒绝。
+- Debug/Release 95、ASan/UBSan 核心 94、PSB 工具 6 项通过；500 作者步重复正/负非线性路径请求、几何/构帧普通 C++ new 为零。Release/LTO 120 预热/2000 完整 CPU 差分样本：Chocola P50/P95/P99=0.387205/0.417864/0.4685ms；Fraise=0.728732/0.795012/0.841736ms。不含 GPU/呈现/读回/JSON/内存/功耗，也不作为单独活跃 Expression 曲线成本或性能提升证据。
+- 证据与复现见 docs/validation/p5-expression-easing.json、playback-expression-inputs.json、tests/fixtures/expression_easing_reference.json。P3/P4/P5/P6 仍进行中，接下来核实 Eye 跨区间/自动眨眼、动作权重与剩余像素，再补完整会话及宿主。

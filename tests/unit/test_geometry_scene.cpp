@@ -475,7 +475,8 @@ TEST_CASE("Warmed animation, expression routing and geometry allocate no project
     REQUIRE(player.play(cycle, runtime::TimelinePlayMode::Parallel));
     const auto update = [&](int frame)
     {
-        if (frame % 20 == 0 && !player.transition(parameter, frame % 40 == 0 ? 3.0f : 0.0f, 10))
+        if (frame % 20 == 0 && !player.transition(parameter, frame % 40 == 0 ? 3.0f : 0.0f, 10,
+                                                  frame % 40 == 0 ? 1.0f : -0.5f))
             return false;
         if (!player.step())
             return false;

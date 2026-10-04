@@ -51,6 +51,8 @@ Fraise 已补齐子部件原点同步、细小发片细分和透明辅助遮罩�
 
 最新精度复核：Chocola 四组与 Fraise 三组未修改源素材的完整会话均通过物理数值、最终几何和截图；不同作者/模型比例组合仍有明确 FAIL，参见 [当前证据](docs/validation/p6-transform-precision.json)。完整动画引擎与应用仍在开发中，不能将这七组对照视为全部能力验收。
 
+已补齐 Selector 独立权重和非线性 Expression 曲线距离/跨段求值，后者七组完整模型截图均通过；目标区间绕行及网页参考 NaN 边界均有回归。自动眨眼、Eye 跨区间、动画权重、交互/音频/背景、宿主和既有像素差异仍待完成，见 [表情验证记录](docs/validation/p5-expression-easing.json)。
+
 固定姿态可导出实际 CPU 帧供逐三角形诊断：
 
 ```sh

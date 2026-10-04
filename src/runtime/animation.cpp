@@ -19,6 +19,7 @@ struct Controller
     std::vector<std::array<float, 2>> edges;
     std::vector<float> points, distance;
     std::vector<int> next, jumps;
+    std::vector<bool> continuous;
     std::vector<std::pair<ParamId, model::SelectorOption>> options;
 };
 struct Event
@@ -112,17 +113,50 @@ void compile_graph(Controller& c, const model::VariableControl& source)
                 c.next[i * n + j] = static_cast<int>(j);
                 c.jumps[i * n + j] = i == j ? 0 : 1;
             }
-    for (std::size_t k = 0; k < n; ++k)
+    const auto adjacent_distance = c.distance;
+    const auto adjacent_next = c.next;
+    const auto adjacent_jumps = c.jumps;
+    c.continuous.resize(n * n);
+    for (std::size_t i = 0; i < n * n; ++i)
+        c.continuous[i] = adjacent_jumps[i] == 0;
+    // Enter the destination interval through a junction before approaching the
+    // target. Traversing its interior as part of the graph route would create
+    // an unobserved detour and reversal (e.g. eyebrow 34/35 -> 5).
+    for (const auto& terminal : c.edges)
+    {
+        auto distance = adjacent_distance;
+        auto next = adjacent_next;
+        auto jumps = adjacent_jumps;
+        const auto in_terminal = [&](std::size_t i)
+        { return c.points[i] >= terminal[0] && c.points[i] <= terminal[1]; };
         for (std::size_t i = 0; i < n; ++i)
             for (std::size_t j = 0; j < n; ++j)
-                if (c.jumps[i * n + k] + c.jumps[k * n + j] < c.jumps[i * n + j] ||
-                    (c.jumps[i * n + k] + c.jumps[k * n + j] == c.jumps[i * n + j] &&
-                     c.distance[i * n + k] + c.distance[k * n + j] < c.distance[i * n + j]))
+                if (i != j && in_terminal(i) && in_terminal(j) && c.continuous[i * n + j])
                 {
-                    c.distance[i * n + j] = c.distance[i * n + k] + c.distance[k * n + j];
-                    c.next[i * n + j] = c.next[i * n + k];
-                    c.jumps[i * n + j] = c.jumps[i * n + k] + c.jumps[k * n + j];
+                    distance[i * n + j] = kInfinity;
+                    next[i * n + j] = -1;
+                    jumps[i * n + j] = 1000000;
                 }
+        for (std::size_t k = 0; k < n; ++k)
+            for (std::size_t i = 0; i < n; ++i)
+                for (std::size_t j = 0; j < n; ++j)
+                    if (jumps[i * n + k] + jumps[k * n + j] < jumps[i * n + j] ||
+                        (jumps[i * n + k] + jumps[k * n + j] == jumps[i * n + j] &&
+                         distance[i * n + k] + distance[k * n + j] < distance[i * n + j]))
+                    {
+                        distance[i * n + j] = distance[i * n + k] + distance[k * n + j];
+                        next[i * n + j] = next[i * n + k];
+                        jumps[i * n + j] = jumps[i * n + k] + jumps[k * n + j];
+                    }
+        for (std::size_t j = 0; j < n; ++j)
+            if (in_terminal(j))
+                for (std::size_t i = 0; i < n; ++i)
+                {
+                    c.distance[i * n + j] = distance[i * n + j];
+                    c.next[i * n + j] = next[i * n + j];
+                    c.jumps[i * n + j] = jumps[i * n + j];
+                }
+    }
 }
 struct Segment
 {
@@ -134,7 +168,7 @@ struct Transition
     bool active{false}, deferred{false};
     std::size_t path_index{0};
     float traversed_length{0};
-    float previous_curve{0};
+    float curve_distance{0};
     std::vector<Segment> path;
     explicit Transition(std::size_t capacity = 0)
     {
@@ -147,7 +181,7 @@ struct Transition
         path.clear();
         path_index = 0;
         traversed_length = 0;
-        previous_curve = 0;
+        curve_distance = 0;
     }
 };
 bool route(const Controller& c, Transition& state, float target) noexcept
@@ -223,7 +257,7 @@ bool route(const Controller& c, Transition& state, float target) noexcept
             if (next < 0 || next == cursor)
                 return false;
             const auto successor = static_cast<std::size_t>(next);
-            if (c.jumps[current * n + successor] == 0)
+            if (c.continuous[current * n + successor])
                 segment(c.points[current], c.points[successor]);
             cursor = next;
         }
@@ -237,8 +271,6 @@ bool route(const Controller& c, Transition& state, float target) noexcept
 bool request(const Controller& c, Transition& state, float target, float duration,
              float easing) noexcept
 {
-    if (c.kind == Kind::Expression && easing != 0)
-        return false; // nonlinear expression routing has independent, unverified timing
     if (!route(c, state, target))
         return false;
     if (c.kind == Kind::Eye && state.path.size() <= 1)
@@ -247,7 +279,7 @@ bool request(const Controller& c, Transition& state, float target, float duratio
     state.target = c.kind == Kind::Selector ? std::trunc(target) : target;
     state.duration = duration;
     state.easing = easing;
-    state.progress = state.elapsed = state.previous_curve = 0;
+    state.progress = state.elapsed = state.curve_distance = 0;
     state.path_index = 0;
     state.traversed_length = 0;
     state.active = true;
@@ -260,16 +292,69 @@ bool request(const Controller& c, Transition& state, float target, float duratio
     }
     return true;
 }
-void update(Transition& state) noexcept
+bool update_expression_curve(Transition& state) noexcept
+{
+    // The curve caches distance, independently of the rounded model value. At a
+    // junction the discarded overshoot changes the next inverse curve input.
+    // Observed through public Math calls and Float32 stores; see p5-expression-easing.json.
+    const auto advance_distance = [&](float previous)
+    {
+        const double phase = ease_progress(
+            static_cast<double>(previous) / static_cast<double>(state.length), -state.easing);
+        const double next =
+            static_cast<double>(state.length) *
+            ease_progress(phase + static_cast<double>(1.0f / state.duration), state.easing);
+        state.curve_distance = static_cast<float>(next);
+        return next - static_cast<double>(previous);
+    };
+    if (state.elapsed == 1)
+        state.value = state.path.front().begin;
+    const double distance = advance_distance(state.curve_distance);
+    const auto& segment = state.path[state.path_index];
+    const double direction = segment.end > segment.begin ? 1 : -1;
+    float next_value = static_cast<float>(static_cast<double>(state.value) + direction * distance);
+    if ((static_cast<double>(next_value) - static_cast<double>(segment.end)) * direction >= 0)
+    {
+        if (state.path_index + 1 == state.path.size())
+        {
+            state.value = state.target; // includes a terminal zero-distance junction
+            state.active = false;
+            return true;
+        }
+        state.traversed_length += std::abs(segment.end - segment.begin);
+        const float reset_distance =
+            static_cast<float>(static_cast<double>(state.traversed_length) - distance);
+        if (reset_distance < 0)
+        {
+            // The reference produces NaN when this reaches a fractional inverse
+            // power. Reject the numerical domain instead of clamping its input.
+            state.active = false;
+            return false;
+        }
+        const double next_distance = advance_distance(reset_distance);
+        const auto& successor = state.path[++state.path_index];
+        next_value = static_cast<float>(static_cast<double>(successor.begin) +
+                                        (successor.end > successor.begin ? 1 : -1) * next_distance);
+        next_value = std::clamp(next_value, std::min(successor.begin, successor.end),
+                                std::max(successor.begin, successor.end));
+    }
+    state.value = next_value;
+    return true;
+}
+bool update(Transition& state) noexcept
 {
     if (!state.active)
-        return;
+        return true;
     state.elapsed += 1;
+    if (!state.path.empty() && state.easing != 0)
+    {
+        return update_expression_curve(state);
+    }
     if (state.deferred || state.elapsed >= state.duration)
     {
         state.value = state.target;
         state.active = false;
-        return;
+        return true;
     }
     // The Float32 progress cache is saved for the next tick; this tick
     // consumes the transient sum in the double curve and final value.
@@ -284,12 +369,7 @@ void update(Transition& state) noexcept
             (static_cast<double>(state.target) - static_cast<double>(state.start)) * amount);
     else
     {
-        const float distance =
-            state.easing == 0
-                ? state.length / state.duration
-                : static_cast<float>(static_cast<double>(state.length) *
-                                     (amount - static_cast<double>(state.previous_curve)));
-        state.previous_curve = static_cast<float>(amount);
+        const float distance = state.length / state.duration;
         auto index = state.path_index;
         const auto& segment = state.path[index];
         const float direction = segment.end > segment.begin ? 1.0f : -1.0f;
@@ -313,6 +393,7 @@ void update(Transition& state) noexcept
         state.path_index = index;
         state.value = value;
     }
+    return true;
 }
 } // namespace
 struct AnimationProgram::Impl : ProgramData
@@ -435,9 +516,6 @@ AnimationCompileResult compile_animation(const model::ModelAsset& asset, const G
                     e.value = key.type == 2;
                     if (e.value)
                     {
-                        if (controller.kind == Kind::Expression && key.easing.has_value() &&
-                            key.easing.data != 0)
-                            clip.supported = false;
                         e.target = key.value.data;
                         e.easing = key.easing.has_value() ? key.easing.data : 0;
                         e.duration = i + 1 < source.keys.size()
@@ -693,12 +771,17 @@ AnimationStatus AnimationInstance::step() noexcept
                     TimelineId{static_cast<std::uint32_t>(i)},
                     {}};
     }
-    for (auto& transition : data.base)
-        update(transition);
+    for (std::size_t i = 1; i < data.base.size(); ++i)
+        if (!update(data.base[i]))
+            return {
+                AnimationError::UnsupportedController, {}, ParamId{static_cast<std::uint32_t>(i)}};
     for (std::size_t i = 1; i < data.clips.size(); ++i)
         if (data.clips[i].playing && data.clips[i].additive && !data.clips[i].skip_update)
             for (auto& transition : data.clips[i].tracks)
-                update(transition);
+                if (!update(transition))
+                    return {AnimationError::UnsupportedController,
+                            TimelineId{static_cast<std::uint32_t>(i)},
+                            {}};
     data.update_selectors();
     data.compose();
     ++data.ticks;

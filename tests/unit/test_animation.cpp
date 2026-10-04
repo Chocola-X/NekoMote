@@ -248,7 +248,7 @@ TEST_CASE("Animation rejects unknown IDs and selected unsupported controllers", 
             runtime::AnimationError::InvalidTimeline);
     REQUIRE_FALSE(player.transition(reference.scene->find_variable("body_UD"),
                                     std::numeric_limits<float>::quiet_NaN()));
-    REQUIRE(player.transition(reference.scene->find_variable("face_eyebrow"), 40, 20, 1).error ==
+    REQUIRE(player.transition(reference.scene->find_variable("face_eyebrow"), 56, 20, 1).error ==
             runtime::AnimationError::UnsupportedController);
     REQUIRE(player.values()[reference.scene->find_variable("face_eyebrow").value - 1].value ==
             0.0f);
@@ -268,6 +268,109 @@ TEST_CASE("Animation rejects unknown IDs and selected unsupported controllers", 
     for (int i = 0; i < 20; ++i)
         REQUIRE(player.step());
     REQUIRE(value(player, reference.scene->find_variable("head_LR")) == -30.0f);
+}
+
+TEST_CASE("Nonlinear expression routes preserve independent curve distance across junctions",
+          "[animation]")
+{
+    Reference reference;
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "expression_easing_reference.json");
+    const auto parameter =
+        reference.scene->find_variable(fixture.at("variable").get<std::string>());
+    for (const auto& experiment : fixture.at("cases"))
+    {
+        INFO(experiment.at("case").get<std::string>());
+        runtime::AnimationInstance player(*reference.program);
+        for (const auto& [name, initial] : experiment.at("variables").items())
+            REQUIRE(player.transition(reference.scene->find_variable(name), initial.get<float>()));
+        const auto apply = [&](const Json& transitions)
+        {
+            for (const auto& [name, transition] : transitions.items())
+                REQUIRE(player.transition(
+                    reference.scene->find_variable(name), transition.at("value").get<float>(),
+                    transition.at("frames").get<float>(), transition.at("easing").get<float>()));
+        };
+        apply(experiment.at("transitions"));
+        for (const auto& sample : experiment.at("samples"))
+        {
+            INFO(sample.at("step").get<int>());
+            for (const auto& event : experiment.at("events"))
+                if (event.at("step") == sample.at("step"))
+                    apply(event.at("transitions"));
+            REQUIRE(player.step());
+            REQUIRE_THAT(value(player, parameter),
+                         Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                    fixture.at("value_tolerance").get<double>()));
+        }
+        player.reset();
+        REQUIRE(value(player, parameter) == 0.0f);
+    }
+}
+
+TEST_CASE("Expression transitions report an inverse curve domain failure without NaN output",
+          "[animation]")
+{
+    Reference reference;
+    const auto parameter = reference.scene->find_variable("face_eyebrow");
+    runtime::AnimationInstance player(*reference.program);
+    REQUIRE(player.transition(parameter, 40, 2, 1));
+    REQUIRE(player.step());
+    REQUIRE(value(player, parameter) == 4.75f);
+    const auto failure = player.step();
+    REQUIRE(failure.error == runtime::AnimationError::UnsupportedController);
+    REQUIRE(failure.parameter == parameter);
+    REQUIRE(value(player, parameter) == 4.75f);
+    player.reset();
+    REQUIRE(player.transition(parameter, 40, 20, 1));
+    for (int i = 0; i < 24; ++i)
+        REQUIRE(player.step());
+    REQUIRE(value(player, parameter) == 40.0f);
+
+    auto compiled =
+        runtime::compile_playback(reference.asset, runtime::PhysicsMode::DisabledDiagnostic);
+    REQUIRE(compiled.program);
+    runtime::PlaybackInstance playback(*compiled.program);
+    REQUIRE(playback.transition(parameter, 40, 2, 1));
+    REQUIRE(playback.step());
+    REQUIRE_FALSE(playback.step());
+    REQUIRE_FALSE(playback.prepare_frame());
+    playback.reset();
+    REQUIRE(playback.transition(parameter, 40, 20, 1));
+    REQUIRE(playback.step());
+    REQUIRE(playback.tick_count() == std::uint64_t{1});
+}
+
+TEST_CASE("Main timelines dispatch nonlinear expression transitions through their control graph",
+          "[animation]")
+{
+    Reference reference;
+    model::Timeline clip;
+    clip.label = "expression_curve";
+    clip.last_time = 21;
+    model::Field<float> target, easing;
+    target.state = easing.state = model::FieldState::Value;
+    target.data = 40;
+    easing.data = 1;
+    clip.tracks.push_back({"face_eyebrow", {{0, 2, target, easing}, {21, 0, {}, {}}}});
+    reference.asset.timelines.push_back(clip);
+    auto compiled = runtime::compile_animation(reference.asset, *reference.scene);
+    REQUIRE(compiled.program);
+    runtime::AnimationInstance player(*compiled.program);
+    const auto timeline = compiled.program->find_timeline(clip.label);
+    REQUIRE(player.play(timeline, runtime::TimelinePlayMode::Parallel));
+    const auto fixture =
+        read(std::filesystem::path(NEKOMOTE_FIXTURES_DIR) / "expression_easing_reference.json");
+    for (const auto& sample : fixture.at("cases")[0].at("samples"))
+    {
+        REQUIRE(player.step());
+        REQUIRE_THAT(value(player, reference.scene->find_variable("face_eyebrow")),
+                     Catch::Matchers::WithinAbs(sample.at("value").get<double>(),
+                                                fixture.at("value_tolerance").get<double>()));
+    }
+    REQUIRE_FALSE(player.is_playing(timeline));
+    REQUIRE(player.play(timeline, runtime::TimelinePlayMode::AdditiveParallel).error ==
+            runtime::AnimationError::UnsupportedTimeline);
 }
 
 TEST_CASE("Selector requests match original deferred choice and independent fade trajectories",

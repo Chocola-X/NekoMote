@@ -1,0 +1,1090 @@
+{
+  "value_tolerance": 1e-05,
+  "variable": "face_eyebrow",
+  "note": "Unmodified PSB, fixed integer author steps. Observations after the first update only: the public raw variable cache is cleared by requests and does not certify step-zero scene state. Model values and curve distance have independent Float32 caches; Double curve displacements feed the current value before saving.",
+  "cases": [
+    {
+      "case": "zero-to40-ease1",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 40,
+          "frames": 20,
+          "easing": 1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "92f559ef05b80448cf1b735cf6adfd4ec1906643415a603d2fd0d76b74fefe42",
+      "samples": [
+        {
+          "step": 1,
+          "value": 0.04750000312924385
+        },
+        {
+          "step": 2,
+          "value": 0.1900000125169754
+        },
+        {
+          "step": 3,
+          "value": 0.42750000953674316
+        },
+        {
+          "step": 4,
+          "value": 0.7599999904632568
+        },
+        {
+          "step": 5,
+          "value": 1.1875
+        },
+        {
+          "step": 6,
+          "value": 1.7100000381469727
+        },
+        {
+          "step": 7,
+          "value": 2.327500104904175
+        },
+        {
+          "step": 8,
+          "value": 3.0400002002716064
+        },
+        {
+          "step": 9,
+          "value": 3.8475003242492676
+        },
+        {
+          "step": 10,
+          "value": 4.750000476837158
+        },
+        {
+          "step": 11,
+          "value": 5.747500419616699
+        },
+        {
+          "step": 12,
+          "value": 6.840000629425049
+        },
+        {
+          "step": 13,
+          "value": 8.027501106262207
+        },
+        {
+          "step": 14,
+          "value": 9.310001373291016
+        },
+        {
+          "step": 15,
+          "value": 32.327449798583984
+        },
+        {
+          "step": 16,
+          "value": 33.749900817871094
+        },
+        {
+          "step": 17,
+          "value": 35.26735305786133
+        },
+        {
+          "step": 18,
+          "value": 36.87980270385742
+        },
+        {
+          "step": 19,
+          "value": 38.58725357055664
+        },
+        {
+          "step": 20,
+          "value": 40
+        },
+        {
+          "step": 21,
+          "value": 40
+        },
+        {
+          "step": 22,
+          "value": 40
+        },
+        {
+          "step": 23,
+          "value": 40
+        },
+        {
+          "step": 24,
+          "value": 40
+        }
+      ]
+    },
+    {
+      "case": "35-to5-ease-minus1",
+      "model": "fraise-casual-a",
+      "variables": {
+        "face_eyebrow": 35
+      },
+      "transitions": {
+        "face_eyebrow": {
+          "value": 5,
+          "frames": 20,
+          "easing": -1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "7746267f8d9078b6550691f5056bcdbac6059f61318f2264c0cebdfa7d4a6376",
+      "samples": [
+        {
+          "step": 1,
+          "value": 39.24852752685547
+        },
+        {
+          "step": 2,
+          "value": 41.00832748413086
+        },
+        {
+          "step": 3,
+          "value": 42.35866928100586
+        },
+        {
+          "step": 4,
+          "value": 43.4970588684082
+        },
+        {
+          "step": 5,
+          "value": 44.5
+        },
+        {
+          "step": 6,
+          "value": 45.4067268371582
+        },
+        {
+          "step": 7,
+          "value": 46.24055099487305
+        },
+        {
+          "step": 8,
+          "value": 47.01665496826172
+        },
+        {
+          "step": 9,
+          "value": 47.74558639526367
+        },
+        {
+          "step": 10,
+          "value": 48.435028076171875
+        },
+        {
+          "step": 11,
+          "value": 0.6599994897842407
+        },
+        {
+          "step": 12,
+          "value": 1.2902640104293823
+        },
+        {
+          "step": 13,
+          "value": 1.8944834470748901
+        },
+        {
+          "step": 14,
+          "value": 2.475642204284668
+        },
+        {
+          "step": 15,
+          "value": 3.0361952781677246
+        },
+        {
+          "step": 16,
+          "value": 3.578190326690674
+        },
+        {
+          "step": 17,
+          "value": 4.103356838226318
+        },
+        {
+          "step": 18,
+          "value": 4.613171577453613
+        },
+        {
+          "step": 19,
+          "value": 5
+        },
+        {
+          "step": 20,
+          "value": 5
+        },
+        {
+          "step": 21,
+          "value": 5
+        },
+        {
+          "step": 22,
+          "value": 5
+        },
+        {
+          "step": 23,
+          "value": 5
+        },
+        {
+          "step": 24,
+          "value": 5
+        }
+      ]
+    },
+    {
+      "case": "zero-to8-ease-half",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 8,
+          "frames": 20,
+          "easing": 0.5
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "681e33ed674942ba0f2e0f3ca32155216da1bd375cab84a0e13238a2eeeb9a3b",
+      "samples": [
+        {
+          "step": 1,
+          "value": 0.08944272249937057
+        },
+        {
+          "step": 2,
+          "value": 0.2529822289943695
+        },
+        {
+          "step": 3,
+          "value": 0.464758038520813
+        },
+        {
+          "step": 4,
+          "value": 0.7155417799949646
+        },
+        {
+          "step": 5,
+          "value": 1
+        },
+        {
+          "step": 6,
+          "value": 1.3145341873168945
+        },
+        {
+          "step": 7,
+          "value": 1.656502366065979
+        },
+        {
+          "step": 8,
+          "value": 2.023857831954956
+        },
+        {
+          "step": 9,
+          "value": 2.4149534702301025
+        },
+        {
+          "step": 10,
+          "value": 2.8284270763397217
+        },
+        {
+          "step": 11,
+          "value": 3.263127326965332
+        },
+        {
+          "step": 12,
+          "value": 3.718064069747925
+        },
+        {
+          "step": 13,
+          "value": 4.192374229431152
+        },
+        {
+          "step": 14,
+          "value": 4.685296535491943
+        },
+        {
+          "step": 15,
+          "value": 5.196152687072754
+        },
+        {
+          "step": 16,
+          "value": 5.724334239959717
+        },
+        {
+          "step": 17,
+          "value": 6.269290447235107
+        },
+        {
+          "step": 18,
+          "value": 6.830520153045654
+        },
+        {
+          "step": 19,
+          "value": 7.407564163208008
+        },
+        {
+          "step": 20,
+          "value": 8
+        },
+        {
+          "step": 21,
+          "value": 8
+        },
+        {
+          "step": 22,
+          "value": 8
+        },
+        {
+          "step": 23,
+          "value": 8
+        },
+        {
+          "step": 24,
+          "value": 8
+        }
+      ]
+    },
+    {
+      "case": "ten-to15-ease1",
+      "model": "chocola-date-a",
+      "variables": {
+        "face_eyebrow": 10
+      },
+      "transitions": {
+        "face_eyebrow": {
+          "value": 15,
+          "frames": 20,
+          "easing": 1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "322bd4333635b38b78fbd82983e42653bd5a40d52d1ffdd79ea18533990f22f3",
+      "samples": [
+        {
+          "step": 1,
+          "value": 11.010000228881836
+        },
+        {
+          "step": 2,
+          "value": 11.039999961853027
+        },
+        {
+          "step": 3,
+          "value": 11.09000015258789
+        },
+        {
+          "step": 4,
+          "value": 11.15999984741211
+        },
+        {
+          "step": 5,
+          "value": 11.25
+        },
+        {
+          "step": 6,
+          "value": 11.359999656677246
+        },
+        {
+          "step": 7,
+          "value": 11.489999771118164
+        },
+        {
+          "step": 8,
+          "value": 11.639999389648438
+        },
+        {
+          "step": 9,
+          "value": 11.809999465942383
+        },
+        {
+          "step": 10,
+          "value": 11.999999046325684
+        },
+        {
+          "step": 11,
+          "value": 12.209999084472656
+        },
+        {
+          "step": 12,
+          "value": 12.439998626708984
+        },
+        {
+          "step": 13,
+          "value": 12.689998626708984
+        },
+        {
+          "step": 14,
+          "value": 12.959999084472656
+        },
+        {
+          "step": 15,
+          "value": 13.249999046325684
+        },
+        {
+          "step": 16,
+          "value": 13.559999465942383
+        },
+        {
+          "step": 17,
+          "value": 13.889999389648438
+        },
+        {
+          "step": 18,
+          "value": 14.239999771118164
+        },
+        {
+          "step": 19,
+          "value": 14.609999656677246
+        },
+        {
+          "step": 20,
+          "value": 15
+        },
+        {
+          "step": 21,
+          "value": 15
+        },
+        {
+          "step": 22,
+          "value": 15
+        },
+        {
+          "step": 23,
+          "value": 15
+        },
+        {
+          "step": 24,
+          "value": 15
+        }
+      ]
+    },
+    {
+      "case": "zero-to11-ease1",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 11,
+          "frames": 20,
+          "easing": 1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "8ac29e52616f945dcc00c5806828d02b46e548dab5586e31c76eaa7208f6cf69",
+      "samples": [
+        {
+          "step": 1,
+          "value": 0.02500000037252903
+        },
+        {
+          "step": 2,
+          "value": 0.10000000149011612
+        },
+        {
+          "step": 3,
+          "value": 0.22500000894069672
+        },
+        {
+          "step": 4,
+          "value": 0.4000000059604645
+        },
+        {
+          "step": 5,
+          "value": 0.625
+        },
+        {
+          "step": 6,
+          "value": 0.8999999761581421
+        },
+        {
+          "step": 7,
+          "value": 1.225000023841858
+        },
+        {
+          "step": 8,
+          "value": 1.600000023841858
+        },
+        {
+          "step": 9,
+          "value": 2.0250000953674316
+        },
+        {
+          "step": 10,
+          "value": 2.5
+        },
+        {
+          "step": 11,
+          "value": 3.0250000953674316
+        },
+        {
+          "step": 12,
+          "value": 3.6000001430511475
+        },
+        {
+          "step": 13,
+          "value": 4.225000381469727
+        },
+        {
+          "step": 14,
+          "value": 4.90000057220459
+        },
+        {
+          "step": 15,
+          "value": 5.625000476837158
+        },
+        {
+          "step": 16,
+          "value": 6.40000057220459
+        },
+        {
+          "step": 17,
+          "value": 7.225000858306885
+        },
+        {
+          "step": 18,
+          "value": 8.100001335144043
+        },
+        {
+          "step": 19,
+          "value": 9.025001525878906
+        },
+        {
+          "step": 20,
+          "value": 11
+        },
+        {
+          "step": 21,
+          "value": 11
+        },
+        {
+          "step": 22,
+          "value": 11
+        },
+        {
+          "step": 23,
+          "value": 11
+        },
+        {
+          "step": 24,
+          "value": 11
+        }
+      ]
+    },
+    {
+      "case": "redirect-step10",
+      "model": "chocola-date-a",
+      "variables": {},
+      "transitions": {
+        "face_eyebrow": {
+          "value": 40,
+          "frames": 20,
+          "easing": 1
+        }
+      },
+      "events": [
+        {
+          "step": 10,
+          "transitions": {
+            "face_eyebrow": {
+              "value": 15,
+              "frames": 12,
+              "easing": -0.5
+            }
+          }
+        }
+      ],
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "fcd926fe5beec7faa1ef9255e011a8af890be0e6150cf4f74edd1b527061f768",
+      "samples": [
+        {
+          "step": 1,
+          "value": 0.04750000312924385
+        },
+        {
+          "step": 2,
+          "value": 0.1900000125169754
+        },
+        {
+          "step": 3,
+          "value": 0.42750000953674316
+        },
+        {
+          "step": 4,
+          "value": 0.7599999904632568
+        },
+        {
+          "step": 5,
+          "value": 1.1875
+        },
+        {
+          "step": 6,
+          "value": 1.7100000381469727
+        },
+        {
+          "step": 7,
+          "value": 2.327500104904175
+        },
+        {
+          "step": 8,
+          "value": 3.0400002002716064
+        },
+        {
+          "step": 9,
+          "value": 3.8475003242492676
+        },
+        {
+          "step": 10,
+          "value": 5.784451961517334
+        },
+        {
+          "step": 11,
+          "value": 6.922219753265381
+        },
+        {
+          "step": 12,
+          "value": 7.876522541046143
+        },
+        {
+          "step": 13,
+          "value": 8.728313446044922
+        },
+        {
+          "step": 14,
+          "value": 9.511181831359863
+        },
+        {
+          "step": 15,
+          "value": 11.746753692626953
+        },
+        {
+          "step": 16,
+          "value": 12.450702667236328
+        },
+        {
+          "step": 17,
+          "value": 13.120246887207031
+        },
+        {
+          "step": 18,
+          "value": 13.761265754699707
+        },
+        {
+          "step": 19,
+          "value": 14.378077507019043
+        },
+        {
+          "step": 20,
+          "value": 14.973970413208008
+        },
+        {
+          "step": 21,
+          "value": 15
+        },
+        {
+          "step": 22,
+          "value": 15
+        },
+        {
+          "step": 23,
+          "value": 15
+        },
+        {
+          "step": 24,
+          "value": 15
+        }
+      ]
+    },
+    {
+      "case": "35-to5-linear",
+      "model": "fraise-casual-a",
+      "variables": {
+        "face_eyebrow": 35
+      },
+      "transitions": {
+        "face_eyebrow": {
+          "value": 5,
+          "frames": 20,
+          "easing": 0
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "a021ea719e8df11f1dfcfc5a229ecc37be9d1085f4c0f14ba07f5d5cf3edfb96",
+      "samples": [
+        {
+          "step": 1,
+          "value": 35.95000076293945
+        },
+        {
+          "step": 2,
+          "value": 36.900001525878906
+        },
+        {
+          "step": 3,
+          "value": 37.85000228881836
+        },
+        {
+          "step": 4,
+          "value": 38.80000305175781
+        },
+        {
+          "step": 5,
+          "value": 39.750003814697266
+        },
+        {
+          "step": 6,
+          "value": 40.70000457763672
+        },
+        {
+          "step": 7,
+          "value": 41.65000534057617
+        },
+        {
+          "step": 8,
+          "value": 42.600006103515625
+        },
+        {
+          "step": 9,
+          "value": 43.55000686645508
+        },
+        {
+          "step": 10,
+          "value": 44.50000762939453
+        },
+        {
+          "step": 11,
+          "value": 45.450008392333984
+        },
+        {
+          "step": 12,
+          "value": 46.40000915527344
+        },
+        {
+          "step": 13,
+          "value": 47.35000991821289
+        },
+        {
+          "step": 14,
+          "value": 48.300010681152344
+        },
+        {
+          "step": 15,
+          "value": 0.949999988079071
+        },
+        {
+          "step": 16,
+          "value": 1.899999976158142
+        },
+        {
+          "step": 17,
+          "value": 2.8499999046325684
+        },
+        {
+          "step": 18,
+          "value": 3.799999952316284
+        },
+        {
+          "step": 19,
+          "value": 4.75
+        },
+        {
+          "step": 20,
+          "value": 5
+        },
+        {
+          "step": 21,
+          "value": 5
+        },
+        {
+          "step": 22,
+          "value": 5
+        },
+        {
+          "step": 23,
+          "value": 5
+        },
+        {
+          "step": 24,
+          "value": 5
+        }
+      ]
+    },
+    {
+      "case": "34-to5-ease-minus1",
+      "model": "fraise-casual-a",
+      "variables": {
+        "face_eyebrow": 34
+      },
+      "transitions": {
+        "face_eyebrow": {
+          "value": 5,
+          "frames": 20,
+          "easing": -1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "87b35c030583f0dc5ae48913cb6fe388e67caf5e3a6755aac333bdbc161195b5",
+      "samples": [
+        {
+          "step": 1,
+          "value": 38.472137451171875
+        },
+        {
+          "step": 2,
+          "value": 40.32455825805664
+        },
+        {
+          "step": 3,
+          "value": 41.745967864990234
+        },
+        {
+          "step": 4,
+          "value": 42.94427490234375
+        },
+        {
+          "step": 5,
+          "value": 44.000003814697266
+        },
+        {
+          "step": 6,
+          "value": 44.9544563293457
+        },
+        {
+          "step": 7,
+          "value": 45.8321647644043
+        },
+        {
+          "step": 8,
+          "value": 46.64911651611328
+        },
+        {
+          "step": 9,
+          "value": 47.416412353515625
+        },
+        {
+          "step": 10,
+          "value": 48.14213943481445
+        },
+        {
+          "step": 11,
+          "value": 48.832401275634766
+        },
+        {
+          "step": 12,
+          "value": 0.6811509132385254
+        },
+        {
+          "step": 13,
+          "value": 1.3327271938323975
+        },
+        {
+          "step": 14,
+          "value": 1.9582760334014893
+        },
+        {
+          "step": 15,
+          "value": 2.560687780380249
+        },
+        {
+          "step": 16,
+          "value": 3.1423544883728027
+        },
+        {
+          "step": 17,
+          "value": 3.705281972885132
+        },
+        {
+          "step": 18,
+          "value": 4.2511725425720215
+        },
+        {
+          "step": 19,
+          "value": 4.781485557556152
+        },
+        {
+          "step": 20,
+          "value": 5
+        },
+        {
+          "step": 21,
+          "value": 5
+        },
+        {
+          "step": 22,
+          "value": 5
+        },
+        {
+          "step": 23,
+          "value": 5
+        },
+        {
+          "step": 24,
+          "value": 5
+        }
+      ]
+    },
+    {
+      "case": "36-to5-ease-minus1",
+      "model": "fraise-casual-a",
+      "variables": {
+        "face_eyebrow": 36
+      },
+      "transitions": {
+        "face_eyebrow": {
+          "value": 5,
+          "frames": 20,
+          "easing": -1
+        }
+      },
+      "events": [],
+      "source_hashes": {
+        "psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "original_psb": "02c18d39974abdf9410165dadb0f708944edb59ee45ebe6a4743ff719ad21d64",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "metadata_sha256": "aa0cff16b27d7dae8f1b3430b080c4a5fc4e032e27cc3ba947c1193c20778ab0",
+      "samples": [
+        {
+          "step": 1,
+          "value": 40.02492141723633
+        },
+        {
+          "step": 2,
+          "value": 41.692100524902344
+        },
+        {
+          "step": 3,
+          "value": 42.971370697021484
+        },
+        {
+          "step": 4,
+          "value": 44.04984664916992
+        },
+        {
+          "step": 5,
+          "value": 45.000003814697266
+        },
+        {
+          "step": 6,
+          "value": 45.8590087890625
+        },
+        {
+          "step": 7,
+          "value": 46.64894485473633
+        },
+        {
+          "step": 8,
+          "value": 47.38420104980469
+        },
+        {
+          "step": 9,
+          "value": 48.07476806640625
+        },
+        {
+          "step": 10,
+          "value": 48.72792434692383
+        },
+        {
+          "step": 11,
+          "value": 0.6379098892211914
+        },
+        {
+          "step": 12,
+          "value": 1.245985507965088
+        },
+        {
+          "step": 13,
+          "value": 1.8280582427978516
+        },
+        {
+          "step": 14,
+          "value": 2.3872034549713135
+        },
+        {
+          "step": 15,
+          "value": 2.9259345531463623
+        },
+        {
+          "step": 16,
+          "value": 3.446336269378662
+        },
+        {
+          "step": 17,
+          "value": 3.9501612186431885
+        },
+        {
+          "step": 18,
+          "value": 4.438899517059326
+        },
+        {
+          "step": 19,
+          "value": 4.913829803466797
+        },
+        {
+          "step": 20,
+          "value": 5
+        },
+        {
+          "step": 21,
+          "value": 5
+        },
+        {
+          "step": 22,
+          "value": 5
+        },
+        {
+          "step": 23,
+          "value": 5
+        },
+        {
+          "step": 24,
+          "value": 5
+        }
+      ]
+    }
+  ]
+}
