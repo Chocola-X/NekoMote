@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：初稿，2026-10-03。当前状态：P0/P1 已复核，P2 已验证，P3/P4/P5/P6 进行中，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
+版本：执行中，2026-10-04。当前状态：P0/P1 已复核，P2 已验证，P3/P4/P5/P6 进行中，详见 [docs/p0-handoff.md](docs/p0-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
 
 ## 1. 产品与开发策略
 
@@ -414,3 +414,7 @@ GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必�
 5. 完成 P3/P4 的复杂模型闭合后再推进完整动画。每次交付更新实际阶段状态。
 
 当前下一步是 **P3 参数、场景图与网格变形**（ROADMAP §8）。P0/P1 复核记录见 [docs/development-log.md](docs/development-log.md) 与 [docs/p1-handoff.md](docs/p1-handoff.md)。
+
+### 2026-10-04 当前接续点
+
+P6 两节链条数值内核 27 组/1106 步已闭合，五张真实物理截图通过。参考工具共享字段审计和 Eye 过渡更正已验证；完整链锚点/作者时钟仍待接入。Fraise face_UD 变换、既有静态/动态像素、selector/表达式/嵌套遮罩等缺口保留，P3/P4/P5/P6 继续进行中。证据入口：docs/validation/p6-chain-kernel.json、p6-eye-controller.json 和 docs/development-log.md。

@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <nekomote/runtime/animation.hpp>
 #include <nekomote/runtime/bend.hpp>
+#include <nekomote/runtime/chain.hpp>
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 #include <nekomote/runtime/physics.hpp>
@@ -850,4 +851,51 @@ TEST_CASE("Warmed physical binding and anchor sampling allocate no project heap"
     measure_allocations = false;
     REQUIRE(success);
     REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Two-particle state is independent, resettable and allocation free", "[runtime]")
+{
+    using namespace nekomote::runtime;
+    const ChainCoefficients coefficients{
+        0.00371093745f, 0.2f, {0.03125f, 0.03125f}, {64, 48}, 0.5f};
+    const ChainRest rest{{{{0, 64}, {0, 112}}}};
+    const ChainState snapshot{{{{0, 117.894691f}, {0, 166.270462f}}},
+                              {{{0, 1.36992894e-5f}, {0, 0.375757635f}}}};
+    auto state = snapshot, independent = snapshot;
+    const auto initial = advance_chain(state, coefficients, rest, {100, 200}, {100, 200});
+    REQUIRE(state.initialized);
+    REQUIRE(state.anchor_offset == nekomote::Vec2{});
+    REQUIRE(state.velocity == snapshot.velocity);
+    REQUIRE(state.position[0] == snapshot.position[0]);
+    REQUIRE(state.position[1].y == 165.89468383789062f);
+    REQUIRE_FALSE(independent.initialized);
+    REQUIRE(independent.position == snapshot.position);
+    // Actual saved source state after a +50 vertical external displacement.
+    advance_chain(state, coefficients, rest, {}, {0, 50});
+    REQUIRE(state.position[0].y == 118.07445526123047f);
+    REQUIRE(state.velocity[0].y == 0.17976197600364685f);
+    state = snapshot;
+    REQUIRE(advance_chain(state, coefficients, rest, {}, {}).displacement == initial.displacement);
+    const ChainOutput mapping{{0.75f, 0.25f}, 2, -53.89473f, 1};
+    const BendCoefficients bend_coefficients{0.3926991f, 3};
+    BendState bend{0.355883569f, 0};
+    for (int i = 0; i < 120; ++i)
+        advance_bend(
+            bend, bend_coefficients,
+            unbent_chain_output(advance_chain(state, coefficients, rest, {}, {}), mapping));
+    measured_allocations = 0;
+    measure_allocations = true;
+    ChainVariables value;
+    for (int i = 0; i < 1000; ++i)
+        value =
+            advance_bend(bend, bend_coefficients,
+                         unbent_chain_output(
+                             advance_chain(state, coefficients, rest, {}, {0.1f, -0.2f}), mapping));
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+    REQUIRE(std::isfinite(value.root_x));
+    REQUIRE(std::isfinite(value.vertical));
+    REQUIRE(std::isfinite(value.tip_x));
+    REQUIRE(independent.position == snapshot.position);
+    REQUIRE(independent.velocity == snapshot.velocity);
 }

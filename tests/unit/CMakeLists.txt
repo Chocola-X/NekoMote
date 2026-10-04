@@ -18,7 +18,8 @@ add_executable(nekomote_unit_tests
     test_animation_curve.cpp
     test_animation.cpp
     test_spring.cpp
-    test_bend.cpp)
+    test_bend.cpp
+    test_chain.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
