@@ -468,3 +468,70 @@ TEST_CASE("Spring advancement has independent state and no project heap", "[runt
     REQUIRE(first.position == second.position);
     REQUIRE(first.velocity == second.velocity);
 }
+TEST_CASE("Exported locators report inactive branches and reject unknown transforms", "[runtime]")
+{
+    auto asset = rig();
+    auto marker = layer("anchor", 1, FrameContent{});
+    marker.inherit_mask = 0x200020c;
+    asset.parts[1].layers.push_back(marker);
+    asset.parts[2].layers.push_back(marker);
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    const auto& scene = *compiled.scene;
+    REQUIRE(scene.locators().size() == 2);
+    runtime::GeometryInstance instance(scene);
+    const auto first = scene.locators()[0].node, second = scene.locators()[1].node;
+    REQUIRE(instance.sample_locator({}).status.error == runtime::GeometryError::InvalidLocator);
+    REQUIRE(instance.sample_locator(first).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.sample_locator(first).status);
+    REQUIRE(instance.sample_locator(first).state == runtime::LocatorState::Active);
+    near(instance.sample_locator(first).position, {10, 20});
+    REQUIRE(instance.sample_locator(second).state == runtime::LocatorState::Inactive);
+    REQUIRE(instance.set_parameter(scene.find_variable("pick"), 1));
+    REQUIRE(instance.sample_locator(first).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.sample_locator(first).state == runtime::LocatorState::Inactive);
+    REQUIRE(instance.sample_locator(second).status);
+    near(instance.sample_locator(second).position, {10, 20});
+
+    const auto pick = scene.find_variable("pick");
+    bool success = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(instance.set_parameter(pick, static_cast<float>(i % 2)));
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(instance.sample_locator(first).status);
+        success &= static_cast<bool>(instance.sample_locator(second).status);
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+
+    // A zero local origin is the verified partial-inheritance scope. Do not
+    // generalize it to positioned markers or other unknown inheritance bits.
+    asset.parts[1].layers.back().frame_list[0].content.data.coord =
+        field(std::array<float, 3>{1, 0, 0});
+    compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance positioned(*compiled.scene);
+    REQUIRE(positioned.evaluate());
+    REQUIRE(positioned.sample_locator(compiled.scene->locators()[0].node).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+
+    auto unknown_parent = layer("unknown", 2, FrameContent{});
+    unknown_parent.inherit_mask = 0;
+    unknown_parent.children.push_back(marker);
+    asset.parts[1].layers.pop_back();
+    asset.parts[1].layers.push_back(std::move(unknown_parent));
+    compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance unknown(*compiled.scene);
+    REQUIRE(unknown.evaluate());
+    REQUIRE(unknown.sample_locator(compiled.scene->locators()[0].node).status.error ==
+            runtime::GeometryError::UnsupportedTransform);
+}

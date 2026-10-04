@@ -33,6 +33,11 @@ struct GeometryPrimitive
     float opacity{0}, depth{0};
     int mesh_division{0};
 };
+struct GeometryLocator
+{
+    NodeId node;
+    std::string_view name; // scene-owned source label; bind IDs at loading time
+};
 enum class GeometryError
 {
     None,
@@ -43,7 +48,8 @@ enum class GeometryError
     UnsupportedTransform,
     UnsupportedCombination,
     UnsupportedTessellation,
-    UnsupportedMask
+    UnsupportedMask,
+    InvalidLocator
 };
 struct GeometryStatus
 {
@@ -59,6 +65,17 @@ struct GeometryCapacity
 {
     std::size_t vertices{0}, indices{0}, commands{0}, mask_commands{0}, masks{0};
 };
+enum class LocatorState
+{
+    Inactive,
+    Active
+};
+struct LocatorSample
+{
+    GeometryStatus status;
+    LocatorState state{LocatorState::Inactive};
+    Vec2 position{}; // model space; independent of viewport placement or GPU state
+};
 class GeometryInstance;
 struct GeometryCompileResult;
 // Diagnostic static scene, not a certified player. Source bindings/resources
@@ -71,6 +88,7 @@ class GeometryScene
     GeometryScene& operator=(const GeometryScene&) = delete;
     std::span<const VariableSymbol> variables() const noexcept;
     std::span<const TextureBinding> textures() const noexcept;
+    std::span<const GeometryLocator> locators() const noexcept;
     std::span<const std::string> diagnostics() const noexcept;
     ParamId find_variable(std::string_view name) const noexcept; // load/diagnostics only
     std::size_t node_count() const noexcept;
@@ -105,6 +123,11 @@ class GeometryInstance
     // node must come from this instance's current primitives(). Samples an icon
     // in atlas pixel coordinates; useful for geometry evidence and inspection.
     Vec2 sample_atlas_point(NodeId node, Vec2 atlas_pixel) const noexcept;
+    // ID must come from scene.locators(). Inactive resource branches are explicit.
+    // Valid after evaluate(); never substitutes zero for unverified inheritance.
+    // Supports full inheritance and verified zero-local-origin type-one markers
+    // with mask 0x200020c. Evidence: docs/p6-physics-investigation.md.
+    LocatorSample sample_locator(NodeId node) const noexcept;
     // Static diagnostic frame. Supports verified union masks and protected straight
     // composition; unsupported selected mask sources/nesting fail explicitly.
     // Unknown automatic tessellation explicitly fails instead of drawing a quad.

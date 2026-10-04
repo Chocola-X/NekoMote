@@ -220,6 +220,19 @@ int run(const Options& o)
                 {"nodes", scene.node_count()},
                 {"primitives", instance.primitives().size()},
                 {"diagnostics", scene.diagnostics()}};
+    report["locators"] = Json::array();
+    for (const auto& locator : scene.locators())
+    {
+        const auto sample = instance.sample_locator(locator.node);
+        Json value{{"name", locator.name},
+                   {"node", locator.node.value},
+                   {"path", scene.node_label(locator.node)},
+                   {"error", static_cast<int>(sample.status.error)},
+                   {"active", sample.state == runtime::LocatorState::Active}};
+        if (sample.status && sample.state == runtime::LocatorState::Active)
+            value["position"] = {sample.position.x, sample.position.y};
+        report["locators"].push_back(std::move(value));
+    }
     if (!o.trace.empty())
     {
         auto metadata_file = o.trace;

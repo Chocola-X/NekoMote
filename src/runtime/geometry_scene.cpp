@@ -70,6 +70,7 @@ struct Node
     int type{0}, division{0}, priority{0}, maximum_division{0};
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false};
+    bool exported_locator{false}, partial_locator_origin{false};
 };
 struct Clamp
 {
@@ -92,6 +93,7 @@ struct CompiledData
     std::vector<Node> nodes{1};
     std::vector<Clamp> clamps;
     std::vector<CompiledMask> masks;
+    std::vector<GeometryLocator> locators;
     std::size_t mask_command_capacity{0};
     std::vector<std::string> diagnostics;
     std::size_t vertex_capacity{0}, index_capacity{0};
@@ -241,6 +243,7 @@ struct Compiler
         n.parent = parent;
         n.guard = guard;
         n.type = layer.type;
+        n.exported_locator = layer.type == 1 && layer.export_self == 1;
         require(n.type == 0 || n.type == 1 || n.type == 2 || n.type == 3 || n.type == 12, n.label,
                 "unsupported layer type");
         n.division = layer.mesh_division;
@@ -248,14 +251,17 @@ struct Compiler
         n.maximum_division = n.division;
         require(n.division >= 0 && n.division <= 256, n.label, "unsupported division capacity");
         n.combine = layer.mesh_combine == 1;
-        n.unsupported = layer.coordinate != 0 ||
-                        (layer.mesh_transform != 0 && layer.mesh_transform != 1) ||
-                        (layer.mesh_combine != 0 && layer.mesh_combine != 1) ||
-                        (layer.mesh_sync_child_mask != 0 && layer.mesh_sync_child_mask != 8) ||
-                        (layer.inherit_mask != 0x20007fc &&
-                         !(layer.type == 12 && layer.inherit_mask == 0x24007fc)) ||
-                        (!layer.transform_order.empty() &&
-                         layer.transform_order != std::vector<int>{0, 3, 2, 1});
+        const bool unsupported_common =
+            layer.coordinate != 0 || (layer.mesh_transform != 0 && layer.mesh_transform != 1) ||
+            (layer.mesh_combine != 0 && layer.mesh_combine != 1) ||
+            (layer.mesh_sync_child_mask != 0 && layer.mesh_sync_child_mask != 8) ||
+            (!layer.transform_order.empty() &&
+             layer.transform_order != std::vector<int>{0, 3, 2, 1});
+        n.partial_locator_origin =
+            !unsupported_common && n.exported_locator && layer.inherit_mask == 0x200020c;
+        n.unsupported =
+            unsupported_common || (layer.inherit_mask != 0x20007fc &&
+                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
         const auto binding =
             layer.parameterize.has_value() ? layer.parameterize : part.parameterize;
         const auto& parameters = layer.parameter.empty() ? part.parameter : layer.parameter;
@@ -337,6 +343,10 @@ GeometryScene::~GeometryScene() = default;
 std::span<const VariableSymbol> GeometryScene::variables() const noexcept
 {
     return impl_->variables;
+}
+std::span<const GeometryLocator> GeometryScene::locators() const noexcept
+{
+    return impl_->locators;
 }
 std::span<const TextureBinding> GeometryScene::textures() const noexcept
 {
@@ -514,6 +524,10 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                 "geometry capacity exceeded");
         for (auto& r : data->resources)
             r.motion = nullptr;
+        for (std::size_t i = 1; i < data->nodes.size(); ++i)
+            if (data->nodes[i].exported_locator)
+                data->locators.push_back(
+                    {NodeId{static_cast<std::uint32_t>(i)}, data->nodes[i].source_label});
         result.scene = std::unique_ptr<const GeometryScene>(new GeometryScene(std::move(data)));
     }
     catch (const std::runtime_error& e)
@@ -698,6 +712,29 @@ Vec2 GeometryInstance::sample_atlas_point(NodeId node, Vec2 atlas_pixel) const n
     assert(state.pose.active && r.kind == ResourceKind::Sprite);
     return impl_->transform(node, {atlas_pixel.x - r.rect.left - r.rect.origin_x,
                                    atlas_pixel.y - r.rect.top - r.rect.origin_y});
+}
+LocatorSample GeometryInstance::sample_locator(NodeId node) const noexcept
+{
+    const auto& instance = *impl_;
+    if (!node.valid() || node.value >= instance.scene.nodes.size() ||
+        !instance.scene.nodes[node.value].exported_locator)
+        return {{GeometryError::InvalidLocator, node, {}}};
+    if (!instance.evaluated)
+        return {{GeometryError::UnsupportedTransform, node, {}}};
+    if (!instance.states[node.value].pose.active)
+        return {};
+    for (NodeId ancestor = node; ancestor.valid();
+         ancestor = instance.scene.nodes[ancestor.value].parent)
+    {
+        const auto& n = instance.scene.nodes[ancestor.value];
+        const auto& pose = instance.states[ancestor.value].pose;
+        const bool known_partial_origin = ancestor == node && n.partial_locator_origin &&
+                                          pose.translation == Vec2{} && pose.angle == 0 &&
+                                          !pose.mesh;
+        if ((n.unsupported && !known_partial_origin) || pose.unsupported)
+            return {{GeometryError::UnsupportedTransform, ancestor, {}}};
+    }
+    return {{}, LocatorState::Active, instance.transform(node, {})};
 }
 GeometryStatus GeometryInstance::build_frame() noexcept
 {

@@ -98,3 +98,10 @@
 - 原生内核计算参数后经正常场景/GL 输出，四个 24 步弹簧隔离截图全部 PASS，alpha 无差、RGB 最大 1/255，目视核实；不把 fixture 验证记为未经修改的完整播放验收。证据 `docs/validation/p6-spring-images.json`。
 - Debug/Release 51 个入口、ASan/UBSan 50 核心入口全部通过；预热后的 1000 步无普通 C++ new，独立状态重置一致。发布态单粒子 step+map 中位 16.834 ns/op，仅数值内核。
 - 父级累计 Float32 变换候选更贴近锚点位置，但 30 组静态图片仍 23 PASS/7 FAIL，未直接替代正式几何。完整 locator/变形继承、头发两粒子约束、物理 schema 和实时会话待接入，详见 `docs/p6-physics-investigation.md`。
+
+## P6 限定场景锚点子步骤
+
+- 提供由场景持有的导出标记 NodeId 与实例求值后锚点查询；活动/非活动分支、失效和未验证父层继承明确区分。只对 full inheritance 和已验证零局部原点 type-one 0x200020c 开放，不推断一般部分继承。
+- 胸部锚点八组真实 body/head/act_sp 变形输入与原 SDK 逐步物理位移观察全部通过，最大 0.0000658795px，证据 `docs/validation/p6-locators.json`。
+- Debug/Release 52 项、ASan/UBSan 51 项全部通过；200 次切换/求值/查询无普通 C++ new。重做四型号 30 张静态截图仍 23 PASS/7 FAIL，几何全 PASS，没有新增画面回归；默认并列图已查看。
+- 头发一侧伸长弹簧/第二粒子最大长度约束候选已与隔离数值接近，弯曲输出调查继续；尚未把候选或原 trace 数据接入正式播放。

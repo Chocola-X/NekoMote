@@ -1,0 +1,235 @@
+{
+  "scope": "Zero-local-position exported type-one locator, partial inheritance 0x200020c; isolated source zero-spring/gravity controller measures center_bust delta",
+  "stage_complete": false,
+  "tolerance_px": 0.001,
+  "passed": true,
+  "asset_sha256": "5eaa19c66db7d1fe6ff3b019d4a37683ca7694b4d5279a9d5207885803ef3aaf",
+  "cases": [
+    {
+      "case": "body-lr30",
+      "variables": {
+        "body_LR": 30
+      },
+      "reference_position": [
+        16.201078414916992,
+        119.20294189453125
+      ],
+      "native_position": [
+        16.20107650756836,
+        119.20294189453125
+      ],
+      "error_px": 1.9073486328125e-06,
+      "reference_metadata_sha256": "f55b6136baaad38838a84a618c8ad0461789bd903ef96cb0c22b7b5500502c7f"
+    },
+    {
+      "case": "body-ud30",
+      "variables": {
+        "body_UD": 30
+      },
+      "reference_position": [
+        -0.9999942779541016,
+        132.31268310546875
+      ],
+      "native_position": [
+        -0.9999942779541016,
+        132.31268310546875
+      ],
+      "error_px": 0.0,
+      "reference_metadata_sha256": "20a7d990b5dd1c865f9dd6f29beff5fb74745b15509b381ab053522ee853db0d"
+    },
+    {
+      "case": "body-lr-ud",
+      "variables": {
+        "body_LR": 15,
+        "body_UD": -20
+      },
+      "reference_position": [
+        7.210336685180664,
+        113.2547607421875
+      ],
+      "native_position": [
+        7.210334777832031,
+        113.2547607421875
+      ],
+      "error_px": 1.9073486328125e-06,
+      "reference_metadata_sha256": "abc909f11106ae114f7d18a558d5278d9b0d4312a8557af6bc366c4ce104e2c5"
+    },
+    {
+      "case": "head-lr30",
+      "variables": {
+        "head_LR": 30
+      },
+      "reference_position": [
+        -9.092117309570312,
+        117.0
+      ],
+      "native_position": [
+        -9.092124938964844,
+        117.0
+      ],
+      "error_px": 7.62939453125e-06,
+      "reference_metadata_sha256": "1a22f6e0fb5283f06a6b927e4898278cf0ee64802cad46cc17532fdb044596b9"
+    },
+    {
+      "case": "head-slant30",
+      "variables": {
+        "head_slant": 30
+      },
+      "reference_position": [
+        -0.9999824166297913,
+        117.21966552734375
+      ],
+      "native_position": [
+        -0.9999866485595703,
+        117.2197265625
+      ],
+      "error_px": 6.118169275295305e-05,
+      "reference_metadata_sha256": "260c0abfa3f89b18b3fe7d87964aaf1b768a33abc64f7e6702c94ff8544db808"
+    },
+    {
+      "case": "body-slant30",
+      "variables": {
+        "body_slant": 30
+      },
+      "reference_position": [
+        21.672164916992188,
+        120.3892822265625
+      ],
+      "native_position": [
+        21.672164916992188,
+        120.38932800292969
+      ],
+      "error_px": 4.57763671875e-05,
+      "reference_metadata_sha256": "2e448fbc38b325f437f4953b7f5af3917f006e031e4b9d853c761c69377c335e"
+    },
+    {
+      "case": "head-body",
+      "variables": {
+        "head_LR": -15,
+        "head_UD": 20,
+        "body_LR": 15,
+        "body_UD": -20,
+        "head_slant": 10,
+        "body_slant": -10
+      },
+      "reference_position": [
+        5.587127685546876,
+        125.91259765625
+      ],
+      "native_position": [
+        5.587102890014648,
+        125.91253662109375
+      ],
+      "error_px": 6.58795014925315e-05,
+      "reference_metadata_sha256": "97983017a8634c121a001064ad5f0641b11b0f8a11a2c8b17acd178401616b6f"
+    },
+    {
+      "case": "act-sp-minus30",
+      "variables": {
+        "act_sp": -30
+      },
+      "reference_position": [
+        0.40764930844306946,
+        114.01025390625
+      ],
+      "native_position": [
+        0.40764617919921875,
+        114.01025390625
+      ],
+      "error_px": 3.129243850708008e-06,
+      "reference_metadata_sha256": "a43d25d124bc2c7a4dddad794d3960cf3891eda0db3f763371ff0b968acea473"
+    }
+  ],
+  "source_hashes": {
+    "psb": "a4fee1bbf3a6eecf437eb3565af1d51b1a6a0e79fe6ac02db42883351be9d392",
+    "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+    "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "fixture": [
+    {
+      "path": "/metadata/hairControl/0/enabled",
+      "offset": 281654,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/1/enabled",
+      "offset": 282006,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/2/enabled",
+      "offset": 282358,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/hairControl/3/enabled",
+      "offset": 282715,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/partsControl/0/enabled",
+      "offset": 280776,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/partsControl/1/enabled",
+      "offset": 281129,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/bustControl/1/enabled",
+      "offset": 284325,
+      "before": 1,
+      "after": 0,
+      "bytes": 1
+    },
+    {
+      "path": "/metadata/bustControl/0/param/ofs",
+      "offset": 284212,
+      "before": 9.599772,
+      "after": 0,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/bustControl/0/param/p/y",
+      "offset": 284249,
+      "before": 9.600044,
+      "after": 0,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/bustControl/0/param/pv/y",
+      "offset": 284272,
+      "before": 9.804964065551758e-06,
+      "after": 0,
+      "bytes": 4
+    },
+    {
+      "path": "/metadata/bustControl/0/gravity",
+      "offset": 284188,
+      "before": 0.3,
+      "after": 0,
+      "bytes": 8
+    },
+    {
+      "path": "/metadata/bustControl/0/spring",
+      "offset": 284287,
+      "before": 0.03125,
+      "after": 0,
+      "bytes": 4
+    }
+  ]
+}
