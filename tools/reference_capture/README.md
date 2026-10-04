@@ -87,3 +87,5 @@ PSB 字典可能共享标量存储，修改一个路径可能同时改变其它�
 preview `--playback-script <JSON>` 仅允许固定步数截图诊断，执行同样 timeline_requests/events；正式实时应用通过数值/ID API 调用。playback probe 输入接收同样两字段并输出 blend_ratios/playing；诊断脚本、JSON 采样和截图不计入稳态性能。完整矩阵入口使用 `docs/validation/playback-timeline-weight-inputs.json`。证据输出后缀添加到完整名称，带小数点的权重 case 不会覆盖或错误读取另一个 case。
 
 外部参数差分使用 `--differences '{"eye":{"head_LR":{"value":30,"frames":60,"easing":-1}}}'`；模块和变量的 JSON 顺序参与参考语义，诊断工具保留输入顺序。事件可包含同样的 `differences` 字段，公开 SDK 的 `GetVariableDiff` 逐步查询每个已定义绑定。正式运行时用编译后的 `VariableSourceId` 和 `ParamId`，不在帧路径解析字符串或 JSON。`--playback-script` 接收初始差分与事件。完整物理、几何和截图矩阵为 `docs/validation/playback-variable-difference-inputs.json`，当前 8/9 截图通过，失败像素及证据保留在 `docs/validation/p6-variable-differences.json`。
+
+`--trace-float-reads` 显式观察所有数字读取，须配合 caller/step 过滤和有界上限。追加 `--trace-float-unique-reads` 仅记录每个索引首次读取或数值变化；显式 read-index 总是记录。记录读写共有的 `sequence` 可还原被记录事件的先后，不表示完整执行轨迹；过滤/去重/截断会省略事件。调查预变形网格时必须读取缓存点第一次出现的值，不能把后续曲面覆盖后的同一缓冲区误作刚性网格。观察不进入正式运行时；证据必须注明截断状态及与无观察截图的对应关系。

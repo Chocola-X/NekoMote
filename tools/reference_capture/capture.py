@@ -61,6 +61,8 @@ def main():
                         help='diagnostic Float32 storage observations; not for benchmarks')
     parser.add_argument('--trace-float-reads', action='store_true',
                         help='observe all numeric Float32 reads; use caller/step filter and bounded limit')
+    parser.add_argument('--trace-float-unique-reads', action='store_true',
+                        help='record numeric reads only when the index value changes; requires reads')
     parser.add_argument('--trace-float-read-index', action='append', type=int, default=[],
                         help='also observe reads at explicit Float32 heap indices; requires stores')
     parser.add_argument('--trace-float-stack', default='',
@@ -117,6 +119,8 @@ def main():
         parser.error('--trace-math-step requires math tracing and an update in 0..steps')
     if args.trace_float_reads and not args.trace_float_stores:
         parser.error('--trace-float-reads requires --trace-float-stores')
+    if args.trace_float_unique_reads and not args.trace_float_reads:
+        parser.error('--trace-float-unique-reads requires --trace-float-reads')
     if args.trace_float_stack and not args.trace_float_stores:
         parser.error('--trace-float-stack requires --trace-float-stores')
     if not 1 <= args.trace_float_limit <= 100000:
@@ -295,6 +299,7 @@ def main():
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,
                    traceFloatStep=args.trace_float_step, traceFloatLimit=args.trace_float_limit,
                    traceFloatReadIndices=args.trace_float_read_index, traceFloatAllReads=args.trace_float_reads,
+                   traceFloatUniqueReads=args.trace_float_unique_reads,
                    traceRandom=args.trace_random, traceClock=args.trace_clock,
                    fixedClockMs=args.fixed_clock_ms,
                    traceIntegerStores=args.trace_integer_stores, traceIntegerReads=args.trace_integer_reads, traceIntegerStack=args.trace_integer_stack,

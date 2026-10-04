@@ -659,7 +659,10 @@ struct GeometryInstance::Impl
     }
     Vec2 transform(NodeId id, double x, double y) const noexcept
     {
-        auto p = states[id.value].world.apply(x, y);
+        return deform(id, states[id.value].world.apply(x, y));
+    }
+    Vec2 deform(NodeId id, Vec2 p) const noexcept
+    {
         while (id.valid())
         {
             const auto& s = states[id.value];
@@ -1037,13 +1040,34 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         const auto base = static_cast<std::uint32_t>(instance.vertices.size());
         const auto first = static_cast<std::uint32_t>(instance.indices.size());
         const auto& texture = instance.scene.textures[p.texture.value - 1];
+        const auto& world = instance.states[p.node.value].world;
+        const double left = -static_cast<double>(r.origin_x);
+        const double top = -static_cast<double>(r.origin_y);
+        // Author tessellation saves the four rigid world corners first, then
+        // interpolates their rows in double and saves each point before curves.
+        // Directly transforming local grid points loses this Float32 boundary.
+        const auto corner = [&](double x, double y) noexcept
+        {
+            const auto saved = world.apply(x, y);
+            return std::array<double, 2>{saved.x, saved.y};
+        };
+        const auto top_left = corner(left, top);
+        const auto top_right = corner(left + static_cast<double>(r.width), top);
+        const auto bottom_left = corner(left, top + static_cast<double>(r.height));
+        const auto bottom_right =
+            corner(left + static_cast<double>(r.width), top + static_cast<double>(r.height));
         for (int y = 0; y <= ny; ++y)
+        {
+            const double row = static_cast<double>(y) / ny;
+            const double row_left_x = (1 - row) * top_left[0] + row * bottom_left[0];
+            const double row_left_y = (1 - row) * top_left[1] + row * bottom_left[1];
+            const double row_right_x = (1 - row) * top_right[0] + row * bottom_right[0];
+            const double row_right_y = (1 - row) * top_right[1] + row * bottom_right[1];
             for (int x = 0; x <= nx; ++x)
             {
-                // Keep author tessellation and origin subtraction in double
-                // until the rigid world point is saved. Saving ratio/local XY
-                // first loses subpixel precision, including visible edge pixels.
-                // UV packing has a separate Float32 boundary.
+                // Atlas coordinates use the original local grid ratios in
+                // double, independently of the saved rigid corner interpolation.
+                // UV packing has its own Float32 boundary.
                 const double local_x = static_cast<double>(x) / nx * static_cast<double>(r.width);
                 const double local_y = static_cast<double>(y) / ny * static_cast<double>(r.height);
                 const float u = static_cast<float>(static_cast<double>(r.left) + local_x);
@@ -1055,15 +1079,18 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                 const float v = static_cast<float>(texture.height) - bottom_v;
                 // Atlas packing affects UV only. Adding a large atlas offset and
                 // subtracting it before deformation loses local subpixel precision.
-                const auto point =
-                    instance.transform(p.node, local_x - static_cast<double>(r.origin_x),
-                                       local_y - static_cast<double>(r.origin_y));
+                const double column = static_cast<double>(x) / nx;
+                const Vec2 rigid_point{
+                    static_cast<float>((1 - column) * row_left_x + column * row_right_x),
+                    static_cast<float>((1 - column) * row_left_y + column * row_right_y)};
+                const auto point = instance.deform(p.node, rigid_point);
                 instance.vertices.push_back({point.x,
                                              point.y,
                                              u / static_cast<float>(texture.width),
                                              v / static_cast<float>(texture.height),
                                              {1, 1, 1, p.opacity}});
             }
+        }
         for (int y = 0; y < ny; ++y)
             for (int x = 0; x < nx; ++x)
             {

@@ -50,6 +50,8 @@ window.floatStoresTruncated=false;
 window.floatReads=[];
 window.floatReadsTruncated=false;
 window.traceFloatReadIndices=new Set();
+window.floatReadLastValue=new Map();
+window.floatObservationSequence=0;
 if(window.enableFloatStores) {
     const NativeFloat32Array=window.Float32Array;
     // Observe full heap views only. Methods use the original typed-array receiver;
@@ -62,12 +64,18 @@ if(window.enableFloatStores) {
                 const value=Reflect.get(target,key,target);
                 if(window.traceFloatStores && (window.traceFloatReadIndices.has(key) ||
                    (window.traceFloatAllReads && typeof key==='string' && /^[0-9]+$/.test(key))) &&
+                   (!window.traceFloatUniqueReads || window.traceFloatReadIndices.has(key) ||
+                    !window.floatReadLastValue.has(key) ||
+                    !Object.is(window.floatReadLastValue.get(key),value)) &&
                    (window.traceFloatStep===null || window.traceFloatStep===(window.authorStep||0))) {
                     if(window.floatReads.length>=window.traceFloatLimit) window.floatReadsTruncated=true;
                     else {
                         const stack=new Error().stack;
-                        if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' ('))
-                            window.floatReads.push({step:window.authorStep||0,index:Number(key),value,stack});
+                        if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' (')) {
+                            window.floatReads.push({sequence:window.floatObservationSequence++,
+                                                    step:window.authorStep||0,index:Number(key),value,stack});
+                            if(window.traceFloatUniqueReads) window.floatReadLastValue.set(key,value);
+                        }
                     }
                 }
                 return typeof value==='function' && key!=='constructor'?value.bind(target):value;
@@ -81,7 +89,8 @@ if(window.enableFloatStores) {
                     else {
                         const stack=new Error().stack;
                         if(!window.traceFloatStack || stack.includes(' at '+window.traceFloatStack+' ('))
-                            window.floatStores.push({step:window.authorStep||0,index:Number(key),
+                            window.floatStores.push({sequence:window.floatObservationSequence++,
+                                                     step:window.authorStep||0,index:Number(key),
                                                      old,input,stored:target[key],stack});
                     }
                 }
@@ -174,6 +183,7 @@ window.capture = async function(options) {
     window.traceFloatStep=options.traceFloatStep;
     window.traceFloatLimit=options.traceFloatLimit;
     window.traceFloatAllReads=options.traceFloatAllReads;
+    window.traceFloatUniqueReads=options.traceFloatUniqueReads;
     window.traceFloatReadIndices=new Set((options.traceFloatReadIndices||[]).map(String));
     for (const [label,value] of Object.entries(options.variables))
         EmotePlayer_SetVariable(id,label,value,0,0);

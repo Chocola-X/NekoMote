@@ -1,0 +1,112 @@
+{
+  "scope": "Observed saved Float32 rigid corners before double row/column tessellation; representative-model numeric and visual matrices pass. Catalogue partial inheritance, nested masks, host and soak remain incomplete.",
+  "base_commit": "b2adefc",
+  "coordinate_tolerance_px": 0.001,
+  "scalar_tolerance": 1e-05,
+  "image_tolerance": 2,
+  "reports": {
+    "base": {
+      "path": "build/evidence/p6-four-corners/base/report.json",
+      "sha256": "1695cd48206849b112a44db53eeb0bb37e9a3c47ae94ecb6069f6c7bf4c03fe1",
+      "passed": 4,
+      "total": 4,
+      "failures": []
+    },
+    "fraise": {
+      "path": "build/evidence/p6-four-corners/fraise/report.json",
+      "sha256": "b039638015a835353972603ae17868ba0b0e2d352e8d64262442c0de28e481a5",
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "weights": {
+      "path": "build/evidence/p6-four-corners/weights/report.json",
+      "sha256": "59a56f03f883d0b644a34cafa3511adbba9b6dac7c42b19faf83ff08aa10a7d3",
+      "passed": 20,
+      "total": 20,
+      "failures": []
+    },
+    "hybrid": {
+      "path": "build/evidence/p6-four-corners/hybrid/report.json",
+      "sha256": "b09c4b481c346ee20559c08d88be47c1a25b725d2b115fac2663e5acd95c3877",
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "external": {
+      "path": "build/evidence/p6-four-corners/external/report.json",
+      "sha256": "4f69d3e7d97659bd8a8369c44385eb21c78835fac16ac40bdc8dd8631551d3d7",
+      "passed": 9,
+      "total": 9,
+      "failures": []
+    },
+    "eye": {
+      "path": "build/evidence/p6-four-corners/eye/report.json",
+      "sha256": "409f7d7a7a5d6398c1b79a8f601993901c45a216ff09151e4909891ea84e99b3",
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "blink": {
+      "path": "build/evidence/p6-four-corners/blink/report.json",
+      "sha256": "417ed943f9506aa6a7ab769424f1913ba98f7ecb36c27b650348a5fb195a449c",
+      "passed": 11,
+      "total": 11,
+      "failures": []
+    },
+    "scale": {
+      "path": "build/evidence/p6-four-corners/scale/report.json",
+      "sha256": "e89ab34d7d9f89179fb19eb0258434e89c506c745bf562bc137971639580876f",
+      "passed": 8,
+      "total": 8,
+      "failures": []
+    },
+    "fraise-scale": {
+      "path": "build/evidence/p6-four-corners/fraise-scale/report.json",
+      "sha256": "a9aa640427bd0c4fc205f3d3f4fbd466d0c9cc2c425514617e696e3deef19dec",
+      "passed": 3,
+      "total": 3,
+      "failures": []
+    },
+    "static": {
+      "path": "build/evidence/p6-four-corners/static/report.json",
+      "sha256": "0861942665f18e375760f2b838e801666b4b6df8b5d434bac4d0d41d83cbe333",
+      "passed": 30,
+      "total": 30,
+      "failures": []
+    },
+    "animation": {
+      "path": "build/evidence/p6-four-corners/animation/report.json",
+      "sha256": "3a5785b715d308318584e0e27e685d71d01389bdeeed9a026ed7005824b0f931",
+      "passed": 7,
+      "total": 7,
+      "failures": []
+    }
+  },
+  "observations": {
+    "path": "build/evidence/p6-paired-precision/edge-diagnostic/fraise400-hu-events.json",
+    "sha256": "93f1ba6f1d58092a7957f5fd010be369fccdee22ccb63860a59805acbda438a2",
+    "reads_truncated": true,
+    "stores_truncated": true,
+    "accepted_scope": "Four saved corners and first reads of 96 rearhair rigid vertices occur before truncation; the full trace is not certified. First-read points match saved-corner interpolation 96/96; direct rigid transformation matched 20/96."
+  },
+  "fixture": {
+    "path": "tests/fixtures/rigid_grid_reference.json",
+    "sha256": "04117e2e045493281163a2fda6116f183165821f9d891590a5e16f7428fcbb91"
+  },
+  "tests": {
+    "debug": 124,
+    "release": 124,
+    "asan_ubsan_headless": 123,
+    "python": 9
+  },
+  "cpu_benchmark": {
+    "p50_ms": 0.414786,
+    "p95_ms": 0.442233,
+    "p99_ms": 0.459623,
+    "warmup_ticks": 120,
+    "samples": 2000,
+    "scope": "author animation+anchors+physics+final geometry+frame; no JSON samples, GPU, presentation or readback"
+  },
+  "player": "Fixed h01 at 36 steps matches previous WebGL-certified capture; owned-window callback check passes without OS input injection. Initial capture attempt with missing model path failed and remains recorded."
+}

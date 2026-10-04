@@ -2440,3 +2440,56 @@ TEST_CASE("Paired clamp preserves transient values until each binding time is sa
     REQUIRE(sample.status);
     REQUIRE(sample.position.x == reference.at("binding_stores")[0].at("stored").get<float>());
 }
+
+TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runtime][scene]")
+{
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/rigid_grid_reference.json");
+    const auto reference = nlohmann::json::parse(input);
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.textures[0].width = 4096;
+    asset.textures[0].height = 2048;
+    const auto size = reference.at("sprite_size").get<std::array<float, 2>>();
+    const auto origin = reference.at("sprite_origin").get<std::array<float, 2>>();
+    asset.icons["atlas/a"] = {"atlas", 800, 1, size[0], size[1], origin[0], origin[1]};
+    auto child_content = sprite();
+    const auto world = reference.at("world").get<std::array<float, 6>>();
+    child_content.coord = field(std::array<float, 3>{world[4], world[5], 0});
+    child_content.angle = field(reference.at("angle_degrees").get<float>());
+    auto child = layer("sprite", 0, child_content);
+    child.mesh_division = 16;
+    FrameContent content;
+    content.src = field(std::string{"blank"});
+    content.icon = field(std::string{"100:100:0:0"});
+    MeshData mesh;
+    std::array<float, 32> controls{};
+    const auto identity = runtime::identity_patch();
+    for (std::size_t i = 0; i < identity.size(); ++i)
+    {
+        controls[2 * i] = identity[i].x;
+        controls[2 * i + 1] = identity[i].y;
+    }
+    mesh.bp = field(controls);
+    content.mesh = field(mesh);
+    auto parent = layer("mesh_path", 0, content);
+    // Density/tessellation inheritance is independent of curve inheritance.
+    parent.mesh_sync_child_mask = 0;
+    parent.children = {child};
+    asset.parts[0].layers = {parent};
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    const auto vertices = instance.frame().vertices;
+    REQUIRE(vertices.size() == reference.at("expected").size());
+    const auto observed = instance.observe_node(instance.primitives()[0].node);
+    REQUIRE(observed);
+    REQUIRE(observed->world == world);
+    for (std::size_t i = 0; i < vertices.size(); ++i)
+    {
+        INFO(i);
+        REQUIRE(vertices[i].x == reference.at("expected")[i][0].get<float>());
+        REQUIRE(vertices[i].y == reference.at("expected")[i][1].get<float>());
+    }
+}

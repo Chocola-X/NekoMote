@@ -1,6 +1,6 @@
 # 原生窗口播放器与设备服务
 
-当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。该入口已经可操作；完整模型语义认证仍有几何/物理 FAIL，不能把窗口功能通过视为 P3–P6 全部完成。
+当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。代表模型的115组冻结数值/几何/图像矩阵已通过（docs/validation/p6-rigid-grid.json）；全目录的局部继承、嵌套mask等仍明确拒绝。窗口体验和代表模型验证不等于全素材认证。
 
 ## 构建与素材
 
@@ -79,3 +79,5 @@ build/dev/bin/nekomote_player --model /path/model.nkm.json \
 该入口不抢占初始焦点，等待六次初始swap后独立保存暂停/resize/恢复截图，验证暂停像素相等、异步resize/fit、minimize/restore、reset/resume和退出。截图读回与分配仅发生在显式诊断模式；与性能测量互斥。证据见 docs/validation/p6-player-pacing.json。
 
 Debug/Release 的窗口自检均通过。Release 曾在EGL初始drawable分配前取到仅1×1有效内容的800×1080截图；失败材料保留，自检先预热实际surface再比较暂停像素。
+
+2026-10-05 刚性四角修复后，旧隔离动画7/7、完整代表模型矩阵均通过。上述2026-10-04失败是历史记录；所有原始材料保留。当前播放器固定h01及自有窗口检查均回归通过。
