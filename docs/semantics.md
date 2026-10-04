@@ -34,7 +34,7 @@
 
 ## 原生场景与细分（P3 进行中）
 
-固定姿态 C++ 场景的实际顶点及三角形对照通过 30 组、四个型号；证据见 [原生场景记录](p3-native-scene.md)。非零 meshDivision 的 X/Y 段数为 floor(D*w/(w+h))+1 和 D-floor(D*w/(w+h))+1。priority=2、D=0 的密度取当前有 BP 的父域最大 D/(宽+高)，乘图像宽高和取整、最少 2。null BP 不启用细分；显式单位 BP 启用。
+固定姿态 C++ 场景的实际顶点及三角形对照通过 30 组、四个型号；证据见 [原生场景记录](p3-native-scene.md)。非零 meshDivision 的 X/Y 段数为 floor(D*w/(w+h))+1 和 D-floor(D*w/(w+h))+1。priority=2、D=0 的密度取当前有 BP 的父域最大 D/(宽+高)，乘图像宽高和取整；每个最终网格轴至少两段。null BP 不启用细分；显式单位 BP 启用。
 
 初始“按图像尺寸固定 3/64 密度”的候选在 body_LR=30 与 azuki 初态失败。进一步用 213×213 fixture 区分近似密度：304×122 父域 D=20 输出 D=20；3/64 会输出 19。此规则已通过实际原生网格和拓扑对照，其他 priority 自动模式未验证。fixture 仅内存修改尺寸，原仓库只读。
 
@@ -47,3 +47,13 @@
 ### P6 type=1 配对限幅
 
 对于已验证的对称正范围，圆内值保持不变，圆外将原始二维向量投影至半径为范围上限的圆周。圆外不得预先逐轴截断；`(60,15)` 的方向与 `(30,15)` 不同。Math 输入/输出和最终原生顶点/图像均有独立证据，见 [10 组验证](validation/p6-circle-clamp.json)。此实现仅限幅，不包含胸部/头发积分、初始化或锚点继承。
+
+## Fraise 子同步、细分与透明遮罩
+
+`meshSyncChildMask=1` 对直接子节点的刚性原点求曲面，子节点随后保持自己的局部形状；`8` 将曲面接入后代顶点链，`0` 不传播自身曲面。同域 combine 在 `8` 下合并位移，位置同步下先改变 helper 原点，保留 helper 自己的曲面。Fraise `face_UD/face_LR` 原版及只重定向两处 flag 到同字典 groundCorrection=0 的对照，确认了这些差异；直接对子布局使用 UD+LR 合并曲面会产生 6.668px 的真实错误。
+
+小图自动 division 可截断为零；源 6×7 图仍为 3×3 个顶点，109×219 图为 3×5。显式 division=1 的独立引用 fixture 也为 3×3。修正前缺少的发片一列导致两千多个轮廓差异。原资料中的总 division 最小值不能继续作为公式依据。
+
+Fraise `add_mask` 的 opa=0 不抑制 stencil 贡献。源 mask shader 从纹理 alpha 生成 union，忽略 vertex colour/opacity；颜色路径仍剔除透明图元。原 PNG 与原 WebGL atlas 的 33,554,432 个 RGBA 字节逐位相同；缺失辅助 mask 而非素材解码导致下眼睑残差。未知嵌套/反向语义继续显式拒绝。
+
+四姿态几何闭合，三张静态图和完整 idle24 PASS；head-UD 耳尖一个像素、完整 turn24/additive60 的物理数值仍 FAIL。阶段不完成，见 [证据与冻结输入](validation/p6-child-synchronization.json)。

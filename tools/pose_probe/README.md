@@ -30,3 +30,5 @@ python3 tools/pose_probe/compare_geometry.py \
 trace 只用于诊断验证，不是预览或运行时输入。--benchmark 2000 测量 evaluate+build_frame；不含 GPU。
 
 完整复现可给 validate.py 增加 --native-evaluator build/dev/bin/nekomote_pose，重新捕获原网页并核对原生网格/拓扑。Python probe 的均匀网格仍只是早期独立公式实验，实际原生网格证据以 [p3-native-geometry.json](../../docs/validation/p3-native-geometry.json) 为准。
+
+带 `--sample-trace` 时，诊断使用冻结 metadata 的 x/y/scale 作为显式模型输入，先在 CPU 放置/缩放后编译曲面，再核对源画布中心坐标。透明 mask-only 图元通过各 primitive 的 draw 范围比较，不能再将 primitive 序号当作普通颜色命令序号。geometry preview 使用同样的实例位置/比例，最终 View 仅映射画布中心。

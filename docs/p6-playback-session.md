@@ -45,3 +45,5 @@ python3 tools/reference_capture/validate_playback.py \
 工具需要 Pillow/numpy；冻结截图位于本地显式 evidence 路径，可按 tools/reference_capture/README.md 重新采样，重采样后的元数据 hash 需审计。已有两组 FAIL 时验证命令退出 1，属于保留的失败证据。几何比较限于该冻结单图集、SDK texture 2 的诊断协议，不能宣称整个型号目录支持。正式构建和测试不依赖这些素材。
 
 2026-10-04 后续放置后曲面修正已使四组未修改原版联合会话全部通过标量、实际几何和图片。旧失败记录保留，当前状态和未通过的扩展矩阵见 [最新证据](validation/p6-world-deformation.json)。
+
+Fraise 扩展已接入 `meshSyncChildMask=1`、透明 stencil 辅助层和小图细分。原版完整 idle24 的 22 个物理输出、实际几何/拓扑和图像通过。右向き差分 24 步与待机差分 60 步全部几何通过，但 hair_UD 数值最大偏差分别为 0.000386029482 / 0.000105287880；前者还有四个失败像素，后者图像通过。不能仅凭图片把这两个会话记为通过。Fraise author_scale=0.88 的归一化顺序是下一项调查，冻结输入见 [Fraise 会话矩阵](validation/playback-fraise-inputs.json)，完整证据见 [子同步记录](validation/p6-child-synchronization.json)。

@@ -214,7 +214,6 @@ int run(const Options& o)
             playback_program = std::move(compiled.program);
             geometry_scene = &playback_program->scene();
             playback_instance = std::make_unique<runtime::PlaybackInstance>(*playback_program);
-            if (o.playback)
             {
                 // Model placement participates in author-space Float32 matrices;
                 // the final view separately maps the centered canvas to pixels.
@@ -252,6 +251,13 @@ int run(const Options& o)
                                              std::to_string(static_cast<int>(status.error)) + ": " +
                                              std::string(geometry_scene->node_label(status.node)));
             };
+            checked(geometry_instance->set_origin({o.x - static_cast<float>(o.width) * 0.5f,
+                                                   o.y - static_cast<float>(o.height) * 0.5f}));
+            checked(geometry_instance->set_scale(o.scale));
+            view = {static_cast<float>(o.width) * 0.5f,
+                    static_cast<float>(o.height) * 0.5f,
+                    1,
+                    {0, 0, 0, 0}};
             for (const auto& [name, value] : o.variables)
                 checked(
                     geometry_instance->set_parameter(geometry_scene->find_variable(name), value));

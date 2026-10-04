@@ -39,11 +39,12 @@ uniform sampler2D alpha_mask;
 uniform vec2 mask_output_size;
 out vec4 output_color;
 void main() {
-    vec4 color=texture(atlas,texture_uv)*vertex_color;
+    vec4 sampled=texture(atlas,texture_uv);
     if (mask_write != 0) {
-        output_color=vec4(0.0,color.a,0.0,0.0);
+        output_color=vec4(0.0,sampled.a,0.0,0.0);
         return;
     }
+    vec4 color=sampled*vertex_color;
     if (use_mask != 0) color.a*=texture(alpha_mask,gl_FragCoord.xy/mask_output_size).g;
     if (protection_pass != 0 && color.a < 0.0000001) discard;
     output_color=vec4(premultiply != 0 ? color.rgb*color.a : color.rgb,color.a);

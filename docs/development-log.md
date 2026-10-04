@@ -183,3 +183,15 @@
 - 八组冻结原版 0.8/1.25 比例全部物理原始数值与最终 UV/几何/三角形通过；六张待机/转头/跳跃图 PASS，两组差分图保留 2/1 个失败像素。比例 1 的四组完整回归继续全 PASS，缩小跳跃并列图已查看。严格门槛不变，P3/P4/P5/P6 和完整播放器未标记完成。
 - 新回归验证 72 步混合 Spring/Chain 的作者空间比例不变性、重置/独立性、非法请求和 200 次比例更新/求值/构帧零普通 C++ new。Debug/Release 80、ASan/UBSan 79 项全 PASS；发布 CPU 缩放差分会话 120 预热/2000 样本 P50/P95/P99=0.315142/0.341613/0.357398ms，未声称 GPU/呈现/功耗改善。
 - 冻结输入、完整 FAIL 和复现命令见 docs/validation/playback-scale-inputs.json、p6-model-scaling.json。翻转纹理候选未闭合像素，代码撤回、证据保留；下一步继续颜色/纹理采样精度与其他素材能力验证。
+
+## P6 Fraise 子同步、细分与辅助遮罩子步骤
+
+- 重新接续时确认原 geometry candidate 未验证；拒绝将 parent mask=1 当作完整顶点曲面。原版/两处 flag→groundCorrection=0 的只读 PSB 引用对照定位了原点同步与同域 helper 顺序；原错误候选的 6.668px / 11.703px 偏差保留。新增 0/1/8、组合与实际帧顶点回归，已有 synthetic mesh 父层补上实际源标志 8，未扩大容差。
+- 自动总 division 可截断为零，两轴至少两段；原 6×7 小图与 109×219 发片实际顶点/UV/三角形闭合，显式 division=1 独立 fixture 也确认 3×3 顶点。修正缺少的一列，消除纵向转头的两千多个轮廓差异。
+- Fraise 数值字段与原 PSB 转 Float32 一致，无差异；原 WebGL atlas 与 PNG 解码的 33,554,432 个 RGBA 字节逐位相同。mask GPU 观察确认零透明度 add_mask 仍贡献 texture alpha；颜色不绘制它，只为当前使用的 mask 保留几何，renderer 的 mask 路径忽略 vertex opacity。新增 CPU/GPU 回归及透明目标不建立 mask 的生命周期检查，稳态普通 C++ new 仍为零。
+- 预览静态/隔离动画与完整会话统一在 CPU 放置/缩放后编译曲面；pose probe 用冻结的显式位置/比例检查实际帧，并从 primitive.draw 取得包含 mask-only 几何的正确范围，消除 primitive 序号与颜色命令序号耦合。
+- 四组 Fraise 固定姿态全部几何/拓扑通过，初态/横向/组合图像通过，head-UD 耳尖 (561,207) 一个像素 FAIL。原版完整 idle24 的 22 个物理输出、几何与图像通过；turn24/additive60 几何通过，但 hair_UD 最大差 0.000386029482 / 0.000105287880，前者四个失败像素、后者图像通过。冻结输入与完整 FAIL 保留，不能将图片通过当作物理通过。
+- Chocola 四组原版完整会话继续全 PASS；原有静态 25/30、五个失败像素，隔离动画 2/7、九个失败像素，全部几何通过。Debug/Release 83、ASan/UBSan 82 个入口全 PASS，格式与 diff 检查通过；新增 GPU 用例包含在 GPU CTest 入口中。
+- Release/LTO 独立完整 CPU 差分会话 chocola，120 预热/2000 步，P50/P95/P99=0.27196/0.293122/0.312468ms；不包含 GPU、呈现、JSON 样本、读回、内存或功耗，不声称性能改善。
+- Release/LTO 独立完整 CPU 差分会话 fraise，120 预热/2000 步，P50/P95/P99=0.630663/0.693031/0.729488ms；不包含 GPU、呈现、JSON 样本、读回、内存或功耗，不声称性能改善。
+- 最新证据见 docs/validation/p6-child-synchronization.json 与 playback-fraise-inputs.json。P3/P4/P5/P6 仍进行中；下一步核实 Fraise author_scale=0.88 的绝对物理坐标归一化保存顺序，再闭合既有像素、行为与宿主。

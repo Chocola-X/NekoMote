@@ -350,3 +350,30 @@ TEST_CASE("GPU alpha masks union with observed five-bit precision and reuse resi
     REQUIRE_THROWS(renderer.prepare(frame)); // recursive mask reads are explicitly unsupported
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
+
+TEST_CASE("Opacity-zero source vertices retain full texture mask coverage", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.reserve({8, 12, 1, 2, 1, 1});
+    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    const auto color = quad(0, 0, 1, 1);
+    const auto mask = quad(0, 0, 1, 1, 0);
+    std::array<RenderVertex, 8> vertices;
+    std::copy(color.begin(), color.end(), vertices.begin());
+    std::copy(mask.begin(), mask.end(), vertices.begin() + 4);
+    std::array<DrawCommand, 1> commands{
+        {{TextureId{1}, 0, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    std::array<DrawCommand, 1> mask_commands{{{TextureId{2}, 6, 6, BlendMode::Over}}};
+    std::array<MaskDefinition, 1> masks{{{0, 1}}};
+    renderer.prepare(
+        {vertices, kIndices, commands, ColorComposition::ProtectedStraight, mask_commands, masks});
+    renderer.resize_output(64, 64);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32) ==
+            std::array<unsigned char, 4>{255, 0, 0, 255});
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}

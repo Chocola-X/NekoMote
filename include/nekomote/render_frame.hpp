@@ -44,7 +44,8 @@ struct DrawCommand
     MaskId mask{};
 };
 // Union of sampled alpha, cleared to zero for every application. Mask commands
-// use the same geometry buffers as colour commands. IDs are one-based indices
+// use texture alpha independently of vertex colour/opacity and share the colour
+// geometry buffers. IDs are one-based indices
 // into RenderFrame::masks; zero means no mask. Current raster contract: five-bit
 // stored coverage, bilinear sampling, floor-power-of-two output dimensions, and
 // a two-output-pixel border for intersected source/draw region clipping.

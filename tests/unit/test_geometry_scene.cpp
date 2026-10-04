@@ -217,6 +217,7 @@ TEST_CASE("Same-domain helpers combine before the parent's rotation", "[runtime]
     mesh.bp = field(raw);
     blank.mesh = field(mesh);
     auto helper = layer("helper", 0, blank);
+    helper.mesh_sync_child_mask = 8;
     helper.mesh_combine = 1;
     helper.children.push_back(child);
     for (std::size_t i = 0; i < patch.size(); ++i)
@@ -229,6 +230,7 @@ TEST_CASE("Same-domain helpers combine before the parent's rotation", "[runtime]
     blank.angle = field(90.0f);
     blank.coord = field(std::array<float, 3>{10, 20, 0});
     auto root = layer("base patch", 0, blank);
+    root.mesh_sync_child_mask = 8;
     root.children.push_back(helper);
     input.parts[0].layers = {root};
     auto compiled = runtime::compile_geometry_scene(input);
@@ -1437,7 +1439,9 @@ TEST_CASE("Placed nested curves preserve the observed physical locator coordinat
         }
         mesh.bp = field(points);
         content.mesh = field(mesh);
-        return layer("domain" + std::to_string(index), 2, content);
+        auto result = layer("domain" + std::to_string(index), 2, content);
+        result.mesh_sync_child_mask = 8;
+        return result;
     };
     auto outer = domain_layer(0), inner = domain_layer(1);
     auto marker = layer("anchor", 1, FrameContent{});
@@ -1566,4 +1570,148 @@ TEST_CASE("Model scaling preserves author physics and independent resettable ses
     measure_allocations = false;
     REQUIRE(success);
     REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Child synchronization selects rigid origins or full curves through helpers",
+          "[runtime][scene]")
+{
+    // The mask-one face UD/LR capture shifts the LR origin before evaluating its
+    // child positions. Mask eight instead adds both normalized patch shapes.
+    for (const auto [mode, expected] :
+         {std::pair{0, Vec2{2, 3}}, std::pair{1, Vec2{6, 11}}, std::pair{8, Vec2{6, 14}}})
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.icons.at("atlas/a").origin_x = asset.icons.at("atlas/a").origin_y = 0;
+        FrameContent blank;
+        blank.src = field(std::string{"blank"});
+        blank.icon = field(std::string{"16:16:8:8"});
+        auto patch = runtime::identity_patch();
+        const auto content = [&](bool stretch)
+        {
+            auto result = blank;
+            MeshData mesh;
+            std::array<float, 32> raw{};
+            for (std::size_t i = 0; i < patch.size(); ++i)
+            {
+                raw[i * 2] = patch[i].x + (stretch ? 0 : 0.25f);
+                raw[i * 2 + 1] = patch[i].y * (stretch ? 2 : 1);
+            }
+            mesh.bp = field(raw);
+            result.mesh = field(mesh);
+            return result;
+        };
+        auto child_content = sprite();
+        child_content.coord = field(std::array<float, 3>{2, 3, 0});
+        auto child = layer("child", 0, child_content);
+        auto helper = layer("helper", 2, content(false));
+        helper.mesh_combine = 1;
+        helper.mesh_sync_child_mask = mode;
+        helper.children = {child};
+        auto root = layer("root", 2, content(true));
+        root.mesh_sync_child_mask = mode;
+        root.children = {helper};
+        asset.parts[0].layers = {root};
+        auto scene = runtime::compile_geometry_scene(asset);
+        REQUIRE(scene.scene);
+        runtime::GeometryInstance instance(*scene.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.primitives().size() == 1);
+        near(instance.sample_atlas_point(instance.primitives()[0].node, {0, 0}), expected);
+        near({instance.frame().vertices[0].x, instance.frame().vertices[0].y}, expected);
+    }
+}
+
+TEST_CASE("Automatic grids retain both axes for small and slender source sprites",
+          "[runtime][scene]")
+{
+    for (const auto dimensions :
+         {std::array{6, 7, 219, 160, 9, 0}, std::array{109, 219, 928, 929, 15, 0},
+          std::array{78, 61, 928, 929, 9, 1}})
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        auto& rect = asset.icons.at("atlas/a");
+        rect.width = static_cast<float>(dimensions[0]);
+        rect.height = static_cast<float>(dimensions[1]);
+        asset.textures[0].width = asset.textures[0].height = 256;
+        auto content = sprite();
+        content.src = field(std::string{"blank"});
+        content.icon =
+            field(std::to_string(dimensions[2]) + ":" + std::to_string(dimensions[3]) + ":0:0");
+        MeshData mesh;
+        std::array<float, 32> raw{};
+        auto patch = runtime::identity_patch();
+        for (std::size_t i = 0; i < patch.size(); ++i)
+        {
+            raw[i * 2] = patch[i].x;
+            raw[i * 2 + 1] = patch[i].y;
+        }
+        mesh.bp = field(raw);
+        content.mesh = field(mesh);
+        auto parent = layer("domain", 2, content);
+        parent.mesh_sync_child_mask = 8;
+        auto child = layer("sprite", 0, sprite());
+        child.mesh_division = dimensions[5];
+        child.obj_tri_priority = 2;
+        parent.children = {child};
+        asset.parts[0].layers = {parent};
+        auto scene = runtime::compile_geometry_scene(asset);
+        REQUIRE(scene.scene);
+        runtime::GeometryInstance instance(*scene.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().vertices.size() == static_cast<std::size_t>(dimensions[4]));
+    }
+}
+
+TEST_CASE("Opacity-zero sprites still supply mask geometry without color draws", "[runtime][scene]")
+{
+    auto asset = rig();
+    asset.parts.resize(1);
+    auto hidden = sprite();
+    hidden.opa = field(0.0f);
+    auto source = layer("hidden mask source", 0, hidden);
+    FrameContent blank;
+    blank.src = field(std::string{"blank"});
+    blank.icon = field(std::string{"32:32:16:16"});
+    auto mask = layer("mask", 12, blank);
+    mask.inherit_mask = 0x24007fc;
+    mask.stencil_type = 5;
+    mask.stencil_composite_mask_layers = {"hidden mask source"};
+    mask.children = {layer("masked color", 0, sprite())};
+    asset.parts[0].layers = {source, mask};
+    auto scene = runtime::compile_geometry_scene(asset);
+    REQUIRE(scene.scene);
+    runtime::GeometryInstance instance(*scene.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    auto frame = instance.frame();
+    REQUIRE(frame.commands.size() == 1);
+    REQUIRE(frame.commands[0].mask == MaskId{1});
+    REQUIRE(frame.mask_commands.size() == 1);
+    REQUIRE(frame.mask_commands[0].index_count == 6);
+    REQUIRE(frame.mask_commands[0].first_index != frame.commands[0].first_index);
+    REQUIRE(frame.vertices[frame.indices[frame.mask_commands[0].first_index]].color[3] == 0.0f);
+    measured_allocations = 0;
+    measure_allocations = true;
+    bool success = true;
+    for (int i = 0; i < 200; ++i)
+    {
+        success &= static_cast<bool>(instance.evaluate());
+        success &= static_cast<bool>(instance.build_frame());
+    }
+    measure_allocations = false;
+    REQUIRE(success);
+    REQUIRE(measured_allocations == 0);
+    asset.parts[0].layers[1].children[0].frame_list[0].content.data.opa = field(0.0f);
+    auto inactive_scene = runtime::compile_geometry_scene(asset);
+    REQUIRE(inactive_scene.scene);
+    runtime::GeometryInstance inactive(*inactive_scene.scene);
+    REQUIRE(inactive.evaluate());
+    REQUIRE(inactive.build_frame());
+    REQUIRE(inactive.primitives().empty());
+    REQUIRE(inactive.frame().commands.empty());
+    REQUIRE(inactive.frame().mask_commands.empty());
 }

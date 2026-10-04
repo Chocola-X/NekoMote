@@ -46,3 +46,5 @@ build/dev/bin/nekomote_preview --playback --asset /path/to/model.nkm.json \
 共同作者时钟、暂停和固定步进由 PlaybackInstance 管理。联合播放已支持模型比例（例如 `--scale 0.8`），缩放物理与几何通过、两组缩放差分截图仍有 2/1 个失败像素；静止/转头/24 步跳跃/60 步待机差分的原版完整物理、几何和截图对照通过；其他姿态仍有失败项。契约、完整失败输入、截图验证命令及性能范围见 [统一播放会话](docs/p6-playback-session.md)；后续关键帧权重修正见 [最新数值/画面证据](docs/validation/p6-world-deformation.json)。
 
 模型比例、无效请求及重置契约、八组冻结缩放对照见 [缩放证据](docs/validation/p6-model-scaling.json)。
+
+Fraise 已补齐子部件原点同步、细小发片细分和透明辅助遮罩，初态/横向转头/组合姿态通过；完整待机通过。纵向转头耳尖像素与两个完整差分会话的物理数值仍有 FAIL，详见 [跨型号证据与后续任务](docs/validation/p6-child-synchronization.json)。

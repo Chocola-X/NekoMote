@@ -162,6 +162,19 @@ int run(const Options& o)
     loaded = {};
     const auto& scene = *compiled.scene;
     runtime::GeometryInstance instance(scene);
+    Json metadata;
+    if (!o.trace.empty())
+    {
+        auto path = o.trace.string();
+        const std::string suffix = ".trace.json";
+        if (!path.ends_with(suffix))
+            throw std::runtime_error("sample trace must end with .trace.json");
+        path.resize(path.size() - suffix.size());
+        metadata = read(path + ".json");
+        check(instance.set_origin({metadata.at("x").get<float>(), metadata.at("y").get<float>()}));
+        check(instance.set_scale(metadata.at("scale").get<float>()));
+    }
+
     for (const auto& [name, value] : (o.animation ? animated_variables : o.variables).items())
         check(instance.set_parameter(scene.find_variable(name), value.get<float>()));
     check(instance.evaluate());
@@ -235,17 +248,10 @@ int run(const Options& o)
     }
     if (!o.trace.empty())
     {
-        auto metadata_file = o.trace;
-        std::string path = metadata_file.string();
-        const std::string suffix = ".trace.json";
-        if (!path.ends_with(suffix))
-            throw std::runtime_error("sample trace must end with .trace.json");
-        path.resize(path.size() - suffix.size());
-        const auto metadata = read(path + ".json");
         const auto draws = read(o.trace);
         Json comparisons = Json::array(), missing = Json::array();
         double largest = 0, largest_frame = 0;
-        std::size_t total_unmatched = 0, total_unused = 0, primitive_index = 0;
+        std::size_t total_unmatched = 0, total_unused = 0;
         std::size_t total_missing_triangles = 0, total_unused_triangles = 0;
         const auto frame = instance.frame();
         for (const auto& p : instance.primitives())
@@ -259,7 +265,7 @@ int run(const Options& o)
             std::set<std::array<std::uint32_t, 3>> native_triangles, reference_triangles;
             if (frame_status)
             {
-                const auto& command = frame.commands[primitive_index];
+                const auto& command = p.draw;
                 for (std::uint32_t j = 0; j < command.index_count; j += 3)
                 {
                     std::array<std::uint32_t, 3> triangle{};
@@ -275,19 +281,14 @@ int run(const Options& o)
                 native_indices.erase(std::unique(native_indices.begin(), native_indices.end()),
                                      native_indices.end());
             }
-            ++primitive_index;
             std::array<float, 4> frame_bounds{
                 std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
                 -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()};
             for (const auto index : native_indices)
             {
                 const auto& vertex = frame.vertices[index];
-                const float x = vertex.x * metadata.at("scale").get<float>() +
-                                metadata.at("x").get<float>() +
-                                metadata.at("width").get<float>() / 2;
-                const float y = vertex.y * metadata.at("scale").get<float>() +
-                                metadata.at("y").get<float>() +
-                                metadata.at("height").get<float>() / 2;
+                const float x = vertex.x + metadata.at("width").get<float>() / 2;
+                const float y = vertex.y + metadata.at("height").get<float>() / 2;
                 frame_bounds[0] = std::min(frame_bounds[0], x);
                 frame_bounds[1] = std::min(frame_bounds[1], y);
                 frame_bounds[2] = std::max(frame_bounds[2], x);
@@ -316,12 +317,8 @@ int run(const Options& o)
                         v < rect.top - 0.001f || v > rect.top + rect.height + 0.001f)
                         continue;
                     const auto point = instance.sample_atlas_point(p.node, {u, v});
-                    const double x =
-                        static_cast<double>(point.x) * metadata.at("scale").get<double>() +
-                        metadata.at("x").get<double>();
-                    const double y =
-                        static_cast<double>(point.y) * metadata.at("scale").get<double>() +
-                        metadata.at("y").get<double>();
+                    const double x = static_cast<double>(point.x);
+                    const double y = static_cast<double>(point.y);
                     const auto& pos = attributes.at("a_pos").at("data").at(index);
                     const double error =
                         std::hypot(x - pos[0].get<double>(), y - pos[1].get<double>());
@@ -348,12 +345,8 @@ int run(const Options& o)
                             matched[closest] = true;
                             mapped[index] = native_indices[closest];
                             const auto& vertex = frame.vertices[native_indices[closest]];
-                            const double vx =
-                                static_cast<double>(vertex.x) * metadata.at("scale").get<double>() +
-                                metadata.at("x").get<double>();
-                            const double vy =
-                                static_cast<double>(vertex.y) * metadata.at("scale").get<double>() +
-                                metadata.at("y").get<double>();
+                            const double vx = static_cast<double>(vertex.x);
+                            const double vy = static_cast<double>(vertex.y);
                             frame_maximum =
                                 std::max(frame_maximum, std::hypot(vx - pos[0].get<double>(),
                                                                    vy - pos[1].get<double>()));

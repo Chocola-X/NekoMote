@@ -32,6 +32,9 @@ struct GeometryPrimitive
     const model::IconRect* rect{nullptr}; // scene-owned; valid while the scene lives
     float opacity{0}, depth{0};
     int mesh_division{0};
+    // Valid after successful build_frame until the next evaluation. Includes
+    // opacity-zero mask sources omitted from frame.commands.
+    DrawCommand draw;
 };
 struct GeometryLocator
 {

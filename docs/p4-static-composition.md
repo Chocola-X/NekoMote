@@ -30,3 +30,5 @@ Renderer 不拥有窗口/上下文；所有操作及销毁需在同一个当前�
 2026-10-04：Release+LTO，Ryzen 7 5800H、RTX 3060 Laptop、NVIDIA 575.64.03、KDE/X11。主模型固定头身组合、431 nodes/33 sprites、800×1080、120 帧预热/2000 次采样：CPU evaluate+build_frame P50/P95/P99=0.609517/0.664972/0.700243ms。默认姿态 render+swap（hidden、vsync=0）为 0.165947/0.189413/0.388675ms。两份范围不同，不能相加为实际呈现帧时间；未测完整壁纸的功耗、GPU 时长或长期内存。
 
 所需而未知的 mask 源/blank 绘制/嵌套会失败，并发布空帧；未选中的空定义保留诊断。图像通过的范围不能推广到动画、cc、部分继承、物理、全部素材或正式桌面宿主。
+
+Fraise 的零透明度 `add_mask` 仍贡献 stencil alpha，普通颜色命令不包含它；帧缓冲保留其几何用于独立 mask commands。后端 mask 写入忽略 vertex opacity，GPU 回归覆盖这一行为。补齐后 Fraise 初态/横向转头/组合姿态通过，纵向转头剩一个耳尖像素。原有 30 组仍 25/30 图像通过、五个失败像素；几何全部通过。证据见 [子同步与遮罩](validation/p6-child-synchronization.json)。

@@ -67,9 +67,9 @@ struct Node
     ResourceId guard;
     Binding binding;
     std::vector<Key> keys;
-    int type{0}, division{0}, priority{0}, maximum_division{0};
+    int type{0}, division{0}, priority{0}, maximum_division{0}, child_sync{0};
     float maximum_density{0};
-    bool combine{false}, unsupported{false}, has_sprites{false};
+    bool combine{false}, unsupported{false}, has_sprites{false}, mask_source{false};
     bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
 };
 struct Clamp
@@ -141,7 +141,7 @@ bool same_domain(const Resource& a, const Resource& b) noexcept
 std::pair<int, int> grid(int division, const model::IconRect& r) noexcept
 {
     const auto x = static_cast<int>(static_cast<float>(division) * r.width / (r.width + r.height));
-    return {x + 1, division - x + 1}; // cells; positive on both axes
+    return {std::max(2, x + 1), std::max(2, division - x + 1)};
 }
 struct Compiler
 {
@@ -265,10 +265,12 @@ struct Compiler
         n.maximum_division = n.division;
         require(n.division >= 0 && n.division <= 256, n.label, "unsupported division capacity");
         n.combine = layer.mesh_combine == 1;
+        n.child_sync = layer.mesh_sync_child_mask;
         const bool unsupported_common =
             layer.coordinate != 0 || (layer.mesh_transform != 0 && layer.mesh_transform != 1) ||
             (layer.mesh_combine != 0 && layer.mesh_combine != 1) ||
-            (layer.mesh_sync_child_mask != 0 && layer.mesh_sync_child_mask != 8) ||
+            (layer.mesh_sync_child_mask != 0 && layer.mesh_sync_child_mask != 1 &&
+             layer.mesh_sync_child_mask != 8) ||
             (!layer.transform_order.empty() &&
              layer.transform_order != std::vector<int>{0, 3, 2, 1});
         n.partial_locator_origin =
@@ -351,7 +353,8 @@ struct State
 {
     Pose pose;
     Pose transform;
-    NodeId transform_parent;
+    NodeId transform_parent, curve_parent;
+    int child_sync{0};
     RigidTransform world;
     Patch world_patch{};
     Vec2 domain_corner{};
@@ -546,7 +549,10 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                        std::find(roots.begin(), roots.end(), ancestor) == roots.end())
                     ancestor = data->nodes[ancestor.value].parent;
                 if (ancestor.valid())
+                {
                     mask.members.push_back(NodeId{static_cast<std::uint32_t>(j)});
+                    data->nodes[j].mask_source = true;
+                }
             }
             data->mask_command_capacity += mask.members.size();
             require(data->mask_command_capacity <= 1000000, node.label, "mask capacity exceeded");
@@ -614,15 +620,15 @@ struct GeometryInstance::Impl
     std::vector<std::uint32_t> indices;
     std::vector<DrawCommand> commands, mask_commands;
     std::vector<MaskDefinition> masks;
-    std::vector<std::uint32_t> node_commands;
-    std::vector<bool> used_masks;
+    std::vector<DrawCommand> node_commands;
+    std::vector<bool> used_masks, needed_mask_sources;
     bool evaluated{false}, frame_ready{false};
     Vec2 origin{};
     float scale{1};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
         : owner(scene_owner), scene(data), input(data.variables.size() + 1),
           parameters(input.size()), states(data.nodes.size()), node_commands(data.nodes.size()),
-          used_masks(data.masks.size())
+          used_masks(data.masks.size()), needed_mask_sources(data.nodes.size())
     {
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
@@ -638,18 +644,20 @@ struct GeometryInstance::Impl
         {
             const auto& s = states[id.value];
             if (s.transform.mesh)
-            {
-                const double x = static_cast<double>(p.x) - static_cast<double>(s.domain_corner.x);
-                const double y = static_cast<double>(p.y) - static_cast<double>(s.domain_corner.y);
-                const Vec2 uv{static_cast<float>(x * static_cast<double>(s.domain_inverse[0]) +
-                                                 y * static_cast<double>(s.domain_inverse[2])),
-                              static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
-                                                 y * static_cast<double>(s.domain_inverse[3]))};
-                p = evaluate_patch(s.world_patch, uv);
-            }
-            id = s.transform_parent;
+                p = warp(s, p);
+            id = s.curve_parent;
         }
         return p;
+    }
+    static Vec2 warp(const State& s, Vec2 p) noexcept
+    {
+        const double x = static_cast<double>(p.x) - static_cast<double>(s.domain_corner.x);
+        const double y = static_cast<double>(p.y) - static_cast<double>(s.domain_corner.y);
+        const Vec2 uv{static_cast<float>(x * static_cast<double>(s.domain_inverse[0]) +
+                                         y * static_cast<double>(s.domain_inverse[2])),
+                      static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
+                                         y * static_cast<double>(s.domain_inverse[3]))};
+        return evaluate_patch(s.world_patch, uv);
     }
 };
 GeometryInstance::GeometryInstance(const GeometryScene& scene)
@@ -704,8 +712,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     instance.commands.clear();
     instance.mask_commands.clear();
     std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
-    std::fill(instance.node_commands.begin(), instance.node_commands.end(),
-              std::numeric_limits<std::uint32_t>::max());
+    std::fill(instance.node_commands.begin(), instance.node_commands.end(), DrawCommand{});
     std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
     instance.evaluated = false;
     instance.frame_ready = false;
@@ -764,6 +771,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         if (n.has_sprites && (n.unsupported || state.pose.unsupported))
             return {GeometryError::UnsupportedTransform, id, {}};
         state.transform = state.pose;
+        state.child_sync = n.child_sync;
         state.transform_parent = n.parent;
         state.depth = state.pose.depth + parent.depth;
         state.opacity = state.pose.opacity * (n.parent.valid() ? parent.opacity : 1);
@@ -778,10 +786,17 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         {
             if (state.pose.translation != Vec2{} || state.pose.angle != 0)
                 return {GeometryError::UnsupportedCombination, id, {}};
-            state.transform = parent.transform;
-            add_patch_displacement(state.transform.patch, state.pose.patch);
-            state.transform.mesh = state.transform.mesh || state.pose.mesh;
-            state.transform_parent = parent.transform_parent;
+            // A position-synchronized parent has already changed the helper's
+            // rigid origin. Its patch must not also be added to the helper.
+            // Source captures: docs/validation/p6-child-synchronization.json.
+            if (parent.child_sync != 1)
+            {
+                state.transform = parent.transform;
+                state.child_sync = parent.child_sync;
+                add_patch_displacement(state.transform.patch, state.pose.patch);
+                state.transform.mesh = state.transform.mesh || state.pose.mesh;
+                state.transform_parent = parent.transform_parent;
+            }
         }
         // A canonical identity BP still requests tessellation/density, but its
         // coordinate map is exactly neutral. Avoid polynomial roundoff shifting
@@ -795,7 +810,14 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const float cosine = std::cos(state.transform.angle);
         const float sine = std::sin(state.transform.angle);
         const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
-        state.world = compose(instance.states[state.transform_parent.value].world, local);
+        const auto& transform_parent = instance.states[state.transform_parent.value];
+        state.world = compose(transform_parent.world, local);
+        state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
+                                                              : transform_parent.curve_parent;
+        // Mask one bends the direct child origin, leaving its geometry rigid.
+        // Mask eight retains the curve in the descendant vertex chain.
+        if (transform_parent.child_sync == 1 && transform_parent.transform.mesh)
+            state.world.translation = Impl::warp(transform_parent, state.world.translation);
         if (state.transform.mesh)
         {
             const auto& domain = scene.resources[state.transform.resource.value].rect;
@@ -844,16 +866,39 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)
             // Priority-two automatic density is the maximum active ancestor
-            // division/domain-perimeter, scaled to the sprite perimeter; minimum 2.
+            // division/domain-perimeter, scaled to the sprite perimeter. Each grid axis
+            // has at least two cells, even when the requested division truncates to zero.
             // Verified with original PSB size boundaries and different parent domains.
-            division =
-                state.density > 0
-                    ? std::max(2, static_cast<int>((r.rect.width + r.rect.height) * state.density))
-                    : 0;
-        if (n.type == 0 && r.kind == ResourceKind::Sprite && state.opacity > 0)
-            instance.primitives.push_back(
-                {id, r.texture, n.label, r.name, &r.rect, state.opacity, state.depth, division});
+            division = state.density > 0
+                           ? static_cast<int>((r.rect.width + r.rect.height) * state.density)
+                           : 0;
+        if (n.type == 0 && r.kind == ResourceKind::Sprite && (state.opacity > 0 || n.mask_source))
+            instance.primitives.push_back({id,
+                                           r.texture,
+                                           n.label,
+                                           r.name,
+                                           &r.rect,
+                                           state.opacity,
+                                           state.depth,
+                                           division,
+                                           {}});
     }
+    // Transparent helpers can supply visible stencil alpha; retain only those
+    // needed by a currently visible masked draw. No colour command is emitted.
+    std::fill(instance.needed_mask_sources.begin(), instance.needed_mask_sources.end(), false);
+    for (const auto& primitive : instance.primitives)
+    {
+        const auto mask = scene.nodes[primitive.node.value].mask;
+        if (primitive.opacity > 0 && mask.valid())
+            instance.used_masks[mask.value - 1] = true;
+    }
+    for (std::size_t i = 0; i < scene.masks.size(); ++i)
+        if (instance.used_masks[i])
+            for (const auto source : scene.masks[i].members)
+                instance.needed_mask_sources[source.value] = true;
+    std::erase_if(
+        instance.primitives, [&](const auto& primitive)
+        { return primitive.opacity <= 0 && !instance.needed_mask_sources[primitive.node.value]; });
     std::sort(instance.primitives.begin(), instance.primitives.end(),
               [](const auto& a, const auto& b)
               { return a.depth == b.depth ? a.node < b.node : a.depth < b.depth; });
@@ -916,15 +961,15 @@ GeometryStatus GeometryInstance::build_frame() noexcept
     instance.commands.clear();
     instance.mask_commands.clear();
     std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
-    std::fill(instance.node_commands.begin(), instance.node_commands.end(),
-              std::numeric_limits<std::uint32_t>::max());
+    std::fill(instance.node_commands.begin(), instance.node_commands.end(), DrawCommand{});
     std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
     if (!instance.evaluated)
         return {GeometryError::UnsupportedTransform, {}, {}};
     for (const auto& p : instance.primitives)
-        if (p.mesh_division == 0 && instance.states[p.node.value].mesh_path)
+        if (p.mesh_division == 0 && instance.states[p.node.value].mesh_path &&
+            instance.scene.nodes[p.node.value].priority != 2)
             return {GeometryError::UnsupportedTessellation, p.node, {}};
-    for (const auto& p : instance.primitives)
+    for (auto& p : instance.primitives)
     {
         const auto& r = *p.rect;
         const auto [nx, ny] = instance.states[p.node.value].mesh_path ? grid(p.mesh_division, r)
@@ -958,13 +1003,19 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                     instance.indices.push_back(index);
             }
         const auto mask = instance.scene.nodes[p.node.value].mask;
-        if (mask.valid())
+        if (mask.valid() && p.opacity > 0)
             instance.used_masks[mask.value - 1] = true;
-        instance.node_commands[p.node.value] = static_cast<std::uint32_t>(instance.commands.size());
-        instance.commands.push_back(
-            {p.texture, first, static_cast<std::uint32_t>(instance.indices.size()) - first,
-             BlendMode::Over,
-             r.attr == 1 ? ColorProtection::PreserveTranslucent : ColorProtection::None, mask});
+        const DrawCommand command{p.texture,
+                                  first,
+                                  static_cast<std::uint32_t>(instance.indices.size()) - first,
+                                  BlendMode::Over,
+                                  r.attr == 1 ? ColorProtection::PreserveTranslucent
+                                              : ColorProtection::None,
+                                  mask};
+        p.draw = command;
+        instance.node_commands[p.node.value] = command;
+        if (p.opacity > 0)
+            instance.commands.push_back(command);
     }
     for (std::size_t i = 0; i < instance.scene.masks.size(); ++i)
     {
@@ -980,7 +1031,7 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         definition.first_command = static_cast<std::uint32_t>(instance.mask_commands.size());
         for (const auto node : source.members)
         {
-            const auto command_index = instance.node_commands[node.value];
+            auto command = instance.node_commands[node.value];
             const auto& state = instance.states[node.value];
             const auto& resource = instance.scene.resources[state.pose.resource.value];
             if (state.pose.active && state.opacity > 0 && resource.kind == ResourceKind::Blank &&
@@ -989,9 +1040,8 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                 instance.commands.clear();
                 return {GeometryError::UnsupportedMask, node, {}};
             }
-            if (command_index == std::numeric_limits<std::uint32_t>::max())
+            if (command.index_count == 0)
                 continue;
-            auto command = instance.commands[command_index];
             if (command.mask.valid())
             {
                 instance.commands.clear();
