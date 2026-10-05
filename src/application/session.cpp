@@ -378,10 +378,6 @@ struct SessionInstance::Impl
         }
         if (phase == ReactionPhase::Recovering && upcoming >= recovery_end)
         {
-            Action idle;
-            idle.differences[3] = program.idle;
-            if (auto status = apply(idle); !status)
-                return status;
             phase = ReactionPhase::Idle;
             reaction = {};
         }

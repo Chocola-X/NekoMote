@@ -411,3 +411,14 @@
   2. apply() 差分时间线切换从 stop() 改为 fade_out(18 author_frames=300ms)，与原项目一致。
 - 验证：session_probe 触发 b01 反应，修复后 step 70（Idle）body_UD=2.4051 与纯 idle 完全一致；Playing→Recovering 跳变从 head_slant 25 降至 1.39（剩余为 main 硬切，与原项目一致）。20 个反应全部正确回到 idle。
 - 单元测试 127/127 通过。main timeline 硬切行为与原项目一致，不做 crossfade。
+
+## 2026-10-05 反应恢复过渡修复（二次修正）（CodeArts GLM-5.2）
+
+- 一次修正中在 Recovering→Idle 调用 apply(idle_action) 停止 main timeline 是错误的：`平常` timeline 不循环（loop_begin/end=-1），时长 31 帧，但 recovery_ticks=20 < 31，提前停止打断了 `平常` 的 30 帧平滑过渡（`平常` 的 type=2 key 在 30 帧内把变量从当前值过渡到 0）。
+- 原项目调查确认：recovery 结束后不停止 main timeline，让 `平常` 自然播完 31 帧后由 E-mote 引擎内部停止（animation.cpp:1103 `state.time >= clip.end` 时 `state.playing = false`）。idle 状态 main timeline 保持 `平常`（已停止，停留在最后一帧），idle 完全靠 diff slot4 = `差分用_waiting_loop` 循环维持。
+- 修正：移除 Recovering→Idle 的 apply(idle_action)，只设 phase=Idle; reaction={}。保留 Playing→Recovering 的 fade_out(18 author_frames=300ms) 差分淡出。
+- 验证：
+  - Playing→Recovering: face_mouth 20→0（Mouth controller deferred=true，E-mote 固有行为，已对照验证），head_slant -25→0（`疑問` 差分 fade_out 18 帧平滑过渡），其他变量跳变 <1.4。
+  - Recovering→Idle: 无跳变。`平常` 在 step 81（50+31）自然停止。
+  - 20 个反应全部正确回到 idle。单元测试 127/127 通过。
+- face_mouth 瞬间跳变是 Mouth controller（kind=4, deferred=true）的固有行为，原项目同样如此。talk_variable（face_talk）是独立 Linear 插值通道，负责口型同步平滑。
