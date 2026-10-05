@@ -2557,3 +2557,38 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
         REQUIRE(instance.frame().vertices.size() == 16);
     }
 }
+
+TEST_CASE("Blend-mode frames compile without UnsupportedTransform", "[runtime][scene]")
+{
+    // E-mote frames carry a blend-mode field (bm) that only affects the render
+    // pass混合方程, not geometry. A non-zero bm (e.g. 19 used by 追加パーツ/胸揺れ
+    // in fraise-maid-a/b and milk-summer) must not surface as
+    // UnsupportedTransform during CPU geometry evaluation.
+    auto build_bm_rig = [](int bm_value)
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.textures[0].width = 64;
+        asset.textures[0].height = 32;
+        asset.icons["atlas/a"] = {"atlas", 0, 0, 8, 4, 3, 1};
+        auto content = sprite();
+        content.bm = field(bm_value);
+        auto sprite_layer = layer("bm_sprite", 0, content);
+        FrameContent root_content;
+        root_content.src = field(std::string{"blank"});
+        root_content.icon = field(std::string{"100:100:0:0"});
+        auto root = layer("root", 0, root_content);
+        root.children = {sprite_layer};
+        asset.parts[0].layers = {root};
+        return asset;
+    };
+    for (int bm : {0, 16, 19})
+    {
+        auto compiled = runtime::compile_geometry_scene(build_bm_rig(bm));
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        const auto status = instance.evaluate();
+        REQUIRE(status);
+        REQUIRE(instance.build_frame());
+    }
+}

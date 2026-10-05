@@ -364,3 +364,13 @@
 - 新增单元测试验证 inheritShape=0/1 的 mesh_path 继承差异：inheritShape=0 子树顶点 4（刚性 quad），inheritShape=1 子树顶点 16（4×4 网格细分）。
 - Debug/Release 124、ASan/UBSan 通过；既有 115/115 代表模型回归全通过。剩余 7 型号：追加パーツ/胸揺れ（fraise-maid-a/b、milk-summer）、嵌套 shirome（fraise-casual-b/hawaii-b/pajama-b/swimsuit-b）。
 - 证据 build/evidence/gap-investigation/batch/。继续追加パーツ/胸揺れ 与嵌套 shirome 缺口。
+
+## 2026-10-05 P3 追加パーツ/胸揺れ blend-mode 缺口（CodeArts GLM-5.2）
+
+- fraise-maid-a 失败节点 `...BLR/■追加パーツ` 的 frame content 为 bm=19, mask=0x2020000, mesh={bp:null,cc:null}。bm 字段对应 MmoFrameMask.BlendMode（bit 17），默认值 16；bm=19 仅出现在 fraise-maid-a/b 和 milk-summer 的 追加パーツ/胸揺れ 节点。
+- bm 字段是渲染混合模式参数，只影响 GPU 混合方程，不影响几何求值（位置/旋转/缩放/网格变形）。pose() 中 `field_or(c.bm, 0) != 0` 把 bm!=0 的帧标记为 UnsupportedTransform，过于保守。
+- 修改 geometry_scene.cpp pose()：从 p.unsupported 条件中移除 bm 检查。几何求值忽略 bm；渲染后端在绘制阶段处理 blend mode。
+- fraise-maid-a 和 milk-summer runtime_audit 全通过；fraise-maid-b 的 bm 缺口修复，剩余失败为嵌套 shirome 遮罩（阶段 3）。
+- 新增单元测试验证 bm=0/16/19 三种值均不触发 UnsupportedTransform，几何求值正常完成。
+- Debug/Release 126、ASan/UBSan 125 通过；既有 115/115 代表模型回归全通过。剩余 5 型号：嵌套 shirome（fraise-casual-b/hawaii-b/pajama-b/swimsuit-b/fraise-maid-b）。
+- 继续嵌套 shirome 遮罩缺口。

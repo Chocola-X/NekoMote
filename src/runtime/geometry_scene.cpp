@@ -208,7 +208,6 @@ struct Compiler
         }
         p.unsupported = frame.type == 1 || c.zx.has_value() || c.zy.has_value() ||
                         c.ox.has_value() || c.oy.has_value() || field_or(c.flip, 0) != 0 ||
-                        field_or(c.bm, 0) != 0 ||
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
                         (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0 &&
                          !data.resources[p.resource.value].parameter_driven);
