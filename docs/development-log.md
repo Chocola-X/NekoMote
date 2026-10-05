@@ -398,3 +398,16 @@
 - 阶段 1-3 修复的 22 个语义失败型号全部通过：親変形無視（15）、追加パーツ/胸揺れ（3）、嵌套 shirome 遮罩（5，含 fraise-maid-b）。
 - **长期连续运行测试未进行**：8-24 小时连续运行、固定模型切换、重复反应、resize/多屏热插拔/锁屏/睡眠恢复/图形资源重建/插件升级卸载等尚未执行。当前仅验证每型号独立加载+120 步求值。
 - 详见 docs/validation/p9-full-catalog.json。
+
+## 2026-10-05 反应恢复过渡修复（CodeArts GLM-5.2）
+
+- 问题：反应恢复结束后角色未正确回到 idle 状态，部分变量持续漂移；Playing→Recovering 切换时差分时间线硬切导致跳变。
+- 根因分析（对照原项目 NekoWebShow 调查）：
+  1. Recovering→Idle：tick() 在恢复结束时只设 phase=Idle，未调用 apply() 停止 recovery 的 main 时间线（`平常`），导致 main 继续播放。
+  2. Playing→Recovering：apply() 差分时间线切换用 stop() 硬切，原项目用 FadeOutTimeline 300ms 淡出旧差分。
+  3. 原项目 main timeline 切换也是硬切（Stop+Play），无 crossfade；平滑感来自差分淡出 300ms + recovery variables 120~240ms 插值归零。
+- 修复 session.cpp：
+  1. Recovering→Idle 时构造 idle Action（differences[3]=program.idle，main=invalid）并调用 apply()，停止 recovery main 时间线。
+  2. apply() 差分时间线切换从 stop() 改为 fade_out(18 author_frames=300ms)，与原项目一致。
+- 验证：session_probe 触发 b01 反应，修复后 step 70（Idle）body_UD=2.4051 与纯 idle 完全一致；Playing→Recovering 跳变从 head_slant 25 降至 1.39（剩余为 main 硬切，与原项目一致）。20 个反应全部正确回到 idle。
+- 单元测试 127/127 通过。main timeline 硬切行为与原项目一致，不做 crossfade。

@@ -1,4 +1,5 @@
 #include <nekomote/application/session.hpp>
+#include <cstdio>
 
 #include <algorithm>
 #include <array>
@@ -17,7 +18,7 @@ constexpr std::array<std::string_view, 8> kGazeVariables{"face_eye_LR", "face_ey
 constexpr float kEyeFrames = 30, kHeadFrames = 60, kBodyFrames = 120;
 constexpr double kHeadDistanceSquared = 60 * 60, kBodyDistanceSquared = 120 * 120;
 constexpr double kReturnTicks = 60;
-constexpr float kLipFrames = 4.2f, kLipStopFrames = 7.2f;
+constexpr float kLipFrames = 4.2f, kLipStopFrames = 7.2f, kDiffFadeOutFrames = 18;
 constexpr double kLipThreshold = 0.015, kLipGain = 50, kLipRetention = 0.62;
 constexpr std::size_t kAudioCommands = 8;
 struct BoundVariable
@@ -290,7 +291,7 @@ struct SessionInstance::Impl
             if (differences[i] != action.differences[i])
             {
                 if (differences[i].valid())
-                    if (auto status = player.stop(differences[i]); !status)
+                    if (auto status = player.fade_out(differences[i], kDiffFadeOutFrames); !status)
                         return status;
                 differences[i] = action.differences[i];
                 if (differences[i].valid())
@@ -377,6 +378,10 @@ struct SessionInstance::Impl
         }
         if (phase == ReactionPhase::Recovering && upcoming >= recovery_end)
         {
+            Action idle;
+            idle.differences[3] = program.idle;
+            if (auto status = apply(idle); !status)
+                return status;
             phase = ReactionPhase::Idle;
             reaction = {};
         }
