@@ -390,3 +390,11 @@
 - 零分配验证通过：预热后 200 帧 set_parameter+evaluate+build_frame 项目普通堆分配为 0（5 个测试覆盖几何/动画/弯曲/物理/弹簧）。
 - 帧时间基线：azuki-casual 425μs/帧（115 timelines×120步），fraise-maid-a 768μs/帧（111 timelines×120步）。
 - P7 待完成：资产打包（紧凑二进制资产）、完整资源收益验证、发布构建冻结基线。详见 docs/validation/p7-performance-baseline.json。
+
+## 2026-10-05 P9 全素材加载运行测试（CodeArts GLM-5.2）
+
+- 并行运行全目录 198 个型号（194 个唯一名称）的 runtime_audit，每型号 120 步/时间线，自动映射外部纹理。
+- 结果：192 通过，2 失败。失败均为数据损坏：fraise-france-maid-b（tex/0029 非整数图集矩形）、vanilla-lolita（icon 0034 越界）。非运行时语义缺陷。
+- 阶段 1-3 修复的 22 个语义失败型号全部通过：親変形無視（15）、追加パーツ/胸揺れ（3）、嵌套 shirome 遮罩（5，含 fraise-maid-b）。
+- **长期连续运行测试未进行**：8-24 小时连续运行、固定模型切换、重复反应、resize/多屏热插拔/锁屏/睡眠恢复/图形资源重建/插件升级卸载等尚未执行。当前仅验证每型号独立加载+120 步求值。
+- 详见 docs/validation/p9-full-catalog.json。

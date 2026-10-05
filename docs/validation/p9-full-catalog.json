@@ -1,0 +1,1398 @@
+{
+  "scope": "P9 全素材加载运行测试",
+  "date": "2026-10-05",
+  "base_commit": "58ed5a0",
+  "steps_per_timeline": 120,
+  "wall_time_seconds": 153.8,
+  "method": "每型号独立 runtime_audit，120 步/时间线，自动映射外部纹理",
+  "long_run_status": "未进行：8-24 小时连续运行、固定模型切换、重复反应、resize/多屏/锁屏/睡眠恢复等长期运行测试尚未执行",
+  "summary": {
+    "total": 194,
+    "pass": 192,
+    "fail": 2
+  },
+  "models": {
+    "azuki-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-casual-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-casual-a-ohtoro": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-casual-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-maid-a-custard": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-maid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-maid-b-custard": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "azuki-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-casual-a-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-casual-a-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-casual-b-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-casual-b-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-date-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-date-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-koneko": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-koneko-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-koneko-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-lolita": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-maid-a-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-maid-a-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-maid-b-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-maid-b-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-pajama": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-pajama-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-pajama-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "chocola-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-casual-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-casual-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-dress-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-maid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "cinnamon-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-casual-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-casual-a-4yo": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-casual-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-casual-b-4yo": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-koneko": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-koneko-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-koneko-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-maid-a-4yo": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-maid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-maid-b-4yo": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-pajama": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-shirt-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "coconut-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-casual-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-casual-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-france-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-france-maid-b": {
+      "ok": false,
+      "compiled": false,
+      "timelines": 0,
+      "import_errors": [],
+      "compile_errors": [
+        "tex/0029: invalid or nonintegral sprite rectangle; source truncation is unverified"
+      ]
+    },
+    "fraise-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-maid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-pajama-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-pajama-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "fraise-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-casual-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-casual-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-dress-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-maid-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-maid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "maple-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "milk-summer": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 111,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "milk-teenage.pure": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "milk-teenage-4yo": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 115,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-dress": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-koneko": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-lolita": {
+      "ok": false,
+      "compiled": false,
+      "timelines": 0,
+      "import_errors": [
+        "/run/media/chocola/DATA/Project/NekoWebShow/model_conversion/vanilla/lolita/vanilla-lolita.json: /source/tex/icon/0034: icon outside atlas"
+      ],
+      "compile_errors": []
+    },
+    "vanilla-maid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-pajama": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-santa": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-teenage": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual-a-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual-a-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual-b-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual-b-no-bell-tail-pin": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-casual-b-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-date-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-date-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-dress-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-hawaii-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-hawaii-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-koneko-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-koneko-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-maid-a-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-maid-a-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-maid-b-no-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-maid-b-with-bell": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-pajama-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-pajama-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-santa-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-swimsuit-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-swimsuit-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-teenage-a": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-teenage-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-winter": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-winter-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-wintermaid": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-wintermaid-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-yukata": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 116,
+      "import_errors": [],
+      "compile_errors": []
+    },
+    "vanilla-yukata-b": {
+      "ok": true,
+      "compiled": true,
+      "timelines": 113,
+      "import_errors": [],
+      "compile_errors": []
+    }
+  },
+  "failures": {
+    "fraise-france-maid-b": {
+      "ok": false,
+      "compiled": false,
+      "timelines": 0,
+      "import_errors": [],
+      "compile_errors": [
+        "tex/0029: invalid or nonintegral sprite rectangle; source truncation is unverified"
+      ]
+    },
+    "vanilla-lolita": {
+      "ok": false,
+      "compiled": false,
+      "timelines": 0,
+      "import_errors": [
+        "/run/media/chocola/DATA/Project/NekoWebShow/model_conversion/vanilla/lolita/vanilla-lolita.json: /source/tex/icon/0034: icon outside atlas"
+      ],
+      "compile_errors": []
+    }
+  }
+}
