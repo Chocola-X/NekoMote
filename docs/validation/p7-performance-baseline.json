@@ -1,0 +1,66 @@
+{
+  "scope": "P7 稳态性能基线",
+  "base_commit": "d7149c5",
+  "date": "2026-10-05",
+  "build": "release",
+  "hardware": {
+    "platform": "linux",
+    "notes": "记录于开发环境，非冻结发布基线"
+  },
+  "zero_allocation": {
+    "status": "verified",
+    "tests": [
+      "Warmed geometry evaluation and frame building allocate no project heap",
+      "Warmed animation, expression and Eye routing allocate no project heap",
+      "Warmed bending output retains independent resettable state without heap",
+      "Warmed physical binding and anchor sampling allocate no project heap",
+      "Spring advancement has independent state and no project heap"
+    ],
+    "method": "预热后测量 200 帧 set_parameter+evaluate+build_frame，项目普通堆分配计数为 0"
+  },
+  "frame_time": {
+    "azuki-casual": {
+      "timelines": 115,
+      "steps_per_timeline": 120,
+      "total_frames": 13800,
+      "wall_time_seconds": 5.86,
+      "us_per_frame": 425
+    },
+    "fraise-maid-a": {
+      "timelines": 111,
+      "steps_per_timeline": 120,
+      "total_frames": 13320,
+      "wall_time_seconds": 10.22,
+      "us_per_frame": 768
+    }
+  },
+  "semantic_fixes": {
+    "stage_1_parent_deformation_ignore": {
+      "commit": "030512d",
+      "models_fixed": 15,
+      "description": "inheritMask bit 25 (inheritShape=0) 親変形無視 reference nodes"
+    },
+    "stage_2_blend_mode": {
+      "commit": "9926d60",
+      "models_fixed": 3,
+      "description": "bm field (BlendMode) removed from geometry unsupported check"
+    },
+    "stage_3_add_mask_marker": {
+      "commit": "d7149c5",
+      "models_fixed": 5,
+      "description": "add_mask composite operation marker skipped in stencil source resolution"
+    },
+    "total_models_fixed": 23,
+    "note": "fraise-maid-b 同时受 stage_2 和 stage_3 影响，只计一次"
+  },
+  "remaining_failures": {
+    "texture_data_missing": ["cinnamon-maid", "coconut-maid"],
+    "data_corrupt": ["milk-winter", "vanilla-lolita", "fraise-france-maid-b"],
+    "note": "均为数据问题，非运行时语义缺陷"
+  },
+  "pending": [
+    "资产打包（紧凑二进制资产）",
+    "完整资源收益验证",
+    "发布构建冻结基线（含 CPU/P50/P95/P99、内存/显存、功耗）"
+  ]
+}

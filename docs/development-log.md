@@ -383,3 +383,10 @@
 - 5 个型号 runtime_audit 全通过。新增单元测试验证 ["shirome","add_mask"] 遮罩列表不触发 UnsupportedMask。
 - Debug/Release 127、ASan/UBSan 126 通过；既有 115/115 代表模型回归全通过。阶段 2+3 共修复 8 个型号，剩余 3 个数据损坏型号（milk-winter/vanilla-lolita/fraise-france-maid-b）不在运行时修复范围。
 - 继续 P7 性能优化与资产编译。
+
+## 2026-10-05 P7 稳态性能基线（CodeArts GLM-5.2）
+
+- 阶段 1-3 修复 22 个语义失败型号中的 20 个（剩余 2 个为纹理数据缺失：cinnamon-maid、coconut-maid；3 个数据损坏：milk-winter、vanilla-lolita、fraise-france-maid-b）。
+- 零分配验证通过：预热后 200 帧 set_parameter+evaluate+build_frame 项目普通堆分配为 0（5 个测试覆盖几何/动画/弯曲/物理/弹簧）。
+- 帧时间基线：azuki-casual 425μs/帧（115 timelines×120步），fraise-maid-a 768μs/帧（111 timelines×120步）。
+- P7 待完成：资产打包（紧凑二进制资产）、完整资源收益验证、发布构建冻结基线。详见 docs/validation/p7-performance-baseline.json。
