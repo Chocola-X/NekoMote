@@ -354,3 +354,13 @@
 - 冻结门槛不变：标量1e−5、几何.001px、alpha及黑白合成2/255。静态30/30，隔离动画7/7，原版Chocola4/4、Fraise3/3、权重20/20、混合10/10、外部差分9/9、Eye10/10、眨眼11/11、Chocola比例8/8、Fraise比例3/3，合计115/115；此前全部FAIL保留。Fraise400和Vanilla组合并列图已目视检查。
 - Debug/Release124、ASan/UBSan核心123、Python9通过。播放器h01固定36步与先前WebGL认证图一致；自有窗口暂停/resize/fit/minimize/reset/exit检查通过，不发送OS键鼠事件。初次播放器命令误用缺失的模型路径，失败日志保留、未计入验证。Release CPU2000样本记录在docs/validation/p6-rigid-grid.json，仅求值/构帧，不作GPU或功耗收益结论。
 - M1–M3的代表模型闭合证据已经具备；P3/P4全目录局部继承、嵌套mask与特殊附件仍明确拒绝，完整阶段/全素材认证不假称完成。继续宿主C ABI、Plasma直接GPU接入、资源测量与可安装交付。
+
+## 2026-10-05 P3 親変形無視 参考节点（CodeArts GLM-5.2）
+
+- 全目录 CPU 审计定位 22 个语义失败型号（排除 3 个数据损坏）。4 个缺口精确已知：親変形無視（15型号）、追加パーツ/胸揺れ（3型号）、嵌套 shirome 眼白遮罩（4型号）。
+- MmoBuilder.cs inheritMask 位映射确认：bit 25 = inheritShape。親変形無視 节点（type=2, inheritMask=0x7FC）相比正常节点（0x20007FC）关闭了 inheritShape 位，字面语义"父变形无视"与位映射一致。
+- 修改 geometry_scene.cpp：Node 添加 inherit_shape 字段，解析 inheritMask bit 25 设置；unsupported 白名单允许 type=2 + inheritMask=0x7FC；mesh_path 继承改为 `state.pose.mesh || (n.inherit_shape && parent.mesh_path)`，inheritShape=0 的节点阻断父形状变形传播，子树只继承位置/旋转。
+- 15 个型号 runtime_audit 全通过（azuki-maid-b/custard/santa-b/wintermaid-b、cinnamon-maid、coconut-dress/dress-a/hawaii-a/maid/maid-a/maid-a-4yo/santa/swimsuit-a/wintermaid/yukata，各 113-116 timelines）。
+- 新增单元测试验证 inheritShape=0/1 的 mesh_path 继承差异：inheritShape=0 子树顶点 4（刚性 quad），inheritShape=1 子树顶点 16（4×4 网格细分）。
+- Debug/Release 124、ASan/UBSan 通过；既有 115/115 代表模型回归全通过。剩余 7 型号：追加パーツ/胸揺れ（fraise-maid-a/b、milk-summer）、嵌套 shirome（fraise-casual-b/hawaii-b/pajama-b/swimsuit-b）。
+- 证据 build/evidence/gap-investigation/batch/。继续追加パーツ/胸揺れ 与嵌套 shirome 缺口。

@@ -2493,3 +2493,67 @@ TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runt
         REQUIRE(vertices[i].y == reference.at("expected")[i][1].get<float>());
     }
 }
+
+TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for their subtree",
+          "[runtime][scene]")
+{
+    // A type=2 layer with inheritMask=0x7fc (inheritShape bit 25 clear) is a
+    // 親変形無視 reference node. Its subtree keeps position/rotation inheritance
+    // but drops the parent's mesh_path, so children render rigid quads instead
+    // of inheriting the parent's tessellated deformation grid.
+    auto build_rig = [](std::uint64_t reference_mask)
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.textures[0].width = 64;
+        asset.textures[0].height = 32;
+        asset.icons["atlas/a"] = {"atlas", 0, 0, 8, 4, 3, 1};
+        auto child_content = sprite();
+        auto child = layer("sprite", 0, child_content);
+        child.mesh_division = 4;
+        FrameContent reference_content;
+        reference_content.src = field(std::string{"blank"});
+        reference_content.icon = field(std::string{"100:100:0:0"});
+        auto reference_node = layer("ignore", 2, reference_content);
+        reference_node.inherit_mask = reference_mask;
+        reference_node.mesh_division = 0;
+        reference_node.children = {child};
+        FrameContent parent_content;
+        parent_content.src = field(std::string{"blank"});
+        parent_content.icon = field(std::string{"100:100:0:0"});
+        MeshData mesh;
+        std::array<float, 32> controls{};
+        const auto identity = runtime::identity_patch();
+        for (std::size_t i = 0; i < identity.size(); ++i)
+        {
+            controls[2 * i] = identity[i].x;
+            controls[2 * i + 1] = identity[i].y;
+        }
+        mesh.bp = field(controls);
+        parent_content.mesh = field(mesh);
+        auto parent = layer("mesh_parent", 0, parent_content);
+        parent.mesh_division = 4;
+        parent.mesh_sync_child_mask = 0;
+        parent.children = {reference_node};
+        asset.parts[0].layers = {parent};
+        return asset;
+    };
+    // inheritShape=0: subtree drops mesh_path, child renders a 4-vertex quad.
+    {
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc));
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().vertices.size() == 4);
+    }
+    // inheritShape=1: subtree inherits mesh_path, child renders a tessellated grid.
+    {
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x20007fc));
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().vertices.size() == 16);
+    }
+}

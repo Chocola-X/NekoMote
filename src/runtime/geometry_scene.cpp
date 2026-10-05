@@ -72,6 +72,7 @@ struct Node
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false}, mask_source{false};
     bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
+    bool inherit_shape{true}; // inheritMask bit 25; false = 親変形無視, drop parent mesh_path
 };
 struct Clamp
 {
@@ -276,11 +277,17 @@ struct Compiler
              layer.mesh_sync_child_mask != 8) ||
             (!layer.transform_order.empty() &&
              layer.transform_order != std::vector<int>{0, 3, 2, 1});
+        n.inherit_shape = (layer.inherit_mask & 0x2000000) != 0;
         n.partial_locator_origin =
             !unsupported_common && n.exported_locator && layer.inherit_mask == 0x200020c;
+        // type=2 + inheritMask=0x7fc is a 親変形無視 reference node: it provides
+        // a coordinate frame whose subtree drops the parent's shape deformation
+        // (mesh_path) while keeping position/rotation inheritance. Source labels
+        // end with _親変形無視; the bit pattern is the structural signal.
         n.unsupported =
             unsupported_common || (layer.inherit_mask != 0x20007fc &&
-                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
+                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc) &&
+                                   !(layer.type == 2 && layer.inherit_mask == 0x7fc));
         const auto binding =
             layer.parameterize.has_value() ? layer.parameterize : part.parameterize;
         const auto& parameters = layer.parameter.empty() ? part.parameter : layer.parameter;
@@ -800,7 +807,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         state.depth = state.pose.depth + parent.depth;
         state.opacity = state.pose.opacity * (n.parent.valid() ? parent.opacity : 1);
         const auto& r = scene.resources[state.pose.resource.value];
-        state.mesh_path = state.pose.mesh || parent.mesh_path;
+        state.mesh_path = state.pose.mesh || (n.inherit_shape && parent.mesh_path);
         state.density = parent.density;
         if (state.pose.mesh && r.rect.width > 0 && n.division > 0)
             state.density = std::max(state.density, static_cast<float>(n.division) /
