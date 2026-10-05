@@ -2592,3 +2592,47 @@ TEST_CASE("Blend-mode frames compile without UnsupportedTransform", "[runtime][s
         REQUIRE(instance.build_frame());
     }
 }
+
+TEST_CASE("add_mask composite marker resolves without UnsupportedMask", "[runtime][scene]")
+{
+    // E-mote stencilCompositeMaskLayerList may contain "add_mask", a composite
+    // operation marker (additive stencil) rather than a node label. It must
+    // not surface as an unresolved mask source. fraise-casual-b/hawaii-b/
+    // pajama-b/swimsuit-b/maid-b use ["shirome","add_mask"] for nested eye-white
+    // masks.
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.textures[0].width = 64;
+    asset.textures[0].height = 32;
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 8, 4, 3, 1};
+    asset.icons.emplace("atlas/mask", IconRect{"atlas", 0, 0, 8, 4, 3, 1});
+    // shirome source node (mask geometry)
+    auto mask_content = sprite();
+    mask_content.src = field(std::string{"atlas"});
+    mask_content.icon = field(std::string{"mask"});
+    auto shirome = layer("shirome", 0, mask_content);
+    // masked sprite under the stencil layer
+    auto eye_content = sprite();
+    auto eye = layer("eye", 0, eye_content);
+    // stencil layer with [shirome, add_mask]
+    FrameContent stencil_content;
+    stencil_content.src = field(std::string{"blank"});
+    stencil_content.icon = field(std::string{"100:100:0:0"});
+    auto stencil = layer("ステンシル(shirome)", 12, stencil_content);
+    stencil.inherit_mask = 0x24007fc;
+    stencil.stencil_type = 5;
+    stencil.stencil_composite_mask_layers = {"shirome", "add_mask"};
+    stencil.children = {eye};
+    FrameContent root_content;
+    root_content.src = field(std::string{"blank"});
+    root_content.icon = field(std::string{"100:100:0:0"});
+    auto root = layer("root", 0, root_content);
+    root.children = {shirome, stencil};
+    asset.parts[0].layers = {root};
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    const auto status = instance.evaluate();
+    REQUIRE(status);
+    REQUIRE(instance.build_frame());
+}

@@ -550,6 +550,12 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             std::vector<NodeId> roots;
             for (const auto& name : node.mask_sources)
             {
+                // "add_mask" is a stencil composite operation marker, not a
+                // node label. It selects additive mask composition in the
+                // render pass (stencil INCR-style) but contributes no source
+                // geometry. Skip it during source resolution.
+                if (name == "add_mask")
+                    continue;
                 NodeId root;
                 for (std::size_t j = 1; j < data->nodes.size(); ++j)
                     if (data->nodes[j].scope == node.scope && data->nodes[j].source_label == name)

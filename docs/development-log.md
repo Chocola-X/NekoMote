@@ -374,3 +374,12 @@
 - 新增单元测试验证 bm=0/16/19 三种值均不触发 UnsupportedTransform，几何求值正常完成。
 - Debug/Release 126、ASan/UBSan 125 通过；既有 115/115 代表模型回归全通过。剩余 5 型号：嵌套 shirome（fraise-casual-b/hawaii-b/pajama-b/swimsuit-b/fraise-maid-b）。
 - 继续嵌套 shirome 遮罩缺口。
+
+## 2026-10-05 P3 嵌套 shirome 遮罩 add_mask 标记（CodeArts GLM-5.2）
+
+- 5 个型号（fraise-casual-b/hawaii-b/pajama-b/swimsuit-b/maid-b）报 UnsupportedMask (error=8)，失败节点均为 `ステンシル(shirome)`（type=12, stencilType=5, inheritMask=0x24007FC, stencilCompositeMaskLayerList=["shirome","add_mask"]）。
+- mask source 解析中，"add_mask" 不是节点 label，而是 stencil 组合操作标记（additive stencil），不贡献源几何。代码把 "add_mask" 当作节点 label 查找，找不到后设 mask.resolved=false，导致被选中时报 UnsupportedMask。
+- 修改 geometry_scene.cpp mask 解析：跳过 name=="add_mask" 的条目，只解析真正的节点 label 作为遮罩源。"add_mask" 的组合语义在渲染后端处理。
+- 5 个型号 runtime_audit 全通过。新增单元测试验证 ["shirome","add_mask"] 遮罩列表不触发 UnsupportedMask。
+- Debug/Release 127、ASan/UBSan 126 通过；既有 115/115 代表模型回归全通过。阶段 2+3 共修复 8 个型号，剩余 3 个数据损坏型号（milk-winter/vanilla-lolita/fraise-france-maid-b）不在运行时修复范围。
+- 继续 P7 性能优化与资产编译。
