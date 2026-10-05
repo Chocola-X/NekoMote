@@ -30,6 +30,7 @@ struct Device::Impl
     std::atomic<DeviceState> state{DeviceState::Connecting};
     std::atomic<float> rms{0};
     std::atomic<int> error{0};
+    std::atomic<std::uint32_t> underruns{0};
     std::thread worker;
     // Worker-owned, never accessed from the evaluation thread.
     pa_mainloop* loop{nullptr};
@@ -73,6 +74,7 @@ struct Device::Impl
         if (stream)
         {
             pa_stream_set_write_callback(stream, nullptr, nullptr);
+            pa_stream_set_underflow_callback(stream, nullptr, nullptr);
             pa_stream_disconnect(stream);
             pa_stream_unref(stream);
             stream = nullptr;
@@ -100,6 +102,11 @@ struct Device::Impl
     {
         static_cast<Impl*>(userdata)->write_pcm(bytes);
     }
+    static void underflow(pa_stream*, void* userdata) noexcept
+    {
+        static_cast<Impl*>(userdata)->underruns
+            .fetch_add(1, std::memory_order_relaxed);
+    }
     void command(application::AudioCommand value) noexcept
     {
         using application::AudioCommandKind;
@@ -121,10 +128,14 @@ struct Device::Impl
                 return;
             }
             pa_stream_set_write_callback(stream, requested, this);
-            // No prebuffer deadlock for short clips. Server timing includes the
-            // sink latency; lip RMS follows pa_stream_get_time, never wall time.
+            pa_stream_set_underflow_callback(stream, underflow, this);
+            // 200 ms target buffer (was 40 ms). The worker polls every ~4 ms,
+            // so 200 ms leaves ~196 ms of scheduling slack — enough to survive
+            // desktop jitter without underrun. prebuf=0 avoids deadlock on short
+            // clips. Server timing includes sink latency; lip RMS follows
+            // pa_stream_get_time, never wall time.
             const auto frame_bytes = clip->channels * sizeof(float);
-            const auto length = static_cast<std::uint32_t>(clip->sample_rate * frame_bytes / 25);
+            const auto length = static_cast<std::uint32_t>(clip->sample_rate * frame_bytes / 5);
             const pa_buffer_attr attr{length * 2, length, 0,
                                       static_cast<std::uint32_t>(512 * frame_bytes), 0};
             const auto flags = static_cast<pa_stream_flags_t>(
