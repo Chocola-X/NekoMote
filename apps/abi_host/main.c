@@ -20,10 +20,14 @@
 
 #include <dirent.h>
 #include <math.h>
+#include <pulse/error.h>
+#include <pulse/simple.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                          */
@@ -35,6 +39,245 @@
 #define MAX_PATH 1024
 #define FADE_CHAR_SECONDS 0.4
 #define FADE_BG_SECONDS 0.8
+#define MAX_CLIPS 32
+#define AUDIO_RMS_FRAMES 512
+#define AUDIO_CMD_QUEUE 32
+
+/* ------------------------------------------------------------------ */
+/* Audio (PulseAudio pa_simple + worker thread)                        */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    uint32_t sample_rate;
+    uint32_t channels;
+    float *samples;
+    size_t sample_count;
+    float *rms;
+    size_t rms_count;
+} AudioClip;
+
+typedef struct {
+    nekomote_audio_command commands[AUDIO_CMD_QUEUE];
+    int cmd_read;
+    int cmd_write;
+    pthread_mutex_t mutex;
+    pthread_t thread;
+    pa_simple *stream;
+    AudioClip clips[MAX_CLIPS];
+    int clip_count;
+    int playing;
+    int paused;
+    int current_clip;
+    size_t position;
+    float current_rms;
+    int quitting;
+    int started;
+} AudioDevice;
+
+static int load_wav(const char *path, AudioClip *out)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f) return 0;
+    unsigned char header[12];
+    if (fread(header, 1, 12, f) != 12 || memcmp(header, "RIFF", 4) != 0 ||
+        memcmp(header + 8, "WAVE", 4) != 0)
+    { fclose(f); return 0; }
+    uint16_t encoding = 0, channels = 0, bits = 0;
+    uint32_t sample_rate = 0;
+    unsigned char *data = NULL;
+    size_t data_size = 0;
+    for (;;)
+    {
+        unsigned char chunk_hdr[8];
+        size_t n = fread(chunk_hdr, 1, 8, f);
+        if (n != 8) break;
+        uint32_t len = chunk_hdr[4] | (chunk_hdr[5] << 8) |
+                       (chunk_hdr[6] << 16) | ((uint32_t)chunk_hdr[7] << 24);
+        if (memcmp(chunk_hdr, "fmt ", 4) == 0)
+        {
+            unsigned char fmt[16];
+            if (len < 16 || fread(fmt, 1, 16, f) != 16) { fclose(f); free(data); return 0; }
+            encoding = fmt[0] | (fmt[1] << 8);
+            channels = fmt[2] | (fmt[3] << 8);
+            sample_rate = fmt[4] | (fmt[5] << 8) | (fmt[6] << 16) | ((uint32_t)fmt[7] << 24);
+            bits = fmt[14] | (fmt[15] << 8);
+            if (len > 16) fseek(f, (long)(len - 16), SEEK_CUR);
+        }
+        else if (memcmp(chunk_hdr, "data", 4) == 0)
+        {
+            data_size = len;
+            data = malloc(data_size);
+            if (!data || fread(data, 1, data_size, f) != data_size)
+            { fclose(f); free(data); return 0; }
+        }
+        else
+            fseek(f, (long)len, SEEK_CUR);
+        if (len & 1) fseek(f, 1, SEEK_CUR);
+    }
+    fclose(f);
+    if (!data || encoding != 1 || (bits != 16 && bits != 8) ||
+        channels < 1 || channels > 2 || sample_rate < 8000 || sample_rate > 192000)
+    { free(data); return 0; }
+    size_t bytes = bits / 8;
+    size_t sample_count = data_size / bytes;
+    out->sample_rate = sample_rate;
+    out->channels = channels;
+    out->samples = malloc(sample_count * sizeof(float));
+    if (!out->samples) { free(data); return 0; }
+    for (size_t i = 0; i < sample_count; i++)
+    {
+        if (bits == 16)
+        {
+            int16_t v = (int16_t)(data[i * 2] | (data[i * 2 + 1] << 8));
+            out->samples[i] = (float)v / 32768.0f;
+        }
+        else
+            out->samples[i] = ((float)data[i] - 128.0f) / 128.0f;
+    }
+    out->sample_count = sample_count;
+    free(data);
+    size_t frames = sample_count / channels;
+    out->rms_count = (frames + AUDIO_RMS_FRAMES - 1) / AUDIO_RMS_FRAMES;
+    out->rms = malloc(out->rms_count * sizeof(float));
+    if (!out->rms) { free(out->samples); return 0; }
+    for (size_t w = 0; w < out->rms_count; w++)
+    {
+        size_t begin = w * AUDIO_RMS_FRAMES;
+        size_t end = frames < begin + AUDIO_RMS_FRAMES ? frames : begin + AUDIO_RMS_FRAMES;
+        double sq = 0;
+        for (size_t fr = begin; fr < end; fr++)
+        {
+            double mono = 0;
+            for (uint32_t c = 0; c < channels; c++)
+                mono += (double)out->samples[fr * channels + c];
+            mono /= channels;
+            sq += mono * mono;
+        }
+        out->rms[w] = (float)sqrt(sq / (double)(end - begin));
+    }
+    return 1;
+}
+
+static void *audio_worker(void *arg)
+{
+    AudioDevice *dev = (AudioDevice *)arg;
+    while (!dev->quitting)
+    {
+        pthread_mutex_lock(&dev->mutex);
+        while (dev->cmd_read != dev->cmd_write)
+        {
+            nekomote_audio_command cmd = dev->commands[dev->cmd_read % AUDIO_CMD_QUEUE];
+            dev->cmd_read++;
+            pthread_mutex_unlock(&dev->mutex);
+            if (cmd.kind == NEKOMOTE_AUDIO_STOP)
+            {
+                if (dev->stream) { pa_simple_drain(dev->stream, NULL); pa_simple_free(dev->stream); dev->stream = NULL; }
+                dev->playing = 0;
+                dev->current_clip = -1;
+                dev->current_rms = 0;
+            }
+            else if (cmd.kind == NEKOMOTE_AUDIO_PLAY && cmd.clip_id > 0 &&
+                     (int)cmd.clip_id <= dev->clip_count)
+            {
+                if (dev->stream) { pa_simple_free(dev->stream); dev->stream = NULL; }
+                dev->current_clip = (int)cmd.clip_id - 1;
+                dev->position = 0;
+                dev->playing = 1;
+                AudioClip *clip = &dev->clips[dev->current_clip];
+                pa_sample_spec spec = {PA_SAMPLE_FLOAT32NE, clip->sample_rate,
+                                       (uint8_t)clip->channels};
+                pa_buffer_attr attr = {(uint32_t)-1, (uint32_t)-1, (uint32_t)-1,
+                                       (uint32_t)-1, (uint32_t)-1};
+                int err = 0;
+                dev->stream = pa_simple_new(NULL, "NekoMote ABI Host",
+                    PA_STREAM_PLAYBACK, NULL, "voice", &spec, NULL, &attr, &err);
+                if (!dev->stream) dev->playing = 0;
+            }
+            else if (cmd.kind == NEKOMOTE_AUDIO_PAUSE)
+                dev->paused = 1;
+            else if (cmd.kind == NEKOMOTE_AUDIO_RESUME)
+                dev->paused = 0;
+            pthread_mutex_lock(&dev->mutex);
+        }
+        if (dev->playing && !dev->paused && dev->stream && dev->current_clip >= 0)
+        {
+            AudioClip *clip = &dev->clips[dev->current_clip];
+            size_t remaining = clip->sample_count - dev->position;
+            size_t chunk = remaining < 2048 * clip->channels ? remaining : 2048 * clip->channels;
+            if (chunk > 0)
+            {
+                int err = 0;
+                pa_simple_write(dev->stream, clip->samples + dev->position,
+                                chunk * sizeof(float), &err);
+                dev->position += chunk;
+                size_t frame = dev->position / clip->channels;
+                size_t idx = frame / AUDIO_RMS_FRAMES;
+                if (idx < clip->rms_count)
+                    dev->current_rms = clip->rms[idx];
+            }
+            else
+            {
+                pa_simple_drain(dev->stream, NULL);
+                pa_simple_free(dev->stream);
+                dev->stream = NULL;
+                dev->playing = 0;
+                dev->current_clip = -1;
+                dev->current_rms = 0;
+            }
+        }
+        pthread_mutex_unlock(&dev->mutex);
+        usleep(4000);
+    }
+    if (dev->stream) { pa_simple_drain(dev->stream, NULL); pa_simple_free(dev->stream); }
+    return NULL;
+}
+
+static void audio_init(AudioDevice *dev)
+{
+    memset(dev, 0, sizeof(*dev));
+    pthread_mutex_init(&dev->mutex, NULL);
+    dev->current_clip = -1;
+}
+
+static void audio_start(AudioDevice *dev)
+{
+    dev->quitting = 0;
+    pthread_create(&dev->thread, NULL, audio_worker, dev);
+    dev->started = 1;
+}
+
+static void audio_submit(AudioDevice *dev, nekomote_audio_command cmd)
+{
+    pthread_mutex_lock(&dev->mutex);
+    if (dev->cmd_write - dev->cmd_read < AUDIO_CMD_QUEUE)
+    {
+        dev->commands[dev->cmd_write % AUDIO_CMD_QUEUE] = cmd;
+        dev->cmd_write++;
+    }
+    pthread_mutex_unlock(&dev->mutex);
+}
+
+static float audio_rms(AudioDevice *dev)
+{
+    pthread_mutex_lock(&dev->mutex);
+    float rms = dev->playing && !dev->paused ? dev->current_rms : 0;
+    pthread_mutex_unlock(&dev->mutex);
+    return rms;
+}
+
+static void audio_destroy(AudioDevice *dev)
+{
+    if (!dev->started) return;
+    dev->quitting = 1;
+    pthread_join(dev->thread, NULL);
+    pthread_mutex_destroy(&dev->mutex);
+    for (int i = 0; i < dev->clip_count; i++)
+    {
+        free(dev->clips[i].samples);
+        free(dev->clips[i].rms);
+    }
+    dev->started = 0;
+}
 
 /* ------------------------------------------------------------------ */
 /* Catalog                                                            */
@@ -182,6 +425,8 @@ typedef struct {
     int mirror;
     float cutoff_y;
     int has_cutoff;
+    AudioDevice audio;
+    int has_audio;
     char name[MAX_NAME];
 } Holder;
 
@@ -240,16 +485,42 @@ static int load_holder(Holder *h, const CharacterEntry *entry)
     h->program = nekomote_program_compile(h->model, h->session_asset);
     if (!h->program) { nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
 
-    nekomote_session_config config = {0};
-    config.random_seed = 42;
-    config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
-    config.audio = NEKOMOTE_AUDIO_DISABLED;
-    h->session = nekomote_session_create(h->program, config);
-    if (!h->session) { nekomote_program_destroy(h->program); nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
-
+    h->has_audio = 0;
     h->mirror = nekomote_program_mirror(h->program);
     h->cutoff_y = entry->cutoff_y;
     h->has_cutoff = entry->has_cutoff;
+
+    size_t audio_count = nekomote_program_audio_count(h->program);
+    if (audio_count > 0 && audio_count <= MAX_CLIPS)
+    {
+        audio_init(&h->audio);
+        const char *slash = strrchr(entry->session_path, '/');
+        size_t dir_len = slash ? (size_t)(slash - entry->session_path) : 0;
+        for (size_t i = 0; i < audio_count; i++)
+        {
+            const char *ap = nekomote_program_audio_path(h->program, i);
+            char full[MAX_PATH];
+            if (dir_len > 0)
+                snprintf(full, sizeof(full), "%.*s/%s", (int)dir_len, entry->session_path, ap);
+            else
+                snprintf(full, sizeof(full), "%s", ap);
+            if (load_wav(full, &h->audio.clips[h->audio.clip_count]))
+                h->audio.clip_count++;
+        }
+        if (h->audio.clip_count > 0)
+        {
+            audio_start(&h->audio);
+            h->has_audio = 1;
+        }
+    }
+
+    nekomote_session_config config = {0};
+    config.random_seed = 42;
+    config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
+    config.audio = h->has_audio ? NEKOMOTE_AUDIO_DEVICE : NEKOMOTE_AUDIO_DISABLED;
+    h->session = nekomote_session_create(h->program, config);
+    if (!h->session) { if (h->has_audio) audio_destroy(&h->audio); nekomote_program_destroy(h->program); nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
+
     nekomote_session_start(h->session);
     return 1;
 }
@@ -267,6 +538,7 @@ static void load_holder_with_gl(Holder *h, const CharacterEntry *entry)
 
 static void destroy_holder(Holder *h)
 {
+    if (h->has_audio) audio_destroy(&h->audio);
     if (h->renderer) nekomote_renderer_destroy(h->renderer);
     if (h->session) nekomote_session_destroy(h->session);
     if (h->program) nekomote_program_destroy(h->program);
@@ -779,12 +1051,14 @@ int main(int argc, char **argv)
     nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
     nekomote_session_set_scale(g_app.current.session, g_app.scale);
     fit_character();
-    printf("  current: %s (mirror=%d, gaze=%d, touch=%d, textures=%zu)\n",
+    printf("  current: %s (mirror=%d, gaze=%d, touch=%d, textures=%zu, audio=%d/%zu)\n",
            g_app.catalog.characters[g_app.char_index].name,
            g_app.current.mirror,
            nekomote_program_gaze_available(g_app.current.program),
            nekomote_program_touch_available(g_app.current.program),
-           nekomote_program_texture_count(g_app.current.program));
+           nekomote_program_texture_count(g_app.current.program),
+           g_app.current.has_audio ? g_app.current.audio.clip_count : 0,
+           nekomote_program_audio_count(g_app.current.program));
 
     /* Set callbacks */
     glfwSetFramebufferSizeCallback(window, on_resize);
@@ -883,6 +1157,16 @@ int main(int argc, char **argv)
         nekomote_session_advance(g_app.current.session, dt);
         if (g_app.fade_state == FADE_CROSSFADE && g_app.has_old)
             nekomote_session_advance(g_app.old.session, dt);
+
+        /* Audio: pop commands and feed RMS back */
+        if (g_app.current.has_audio)
+        {
+            nekomote_audio_command cmd;
+            while (nekomote_session_pop_audio_command(g_app.current.session, &cmd))
+                audio_submit(&g_app.current.audio, cmd);
+            nekomote_session_set_audio_level(g_app.current.session,
+                                            audio_rms(&g_app.current.audio));
+        }
 
         /* Prepare frames */
         nekomote_session_prepare_frame(g_app.current.session);

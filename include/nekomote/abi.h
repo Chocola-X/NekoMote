@@ -73,6 +73,18 @@ typedef enum {
     NEKOMOTE_REACTION_RECOVERING,
 } nekomote_reaction_phase;
 
+typedef enum {
+    NEKOMOTE_AUDIO_PLAY = 0,
+    NEKOMOTE_AUDIO_STOP,
+    NEKOMOTE_AUDIO_PAUSE,
+    NEKOMOTE_AUDIO_RESUME,
+} nekomote_audio_command_kind;
+
+typedef struct {
+    nekomote_audio_command_kind kind;
+    uint32_t clip_id;
+} nekomote_audio_command;
+
 typedef struct {
     uint32_t random_seed;
     nekomote_pointer_scope pointer;
@@ -213,6 +225,8 @@ nekomote_error nekomote_session_react(
     nekomote_session *session, uint32_t reaction_id);
 nekomote_error nekomote_session_set_audio_level(
     nekomote_session *session, float rms);
+int nekomote_session_pop_audio_command(
+    nekomote_session *session, nekomote_audio_command *out);
 nekomote_error nekomote_session_set_playback_state(
     nekomote_session *session, nekomote_playback_state state);
 nekomote_error nekomote_session_advance(

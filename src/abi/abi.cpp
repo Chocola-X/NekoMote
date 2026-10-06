@@ -385,6 +385,26 @@ nekomote_error nekomote_session_set_audio_level(
     return to_c_error(session->instance->set_audio_level(rms).error);
 }
 
+int nekomote_session_pop_audio_command(
+    nekomote_session *session, nekomote_audio_command *out)
+{
+    if (!session || !session->instance || !out)
+        return 0;
+    try
+    {
+        const auto cmd = session->instance->pop_audio_command();
+        if (!cmd)
+            return 0;
+        out->kind = static_cast<nekomote_audio_command_kind>(cmd->kind);
+        out->clip_id = cmd->clip.value;
+        return 1;
+    }
+    catch (...)
+    {
+        return 0;
+    }
+}
+
 nekomote_error nekomote_session_set_playback_state(
     nekomote_session *session, nekomote_playback_state state)
 {
