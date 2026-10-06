@@ -302,17 +302,6 @@ struct Surface
         s.synchronize_pause();
     }
 };
-void background_vertices(std::array<RenderVertex, 4>& vertices, int w, int h, int iw, int ih)
-{
-    const auto cover = std::max(static_cast<double>(w) / iw, static_cast<double>(h) / ih);
-    const auto du = static_cast<float>(w / (iw * cover) * .5),
-               dv = static_cast<float>(h / (ih * cover) * .5);
-    const auto fw = static_cast<float>(w), fh = static_cast<float>(h);
-    vertices = {{{0, 0, .5f - du, .5f - dv},
-                 {fw, 0, .5f + du, .5f - dv},
-                 {fw, fh, .5f + du, .5f + dv},
-                 {0, fh, .5f - du, .5f + dv}}};
-}
 int run(int argc, char** argv)
 {
     const auto o = options(argc, argv);
@@ -411,20 +400,15 @@ int run(int argc, char** argv)
         renderer.upload_texture(texture.id, image.image);
     }
     std::unique_ptr<render_gl::Renderer> background;
-    std::array<RenderVertex, 4> bg_vertices{};
-    const std::array<std::uint32_t, 6> indices{0, 1, 2, 0, 2, 3};
-    const std::array<DrawCommand, 1> command{{{TextureId{1}, 0, 6, BlendMode::Over}}};
-    int image_width = 0, image_height = 0;
     if (!o.background.empty())
     {
         auto image = asset_io::load_png(o.background);
         if (!image.ok)
             throw std::runtime_error(image.error);
-        image_width = image.image.width;
-        image_height = image.image.height;
         background = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
-        background->reserve({4, 6, 1, 1});
+        background->reserve({8, 12, 2, 2});
         background->upload_texture(TextureId{1}, image.image);
+        check(session.set_background(TextureId{1}, image.image.width, image.image.height));
     }
     std::vector<double> times(static_cast<std::size_t>(o.measure));
     std::vector<double> cadence(static_cast<std::size_t>(o.measure));
@@ -496,25 +480,28 @@ int run(int argc, char** argv)
         if (w != last_width || h != last_height)
         {
             renderer.resize_output(w, h);
+            check(session.set_output_size(w, h));
             std::printf("Output %dx%d, model scale %.6f origin (%.3f, %.3f)\n", w, h,
                         static_cast<double>(surface.scale), static_cast<double>(surface.origin.x),
                         static_cast<double>(surface.origin.y));
-            if (background)
-            {
-                background_vertices(bg_vertices, w, h, image_width, image_height);
-                background->prepare({bg_vertices, indices, command});
-            }
             last_width = w;
             last_height = h;
         }
         const std::array<float, 4> clear = o.transparent ? std::array<float, 4>{0, 0, 0, 0}
                                                          : std::array<float, 4>{.06f, .07f, .1f, 1};
         const render_gl::Target target{0, w, h};
+        RenderFrame bg_frame{};
         if (background)
+            bg_frame = session.background_frame();
+        if (!bg_frame.commands.empty())
+        {
+            background->prepare(bg_frame);
             background->render(target, {0, 0, 1, clear});
+        }
         renderer.render(
             target, {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear},
-            background ? render_gl::TargetContents::Preserve : render_gl::TargetContents::Clear);
+            !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
+                                       : render_gl::TargetContents::Clear);
         if (!o.capture.empty())
         {
             const auto error = asset_io::write_png(o.capture, renderer.capture(target));

@@ -422,3 +422,19 @@
   - Recovering→Idle: 无跳变。`平常` 在 step 81（50+31）自然停止。
   - 20 个反应全部正确回到 idle。单元测试 127/127 通过。
 - face_mouth 瞬间跳变是 Mouth controller（kind=4, deferred=true）的固有行为，原项目同样如此。talk_variable（face_talk）是独立 Linear 插值通道，负责口型同步平滑。
+
+## 2026-10-06 背景层管理与渐变切换：从 player 提取到 application（CodeArts GLM-5.2）
+
+- 问题：背景图渲染逻辑仅在 player 应用中，不在引擎库中。壁纸插件/Galgame 等其他宿主无法复用，需各自重写。
+- 设计：分层渲染——application 层管理背景状态+渐变逻辑，输出 background_frame()；宿主先渲染背景层（Clear），再渲染角色层（Preserve）。立绘叠放在背景之上，不合成到同一 frame。
+- 接口（session.hpp）：
+  - set_output_size(w, h)：设置输出尺寸（背景 quad 全屏覆盖需要）
+  - set_background(TextureId, w, h)：设置/替换背景（立即切换）
+  - fade_background(TextureId, w, h, duration)：渐变切换背景（cross-fade）
+  - clear_background()：移除背景
+  - background_frame()：返回背景 RenderFrame（可能含渐变两个 quad）
+- 渐变实现：两个全屏 quad 叠加（旧背景 alpha=1−t + 新背景 alpha=t），advance(dt) 推进进度，完成后释放旧背景。无需自定义 shader。
+- 性能：静态背景 4 顶点+6 索引+1 command，开销可忽略。渐变 8+12+2，仍极小。稳态可缓存 frame。
+- 架构：runtime 零改动。纹理上传由宿主负责，application 只管背景状态+几何+渐变。未来视频背景（解码+每帧纹理更新）归属宿主侧，application 接口不变。
+- player 修改：移除 background_vertices 函数和内联背景逻辑，改用 session.set_output_size + set_background + background_frame。
+- 验证：构建通过，单元测试 127/127 通过。player 带背景截取 327 种采样颜色（背景覆盖全画面），无背景 180 种（默认深色+角色），均正确。

@@ -73,7 +73,7 @@ src/model/                  不可变资产、实例数据、强类型 ID
 src/runtime/                参数、场景图、变形、动画、物理
 src/asset_io/               当前项目资产加载、校验和解码
 src/render_gl/              绘制协议的 OpenGL 实现
-src/application/            壁纸会话、反应、背景、音频协调
+src/application/            壁纸会话、反应、背景层管理与渐变、音频协调
 src/adapters/plasma/        Plasma 生命周期、输入、GPU 接入
 apps/preview/               独立窗口播放器与诊断入口
 tools/import_emote/         离线导入与资源编译

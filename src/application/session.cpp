@@ -21,6 +21,30 @@ constexpr double kReturnTicks = 60;
 constexpr float kLipFrames = 4.2f, kLipStopFrames = 7.2f, kDiffFadeOutFrames = 18;
 constexpr double kLipThreshold = 0.015, kLipGain = 50, kLipRetention = 0.62;
 constexpr std::size_t kAudioCommands = 8;
+struct BackgroundLayer
+{
+    TextureId texture{0};
+    int width{0}, height{0};
+};
+void fill_background_quad(RenderVertex* v, std::uint32_t* idx, int ow, int oh, int iw, int ih,
+                          float alpha, std::uint32_t base) noexcept
+{
+    const auto cover = std::max(static_cast<double>(ow) / iw, static_cast<double>(oh) / ih);
+    const auto du = static_cast<float>(ow / (iw * cover) * .5);
+    const auto dv = static_cast<float>(oh / (ih * cover) * .5);
+    const auto fw = static_cast<float>(ow), fh = static_cast<float>(oh);
+    const std::array<float, 4> color{1, 1, 1, alpha};
+    v[0] = RenderVertex{0, 0, .5f - du, .5f - dv, color};
+    v[1] = RenderVertex{fw, 0, .5f + du, .5f - dv, color};
+    v[2] = RenderVertex{fw, fh, .5f + du, .5f + dv, color};
+    v[3] = RenderVertex{0, fh, .5f - du, .5f + dv, color};
+    idx[0] = base;
+    idx[1] = base + 1;
+    idx[2] = base + 2;
+    idx[3] = base;
+    idx[4] = base + 2;
+    idx[5] = base + 3;
+}
 struct BoundVariable
 {
     ParamId parameter;
@@ -251,6 +275,14 @@ struct SessionInstance::Impl
     std::array<AudioCommand, kAudioCommands> commands{};
     std::size_t command_head{0}, command_count{0};
     SessionStatus callback_status;
+    BackgroundLayer bg_current;
+    BackgroundLayer bg_target;
+    double bg_fade_progress{1.0};
+    double bg_fade_duration{0};
+    int output_width{0}, output_height{0};
+    mutable std::array<RenderVertex, 8> bg_vertices{};
+    mutable std::array<std::uint32_t, 12> bg_indices{};
+    mutable std::array<DrawCommand, 2> bg_commands{};
     Impl(const SessionProgram::Impl& data, SessionConfig options)
         : program(data), player(*data.playback, options.animation), config(options),
           random(options.reaction_seed)
@@ -601,6 +633,16 @@ SessionStatus SessionInstance::advance(double elapsed, runtime::PhysicsInputs in
     if (auto status = start(); !status)
         return status;
     data.callback_status = {};
+    if (data.bg_target.texture.value != 0 && data.bg_fade_duration > 0)
+    {
+        data.bg_fade_progress += elapsed / data.bg_fade_duration;
+        if (data.bg_fade_progress >= 1.0)
+        {
+            data.bg_fade_progress = 1.0;
+            data.bg_current = data.bg_target;
+            data.bg_target = {};
+        }
+    }
     const auto status = data.player.advance(elapsed, inputs, {&data, &Impl::before_tick});
     if (!status)
         return data.fail(data.callback_status ? checked(status) : data.callback_status);
@@ -626,6 +668,10 @@ SessionStatus SessionInstance::reset() noexcept
     data.phase = ReactionPhase::Idle;
     data.random = data.config.reaction_seed;
     data.command_head = data.command_count = 0;
+    data.bg_current = {};
+    data.bg_target = {};
+    data.bg_fade_progress = 1.0;
+    data.bg_fade_duration = 0;
     data.enqueue(AudioCommandKind::Stop);
     return start();
 }
@@ -654,5 +700,89 @@ const runtime::PlaybackInstance& SessionInstance::playback() const noexcept
 RenderFrame SessionInstance::frame() const noexcept
 {
     return impl_->faulted ? RenderFrame{} : impl_->player.frame();
+}
+SessionStatus SessionInstance::set_output_size(int width, int height) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {SessionError::Faulted, {}};
+    if (width < 0 || height < 0)
+        return {SessionError::InvalidInput, {}};
+    data.output_width = width;
+    data.output_height = height;
+    return {};
+}
+SessionStatus SessionInstance::set_background(TextureId id, int width, int height) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {SessionError::Faulted, {}};
+    if (id.value == 0 || width <= 0 || height <= 0)
+        return {SessionError::InvalidInput, {}};
+    data.bg_current = {id, width, height};
+    data.bg_target = {};
+    data.bg_fade_progress = 1.0;
+    data.bg_fade_duration = 0;
+    return {};
+}
+SessionStatus SessionInstance::fade_background(TextureId id, int width, int height,
+                                                double duration_seconds) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {SessionError::Faulted, {}};
+    if (id.value == 0 || width <= 0 || height <= 0)
+        return {SessionError::InvalidInput, {}};
+    if (!std::isfinite(duration_seconds) || duration_seconds <= 0)
+        return {SessionError::InvalidInput, {}};
+    if (data.bg_current.texture.value == 0)
+    {
+        data.bg_current = {id, width, height};
+        return {};
+    }
+    data.bg_target = {id, width, height};
+    data.bg_fade_progress = 0;
+    data.bg_fade_duration = duration_seconds;
+    return {};
+}
+void SessionInstance::clear_background() noexcept
+{
+    auto& data = *impl_;
+    data.bg_current = {};
+    data.bg_target = {};
+    data.bg_fade_progress = 1.0;
+    data.bg_fade_duration = 0;
+}
+RenderFrame SessionInstance::background_frame() const noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted || data.bg_current.texture.value == 0 ||
+        data.output_width <= 0 || data.output_height <= 0)
+        return {};
+    const bool fading = data.bg_target.texture.value != 0 && data.bg_fade_progress < 1.0;
+    if (!fading)
+    {
+        fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(),
+                             data.output_width, data.output_height,
+                             data.bg_current.width, data.bg_current.height, 1.0f, 0);
+        data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
+        return {std::span<const RenderVertex>(data.bg_vertices.data(), 4),
+                std::span<const std::uint32_t>(data.bg_indices.data(), 6),
+                std::span<const DrawCommand>(data.bg_commands.data(), 1),
+                ColorComposition::PremultipliedOver};
+    }
+    const auto alpha = static_cast<float>(data.bg_fade_progress);
+    fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(),
+                         data.output_width, data.output_height,
+                         data.bg_current.width, data.bg_current.height, 1.0f - alpha, 0);
+    fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6,
+                         data.output_width, data.output_height,
+                         data.bg_target.width, data.bg_target.height, alpha, 4);
+    data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
+    data.bg_commands[1] = {data.bg_target.texture, 6, 6, BlendMode::Over};
+    return {std::span<const RenderVertex>(data.bg_vertices.data(), 8),
+            std::span<const std::uint32_t>(data.bg_indices.data(), 12),
+            std::span<const DrawCommand>(data.bg_commands.data(), 2),
+            ColorComposition::PremultipliedOver};
 }
 } // namespace nekomote::application

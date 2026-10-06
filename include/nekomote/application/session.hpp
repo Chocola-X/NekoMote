@@ -130,6 +130,16 @@ class SessionInstance
     ReactionId active_reaction() const noexcept;
     const runtime::PlaybackInstance& playback() const noexcept;
     RenderFrame frame() const noexcept;
+    // Background layer: rendered before frame() with Clear, then frame() with
+    // Preserve. Hosts own texture upload; these calls only track geometry and
+    // fade state. set_output_size is required before background_frame to size
+    // the full-screen quad. fade_background cross-fades over duration_seconds.
+    SessionStatus set_output_size(int width, int height) noexcept;
+    SessionStatus set_background(TextureId id, int width, int height) noexcept;
+    SessionStatus fade_background(TextureId id, int width, int height,
+                                  double duration_seconds) noexcept;
+    void clear_background() noexcept;
+    RenderFrame background_frame() const noexcept;
 
   private:
     struct Impl;
