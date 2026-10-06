@@ -163,72 +163,125 @@ static void *audio_worker(void *arg)
     AudioDevice *dev = (AudioDevice *)arg;
     while (!dev->quitting)
     {
+        /* Process one command (PulseAudio calls outside mutex) */
         pthread_mutex_lock(&dev->mutex);
-        while (dev->cmd_read != dev->cmd_write)
+        int has_cmd = dev->cmd_read != dev->cmd_write;
+        nekomote_audio_command cmd = {0};
+        if (has_cmd)
         {
-            nekomote_audio_command cmd = dev->commands[dev->cmd_read % AUDIO_CMD_QUEUE];
+            cmd = dev->commands[dev->cmd_read % AUDIO_CMD_QUEUE];
             dev->cmd_read++;
-            pthread_mutex_unlock(&dev->mutex);
+        }
+        pthread_mutex_unlock(&dev->mutex);
+        if (has_cmd)
+        {
             if (cmd.kind == NEKOMOTE_AUDIO_STOP)
             {
-                if (dev->stream) { pa_simple_drain(dev->stream, NULL); pa_simple_free(dev->stream); dev->stream = NULL; }
-                dev->playing = 0;
-                dev->current_clip = -1;
-                dev->current_rms = 0;
-            }
-            else if (cmd.kind == NEKOMOTE_AUDIO_PLAY && cmd.clip_id > 0 &&
-                     (int)cmd.clip_id <= dev->clip_count)
-            {
-                if (dev->stream) { pa_simple_free(dev->stream); dev->stream = NULL; }
-                dev->current_clip = (int)cmd.clip_id - 1;
-                dev->position = 0;
-                dev->playing = 1;
-                AudioClip *clip = &dev->clips[dev->current_clip];
-                pa_sample_spec spec = {PA_SAMPLE_FLOAT32NE, clip->sample_rate,
-                                       (uint8_t)clip->channels};
-                pa_buffer_attr attr = {(uint32_t)-1, (uint32_t)-1, (uint32_t)-1,
-                                       (uint32_t)-1, (uint32_t)-1};
-                int err = 0;
-                dev->stream = pa_simple_new(NULL, "NekoMote ABI Host",
-                    PA_STREAM_PLAYBACK, NULL, "voice", &spec, NULL, &attr, &err);
-                if (!dev->stream) dev->playing = 0;
-            }
-            else if (cmd.kind == NEKOMOTE_AUDIO_PAUSE)
-                dev->paused = 1;
-            else if (cmd.kind == NEKOMOTE_AUDIO_RESUME)
-                dev->paused = 0;
-            pthread_mutex_lock(&dev->mutex);
-        }
-        if (dev->playing && !dev->paused && dev->stream && dev->current_clip >= 0)
-        {
-            AudioClip *clip = &dev->clips[dev->current_clip];
-            size_t remaining = clip->sample_count - dev->position;
-            size_t chunk = remaining < 2048 * clip->channels ? remaining : 2048 * clip->channels;
-            if (chunk > 0)
-            {
-                int err = 0;
-                pa_simple_write(dev->stream, clip->samples + dev->position,
-                                chunk * sizeof(float), &err);
-                dev->position += chunk;
-                size_t frame = dev->position / clip->channels;
-                size_t idx = frame / AUDIO_RMS_FRAMES;
-                if (idx < clip->rms_count)
-                    dev->current_rms = clip->rms[idx];
-            }
-            else
-            {
-                pa_simple_drain(dev->stream, NULL);
-                pa_simple_free(dev->stream);
+                pthread_mutex_lock(&dev->mutex);
+                pa_simple *s = dev->stream;
                 dev->stream = NULL;
                 dev->playing = 0;
                 dev->current_clip = -1;
                 dev->current_rms = 0;
+                pthread_mutex_unlock(&dev->mutex);
+                if (s) { pa_simple_drain(s, NULL); pa_simple_free(s); }
+            }
+            else if (cmd.kind == NEKOMOTE_AUDIO_PLAY && cmd.clip_id > 0 &&
+                     (int)cmd.clip_id <= dev->clip_count)
+            {
+                pthread_mutex_lock(&dev->mutex);
+                pa_simple *old = dev->stream;
+                dev->stream = NULL;
+                int clip_idx = (int)cmd.clip_id - 1;
+                dev->current_clip = clip_idx;
+                dev->position = 0;
+                dev->playing = 1;
+                uint32_t sr = dev->clips[clip_idx].sample_rate;
+                uint32_t ch = dev->clips[clip_idx].channels;
+                pthread_mutex_unlock(&dev->mutex);
+                if (old) pa_simple_free(old);
+                pa_sample_spec spec = {PA_SAMPLE_FLOAT32NE, sr, (uint8_t)ch};
+                pa_buffer_attr attr = {(uint32_t)-1, (uint32_t)-1, (uint32_t)-1,
+                                       (uint32_t)-1, (uint32_t)-1};
+                int err = 0;
+                pa_simple *s = pa_simple_new(NULL, "NekoMote ABI Host",
+                    PA_STREAM_PLAYBACK, NULL, "voice", &spec, NULL, &attr, &err);
+                pthread_mutex_lock(&dev->mutex);
+                dev->stream = s;
+                if (!s) dev->playing = 0;
+                pthread_mutex_unlock(&dev->mutex);
+            }
+            else if (cmd.kind == NEKOMOTE_AUDIO_PAUSE)
+            {
+                pthread_mutex_lock(&dev->mutex);
+                dev->paused = 1;
+                pthread_mutex_unlock(&dev->mutex);
+            }
+            else if (cmd.kind == NEKOMOTE_AUDIO_RESUME)
+            {
+                pthread_mutex_lock(&dev->mutex);
+                dev->paused = 0;
+                pthread_mutex_unlock(&dev->mutex);
             }
         }
+
+        /* Play one chunk (pa_simple_write outside mutex) */
+        pthread_mutex_lock(&dev->mutex);
+        int should_play = dev->playing && !dev->paused && dev->stream &&
+                          dev->current_clip >= 0;
+        pa_simple *stream = NULL;
+        float *write_ptr = NULL;
+        size_t chunk = 0, channels = 0, rms_count = 0;
+        float *rms = NULL;
+        int drain = 0;
+        if (should_play)
+        {
+            AudioClip *clip = &dev->clips[dev->current_clip];
+            size_t remaining = clip->sample_count - dev->position;
+            chunk = remaining < 2048 * clip->channels ? remaining : 2048 * clip->channels;
+            stream = dev->stream;
+            if (chunk > 0)
+            {
+                write_ptr = clip->samples + dev->position;
+                channels = clip->channels;
+                rms_count = clip->rms_count;
+                rms = clip->rms;
+            }
+            else
+                drain = 1;
+        }
         pthread_mutex_unlock(&dev->mutex);
+
+        if (chunk > 0 && stream)
+        {
+            int err = 0;
+            pa_simple_write(stream, write_ptr, chunk * sizeof(float), &err);
+            pthread_mutex_lock(&dev->mutex);
+            dev->position += chunk;
+            size_t frame = dev->position / channels;
+            size_t idx = frame / AUDIO_RMS_FRAMES;
+            if (idx < rms_count)
+                dev->current_rms = rms[idx];
+            pthread_mutex_unlock(&dev->mutex);
+        }
+        else if (drain && stream)
+        {
+            pa_simple_drain(stream, NULL);
+            pthread_mutex_lock(&dev->mutex);
+            if (dev->stream) { pa_simple_free(dev->stream); dev->stream = NULL; }
+            dev->playing = 0;
+            dev->current_clip = -1;
+            dev->current_rms = 0;
+            pthread_mutex_unlock(&dev->mutex);
+        }
+
         usleep(4000);
     }
-    if (dev->stream) { pa_simple_drain(dev->stream, NULL); pa_simple_free(dev->stream); }
+    pthread_mutex_lock(&dev->mutex);
+    pa_simple *s = dev->stream;
+    dev->stream = NULL;
+    pthread_mutex_unlock(&dev->mutex);
+    if (s) { pa_simple_drain(s, NULL); pa_simple_free(s); }
     return NULL;
 }
 
