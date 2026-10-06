@@ -1,47 +1,443 @@
+/*
+ * nekomote_abi_host — C ABI wallpaper verification platform.
+ *
+ * Pure C (no C++ engine calls). Verifies the C ABI is complete enough to
+ * implement all wallpaper features: multi-model directory scan, character
+ * cross-fade switching, background loading and fade switching, mirror,
+ * mouse gaze, touch, pause, reset, fit.
+ *
+ * Usage: nekomote_abi_host --assets <dir> [--character <name>] [--width N] [--height N]
+ *        nekomote_abi_host <model.nkm.json> <session.nks.json> [options]
+ *
+ * Keys: Tab=next char, 1-9=select char, B/N=next bg, C=clear bg,
+ *       Space=pause, R=reset, F=fit, Esc=quit
+ */
+
 #include <nekomote/abi.h>
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+#include <dirent.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
+/* ------------------------------------------------------------------ */
+/* Constants                                                          */
+/* ------------------------------------------------------------------ */
+
+#define MAX_CHARACTERS 512
+#define MAX_BACKGROUNDS 64
+#define MAX_NAME 256
+#define MAX_PATH 1024
+#define FADE_CHAR_SECONDS 0.4
+#define FADE_BG_SECONDS 0.8
+
+/* ------------------------------------------------------------------ */
+/* Catalog                                                            */
+/* ------------------------------------------------------------------ */
 
 typedef struct {
+    char name[MAX_NAME];
+    char model_path[MAX_PATH];
+    char session_path[MAX_PATH];
+    char directory[MAX_PATH];
+} CharacterEntry;
+
+typedef struct {
+    char name[MAX_NAME];
+    char path[MAX_PATH];
+} BackgroundEntry;
+
+typedef struct {
+    CharacterEntry characters[MAX_CHARACTERS];
+    int character_count;
+    BackgroundEntry backgrounds[MAX_BACKGROUNDS];
+    int background_count;
+} Catalog;
+
+static int has_file(const char *dir, const char *name)
+{
+    char path[MAX_PATH];
+    snprintf(path, sizeof(path), "%s/%s", dir, name);
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+static void scan_catalog(Catalog *cat, const char *assets_dir)
+{
+    cat->character_count = 0;
+    cat->background_count = 0;
+
+    char chars_dir[MAX_PATH];
+    snprintf(chars_dir, sizeof(chars_dir), "%s/characters", assets_dir);
+    DIR *d = opendir(chars_dir);
+    if (d)
+    {
+        struct dirent *e;
+        while ((e = readdir(d)) && cat->character_count < MAX_CHARACTERS)
+        {
+            if (e->d_name[0] == '.')
+                continue;
+            char subdir[MAX_PATH];
+            snprintf(subdir, sizeof(subdir), "%s/%s", chars_dir, e->d_name);
+            struct stat st;
+            if (stat(subdir, &st) != 0 || !S_ISDIR(st.st_mode))
+                continue;
+            if (!has_file(subdir, "model.nkm.json") || !has_file(subdir, "session.nks.json"))
+                continue;
+            CharacterEntry *c = &cat->characters[cat->character_count++];
+            strncpy(c->name, e->d_name, MAX_NAME - 1);
+            c->name[MAX_NAME - 1] = '\0';
+            strncpy(c->directory, subdir, MAX_PATH - 1);
+            c->directory[MAX_PATH - 1] = '\0';
+            snprintf(c->model_path, MAX_PATH, "%s/model.nkm.json", subdir);
+            snprintf(c->session_path, MAX_PATH, "%s/session.nks.json", subdir);
+        }
+        closedir(d);
+    }
+
+    char bg_dir[MAX_PATH];
+    snprintf(bg_dir, sizeof(bg_dir), "%s/backgrounds", assets_dir);
+    d = opendir(bg_dir);
+    if (d)
+    {
+        struct dirent *e;
+        while ((e = readdir(d)) && cat->background_count < MAX_BACKGROUNDS)
+        {
+            if (e->d_name[0] == '.')
+                continue;
+            const char *dot = strrchr(e->d_name, '.');
+            if (!dot || (strcmp(dot, ".png") != 0 && strcmp(dot, ".jpg") != 0))
+                continue;
+            BackgroundEntry *b = &cat->backgrounds[cat->background_count++];
+            strncpy(b->name, e->d_name, MAX_NAME - 1);
+            b->name[MAX_NAME - 1] = '\0';
+            snprintf(b->path, MAX_PATH, "%s/%s", bg_dir, e->d_name);
+        }
+        closedir(d);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Character holder                                                   */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    nekomote_model *model;
+    nekomote_session_asset *session_asset;
     nekomote_program *program;
     nekomote_session *session;
     nekomote_renderer *renderer;
+    int mirror;
+    char name[MAX_NAME];
+} Holder;
+
+static int load_textures(Holder *h)
+{
+    size_t tex_count = nekomote_program_texture_count(h->program);
+    nekomote_renderer_capacity cap = {0};
+    cap.vertices = 65536;
+    cap.indices = 131072;
+    cap.commands = 1024;
+    cap.textures = tex_count > 0 ? tex_count : 1;
+    cap.mask_commands = 256;
+    cap.masks = 64;
+    nekomote_renderer_reserve(h->renderer, cap);
+
+    const char *model_path = h->name;
+    (void)model_path;
+    int uploaded = 0;
+    for (size_t i = 0; i < tex_count; i++)
+    {
+        nekomote_texture_info tex = nekomote_program_texture(h->program, i);
+        if (!tex.path || tex.id == 0)
+            continue;
+        char full_path[MAX_PATH];
+        const char *slash = strrchr(h->name, '/');
+        (void)slash;
+        snprintf(full_path, sizeof(full_path), "%s/textures/%s",
+                 nekomote_program_texture(h->program, 0).path ? "." : ".",
+                 tex.path);
+        /* Try relative to model directory */
+        snprintf(full_path, sizeof(full_path), "%s/%s",
+                 h->name, tex.path);
+        nekomote_image *img = nekomote_image_load_png(full_path);
+        if (!img)
+            continue;
+        nekomote_renderer_upload_texture(
+            h->renderer, tex.id,
+            nekomote_image_width(img), nekomote_image_height(img),
+            nekomote_image_pixels(img));
+        nekomote_image_destroy(img);
+        uploaded++;
+    }
+    return uploaded;
+}
+
+static int load_holder(Holder *h, const CharacterEntry *entry)
+{
+    memset(h, 0, sizeof(*h));
+    strncpy(h->name, entry->directory, MAX_NAME - 1);
+    h->name[MAX_NAME - 1] = '\0';
+
+    h->model = nekomote_model_load(entry->model_path);
+    if (!h->model) return 0;
+    h->session_asset = nekomote_session_asset_load(entry->session_path);
+    if (!h->session_asset) { nekomote_model_destroy(h->model); return 0; }
+    h->program = nekomote_program_compile(h->model, h->session_asset);
+    if (!h->program) { nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
+
+    nekomote_session_config config = {0};
+    config.random_seed = 42;
+    config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
+    config.audio = NEKOMOTE_AUDIO_DISABLED;
+    h->session = nekomote_session_create(h->program, config);
+    if (!h->session) { nekomote_program_destroy(h->program); nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
+
+    h->mirror = nekomote_program_mirror(h->program);
+    nekomote_session_start(h->session);
+    return 1;
+}
+
+static void load_holder_with_gl(Holder *h, const CharacterEntry *entry)
+{
+    if (!load_holder(h, entry))
+    {
+        fprintf(stderr, "Error: failed to load character %s\n", entry->name);
+        return;
+    }
+    h->renderer = nekomote_renderer_create(glfwGetProcAddress);
+    load_textures(h);
+}
+
+static void destroy_holder(Holder *h)
+{
+    if (h->renderer) nekomote_renderer_destroy(h->renderer);
+    if (h->session) nekomote_session_destroy(h->session);
+    if (h->program) nekomote_program_destroy(h->program);
+    if (h->session_asset) nekomote_session_asset_destroy(h->session_asset);
+    if (h->model) nekomote_model_destroy(h->model);
+    memset(h, 0, sizeof(*h));
+}
+
+/* ------------------------------------------------------------------ */
+/* Background state                                                    */
+/* ------------------------------------------------------------------ */
+
+typedef struct {
+    nekomote_renderer *renderer;
+    int has_background;
+    char current_path[MAX_PATH];
+} BackgroundState;
+
+static void apply_background(BackgroundState *bg, nekomote_session *session,
+                             const char *bg_path, double fade_duration)
+{
+    nekomote_image *new_img = nekomote_image_load_png(bg_path);
+    if (!new_img)
+    {
+        fprintf(stderr, "  Warning: failed to load background %s\n", bg_path);
+        return;
+    }
+    int w = nekomote_image_width(new_img);
+    int h = nekomote_image_height(new_img);
+
+    if (!bg->has_background || fade_duration <= 0)
+    {
+        if (bg->renderer) nekomote_renderer_destroy(bg->renderer);
+        bg->renderer = nekomote_renderer_create(glfwGetProcAddress);
+        nekomote_renderer_capacity cap = {0};
+        cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
+        nekomote_renderer_reserve(bg->renderer, cap);
+        nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(new_img));
+        nekomote_session_set_background(session, 1, w, h);
+        bg->has_background = 1;
+        strncpy(bg->current_path, bg_path, MAX_PATH - 1);
+        bg->current_path[MAX_PATH - 1] = '\0';
+    }
+    else
+    {
+        nekomote_image *old_img = nekomote_image_load_png(bg->current_path);
+        if (!old_img)
+        {
+            nekomote_image_destroy(new_img);
+            return;
+        }
+        if (bg->renderer) nekomote_renderer_destroy(bg->renderer);
+        bg->renderer = nekomote_renderer_create(glfwGetProcAddress);
+        nekomote_renderer_capacity cap = {0};
+        cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
+        nekomote_renderer_reserve(bg->renderer, cap);
+        nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(old_img));
+        nekomote_renderer_upload_texture(bg->renderer, 2, w, h, nekomote_image_pixels(new_img));
+        nekomote_session_set_background(session, 1,
+            nekomote_image_width(old_img), nekomote_image_height(old_img));
+        nekomote_session_fade_background(session, 2, w, h, fade_duration);
+        bg->has_background = 1;
+        strncpy(bg->current_path, bg_path, MAX_PATH - 1);
+        bg->current_path[MAX_PATH - 1] = '\0';
+        nekomote_image_destroy(old_img);
+    }
+    nekomote_image_destroy(new_img);
+}
+
+static void clear_background(BackgroundState *bg, nekomote_session *session)
+{
+    nekomote_session_clear_background(session);
+    bg->has_background = 0;
+    bg->current_path[0] = '\0';
+    if (bg->renderer)
+    {
+        nekomote_renderer_destroy(bg->renderer);
+        bg->renderer = NULL;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* App state                                                          */
+/* ------------------------------------------------------------------ */
+
+typedef enum {
+    FADE_NONE,
+    FADE_PENDING,
+    FADE_CROSSFADE,
+} FadeState;
+
+typedef struct {
+    Catalog catalog;
+    Holder current;
+    Holder old;
+    BackgroundState bg;
+    int has_old;
+    int char_index;
+    int bg_index;
+    FadeState fade_state;
+    double fade_start;
+    float fade_alpha;
+    int need_bg_switch;
+    int target_bg_index;
+    int need_bg_clear;
     int width;
     int height;
-    int mirror;
     float origin_x;
     float origin_y;
     float scale;
     int paused;
-} AppState;
+    int fit;
+} App;
 
-static AppState g_state;
+static App g_app;
+
+/* ------------------------------------------------------------------ */
+/* Rendering                                                          */
+/* ------------------------------------------------------------------ */
+
+static void render_holder(Holder *h, nekomote_render_target target,
+                          float alpha, int clear_target)
+{
+    if (!h->session || !h->renderer)
+        return;
+    nekomote_render_frame frame = nekomote_session_frame(h->session);
+    nekomote_renderer_prepare(h->renderer, frame);
+    nekomote_renderer_resize_output(h->renderer, target.width, target.height);
+
+    nekomote_render_view view = {0};
+    view.origin_x = (float)target.width * 0.5f;
+    view.origin_y = (float)target.height * 0.5f;
+    view.scale = g_app.scale;
+    view.clear[0] = 0.05f;
+    view.clear[1] = 0.06f;
+    view.clear[2] = 0.10f;
+    view.clear[3] = 1.0f;
+    view.alpha = alpha;
+    view.flip_x = h->mirror;
+    nekomote_renderer_render(h->renderer, target, view,
+                             clear_target ? NEKOMOTE_TARGET_CLEAR : NEKOMOTE_TARGET_PRESERVE);
+}
+
+static void render_frame(void)
+{
+    nekomote_render_target target = {0};
+    target.width = g_app.width;
+    target.height = g_app.height;
+
+    /* Background layer */
+    int has_bg = 0;
+    if (g_app.bg.has_background && g_app.bg.renderer)
+    {
+        nekomote_render_frame bg_frame = nekomote_session_background_frame(g_app.current.session);
+        if (bg_frame.command_count > 0)
+        {
+            nekomote_renderer_prepare(g_app.bg.renderer, bg_frame);
+            nekomote_renderer_resize_output(g_app.bg.renderer, target.width, target.height);
+            nekomote_render_view bg_view = {0};
+            bg_view.scale = 1.0f;
+            bg_view.clear[3] = 1.0f;
+            bg_view.alpha = 1.0f;
+            nekomote_renderer_render(g_app.bg.renderer, target, bg_view, NEKOMOTE_TARGET_CLEAR);
+            has_bg = 1;
+        }
+    }
+
+    /* Character layer */
+    if (g_app.fade_state == FADE_CROSSFADE && g_app.has_old)
+    {
+        render_holder(&g_app.old, target, 1.0f - g_app.fade_alpha, !has_bg);
+        render_holder(&g_app.current, target, g_app.fade_alpha, 0);
+    }
+    else
+    {
+        float alpha = g_app.fade_state == FADE_NONE ? 1.0f : g_app.fade_alpha;
+        render_holder(&g_app.current, target, alpha, !has_bg);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Switching                                                          */
+/* ------------------------------------------------------------------ */
+
+static void switch_character(int index)
+{
+    if (index < 0 || index >= g_app.catalog.character_count)
+        return;
+    if (index == g_app.char_index || g_app.fade_state != FADE_NONE)
+        return;
+    g_app.fade_state = FADE_PENDING;
+    g_app.char_index = index;
+}
+
+static void switch_background(int index)
+{
+    if (index < 0 || index >= g_app.catalog.background_count)
+        return;
+    g_app.target_bg_index = index;
+    g_app.need_bg_switch = 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Input callbacks                                                    */
+/* ------------------------------------------------------------------ */
 
 static void on_resize(GLFWwindow *win, int w, int h)
 {
     (void)win;
-    g_state.width = w;
-    g_state.height = h;
-    nekomote_renderer_resize_output(g_state.renderer, w, h);
-    nekomote_session_set_output_size(g_state.session, w, h);
+    g_app.width = w;
+    g_app.height = h;
+    nekomote_session_set_output_size(g_app.current.session, w, h);
 }
 
 static void on_mouse_move(GLFWwindow *win, double x, double y)
 {
     (void)win;
-    if (!g_state.session)
-        return;
     float px = (float)x;
     float py = (float)y;
-    if (g_state.mirror)
-        px = (float)g_state.width - px;
-    nekomote_session_pointer_move(g_state.session, px, py);
+    if (g_app.current.mirror)
+        px = (float)g_app.width - px;
+    nekomote_session_pointer_move(g_app.current.session, px, py);
 }
 
 static void on_mouse_button(GLFWwindow *win, int button, int action, int mods)
@@ -53,9 +449,19 @@ static void on_mouse_button(GLFWwindow *win, int button, int action, int mods)
     glfwGetCursorPos(win, &x, &y);
     float px = (float)x;
     float py = (float)y;
-    if (g_state.mirror)
-        px = (float)g_state.width - px;
-    nekomote_session_touch(g_state.session, px, py);
+    if (g_app.current.mirror)
+        px = (float)g_app.width - px;
+    nekomote_session_touch(g_app.current.session, px, py);
+}
+
+static void on_scroll(GLFWwindow *win, double xoff, double yoff)
+{
+    (void)win;
+    (void)xoff;
+    g_app.scale *= (float)(1.0 + yoff * 0.1);
+    if (g_app.scale < 0.1f) g_app.scale = 0.1f;
+    if (g_app.scale > 10.0f) g_app.scale = 10.0f;
+    nekomote_session_set_scale(g_app.current.session, g_app.scale);
 }
 
 static void on_key(GLFWwindow *win, int key, int scancode, int action, int mods)
@@ -70,142 +476,148 @@ static void on_key(GLFWwindow *win, int key, int scancode, int action, int mods)
         glfwSetWindowShouldClose(win, GLFW_TRUE);
         break;
     case GLFW_KEY_SPACE:
-        g_state.paused = !g_state.paused;
+        g_app.paused = !g_app.paused;
         nekomote_session_set_playback_state(
-            g_state.session,
-            g_state.paused ? NEKOMOTE_PLAYBACK_PAUSED : NEKOMOTE_PLAYBACK_RUNNING);
+            g_app.current.session,
+            g_app.paused ? NEKOMOTE_PLAYBACK_PAUSED : NEKOMOTE_PLAYBACK_RUNNING);
         break;
     case GLFW_KEY_R:
-        nekomote_session_reset(g_state.session);
+        nekomote_session_reset(g_app.current.session);
         break;
     case GLFW_KEY_F:
-        g_state.scale = 1.0f;
-        g_state.origin_x = 0.0f;
-        g_state.origin_y = 0.0f;
-        nekomote_session_set_scale(g_state.session, g_state.scale);
-        nekomote_session_set_origin(g_state.session, g_state.origin_x, g_state.origin_y);
+        g_app.scale = 1.0f;
+        nekomote_session_set_scale(g_app.current.session, g_app.scale);
+        break;
+    case GLFW_KEY_TAB:
+        switch_character((g_app.char_index + 1) % g_app.catalog.character_count);
+        break;
+    case GLFW_KEY_B:
+    case GLFW_KEY_N:
+        if (g_app.catalog.background_count > 0)
+            switch_background((g_app.bg_index + 1) % g_app.catalog.background_count);
+        break;
+    case GLFW_KEY_C:
+        g_app.need_bg_clear = 1;
+        break;
+    default:
+        if (key >= GLFW_KEY_1 && key <= GLFW_KEY_9)
+        {
+            int idx = key - GLFW_KEY_1;
+            switch_character(idx);
+        }
         break;
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* Main                                                               */
+/* ------------------------------------------------------------------ */
+
 static void print_usage(const char *prog)
 {
-    fprintf(stderr, "Usage: %s <model.nkm.json> <session.nks.json> [options]\n", prog);
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "  %s --assets <dir> [options]\n", prog);
+    fprintf(stderr, "  %s <model.nkm.json> <session.nks.json> [options]\n", prog);
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  --width <N>     Window width (default 800)\n");
     fprintf(stderr, "  --height <N>    Window height (default 600)\n");
-    fprintf(stderr, "  --fps <N>       Target FPS (default 60)\n");
-    fprintf(stderr, "  --scale <F>     Initial scale (default 1.0)\n");
-    fprintf(stderr, "  --origin-x <F>  Origin X offset (default 0)\n");
-    fprintf(stderr, "  --origin-y <F>  Origin Y offset (default 0)\n");
-    fprintf(stderr, "Keys: ESC=quit, Space=pause, R=reset, F=fit\n");
+    fprintf(stderr, "  --character <name>  Initial character\n");
+    fprintf(stderr, "Keys: Tab=next, 1-9=select, B/N=next bg, C=clear bg, Space=pause, R=reset, F=fit, Esc=quit\n");
 }
 
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    const char *assets_dir = NULL;
+    const char *single_model = NULL;
+    const char *single_session = NULL;
+    const char *char_name = NULL;
+    int width = 800;
+    int height = 600;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--assets") == 0 && i + 1 < argc)
+            assets_dir = argv[++i];
+        else if (strcmp(argv[i], "--width") == 0 && i + 1 < argc)
+            width = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc)
+            height = atoi(argv[++i]);
+        else if (strcmp(argv[i], "--character") == 0 && i + 1 < argc)
+            char_name = argv[++i];
+        else if (argv[i][0] != '-' && !single_model)
+            single_model = argv[i];
+        else if (argv[i][0] != '-' && !single_session)
+            single_session = argv[i];
+    }
+
+    if (!assets_dir && (!single_model || !single_session))
     {
         print_usage(argv[0]);
         return 2;
     }
 
-    const char *model_path = argv[1];
-    const char *session_path = argv[2];
-    int width = 800;
-    int height = 600;
-    int fps = 60;
-    g_state.scale = 1.0f;
-    g_state.origin_x = 0.0f;
-    g_state.origin_y = 0.0f;
-
-    for (int i = 3; i < argc; i++)
-    {
-        if (strcmp(argv[i], "--width") == 0 && i + 1 < argc)
-            width = atoi(argv[++i]);
-        else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc)
-            height = atoi(argv[++i]);
-        else if (strcmp(argv[i], "--fps") == 0 && i + 1 < argc)
-            fps = atoi(argv[++i]);
-        else if (strcmp(argv[i], "--scale") == 0 && i + 1 < argc)
-            g_state.scale = (float)atof(argv[++i]);
-        else if (strcmp(argv[i], "--origin-x") == 0 && i + 1 < argc)
-            g_state.origin_x = (float)atof(argv[++i]);
-        else if (strcmp(argv[i], "--origin-y") == 0 && i + 1 < argc)
-            g_state.origin_y = (float)atof(argv[++i]);
-    }
-
-    printf("nekomote_abi_host — C ABI verification host\n");
-    fflush(stdout);
-    printf("  model:   %s\n", model_path);
-    printf("  session: %s\n", session_path);
-    printf("  window:  %dx%d @ %d fps\n", width, height, fps);
+    printf("nekomote_abi_host — C ABI wallpaper verification platform\n");
     printf("  version: %s\n\n", nekomote_version());
 
-    /* Load assets through C ABI */
-    nekomote_model *model = nekomote_model_load(model_path);
-    if (!model)
+    /* Build catalog */
+    if (assets_dir)
     {
-        fprintf(stderr, "Error: failed to load model\n");
-        return 1;
+        scan_catalog(&g_app.catalog, assets_dir);
+        printf("  characters: %d\n", g_app.catalog.character_count);
+        printf("  backgrounds: %d\n", g_app.catalog.background_count);
+        if (g_app.catalog.character_count == 0)
+        {
+            fprintf(stderr, "Error: no characters found in %s/characters\n", assets_dir);
+            return 1;
+        }
     }
-    nekomote_session_asset *session_asset = nekomote_session_asset_load(session_path);
-    if (!session_asset)
+    else
     {
-        fprintf(stderr, "Error: failed to load session asset\n");
-        nekomote_model_destroy(model);
-        return 1;
+        g_app.catalog.character_count = 1;
+        strncpy(g_app.catalog.characters[0].name, "model", MAX_NAME - 1);
+        strncpy(g_app.catalog.characters[0].model_path, single_model, MAX_PATH - 1);
+        strncpy(g_app.catalog.characters[0].session_path, single_session, MAX_PATH - 1);
+        const char *slash = strrchr(single_model, '/');
+        if (slash)
+        {
+            size_t len = (size_t)(slash - single_model);
+            memcpy(g_app.catalog.characters[0].directory, single_model, len);
+            g_app.catalog.characters[0].directory[len] = '\0';
+        }
     }
 
-    /* Compile program */
-    nekomote_program *program = nekomote_program_compile(model, session_asset);
-    if (!program)
+    /* Select initial character */
+    g_app.char_index = 0;
+    if (char_name)
     {
-        fprintf(stderr, "Error: failed to compile program\n");
-        nekomote_session_asset_destroy(session_asset);
-        nekomote_model_destroy(model);
-        return 1;
+        for (int i = 0; i < g_app.catalog.character_count; i++)
+            if (strcmp(g_app.catalog.characters[i].name, char_name) == 0)
+            {
+                g_app.char_index = i;
+                break;
+            }
     }
-
-    g_state.program = program;
-    g_state.mirror = nekomote_program_mirror(program);
-    printf("  mirror:  %s\n", g_state.mirror ? "yes" : "no");
-    printf("  gaze:    %s\n", nekomote_program_gaze_available(program) ? "yes" : "no");
-    printf("  touch:   %s\n", nekomote_program_touch_available(program) ? "yes" : "no");
-    printf("  textures: %zu\n", nekomote_program_texture_count(program));
-
-    /* Create session */
-    nekomote_session_config config = {0};
-    config.random_seed = 42;
-    config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
-    config.audio = NEKOMOTE_AUDIO_DISABLED;
-    nekomote_session *session = nekomote_session_create(program, config);
-    if (!session)
-    {
-        fprintf(stderr, "Error: failed to create session\n");
-        goto cleanup_program;
-    }
-    g_state.session = session;
-    nekomote_session_set_origin(session, g_state.origin_x, g_state.origin_y);
-    nekomote_session_set_scale(session, g_state.scale);
-    nekomote_session_start(session);
+    g_app.bg_index = -1;
+    g_app.scale = 1.0f;
+    g_app.width = width;
+    g_app.height = height;
 
     /* Init GLFW */
     if (!glfwInit())
     {
         fprintf(stderr, "Error: glfwInit failed\n");
-        goto cleanup_session;
+        return 1;
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
 
     GLFWwindow *window = glfwCreateWindow(width, height, "NekoMote ABI Host", NULL, NULL);
     if (!window)
     {
         fprintf(stderr, "Error: glfwCreateWindow failed\n");
         glfwTerminate();
-        goto cleanup_session;
+        return 1;
     }
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -215,85 +627,35 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error: gladLoadGL failed\n");
         glfwDestroyWindow(window);
         glfwTerminate();
-        goto cleanup_session;
+        return 1;
     }
-    printf("  GL:      %s\n", glGetString(GL_VERSION));
+    printf("  GL: %s\n", glGetString(GL_VERSION));
 
-    /* Create renderer through C ABI */
-    nekomote_renderer *renderer = nekomote_renderer_create(glfwGetProcAddress);
-    if (!renderer)
+    /* Load initial character */
+    load_holder_with_gl(&g_app.current, &g_app.catalog.characters[g_app.char_index]);
+    if (!g_app.current.session)
     {
-        fprintf(stderr, "Error: failed to create renderer\n");
+        fprintf(stderr, "Error: failed to load initial character\n");
         glfwDestroyWindow(window);
         glfwTerminate();
-        goto cleanup_session;
+        return 1;
     }
-    g_state.renderer = renderer;
+    nekomote_session_set_output_size(g_app.current.session, width, height);
+    printf("  current: %s (mirror=%d, gaze=%d, touch=%d, textures=%zu)\n",
+           g_app.catalog.characters[g_app.char_index].name,
+           g_app.current.mirror,
+           nekomote_program_gaze_available(g_app.current.program),
+           nekomote_program_touch_available(g_app.current.program),
+           nekomote_program_texture_count(g_app.current.program));
 
-    /* Reserve capacity and upload textures */
-    {
-        size_t tex_count = nekomote_program_texture_count(program);
-        nekomote_renderer_capacity cap = {0};
-        cap.vertices = 65536;
-        cap.indices = 131072;
-        cap.commands = 1024;
-        cap.textures = tex_count;
-        cap.mask_commands = 256;
-        cap.masks = 64;
-        nekomote_renderer_reserve(renderer, cap);
-
-        char dir_buf[1024];
-        const char *last_slash = strrchr(model_path, '/');
-        if (last_slash)
-        {
-            size_t dir_len = (size_t)(last_slash - model_path);
-            if (dir_len >= sizeof(dir_buf))
-                dir_len = sizeof(dir_buf) - 1;
-            memcpy(dir_buf, model_path, dir_len);
-            dir_buf[dir_len] = '\0';
-        }
-        else
-        {
-            dir_buf[0] = '.';
-            dir_buf[1] = '\0';
-        }
-
-        int uploaded = 0;
-        for (size_t i = 0; i < tex_count; i++)
-        {
-            nekomote_texture_info tex = nekomote_program_texture(program, i);
-            if (!tex.path || tex.id == 0)
-                continue;
-            char full_path[2048];
-            snprintf(full_path, sizeof(full_path), "%s/%s", dir_buf, tex.path);
-            nekomote_image *img = nekomote_image_load_png(full_path);
-            if (!img)
-            {
-                fprintf(stderr, "  Warning: failed to load texture %zu: %s\n", i, full_path);
-                continue;
-            }
-            nekomote_renderer_upload_texture(
-                renderer, tex.id,
-                nekomote_image_width(img), nekomote_image_height(img),
-                nekomote_image_pixels(img));
-            nekomote_image_destroy(img);
-            uploaded++;
-        }
-        printf("  uploaded: %d/%zu textures\n", uploaded, tex_count);
-    }
-
-    /* Set up callbacks and state */
-    g_state.width = width;
-    g_state.height = height;
-    g_state.paused = 0;
-    nekomote_renderer_resize_output(renderer, width, height);
-    nekomote_session_set_output_size(session, width, height);
+    /* Set callbacks */
     glfwSetFramebufferSizeCallback(window, on_resize);
     glfwSetCursorPosCallback(window, on_mouse_move);
     glfwSetMouseButtonCallback(window, on_mouse_button);
+    glfwSetScrollCallback(window, on_scroll);
     glfwSetKeyCallback(window, on_key);
 
-    printf("\nRunning. ESC=quit, Space=pause, R=reset, F=fit\n\n");
+    printf("\nRunning. Tab=next, 1-9=select, B/N=bg, C=clear, Space=pause, R=reset, F=fit, Esc=quit\n\n");
 
     /* Main loop */
     double last_time = glfwGetTime();
@@ -306,53 +668,106 @@ int main(int argc, char **argv)
         double now = glfwGetTime();
         double dt = now - last_time;
         last_time = now;
+        if (dt > 0.25) dt = 0.25;
 
-        if (dt > 0.25)
-            dt = 0.25;
+        /* Handle pending character switch */
+        if (g_app.fade_state == FADE_PENDING)
+        {
+            printf("Switching to character: %s\n", g_app.catalog.characters[g_app.char_index].name);
+            g_app.old = g_app.current;
+            g_app.has_old = 1;
+            memset(&g_app.current, 0, sizeof(g_app.current));
+            load_holder_with_gl(&g_app.current, &g_app.catalog.characters[g_app.char_index]);
+            nekomote_session_set_output_size(g_app.current.session, g_app.width, g_app.height);
+            nekomote_session_set_scale(g_app.current.session, g_app.scale);
 
-        nekomote_session_advance(session, dt);
-        nekomote_session_prepare_frame(session);
-        nekomote_render_frame frame = nekomote_session_frame(session);
+            /* Re-apply background to new session */
+            if (g_app.bg.has_background)
+            {
+                g_app.bg.has_background = 0;
+                apply_background(&g_app.bg, g_app.current.session, g_app.bg.current_path, 0);
+            }
 
-        nekomote_renderer_prepare(renderer, frame);
-        nekomote_renderer_resize_output(renderer, g_state.width, g_state.height);
+            g_app.fade_state = FADE_CROSSFADE;
+            g_app.fade_alpha = 0.0f;
+            g_app.fade_start = now;
+            printf("  mirror=%d, textures=%zu\n", g_app.current.mirror,
+                   nekomote_program_texture_count(g_app.current.program));
+        }
 
-        nekomote_render_target target = {0};
-        target.width = g_state.width;
-        target.height = g_state.height;
+        /* Update cross-fade */
+        if (g_app.fade_state == FADE_CROSSFADE)
+        {
+            double elapsed = now - g_app.fade_start;
+            g_app.fade_alpha = (float)(elapsed / FADE_CHAR_SECONDS);
+            if (g_app.fade_alpha >= 1.0f)
+            {
+                g_app.fade_alpha = 1.0f;
+                g_app.fade_state = FADE_NONE;
+                if (g_app.has_old)
+                {
+                    destroy_holder(&g_app.old);
+                    g_app.has_old = 0;
+                }
+            }
+        }
 
-        nekomote_render_view view = {0};
-        view.origin_x = g_state.origin_x;
-        view.origin_y = g_state.origin_y;
-        view.scale = g_state.scale;
-        view.clear[0] = 0.05f;
-        view.clear[1] = 0.05f;
-        view.clear[2] = 0.08f;
-        view.clear[3] = 1.0f;
-        view.alpha = 1.0f;
-        view.flip_x = g_state.mirror;
+        /* Handle background switch */
+        if (g_app.need_bg_switch)
+        {
+            switch_background(g_app.target_bg_index);
+            if (g_app.target_bg_index >= 0 && g_app.target_bg_index < g_app.catalog.background_count)
+            {
+                printf("Switching to background: %s\n", g_app.catalog.backgrounds[g_app.target_bg_index].name);
+                apply_background(&g_app.bg, g_app.current.session,
+                                 g_app.catalog.backgrounds[g_app.target_bg_index].path,
+                                 FADE_BG_SECONDS);
+                g_app.bg_index = g_app.target_bg_index;
+            }
+            g_app.need_bg_switch = 0;
+        }
 
-        nekomote_renderer_render(renderer, target, view, NEKOMOTE_TARGET_CLEAR);
+        /* Handle background clear */
+        if (g_app.need_bg_clear)
+        {
+            clear_background(&g_app.bg, g_app.current.session);
+            g_app.bg_index = -1;
+            printf("Background cleared\n");
+            g_app.need_bg_clear = 0;
+        }
 
+        /* Advance sessions */
+        nekomote_session_advance(g_app.current.session, dt);
+        if (g_app.fade_state == FADE_CROSSFADE && g_app.has_old)
+            nekomote_session_advance(g_app.old.session, dt);
+
+        /* Prepare frames */
+        nekomote_session_prepare_frame(g_app.current.session);
+        if (g_app.fade_state == FADE_CROSSFADE && g_app.has_old)
+            nekomote_session_prepare_frame(g_app.old.session);
+
+        /* Render */
+        render_frame();
         glfwSwapBuffers(window);
         frame_count++;
 
         if (frame_count % 300 == 0)
-            printf("  frame %ld  dt=%.3fms  verts=%zu  cmds=%zu\n",
-                   frame_count, dt * 1000.0,
-                   frame.vertex_count, frame.command_count);
+        {
+            nekomote_render_frame f = nekomote_session_frame(g_app.current.session);
+            printf("  frame %ld  dt=%.2fms  verts=%zu  cmds=%zu  char=%s  bg=%s\n",
+                   frame_count, dt * 1000.0, f.vertex_count, f.command_count,
+                   g_app.catalog.characters[g_app.char_index].name,
+                   g_app.bg.has_background ? g_app.catalog.backgrounds[g_app.bg_index].name : "none");
+        }
     }
 
     printf("\nRendered %ld frames. Shutting down.\n", frame_count);
 
+    /* Cleanup */
+    if (g_app.has_old) destroy_holder(&g_app.old);
+    destroy_holder(&g_app.current);
+    if (g_app.bg.renderer) nekomote_renderer_destroy(g_app.bg.renderer);
     glfwDestroyWindow(window);
     glfwTerminate();
-    nekomote_renderer_destroy(renderer);
-cleanup_session:
-    nekomote_session_destroy(session);
-cleanup_program:
-    nekomote_program_destroy(program);
-    nekomote_session_asset_destroy(session_asset);
-    nekomote_model_destroy(model);
     return 0;
 }
