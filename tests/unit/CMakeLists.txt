@@ -39,3 +39,18 @@ target_compile_definitions(nekomote_unit_tests PRIVATE
 
 include(Catch)
 catch_discover_tests(nekomote_unit_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# C ABI test (pure C, verifies the C boundary is usable without C++).
+# Uses a real model asset if available; skipped otherwise.
+if(NEKOMOTE_BUILD_PREVIEW)
+    add_executable(nekomote_abi_test test_abi.c)
+    target_link_libraries(nekomote_abi_test PRIVATE nekomote::abi)
+    target_compile_features(nekomote_abi_test PRIVATE c_std_11)
+    target_compile_options(nekomote_abi_test PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2)
+    set(NEKOMOTE_ABI_TEST_MODEL "${CMAKE_SOURCE_DIR}/assets/characters/chocola-date-a/model.nkm.json")
+    set(NEKOMOTE_ABI_TEST_SESSION "${CMAKE_SOURCE_DIR}/assets/characters/chocola-date-a/session.nks.json")
+    add_test(NAME abi_test
+        COMMAND nekomote_abi_test "${NEKOMOTE_ABI_TEST_MODEL}" "${NEKOMOTE_ABI_TEST_SESSION}"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()
