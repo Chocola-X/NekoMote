@@ -1148,6 +1148,11 @@ int main(int argc, char **argv)
         if (g_app.fade_state == FADE_PENDING)
         {
             printf("Switching to character: %s\n", g_app.catalog.characters[g_app.char_index].name);
+            /* Stop audio thread before shallow-copy: the worker's dev pointer
+               points at g_app.current.audio, so memset below would zero its
+               mutex while the thread still holds it — deadlock. */
+            if (g_app.current.has_audio) audio_destroy(&g_app.current.audio);
+            g_app.current.has_audio = 0;
             g_app.old = g_app.current;
             g_app.has_old = 1;
             memset(&g_app.current, 0, sizeof(g_app.current));
