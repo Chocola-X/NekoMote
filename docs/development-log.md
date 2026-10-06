@@ -438,3 +438,26 @@
 - 架构：runtime 零改动。纹理上传由宿主负责，application 只管背景状态+几何+渐变。未来视频背景（解码+每帧纹理更新）归属宿主侧，application 接口不变。
 - player 修改：移除 background_vertices 函数和内联背景逻辑，改用 session.set_output_size + set_background + background_frame。
 - 验证：构建通过，单元测试 127/127 通过。player 带背景截取 327 种采样颜色（背景覆盖全画面），无背景 180 种（默认深色+角色），均正确。
+
+## 2026-10-06 cutoffY 底部基准修复（CodeArts GLM-5.2）
+
+- 问题：fit() 用顶点边界框 bottom 作为底部基准，尾巴等附属物扩大边界框，角色被过度缩小。
+- 设计：用 cutoffY（腿部裁切位置，模型坐标系 Y 值）代替 bottom。CharacterEntry 从 meta.json 读取 cutoff_y/has_cutoff，Surface::fit() 用 effective_bottom = has_cutoff ? cutoff_y : bottom。
+- 8 个角色的 cutoffY 值已写入 assets/characters/*/meta.json。
+- 验证：构建通过，单元测试 127/127 通过。
+
+## 2026-10-06 自绘 UI：二次元咖啡厅风格控制面板（CodeArts GLM-5.2）
+
+- 目标：在 player 中实现可视化 UI，参考 NekoWebShow 的二次元咖啡厅风格（白色半透明底、咖啡色文字、粉色描边、圆角、无阴影）。
+- 设计决策：选择自绘 UI 而非 ImGui，因为需要个性化风格、动画效果和可拖动浮动 UI。自绘 UI 完全控制风格，与渲染器集成，轻量无外部依赖。
+- 实现（apps/player/ui.hpp/cpp）：
+  - FontAtlas：fontconfig 查找系统字体（萝莉体/Noto CJK 回退），stb_truetype 加载，动态字符纹理图集（首次遇到字符时生成位图并打包，纹理不足时自动扩展）
+  - Renderer：SDF 圆角矩形 shader（fill+border）、文字 shader（R8 atlas）、图标 shader（RGBA 纹理），OpenGL 状态保存/恢复
+  - Context：输入处理（mouse_move/button，pressed/released 标志）、布局、控件（toggle_icon/radio_button/text_button/toggle_switch/label/divider_line）、缓动函数（ease_out_back/ease_out_cubic/lerp）
+- player 集成（main.cpp）：
+  - assets 模式下初始化 UI（FontAtlas + Renderer + Context），加载 neko.png 图标纹理
+  - 渲染循环中角色渲染后绘制 UI：切换图标（可拖动、hover 缩放）、侧边栏（ease_out_back 滑入动画、角色列表、背景列表、清除背景按钮）
+  - 鼠标回调更新 UI 上下文，窗口大小变化时更新 UI 渲染器 viewport
+- 风格：白半透明底 rgba(255,255,255,0.78)、咖啡色文字 #6f4e37、粉色描边 #f2a0c0、圆角 18px、弹性缓动
+- 依赖：fontconfig（系统）、stb_truetype（已有）、glad（已有）。CMakeLists.txt 添加 fontconfig pkg-config 检测。
+- 验证：构建通过，单元测试 127/127 通过。
