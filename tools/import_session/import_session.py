@@ -33,7 +33,10 @@ def main():
         parser.error('model is absent from the source catalog')
     entry = catalog[args.model]
     character = entry['character']
+    costume = entry.get('costume', args.model)
     model_dir = root / 'model_conversion' / character / args.model
+    if not model_dir.exists():
+        model_dir = root / 'model_conversion' / character / costume
     source_path = model_dir / (args.model + '.json')
     if not source_path.exists():
         source_path = model_dir / (args.model + '.pure.json')
