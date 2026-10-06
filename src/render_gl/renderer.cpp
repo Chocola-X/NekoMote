@@ -61,9 +61,11 @@ void main() {
 constexpr const char* kBlitFragment = R"(#version 330 core
 in vec2 texture_uv;
 uniform sampler2D scene;
+uniform float global_alpha;
 out vec4 output_color;
 void main() {
     vec4 c=texture(scene,texture_uv);
+    c.a*=global_alpha;
     if(c.a<=0.003) discard;
     output_color=vec4(c.rgb*c.a,c.a);
 })";
@@ -224,7 +226,7 @@ struct Renderer::Impl
 {
     GLuint program{0}, blit_program{0}, vao{0}, vbo{0}, ebo{0};
     GLint premultiply{-1}, protection_pass{-1}, mask_write{-1}, use_mask{-1}, mask_output_size{-1};
-    GLint global_alpha{-1};
+    GLint global_alpha{-1}, blit_global_alpha{-1};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
     GLint output_size{-1}, view{-1}, projection{-1};
@@ -272,6 +274,7 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
     p.blit_program = link_program(kBlitVertex, kBlitFragment);
     glUseProgram(p.blit_program);
     glUniform1i(glGetUniformLocation(p.blit_program, "scene"), 0);
+    p.blit_global_alpha = glGetUniformLocation(p.blit_program, "global_alpha");
     p.premultiply = glGetUniformLocation(p.program, "premultiply");
     p.protection_pass = glGetUniformLocation(p.program, "protection_pass");
     p.mask_write = glGetUniformLocation(p.program, "mask_write");
@@ -517,7 +520,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glUniform1i(p.use_mask, 0);
     glUniform2f(p.mask_output_size, static_cast<float>(target.width),
                 static_cast<float>(target.height));
-    glUniform1f(p.global_alpha, view.alpha);
+    glUniform1f(p.global_alpha, straight ? 1.0f : view.alpha);
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -602,6 +605,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         }
         glUseProgram(p.blit_program);
         glBindTexture(GL_TEXTURE_2D, p.color_target->texture);
+        glUniform1f(p.blit_global_alpha, view.alpha);
         glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
