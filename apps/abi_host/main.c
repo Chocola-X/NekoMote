@@ -348,7 +348,7 @@ static void render_holder(Holder *h, nekomote_render_target target,
     nekomote_render_view view = {0};
     view.origin_x = (float)target.width * 0.5f;
     view.origin_y = (float)target.height * 0.5f;
-    view.scale = g_app.scale;
+    view.scale = 1.0f;
     view.clear[0] = 0.05f;
     view.clear[1] = 0.06f;
     view.clear[2] = 0.10f;
@@ -357,6 +357,55 @@ static void render_holder(Holder *h, nekomote_render_target target,
     view.flip_x = h->mirror;
     nekomote_renderer_render(h->renderer, target, view,
                              clear_target ? NEKOMOTE_TARGET_CLEAR : NEKOMOTE_TARGET_PRESERVE);
+}
+
+static void fit_character(void)
+{
+    if (!g_app.current.session)
+        return;
+    int w = g_app.width, h = g_app.height;
+    if (w <= 32 || h <= 32)
+        return;
+    nekomote_session_prepare_frame(g_app.current.session);
+    nekomote_render_frame frame = nekomote_session_frame(g_app.current.session);
+    float left = 1e30f, top = 1e30f, right = -1e30f, bottom = -1e30f;
+    for (size_t c = 0; c < frame.command_count; c++)
+    {
+        for (uint32_t i = 0; i < frame.commands[c].index_count; i++)
+        {
+            const nekomote_vertex *v =
+                &frame.vertices[frame.indices[frame.commands[c].first_index + i]];
+            if (v->color[3] <= 0)
+                continue;
+            if (v->x < left) left = v->x;
+            if (v->x > right) right = v->x;
+            if (v->y < top) top = v->y;
+            if (v->y > bottom) bottom = v->y;
+        }
+    }
+    if (!(right > left) || !(bottom > top))
+        return;
+    float ratio = fminf((float)(w - 32) / (right - left),
+                        (float)(h - 32) / (bottom - top));
+    float new_scale = g_app.scale * ratio;
+    if (new_scale < 0.05f) new_scale = 0.05f;
+    if (new_scale > 5.0f) new_scale = 5.0f;
+    float actual_ratio = new_scale / g_app.scale;
+    g_app.origin_x = (g_app.origin_x - (left + right) * 0.5f) * actual_ratio;
+    g_app.origin_y = (g_app.origin_y - (top + bottom) * 0.5f) * actual_ratio;
+    g_app.scale = new_scale;
+    nekomote_session_set_scale(g_app.current.session, g_app.scale);
+    nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
+}
+
+static void pointer_to_center(GLFWwindow *win, double x, double y,
+                              float *out_x, float *out_y)
+{
+    int w = 0, h = 0, fw = 0, fh = 0;
+    glfwGetWindowSize(win, &w, &h);
+    glfwGetFramebufferSize(win, &fw, &fh);
+    *out_x = (float)(w > 0 ? x * fw / w - fw * 0.5 : 0);
+    *out_y = (float)(h > 0 ? y * fh / h - fh * 0.5 : 0);
 }
 
 static void render_frame(void)
@@ -433,10 +482,10 @@ static void on_resize(GLFWwindow *win, int w, int h)
 static void on_mouse_move(GLFWwindow *win, double x, double y)
 {
     (void)win;
-    float px = (float)x;
-    float py = (float)y;
+    float px, py;
+    pointer_to_center(win, x, y, &px, &py);
     if (g_app.current.mirror)
-        px = (float)g_app.width - px;
+        px = -px;
     nekomote_session_pointer_move(g_app.current.session, px, py);
 }
 
@@ -447,10 +496,10 @@ static void on_mouse_button(GLFWwindow *win, int button, int action, int mods)
         return;
     double x, y;
     glfwGetCursorPos(win, &x, &y);
-    float px = (float)x;
-    float py = (float)y;
+    float px, py;
+    pointer_to_center(win, x, y, &px, &py);
     if (g_app.current.mirror)
-        px = (float)g_app.width - px;
+        px = -px;
     nekomote_session_touch(g_app.current.session, px, py);
 }
 
@@ -458,10 +507,19 @@ static void on_scroll(GLFWwindow *win, double xoff, double yoff)
 {
     (void)win;
     (void)xoff;
-    g_app.scale *= (float)(1.0 + yoff * 0.1);
-    if (g_app.scale < 0.1f) g_app.scale = 0.1f;
-    if (g_app.scale > 10.0f) g_app.scale = 10.0f;
+    double x, y;
+    glfwGetCursorPos(win, &x, &y);
+    float px, py;
+    pointer_to_center(win, x, y, &px, &py);
+    float new_scale = g_app.scale * (float)pow(1.1, yoff);
+    if (new_scale < 0.05f) new_scale = 0.05f;
+    if (new_scale > 5.0f) new_scale = 5.0f;
+    float ratio = new_scale / g_app.scale;
+    g_app.origin_x = px + (g_app.origin_x - px) * ratio;
+    g_app.origin_y = py + (g_app.origin_y - py) * ratio;
+    g_app.scale = new_scale;
     nekomote_session_set_scale(g_app.current.session, g_app.scale);
+    nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
 }
 
 static void on_key(GLFWwindow *win, int key, int scancode, int action, int mods)
@@ -485,8 +543,7 @@ static void on_key(GLFWwindow *win, int key, int scancode, int action, int mods)
         nekomote_session_reset(g_app.current.session);
         break;
     case GLFW_KEY_F:
-        g_app.scale = 1.0f;
-        nekomote_session_set_scale(g_app.current.session, g_app.scale);
+        fit_character();
         break;
     case GLFW_KEY_TAB:
         switch_character((g_app.char_index + 1) % g_app.catalog.character_count);
@@ -641,6 +698,12 @@ int main(int argc, char **argv)
         return 1;
     }
     nekomote_session_set_output_size(g_app.current.session, width, height);
+    g_app.origin_x = 0.0f;
+    g_app.origin_y = 400.0f;
+    g_app.scale = 1.0f;
+    nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
+    nekomote_session_set_scale(g_app.current.session, g_app.scale);
+    fit_character();
     printf("  current: %s (mirror=%d, gaze=%d, touch=%d, textures=%zu)\n",
            g_app.catalog.characters[g_app.char_index].name,
            g_app.current.mirror,
@@ -679,7 +742,12 @@ int main(int argc, char **argv)
             memset(&g_app.current, 0, sizeof(g_app.current));
             load_holder_with_gl(&g_app.current, &g_app.catalog.characters[g_app.char_index]);
             nekomote_session_set_output_size(g_app.current.session, g_app.width, g_app.height);
+            g_app.origin_x = 0.0f;
+            g_app.origin_y = 400.0f;
+            g_app.scale = 1.0f;
+            nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
             nekomote_session_set_scale(g_app.current.session, g_app.scale);
+            fit_character();
 
             /* Re-apply background to new session */
             if (g_app.bg.has_background)

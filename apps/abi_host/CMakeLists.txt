@@ -7,5 +7,5 @@ target_link_libraries(nekomote_abi_host
         nekomote_gl_loader)
 target_compile_features(nekomote_abi_host PRIVATE c_std_11)
 target_compile_options(nekomote_abi_host PRIVATE
-    -Wno-error
-    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2)
+    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2
+    -Wno-format-truncation -Wno-error)
