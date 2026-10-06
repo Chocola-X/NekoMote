@@ -800,11 +800,17 @@ ImportResult parse(const ImportOptions& opts)
         }
     }
     physical_controls(md, a, result.report);
+    if (md.contains("mirror"))
+    {
+        const auto value = get_int(md, "mirror", "/metadata/mirror", 0);
+        check(value == 0 || value == 1, "/metadata/mirror", "expected 0 or 1");
+        a.mirror = value == 1;
+    }
     unknown_fields(md, "/metadata",
                    {"variableList", "instantVariableList", "customPartsOrder", "timelineControl",
                     "base", "clampControl", "transitionControl", "immediateControl",
                     "eyebrowControl", "eyeControl", "mouthControl", "selectorControl", "scale",
-                    "bustControl", "hairControl", "partsControl"},
+                    "bustControl", "hairControl", "partsControl", "mirror", "mirrorControl"},
                    result.report);
     unknown_fields(d, "",
                    {"spec", "version", "screenSize", "source", "object", "metadata", "id", "label"},

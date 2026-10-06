@@ -95,6 +95,7 @@ struct SessionProgram::Impl
     std::vector<Reaction> reactions{1};
     std::array<std::vector<ReactionId>, model::kTouchZoneCount> zones;
     std::vector<std::string> audio;
+    bool mirror{false};
 };
 SessionProgram::SessionProgram(std::unique_ptr<Impl> impl) : impl_(std::move(impl))
 {
@@ -126,10 +127,11 @@ bool SessionProgram::gaze_available() const noexcept
 }
 bool SessionProgram::touch_available() const noexcept
 {
-    for (std::size_t i = 0; i < impl_->zones.size(); ++i)
-        if (!impl_->zones[i].empty() && impl_->interaction.regions[i])
-            return true;
-    return false;
+    return impl_->zones[0].size() + impl_->zones[1].size() > 0;
+}
+bool SessionProgram::mirror() const noexcept
+{
+    return impl_->mirror;
 }
 SessionCompileResult compile_session(const model::ModelAsset& model,
                                      const model::SessionAsset& asset)
@@ -141,6 +143,7 @@ SessionCompileResult compile_session(const model::ModelAsset& model,
         data->interaction = asset.interaction;
         data->author_scale = model.author_scale.has_value() ? model.author_scale.data : 1;
         data->talk_max = asset.talk_max;
+        data->mirror = model.mirror;
         require(std::isfinite(data->talk_max) && data->talk_max > 0 && data->talk_max <= 100,
                 "invalid talk limit");
         require(!asset.interaction.eye || std::isfinite(*asset.interaction.eye),

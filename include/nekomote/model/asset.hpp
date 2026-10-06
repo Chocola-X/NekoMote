@@ -250,6 +250,7 @@ struct ModelAsset
     std::vector<ChainControl> chain_controls;
     std::vector<std::string> parts_order; // meaning unverified; not draw order
     int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};
+    bool mirror{false}; // metadata.mirror: render model horizontally flipped
 };
 
 } // namespace nekomote::model

@@ -84,6 +84,7 @@ class SessionProgram
     std::string_view reaction_label(ReactionId id) const noexcept;
     bool gaze_available() const noexcept;
     bool touch_available() const noexcept;
+    bool mirror() const noexcept;
 
   private:
     struct Impl;

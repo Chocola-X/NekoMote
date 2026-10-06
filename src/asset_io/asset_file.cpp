@@ -534,7 +534,8 @@ inline void to_json(Json& j, const ModelAsset& v)
              {"total_layers", v.total_layers},
              {"total_frames", v.total_frames},
              {"bp_nonnull", v.bp_nonnull},
-             {"cc_nonnull", v.cc_nonnull}};
+             {"cc_nonnull", v.cc_nonnull},
+             {"mirror", v.mirror}};
 }
 inline void from_json(const Json& j, ModelAsset& v)
 {
@@ -563,6 +564,7 @@ inline void from_json(const Json& j, ModelAsset& v)
     v.total_frames = checked_value<decltype(v.total_frames)>(j.at("total_frames"));
     v.bp_nonnull = checked_value<decltype(v.bp_nonnull)>(j.at("bp_nonnull"));
     v.cc_nonnull = checked_value<decltype(v.cc_nonnull)>(j.at("cc_nonnull"));
+    v.mirror = j.value("mirror", false);
 }
 
 } // namespace nekomote::model

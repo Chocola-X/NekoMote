@@ -308,6 +308,7 @@ struct Surface
     application::SessionStatus error;
     float cutoff_y{0};
     bool has_cutoff{false};
+    bool mirror{false};
     player::ui::Context* ui_context{nullptr};
     void accept(application::SessionStatus s) noexcept
     {
@@ -340,7 +341,10 @@ struct Surface
             s.accept(s.session->set_origin(s.origin));
         }
         s.previous = p;
-        s.accept(s.session->pointer_move(p));
+        Vec2 gaze = p;
+        if (s.mirror)
+            gaze.x = -gaze.x;
+        s.accept(s.session->pointer_move(gaze));
     }
     static void enter(GLFWwindow* w, int entered) noexcept
     {
@@ -348,7 +352,12 @@ struct Surface
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         if (entered)
-            s.accept(s.session->pointer_enter(s.point(x, y)));
+        {
+            auto p = s.point(x, y);
+            if (s.mirror)
+                p.x = -p.x;
+            s.accept(s.session->pointer_enter(p));
+        }
         else
         {
             s.dragging = false;
@@ -554,7 +563,7 @@ int run(int argc, char** argv)
     }
     Surface surface{holder.instance.get(), window.get(), o.origin, {}, o.scale,
                     false, false, false, false, {},
-                    initial->cutoff_y, initial->has_cutoff};
+                    initial->cutoff_y, initial->has_cutoff, holder.program->mirror()};
     player::ui::FontAtlas ui_font;
     player::ui::Renderer ui_renderer;
     player::ui::Context ui_context;
@@ -780,6 +789,7 @@ int run(int argc, char** argv)
             surface.paused = false;
             surface.cutoff_y = entry.cutoff_y;
             surface.has_cutoff = entry.has_cutoff;
+            surface.mirror = holder.program->mirror();
             check(holder.instance->set_scale(surface.scale));
             check(holder.instance->set_origin(surface.origin));
             if (assets_mode && config.fit)
@@ -925,12 +935,12 @@ int run(int argc, char** argv)
             old_holder.renderer->render(
                 target,
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 1.0f - fade_alpha},
+                 1.0f - fade_alpha, old_holder.program->mirror()},
                 target_contents);
             holder.renderer->render(
                 target,
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 fade_alpha},
+                 fade_alpha, holder.program->mirror()},
                 render_gl::TargetContents::Preserve);
         }
         else
@@ -938,7 +948,8 @@ int run(int argc, char** argv)
             holder.renderer->render(
                 target,
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 fade_state == CharacterFadeState::None ? 1.0f : fade_alpha},
+                 fade_state == CharacterFadeState::None ? 1.0f : fade_alpha,
+                 holder.program->mirror()},
                 target_contents);
         }
         if (ui_ready && o.capture.empty() && o.check_window.empty())

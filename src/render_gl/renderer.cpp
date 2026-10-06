@@ -18,11 +18,13 @@ layout(location=1) in vec2 uv;
 layout(location=2) in vec4 color;
 uniform vec2 output_size;
 uniform vec3 view;
+uniform int flip_x;
 uniform vec2 projection;
 out vec2 texture_uv;
 out vec4 vertex_color;
 void main() {
     vec2 centered=position*view.z+(view.xy-output_size*0.5);
+    if (flip_x != 0) centered.x=-centered.x;
     gl_Position=vec4(centered*projection,0.0,1.0);
     texture_uv=uv;
     vertex_color=color;
@@ -213,7 +215,13 @@ Clip clip(const Bounds& bounds, Target target, const View& view) noexcept
         integer_bound(static_cast<float>(target.height) -
                           std::floor(bounds.top * view.scale + view.origin_y) + kMaskBorderPixels,
                       target.height);
-    return {x, y, std::max(0, right - x), std::max(0, top - y)};
+    int clip_x = x, clip_right = right;
+    if (view.flip_x)
+    {
+        clip_x = target.width - right;
+        clip_right = target.width - x;
+    }
+    return {clip_x, y, std::max(0, clip_right - clip_x), std::max(0, top - y)};
 }
 Clip intersect(Clip a, Clip b) noexcept
 {
@@ -229,7 +237,7 @@ struct Renderer::Impl
     GLint global_alpha{-1}, blit_global_alpha{-1};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
-    GLint output_size{-1}, view{-1}, projection{-1};
+    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1};
     struct Texture
     {
         TextureId id;
@@ -284,6 +292,7 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
     p.output_size = glGetUniformLocation(p.program, "output_size");
     p.view = glGetUniformLocation(p.program, "view");
     p.projection = glGetUniformLocation(p.program, "projection");
+    p.flip_x = glGetUniformLocation(p.program, "flip_x");
     glUseProgram(p.program);
     glUniform1i(glGetUniformLocation(p.program, "atlas"), 0);
     glUniform1i(glGetUniformLocation(p.program, "alpha_mask"), 1);
@@ -512,6 +521,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glBindSampler(1, 0);
     glUniform2f(p.output_size, static_cast<float>(target.width), static_cast<float>(target.height));
     glUniform3f(p.view, view.origin_x, view.origin_y, view.scale);
+    glUniform1i(p.flip_x, view.flip_x ? 1 : 0);
     glUniform2f(p.projection, 2.0f / static_cast<float>(target.width),
                 -2.0f / static_cast<float>(target.height));
     glUniform1i(p.premultiply, straight ? 0 : 1);
