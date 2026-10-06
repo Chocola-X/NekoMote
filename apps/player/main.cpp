@@ -416,11 +416,12 @@ struct Surface
         if (!(effective_bottom > top))
             return;
         const auto ratio = std::min(static_cast<float>(w - 32) / (right - left),
-                                    static_cast<float>(h - 32) / (effective_bottom - top));
+                                    static_cast<float>(h) / (effective_bottom - top));
         const auto new_scale = std::clamp(scale * ratio, .05f, 5.0f);
         const auto actual_ratio = new_scale / scale;
         origin = {(origin.x - (left + right) * .5f) * actual_ratio,
-                  (origin.y - (top + effective_bottom) * .5f) * actual_ratio};
+                  static_cast<float>(h) * .5f -
+                      (effective_bottom - top) * new_scale * .5f};
         scale = new_scale;
         accept(session->set_scale(scale));
         accept(session->set_origin(origin));
@@ -582,11 +583,6 @@ int run(int argc, char** argv)
     {
         check(holder.instance->prepare_frame());
         surface.fit();
-        if (assets_mode)
-        {
-            surface.origin.y += 50;
-            check(holder.instance->set_origin(surface.origin));
-        }
         check(surface.error);
     }
     std::printf("%s\n", holder.renderer->diagnostics().c_str());
@@ -803,7 +799,6 @@ int run(int argc, char** argv)
             {
                 check(holder.instance->prepare_frame());
                 surface.fit();
-                surface.origin.y += 50;
                 check(holder.instance->set_origin(surface.origin));
             }
             glfwSetWindowUserPointer(window.get(), &surface);
