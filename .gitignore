@@ -4,6 +4,8 @@ refer/
 
 # build artifacts (CMakePresets uses build/<preset>/)
 build/
+CMakeFiles/
+CMakeCache.txt
 compile_commands.json
 
 # editor / os cruft
@@ -15,11 +17,6 @@ compile_commands.json
 node_modules/
 __pycache__/
 
-# Compiled model assets (large, regenerate via tools/build_assets.sh)
-assets/characters/*/model.nkm.json
-assets/characters/*/session.nks.json
-assets/characters/*/textures/
-assets/characters/*/audio/
-assets/characters/*/report.json
-assets/characters/*/*.report.json
+# Compiled model assets (large, regenerate via import tools)
+assets/characters/
 assets/config.json
