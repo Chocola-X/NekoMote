@@ -45,6 +45,8 @@ typedef struct {
     char model_path[MAX_PATH];
     char session_path[MAX_PATH];
     char directory[MAX_PATH];
+    float cutoff_y;
+    int has_cutoff;
 } CharacterEntry;
 
 typedef struct {
@@ -65,6 +67,39 @@ static int has_file(const char *dir, const char *name)
     snprintf(path, sizeof(path), "%s/%s", dir, name);
     struct stat st;
     return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+static int read_cutoff_y(const char *dir, float *out)
+{
+    char meta_path[MAX_PATH];
+    snprintf(meta_path, sizeof(meta_path), "%s/meta.json", dir);
+    FILE *f = fopen(meta_path, "r");
+    if (!f) return 0;
+    char buf[256];
+    size_t n = fread(buf, 1, sizeof(buf) - 1, f);
+    fclose(f);
+    buf[n] = '\0';
+    const char *p = strstr(buf, "cutoff_y");
+    if (!p) return 0;
+    p = strchr(p, ':');
+    if (!p) return 0;
+    p++;
+    float val;
+    if (sscanf(p, " %f", &val) != 1) return 0;
+    *out = val;
+    return 1;
+}
+
+static int char_cmp(const void *a, const void *b)
+{
+    return strcmp(((const CharacterEntry *)a)->name,
+                  ((const CharacterEntry *)b)->name);
+}
+
+static int bg_cmp(const void *a, const void *b)
+{
+    return strcmp(((const BackgroundEntry *)a)->name,
+                  ((const BackgroundEntry *)b)->name);
 }
 
 static void scan_catalog(Catalog *cat, const char *assets_dir)
@@ -96,9 +131,18 @@ static void scan_catalog(Catalog *cat, const char *assets_dir)
             c->directory[MAX_PATH - 1] = '\0';
             snprintf(c->model_path, MAX_PATH, "%s/model.nkm.json", subdir);
             snprintf(c->session_path, MAX_PATH, "%s/session.nks.json", subdir);
+            c->cutoff_y = 0;
+            c->has_cutoff = 0;
+            float cutoff;
+            if (read_cutoff_y(subdir, &cutoff))
+            {
+                c->cutoff_y = cutoff;
+                c->has_cutoff = 1;
+            }
         }
         closedir(d);
     }
+    qsort(cat->characters, (size_t)cat->character_count, sizeof(CharacterEntry), char_cmp);
 
     char bg_dir[MAX_PATH];
     snprintf(bg_dir, sizeof(bg_dir), "%s/backgrounds", assets_dir);
@@ -111,15 +155,18 @@ static void scan_catalog(Catalog *cat, const char *assets_dir)
             if (e->d_name[0] == '.')
                 continue;
             const char *dot = strrchr(e->d_name, '.');
-            if (!dot || (strcmp(dot, ".png") != 0 && strcmp(dot, ".jpg") != 0))
+            if (!dot || (strcmp(dot, ".png") != 0 && strcmp(dot, ".PNG") != 0))
                 continue;
             BackgroundEntry *b = &cat->backgrounds[cat->background_count++];
-            strncpy(b->name, e->d_name, MAX_NAME - 1);
-            b->name[MAX_NAME - 1] = '\0';
+            size_t stem_len = (size_t)(dot - e->d_name);
+            if (stem_len >= MAX_NAME) stem_len = MAX_NAME - 1;
+            memcpy(b->name, e->d_name, stem_len);
+            b->name[stem_len] = '\0';
             snprintf(b->path, MAX_PATH, "%s/%s", bg_dir, e->d_name);
         }
         closedir(d);
     }
+    qsort(cat->backgrounds, (size_t)cat->background_count, sizeof(BackgroundEntry), bg_cmp);
 }
 
 /* ------------------------------------------------------------------ */
@@ -133,6 +180,8 @@ typedef struct {
     nekomote_session *session;
     nekomote_renderer *renderer;
     int mirror;
+    float cutoff_y;
+    int has_cutoff;
     char name[MAX_NAME];
 } Holder;
 
@@ -199,6 +248,8 @@ static int load_holder(Holder *h, const CharacterEntry *entry)
     if (!h->session) { nekomote_program_destroy(h->program); nekomote_session_asset_destroy(h->session_asset); nekomote_model_destroy(h->model); return 0; }
 
     h->mirror = nekomote_program_mirror(h->program);
+    h->cutoff_y = entry->cutoff_y;
+    h->has_cutoff = entry->has_cutoff;
     nekomote_session_start(h->session);
     return 1;
 }
@@ -349,8 +400,8 @@ static void render_holder(Holder *h, nekomote_render_target target,
     view.origin_x = (float)target.width * 0.5f;
     view.origin_y = (float)target.height * 0.5f;
     view.scale = 1.0f;
-    view.clear[0] = 0.05f;
-    view.clear[1] = 0.06f;
+    view.clear[0] = 0.06f;
+    view.clear[1] = 0.07f;
     view.clear[2] = 0.10f;
     view.clear[3] = 1.0f;
     view.alpha = alpha;
@@ -385,15 +436,35 @@ static void fit_character(void)
     }
     if (!(right > left) || !(bottom > top))
         return;
-    float ratio = fminf((float)(w - 32) / (right - left),
-                        (float)(h - 32) / (bottom - top));
-    float new_scale = g_app.scale * ratio;
-    if (new_scale < 0.05f) new_scale = 0.05f;
-    if (new_scale > 5.0f) new_scale = 5.0f;
-    float actual_ratio = new_scale / g_app.scale;
-    g_app.origin_x = (g_app.origin_x - (left + right) * 0.5f) * actual_ratio;
-    g_app.origin_y = (g_app.origin_y - (top + bottom) * 0.5f) * actual_ratio;
-    g_app.scale = new_scale;
+    if (g_app.current.has_cutoff)
+    {
+        float effective_bottom = g_app.current.cutoff_y;
+        if (!(effective_bottom > top))
+            return;
+        float floor_val = (float)h + 40.0f;
+        float ratio = fminf((float)(w - 32) / (right - left),
+                            floor_val / (effective_bottom - top));
+        float new_scale = g_app.scale * ratio / 1.21f;
+        if (new_scale < 0.05f) new_scale = 0.05f;
+        if (new_scale > 5.0f) new_scale = 5.0f;
+        float actual_ratio = new_scale / g_app.scale;
+        g_app.origin_x = (g_app.origin_x - (left + right) * 0.5f) * actual_ratio;
+        g_app.origin_y = (float)h * 0.5f -
+                         (effective_bottom - top) * new_scale * 0.5f - 100.0f;
+        g_app.scale = new_scale;
+    }
+    else
+    {
+        float ratio = fminf((float)(w - 32) / (right - left),
+                            (float)(h - 32) / (bottom - top));
+        float new_scale = g_app.scale * ratio;
+        if (new_scale < 0.05f) new_scale = 0.05f;
+        if (new_scale > 5.0f) new_scale = 5.0f;
+        float actual_ratio = new_scale / g_app.scale;
+        g_app.origin_x = (g_app.origin_x - (left + right) * 0.5f) * actual_ratio;
+        g_app.origin_y = (g_app.origin_y - (top + bottom) * 0.5f) * actual_ratio;
+        g_app.scale = new_scale;
+    }
     nekomote_session_set_scale(g_app.current.session, g_app.scale);
     nekomote_session_set_origin(g_app.current.session, g_app.origin_x, g_app.origin_y);
 }
@@ -476,7 +547,8 @@ static void on_resize(GLFWwindow *win, int w, int h)
     (void)win;
     g_app.width = w;
     g_app.height = h;
-    nekomote_session_set_output_size(g_app.current.session, w, h);
+    if (g_app.current.session)
+        nekomote_session_set_output_size(g_app.current.session, w, h);
 }
 
 static void on_mouse_move(GLFWwindow *win, double x, double y)
@@ -688,6 +760,9 @@ int main(int argc, char **argv)
     }
     printf("  GL: %s\n", glGetString(GL_VERSION));
 
+    /* Sync to actual framebuffer size (HiDPI) before fit */
+    glfwGetFramebufferSize(window, &g_app.width, &g_app.height);
+
     /* Load initial character */
     load_holder_with_gl(&g_app.current, &g_app.catalog.characters[g_app.char_index]);
     if (!g_app.current.session)
@@ -697,7 +772,7 @@ int main(int argc, char **argv)
         glfwTerminate();
         return 1;
     }
-    nekomote_session_set_output_size(g_app.current.session, width, height);
+    nekomote_session_set_output_size(g_app.current.session, g_app.width, g_app.height);
     g_app.origin_x = 0.0f;
     g_app.origin_y = 400.0f;
     g_app.scale = 1.0f;
