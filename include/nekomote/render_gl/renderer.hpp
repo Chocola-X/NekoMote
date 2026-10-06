@@ -27,6 +27,7 @@ struct View
 {
     float origin_x{0}, origin_y{0}, scale{1};
     std::array<float, 4> clear{0, 0, 0, 0}; // premultiplied target clear
+    float alpha{1}; // global alpha multiplier for all drawn fragments
 };
 enum class TargetContents
 {

@@ -575,17 +575,8 @@ int run(int argc, char** argv)
     bool need_bg_switch = false;
     int target_background_index = current_background_index;
     bool need_bg_clear = false;
-    auto overlay_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
-    overlay_renderer->reserve({4, 6, 1, 1});
-    {
-        ImageRgba8 white{1, 1, std::vector<std::uint8_t>{255, 255, 255, 255}};
-        overlay_renderer->upload_texture(TextureId{1}, white);
-    }
-    std::array<RenderVertex, 4> overlay_vertices;
-    const std::array<std::uint32_t, 6> overlay_indices = {0, 1, 2, 0, 2, 3};
-    const DrawCommand overlay_command{TextureId{1}, 0, 6, BlendMode::Over};
     CharacterFadeState fade_state = CharacterFadeState::None;
-    float fade_alpha = 0;
+    float fade_alpha = 1;
     Clock::time_point fade_start;
     int fade_target_character = -1;
     auto switch_character = [&](int index)
@@ -596,7 +587,7 @@ int run(int argc, char** argv)
             return;
         fade_target_character = index;
         fade_state = CharacterFadeState::FadingOut;
-        fade_alpha = 0;
+        fade_alpha = 1;
         fade_start = Clock::now();
     };
     auto switch_background = [&](int index)
@@ -715,22 +706,22 @@ int run(int argc, char** argv)
             const auto progress = static_cast<float>(elapsed / kCharacterFadeSeconds);
             if (fade_state == CharacterFadeState::FadingOut)
             {
-                fade_alpha = std::min(progress, 1.0f);
-                if (fade_alpha >= 1.0f)
+                fade_alpha = std::max(1.0f - progress, 0.0f);
+                if (fade_alpha <= 0.0f)
                 {
                     target_character_index = fade_target_character;
                     need_reload = true;
                     fade_state = CharacterFadeState::FadingIn;
-                    fade_alpha = 1.0f;
+                    fade_alpha = 0.0f;
                     fade_start = Clock::now();
                 }
             }
             else
             {
-                fade_alpha = std::max(1.0f - progress, 0.0f);
-                if (fade_alpha <= 0.0f)
+                fade_alpha = std::min(progress, 1.0f);
+                if (fade_alpha >= 1.0f)
                 {
-                    fade_alpha = 0.0f;
+                    fade_alpha = 1.0f;
                     fade_state = CharacterFadeState::None;
                 }
             }
@@ -848,26 +839,10 @@ int run(int argc, char** argv)
             holder.background_renderer->render(target, {0, 0, 1, clear});
         }
         holder.renderer->render(
-            target, {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear},
+            target, {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
+                     fade_state == CharacterFadeState::None ? 1.0f : fade_alpha},
             !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
                                        : render_gl::TargetContents::Clear);
-        if (fade_alpha > 0 && o.capture.empty())
-        {
-            const std::array<float, 4> color{0, 0, 0, fade_alpha};
-            const float fw = static_cast<float>(w), fh = static_cast<float>(h);
-            overlay_vertices[0] = RenderVertex{0, 0, 0, 0, color};
-            overlay_vertices[1] = RenderVertex{fw, 0, 1, 0, color};
-            overlay_vertices[2] = RenderVertex{fw, fh, 1, 1, color};
-            overlay_vertices[3] = RenderVertex{0, fh, 0, 1, color};
-            const RenderFrame overlay_frame{
-                std::span<const RenderVertex>(overlay_vertices.data(), 4),
-                std::span<const std::uint32_t>(overlay_indices.data(), 6),
-                std::span<const DrawCommand>(&overlay_command, 1),
-                ColorComposition::PremultipliedOver};
-            overlay_renderer->prepare(overlay_frame);
-            overlay_renderer->render(target, {0, 0, 1, {0, 0, 0, 0}},
-                                     render_gl::TargetContents::Preserve);
-        }
         if (!o.capture.empty())
         {
             const auto error = asset_io::write_png(o.capture, holder.renderer->capture(target));

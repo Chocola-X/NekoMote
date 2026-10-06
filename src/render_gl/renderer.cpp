@@ -37,6 +37,7 @@ uniform int mask_write;
 uniform int use_mask;
 uniform sampler2D alpha_mask;
 uniform vec2 mask_output_size;
+uniform float global_alpha;
 out vec4 output_color;
 void main() {
     vec4 sampled=texture(atlas,texture_uv);
@@ -45,6 +46,7 @@ void main() {
         return;
     }
     vec4 color=sampled*vertex_color;
+    color.a*=global_alpha;
     if (use_mask != 0) color.a*=texture(alpha_mask,gl_FragCoord.xy/mask_output_size).g;
     if (protection_pass != 0 && color.a < 0.0000001) discard;
     output_color=vec4(premultiply != 0 ? color.rgb*color.a : color.rgb,color.a);
@@ -222,6 +224,7 @@ struct Renderer::Impl
 {
     GLuint program{0}, blit_program{0}, vao{0}, vbo{0}, ebo{0};
     GLint premultiply{-1}, protection_pass{-1}, mask_write{-1}, use_mask{-1}, mask_output_size{-1};
+    GLint global_alpha{-1};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
     GLint output_size{-1}, view{-1}, projection{-1};
@@ -274,6 +277,7 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
     p.mask_write = glGetUniformLocation(p.program, "mask_write");
     p.use_mask = glGetUniformLocation(p.program, "use_mask");
     p.mask_output_size = glGetUniformLocation(p.program, "mask_output_size");
+    p.global_alpha = glGetUniformLocation(p.program, "global_alpha");
     p.output_size = glGetUniformLocation(p.program, "output_size");
     p.view = glGetUniformLocation(p.program, "view");
     p.projection = glGetUniformLocation(p.program, "projection");
@@ -513,6 +517,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glUniform1i(p.use_mask, 0);
     glUniform2f(p.mask_output_size, static_cast<float>(target.width),
                 static_cast<float>(target.height));
+    glUniform1f(p.global_alpha, view.alpha);
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

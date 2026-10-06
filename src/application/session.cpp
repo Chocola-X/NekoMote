@@ -774,7 +774,7 @@ RenderFrame SessionInstance::background_frame() const noexcept
     const auto alpha = static_cast<float>(data.bg_fade_progress);
     fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(),
                          data.output_width, data.output_height,
-                         data.bg_current.width, data.bg_current.height, 1.0f - alpha, 0);
+                         data.bg_current.width, data.bg_current.height, 1.0f, 0);
     fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6,
                          data.output_width, data.output_height,
                          data.bg_target.width, data.bg_target.height, alpha, 4);
