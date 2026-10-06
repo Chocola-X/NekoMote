@@ -42,7 +42,7 @@ struct Options
 {
     fs::path model, session, background, capture, check_window, assets;
     std::string reaction, character, background_name;
-    int width{800}, height{1080}, steps{0}, measure{0}, fps{30};
+    int width{1920}, height{1080}, steps{0}, measure{0}, fps{30};
     bool mute{false}, transparent{false}, fit{false}, no_save{false};
     std::uint32_t seed{1};
     float scale{1};
@@ -467,6 +467,8 @@ int run(int argc, char** argv)
             config.background = o.background_name;
         if (config.character.empty())
             config.character = catalog.characters.front().name;
+        if (assets_mode)
+            config.fit = true;
         if (!o.no_save)
         {
             config.scale = o.scale;
@@ -476,7 +478,7 @@ int run(int argc, char** argv)
             config.height = o.height;
             config.fps = o.fps;
             config.mute = o.mute;
-            config.fit = o.fit;
+            config.fit = o.fit || config.fit;
         }
     }
     Glfw glfw;
@@ -528,6 +530,11 @@ int run(int argc, char** argv)
     {
         check(holder.instance->prepare_frame());
         surface.fit();
+        if (assets_mode)
+        {
+            surface.origin.y += 50;
+            check(holder.instance->set_origin(surface.origin));
+        }
         check(surface.error);
     }
     std::printf("%s\n", holder.renderer->diagnostics().c_str());
