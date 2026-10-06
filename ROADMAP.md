@@ -319,7 +319,11 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 ### 工作项
 
 1. 记录目标 Plasma、Qt 和实际 Qt Quick 图形后端，不按桌面名称猜测 GPU 接入能力。
-2. 建立最小宿主契约/C ABI，定义线程、目标、输入、缩放、暂停和销毁。
+2. ✅ 建立最小宿主契约/C ABI，定义线程、目标、输入、缩放、暂停和销毁。
+   - `include/nekomote/abi.h`：完整 C ABI 头文件（opaque handle、错误码、RenderFrame C 结构、session/renderer/image 函数）。
+   - `src/abi/abi.cpp`：`extern "C"` 实现，封装 SessionProgram/SessionInstance/Renderer/asset loading；所有异常捕获转为错误码，不越过 ABI 边界。
+   - `tests/unit/test_abi.c`：31 个纯 C 测试，覆盖 null safety、完整管线、帧数据布局、背景、播放状态、反应。
+   - `apps/abi_host/main.c`：极简纯 C GLFW+OpenGL 宿主，通过 C ABI 完成加载→编译→上传纹理→渲染全链条，已用 chocola-date-a 验证 300+ 帧。
 3. 实现 WallpaperItem/QML 接入层和原生绘制模块；配置界面保持简单。
 4. 图形后端匹配后直接接入宿主 GPU 目标/纹理。若非 OpenGL，先评估必要的后端实现，不用 CPU 读回通用桥接，也不擅自改整个桌面后端。
 5. 处理多屏、device scale、桌面图标、输入区域、锁屏/休眠和插件卸载。

@@ -461,3 +461,25 @@
 - 风格：白半透明底 rgba(255,255,255,0.78)、咖啡色文字 #6f4e37、粉色描边 #f2a0c0、圆角 18px、弹性缓动
 - 依赖：fontconfig（系统）、stb_truetype（已有）、glad（已有）。CMakeLists.txt 添加 fontconfig pkg-config 检测。
 - 验证：构建通过，单元测试 127/127 通过。
+
+## 2026-10-06 P8 C ABI 接口与极简 C 宿主（CodeArts GLM-5.2）
+
+- 目标：建立最小 C ABI（ROADMAP P8 工作项 2），使非 C++ 宿主（QML/C/GJS）能调用引擎核心；用极简纯 C 宿主验证 ABI 端到端可用。
+- 设计（AGENTS.md §4）：
+  - 不透明句柄（nekomote_program/session/renderer）拥有内存，destroy 释放。
+  - 错误码枚举（nekomote_error）从所有可失败函数返回；C++ SessionError 映射到 C 错误码。
+  - RenderFrame 的 C 结构含 const 指针 + size_t 长度，非拥有视图，下次 advance/prepare_frame 后失效。
+  - 跨 ABI 不传 STL、异常和 C++ 对象布局；所有 C++ 异常 catch(...) 转为错误码或静默返回。
+- 实现：
+  - include/nekomote/abi.h：完整 C ABI 头文件。覆盖资产加载、程序编译与查询、会话实例控制、帧数据访问、背景层、渲染器、PNG 加载、版本查询。
+  - src/abi/abi.cpp：extern "C" 实现，封装 SessionProgram/SessionInstance/render_gl::Renderer/asset_io。渲染器函数全部 try-catch 防止异常越过 ABI 边界。
+  - src/abi/CMakeLists.txt：静态库 nekomote_abi，链接 application + asset_io + render_gl。
+- 测试：
+  - tests/unit/test_abi.c：31 个纯 C 测试。覆盖 null safety、完整管线、帧数据布局、背景层、播放状态、反应查询、越界检查。用 chocola-date-a 真实模型验证。全部通过。
+  - 全部 128 测试通过（127 既有 + 1 新 abi_test）。
+- 极简 C 宿主 apps/abi_host/main.c：
+  - 纯 C（非 C++），用 GLFW 创建窗口、glad 加载 OpenGL、C ABI 调用引擎。
+  - 功能：加载→编译→上传纹理→主循环。支持鼠标注视、左键触摸、Space 暂停、R 重置、F 适配、ESC 退出。镜像自动翻转 pointer x。
+  - 验证：chocola-date-a 渲染 300+ 帧（4189 顶点，33 命令），OpenGL 3.3.0 NVIDIA 575.64.03，1/1 纹理上传成功。
+  - 修复：resize_output 须在 prepare 之后调用（composition 在 prepare 时才确定）。
+- 交付：C ABI 可被纯 C 宿主完整使用，从加载到渲染不依赖任何 C++ 接口。为 Plasma QML 插件和其他桌面适配器铺好 ABI 通路。
