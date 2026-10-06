@@ -743,8 +743,15 @@ int run(int argc, char** argv)
             surface.origin = o.origin;
             surface.scale = o.scale;
             surface.paused = false;
-            check(holder.instance->set_origin(surface.origin));
             check(holder.instance->set_scale(surface.scale));
+            check(holder.instance->set_origin(surface.origin));
+            if (assets_mode && config.fit)
+            {
+                check(holder.instance->prepare_frame());
+                surface.fit();
+                surface.origin.y += 50;
+                check(holder.instance->set_origin(surface.origin));
+            }
             glfwSetWindowUserPointer(window.get(), &surface);
             current_character_index = target_character_index;
             config.character = entry.name;
