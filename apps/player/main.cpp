@@ -29,6 +29,14 @@ namespace
 using namespace nekomote;
 using Clock = std::chrono::steady_clock;
 namespace fs = std::filesystem;
+constexpr double kBackgroundFadeSeconds = 0.8;
+constexpr double kCharacterFadeSeconds = 0.4;
+enum class CharacterFadeState
+{
+    None,
+    FadingOut,
+    FadingIn
+};
 
 struct Options
 {
@@ -186,6 +194,7 @@ struct CharacterHolder
     bool has_background{false};
     std::string name;
     fs::path model_dir;
+    fs::path current_background_path;
 };
 
 CharacterHolder load_character(const player::CharacterEntry& entry, const Options& o)
@@ -253,16 +262,38 @@ CharacterHolder load_character(const player::CharacterEntry& entry, const Option
     return holder;
 }
 
-void apply_background(CharacterHolder& holder, const fs::path& bg_path)
+void apply_background(CharacterHolder& holder, const fs::path& bg_path, double fade_duration)
 {
-    auto image = asset_io::load_png(bg_path);
-    if (!image.ok)
-        throw std::runtime_error(image.error);
-    const TextureId id{1};
-    holder.background_renderer->upload_texture(id, image.image);
-    check(holder.instance->set_background(id, image.image.width, image.image.height));
-    holder.current_background_id = id;
+    auto new_image = asset_io::load_png(bg_path);
+    if (!new_image.ok)
+        throw std::runtime_error(new_image.error);
+    if (!holder.has_background || fade_duration <= 0)
+    {
+        holder.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+        holder.background_renderer->reserve({8, 12, 2, 2});
+        const TextureId id{1};
+        holder.background_renderer->upload_texture(id, new_image.image);
+        check(holder.instance->set_background(id, new_image.image.width, new_image.image.height));
+        holder.current_background_id = id;
+        holder.has_background = true;
+        holder.current_background_path = bg_path;
+        return;
+    }
+    auto old_image = asset_io::load_png(holder.current_background_path);
+    if (!old_image.ok)
+        throw std::runtime_error(old_image.error);
+    holder.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    holder.background_renderer->reserve({8, 12, 2, 2});
+    const TextureId old_id{1}, new_id{2};
+    holder.background_renderer->upload_texture(old_id, old_image.image);
+    holder.background_renderer->upload_texture(new_id, new_image.image);
+    check(holder.instance->set_background(old_id, old_image.image.width,
+                                          old_image.image.height));
+    check(holder.instance->fade_background(new_id, new_image.image.width,
+                                           new_image.image.height, fade_duration));
+    holder.current_background_id = new_id;
     holder.has_background = true;
+    holder.current_background_path = bg_path;
 }
 
 struct Surface
@@ -484,12 +515,12 @@ int run(int argc, char** argv)
     if (!o.reaction.empty())
         check(holder.instance->react(holder.program->find_reaction(o.reaction)));
     if (!o.background.empty())
-        apply_background(holder, o.background);
+        apply_background(holder, o.background, 0);
     else if (assets_mode && !config.background.empty())
     {
         const auto* bg = catalog.find_background(config.background);
         if (bg)
-            apply_background(holder, bg->path);
+            apply_background(holder, bg->path, 0);
     }
     Surface surface{holder.instance.get(), window.get(), o.origin, {}, o.scale,
                     false, false, false, false, {}};
@@ -544,14 +575,29 @@ int run(int argc, char** argv)
     bool need_bg_switch = false;
     int target_background_index = current_background_index;
     bool need_bg_clear = false;
+    auto overlay_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    overlay_renderer->reserve({4, 6, 1, 1});
+    {
+        ImageRgba8 white{1, 1, std::vector<std::uint8_t>{255, 255, 255, 255}};
+        overlay_renderer->upload_texture(TextureId{1}, white);
+    }
+    std::array<RenderVertex, 4> overlay_vertices;
+    const std::array<std::uint32_t, 6> overlay_indices = {0, 1, 2, 0, 2, 3};
+    const DrawCommand overlay_command{TextureId{1}, 0, 6, BlendMode::Over};
+    CharacterFadeState fade_state = CharacterFadeState::None;
+    float fade_alpha = 0;
+    Clock::time_point fade_start;
+    int fade_target_character = -1;
     auto switch_character = [&](int index)
     {
         if (index < 0 || index >= static_cast<int>(catalog.characters.size()))
             return;
-        if (index == current_character_index)
+        if (index == current_character_index || fade_state != CharacterFadeState::None)
             return;
-        target_character_index = index;
-        need_reload = true;
+        fade_target_character = index;
+        fade_state = CharacterFadeState::FadingOut;
+        fade_alpha = 0;
+        fade_start = Clock::now();
     };
     auto switch_background = [&](int index)
     {
@@ -663,6 +709,32 @@ int run(int argc, char** argv)
             minimized_check.reset();
         }
         check(surface.error);
+        if (fade_state != CharacterFadeState::None)
+        {
+            const auto elapsed = std::chrono::duration<double>(Clock::now() - fade_start).count();
+            const auto progress = static_cast<float>(elapsed / kCharacterFadeSeconds);
+            if (fade_state == CharacterFadeState::FadingOut)
+            {
+                fade_alpha = std::min(progress, 1.0f);
+                if (fade_alpha >= 1.0f)
+                {
+                    target_character_index = fade_target_character;
+                    need_reload = true;
+                    fade_state = CharacterFadeState::FadingIn;
+                    fade_alpha = 1.0f;
+                    fade_start = Clock::now();
+                }
+            }
+            else
+            {
+                fade_alpha = std::max(1.0f - progress, 0.0f);
+                if (fade_alpha <= 0.0f)
+                {
+                    fade_alpha = 0.0f;
+                    fade_state = CharacterFadeState::None;
+                }
+            }
+        }
         if (need_reload && assets_mode)
         {
             glfwSetWindowUserPointer(window.get(), nullptr);
@@ -682,7 +754,7 @@ int run(int argc, char** argv)
                 current_background_index < static_cast<int>(catalog.backgrounds.size()))
             {
                 const auto& bg = catalog.backgrounds[current_background_index];
-                apply_background(holder, bg.path);
+                apply_background(holder, bg.path, 0);
                 config.background = bg.name;
             }
             if (!o.no_save)
@@ -690,6 +762,8 @@ int run(int argc, char** argv)
             std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
                         holder.has_background ? config.background.c_str() : "none");
             need_reload = false;
+            last_width = 0;
+            last_height = 0;
         }
         if (need_bg_switch && assets_mode)
         {
@@ -698,7 +772,7 @@ int run(int argc, char** argv)
             {
                 const auto& bg = catalog.backgrounds[target_background_index];
                 std::printf("Switching to background: %s\n", bg.name.c_str());
-                apply_background(holder, bg.path);
+                apply_background(holder, bg.path, kBackgroundFadeSeconds);
                 current_background_index = target_background_index;
                 config.background = bg.name;
                 if (!o.no_save)
@@ -777,6 +851,23 @@ int run(int argc, char** argv)
             target, {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear},
             !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
                                        : render_gl::TargetContents::Clear);
+        if (fade_alpha > 0 && o.capture.empty())
+        {
+            const std::array<float, 4> color{0, 0, 0, fade_alpha};
+            const float fw = static_cast<float>(w), fh = static_cast<float>(h);
+            overlay_vertices[0] = RenderVertex{0, 0, 0, 0, color};
+            overlay_vertices[1] = RenderVertex{fw, 0, 1, 0, color};
+            overlay_vertices[2] = RenderVertex{fw, fh, 1, 1, color};
+            overlay_vertices[3] = RenderVertex{0, fh, 0, 1, color};
+            const RenderFrame overlay_frame{
+                std::span<const RenderVertex>(overlay_vertices.data(), 4),
+                std::span<const std::uint32_t>(overlay_indices.data(), 6),
+                std::span<const DrawCommand>(&overlay_command, 1),
+                ColorComposition::PremultipliedOver};
+            overlay_renderer->prepare(overlay_frame);
+            overlay_renderer->render(target, {0, 0, 1, {0, 0, 0, 0}},
+                                     render_gl::TargetContents::Preserve);
+        }
         if (!o.capture.empty())
         {
             const auto error = asset_io::write_png(o.capture, holder.renderer->capture(target));
