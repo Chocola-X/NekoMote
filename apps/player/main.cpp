@@ -415,14 +415,28 @@ struct Surface
         const auto effective_bottom = has_cutoff ? cutoff_y : bottom;
         if (!(effective_bottom > top))
             return;
-        const auto ratio = std::min(static_cast<float>(w - 32) / (right - left),
-                                    static_cast<float>(h) / (effective_bottom - top));
-        const auto new_scale = std::clamp(scale * ratio, .05f, 5.0f);
-        const auto actual_ratio = new_scale / scale;
-        origin = {(origin.x - (left + right) * .5f) * actual_ratio,
-                  static_cast<float>(h) * .5f -
-                      (effective_bottom - top) * new_scale * .5f};
-        scale = new_scale;
+        if (has_cutoff)
+        {
+            const auto floor = static_cast<float>(h) + 40.0f;
+            const auto ratio = std::min(static_cast<float>(w - 32) / (right - left),
+                                        floor / (effective_bottom - top));
+            const auto new_scale = std::clamp(scale * ratio / 1.21f, .05f, 5.0f);
+            const auto actual_ratio = new_scale / scale;
+            origin = {(origin.x - (left + right) * .5f) * actual_ratio,
+                      static_cast<float>(h) * .5f -
+                          (effective_bottom - top) * new_scale * .5f - 100.0f};
+            scale = new_scale;
+        }
+        else
+        {
+            const auto ratio = std::min(static_cast<float>(w - 32) / (right - left),
+                                        static_cast<float>(h - 32) / (bottom - top));
+            const auto new_scale = std::clamp(scale * ratio, .05f, 5.0f);
+            const auto actual_ratio = new_scale / scale;
+            origin = {(origin.x - (left + right) * .5f) * actual_ratio,
+                      (origin.y - (top + bottom) * .5f) * actual_ratio};
+            scale = new_scale;
+        }
         accept(session->set_scale(scale));
         accept(session->set_origin(origin));
     }
