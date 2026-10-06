@@ -524,9 +524,15 @@ void nekomote_renderer_reserve(
 {
     if (!renderer || !renderer->renderer)
         return;
-    renderer->renderer->reserve({capacity.vertices, capacity.indices,
-                                 capacity.commands, capacity.textures,
-                                 capacity.mask_commands, capacity.masks});
+    try
+    {
+        renderer->renderer->reserve({capacity.vertices, capacity.indices,
+                                     capacity.commands, capacity.textures,
+                                     capacity.mask_commands, capacity.masks});
+    }
+    catch (...)
+    {
+    }
 }
 
 void nekomote_renderer_upload_texture(
@@ -535,11 +541,17 @@ void nekomote_renderer_upload_texture(
 {
     if (!renderer || !renderer->renderer || !pixels)
         return;
-    nekomote::ImageRgba8 image;
-    image.width = width;
-    image.height = height;
-    image.pixels.assign(pixels, pixels + static_cast<size_t>(width) * height * 4);
-    renderer->renderer->upload_texture(nekomote::TextureId{id}, image);
+    try
+    {
+        nekomote::ImageRgba8 image;
+        image.width = width;
+        image.height = height;
+        image.pixels.assign(pixels, pixels + static_cast<size_t>(width) * height * 4);
+        renderer->renderer->upload_texture(nekomote::TextureId{id}, image);
+    }
+    catch (...)
+    {
+    }
 }
 
 void nekomote_renderer_prepare(
@@ -547,21 +559,27 @@ void nekomote_renderer_prepare(
 {
     if (!renderer || !renderer->renderer)
         return;
-    nekomote::RenderFrame f;
-    f.vertices = {reinterpret_cast<const nekomote::RenderVertex *>(frame.vertices),
-                  frame.vertex_count};
-    f.indices = {frame.indices, frame.index_count};
-    f.commands = {reinterpret_cast<const nekomote::DrawCommand *>(frame.commands),
-                  frame.command_count};
-    f.composition = frame.composition == NEKOMOTE_COMPOSITION_PREMULTIPLIED_OVER
-                        ? nekomote::ColorComposition::PremultipliedOver
-                        : nekomote::ColorComposition::ProtectedStraight;
-    f.mask_commands = {
-        reinterpret_cast<const nekomote::DrawCommand *>(frame.mask_commands),
-        frame.mask_command_count};
-    f.masks = {reinterpret_cast<const nekomote::MaskDefinition *>(frame.masks),
-               frame.mask_count};
-    renderer->renderer->prepare(f);
+    try
+    {
+        nekomote::RenderFrame f;
+        f.vertices = {reinterpret_cast<const nekomote::RenderVertex *>(frame.vertices),
+                      frame.vertex_count};
+        f.indices = {frame.indices, frame.index_count};
+        f.commands = {reinterpret_cast<const nekomote::DrawCommand *>(frame.commands),
+                      frame.command_count};
+        f.composition = frame.composition == NEKOMOTE_COMPOSITION_PREMULTIPLIED_OVER
+                            ? nekomote::ColorComposition::PremultipliedOver
+                            : nekomote::ColorComposition::ProtectedStraight;
+        f.mask_commands = {
+            reinterpret_cast<const nekomote::DrawCommand *>(frame.mask_commands),
+            frame.mask_command_count};
+        f.masks = {reinterpret_cast<const nekomote::MaskDefinition *>(frame.masks),
+                   frame.mask_count};
+        renderer->renderer->prepare(f);
+    }
+    catch (...)
+    {
+    }
 }
 
 void nekomote_renderer_resize_output(
@@ -569,7 +587,13 @@ void nekomote_renderer_resize_output(
 {
     if (!renderer || !renderer->renderer)
         return;
-    renderer->renderer->resize_output(width, height);
+    try
+    {
+        renderer->renderer->resize_output(width, height);
+    }
+    catch (...)
+    {
+    }
 }
 
 void nekomote_renderer_render(
@@ -580,14 +604,20 @@ void nekomote_renderer_render(
 {
     if (!renderer || !renderer->renderer)
         return;
-    nekomote::render_gl::Target t;
-    t.framebuffer = target.framebuffer;
-    t.width = target.width;
-    t.height = target.height;
-    auto c = contents == NEKOMOTE_TARGET_PRESERVE
-                 ? nekomote::render_gl::TargetContents::Preserve
-                 : nekomote::render_gl::TargetContents::Clear;
-    renderer->renderer->render(t, from_c_view(view), c);
+    try
+    {
+        nekomote::render_gl::Target t;
+        t.framebuffer = target.framebuffer;
+        t.width = target.width;
+        t.height = target.height;
+        auto c = contents == NEKOMOTE_TARGET_PRESERVE
+                     ? nekomote::render_gl::TargetContents::Preserve
+                     : nekomote::render_gl::TargetContents::Clear;
+        renderer->renderer->render(t, from_c_view(view), c);
+    }
+    catch (...)
+    {
+    }
 }
 
 /* ---- Image loading ---- */
