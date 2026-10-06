@@ -531,8 +531,8 @@ int main(int argc, char **argv)
     const char *single_model = NULL;
     const char *single_session = NULL;
     const char *char_name = NULL;
-    int width = 800;
-    int height = 600;
+    int width = 1920;
+    int height = 1080;
 
     for (int i = 1; i < argc; i++)
     {
