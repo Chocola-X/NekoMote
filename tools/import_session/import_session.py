@@ -33,7 +33,10 @@ def main():
         parser.error('model is absent from the source catalog')
     entry = catalog[args.model]
     character = entry['character']
-    source_path = root / 'model_conversion' / character / args.model / (args.model + '.json')
+    model_dir = root / 'model_conversion' / character / args.model
+    source_path = model_dir / (args.model + '.json')
+    if not source_path.exists():
+        source_path = model_dir / (args.model + '.pure.json')
     metadata = json.loads(source_path.read_text())['metadata']
     markers = dict(metadata.get('charaProfile', {}).get('pixelMarker', {}))
     presentation_path = root / 'config/model-presentation.json'

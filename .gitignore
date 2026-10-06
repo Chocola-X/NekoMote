@@ -14,3 +14,12 @@ compile_commands.json
 # Development browser capture dependency cache
 node_modules/
 __pycache__/
+
+# Compiled model assets (large, regenerate via tools/build_assets.sh)
+assets/characters/*/model.nkm.json
+assets/characters/*/session.nks.json
+assets/characters/*/textures/
+assets/characters/*/audio/
+assets/characters/*/report.json
+assets/characters/*/*.report.json
+assets/config.json
