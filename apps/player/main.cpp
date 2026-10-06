@@ -36,8 +36,8 @@ constexpr double kCharacterFadeSeconds = 0.4;
 enum class CharacterFadeState
 {
     None,
-    FadingOut,
-    FadingIn
+    CrossFadePending,
+    CrossFade,
 };
 
 struct Options
@@ -541,6 +541,7 @@ int run(int argc, char** argv)
         initial = &temp_entry;
     }
     CharacterHolder holder = load_character(*initial, o);
+    CharacterHolder old_holder;
     if (!o.reaction.empty())
         check(holder.instance->react(holder.program->find_reaction(o.reaction)));
     if (!o.background.empty())
@@ -639,8 +640,6 @@ int run(int argc, char** argv)
             if (catalog.backgrounds[i].name == config.background)
                 current_background_index = static_cast<int>(i);
     }
-    bool need_reload = false;
-    int target_character_index = current_character_index;
     bool need_bg_switch = false;
     int target_background_index = current_background_index;
     bool need_bg_clear = false;
@@ -655,9 +654,7 @@ int run(int argc, char** argv)
         if (index == current_character_index || fade_state != CharacterFadeState::None)
             return;
         fade_target_character = index;
-        fade_state = CharacterFadeState::FadingOut;
-        fade_alpha = 1;
-        fade_start = Clock::now();
+        fade_state = CharacterFadeState::CrossFadePending;
     };
     auto switch_background = [&](int index)
     {
@@ -769,37 +766,13 @@ int run(int argc, char** argv)
             minimized_check.reset();
         }
         check(surface.error);
-        if (fade_state != CharacterFadeState::None)
-        {
-            const auto elapsed = std::chrono::duration<double>(Clock::now() - fade_start).count();
-            const auto progress = static_cast<float>(elapsed / kCharacterFadeSeconds);
-            if (fade_state == CharacterFadeState::FadingOut)
-            {
-                fade_alpha = std::max(1.0f - progress, 0.0f);
-                if (fade_alpha <= 0.0f)
-                {
-                    target_character_index = fade_target_character;
-                    need_reload = true;
-                    fade_state = CharacterFadeState::FadingIn;
-                    fade_alpha = 0.0f;
-                    fade_start = Clock::now();
-                }
-            }
-            else
-            {
-                fade_alpha = std::min(progress, 1.0f);
-                if (fade_alpha >= 1.0f)
-                {
-                    fade_alpha = 1.0f;
-                    fade_state = CharacterFadeState::None;
-                }
-            }
-        }
-        if (need_reload && assets_mode)
+        if (fade_state == CharacterFadeState::CrossFadePending)
         {
             glfwSetWindowUserPointer(window.get(), nullptr);
-            const auto& entry = catalog.characters[target_character_index];
+            const auto& entry = catalog.characters[fade_target_character];
             std::printf("Switching to character: %s\n", entry.name.c_str());
+            old_holder = std::move(holder);
+            old_holder.device.reset();
             holder = load_character(entry, o);
             surface.session = holder.instance.get();
             surface.origin = o.origin;
@@ -816,7 +789,7 @@ int run(int argc, char** argv)
                 check(holder.instance->set_origin(surface.origin));
             }
             glfwSetWindowUserPointer(window.get(), &surface);
-            current_character_index = target_character_index;
+            current_character_index = fade_target_character;
             config.character = entry.name;
             if (current_background_index >= 0 &&
                 current_background_index < static_cast<int>(catalog.backgrounds.size()))
@@ -829,10 +802,23 @@ int run(int argc, char** argv)
                 config.save(config_path);
             std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
                         holder.has_background ? config.background.c_str() : "none");
-            need_reload = false;
             last_width = 0;
             last_height = 0;
+            fade_state = CharacterFadeState::CrossFade;
+            fade_alpha = 0.0f;
             fade_start = Clock::now();
+        }
+        else if (fade_state == CharacterFadeState::CrossFade)
+        {
+            const auto elapsed = std::chrono::duration<double>(Clock::now() - fade_start).count();
+            const auto progress = static_cast<float>(elapsed / kCharacterFadeSeconds);
+            fade_alpha = std::min(progress, 1.0f);
+            if (fade_alpha >= 1.0f)
+            {
+                fade_alpha = 1.0f;
+                fade_state = CharacterFadeState::None;
+                old_holder = CharacterHolder{};
+            }
         }
         if (need_bg_switch && assets_mode)
         {
@@ -887,7 +873,11 @@ int run(int argc, char** argv)
         }
         const auto begin = Clock::now();
         if (o.capture.empty())
+        {
             check(holder.instance->advance(elapsed));
+            if (fade_state == CharacterFadeState::CrossFade && old_holder.instance)
+                check(old_holder.instance->advance(elapsed));
+        }
         if (w <= 0 || h <= 0 || surface.minimized)
         {
             glfwWaitEventsTimeout(.1);
@@ -895,9 +885,16 @@ int run(int argc, char** argv)
         }
         check(holder.instance->prepare_frame());
         holder.renderer->prepare(holder.instance->frame());
+        if (fade_state == CharacterFadeState::CrossFade && old_holder.instance)
+        {
+            check(old_holder.instance->prepare_frame());
+            old_holder.renderer->prepare(old_holder.instance->frame());
+        }
         if (w != last_width || h != last_height)
         {
             holder.renderer->resize_output(w, h);
+            if (fade_state == CharacterFadeState::CrossFade && old_holder.renderer)
+                old_holder.renderer->resize_output(w, h);
             check(holder.instance->set_output_size(w, h));
             std::printf("Output %dx%d, model scale %.6f origin (%.3f, %.3f)\n", w, h,
                         static_cast<double>(surface.scale), static_cast<double>(surface.origin.x),
@@ -918,11 +915,32 @@ int run(int argc, char** argv)
             holder.background_renderer->prepare(bg_frame);
             holder.background_renderer->render(target, {0, 0, 1, clear});
         }
-        holder.renderer->render(
-            target, {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                     fade_state == CharacterFadeState::None ? 1.0f : fade_alpha},
-            !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
-                                       : render_gl::TargetContents::Clear);
+        const auto target_contents = !bg_frame.commands.empty()
+                                         ? render_gl::TargetContents::Preserve
+                                         : render_gl::TargetContents::Clear;
+        const bool in_crossfade =
+            fade_state == CharacterFadeState::CrossFade && old_holder.instance;
+        if (in_crossfade)
+        {
+            old_holder.renderer->render(
+                target,
+                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
+                 1.0f - fade_alpha},
+                target_contents);
+            holder.renderer->render(
+                target,
+                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
+                 fade_alpha},
+                render_gl::TargetContents::Preserve);
+        }
+        else
+        {
+            holder.renderer->render(
+                target,
+                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
+                 fade_state == CharacterFadeState::None ? 1.0f : fade_alpha},
+                target_contents);
+        }
         if (ui_ready && o.capture.empty() && o.check_window.empty())
         {
             ui_context.begin_frame();
