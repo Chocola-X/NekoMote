@@ -201,8 +201,9 @@ static void *audio_worker(void *arg)
                 pthread_mutex_unlock(&dev->mutex);
                 if (old) pa_simple_free(old);
                 pa_sample_spec spec = {PA_SAMPLE_FLOAT32NE, sr, (uint8_t)ch};
-                pa_buffer_attr attr = {(uint32_t)-1, (uint32_t)-1, (uint32_t)-1,
-                                       (uint32_t)-1, (uint32_t)-1};
+                uint32_t frame_bytes = ch * (uint32_t)sizeof(float);
+                uint32_t blen = sr * frame_bytes / 5;
+                pa_buffer_attr attr = {blen * 2, blen, 0, 512 * frame_bytes, 0};
                 int err = 0;
                 pa_simple *s = pa_simple_new(NULL, "NekoMote ABI Host",
                     PA_STREAM_PLAYBACK, NULL, "voice", &spec, NULL, &attr, &err);
@@ -231,7 +232,7 @@ static void *audio_worker(void *arg)
                           dev->current_clip >= 0;
         pa_simple *stream = NULL;
         float *write_ptr = NULL;
-        size_t chunk = 0, channels = 0, rms_count = 0;
+        size_t chunk = 0, channels = 0, rms_count = 0, sample_rate = 0;
         float *rms = NULL;
         int drain = 0;
         if (should_play)
@@ -246,6 +247,7 @@ static void *audio_worker(void *arg)
                 channels = clip->channels;
                 rms_count = clip->rms_count;
                 rms = clip->rms;
+                sample_rate = clip->sample_rate;
             }
             else
                 drain = 1;
@@ -259,6 +261,13 @@ static void *audio_worker(void *arg)
             pthread_mutex_lock(&dev->mutex);
             dev->position += chunk;
             size_t frame = dev->position / channels;
+            pa_usec_t latency = pa_simple_get_latency(stream, &err);
+            if (latency != (pa_usec_t)-1)
+            {
+                size_t lat_frames = (size_t)((double)latency *
+                                              (double)sample_rate / 1000000.0);
+                frame = frame > lat_frames ? frame - lat_frames : 0;
+            }
             size_t idx = frame / AUDIO_RMS_FRAMES;
             if (idx < rms_count)
                 dev->current_rms = rms[idx];
