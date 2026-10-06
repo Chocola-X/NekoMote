@@ -1,4 +1,5 @@
 #include "asset_catalog.hpp"
+#include "ui.hpp"
 #include <nekomote/application/session.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/audio.hpp>
@@ -9,6 +10,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glad/gl.h>
 
 #include <algorithm>
 #include <array>
@@ -306,6 +308,7 @@ struct Surface
     application::SessionStatus error;
     float cutoff_y{0};
     bool has_cutoff{false};
+    player::ui::Context* ui_context{nullptr};
     void accept(application::SessionStatus s) noexcept
     {
         if (!s && s.error != application::SessionError::Busy &&
@@ -328,6 +331,8 @@ struct Surface
     {
         auto& s = get(w);
         const auto p = s.point(x, y);
+        if (s.ui_context)
+            s.ui_context->mouse_move(x, y);
         if (s.dragging)
         {
             s.origin.x += p.x - s.previous.x;
@@ -355,6 +360,8 @@ struct Surface
         auto& s = get(w);
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
+        if (s.ui_context)
+            s.ui_context->mouse_button(button, action);
         if (button == GLFW_MOUSE_BUTTON_RIGHT)
         {
             s.dragging = action == GLFW_PRESS;
@@ -532,6 +539,45 @@ int run(int argc, char** argv)
     Surface surface{holder.instance.get(), window.get(), o.origin, {}, o.scale,
                     false, false, false, false, {},
                     initial->cutoff_y, initial->has_cutoff};
+    player::ui::FontAtlas ui_font;
+    player::ui::Renderer ui_renderer;
+    player::ui::Context ui_context;
+    player::ui::IconState ui_icon{};
+    player::ui::SidebarState ui_sidebar{};
+    std::uint32_t ui_icon_texture = 0;
+    bool ui_ready = false;
+    if (assets_mode && ui_font.init("", 18))
+    {
+        int fw = 0, fh = 0;
+        glfwGetFramebufferSize(window.get(), &fw, &fh);
+        if (ui_renderer.init(fw, fh))
+        {
+            ui_renderer.set_font(&ui_font);
+            ui_context.init(&ui_renderer);
+            const auto icon_path = o.assets / "icons" / "neko.png";
+            if (std::filesystem::exists(icon_path))
+            {
+                auto image = asset_io::load_png(icon_path);
+                if (image.ok)
+                {
+                    glGenTextures(1, &ui_icon_texture);
+                    glBindTexture(GL_TEXTURE_2D, ui_icon_texture);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.image.width,
+                                 image.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                                 image.image.pixels.data());
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
+            }
+            ui_icon.x = static_cast<float>(fw) - 60;
+            ui_icon.y = 16;
+            ui_ready = true;
+            surface.ui_context = &ui_context;
+        }
+    }
     if (o.fit || (assets_mode && config.fit))
     {
         check(holder.instance->prepare_frame());
@@ -847,6 +893,8 @@ int run(int argc, char** argv)
             std::printf("Output %dx%d, model scale %.6f origin (%.3f, %.3f)\n", w, h,
                         static_cast<double>(surface.scale), static_cast<double>(surface.origin.x),
                         static_cast<double>(surface.origin.y));
+            if (ui_ready)
+                ui_renderer.resize(w, h);
             last_width = w;
             last_height = h;
         }
@@ -866,6 +914,65 @@ int run(int argc, char** argv)
                      fade_state == CharacterFadeState::None ? 1.0f : fade_alpha},
             !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
                                        : render_gl::TargetContents::Clear);
+        if (ui_ready && o.capture.empty() && o.check_window.empty())
+        {
+            ui_context.begin_frame();
+            const player::ui::Style style;
+            if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
+                ui_sidebar.open = !ui_sidebar.open;
+            ui_context.sidebar(ui_sidebar, style);
+            if (ui_sidebar.animation > 0.01f)
+            {
+                const float sidebar_w = 264;
+                const float anim = player::ui::ease_out_back(ui_sidebar.animation);
+                const float sidebar_x = -sidebar_w * (1.0f - anim);
+                const float sidebar_h = static_cast<float>(h) - 16;
+                ui_renderer.draw_rounded_rect(sidebar_x, 8, sidebar_w, sidebar_h,
+                                               style.corner_radius, style.panel_bg,
+                                               style.accent, 2);
+                float y = 20;
+                ui_context.label("角色", sidebar_x + style.padding, y,
+                                 style.title_size, style.text);
+                y += 30;
+                for (std::size_t i = 0; i < catalog.characters.size(); ++i)
+                {
+                    if (ui_context.radio_button(
+                            catalog.characters[i].name.c_str(),
+                            static_cast<int>(i) == current_character_index,
+                            sidebar_x + 4, y, sidebar_w - 8, 28, style))
+                        switch_character(static_cast<int>(i));
+                    y += 30;
+                }
+                y += 8;
+                ui_context.divider_line(sidebar_x + style.padding, y,
+                                        sidebar_w - style.padding * 2, style);
+                y += 16;
+                ui_context.label("背景", sidebar_x + style.padding, y,
+                                 style.title_size, style.text);
+                y += 30;
+                for (std::size_t i = 0; i < catalog.backgrounds.size(); ++i)
+                {
+                    if (ui_context.radio_button(
+                            catalog.backgrounds[i].name.c_str(),
+                            static_cast<int>(i) == current_background_index,
+                            sidebar_x + 4, y, sidebar_w - 8, 28, style))
+                    {
+                        target_background_index = static_cast<int>(i);
+                        need_bg_switch = true;
+                    }
+                    y += 30;
+                }
+                if (current_background_index >= 0)
+                {
+                    y += 8;
+                    if (ui_context.text_button("清除背景", sidebar_x + 4, y,
+                                               sidebar_w - 8, 28, style))
+                        need_bg_clear = true;
+                }
+            }
+            ui_context.end_frame();
+            ui_renderer.end_frame();
+        }
         if (!o.capture.empty())
         {
             const auto error = asset_io::write_png(o.capture, holder.renderer->capture(target));
@@ -998,6 +1105,8 @@ int run(int argc, char** argv)
         config.save(config_path);
     }
     glfwSetCursorPosCallback(window.get(), nullptr);
+    if (ui_icon_texture)
+        glDeleteTextures(1, &ui_icon_texture);
     glfwSetCursorEnterCallback(window.get(), nullptr);
     glfwSetMouseButtonCallback(window.get(), nullptr);
     glfwSetScrollCallback(window.get(), nullptr);
