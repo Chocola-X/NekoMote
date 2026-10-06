@@ -378,7 +378,12 @@ struct Surface
         }
         else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !s.paused &&
                  !s.minimized)
-            s.accept(s.session->touch(s.point(x, y)));
+        {
+            auto p = s.point(x, y);
+            if (s.mirror)
+                p.x = -p.x;
+            s.accept(s.session->touch(p));
+        }
     }
     static void scroll(GLFWwindow* w, double, double amount) noexcept
     {
