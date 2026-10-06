@@ -755,6 +755,7 @@ int run(int argc, char** argv)
             need_reload = false;
             last_width = 0;
             last_height = 0;
+            fade_start = Clock::now();
         }
         if (need_bg_switch && assets_mode)
         {
