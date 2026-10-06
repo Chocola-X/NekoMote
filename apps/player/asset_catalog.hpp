@@ -13,6 +13,8 @@ struct CharacterEntry
     std::filesystem::path model_path;
     std::filesystem::path session_path;
     std::filesystem::path directory;
+    float cutoff_y{0};
+    bool has_cutoff{false};
 };
 
 struct BackgroundEntry

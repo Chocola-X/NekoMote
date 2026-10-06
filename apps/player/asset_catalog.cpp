@@ -31,6 +31,28 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
                 continue;
             catalog.characters.push_back(
                 {dir.filename().string(), model, session, dir});
+            auto& ch = catalog.characters.back();
+            const fs::path meta = dir / "meta.json";
+            if (fs::exists(meta))
+            {
+                std::ifstream mf(meta);
+                if (mf)
+                {
+                    Json mj;
+                    try
+                    {
+                        mf >> mj;
+                        if (mj.contains("cutoff_y"))
+                        {
+                            ch.cutoff_y = mj["cutoff_y"].get<float>();
+                            ch.has_cutoff = true;
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                }
+            }
         }
     std::sort(catalog.characters.begin(), catalog.characters.end(),
               [](const auto& a, const auto& b) { return a.name < b.name; });

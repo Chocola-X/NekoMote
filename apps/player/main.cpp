@@ -304,6 +304,8 @@ struct Surface
     float scale;
     bool dragging{false}, paused{false}, minimized{false}, output_unavailable{false};
     application::SessionStatus error;
+    float cutoff_y{0};
+    bool has_cutoff{false};
     void accept(application::SessionStatus s) noexcept
     {
         if (!s && s.error != application::SessionError::Busy &&
@@ -403,12 +405,15 @@ struct Surface
             }
         if (!(right > left) || !(bottom > top))
             return;
+        const auto effective_bottom = has_cutoff ? cutoff_y : bottom;
+        if (!(effective_bottom > top))
+            return;
         const auto ratio = std::min(static_cast<float>(w - 32) / (right - left),
-                                    static_cast<float>(h - 32) / (bottom - top));
+                                    static_cast<float>(h - 32) / (effective_bottom - top));
         const auto new_scale = std::clamp(scale * ratio, .05f, 5.0f);
         const auto actual_ratio = new_scale / scale;
         origin = {(origin.x - (left + right) * .5f) * actual_ratio,
-                  (origin.y - (top + bottom) * .5f) * actual_ratio};
+                  (origin.y - (top + effective_bottom) * .5f) * actual_ratio};
         scale = new_scale;
         accept(session->set_scale(scale));
         accept(session->set_origin(origin));
@@ -525,7 +530,8 @@ int run(int argc, char** argv)
             apply_background(holder, bg->path, 0);
     }
     Surface surface{holder.instance.get(), window.get(), o.origin, {}, o.scale,
-                    false, false, false, false, {}};
+                    false, false, false, false, {},
+                    initial->cutoff_y, initial->has_cutoff};
     if (o.fit || (assets_mode && config.fit))
     {
         check(holder.instance->prepare_frame());
@@ -743,6 +749,8 @@ int run(int argc, char** argv)
             surface.origin = o.origin;
             surface.scale = o.scale;
             surface.paused = false;
+            surface.cutoff_y = entry.cutoff_y;
+            surface.has_cutoff = entry.has_cutoff;
             check(holder.instance->set_scale(surface.scale));
             check(holder.instance->set_origin(surface.origin));
             if (assets_mode && config.fit)
