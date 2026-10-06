@@ -472,9 +472,8 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             const auto& r = asset.icons.at(name);
             require(
                 r.width > 0 && r.height > 0 && std::isfinite(r.width) && std::isfinite(r.height) &&
-                    textures.contains(r.texture) && r.width == std::floor(r.width) &&
-                    r.height == std::floor(r.height) && (r.attr == 0 || r.attr == 1),
-                name, "invalid or nonintegral sprite rectangle; source truncation is unverified");
+                    textures.contains(r.texture),
+                name, "invalid sprite rectangle");
             const ResourceId id{static_cast<std::uint32_t>(data->resources.size())};
             data->resources.push_back(
                 {name, ResourceKind::Sprite, textures.at(r.texture), r, nullptr});
