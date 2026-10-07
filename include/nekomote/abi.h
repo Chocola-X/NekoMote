@@ -330,6 +330,12 @@ extern "C"
         size_t mask_commands, masks;
     } nekomote_renderer_capacity;
 
+    /* Read-only renderer capacity derived from the compiled scene and texture
+     * count. Returns all-zero and sets NEKOMOTE_ERROR_INVALID_INPUT if program
+     * is NULL. The caller may pass this to nekomote_renderer_reserve instead of
+     * hard-coding capacities. */
+    nekomote_renderer_capacity nekomote_program_renderer_capacity(const nekomote_program* program);
+
     nekomote_renderer* nekomote_renderer_create(nekomote_gl_loader loader);
     void nekomote_renderer_destroy(nekomote_renderer* renderer);
 

@@ -664,6 +664,24 @@ extern "C"
         return program->program->mirror() ? 1 : 0;
     }
 
+    nekomote_renderer_capacity nekomote_program_renderer_capacity(const nekomote_program* program)
+    {
+        nekomote_renderer_capacity cap{};
+        if (!program || !program->program)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null or invalid program");
+            return cap;
+        }
+        const auto fc = program->program->playback().scene().frame_capacity();
+        cap.vertices = fc.vertices;
+        cap.indices = fc.indices;
+        cap.commands = fc.commands;
+        cap.textures = program->program->playback().scene().textures().size();
+        cap.mask_commands = fc.mask_commands;
+        cap.masks = fc.masks;
+        return cap;
+    }
+
     /* ---- Session instance ---- */
 
     nekomote_session* nekomote_session_create(const nekomote_program* program,

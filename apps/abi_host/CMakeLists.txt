@@ -4,11 +4,8 @@ target_link_libraries(nekomote_abi_host
         nekomote::abi
         glfw
         OpenGL::GL
-        nekomote_gl_loader
-        pulse-simple
-        pulse
-        pthread)
+        nekomote_gl_loader)
 target_compile_features(nekomote_abi_host PRIVATE c_std_11)
 target_compile_options(nekomote_abi_host PRIVATE
     -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2
-    -Wno-format-truncation -Wno-double-promotion)
+    -Wno-double-promotion)

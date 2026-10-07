@@ -8,7 +8,7 @@
 | Coconut/Azuki局部继承 | 原Coconut8.876191px/13,111像素FAIL保留；近似已移除，正式0x7fc路径UnsupportedTransform。公式未还原 | Codex / R2 |
 | bm/非标准attr | 非零bm、attr非0/1已恢复明确拒绝；源GPU混合/颜色保护认证仍缺 | Gemini V3，Codex映射 |
 | C ABI边界 | 0.3.0长度/固定宽度/RAII/异常/帧失效/字段复制/预分配与headless已验证；更精确源诊断、真实宿主上下文丢失/卸载未验证 | Codex后续；G2限定只读容量getter |
-| C宿主音频/线程与错误流程 | 重复PCM/Pulse、quitting竞争和pthread浅拷贝仍存在，回退先毁旧声音；打印错误后继续不是成功 | GLM G2：收敛显式静音诊断宿主，删除重复服务 |
+| C宿主音频/线程与错误流程 | **G2已修复**：abi_host收敛为显式静音C ABI诊断工具，删除PCM/Pulse/thread/WAVE/RMS和角色目录/壁纸策略；预分配用nekomote_program_renderer_capacity；生命周期正确 | 已闭合；正式声音由player提供 |
 | 会话/切换/渐变 | 能力查询、背景暂停/共享250ms预算和C++候选事务已修复；角色过渡仍使用墙钟且两遍over，背景reset/重入/声音候选失败尚未验收 | V4 / Codex；Gemini后续视觉 |
 | UI状态与稳态 | UI截图/拖动/输入隔离与字形绘制分配尚未完整验证；核心136项不能代替这些测试 | Gemini V5，后续GLM G8 |
 | 资产/目录/构建 | G4已完成：catalog驱动事务导入、195账本、显式参数、素材移出索引；C宿主warning/依赖/格式待G2简化后清理 | GLM G6；G2进行中 |
