@@ -503,6 +503,67 @@ struct Surface
     }
 };
 
+enum class FitPolicy
+{
+    KeepConfigured,
+    FitToWindow
+};
+
+// All fallible loading/preparation belongs to the candidate. Current session,
+// surface callbacks and device ownership remain intact until it is ready.
+bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, Surface& surface,
+                          const player::CharacterEntry& entry, const Options& options,
+                          const fs::path& background, FitPolicy fit_policy)
+{
+    CharacterHolder candidate;
+    auto candidate_surface = surface;
+    try
+    {
+        candidate = load_character(entry, options);
+        candidate_surface.session = candidate.instance.get();
+        candidate_surface.origin = options.origin;
+        candidate_surface.scale = options.scale;
+        candidate_surface.dragging = false;
+        candidate_surface.cutoff_y = entry.cutoff_y;
+        candidate_surface.has_cutoff = entry.has_cutoff;
+        candidate_surface.mirror = candidate.program->mirror();
+        if (!background.empty())
+            apply_background(candidate, background, 0);
+        check(candidate.instance->prepare_frame());
+        if (fit_policy == FitPolicy::FitToWindow)
+        {
+            candidate_surface.fit();
+            check(candidate_surface.error);
+            check(candidate.instance->prepare_frame());
+        }
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(surface.window, &width, &height);
+        width = std::max(width, 1);
+        height = std::max(height, 1);
+        check(candidate.instance->set_output_size(width, height));
+        candidate.renderer->prepare(candidate.instance->frame());
+        candidate.renderer->resize_output(width, height);
+        if (candidate.has_background)
+        {
+            candidate.background_renderer->prepare(candidate.instance->background_frame());
+            candidate.background_renderer->resize_output(width, height);
+        }
+        candidate_surface.synchronize_pause();
+        check(candidate_surface.error);
+    }
+    catch (const std::exception& error)
+    {
+        std::fprintf(stderr, "Cannot switch to %s: %s; current session retained\n",
+                     entry.name.c_str(), error.what());
+        return false;
+    }
+    previous = std::move(current);
+    current = std::move(candidate);
+    surface = candidate_surface;
+    previous.device.reset();
+    return true;
+}
+
 int run(int argc, char** argv)
 {
     auto o = options(argc, argv);
@@ -826,46 +887,34 @@ int run(int argc, char** argv)
         check(surface.error);
         if (fade_state == CharacterFadeState::CrossFadePending)
         {
-            glfwSetWindowUserPointer(window.get(), nullptr);
             const auto& entry = catalog.characters[fade_target_character];
-            std::printf("Switching to character: %s\n", entry.name.c_str());
-            old_holder = std::move(holder);
-            old_holder.device.reset();
-            holder = load_character(entry, o);
-            surface.session = holder.instance.get();
-            surface.origin = o.origin;
-            surface.scale = o.scale;
-            surface.paused = false;
-            surface.cutoff_y = entry.cutoff_y;
-            surface.has_cutoff = entry.has_cutoff;
-            surface.mirror = holder.program->mirror();
-            check(holder.instance->set_scale(surface.scale));
-            check(holder.instance->set_origin(surface.origin));
-            if (assets_mode && config.fit)
-            {
-                check(holder.instance->prepare_frame());
-                surface.fit();
-                check(holder.instance->set_origin(surface.origin));
-            }
-            glfwSetWindowUserPointer(window.get(), &surface);
-            current_character_index = fade_target_character;
-            config.character = entry.name;
+            fs::path background;
             if (current_background_index >= 0 &&
                 current_background_index < static_cast<int>(catalog.backgrounds.size()))
+                background = catalog.backgrounds[current_background_index].path;
+            if (!try_switch_character(holder, old_holder, surface, entry, o, background,
+                                      config.fit ? FitPolicy::FitToWindow
+                                                 : FitPolicy::KeepConfigured))
             {
-                const auto& bg = catalog.backgrounds[current_background_index];
-                apply_background(holder, bg.path, 0);
-                config.background = bg.name;
+                fade_state = CharacterFadeState::None;
+                fade_target_character = current_character_index;
+                fade_alpha = 1.0f;
             }
-            if (!o.no_save)
-                config.save(config_path);
-            std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
-                        holder.has_background ? config.background.c_str() : "none");
-            last_width = 0;
-            last_height = 0;
-            fade_state = CharacterFadeState::CrossFade;
-            fade_alpha = 0.0f;
-            fade_start = Clock::now();
+            else
+            {
+                current_character_index = fade_target_character;
+                config.character = entry.name;
+                if (!o.no_save)
+                    config.save(config_path);
+                std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
+                            holder.has_background ? config.background.c_str() : "none");
+                last_width = 0;
+                last_height = 0;
+                fade_state = CharacterFadeState::CrossFade;
+                fade_alpha = 0.0f;
+                fade_start = Clock::now();
+                previous = fade_start; // Loading time is not playback time for the candidate.
+            }
         }
         else if (fade_state == CharacterFadeState::CrossFade)
         {
@@ -1225,9 +1274,51 @@ int run(int argc, char** argv)
                 Surface::key(window.get(), GLFW_KEY_SPACE, 0, GLFW_PRESS, 0);
             else if (check_frame == 8)
                 paused_pixels = save("paused-a.png").pixels;
+            else if (check_frame == 9)
+            {
+                const auto* current_session = holder.instance.get();
+                const auto* current_program = holder.program.get();
+                const auto origin = surface.origin;
+                const auto scale = surface.scale;
+                auto missing = *initial;
+                missing.model_path = initial->model_path / "missing-model.nkm.json";
+                if (try_switch_character(holder, old_holder, surface, missing, o, {},
+                                         FitPolicy::KeepConfigured))
+                    throw std::runtime_error("missing candidate unexpectedly succeeded");
+                // This failure occurs after CPU/GPU candidate creation: its
+                // background cannot load. No external files are modified.
+                if (try_switch_character(holder, old_holder, surface, *initial, o,
+                                         initial->model_path / "missing-background.png",
+                                         FitPolicy::KeepConfigured))
+                    throw std::runtime_error("missing candidate background unexpectedly succeeded");
+                if (holder.instance.get() != current_session ||
+                    holder.program.get() != current_program || old_holder.instance ||
+                    surface.session != current_session || !surface.paused ||
+                    surface.origin != origin || surface.scale != scale)
+                    throw std::runtime_error(
+                        "candidate failure changed current ownership or surface");
+            }
+            else if (check_frame == 10)
+            {
+                if (save("switch-failed-retained.png").pixels != paused_pixels)
+                    throw std::runtime_error("candidate failure changed paused rendering");
+            }
+            else if (check_frame == 11)
+            {
+                const auto* previous_session = holder.instance.get();
+                if (!try_switch_character(holder, old_holder, surface, *initial, o, {},
+                                          FitPolicy::KeepConfigured) ||
+                    holder.instance.get() == previous_session ||
+                    old_holder.instance.get() != previous_session || !surface.paused ||
+                    surface.session != holder.instance.get())
+                    throw std::runtime_error("successful switch broke ownership or pause");
+                old_holder = CharacterHolder{};
+            }
+            else if (check_frame == 12)
+                paused_pixels = save("switch-success-paused-a.png").pixels;
             else if (check_frame == 14)
             {
-                if (save("paused-b.png").pixels != paused_pixels)
+                if (save("switch-success-paused-b.png").pixels != paused_pixels)
                     throw std::runtime_error("paused image changed");
                 glfwSetWindowSize(window.get(), 640, 800);
                 resize_check = Clock::now();
@@ -1326,7 +1417,8 @@ int run(int argc, char** argv)
         if (!window_check_passed)
             throw std::runtime_error("owned-window check interrupted");
         std::puts("Owned-window callbacks: pause pixel equality, resize/fit, minimize/restore, "
-                  "reset/resume and close PASS; no OS keyboard/mouse injection.");
+                  "candidate failure retention, reset/resume and close PASS; no OS keyboard/mouse "
+                  "injection.");
     }
     if (!o.capture.empty() && !captured)
         throw std::runtime_error("capture interrupted");

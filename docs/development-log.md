@@ -572,3 +572,11 @@
 - dev **136/136 PASS**；headless ASan/UBSan **135/135 PASS**；无 assets/refer 的独立源码副本 headless 构建/测试 **134 PASS + 1 Skipped**。首轮 ASan 版本断言未迁移的失败日志留存，更新0.3.0后重跑全量通过。
 - GPU 检查失败后宿主白像素未被旧红帧覆盖，随后恢复；无效长度不读像素；模拟 OOM 不越过 C 边界。CPU120轮、GPU100轮 ABI 热路径均0普通 C++ new；此计数不包含驱动/UI/初始化/截图，不宣称整机收益。
 - 具体契约见 `docs/abi-contract.md`。C 宿主音频、线程和通用源错误诊断等仍待交接复核，不将已有实验窗口认证为 Plasma 插件。下一步 C3 处理 C++ 候选角色事务。
+
+
+## 2026-10-07 Codex：C++ 播放器候选切换事务（C3 / G3）
+
+- 提取共同的 try_switch_character：候选先完成模型/会话、音频设备创建、纹理、背景、fit、CPU帧、GPU prepare/resize 和暂停同步；全部成功后才移动当前 holder。加载失败保留现有程序/会话、设备、surface指针、位置/比例和暂停状态；不再将 GLFW user pointer 临时设为 NULL。初始化耗时不加入新角色的第一帧 elapsed。
+- 使用真实生产事务的应用内 `--check-window`：模型缺失（早期）与背景缺失（CPU/GPU初始化之后）均拒绝并保留旧会话。失败后的暂停图与原图逐像素相同；合法切换正确移动所有权并保留暂停，新会话的连续暂停图也逐像素相同。resize/fit/minimize/restore/reset/close 均通过，已查看 resize 截图。没有系统键鼠注入。
+- dev 136/136 通过；当前资产 `chocola/h01` 36步800×1080透明截图直接对照冻结 WebGL reaction36，0超差像素、alpha/黑白合成误差0，原始RGB最大1/255。首条遗漏 reaction 的 `chocola/` 前缀导致明确 InvalidReaction，日志保留；纠正调用参数后通过，没有修改数据或阈值。
+- 报告：`docs/validation/integration-player-2026-10-07.json`。验证使用 --mute/--no-save，未触碰系统桌面或持久设置；音频开启的候选失败、角色渐变合成/时钟、背景reset政策仍待V4和服务复核。正常帧路径未改，加载与失败诊断不计稳态零分配。
