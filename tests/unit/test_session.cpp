@@ -302,7 +302,8 @@ TEST_CASE("Background fade pauses during playback pause", "[application]")
     REQUIRE(session.advance(0.25));
     frame = session.background_frame();
     REQUIRE(frame.commands.size() == 2);
-    REQUIRE(session.advance(0.5));
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.advance(0.25));
     frame = session.background_frame();
     REQUIRE(frame.commands.size() == 1);
 }
@@ -322,4 +323,39 @@ TEST_CASE("Background reset clears fade state", "[application]")
     REQUIRE(session.background_frame().commands.size() == 0);
     REQUIRE(session.reset());
     REQUIRE(session.background_frame().commands.size() == 0);
+}
+
+TEST_CASE("Background and model share the bounded clock across stalls", "[application]")
+{
+    Reference reference;
+    SessionInstance stalled(*reference.program), partitioned(*reference.program);
+    for (auto* session : {&stalled, &partitioned})
+    {
+        REQUIRE(session->start());
+        REQUIRE(session->set_output_size(800, 600));
+        REQUIRE(session->set_background(TextureId{1}, 800, 600));
+        REQUIRE(session->fade_background(TextureId{2}, 800, 600, 1.0));
+    }
+    REQUIRE(stalled.advance(100.0));
+    for (int i = 0; i < 15; ++i)
+        REQUIRE(partitioned.advance(1.0 / 60.0));
+    REQUIRE(stalled.playback().tick_count() == 15);
+    REQUIRE(stalled.playback().tick_count() == partitioned.playback().tick_count());
+    REQUIRE(stalled.background_frame().commands.size() == 2);
+    REQUIRE_THAT(stalled.background_frame().vertices[4].color[3],
+                 Catch::Matchers::WithinAbs(0.25, 1e-6));
+    REQUIRE_THAT(
+        stalled.background_frame().vertices[4].color[3],
+        Catch::Matchers::WithinAbs(partitioned.background_frame().vertices[4].color[3], 1e-6));
+    REQUIRE(stalled.set_playback_state(runtime::PlaybackState::Paused));
+    REQUIRE(stalled.advance(100.0));
+    REQUIRE(stalled.set_playback_state(runtime::PlaybackState::Running));
+    REQUIRE(stalled.advance(100.0));
+    REQUIRE_THAT(stalled.background_frame().vertices[4].color[3],
+                 Catch::Matchers::WithinAbs(0.5, 1e-6));
+    const auto ticks = stalled.playback().tick_count();
+    REQUIRE_FALSE(stalled.advance(std::numeric_limits<double>::quiet_NaN()));
+    REQUIRE(stalled.playback().tick_count() == ticks);
+    REQUIRE_THAT(stalled.background_frame().vertices[4].color[3],
+                 Catch::Matchers::WithinAbs(0.5, 1e-6));
 }

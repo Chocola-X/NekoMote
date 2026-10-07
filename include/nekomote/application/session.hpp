@@ -123,6 +123,8 @@ class SessionInstance
     // Latest RMS snapshot from actual PCM playback, in 0..1. No fake audio.
     SessionStatus set_audio_level(float rms) noexcept;
     SessionStatus set_playback_state(runtime::PlaybackState state) noexcept;
+    // Model and background accept at most runtime::kMaximumAdvanceSeconds per
+    // call; paused or failed advances leave the background fade unchanged.
     SessionStatus advance(double elapsed_seconds, runtime::PhysicsInputs inputs = {}) noexcept;
     SessionStatus prepare_frame() noexcept;
     SessionStatus reset() noexcept;

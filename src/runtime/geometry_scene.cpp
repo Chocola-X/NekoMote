@@ -72,7 +72,6 @@ struct Node
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false}, mask_source{false};
     bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
-    bool inherit_shape{true}; // inheritMask bit 25; false = 親変形無視, drop parent mesh_path
 };
 struct Clamp
 {
@@ -207,7 +206,8 @@ struct Compiler
             }
         }
         p.unsupported = frame.type == 1 || c.zx.has_value() || c.zy.has_value() ||
-                        c.ox.has_value() || c.oy.has_value() || field_or(c.flip, 0) != 0 ||
+                        c.ox.has_value() || c.oy.has_value() || field_or(c.bm, 0) != 0 ||
+                        field_or(c.flip, 0) != 0 ||
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
                         (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0 &&
                          !data.resources[p.resource.value].parameter_driven);
@@ -276,17 +276,14 @@ struct Compiler
              layer.mesh_sync_child_mask != 8) ||
             (!layer.transform_order.empty() &&
              layer.transform_order != std::vector<int>{0, 3, 2, 1});
-        n.inherit_shape = (layer.inherit_mask & 0x2000000) != 0;
         n.partial_locator_origin =
             !unsupported_common && n.exported_locator && layer.inherit_mask == 0x200020c;
-        // type=2 + inheritMask=0x7fc is a 親変形無視 reference node: it provides
-        // a coordinate frame whose subtree drops the parent's shape deformation
-        // (mesh_path) while keeping position/rotation inheritance. Source labels
-        // end with _親変形無視; the bit pattern is the structural signal.
+        // Partial shape inheritance is not validated: Coconut and Azuki hand
+        // attachments fail the frozen geometry threshold. Keep it unsupported
+        // until a source-independent formula passes those captures.
         n.unsupported =
             unsupported_common || (layer.inherit_mask != 0x20007fc &&
-                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc) &&
-                                   !(layer.type == 2 && layer.inherit_mask == 0x7fc));
+                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
         const auto binding =
             layer.parameterize.has_value() ? layer.parameterize : part.parameterize;
         const auto& parameters = layer.parameter.empty() ? part.parameter : layer.parameter;
@@ -796,15 +793,22 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         state.pose = key == n.keys.end() ? left.pose : interpolate(left, *key, time);
         if (!state.pose.active)
             continue;
-        if (n.has_sprites && (n.unsupported || state.pose.unsupported))
-            return {GeometryError::UnsupportedTransform, id, {}};
+        if (n.has_sprites)
+            for (NodeId ancestor = id; ancestor.valid();
+                 ancestor = scene.nodes[ancestor.value].parent)
+                if (scene.nodes[ancestor.value].unsupported ||
+                    (ancestor == id ? state.pose.unsupported
+                                    : instance.states[ancestor.value].pose.unsupported))
+                    return {GeometryError::UnsupportedTransform, ancestor, {}};
         state.transform = state.pose;
         state.child_sync = n.child_sync;
         state.transform_parent = n.parent;
         state.depth = state.pose.depth + parent.depth;
         state.opacity = state.pose.opacity * (n.parent.valid() ? parent.opacity : 1);
         const auto& r = scene.resources[state.pose.resource.value];
-        state.mesh_path = state.pose.mesh || (n.inherit_shape && parent.mesh_path);
+        if (r.kind == ResourceKind::Sprite && r.rect.attr != 0 && r.rect.attr != 1)
+            return {GeometryError::UnsupportedTransform, id, {}};
+        state.mesh_path = state.pose.mesh || parent.mesh_path;
         state.density = parent.density;
         if (state.pose.mesh && r.rect.width > 0 && n.division > 0)
             state.density = std::max(state.density, static_cast<float>(n.division) /
@@ -849,17 +853,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
         const auto& transform_parent = instance.states[state.transform_parent.value];
         state.world = compose(transform_parent.world, local);
-        if (!n.inherit_shape)
-        {
-            state.world.translation =
-                instance.deform(transform_parent.curve_parent, state.world.translation);
-            state.curve_parent = NodeId{};
-        }
-        else
-        {
-            state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
-                                                                  : transform_parent.curve_parent;
-        }
+        state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
+                                                              : transform_parent.curve_parent;
         // Mask one bends the direct child origin, leaving its geometry rigid.
         // Mask eight retains the curve in the descendant vertex chain.
         if (transform_parent.child_sync == 1 && transform_parent.transform.mesh)

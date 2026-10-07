@@ -2494,13 +2494,9 @@ TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runt
     }
 }
 
-TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for their subtree",
+TEST_CASE("Unverified partial shape inheritance rejects the affected sprite subtree",
           "[runtime][scene]")
 {
-    // A type=2 layer with inheritMask=0x7fc (inheritShape bit 25 clear) is a
-    // 親変形無視 reference node. Its subtree keeps position/rotation inheritance
-    // but drops the parent's mesh_path, so children render rigid quads instead
-    // of inheriting the parent's tessellated deformation grid.
     auto build_rig = [](std::uint64_t reference_mask, int child_sync = 0)
     {
         auto asset = rig();
@@ -2538,24 +2534,14 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
         asset.parts[0].layers = {parent};
         return asset;
     };
-    // inheritShape=0: subtree drops mesh_path, child renders a 4-vertex quad.
+    for (const int child_sync : {0, 8})
     {
-        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc));
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc, child_sync));
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
-        REQUIRE(instance.evaluate());
-        REQUIRE(instance.build_frame());
-        REQUIRE(instance.frame().vertices.size() == 4);
-    }
-    // inheritShape=0 with parent child_sync=8: curve_parent is dropped and child stays 4-vertex
-    // quad.
-    {
-        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc, 8));
-        REQUIRE(compiled.scene);
-        runtime::GeometryInstance instance(*compiled.scene);
-        REQUIRE(instance.evaluate());
-        REQUIRE(instance.build_frame());
-        REQUIRE(instance.frame().vertices.size() == 4);
+        REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+        REQUIRE(instance.frame().vertices.empty());
+        REQUIRE_FALSE(instance.build_frame());
     }
     // inheritShape=1: subtree inherits mesh_path, child renders a tessellated grid.
     {
@@ -2568,12 +2554,8 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
     }
 }
 
-TEST_CASE("Blend-mode frames compile without UnsupportedTransform", "[runtime][scene]")
+TEST_CASE("Unverified source blend modes fail instead of drawing ordinary over", "[runtime][scene]")
 {
-    // E-mote frames carry a blend-mode field (bm) that only affects the render
-    // pass混合方程, not geometry. A non-zero bm (e.g. 19 used by 追加パーツ/胸揺れ
-    // in fraise-maid-a/b and milk-summer) must not surface as
-    // UnsupportedTransform during CPU geometry evaluation.
     auto build_bm_rig = [](int bm_value)
     {
         auto asset = rig();
@@ -2598,8 +2580,16 @@ TEST_CASE("Blend-mode frames compile without UnsupportedTransform", "[runtime][s
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
         const auto status = instance.evaluate();
-        REQUIRE(status);
-        REQUIRE(instance.build_frame());
+        if (bm == 0)
+        {
+            REQUIRE(status);
+            REQUIRE(instance.build_frame());
+        }
+        else
+        {
+            REQUIRE(status.error == runtime::GeometryError::UnsupportedTransform);
+            REQUIRE(instance.frame().vertices.empty());
+        }
     }
 }
 
@@ -2666,4 +2656,16 @@ TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][sc
         REQUIRE(status);
         REQUIRE(instance.build_frame());
     }
+}
+
+TEST_CASE("Unverified texture protection flags cannot silently become ordinary alpha",
+          "[runtime][scene]")
+{
+    auto asset = rig();
+    asset.icons["atlas/a"].attr = 2;
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.frame().vertices.empty());
 }

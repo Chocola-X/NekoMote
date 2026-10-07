@@ -11,6 +11,7 @@ namespace
 constexpr double kAuthorHz = 60;
 constexpr double kClockBoundaryTolerance = 1e-9;
 constexpr std::uint32_t kMaximumCatchUpTicks = 15;
+static_assert(kMaximumAdvanceSeconds * kAuthorHz == kMaximumCatchUpTicks);
 } // namespace
 struct PlaybackProgram::Impl
 {
@@ -242,8 +243,7 @@ PlaybackStatus PlaybackInstance::advance(double elapsed_seconds, PhysicsInputs i
         return {PlaybackError::Faulted, {}, {}, {}};
     if (data.state == PlaybackState::Paused)
         return {};
-    data.accumulator +=
-        std::min(elapsed_seconds, static_cast<double>(kMaximumCatchUpTicks) / kAuthorHz);
+    data.accumulator += std::min(elapsed_seconds, kMaximumAdvanceSeconds);
     const auto count = std::min(kMaximumCatchUpTicks,
                                 static_cast<std::uint32_t>(std::floor(data.accumulator * kAuthorHz +
                                                                       kClockBoundaryTolerance)));

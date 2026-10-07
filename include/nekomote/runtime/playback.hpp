@@ -9,6 +9,10 @@
 
 namespace nekomote::runtime
 {
+// Shared wall-time budget for model ticks and application fades. Long stalls
+// discard excess time instead of jumping animations or completing fades.
+inline constexpr double kMaximumAdvanceSeconds = 0.25;
+
 enum class PhysicsMode
 {
     Enabled,

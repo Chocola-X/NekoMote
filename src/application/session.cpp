@@ -641,10 +641,14 @@ SessionStatus SessionInstance::advance(double elapsed, runtime::PhysicsInputs in
     if (auto status = start(); !status)
         return status;
     data.callback_status = {};
+    const auto status = data.player.advance(elapsed, inputs, {&data, &Impl::before_tick});
+    if (!status)
+        return data.fail(data.callback_status ? checked(status) : data.callback_status);
     if (data.playback_state == runtime::PlaybackState::Running &&
         data.bg_target.texture.value != 0 && data.bg_fade_duration > 0)
     {
-        data.bg_fade_progress += elapsed / data.bg_fade_duration;
+        data.bg_fade_progress +=
+            std::min(elapsed, runtime::kMaximumAdvanceSeconds) / data.bg_fade_duration;
         if (data.bg_fade_progress >= 1.0)
         {
             data.bg_fade_progress = 1.0;
@@ -652,9 +656,6 @@ SessionStatus SessionInstance::advance(double elapsed, runtime::PhysicsInputs in
             data.bg_target = {};
         }
     }
-    const auto status = data.player.advance(elapsed, inputs, {&data, &Impl::before_tick});
-    if (!status)
-        return data.fail(data.callback_status ? checked(status) : data.callback_status);
     return {};
 }
 SessionStatus SessionInstance::prepare_frame() noexcept
