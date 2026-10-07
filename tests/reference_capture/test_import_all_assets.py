@@ -410,6 +410,94 @@ def subprocess_timeout(reason):
     return _sp.TimeoutExpired(cmd=['x'], timeout=120)
 
 
+class CliParseTest(unittest.TestCase):
+    """纯 CLI 解析契约，不需要真实素材或 GPU。
+
+    覆盖 G10 要求：缺素材环境的纯 CLI 解析测试也应执行，
+    只有真实 GPU/素材检查 Skipped，不得把整类跳过误报为测试通过。
+    """
+
+    def test_runtime_steps_range_rejects_zero(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            catalog = root / 'config/model-catalog.json'
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text('{}')
+            importer = root / 'importer'
+            importer.write_bytes(b'')
+            with mock.patch('sys.argv', ['import_all_assets.py',
+                                         '--reference-root', str(root),
+                                         '--importer', str(importer),
+                                         '--output', str(root / 'out'),
+                                         '--runtime-steps', '0']):
+                with self.assertRaises(SystemExit) as ctx:
+                    batch.main()
+            self.assertNotEqual(ctx.exception.code, 0)
+
+    def test_runtime_steps_range_rejects_too_large(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            catalog = root / 'config/model-catalog.json'
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text('{}')
+            importer = root / 'importer'
+            importer.write_bytes(b'')
+            with mock.patch('sys.argv', ['import_all_assets.py',
+                                         '--reference-root', str(root),
+                                         '--importer', str(importer),
+                                         '--output', str(root / 'out'),
+                                         '--runtime-steps', '36001']):
+                with self.assertRaises(SystemExit) as ctx:
+                    batch.main()
+            self.assertNotEqual(ctx.exception.code, 0)
+
+    def test_missing_catalog_rejects_with_nonzero(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            importer = root / 'importer'
+            importer.write_bytes(b'')
+            with mock.patch('sys.argv', ['import_all_assets.py',
+                                         '--reference-root', str(root),
+                                         '--importer', str(importer),
+                                         '--output', str(root / 'out')]):
+                with self.assertRaises(SystemExit) as ctx:
+                    batch.main()
+            self.assertNotEqual(ctx.exception.code, 0)
+
+    def test_missing_importer_rejects_with_nonzero(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            catalog = root / 'config/model-catalog.json'
+            catalog.parent.mkdir(parents=True)
+            catalog.write_text('{}')
+            with mock.patch('sys.argv', ['import_all_assets.py',
+                                         '--reference-root', str(root),
+                                         '--importer', str(root / 'absent'),
+                                         '--output', str(root / 'out')]):
+                with self.assertRaises(SystemExit) as ctx:
+                    batch.main()
+            self.assertNotEqual(ctx.exception.code, 0)
+
+    def test_tool_hash_returns_none_for_missing(self):
+        self.assertIsNone(batch.tool_hash(None))
+        self.assertIsNone(batch.tool_hash(pathlib.Path('/nonexistent/path')))
+
+    def test_tool_hash_returns_sha256_for_file(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            tool = root / 'tool'
+            tool.write_bytes(b'binary content')
+            digest = batch.tool_hash(tool)
+            self.assertIsNotNone(digest)
+            self.assertEqual(len(digest), 64)
+
+    def test_head_commit_returns_string_or_none(self):
+        commit = batch.head_commit()
+        if commit is not None:
+            self.assertEqual(len(commit), 40)
+            self.assertTrue(all(c in '0123456789abcdef' for c in commit))
+
+
 if __name__ == '__main__':
     import subprocess
     unittest.main()

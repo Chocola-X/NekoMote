@@ -12,6 +12,7 @@
 """
 import argparse
 import ctypes
+import datetime
 import json
 import os
 import pathlib
@@ -22,6 +23,28 @@ import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / 'import_emote'))
 import catalog_index
+
+
+def head_commit():
+    """返回当前仓库 HEAD commit hash，不在 git 仓库中或失败时返回 None。"""
+    try:
+        proc = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10)
+        if proc.returncode == 0:
+            return proc.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+def tool_hash(path):
+    """计算可执行文件 sha256，缺失或不可读返回 None。"""
+    if path is None:
+        return None
+    resolved = pathlib.Path(path)
+    if not resolved.is_file():
+        return None
+    return catalog_index.sha256(resolved)
 
 
 def publish_bundle(staging, target):
@@ -289,6 +312,16 @@ def main():
     rows = []
     fail_count = 0
     checkpoint = args.report.with_name(args.report.name + '.checkpoint') if args.report else None
+    provenance = {
+        'head_commit': head_commit(),
+        'generated_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        'tool_hashes': {
+            'importer': tool_hash(importer),
+            'runtime_auditor': tool_hash(args.runtime_auditor),
+            'session_tool': tool_hash(args.session_tool),
+        },
+        'runtime_steps': args.runtime_steps,
+    }
     with tempfile.TemporaryDirectory(prefix='.nekomote-import-staging-', dir=output) as temporary:
         tmp = pathlib.Path(temporary)
         total = len(catalog)
@@ -304,12 +337,18 @@ def main():
             if checkpoint is not None:
                 save_checkpoint(
                     {'complete': False, 'catalog_sha256': catalog_hash,
-                     'summary': build_summary(rows), 'models': rows},
+                     **provenance, 'summary': build_summary(rows), 'models': rows},
                     checkpoint)
 
     summary = build_summary(rows)
-    report = {'complete': True, 'catalog_records': total,
-              'catalog_sha256': catalog_hash, 'summary': summary, 'models': rows}
+    report = {
+        'complete': True,
+        'catalog_records': total,
+        'catalog_sha256': catalog_hash,
+        **provenance,
+        'summary': summary,
+        'models': rows,
+    }
 
     if args.report is not None:
         args.report.parent.mkdir(parents=True, exist_ok=True)
