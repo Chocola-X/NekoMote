@@ -1007,7 +1007,7 @@ int run(int argc, char** argv)
             if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
                 ui_sidebar.open = !ui_sidebar.open;
 
-            ui_context.sidebar(ui_sidebar, style);
+            ui_context.sidebar(ui_sidebar, style, static_cast<float>(elapsed));
 
             const bool mouse_over_icon =
                 ui_context.mouse_in_rect(ui_icon.x, ui_icon.y, ui_icon.size, ui_icon.size);
@@ -1023,18 +1023,13 @@ int run(int argc, char** argv)
                 ui_sidebar.scroll_y -= ui_context.scroll_delta() * 32.0f;
             }
 
-            if (ui_sidebar.animation > 0.005f)
+            if (ui_sidebar.animation > 0.001f)
             {
-                float sidebar_x = ui_sidebar.x;
-                float sidebar_y = ui_sidebar.y;
-                if (!ui_sidebar.is_free)
-                {
-                    const float anim = player::ui::ease_out_back(ui_sidebar.animation);
-                    sidebar_x = 8.0f - ui_sidebar.width * (1.0f - anim);
-                    sidebar_y = 8.0f;
-                    ui_sidebar.x = sidebar_x;
-                    ui_sidebar.y = sidebar_y;
-                }
+                const float sidebar_alpha = std::clamp(ui_sidebar.animation, 0.0f, 1.0f);
+                ui_renderer.set_global_alpha(sidebar_alpha);
+
+                const float sidebar_x = ui_sidebar.x;
+                const float sidebar_y = ui_sidebar.y;
 
                 float content_scrollable_h = 0.0f;
                 for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
@@ -1201,6 +1196,8 @@ int run(int argc, char** argv)
 
                 ui_context.draw_scrollbar(sidebar_x, clip_y, ui_sidebar.width, clip_h,
                                           content_scrollable_h, ui_sidebar.scroll_y, style);
+
+                ui_renderer.set_global_alpha(1.0f);
             }
             ui_context.end_frame();
             ui_renderer.end_frame();

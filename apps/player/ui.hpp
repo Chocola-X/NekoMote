@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -118,6 +119,15 @@ class Renderer
     void push_clip_rect(float x, float y, float w, float h);
     void pop_clip_rect();
 
+    void set_global_alpha(float alpha)
+    {
+        global_alpha_ = std::clamp(alpha, 0.0f, 1.0f);
+    }
+    float global_alpha() const
+    {
+        return global_alpha_;
+    }
+
     int viewport_width() const
     {
         return viewport_width_;
@@ -129,6 +139,7 @@ class Renderer
 
   private:
     bool initialized_{false};
+    float global_alpha_{1.0f};
     int viewport_width_{0};
     int viewport_height_{0};
     FontAtlas* font_{nullptr};
@@ -215,8 +226,9 @@ class Context
     }
 
     bool toggle_icon(IconState& icon, std::uint32_t texture_id);
-    void sidebar(SidebarState& sidebar, const Style& style);
-    void sidebar_header(SidebarState& sidebar, const char* title, const Style& style);
+    void sidebar(SidebarState& sidebar, const Style& style, float delta_time = 0.016f);
+    void sidebar(SidebarState& sidebar, float delta_time = 0.016f);
+    void sidebar_header(const SidebarState& sidebar, const char* title, const Style& style);
 
     bool drawer_header(const char* label, bool is_open, float x, float y, float w, float h,
                        const Style& style);

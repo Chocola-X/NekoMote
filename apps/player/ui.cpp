@@ -557,6 +557,7 @@ void Renderer::resize(int viewport_width, int viewport_height)
 
 void Renderer::begin_frame()
 {
+    global_alpha_ = 1.0f;
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -574,6 +575,7 @@ void Renderer::begin_frame()
 
 void Renderer::end_frame()
 {
+    global_alpha_ = 1.0f;
     glDisable(GL_SCISSOR_TEST);
     flush_rects();
     flush_text();
@@ -598,6 +600,8 @@ void Renderer::pop_clip_rect()
 void Renderer::draw_rounded_rect(float x, float y, float w, float h, float radius, Color fill,
                                  Color border, float border_width)
 {
+    fill.a *= global_alpha_;
+    border.a *= global_alpha_;
     const float r = std::min(radius, std::min(w, h) * 0.5f);
     rect_vertices_.insert(rect_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
@@ -640,6 +644,7 @@ void Renderer::draw_text(float x, float y, const char* text, float size, Color c
 {
     if (!font_)
         return;
+    color.a *= global_alpha_;
     font_->draw_text(text_vertices_, text_uvs_, x, y, text, size);
     if (text_vertices_.empty())
         return;
@@ -676,6 +681,7 @@ void Renderer::flush_text()
 
 void Renderer::draw_icon(float x, float y, float w, float h, std::uint32_t texture_id, Color tint)
 {
+    tint.a *= global_alpha_;
     icon_vertices_.insert(icon_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     icon_uvs_.insert(icon_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
@@ -721,6 +727,7 @@ void Renderer::draw_circle(float cx, float cy, float radius, Color fill, Color b
 
 void Renderer::draw_solid_rect(float x, float y, float w, float h, Color color)
 {
+    color.a *= global_alpha_;
     const std::vector<float> tri_verts = {x, y, x + w, y,     x + w, y + h,
                                           x, y, x + w, y + h, x,     y + h};
     glBindVertexArray(vao_);
@@ -739,6 +746,7 @@ void Renderer::draw_solid_rect(float x, float y, float w, float h, Color color)
 
 void Renderer::draw_arrow(float cx, float cy, float size, bool points_up, Color fill)
 {
+    fill.a *= global_alpha_;
     std::vector<float> tri_verts;
     if (points_up)
     {
@@ -858,40 +866,82 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
     return clicked;
 }
 
-void Context::sidebar(SidebarState& sidebar, const Style& /*style*/)
+void Context::sidebar(SidebarState& sidebar, float delta_time)
 {
     if (!renderer_)
         return;
-    const float target = sidebar.open ? 1.0f : 0.0f;
-    sidebar.animation = lerp(sidebar.animation, target, 0.18f);
-    if (std::abs(sidebar.animation - target) < 0.005f)
-        sidebar.animation = target;
+
+    const float vw = static_cast<float>(renderer_->viewport_width());
+    const float vh = static_cast<float>(renderer_->viewport_height());
+    const float header_h = 44.0f;
+
+    // 1. Process drag start, movement, and release
+    if (sidebar.animation > 0.001f)
+    {
+        const bool hover_header = mouse_in_rect(sidebar.x, sidebar.y, sidebar.width, header_h);
+        if (hover_header && mouse_pressed_ && !sidebar.dragging)
+        {
+            sidebar.dragging = true;
+            sidebar.drag_offset_x = mouse_x_ - sidebar.x;
+            sidebar.drag_offset_y = mouse_y_ - sidebar.y;
+        }
+        if (sidebar.dragging)
+        {
+            sidebar.is_free = true;
+            sidebar.x = mouse_x_ - sidebar.drag_offset_x;
+            sidebar.y = mouse_y_ - sidebar.drag_offset_y;
+            sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
+            sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - sidebar.height - 8.0f));
+            if (mouse_released_ || !mouse_down_)
+                sidebar.dragging = false;
+        }
+    }
+    else
+    {
+        sidebar.dragging = false;
+    }
+
+    // 2. Animation progress [0.0, 1.0] with delta time
+    // Opening: ~0.28s, Closing: ~0.24s (no infinite asymptotic lerp tail)
+    const float dt = std::clamp(delta_time, 0.0001f, 0.1f);
+    if (sidebar.open)
+    {
+        const float open_speed = 1.0f / 0.28f;
+        sidebar.animation = std::min(1.0f, sidebar.animation + dt * open_speed);
+    }
+    else
+    {
+        const float close_speed = 1.0f / 0.24f;
+        sidebar.animation = std::max(0.0f, sidebar.animation - dt * close_speed);
+        if (sidebar.animation <= 0.001f)
+            sidebar.animation = 0.0f;
+    }
+
+    // 3. Update sidebar position when docked (!is_free)
+    if (!sidebar.is_free)
+    {
+        const float slide_anim = sidebar.open ? ease_out_back(sidebar.animation)
+                                              : (sidebar.animation * sidebar.animation);
+        sidebar.x = 8.0f - (sidebar.width + 16.0f) * (1.0f - slide_anim);
+        sidebar.y = 8.0f;
+    }
+    else if (!sidebar.dragging)
+    {
+        sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
+        sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - sidebar.height - 8.0f));
+    }
 }
 
-void Context::sidebar_header(SidebarState& sidebar, const char* title, const Style& style)
+void Context::sidebar(SidebarState& sidebar, const Style& /*style*/, float delta_time)
+{
+    this->sidebar(sidebar, delta_time);
+}
+
+void Context::sidebar_header(const SidebarState& sidebar, const char* title, const Style& style)
 {
     if (!renderer_)
         return;
     const float header_h = 44.0f;
-    const bool hover = mouse_in_rect(sidebar.x, sidebar.y, sidebar.width, header_h);
-    if (hover && mouse_pressed_ && !sidebar.dragging)
-    {
-        sidebar.dragging = true;
-        sidebar.drag_offset_x = mouse_x_ - sidebar.x;
-        sidebar.drag_offset_y = mouse_y_ - sidebar.y;
-    }
-    if (sidebar.dragging)
-    {
-        sidebar.is_free = true;
-        sidebar.x = mouse_x_ - sidebar.drag_offset_x;
-        sidebar.y = mouse_y_ - sidebar.drag_offset_y;
-        const float vw = static_cast<float>(renderer_->viewport_width());
-        const float vh = static_cast<float>(renderer_->viewport_height());
-        sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
-        sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - sidebar.height - 8.0f));
-        if (mouse_released_)
-            sidebar.dragging = false;
-    }
     renderer_->draw_text(sidebar.x + 16.0f, sidebar.y + 12.0f, title, style.title_size, style.text);
     renderer_->draw_text(sidebar.x + 16.5f, sidebar.y + 12.0f, title, style.title_size, style.text);
     divider_line(sidebar.x, sidebar.y + header_h - 1.0f, sidebar.width, style);
