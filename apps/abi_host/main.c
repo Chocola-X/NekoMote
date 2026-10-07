@@ -492,6 +492,13 @@ typedef struct {
     char name[MAX_NAME];
 } Holder;
 
+static void check_renderer(const char *where, nekomote_error e)
+{
+    if (e != NEKOMOTE_OK)
+        fprintf(stderr, "[abi_host] %s: error %d (%s)\n", where, (int)e,
+                nekomote_error_message() ? nekomote_error_message() : "unknown");
+}
+
 static int load_textures(Holder *h)
 {
     size_t tex_count = nekomote_program_texture_count(h->program);
@@ -503,6 +510,7 @@ static int load_textures(Holder *h)
     cap.mask_commands = 256;
     cap.masks = 64;
     nekomote_renderer_reserve(h->renderer, cap);
+    (void)nekomote_last_error();
 
     const char *model_path = h->name;
     (void)model_path;
@@ -524,12 +532,14 @@ static int load_textures(Holder *h)
         nekomote_image *img = nekomote_image_load_png(full_path);
         if (!img)
             continue;
-        nekomote_renderer_upload_texture(
+        nekomote_error ue = nekomote_renderer_upload_texture(
             h->renderer, tex.id,
             nekomote_image_width(img), nekomote_image_height(img),
             nekomote_image_pixels(img));
+        check_renderer("upload_texture", ue);
         nekomote_image_destroy(img);
-        uploaded++;
+        if (ue == NEKOMOTE_OK)
+            uploaded++;
     }
     return uploaded;
 }
@@ -637,8 +647,8 @@ static void apply_background(BackgroundState *bg, nekomote_session *session,
         bg->renderer = nekomote_renderer_create(glfwGetProcAddress);
         nekomote_renderer_capacity cap = {0};
         cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
-        nekomote_renderer_reserve(bg->renderer, cap);
-        nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(new_img));
+        check_renderer("bg reserve", nekomote_renderer_reserve(bg->renderer, cap));
+        check_renderer("bg upload", nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(new_img)));
         nekomote_session_set_background(session, 1, w, h);
         bg->has_background = 1;
         strncpy(bg->current_path, bg_path, MAX_PATH - 1);
@@ -656,9 +666,9 @@ static void apply_background(BackgroundState *bg, nekomote_session *session,
         bg->renderer = nekomote_renderer_create(glfwGetProcAddress);
         nekomote_renderer_capacity cap = {0};
         cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
-        nekomote_renderer_reserve(bg->renderer, cap);
-        nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(old_img));
-        nekomote_renderer_upload_texture(bg->renderer, 2, w, h, nekomote_image_pixels(new_img));
+        check_renderer("bg reserve", nekomote_renderer_reserve(bg->renderer, cap));
+        check_renderer("bg upload old", nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(old_img)));
+        check_renderer("bg upload new", nekomote_renderer_upload_texture(bg->renderer, 2, w, h, nekomote_image_pixels(new_img)));
         nekomote_session_set_background(session, 1,
             nekomote_image_width(old_img), nekomote_image_height(old_img));
         nekomote_session_fade_background(session, 2, w, h, fade_duration);
@@ -727,8 +737,8 @@ static void render_holder(Holder *h, nekomote_render_target target,
     if (!h->session || !h->renderer)
         return;
     nekomote_render_frame frame = nekomote_session_frame(h->session);
-    nekomote_renderer_prepare(h->renderer, frame);
-    nekomote_renderer_resize_output(h->renderer, target.width, target.height);
+    check_renderer("prepare", nekomote_renderer_prepare(h->renderer, frame));
+    check_renderer("resize_output", nekomote_renderer_resize_output(h->renderer, target.width, target.height));
 
     nekomote_render_view view = {0};
     view.origin_x = (float)target.width * 0.5f;
@@ -740,8 +750,8 @@ static void render_holder(Holder *h, nekomote_render_target target,
     view.clear[3] = 1.0f;
     view.alpha = alpha;
     view.flip_x = h->mirror;
-    nekomote_renderer_render(h->renderer, target, view,
-                             clear_target ? NEKOMOTE_TARGET_CLEAR : NEKOMOTE_TARGET_PRESERVE);
+    check_renderer("render", nekomote_renderer_render(h->renderer, target, view,
+                             clear_target ? NEKOMOTE_TARGET_CLEAR : NEKOMOTE_TARGET_PRESERVE));
 }
 
 static void fit_character(void)
@@ -826,13 +836,13 @@ static void render_frame(void)
         nekomote_render_frame bg_frame = nekomote_session_background_frame(g_app.current.session);
         if (bg_frame.command_count > 0)
         {
-            nekomote_renderer_prepare(g_app.bg.renderer, bg_frame);
-            nekomote_renderer_resize_output(g_app.bg.renderer, target.width, target.height);
+            check_renderer("bg prepare", nekomote_renderer_prepare(g_app.bg.renderer, bg_frame));
+            check_renderer("bg resize", nekomote_renderer_resize_output(g_app.bg.renderer, target.width, target.height));
             nekomote_render_view bg_view = {0};
             bg_view.scale = 1.0f;
             bg_view.clear[3] = 1.0f;
             bg_view.alpha = 1.0f;
-            nekomote_renderer_render(g_app.bg.renderer, target, bg_view, NEKOMOTE_TARGET_CLEAR);
+            check_renderer("bg render", nekomote_renderer_render(g_app.bg.renderer, target, bg_view, NEKOMOTE_TARGET_CLEAR));
             has_bg = 1;
         }
     }

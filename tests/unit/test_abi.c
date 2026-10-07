@@ -1,6 +1,5 @@
-#include <nekomote/abi.h>
-
 #include <assert.h>
+#include <nekomote/abi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,26 +7,40 @@
 static int g_tests_run = 0;
 static int g_tests_failed = 0;
 
-#define TEST(name) \
-    do { \
-        g_tests_run++; \
-        printf("  %s ... ", name); \
-        fflush(stdout); \
+#define TEST(name)                                                                                 \
+    do                                                                                             \
+    {                                                                                              \
+        g_tests_run++;                                                                             \
+        printf("  %s ... ", name);                                                                 \
+        fflush(stdout);                                                                            \
     } while (0)
 
 #define PASS() printf("ok\n")
-#define FAIL(msg) do { printf("FAIL: %s\n", msg); g_tests_failed++; } while (0)
-#define CHECK(cond, msg) do { if (!(cond)) { FAIL(msg); return; } } while (0)
+#define FAIL(msg)                                                                                  \
+    do                                                                                             \
+    {                                                                                              \
+        printf("FAIL: %s\n", msg);                                                                 \
+        g_tests_failed++;                                                                          \
+    } while (0)
+#define CHECK(cond, msg)                                                                           \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(cond))                                                                               \
+        {                                                                                          \
+            FAIL(msg);                                                                             \
+            return;                                                                                \
+        }                                                                                          \
+    } while (0)
 
-static const char *g_model_path;
-static const char *g_session_path;
+static const char* g_model_path;
+static const char* g_session_path;
 
 static void test_version(void)
 {
     TEST("version");
-    const char *v = nekomote_version();
+    const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.1.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.2.0") == 0, "version mismatch");
     PASS();
 }
 
@@ -37,7 +50,8 @@ static void test_null_safety(void)
     CHECK(nekomote_model_load(NULL) == NULL, "model_load(NULL) should fail");
     CHECK(nekomote_session_asset_load(NULL) == NULL, "session_asset_load(NULL) should fail");
     CHECK(nekomote_program_compile(NULL, NULL) == NULL, "program_compile(NULL,NULL) should fail");
-    CHECK(nekomote_session_create(NULL, (nekomote_session_config){0}) == NULL, "session_create(NULL) should fail");
+    CHECK(nekomote_session_create(NULL, (nekomote_session_config){0}) == NULL,
+          "session_create(NULL) should fail");
     CHECK(nekomote_renderer_create(NULL) == NULL, "renderer_create(NULL) should fail");
     CHECK(nekomote_image_load_png(NULL) == NULL, "image_load_png(NULL) should fail");
 
@@ -53,22 +67,32 @@ static void test_null_safety(void)
 static void test_full_pipeline(void)
 {
     TEST("load model");
-    nekomote_model *model = nekomote_model_load(g_model_path);
+    nekomote_model* model = nekomote_model_load(g_model_path);
     CHECK(model != NULL, "failed to load model");
     PASS();
-    if (!model) return;
+    if (!model)
+        return;
 
     TEST("load session asset");
-    nekomote_session_asset *session = nekomote_session_asset_load(g_session_path);
+    nekomote_session_asset* session = nekomote_session_asset_load(g_session_path);
     CHECK(session != NULL, "failed to load session asset");
     PASS();
-    if (!session) { nekomote_model_destroy(model); return; }
+    if (!session)
+    {
+        nekomote_model_destroy(model);
+        return;
+    }
 
     TEST("compile program");
-    nekomote_program *program = nekomote_program_compile(model, session);
+    nekomote_program* program = nekomote_program_compile(model, session);
     CHECK(program != NULL, "failed to compile program");
     PASS();
-    if (!program) { nekomote_model_destroy(model); nekomote_session_asset_destroy(session); return; }
+    if (!program)
+    {
+        nekomote_model_destroy(model);
+        nekomote_session_asset_destroy(session);
+        return;
+    }
 
     TEST("texture count > 0");
     size_t tex_count = nekomote_program_texture_count(program);
@@ -102,10 +126,11 @@ static void test_full_pipeline(void)
     config.random_seed = 42;
     config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
     config.audio = NEKOMOTE_AUDIO_DISABLED;
-    nekomote_session *sess = nekomote_session_create(program, config);
+    nekomote_session* sess = nekomote_session_create(program, config);
     CHECK(sess != NULL, "failed to create session");
     PASS();
-    if (!sess) goto cleanup_program;
+    if (!sess)
+        goto cleanup_program;
 
     TEST("start");
     CHECK(nekomote_session_start(sess) == NEKOMOTE_OK, "start failed");
@@ -141,14 +166,23 @@ static void test_full_pipeline(void)
     int ok = 1;
     for (int i = 0; i < 10; i++)
     {
-        if (nekomote_session_advance(sess, 0.016) != NEKOMOTE_OK) { ok = 0; break; }
-        if (nekomote_session_prepare_frame(sess) != NEKOMOTE_OK) { ok = 0; break; }
+        if (nekomote_session_advance(sess, 0.016) != NEKOMOTE_OK)
+        {
+            ok = 0;
+            break;
+        }
+        if (nekomote_session_prepare_frame(sess) != NEKOMOTE_OK)
+        {
+            ok = 0;
+            break;
+        }
     }
     CHECK(ok, "advance/prepare_frame loop failed");
     PASS();
 
     TEST("pointer_move");
-    CHECK(nekomote_session_pointer_move(sess, 100.0f, 200.0f) == NEKOMOTE_OK, "pointer_move failed");
+    CHECK(nekomote_session_pointer_move(sess, 100.0f, 200.0f) == NEKOMOTE_OK,
+          "pointer_move failed");
     PASS();
 
     TEST("pointer_leave");
@@ -173,7 +207,8 @@ static void test_full_pipeline(void)
     PASS();
 
     TEST("background: set_output_size");
-    CHECK(nekomote_session_set_output_size(sess, 800, 600) == NEKOMOTE_OK, "set_output_size failed");
+    CHECK(nekomote_session_set_output_size(sess, 800, 600) == NEKOMOTE_OK,
+          "set_output_size failed");
     PASS();
 
     TEST("background: clear");
@@ -186,11 +221,13 @@ static void test_full_pipeline(void)
     PASS();
 
     TEST("set_playback_state paused");
-    CHECK(nekomote_session_set_playback_state(sess, NEKOMOTE_PLAYBACK_PAUSED) == NEKOMOTE_OK, "pause failed");
+    CHECK(nekomote_session_set_playback_state(sess, NEKOMOTE_PLAYBACK_PAUSED) == NEKOMOTE_OK,
+          "pause failed");
     PASS();
 
     TEST("set_playback_state running");
-    CHECK(nekomote_session_set_playback_state(sess, NEKOMOTE_PLAYBACK_RUNNING) == NEKOMOTE_OK, "resume failed");
+    CHECK(nekomote_session_set_playback_state(sess, NEKOMOTE_PLAYBACK_RUNNING) == NEKOMOTE_OK,
+          "resume failed");
     PASS();
 
     TEST("set_audio_level");
@@ -208,16 +245,33 @@ cleanup_program:
 static void test_frame_data_layout(void)
 {
     TEST("frame data layout");
-    nekomote_model *model = nekomote_model_load(g_model_path);
-    if (!model) { FAIL("model load failed"); return; }
-    nekomote_session_asset *session = nekomote_session_asset_load(g_session_path);
-    if (!session) { FAIL("session load failed"); nekomote_model_destroy(model); return; }
-    nekomote_program *program = nekomote_program_compile(model, session);
-    if (!program) { FAIL("compile failed"); goto cleanup; }
+    nekomote_model* model = nekomote_model_load(g_model_path);
+    if (!model)
+    {
+        FAIL("model load failed");
+        return;
+    }
+    nekomote_session_asset* session = nekomote_session_asset_load(g_session_path);
+    if (!session)
+    {
+        FAIL("session load failed");
+        nekomote_model_destroy(model);
+        return;
+    }
+    nekomote_program* program = nekomote_program_compile(model, session);
+    if (!program)
+    {
+        FAIL("compile failed");
+        goto cleanup;
+    }
 
     nekomote_session_config config = {0};
-    nekomote_session *sess = nekomote_session_create(program, config);
-    if (!sess) { FAIL("session create failed"); goto cleanup_prog; }
+    nekomote_session* sess = nekomote_session_create(program, config);
+    if (!sess)
+    {
+        FAIL("session create failed");
+        goto cleanup_prog;
+    }
     nekomote_session_start(sess);
     nekomote_session_advance(sess, 0.016);
     nekomote_session_prepare_frame(sess);
@@ -225,16 +279,26 @@ static void test_frame_data_layout(void)
 
     if (frame.vertex_count > 0)
     {
-        const nekomote_vertex *v = &frame.vertices[0];
-        (void)v->x; (void)v->y; (void)v->u; (void)v->v;
-        (void)v->color[0]; (void)v->color[1]; (void)v->color[2]; (void)v->color[3];
+        const nekomote_vertex* v = &frame.vertices[0];
+        (void)v->x;
+        (void)v->y;
+        (void)v->u;
+        (void)v->v;
+        (void)v->color[0];
+        (void)v->color[1];
+        (void)v->color[2];
+        (void)v->color[3];
     }
 
     if (frame.command_count > 0)
     {
-        const nekomote_draw_command *cmd = &frame.commands[0];
-        (void)cmd->texture; (void)cmd->first_index; (void)cmd->index_count;
-        (void)cmd->blend; (void)cmd->protection; (void)cmd->mask;
+        const nekomote_draw_command* cmd = &frame.commands[0];
+        (void)cmd->texture;
+        (void)cmd->first_index;
+        (void)cmd->index_count;
+        (void)cmd->blend;
+        (void)cmd->protection;
+        (void)cmd->mask;
     }
 
     PASS();
@@ -246,7 +310,7 @@ cleanup:
     nekomote_model_destroy(model);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc < 3)
     {

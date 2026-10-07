@@ -494,3 +494,28 @@
 - C ABI吞异常/布局互转/长度错误、C宿主重复PCM/Pulse/锁内latency/线程退出、背景/reset/切换事务、asset绝对路径/partial、tracked素材和性能采样方法问题按R1–R6记录。性能工具会改写外部index.php，本次未执行；旧收益倍数及audit墙钟纯帧解释撤回认证，原数字保留。
 - docs/review-2026-10-07.md为审查结论；docs/validation/review-2026-10-07.json固定当前源码/证据hash。新agent-workboard列Gemini视觉V1–V5、GLM优先G1–G8及Codex语义/整合任务；这是交接清单，未启动其他Agent。分工依据任务/工具/验证能力而非未经评测的模型排名，按用户无限额度偏好优先明确的GLM任务。
 - 更新ROADMAP当前阶段和顺序：先恢复正确性/宿主边界，再统一服务、可信测量和实际Plasma；全目录/长期/安装按真实证据验收。AGENTS新增ABI边界、证据统计、输入安全和协同规则，提交正文Agent/Model/Context。源码修复留给后续明确领用任务；本次未复跑Release性能、完整115/目录或长期运行。
+
+## 2026-10-07 G1/R3–R4：ABI可观测失败与RAII（CodeArts/GLM-5.2）
+
+- 领用 docs/agent-workboard.md G1。base commit 64be578。
+- **abi.h 接口改造**（0.1.0→0.2.0）：
+  - renderer reserve/upload_texture/prepare/resize_output/render 从 void 改为返回 nekomote_error。
+  - 新增 nekomote_last_error/nekomote_error_message/nekomote_clear_error 每线程错误诊断 API。
+  - 新增 NEKOMOTE_ERROR_RENDERER 错误码。
+  - 完善借用寿命文档：frame 指针有效到下一次 mutation；program 须活过 session；枚举越界拒绝不静默 clamp。
+- **abi.cpp 实现改造**：
+  - 消除全部 reinterpret_cast 对象布局互转（to_c_frame/from_c_frame），改为逐字段拷贝。session 和 renderer 各持有帧存储 vector，prepare_frame 时从 C++ RenderFrame 逐字段拷贝到 C 存储，renderer prepare 时从 C 数据逐字段拷贝到 C++ span。不再依赖 std::array/enum class/强类型 Id 的二进制布局。
+  - RAII 修复 R4 泄漏：所有 new wrapper + make_unique 内部对象改为 make_unique<wrapper> + 赋值 + release，构造失败时 wrapper 自动释放。
+  - 边界检查：upload_texture 验证 width/height > 0 和 size_t 溢出；resize_output/render 验证 target 尺寸；advance/fade 验证非负；prepare 验证 frame 指针/计数一致性和枚举越界。
+  - 枚举越界拒绝：playback_state/blend/protection/composition/target_contents/pointer_scope/audio_mode 全部用 switch 验证，非法值返回 NEKOMOTE_ERROR_INVALID_INPUT。
+  - catch 块不再吞异常：记录错误码和 message 到 thread_local，返回错误码。
+- **负例测试**（test_abi_negative.c，新增）：纯 C，不需要真实资产/GPU/显示服务器，可在 ASan/headless/LSan 下运行。覆盖 NULL 拒绝、非法 enum(999) 拒绝、0/负数/溢出 dimensions 拒绝、错误诊断 API、RAII 不泄漏（renderer_create(null_loader) 100 次循环）、frame 指针/计数验证。
+- **正例测试**（test_abi.c）：version 更新到 0.2.0。
+- **abi_host 适配**：所有 renderer 调用添加 check_renderer 错误输出；upload_texture 失败不计入 uploaded。
+- **构建配置**：ASan preset 从 PREVIEW=OFF 改为 PREVIEW=ON/PLAYER=OFF，使 ABI 库和负例测试在 ASan 下构建运行，覆盖 R4 泄漏路径。
+- **验证**：
+  - dev 配置 129/129 CTest 通过（含 abi_negative_test + abi_test + renderer_gpu）。
+  - ASan 配置：abi_negative_test 通过（无 LSan 报告）、abi_test 通过（7.29s，真实模型路径无泄漏）。R4 泄漏修复确认。
+  - clang-format 检查通过。
+- **未覆盖**：R3 的"失败后不能继续画旧帧"需要 GPU 上下文的集成测试，留待 G2/G6 构建矩阵完善。renderer prepare 的帧数据逐字段拷贝有性能开销，但这是 ABI 边界安全性优先于性能的决策；热路径优化在 P7。
+- 待 Codex 复核：ABI 接口草案和负例表。后续 G2（精简 C 验证宿主）依赖本任务的错误诊断 API。

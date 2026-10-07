@@ -40,9 +40,21 @@ target_compile_definitions(nekomote_unit_tests PRIVATE
 include(Catch)
 catch_discover_tests(nekomote_unit_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-# C ABI test (pure C, verifies the C boundary is usable without C++).
-# Uses a real model asset if available; skipped otherwise.
+# C ABI tests (pure C, verifies the C boundary is usable without C++).
 if(NEKOMOTE_BUILD_PREVIEW)
+    # Negative tests: no assets, no GPU, safe for ASan/headless/LSan.
+    # Verifies NULL rejection, invalid enum rejection, dimension/overflow
+    # checks, error diagnostic API, and RAII (no leak on failed init).
+    add_executable(nekomote_abi_negative_test test_abi_negative.c)
+    target_link_libraries(nekomote_abi_negative_test PRIVATE nekomote::abi)
+    target_compile_features(nekomote_abi_negative_test PRIVATE c_std_11)
+    target_compile_options(nekomote_abi_negative_test PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2)
+    add_test(NAME abi_negative_test
+        COMMAND nekomote_abi_negative_test
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # Positive tests: uses a real model asset if available; skipped otherwise.
     add_executable(nekomote_abi_test test_abi.c)
     target_link_libraries(nekomote_abi_test PRIVATE nekomote::abi)
     target_compile_features(nekomote_abi_test PRIVATE c_std_11)
