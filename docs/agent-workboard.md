@@ -31,9 +31,12 @@
     - CTest 单元测试：**133/133 Passed**（新增真实图层解析及缺失时严格拒绝的双向测试）。
 - [ ] **V2 / R2：Coconut手部与局部继承。**
   - 当前复现：coconut-maid，body_LR=30，零步，scale=.45，origin=(0,100)，800×1080，透明背景、SDK物理scale0；几何8.876191px、13,111超差像素。
-  - 范围：coconut-maid、maid-a、maid-a-4yo、santa、wintermaid；扩大检查catalog中全部0x7fc型号，包含此前Azuki-maid-b最小复现。
-  - 矩阵：零值、正负body_LR/body_UD、头部组合、参数中间值和独立动作；先确认各型号实际参数范围，不统一套任意极值。
-  - 输出手部轮廓、挂接点/原点、刚性平移和旋转差异；公式交Codex数值推导。公式不闭合时正式能力为Unsupported，不判“视觉修复完成”。
+  - 范围：coconut-maid、maid-a、maid-a-4yo、santa、wintermaid 及 catalog 中全部 0x7fc 型号。
+  - 视觉交付已完成（详见 [docs/coconut-hand-local-inheritance-report.md](coconut-hand-local-inheritance-report.md)）：
+    - 输出左右手高分辨率裁切对照图与差异二值图（`build/evidence/v2_analysis/`）；
+    - 量化确认：其余身体节点误差全部小于 0.000106 px，误差 100% 集中在 0x7fc 挂接点；
+    - 关键顶点抽样：Y 坐标完全重合（0.000000 px 误差），X 坐标偏移精准为 +8.876129 px；
+    - 几何数据与挂接矩阵已整理，待 Codex 进行最终数值公式闭合或恢复严格拒绝。
 - [ ] **V3：混合、attr、mirror与透明合成。**
   - GLM提供按字段筛选的最小型号/节点清单；对bm=16/19、attr=2等做源GPU协议观察和真实图像，不按数字猜blend。
   - 同输入分别在透明、黑、白及指定真实背景比较；检查翻转后的遮罩裁剪、触摸/视线坐标和global alpha端点/中间值。
