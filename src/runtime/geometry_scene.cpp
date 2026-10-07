@@ -42,6 +42,7 @@ struct Pose
     float angle_degrees{0}, depth{0}, opacity{1}; // source degrees; depth; straight opacity
     Patch patch{identity_patch()};
     ResourceId resource;
+    BlendMode blend{BlendMode::Over};
     bool mesh{false}, active{false}, unsupported{false};
 };
 struct Key
@@ -194,6 +195,10 @@ struct Compiler
         p.angle_degrees = field_or(c.angle, 0.0f);
         p.opacity = field_or(c.opa, 255.0f) / 255;
         p.resource = resource(c, path);
+        // V6 observes bm19 with premultiplied RGB and unchanged destination alpha.
+        // Blank helpers carry the tag without drawing; sprites use their own tag.
+        const int source_blend = field_or(c.bm, 0);
+        p.blend = source_blend == 19 ? BlendMode::Multiply : BlendMode::Over;
         if (c.mesh.has_value())
         {
             require(!c.mesh.data.cc.has_value(), path, "cc deformation is unverified");
@@ -206,8 +211,8 @@ struct Compiler
             }
         }
         p.unsupported = frame.type == 1 || c.zx.has_value() || c.zy.has_value() ||
-                        c.ox.has_value() || c.oy.has_value() || field_or(c.bm, 0) != 0 ||
-                        field_or(c.flip, 0) != 0 ||
+                        c.ox.has_value() || c.oy.has_value() ||
+                        (source_blend != 0 && source_blend != 19) || field_or(c.flip, 0) != 0 ||
                         field_or(c.color, std::uint32_t{0x808080ff}) != 0x808080ff ||
                         (c.motion.has_value() && field_or(c.motion.data.time_offset, 0.0f) != 0 &&
                          !data.resources[p.resource.value].parameter_driven);
@@ -806,7 +811,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         state.depth = state.pose.depth + parent.depth;
         state.opacity = state.pose.opacity * (n.parent.valid() ? parent.opacity : 1);
         const auto& r = scene.resources[state.pose.resource.value];
-        if (r.kind == ResourceKind::Sprite && r.rect.attr != 0 && r.rect.attr != 1)
+        if (r.kind == ResourceKind::Sprite && r.rect.attr != 0 && r.rect.attr != 1 &&
+            r.rect.attr != 2)
             return {GeometryError::UnsupportedTransform, id, {}};
         state.mesh_path = state.pose.mesh || parent.mesh_path;
         state.density = parent.density;
@@ -1113,9 +1119,11 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         const DrawCommand command{p.texture,
                                   first,
                                   static_cast<std::uint32_t>(instance.indices.size()) - first,
-                                  BlendMode::Over,
-                                  r.attr == 1 ? ColorProtection::PreserveTranslucent
-                                              : ColorProtection::None,
+                                  instance.states[p.node.value].pose.blend,
+                                  r.attr == 1 && instance.states[p.node.value].pose.blend ==
+                                                     BlendMode::Over
+                                      ? ColorProtection::PreserveTranslucent
+                                      : ColorProtection::None,
                                   mask};
         p.draw = command;
         instance.node_commands[p.node.value] = command;
@@ -1148,6 +1156,8 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                 return {GeometryError::UnsupportedMask, node, {}};
             }
             command.protection = ColorProtection::None;
+            command.blend =
+                BlendMode::Over; // Masks sample coverage, independent of color blending.
             instance.mask_commands.push_back(command);
         }
         definition.command_count =

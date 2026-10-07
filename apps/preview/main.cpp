@@ -280,10 +280,8 @@ Options parse(int argc, char** argv)
         o.benchmark < 0 || o.steps < 0 || o.steps > 100000 || o.scale <= 0 || o.opacity < 0 ||
         o.opacity > 1)
         throw std::runtime_error("invalid output/diagnostic settings");
-    if ((o.geometry || o.animation || o.playback) &&
-        (o.asset.empty() || !o.icon.empty() || o.opacity != 1))
-        throw std::runtime_error(
-            "geometry diagnostic requires an asset, no icon filter and opacity=1");
+    if ((o.geometry || o.animation || o.playback) && (o.asset.empty() || !o.icon.empty()))
+        throw std::runtime_error("geometry diagnostic requires an asset and no icon filter");
     if (!o.geometry && !o.animation && !o.playback && !o.variables.empty())
         throw std::runtime_error("--variable requires --geometry-diagnostic");
     if (!o.geometry && !o.animation && !o.playback && !o.asset.empty() && o.icon.empty())
@@ -485,6 +483,8 @@ int run(const Options& o)
                 throw std::runtime_error("PNG dimensions disagree with compiled scene");
             renderer.upload_texture(texture.id, decoded.image);
         }
+        view.alpha = o.opacity; // Whole-model opacity is applied at the final composite.
+        view.flip_x = loaded.asset.mirror;
         renderer.prepare(frame);
         std::printf("%s: %zu draw commands\n",
                     o.playback    ? "PLAYBACK (validation in progress)"

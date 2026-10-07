@@ -2554,7 +2554,7 @@ TEST_CASE("Unverified partial shape inheritance rejects the affected sprite subt
     }
 }
 
-TEST_CASE("Unverified source blend modes fail instead of drawing ordinary over", "[runtime][scene]")
+TEST_CASE("Verified source multiply is explicit and unknown blend modes fail", "[runtime][scene]")
 {
     auto build_bm_rig = [](int bm_value)
     {
@@ -2563,6 +2563,7 @@ TEST_CASE("Unverified source blend modes fail instead of drawing ordinary over",
         asset.textures[0].width = 64;
         asset.textures[0].height = 32;
         asset.icons["atlas/a"] = {"atlas", 0, 0, 8, 4, 3, 1};
+        asset.icons["atlas/a"].attr = 1;
         auto content = sprite();
         content.bm = field(bm_value);
         auto sprite_layer = layer("bm_sprite", 0, content);
@@ -2574,16 +2575,21 @@ TEST_CASE("Unverified source blend modes fail instead of drawing ordinary over",
         asset.parts[0].layers = {root};
         return asset;
     };
-    for (int bm : {0, 16, 19})
+    for (int bm : {0, 16, 19, 20})
     {
         auto compiled = runtime::compile_geometry_scene(build_bm_rig(bm));
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
         const auto status = instance.evaluate();
-        if (bm == 0)
+        if (bm == 0 || bm == 19)
         {
             REQUIRE(status);
             REQUIRE(instance.build_frame());
+            REQUIRE(instance.frame().commands.size() == 1);
+            REQUIRE(instance.frame().commands[0].blend ==
+                    (bm == 19 ? BlendMode::Multiply : BlendMode::Over));
+            REQUIRE(instance.frame().commands[0].protection ==
+                    (bm == 19 ? ColorProtection::None : ColorProtection::PreserveTranslucent));
         }
         else
         {
@@ -2658,14 +2664,27 @@ TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][sc
     }
 }
 
-TEST_CASE("Unverified texture protection flags cannot silently become ordinary alpha",
+TEST_CASE("Observed attr2 uses ordinary alpha and unknown protection flags fail",
           "[runtime][scene]")
 {
-    auto asset = rig();
-    asset.icons["atlas/a"].attr = 2;
-    auto compiled = runtime::compile_geometry_scene(asset);
-    REQUIRE(compiled.scene);
-    runtime::GeometryInstance instance(*compiled.scene);
-    REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
-    REQUIRE(instance.frame().vertices.empty());
+    for (int attr : {0, 1, 2, 3})
+    {
+        auto asset = rig();
+        asset.icons["atlas/a"].attr = attr;
+        auto compiled = runtime::compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        if (attr == 3)
+        {
+            REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+            REQUIRE(instance.frame().vertices.empty());
+        }
+        else
+        {
+            REQUIRE(instance.evaluate());
+            REQUIRE(instance.build_frame());
+            REQUIRE(instance.frame().commands[0].protection ==
+                    (attr == 1 ? ColorProtection::PreserveTranslucent : ColorProtection::None));
+        }
+    }
 }

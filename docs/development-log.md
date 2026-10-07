@@ -683,3 +683,12 @@
 - 补修EXISTS_UNCHECKED和CPU TIMEOUT被当成功、逐项解析/I/O错误中断账本、失败CPU详情丢失及非法catalog ID路径；已有输出保持，新增4项CLI边界回归。有限截图必须指定正步数，限制8192尺寸/100000作者步，隐藏截图窗口，清理旧交换后截图注释；新增3项宿主负例。
 - dev CTest138/138、headless ASan/UBSan136/136、工具Python35/35、C宿主13/13；纯CPU UI无DISPLAY下8组/124断言通过。Release播放器/C宿主重建，同输入Chocola320×240、seed42、30步、origin_y=0，C/C++截图RGBA完全一致。证据integration-next-2026-10-07，截图不用于性能报告。
 - G7原账本195项：194结构OK/1歧义、171 CPU OK/23 FAIL/1未测；全部视觉/交互/soak未测。V6动态UI仍未测。未修改外部素材、配置或桌面，未注入OS输入；继续C5原生混合和真实画面验证。
+
+## 2026-10-07 Codex：C5混合映射及真实播放验证
+
+- bm19编译为独立Multiply，预乘源RGB并保持目标alpha，attr1不进入Over双遍保护；attr2映射普通单遍Over。未知bm/attr、未验证继承及嵌套遮罩仍拒绝。仅放行已证明的ProtectedStraight组合。
+- 原115WebGL代表矩阵重跑115/115；Fraise maid-a/Milk summer/Milk winter原PSB、固定clock1000/seed1、物理启用、初态/60步/姿态60步新增9/9，最大几何0.00007003px，scalar1e-5与alpha/合成RGB2字节门槛通过；已读联系图与实际默认1920×1080播放器图。
+- V6整模型10/19，Fraise maid-a全部10组通过。孤立Animation step30手动控制器与SDK请求不同，改用独立managed Playback+零物理幅度后几何0px、合成像素零差异。Fraise france-maid-b9FAIL保留：活动stencil及闭眼姿态镜像后剩余约57.775px误差。attr2单层映射不认证全模型。
+- 用户提醒镜像已被其他Agent核查；正式播放器mirror保持，诊断Preview/pose补齐相同呈现约定，不以取消镜像消除误差。默认milk-summer/BG_30A静音、no-save、60步截图成功，6/3缺口已解除。
+- dev CTest138/138、GPU9组174断言，100次预热后prepare/render项目C++零分配；headless ASan136/136及无ABI Release/LTO无DISPLAY133/133。单次CPU Chocola2000步P50/P95/P99=.274617/.319665/.350466ms，无受控收益/功耗结论。证据c5-blending-2026-10-07及validation/c5-blending-results.json，保留工具路径/隔离控制器失败尝试。
+- 清理当前文档中的已修复启动、G7/G8/G9/V6待办；安排GLM G10刷新195 CPU来源账本，Gemini V7只观察受控镜像/遮罩，Codex继续未知求值及C6/C7。未覆盖用户资产、冻结数据或外部源，未注入OS键鼠。

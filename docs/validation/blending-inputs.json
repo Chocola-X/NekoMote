@@ -1,0 +1,531 @@
+{
+  "coordinate_tolerance_px": 0.001,
+  "image_tolerance": 2,
+  "condition": "Unmodified PSB, controlled zero hair/parts/bust, fixed independent requests; whole model geometry and pixels",
+  "cases": [
+    {
+      "case": "fraise-maid-a_base",
+      "model": "fraise-maid-a",
+      "variables": {},
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_base",
+      "reference_hashes": {
+        ".json": "a6da7f52287ef2f9aedd5bb9add689ca0c92f95f333d4bc8f4f23d28cd196dbb",
+        ".png": "6a0d14ce503f4254bbc2573fbdca033856611edf3bd4c3e60441f3e471c82fe5",
+        ".trace.json": "109f2017e6793b8e8e1d8f7f01da0b8552d27b0138d00fe6f859bfcbe5fb3ff0"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_opacity05",
+      "model": "fraise-maid-a",
+      "variables": {},
+      "steps": 0,
+      "opacity": 0.5,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_opacity05",
+      "reference_hashes": {
+        ".json": "0c3ae0599ca945bc3d3ba7b346d625adaeb916c502e8f22cc19370caa8d4180f",
+        ".png": "2ade4a9f5d82778f767ccd181404d781ceb43a07de7f2d09348b5f3a24b41f80",
+        ".trace.json": "b7594a6bbb2075acfa2546a00502a2cc27cc55ce22595325bac1a3c8220369b0"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_head_lr30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "head_LR": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_head_lr30",
+      "reference_hashes": {
+        ".json": "1b50df0cb69f7fef7b7230ece391ffdc72e50de70bde155b0937427d1030d4e1",
+        ".png": "7cf403ecf164ca9684a111c4814900552fdc538426ee3b9ab45eff50fb24e3c0",
+        ".trace.json": "35a6e8762e9523f3b42853c13a32329e83a3710747e1e4d4ebe9d349e4669df6"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_head_lr_minus30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "head_LR": -30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_head_lr_minus30",
+      "reference_hashes": {
+        ".json": "0d7df9f2a0e45f77e98731e0c5d3c060454baa8ff9d4cb3e744a59234f713498",
+        ".png": "48a8d1c7dc69759f27bc8271052d0c5f30dfb2093e8a4127d3c4d66cb883bcd0",
+        ".trace.json": "c91515784dff6510773b4d92c2a3f403ce605248cb05337d17b611a03d0a4af0"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_head_ud30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "head_UD": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_head_ud30",
+      "reference_hashes": {
+        ".json": "9ff5ae1979ef36eb6519a17b8e720ace03fcf3373585200a65f2ac6efad0a28a",
+        ".png": "56c2060b16d9c5a4308925a48c1df8f4edf8e60b6ade40b471fc833ea2657d97",
+        ".trace.json": "8e2cd0add65dfaca46ef5f0fc072d7a85bd8b86763c41a9d42a23267ae84b1f1"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_head_slant30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "head_slant": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_head_slant30",
+      "reference_hashes": {
+        ".json": "bae98ee1bf9db792bcf77fbca593358433bc57aeb485f5dbd592a9cbc4bb8ca1",
+        ".png": "25068692fff189ce405973a26ca325ba0b22e479ca7dea861c83e74fd1383a08",
+        ".trace.json": "4b88f2efaca929d87cac5d47a71a8fb83e0f36c09cec51dce7506bcfaeeedfb8"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_body_lr30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "body_LR": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_body_lr30",
+      "reference_hashes": {
+        ".json": "e44f4a148a1ab7a539892151d9707b83ec22d05f978c6cb74222caee66a335bf",
+        ".png": "442c63660f1700777ce2be01bcf13c49613776e35af100dc44a0d7177313ee6b",
+        ".trace.json": "89b8201b8e755e190f7546302e3f6b96edec1fd3311c61e886efda9b4d60174d"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_act_sp30",
+      "model": "fraise-maid-a",
+      "variables": {
+        "act_sp": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_act_sp30",
+      "reference_hashes": {
+        ".json": "7d50b80ae002972105f51c99bab73fd1c016510195c9fc33374b440e137b20d6",
+        ".png": "4a17216be40c5aba142f1c9d763cac138311c25d3bb771ca2d30c0f477248629",
+        ".trace.json": "ccdeb00b6d7106947e786e9f3b1171ba9c7216ffaa94dcd3d665705eac6df044"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_step30",
+      "model": "fraise-maid-a",
+      "variables": {},
+      "steps": 30,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_step30",
+      "reference_hashes": {
+        ".json": "108f0d574a9d4518fc327044ca302483906b8192e3a2a2baca44158397a82bb8",
+        ".png": "f4624cf03dae23b34025a74f10cec6bf70b0f9a5d2f74a287beb3b83e33500e2",
+        ".trace.json": "4702bac3dcf6eb15eff9c1d1cfc2bffdef89764369c8574b3b4715f27670f71e"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-maid-a_face_invariance",
+      "model": "fraise-maid-a",
+      "variables": {
+        "face_eye_open": 10,
+        "face_mouth": 30,
+        "face_eyebrow": 20
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-maid-a/model.nkm.json",
+      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "reference": "build/evidence/v6/fraise-maid-a_face_invariance",
+      "reference_hashes": {
+        ".json": "7369db9a7fa52bab10a68781e8d7b19fec27b552834682e6de502a09b8c39a36",
+        ".png": "b01d0a0a80364c51936351d9ba1173dfaaf5fd82819ac4680fd6db46cd6fbdf6",
+        ".trace.json": "de6da164bb4955a004b2120934fd0953dc2dd6130b95db8c5979ed5dba83baab"
+      },
+      "source_hashes": {
+        "psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "original_psb": "2868780aafdfe76f4b85cbf47b099f6918c1f9bcb98bd92745c8dcfd21c64bad",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_base",
+      "model": "fraise-france-maid-b",
+      "variables": {},
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_base",
+      "reference_hashes": {
+        ".json": "8e9490f1761743babff2450015284067f751927d54bd8ef6d09a00bc68b01781",
+        ".png": "94fe9d644b3fd0e498f11e441258e6422634cf66f58fad86a5e83c712dd3646b",
+        ".trace.json": "760da1702b8e25a2971638335ca3930f66c2764820f5e58731c73036b53d3efa"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_opacity05",
+      "model": "fraise-france-maid-b",
+      "variables": {},
+      "steps": 0,
+      "opacity": 0.5,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_opacity05",
+      "reference_hashes": {
+        ".json": "847daaa2b2b7d2efcfbffd48151e0ec2e1eb4c19355c7f039cb78c8d6684b958",
+        ".png": "acd7d08b5b53093f2f6e3a24fbd476d87048026ac7e7754544b151d208ef8cd4",
+        ".trace.json": "986030ecd8b876fc8739bf7a92bcae61ac4b4fe1245f8cc01b4aa6380d81c5a3"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_body_lr30",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "body_LR": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_body_lr30",
+      "reference_hashes": {
+        ".json": "70b9843b13a4abd323459b1dda99c1fd1d49e2d81a209a3f643411beaffc6cff",
+        ".png": "3c263a71713f42727d9390cac46c2039be7a5909ff86b6e1fc1d820e47df821f",
+        ".trace.json": "6e6f77a8ab46b2994ef09c5cfeb24b3804cc856746da2877cfe9d166b72d7c4d"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_body_lr_minus30",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "body_LR": -30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_body_lr_minus30",
+      "reference_hashes": {
+        ".json": "2fb1b1b08b09c20a325f99378e83e314ff157ca2543ae34894e8fe6a4aff6272",
+        ".png": "043655d31a16ba76bc40204f5d8f241b8c14e222c8abcc48c75fcb64800007e0",
+        ".trace.json": "38e1effdd532775fcc4a970f9aa57ee00accabdf337f58b88e50269b0698ede2"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_body_ud30",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "body_UD": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_body_ud30",
+      "reference_hashes": {
+        ".json": "f0ddd32d368d74dc3eb9f256500d3a573cf5672781cedb49a0d82697ac4a7bf1",
+        ".png": "f221d098d05104f7e15798d42b0047e359dc50b719235f7d8de4eec960f5e5ae",
+        ".trace.json": "2af91257c4859ea3685c01ed56ce2f69337b9857d872e1d877c04813a822cfbd"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_body_slant30",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "body_slant": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_body_slant30",
+      "reference_hashes": {
+        ".json": "c95ab39a9df8dca8fb3e691567f9bd63a0d033c0325562df81d8c0fc41602a5e",
+        ".png": "fd812d28464e75ec337fd9d6045820bd8a931a7beec40044ec39e5ab47035d7e",
+        ".trace.json": "4c7087e9fbb1d24dc876e5a2951b944f269d9c4af1551e2124b6b73169118406"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_act_sp30",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "act_sp": 30
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_act_sp30",
+      "reference_hashes": {
+        ".json": "4acdd828d1b73514164f77aa560e44529e5c2e041cc818d63a0095edfa01325d",
+        ".png": "380346b637d464f88ae5119c4edafe833230f4cbdccdbfd9ea0326ad718a3b62",
+        ".trace.json": "e66d900d2b064220fd94afa4a4fecfcd5b229d3700d3a0ace8dd6a75890db053"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_step30",
+      "model": "fraise-france-maid-b",
+      "variables": {},
+      "steps": 30,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_step30",
+      "reference_hashes": {
+        ".json": "817c537ac3b0e524778ff37eebad78255183118461ceeaa1d391177ab0484956",
+        ".png": "8bfcd8262dc394fcaff4353bf8b73a994e8141956f99ff323edca90763c86f5b",
+        ".trace.json": "6674f40801fa6ed16872ee3ba1e0409ade878c8f1f73ea2f13d1f2ca03037b4a"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    {
+      "case": "fraise-france-maid-b_head_invariance",
+      "model": "fraise-france-maid-b",
+      "variables": {
+        "head_LR": 30,
+        "head_UD": 30,
+        "face_eye_open": 10
+      },
+      "steps": 0,
+      "opacity": 1.0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1.0,
+      "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
+      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "reference": "build/evidence/v6/fraise-france-maid-b_head_invariance",
+      "reference_hashes": {
+        ".json": "d7a3bf6721d20b49794adcae111aa21fc84717cb6e64c39e604b79a97d3e5120",
+        ".png": "757eae2ef153c9bddc6b6a779a7faf6ea00d5056ec3ab157af25c6b31e9a51b4",
+        ".trace.json": "c2e4f992fe928d3e33701b9e818ea0d1f8c69ae675c2623d196087b3e1fa890d"
+      },
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    }
+  ]
+}

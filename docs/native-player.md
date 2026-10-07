@@ -41,9 +41,9 @@ build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model
 
 ## 启动6/3的含义
 
-`session failure 6/3` 是Playback/Geometry失败，不是段错误。当前保存的 `milk-summer` 首帧 `■胸揺れ` 使用bm19，正式路径尚未实现该混合。上一轮Codex恢复严格门槛后，过去使用近似能显示的部分型号现在明确拒绝；本批Agent未引入这条求值变化。
+`session failure 6/3` 是Playback/Geometry失败，不是段错误。先前milk-summer的bm19缺口已正确实现，默认保存角色的60步截图成功；Fraise maid-a和Milk两季新增完整WebGL播放9/9通过。其他未支持继承/遮罩仍明确拒绝，错误不能一概归因为bm19。
 
-错误包含角色、几何错误名与节点路径，CPU首帧在声音/GPU模型资源初始化前验证。不会把渲染被拒绝的指定角色替换为别的角色。不支持型号的恢复界面/能力标记尚未完成；当前可显式选择已验证型号。补诊断不等于修复该型号。
+错误包含角色、几何错误名与节点路径，CPU首帧在声音/GPU模型资源初始化前验证。不会把渲染被拒绝的指定角色替换为别的角色。不支持型号的恢复界面/能力标记尚未完成；当前可显式选择已验证型号。型号认证以当前几何/画面证据为准。
 
 ## 生命周期与诊断
 
@@ -60,6 +60,6 @@ build/dev/bin/nekomote_player --assets assets --character chocola-date-a --mute 
   --check-window build/evidence/owned-window-check
 ```
 
-当前独立验证：Chocola固定步WebGL对照在上一轮零超差；本轮首帧预检改动前后RGBA字节相同，窗口/候选失败保留检查通过。115组是代表范围，不是195型号完整认证；单元测试不替代视觉、声音、资源和桌面生命周期。证据索引见整合摘要及development-log，历史性能数据不作为当前收益结论。
+当前独立验证：115组冻结WebGL代表矩阵本轮全部重跑通过，新增bm19完整播放9/9；窗口/候选失败保留已有检查通过。代表范围不是195型号完整认证；单元测试不替代视觉、声音、资源和桌面生命周期。证据索引见整合摘要及development-log，历史性能数据不作为当前收益结论。
 
-`nekomote_abi_host`仅是静音C ABI诊断程序。其确定步与截图契约仍待G8复核，不用于认证播放器或Plasma插件。
+`nekomote_abi_host`仅是静音C ABI诊断程序。固定1/60秒、交换前PNG和错误边界已复核，C/C++同初态30步RGBA相同，不用于认证播放器或Plasma插件。

@@ -401,7 +401,10 @@ void Renderer::prepare(RenderFrame frame)
             (command.protection != ColorProtection::PreserveTranslucent ||
              frame.composition != ColorComposition::ProtectedStraight))
             throw std::runtime_error("color protection requires straight composition");
-        if (command.blend != BlendMode::Over)
+        if (command.blend != BlendMode::Over &&
+            (command.blend != BlendMode::Multiply ||
+             frame.composition != ColorComposition::ProtectedStraight ||
+             command.protection != ColorProtection::None))
             throw std::runtime_error("unsupported blend mode");
         if (command.mask.valid() && (command.mask.value > frame.masks.size() ||
                                      frame.composition != ColorComposition::ProtectedStraight))
@@ -412,7 +415,8 @@ void Renderer::prepare(RenderFrame frame)
     for (const auto& command : frame.mask_commands)
     {
         validate(command);
-        if (command.mask.valid() || command.protection != ColorProtection::None)
+        if (command.mask.valid() || command.protection != ColorProtection::None ||
+            command.blend != BlendMode::Over)
             throw std::runtime_error("nested mask commands are unverified");
     }
     for (const auto& mask : frame.masks)
@@ -524,7 +528,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glUniform1i(p.flip_x, view.flip_x ? 1 : 0);
     glUniform2f(p.projection, 2.0f / static_cast<float>(target.width),
                 -2.0f / static_cast<float>(target.height));
-    glUniform1i(p.premultiply, straight ? 0 : 1);
+    int premultiply = straight ? 0 : 1;
+    glUniform1i(p.premultiply, premultiply);
     glUniform1i(p.protection_pass, 0);
     glUniform1i(p.mask_write, 0);
     glUniform1i(p.use_mask, 0);
@@ -587,6 +592,12 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             glUniform1i(p.use_mask, 0);
         }
         glBindTexture(GL_TEXTURE_2D, p.texture(command.texture));
+        const int command_premultiply = command.blend == BlendMode::Multiply || !straight ? 1 : 0;
+        if (command_premultiply != premultiply)
+        {
+            premultiply = command_premultiply;
+            glUniform1i(p.premultiply, premultiply);
+        }
         if (straight && command.protection == ColorProtection::PreserveTranslucent)
         {
             glUniform1i(p.protection_pass, 1);
@@ -597,8 +608,13 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                                               sizeof(std::uint32_t)));
             glUniform1i(p.protection_pass, 0);
         }
-        glBlendFuncSeparate(straight ? GL_SRC_ALPHA : GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
-                            GL_ONE_MINUS_SRC_ALPHA);
+        if (command.blend == BlendMode::Multiply)
+            // Source V6: opacity-weighted multiply changes RGB only; global alpha
+            // remains a final composite operation, as for ordinary straight draws.
+            glBlendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);
+        else
+            glBlendFuncSeparate(straight ? GL_SRC_ALPHA : GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,
+                                GL_ONE_MINUS_SRC_ALPHA);
         glDrawElements(
             GL_TRIANGLES, static_cast<GLsizei>(command.index_count), GL_UNSIGNED_INT,
             reinterpret_cast<const void*>(static_cast<std::uintptr_t>(command.first_index) *

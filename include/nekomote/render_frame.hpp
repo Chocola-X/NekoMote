@@ -18,6 +18,9 @@ enum class BlendMode
 {
     Over,
     Add,
+    // Opacity-weighted RGB multiply preserving destination alpha. Supported in
+    // ProtectedStraight with no color protection; alpha is composited once at
+    // the whole-model boundary. Source evidence: docs/v6-visual-report.md.
     Multiply,
     Screen
 };

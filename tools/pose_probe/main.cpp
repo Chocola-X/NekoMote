@@ -117,6 +117,7 @@ int run(const Options& o)
     auto loaded = asset_io::load_asset(o.asset);
     if (!loaded.ok)
         throw std::runtime_error(loaded.errors.front());
+    const bool mirror = loaded.asset.mirror;
     if (o.disable_eye_controller)
     {
         if (!o.animation)
@@ -332,7 +333,8 @@ int run(const Options& o)
             for (const auto index : native_indices)
             {
                 const auto& vertex = frame.vertices[index];
-                const float x = vertex.x + metadata.at("width").get<float>() / 2;
+                const float x =
+                    (mirror ? -vertex.x : vertex.x) + metadata.at("width").get<float>() / 2;
                 const float y = vertex.y + metadata.at("height").get<float>() / 2;
                 frame_bounds[0] = std::min(frame_bounds[0], x);
                 frame_bounds[1] = std::min(frame_bounds[1], y);
@@ -362,7 +364,7 @@ int run(const Options& o)
                         v < rect.top - 0.001f || v > rect.top + rect.height + 0.001f)
                         continue;
                     const auto point = instance.sample_atlas_point(p.node, {u, v});
-                    const double x = static_cast<double>(point.x);
+                    const double x = static_cast<double>(mirror ? -point.x : point.x);
                     const double y = static_cast<double>(point.y);
                     const auto& pos = attributes.at("a_pos").at("data").at(index);
                     const double error =
@@ -390,7 +392,7 @@ int run(const Options& o)
                             matched[closest] = true;
                             mapped[index] = native_indices[closest];
                             const auto& vertex = frame.vertices[native_indices[closest]];
-                            const double vx = static_cast<double>(vertex.x);
+                            const double vx = static_cast<double>(mirror ? -vertex.x : vertex.x);
                             const double vy = static_cast<double>(vertex.y);
                             frame_maximum =
                                 std::max(frame_maximum, std::hypot(vx - pos[0].get<double>(),

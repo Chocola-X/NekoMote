@@ -293,6 +293,87 @@ TEST_CASE("GPU protected straight colour differs from ordinary premultiplied ove
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
 
+TEST_CASE("GPU multiply preserves alpha, weights opacity and restores ordinary over", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.resize_output(64, 64);
+    renderer.reserve({8, 12, 3, 4});
+    renderer.upload_texture(TextureId{1}, {1, 1, {200, 100, 50, 255}});
+    renderer.upload_texture(TextureId{2}, {1, 1, {128, 64, 255, 128}});
+    renderer.upload_texture(TextureId{3}, {1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{4}, {1, 1, {200, 100, 50, 128}});
+    const auto background = quad(0.5f, 0.5f, 0.5f, 0.5f);
+    const auto multiply = quad(0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(background.begin(), background.end(), vertices.begin());
+    std::copy(multiply.begin(), multiply.end(), vertices.begin() + 4);
+    std::array<DrawCommand, 3> commands{{{TextureId{1}, 0, 6, BlendMode::Over},
+                                         {TextureId{2}, 6, 6, BlendMode::Multiply},
+                                         {TextureId{3}, 0, 6, BlendMode::Over}}};
+    RenderFrame frame{vertices, kIndices, std::span(commands).first(2),
+                      ColorComposition::ProtectedStraight};
+    renderer.prepare(frame);
+    renderer.resize_output(64, 64);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    auto sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    // Source RGB is lerped against white using texture alpha * node opacity.
+    REQUIRE(sample[0] >= 174);
+    REQUIRE(sample[0] <= 176);
+    REQUIRE(sample[1] >= 80);
+    REQUIRE(sample[1] <= 82);
+    REQUIRE(sample[2] == 50);
+    REQUIRE(sample[3] == 255);
+    render_gl::View faded{};
+    faded.alpha = 0.5f;
+    renderer.render({output.framebuffer, 64, 64}, faded);
+    sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[0] >= 173);
+    REQUIRE(sample[0] <= 177);
+    REQUIRE(sample[3] >= 127);
+    REQUIRE(sample[3] <= 128);
+
+    // Following Over must use straight shader RGB again, even across frames.
+    frame.commands = commands;
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[0] >= 214);
+    REQUIRE(sample[0] <= 216);
+    REQUIRE(sample[1] >= 39);
+    REQUIRE(sample[1] <= 41);
+    REQUIRE(sample[3] == 255);
+    allocation_count = 0;
+    track_allocations = true;
+    for (int i = 0; i < 100; ++i)
+    {
+        renderer.prepare(frame);
+        renderer.render({output.framebuffer, 64, 64}, {});
+    }
+    track_allocations = false;
+    REQUIRE(allocation_count == 0);
+    commands[0].texture = TextureId{4};
+    frame.commands = std::span(commands).first(2);
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    sample = pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32);
+    REQUIRE(sample[3] == 128); // Multiply must not accumulate source alpha.
+    REQUIRE(sample[0] >= 86);
+    REQUIRE(sample[0] <= 89);
+    frame.commands = std::span(commands).subspan(1, 1);
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 64, 64}), 32, 32)[3] == 0);
+    commands[1].protection = ColorProtection::PreserveTranslucent;
+    REQUIRE_THROWS(renderer.prepare(frame));
+    commands[1].protection = ColorProtection::None;
+    frame.composition = ColorComposition::PremultipliedOver;
+    REQUIRE_THROWS(renderer.prepare(frame));
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
 TEST_CASE("GPU alpha masks union with observed five-bit precision and reuse resized resources",
           "[gpu]")
 {
