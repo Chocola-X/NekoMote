@@ -19,12 +19,13 @@
  *   --capture <path>  退出前截图保存为 PNG（GL 读回，仅诊断）
  */
 
-#include <nekomote/abi.h>
-
+// clang-format off: glad must precede GLFW
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
 #include <math.h>
+#include <nekomote/abi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +36,7 @@
 /* Error checking                                                     */
 /* ------------------------------------------------------------------ */
 
-static int check(const char *where, nekomote_error e)
+static int check(const char* where, nekomote_error e)
 {
     if (e != NEKOMOTE_OK)
     {
@@ -50,14 +51,16 @@ static int check(const char *where, nekomote_error e)
 /* Path helpers                                                       */
 /* ------------------------------------------------------------------ */
 
-static void dir_of(const char *file_path, char *out, size_t out_size)
+static void dir_of(const char* file_path, char* out, size_t out_size)
 {
-    if (out_size == 0) return;
-    const char *slash = strrchr(file_path, '/');
+    if (out_size == 0)
+        return;
+    const char* slash = strrchr(file_path, '/');
     if (slash)
     {
         size_t len = (size_t)(slash - file_path);
-        if (len >= out_size) len = out_size - 1;
+        if (len >= out_size)
+            len = out_size - 1;
         memcpy(out, file_path, len);
         out[len] = '\0';
     }
@@ -68,7 +71,7 @@ static void dir_of(const char *file_path, char *out, size_t out_size)
     }
 }
 
-static int join_path(char *out, size_t out_size, const char *dir, const char *name)
+static int join_path(char* out, size_t out_size, const char* dir, const char* name)
 {
     int n = snprintf(out, out_size, "%s/%s", dir, name);
     if (n < 0 || (size_t)n >= out_size)
@@ -83,8 +86,8 @@ static int join_path(char *out, size_t out_size, const char *dir, const char *na
 /* Texture upload                                                     */
 /* ------------------------------------------------------------------ */
 
-static int upload_textures(nekomote_program *program, nekomote_renderer *renderer,
-                           const char *model_dir)
+static int upload_textures(nekomote_program* program, nekomote_renderer* renderer,
+                           const char* model_dir)
 {
     size_t tex_count = nekomote_program_texture_count(program);
     int uploaded = 0;
@@ -96,7 +99,7 @@ static int upload_textures(nekomote_program *program, nekomote_renderer *rendere
         char full_path[MAX_PATH];
         if (!join_path(full_path, sizeof(full_path), model_dir, tex.path))
             continue;
-        nekomote_image *img = nekomote_image_load_png(full_path);
+        nekomote_image* img = nekomote_image_load_png(full_path);
         if (!img)
         {
             fprintf(stderr, "[abi_host] texture %zu: failed to load %s\n", i, full_path);
@@ -117,10 +120,10 @@ static int upload_textures(nekomote_program *program, nekomote_renderer *rendere
 /* Screenshot (GL readback, diagnostic only)                          */
 /* ------------------------------------------------------------------ */
 
-static int save_screenshot(const char *path, int width, int height)
+static int save_screenshot(const char* path, int width, int height)
 {
     size_t pixel_count = (size_t)width * (size_t)height * 4;
-    uint8_t *pixels = malloc(pixel_count);
+    uint8_t* pixels = malloc(pixel_count);
     if (!pixels)
         return 0;
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -133,7 +136,7 @@ static int save_screenshot(const char *path, int width, int height)
         return 0;
     }
 
-    FILE *f = fopen(path, "wb");
+    FILE* f = fopen(path, "wb");
     if (!f)
     {
         fprintf(stderr, "[abi_host] cannot open capture file: %s\n", path);
@@ -142,11 +145,11 @@ static int save_screenshot(const char *path, int width, int height)
     }
     /* Flip vertically (OpenGL origin is bottom-left) */
     size_t row_bytes = (size_t)width * 4;
-    uint8_t *row = malloc(row_bytes);
+    uint8_t* row = malloc(row_bytes);
     for (int y = 0; y < height / 2; y++)
     {
-        uint8_t *top = pixels + (size_t)y * row_bytes;
-        uint8_t *bot = pixels + (size_t)(height - 1 - y) * row_bytes;
+        uint8_t* top = pixels + (size_t)y * row_bytes;
+        uint8_t* bot = pixels + (size_t)(height - 1 - y) * row_bytes;
         memcpy(row, top, row_bytes);
         memcpy(top, bot, row_bytes);
         memcpy(bot, row, row_bytes);
@@ -164,8 +167,7 @@ static int save_screenshot(const char *path, int width, int height)
         fprintf(stderr, "[abi_host] short write to capture file\n");
         return 0;
     }
-    printf("[abi_host] captured %dx%d RGBA to %s (%zu bytes)\n",
-           width, height, path, pixel_count);
+    printf("[abi_host] captured %dx%d RGBA to %s (%zu bytes)\n", width, height, path, pixel_count);
     return 1;
 }
 
@@ -173,7 +175,7 @@ static int save_screenshot(const char *path, int width, int height)
 /* Usage                                                              */
 /* ------------------------------------------------------------------ */
 
-static void print_usage(const char *prog)
+static void print_usage(const char* prog)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  %s --model <model.nkm.json> --session <session.nks.json> [options]\n", prog);
@@ -194,12 +196,12 @@ static void print_usage(const char *prog)
 /* Main                                                               */
 /* ------------------------------------------------------------------ */
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    const char *model_path = NULL;
-    const char *session_path = NULL;
-    const char *reaction_name = NULL;
-    const char *capture_path = NULL;
+    const char* model_path = NULL;
+    const char* session_path = NULL;
+    const char* reaction_name = NULL;
+    const char* capture_path = NULL;
     int width = 800;
     int height = 600;
     long steps = 0;
@@ -256,7 +258,7 @@ int main(int argc, char **argv)
     char model_dir[MAX_PATH];
     dir_of(model_path, model_dir, sizeof(model_dir));
 
-    nekomote_model *model = nekomote_model_load(model_path);
+    nekomote_model* model = nekomote_model_load(model_path);
     if (!model)
     {
         fprintf(stderr, "Error: model load failed: %s\n",
@@ -264,7 +266,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    nekomote_session_asset *session_asset = nekomote_session_asset_load(session_path);
+    nekomote_session_asset* session_asset = nekomote_session_asset_load(session_path);
     if (!session_asset)
     {
         fprintf(stderr, "Error: session asset load failed: %s\n",
@@ -273,7 +275,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    nekomote_program *program = nekomote_program_compile(model, session_asset);
+    nekomote_program* program = nekomote_program_compile(model, session_asset);
     if (!program)
     {
         fprintf(stderr, "Error: program compile failed: %s\n",
@@ -284,10 +286,8 @@ int main(int argc, char **argv)
     }
 
     printf("  textures: %zu  gaze: %d  touch: %d  mirror: %d  audio_clips: %zu\n",
-           nekomote_program_texture_count(program),
-           nekomote_program_gaze_available(program),
-           nekomote_program_touch_available(program),
-           nekomote_program_mirror(program),
+           nekomote_program_texture_count(program), nekomote_program_gaze_available(program),
+           nekomote_program_touch_available(program), nekomote_program_mirror(program),
            nekomote_program_audio_count(program));
 
     /* ---- Init GLFW and GL (needed for renderer) ---- */
@@ -303,7 +303,7 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(width, height, "NekoMote ABI Host", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "NekoMote ABI Host", NULL, NULL);
     if (!window)
     {
         fprintf(stderr, "Error: glfwCreateWindow failed\n");
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
     config.random_seed = seed;
     config.pointer = NEKOMOTE_POINTER_LOCAL_SURFACE;
     config.audio = NEKOMOTE_AUDIO_DISABLED;
-    nekomote_session *session = nekomote_session_create(program, config);
+    nekomote_session* session = nekomote_session_create(program, config);
     if (!session)
     {
         fprintf(stderr, "Error: session create failed: %s\n",
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
     }
 
     /* ---- Create renderer and reserve capacity from program ---- */
-    nekomote_renderer *renderer = nekomote_renderer_create(glfwGetProcAddress);
+    nekomote_renderer* renderer = nekomote_renderer_create(glfwGetProcAddress);
     if (!renderer)
     {
         fprintf(stderr, "Error: renderer create failed\n");
@@ -388,8 +388,7 @@ int main(int argc, char **argv)
     printf("  textures uploaded: %d\n", uploaded);
 
     /* ---- Main loop ---- */
-    printf("\nRunning. Esc=quit%s\n\n",
-           steps > 0 ? " (auto-exit after steps)" : "");
+    printf("\nRunning. Esc=quit%s\n\n", steps > 0 ? " (auto-exit after steps)" : "");
 
     double last_time = glfwGetTime();
     long frame_count = 0;
@@ -402,7 +401,8 @@ int main(int argc, char **argv)
         double now = glfwGetTime();
         double dt = now - last_time;
         last_time = now;
-        if (dt > 0.25) dt = 0.25;
+        if (dt > 0.25)
+            dt = 0.25;
 
         if (!check("advance", nekomote_session_advance(session, dt)))
         {
@@ -421,8 +421,7 @@ int main(int argc, char **argv)
             exit_code = 1;
             break;
         }
-        if (!check("resize_output",
-                   nekomote_renderer_resize_output(renderer, fb_width, fb_height)))
+        if (!check("resize_output", nekomote_renderer_resize_output(renderer, fb_width, fb_height)))
         {
             exit_code = 1;
             break;
@@ -454,8 +453,8 @@ int main(int argc, char **argv)
 
         if (frame_count % 300 == 0)
         {
-            printf("  frame %ld  dt=%.2fms  verts=%zu  cmds=%zu\n",
-                   frame_count, dt * 1000.0, frame.vertex_count, frame.command_count);
+            printf("  frame %ld  dt=%.2fms  verts=%zu  cmds=%zu\n", frame_count, dt * 1000.0,
+                   frame.vertex_count, frame.command_count);
         }
 
         if (steps > 0 && frame_count >= steps)
