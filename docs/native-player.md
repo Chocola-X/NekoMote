@@ -1,6 +1,6 @@
 # 原生窗口播放器与设备服务
 
-当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。473d12d的115组冻结矩阵是历史通过基线；当前版本目录/UI/C ABI已有新增，但接续审查发现Fraise遮罩回归、局部继承近似、背景时钟和宿主边界问题。当前并非完整认证产物，详见 [2026-10-07审查](review-2026-10-07.md) 和 [协作任务](agent-workboard.md)。
+当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。2026-10-07第二轮整合已修复Fraise代表遮罩回归、背景时钟和部分宿主边界，115组冻结代表矩阵通过；未验证的局部继承及非标准混合仍明确拒绝。当前并非完整认证产物，详见 [接续审查](review-followup-2026-10-07.md)、[已知限制](known-defects.md) 和 [协作任务](agent-workboard.md)。
 
 ## 构建与素材
 
@@ -91,3 +91,20 @@ build/dev/bin/nekomote_player --assets assets --character chocola-date-a --mute 
 目录模式扫描characters、backgrounds和icons，提供角色/UI选择、背景和角色过渡。`--no-save`用于诊断，避免写持久配置；配置目录内已有资产不等于型号通过认证。UI需Fontconfig和可用字体，当前CMake可选探测与代码必需依赖不一致，按G6修复。C/GLFW ABI宿主是实验性调用样例，有独立音频/错误/所有权缺口，不能代替正式桌面适配器。
 
 R1的Fraise待机400步当前165超差像素，R2的Coconut body_LR30当前8.876px误差；文中早期通过和失败材料保留为当时记录。背景暂停/reset、切换失败和新UI状态尚需专门回归；原核心零分配与声音证据不覆盖新增UI及C宿主设备实现。
+
+上段为首次审查时的记录；第二轮整合后的状态以上文及接续审查为准。
+
+## 启动报错与型号支持（2026-10-07）
+
+`--assets assets` 优先选用 `assets/config.json` 保存的角色。资产导入成功、目录存在或以前能出画面，都不代表该型号已通过WebGL一致性验证。
+
+`session failure 6/3` 表示 `SessionError::Playback` / `PlaybackError::Geometry`，不是段错误。上一轮Codex提交 `a858f01` 恢复了对未验证继承、非零 `bm` 与非标准 `attr` 的严格拒绝；因此过去采用近似实现能显示的部分型号现在会拒绝加载。当前实例为保存的 `milk-summer`：活动节点 `■胸揺れ` 的源帧带 `bm=19`，报 `UnsupportedTransform`。Gemini V3交付了源GPU观测，原生实现及逐像素验收仍待完成。
+
+播放器现在在初始化声音及GPU模型资源之前验证首帧，错误包含角色名、几何错误名称与节点路径。它不会自动把指定角色替换成其他角色，也不会放行近似效果。默认选中不支持型号时仍退出，恢复界面及目录能力提示待后续实现；改进诊断不等于修复该型号的渲染。
+
+可以显式运行当前已验证的代表型号，诊断时保留原配置：
+
+```sh
+build/release/bin/nekomote_player --assets assets --character chocola-date-a --no-save
+# 没有音频服务时额外加 --mute
+```

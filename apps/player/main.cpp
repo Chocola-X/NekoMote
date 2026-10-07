@@ -24,6 +24,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -170,12 +171,56 @@ Options options(int argc, char** argv)
         throw std::runtime_error("--steps requires --capture");
     return o;
 }
-void check(application::SessionStatus status)
+std::string_view geometry_error_name(runtime::GeometryError error) noexcept
 {
-    if (!status)
-        throw std::runtime_error("session failure " +
-                                 std::to_string(static_cast<int>(status.error)) + "/" +
-                                 std::to_string(static_cast<int>(status.playback.error)));
+    switch (error)
+    {
+        case runtime::GeometryError::None:
+            return "None";
+        case runtime::GeometryError::InvalidParameter:
+            return "InvalidParameter";
+        case runtime::GeometryError::NonfiniteParameter:
+            return "NonfiniteParameter";
+        case runtime::GeometryError::UnsupportedClamp:
+            return "UnsupportedClamp";
+        case runtime::GeometryError::UnsupportedDiscretization:
+            return "UnsupportedDiscretization";
+        case runtime::GeometryError::UnsupportedTransform:
+            return "UnsupportedTransform";
+        case runtime::GeometryError::UnsupportedCombination:
+            return "UnsupportedCombination";
+        case runtime::GeometryError::UnsupportedTessellation:
+            return "UnsupportedTessellation";
+        case runtime::GeometryError::UnsupportedMask:
+            return "UnsupportedMask";
+        case runtime::GeometryError::InvalidLocator:
+            return "InvalidLocator";
+        case runtime::GeometryError::InvalidScale:
+            return "InvalidScale";
+    }
+    return "Unknown";
+}
+void check(application::SessionStatus status, const application::SessionProgram* program = nullptr,
+           std::string_view character = {})
+{
+    if (status)
+        return;
+    std::string message = "session failure " + std::to_string(static_cast<int>(status.error)) +
+                          "/" + std::to_string(static_cast<int>(status.playback.error));
+    if (!character.empty())
+        message += "; character='" + std::string(character) + "'";
+    if (status.playback.error == runtime::PlaybackError::Geometry)
+    {
+        const auto& geometry = status.playback.geometry;
+        message += "; geometry=" + std::string(geometry_error_name(geometry.error));
+        if (program)
+            message += "; node='" +
+                       std::string(program->playback().scene().node_label(geometry.node)) + "'";
+        if (geometry.error == runtime::GeometryError::UnsupportedTransform)
+            message += "; selected model uses unimplemented or unverified rendering semantics "
+                       "(e.g. inheritance, bm or attr); select another model with --character";
+    }
+    throw std::runtime_error(message);
 }
 struct Glfw
 {
@@ -227,6 +272,17 @@ CharacterHolder load_character(const player::CharacterEntry& entry, const Option
         throw std::runtime_error(compiled.errors.front());
     holder.program = std::move(compiled.program);
     const auto& program = *holder.program;
+    holder.instance = std::make_unique<application::SessionInstance>(
+        program, application::SessionConfig{{o.seed},
+                                            o.seed,
+                                            application::PointerScope::LocalSurface,
+                                            o.mute ? application::AudioMode::Disabled
+                                                   : application::AudioMode::Device});
+    check(holder.instance->set_origin(o.origin), &program, holder.name);
+    check(holder.instance->set_scale(o.scale), &program, holder.name);
+    check(holder.instance->start(), &program, holder.name);
+    // Reject unsupported initial poses before opening audio or uploading GPU resources.
+    check(holder.instance->prepare_frame(), &program, holder.name);
     if (!o.mute)
     {
         std::vector<model::AudioClip> clips;
@@ -248,15 +304,6 @@ CharacterHolder load_character(const player::CharacterEntry& entry, const Option
                                      std::to_string(snapshot.error) +
                                      "); use --mute for silent playback");
     }
-    holder.instance = std::make_unique<application::SessionInstance>(
-        program, application::SessionConfig{{o.seed},
-                                            o.seed,
-                                            application::PointerScope::LocalSurface,
-                                            o.mute ? application::AudioMode::Disabled
-                                                   : application::AudioMode::Device});
-    check(holder.instance->set_origin(o.origin));
-    check(holder.instance->set_scale(o.scale));
-    check(holder.instance->start());
     holder.renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
     std::printf("%s\n", holder.renderer->diagnostics().c_str());
     const auto& scene = program.playback().scene();
@@ -529,12 +576,12 @@ bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, S
         candidate_surface.mirror = candidate.program->mirror();
         if (!background.empty())
             apply_background(candidate, background, 0);
-        check(candidate.instance->prepare_frame());
+        check(candidate.instance->prepare_frame(), candidate.program.get(), candidate.name);
         if (fit_policy == FitPolicy::FitToWindow)
         {
             candidate_surface.fit();
             check(candidate_surface.error);
-            check(candidate.instance->prepare_frame());
+            check(candidate.instance->prepare_frame(), candidate.program.get(), candidate.name);
         }
         int width = 0, height = 0;
         glfwGetFramebufferSize(surface.window, &width, &height);
@@ -708,7 +755,7 @@ int run(int argc, char** argv)
     }
     if (o.fit || (assets_mode && config.fit))
     {
-        check(holder.instance->prepare_frame());
+        check(holder.instance->prepare_frame(), holder.program.get(), holder.name);
         surface.fit();
         check(surface.error);
     }
@@ -991,11 +1038,11 @@ int run(int argc, char** argv)
             glfwWaitEventsTimeout(.1);
             continue;
         }
-        check(holder.instance->prepare_frame());
+        check(holder.instance->prepare_frame(), holder.program.get(), holder.name);
         holder.renderer->prepare(holder.instance->frame());
         if (fade_state == CharacterFadeState::CrossFade && old_holder.instance)
         {
-            check(old_holder.instance->prepare_frame());
+            check(old_holder.instance->prepare_frame(), old_holder.program.get(), old_holder.name);
             old_holder.renderer->prepare(old_holder.instance->frame());
         }
         if (w != last_width || h != last_height)

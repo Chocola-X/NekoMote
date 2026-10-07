@@ -620,3 +620,10 @@
   - 原生播放器加载验证：严格返回 `session failure 6/3`（`NEKOMOTE_ERROR_UNSUPPORTED`），遵守规范未提前放行未闭合语义；
   - 保存 WebGL 参考图、黑白合成图及高倍局部裁切图至 `build/evidence/v3/`；交付完整报告 [docs/v3-source-blending-report.md](v3-source-blending-report.md)，移交 Codex 依据数学公式完成原生求值与 GPU 映射。
 
+## 2026-10-07 Codex：默认启动6/3定位及诊断
+
+- 接手HEAD `97c9409`，工作区干净。`5a4dc13..97c9409` 没有修改runtime/application/player main。保存配置选择milk-summer，其首帧活动节点 `■胸揺れ` 的bm=19触发UnsupportedTransform；严格拒绝来自上一轮Codex `a858f01`，不是本批Agent引入的段错误。能显示、目视可接受与受控WebGL一致性分别记录。
+- 首帧CPU校验前移至音频设备和GPU模型资源初始化之前；失败包含角色、几何错误名和节点路径。正式门槛未改变，不自动替换保存角色，不声称已支持milk-summer。恢复界面仍待开发；V3混合实现提升为Codex优先项。
+- dev构建及CTest **136/136 PASS**；Release播放器/UI测试构建通过，独立UI **8/8、124 assertions PASS**。真实milk静音/音频模式均明确exit1；Chocola静音截图、音频设备初始化及121显示帧、应用内窗口/候选事务检查均exit0。声音检查无反应音频，因此不认证发声/口型。
+- Chocola首帧改动前后1920×1080 RGBA逐字节相同，已读图；本次没有变更求值/绘制公式，没有重跑115组WebGL矩阵或声称新增型号通过。`--no-save`全过程保持assets/config.json hash不变。证据 `build/evidence/startup-2026-10-07/results.json` 及日志/截图；未注入系统键鼠。
+- 预检只增加加载时的一次CPU prepare；错误字符串仅失败时构建，正常稳态路径未新增分配。没有测量或宣称性能收益。

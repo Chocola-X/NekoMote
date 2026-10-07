@@ -6,7 +6,8 @@
 | --- | --- | --- |
 | Fraise眼缘遮罩回归 | **已修复并独立验收**：真实add_mask恢复，Fraise400零超差，115冻结矩阵通过；Fraise-b缺失/嵌套来源仍拒绝 | V1已闭合；嵌套遮罩由Codex |
 | Coconut/Azuki局部继承 | 原Coconut8.876191px/13,111像素FAIL保留；近似已移除，正式0x7fc路径UnsupportedTransform。公式未还原 | Codex / R2 |
-| bm/非标准attr | 非零bm、attr非0/1已恢复明确拒绝；源GPU混合/颜色保护认证仍缺 | Gemini V3，Codex映射 |
+| bm/非标准attr | 非零bm、attr非0/1已恢复明确拒绝；Gemini V3已交付源GPU观测，原生映射/跨姿态验证未完成。milk-summer的首帧胸揺れ节点bm=19因此拒绝 | Codex独立复核V3并实现映射 |
+| 默认启动的型号支持与诊断 | 保存角色milk-summer会因既有严格门槛退出，非新Agent引入的段错误；已补角色/几何错误/节点信息并前置CPU首帧校验。尚无不支持型号的恢复界面/目录能力提示 | 优先正确实现bm=19；产品恢复体验另行处理，不放行近似 |
 | C ABI边界 | 0.3.0长度/固定宽度/RAII/异常/帧失效/字段复制/预分配与headless已验证；更精确源诊断、真实宿主上下文丢失/卸载未验证 | Codex后续；G2限定只读容量getter |
 | C宿主音频/线程与错误流程 | **G2已修复**：abi_host收敛为显式静音C ABI诊断工具，删除PCM/Pulse/thread/WAVE/RMS和角色目录/壁纸策略；预分配用nekomote_program_renderer_capacity；生命周期正确 | 已闭合；正式声音由player提供 |
 | 会话/切换/渐变 | 能力查询、背景暂停/共享250ms预算和C++候选事务已修复；角色过渡仍使用墙钟且两遍over，背景reset/重入/声音候选失败尚未验收 | V4 / Codex；Gemini后续视觉 |
