@@ -533,3 +533,22 @@
   - reset 清除背景状态（bg_current/bg_target/fade_progress）
 - **验证**：dev 133/133 CTest 通过（新增4测试），clang-format 通过。
 - **未覆盖**：大 delta 追赶限制的数值契约（模型最多15步 vs 背景直接完成）需 Codex 推导统一策略；application 层零分配测试待 G6 构建矩阵完善。
+
+## 2026-10-07 V1/R1：恢复真实遮罩图层解析与全量回归（Antigravity / Gemini 3.8 Flash）
+
+- 领用 docs/agent-workboard.md V1 / R1。
+- 根因定位与排查：
+  - 审查确认提交 d7149c5 在 `src/runtime/geometry_scene.cpp:555` 中添加的无条件 `if (name == "add_mask") continue;` 造成画面回归。
+  - 数据层核实：在 `fraise-casual-a`（及全部 fraise-*-a 系列）模型中，`目L` 和 `目R` 下均真实存在 `label: "add_mask"` 的 Sprite 图层（type=0），且 `stencilCompositeMaskLayerList` 引用 `["shirome", "add_mask"]`。将同名图层强行视作操作跳过，导致 `add_mask` 图层未被加入 mask roots，造成眼缘产生 165 个超差像素（坐标集中在 x: 332–500, y: 511–557，最大合成 RGB 差 24/255）。
+  - 在 `fraise-*-b` 系列中，虽然模板配置了 `["shirome", "add_mask"]`，但模型中无任何名为 `add_mask` 的图层。前人提交试图用跳过字符串掩盖缺少真实源图层的缺陷，违反了项目规范（未支持的语义必须严格明确拒绝，不能用假测试和跳过伪装通过）。
+- 代码修复：
+  - `src/runtime/geometry_scene.cpp`：移除 `if (name == "add_mask") continue;`，按结构正常解析同名节点作为遮罩几何源；
+  - `tests/unit/test_geometry_scene.cpp`：替换原先基于错误假设的单测为双向测试（存在真实 add_mask 图层时正常解析为遮罩源；缺失遮罩源时在 build_frame 中严格拒绝为 UnsupportedMask）。
+- 严格验证与回归结果：
+  - `fraise-seed1-long400`：超差像素由 165 降为 0，原生 PNG sha256 为 `f1a258aba1c734cd004dff35875ff6ba5050b3b6ca5d98600f6d4007d426342a`，最大 RGBA 误差 1/255，黑白背景合成误差均为 0，差异裁切目视核查完全一致；
+  - `playback-blink-inputs.json` (blink11)：11/11 Passed，全部 0 超差像素；
+  - `playback-eye-inputs.json` (Eye10)：10/10 Passed，全部 0 超差像素；
+  - `playback-fraise-inputs.json` (Fraise3)：3/3 Passed，全部 0 超差像素；
+  - `static-inputs.json` (static30)：30/30 Passed，全部 0 超差像素；
+  - dev CTest：133/133 全部通过（100%）。
+

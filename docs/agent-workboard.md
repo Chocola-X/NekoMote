@@ -18,11 +18,17 @@
 
 每项交付包括：模型/输入/步数/seed/资产和源码hash，参照与原生PNG、差异图和区域裁图，标量/几何/alpha/黑白合成报告，严格PASS/FAIL，已观察现象与候选原因分别记录。来源数据只能用于对照，不能写回原生正式帧。先做V1，再做V2；V3–V5可在没有核心修改时分别开展。
 
-- [ ] **V1 / R1：Fraise已通过样例的遮罩回归，最高优先。**
+- [x] **V1 / R1：Fraise已通过样例的遮罩回归，最高优先。**
   - 输入：`docs/validation/playback-blink-inputs.json` 的 `fraise-seed1-long400`，固定seed1、400作者步、待机差分。
-  - 冻结参照：`build/evidence/p5-auto-blink/fraise-seed1-long400.{json,png,trace.json}`；hash在输入文件中。本次当前版本165超差像素，差异主要在眼缘，约x332–500/y511–557。
-  - 查看 `add_mask` 真实来源、左右眼作用域、源mask绘制及覆盖；同名图层存在，不能作为操作标记丢弃。隔离诊断恢复来源后为0超差像素，见审查证据。
-  - 修复后验收：整个blink11、Eye10、Fraise3及static30均回归；还要分别核实此前被放行的Fraise b系列。正确恢复普通来源不等于已经解决全部嵌套来源。
+  - 根因：`src/runtime/geometry_scene.cpp` 中无条件 `if (name == "add_mask") continue;` 错误跳过了 `fraise-casual-a` 等模型中真实存在的 `add_mask` 图层节点，导致遮罩漏切眼缘（超差 165 像素）。
+  - 修复：移除字符串硬编码跳过，恢复真实图层作为遮罩几何源的解析。当图层存在时正常加入 `roots`；当源图层缺失时（如 `fraise-b` 系列尚未解析的嵌套来源）保持严格拒绝（`UnsupportedMask`），不再虚假放行。
+  - 验证证据：
+    - `fraise-seed1-long400`：超差像素由 165 降为 **0**，原生 PNG sha256 为 `f1a258aba1c734cd004dff35875ff6ba5050b3b6ca5d98600f6d4007d426342a`，最大 RGBA 误差 1/255，黑白背景合成误差均为 0；
+    - `playback-blink-inputs.json` (blink11)：**11/11 Passed**，全部 0 超差像素；
+    - `playback-eye-inputs.json` (Eye10)：**10/10 Passed**，全部 0 超差像素；
+    - `playback-fraise-inputs.json` (Fraise3)：**3/3 Passed**，全部 0 超差像素；
+    - `static-inputs.json` (static30)：**30/30 Passed**，全部 0 超差像素；
+    - CTest 单元测试：**133/133 Passed**（新增真实图层解析及缺失时严格拒绝的双向测试）。
 - [ ] **V2 / R2：Coconut手部与局部继承。**
   - 当前复现：coconut-maid，body_LR=30，零步，scale=.45，origin=(0,100)，800×1080，透明背景、SDK物理scale0；几何8.876191px、13,111超差像素。
   - 范围：coconut-maid、maid-a、maid-a-4yo、santa、wintermaid；扩大检查catalog中全部0x7fc型号，包含此前Azuki-maid-b最小复现。
