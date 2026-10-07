@@ -4,10 +4,10 @@
 
 当前已有独立的 C++ 模型求值、时间线/差分、变形、遮罩、物理和可操作窗口播放器，支持视线、触摸反应、真实声音/口型及 PNG 背景。Chocola、Vanilla、Fraise 的反应会话已导入验证。P0/P1/P2 完成；完整模型认证、Plasma 接入和全素材/长期运行仍在开发，严格 WebGL 对照中的几何/物理 FAIL 保留，未宣布最终交付。
 
-启动普通播放器及操作说明见 [原生播放器](docs/native-player.md)。当前验证和失败记录见 [应用会话](docs/p6-application-plan.md)、[统一播放](docs/p6-playback-session.md) 与 [路线图](ROADMAP.md)。
+启动普通播放器及操作说明见 [原生播放器](docs/native-player.md)。当前接续审查与协作任务见 [2026-10-07审查](docs/review-2026-10-07.md)、[Agent任务清单](docs/agent-workboard.md)。历史验证和失败记录见 [应用会话](docs/p6-application-plan.md)、[统一播放](docs/p6-playback-session.md) 与 [路线图](ROADMAP.md)。
 ## 快速构建
 
-需要 CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang），首次配置需联网以拉取依赖。普通播放器额外需要 libpulse 17.x 开发包。
+需要 CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang），首次配置需联网以拉取依赖。普通播放器额外需要 libpulse 17.x 和 Fontconfig 开发包；新增宿主构建边界待修正，详见构建说明。
 
 ```bash
 cmake --preset dev              # 配置 Debug 构建

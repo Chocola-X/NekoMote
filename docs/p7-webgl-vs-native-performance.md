@@ -1,4 +1,7 @@
-# P7 性能对比：原生引擎 vs WebGL 引擎
+# P7 原生 / WebGL 历史测量（方法未验收）
+
+> 2026-10-07审查：以下是ccc5745提交保存的历史原始观察，**不能作为同条件性能收益或P7验收**。工具会写外部index.php，暂停使用该入口直到修复；本次审查未运行它。两端就绪/预热/采样窗口、背景/声音/UI/动作没有闭合控制，rAF不是实际模型呈现时间；整卡GPU/显存不能归因进程。详见 [审查](review-2026-10-07.md) 与任务G5。数据保留，CPU/内存/GPU收益倍数不认证。
+
 
 **日期**：2026-10-07 12:18:10  
 **提交**：869a960  
@@ -20,8 +23,8 @@
 | 实测 FPS | — (vsync=0 无上限) | 60.00360021601296 |
 
 > 原生 render+swap = GL 提交+swapbuffers（vsync=0，不含 CPU 求值 advance/prepare_frame）；WebGL rAF 间隔 = requestAnimationFrame 间隔（含浏览器合成+vsync）。
-> 两者语义不同。原生 CPU 求值基线见 docs/validation/p7-performance-baseline.json（azuki 425us/帧、fraise 768us/帧）。
-> 原生无 vsync 时理论 FPS 上限 ≈ 1000 / (render+swap + cpu_eval)；真实壁纸场景受 vsync 限制为 60 FPS。
+> 两者语义不同。历史audit墙钟折算见 docs/validation/p7-performance-baseline.json（425/768us）；其中包含导入/编译/reset/JSON，不能作为纯CPU帧求值基线。
+> 尚无同条件完整帧时间和实际呈现证据，不据此推算理论帧率；实际桌面呈现能力需宿主测量。
 
 ## 2. CPU 占用率（进程树，%）
 

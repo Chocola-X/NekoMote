@@ -36,3 +36,9 @@
 2. 在本文件登记版本、许可、用途和所在模块。
 3. 确认不违反模块边界（AGENTS.md §3）：公共头不泄漏图形/窗口/JSON 依赖。
 4. 评估许可与构建影响，记入阶段交接记录。
+
+## 2026-10-07新增UI/C宿主依赖审查
+
+- player UI 使用现有固定commit的stb_truetype及系统Fontconfig查找中文字体；需在加载阶段准备字形，字体文件及其许可与引擎代码许可分别核对。CMake目前可选查找Fontconfig、源码却必需，G6须统一必需探测/版本与模块登记。
+- ABI验证宿主直接链接pulse-simple/pulse/pthread，绕开了原audio目标的pkg-config/版本约束。该实现是待收敛偏离，不扩大到runtime，也不把它登记为最终公共服务设计。G2/G6统一服务边界与构建条件。
+- GLFW/Qt宿主、nlohmann JSON等具体依赖不应经ABI PUBLIC链接泄漏C++编译选项到C消费者；真实C接口头应只依赖C基础类型。

@@ -1,40 +1,29 @@
-# 已知渲染缺陷：coconut 系列模型手部水平拉伸与畸变
+# 当前已知缺陷与验收限制
 
-## 发现与更新日期
-- 首次记录：2026-10-06
-- 深度排查与根因确诊：2026-10-07（详见 [docs/coconut-hand-stretch-defect-analysis.md](coconut-hand-stretch-defect-analysis.md)）
+更新：2026-10-07，审查基线 ccc5745。完整证据和复现见 [接续审查](review-2026-10-07.md)、[证据索引](validation/review-2026-10-07.json)，任务分工见 [agent-workboard](agent-workboard.md)。未修复项不得通过改写目标或放宽阈值认证。
 
-## 问题描述与真实复现条件
+| 缺陷 | 当前观察 | 下一任务 |
+| --- | --- | --- |
+| Fraise眼缘遮罩回归 | seed1待机400步165超差像素；同名add_mask真实图层被跳过。独立诊断恢复来源后0超差，正式源码尚未修改 | V1 / R1 |
+| Coconut局部继承/挂接点 | maid，body_LR30，零步scale.45：8.876191px及13,111超差像素。现候选改善畸变但严格FAIL，正式路径已过早放行 | V2 / R2 |
+| bm/非标准attr扩大接受 | 不再拒绝，但尚无对应源GPU混合/颜色保护认证；CPU通过不是画面通过 | V3 / R2 |
+| C ABI错误和布局边界 | 多项renderer调用为void并吞异常；不同C/C++对象直接互转借用；像素输入缺长度、枚举999返回成功 | G1 / R3 |
+| C ABI初始化失败泄漏 | 无效loader返回NULL，LeakSanitizer报告8 bytes/1 allocation；标准ASan不覆盖ABI | G1 / R4 |
+| C宿主音频/线程 | latency仍在mutex内调用，quitting无同步，drain/join退出、队列及设备失败缺少契约；复制既有PCM/Pulse服务 | G2 / R5 |
+| 背景时钟/触摸能力/切换 | 暂停advance(.25)仍改变背景alpha；所有region为空仍报告touch可用；候选失败不能保留当前会话 | G3 / R6，V4 |
+| 新UI稳态/状态验证 | 核心零分配不覆盖绘制时字形分配/上传；所称新增拖动状态单测未在提交或测试目标找到 | G8 / V5 |
+| 性能方法和工程 | 采样工具改外部index.php、采样窗口未对齐；tracked大型素材、绝对路径、partial输出、ABI/C格式与独立构建缺口 | G4 / G5 / G6 |
 
-1. **旧记录“coconut-casual 93% 差异”结论纠偏**：
-   - 经实测证实，原记录中的“93% 差异”为测试工具缺陷造成的假象：`nekomote_player --assets assets` 会默认加载背景图，而原 WebGL `capture.py` 输出透明通道，导致整图被判为大色差。
-   - 在相同透明受控条件下，`coconut-casual`（单手叉腰、单手下垂）各参数下与 WebGL 均保持 **0 像素超差，完全一致**。
-2. **真实受影响模型与严重 BUG 现象**：
-   - 受影响模型：**双手叠放于腹部/围裙前方**的型号（`coconut-maid`, `coconut-maid-a`, `coconut-maid-a-4yo`, `coconut-santa`, `coconut-wintermaid` 等）。
-   - 触发条件：身体参数发生平移或扭转（如 `body_LR: 30` 或 `body_UD: 30`）。
-   - **多模态视觉现象**：
-     - **WebGL 参考画面**：双手自然交叠垂放在围裙前，手指纤细并拢，比例自然。
-     - **NekoMote 原生端**：右手手指发生**剧烈畸变拉伸**，被拉长 2~3 倍延展为长达 150 像素的**尖锐外星异形利爪**！
-     - **实测几何误差**：最大顶点误差高达 **158.91 像素**，超差像素多达 14,044 像素。
+## 局部继承调查的适用范围
 
-## 确诊的根本原因
+早期“coconut-casual 93%差异”来自背景与透明参照混用，不能作为模型误差。本次Coconut maid采用同尺寸/比例/原点、透明输出、相同原PSB零步，排除该条件问题。之前158px畸变下降到8.87px的候选仍然不符合 .001px 门槛。
 
-1. **`■腕R_親変形無視` 架构**：
-   - 上述模型的手部为独立追加图层（`追加パーツ`），挂载在 `■腕R_親変形無視`（`inheritMask = 0x7FC`，`inheritShape = 0`）参考节点下。
-   - `inheritShape == 0` 的核心语义是“断开并忽略父级节点的网格形状形变”。
-2. **代码缺陷位置：`src/runtime/geometry_scene.cpp`**：
-   - 历史提交 `030512d` 仅将 `inherit_shape` 用于 `mesh_path`（网格细分判定）。
-   - 在构建贝塞尔网格回溯链 `curve_parent` 时，**遗漏了对 `inherit_shape` 的检查**。
-   - 导致手部在执行 `deform()` 顶点求值时，一路沿着 `curve_parent` 回溯到父级手臂与躯干的大旋转变形网格（`QLR_M`），手部顶点被强行进行了第二次大幅度扭曲撕扯，导致手指暴拉 158 像素。
+inheritShape字段含义不自动给出精确原点/旋转/子节点公式。见 [历史分析及新审查标注](coconut-hand-stretch-defect-analysis.md)。实际影响不只五个Coconut型号，应按所有0x7fc结构筛选；其他参数/动作范围需受控复测，不能宣布完整修复。
 
-## 修复验证状态
+## 素材来源问题
 
-- **原理验证通过**：
-  在 `geometry_scene.cpp` 中阻断 `!n.inherit_shape` 节点的 `curve_parent` 回溯后：
-  - 最大几何误差从 **158.91px 骤降至 8.87px**（下降 94.4%）。
-  - 视觉上**异形怪爪彻底消除**，手指恢复自然收拢叠放于围裙上的正常形态。
-- **详细技术分析与未确定事项**：
-  完整分析见技术报告 [docs/coconut-hand-stretch-defect-analysis.md](coconut-hand-stretch-defect-analysis.md)。
+先前调查称coconut-dress资源映射指向空图，另从原PSB解包取得纹理后重新导入。本次未重做该修复或认证其全部姿态；G4应记录输入PSB、工具版本、解包输出/纹理hash和导入状态，不把本地替换等同于受控来源验收。milk-winter等缺项继续在目录账本占位，不能因为缺文件而从“全目录”分母移除。
 
-## 附：coconut-dress 纹理空白问题（已修复）
-coconut-dress 的 resx.json 引用的 `coconut-dress-resources/tex-texture.png` 是全空白纹理（32KB，0% 非空像素）。从 `data/coconut-dress.pure.psb.zip` 用 PsbDecompile 解包后获得的正确纹理为 3.3MB（42% 非空像素）。已用正确纹理重新导入。
+## 尚未开展的产品验收
+
+实际Plasma壁纸插件、宿主后端/多屏/卸载重建、8–24小时运行、完整目录画面/反应、同条件性能收益与安装产物尚未闭合。C/GLFW窗口可用于接口实验，不能认证这些能力。历史115组通过结果不替代当前HEAD回归。

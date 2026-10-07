@@ -54,13 +54,27 @@
     "note": "fraise-maid-b 同时受 stage_2 和 stage_3 影响，只计一次"
   },
   "remaining_failures": {
-    "texture_data_missing": ["cinnamon-maid", "coconut-maid"],
-    "data_corrupt": ["milk-winter", "vanilla-lolita", "fraise-france-maid-b"],
+    "texture_data_missing": [
+      "cinnamon-maid",
+      "coconut-maid"
+    ],
+    "data_corrupt": [
+      "milk-winter",
+      "vanilla-lolita",
+      "fraise-france-maid-b"
+    ],
     "note": "均为数据问题，非运行时语义缺陷"
   },
   "pending": [
     "资产打包（紧凑二进制资产）",
     "完整资源收益验证",
     "发布构建冻结基线（含 CPU/P50/P95/P99、内存/显存、功耗）"
-  ]
+  ],
+  "review_2026_10_07": {
+    "date": "2026-10-07",
+    "status": "historical_only_not_acceptance",
+    "wall_time_scope": "runtime_audit includes import/compile/reset/serialization, not isolated per-frame CPU evaluation",
+    "semantic_expansion": "0x7fc remains 8.876px FAIL; bm/attr lack GPU acceptance; add_mask skip introduces Fraise regression",
+    "next": "docs/agent-workboard.md G5"
+  }
 }

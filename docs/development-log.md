@@ -483,3 +483,14 @@
   - 验证：chocola-date-a 渲染 300+ 帧（4189 顶点，33 命令），OpenGL 3.3.0 NVIDIA 575.64.03，1/1 纹理上传成功。
   - 修复：resize_output 须在 prepare 之后调用（composition 在 prepare 时才确定）。
 - 交付：C ABI 可被纯 C 宿主完整使用，从加载到渲染不依赖任何 C++ 接口。为 Plasma QML 插件和其他桌面适配器铺好 ABI 通路。
+
+## 2026-10-07 Codex接续审查与Agent分工（暂停开发任务）
+
+- 用户要求暂停先前实现，核查其他Agent从473d12d到ccc5745的44次提交，并规划后续与协作规范。本次仅修改文档/证据索引，不改正式引擎源码、不回退历史、不删除本地素材、不执行系统键鼠注入或外部原仓库写入。
+- dev配置/构建/128 CTest、无窗口ASan/UBSan126 CTest、Python9通过。标准ASan不编译ABI/UI/C宿主；128项不等于128组画面或UI认证。格式检查player main/UI通过，ABI cpp/header、C宿主及application session失败。
+- Chocola四组冻结完整会话抽样标量/几何/图像PASS；Fraise seed1待机400步数值/几何PASS但165超差像素FAIL。当前代码跳过真实同名add_mask来源；隔离诊断只恢复来源后0超差像素，正式源码不变。旧冻结资产与assets中的当前资产绘制结果一致。并列图已目视核实。
+- 原PSB新采样Coconut maid/body_LR30/零步/scale.45/origin(0,100)：几何8.876191px、13,111超差像素，当前局部继承公式仍FAIL，不能以形状改善正式放行。没有扩大冻结门槛。
+- 契约复现：pause后advance(.25)让背景alpha从0变.25；非法播放enum999成功；移除全部region仍touch_available=true。无效GL loader返回NULL时LeakSanitizer定位ABI wrapper泄漏8bytes；临时无窗口诊断使用ASan拦截分配，不声称标准preset覆盖ABI。
+- C ABI吞异常/布局互转/长度错误、C宿主重复PCM/Pulse/锁内latency/线程退出、背景/reset/切换事务、asset绝对路径/partial、tracked素材和性能采样方法问题按R1–R6记录。性能工具会改写外部index.php，本次未执行；旧收益倍数及audit墙钟纯帧解释撤回认证，原数字保留。
+- docs/review-2026-10-07.md为审查结论；docs/validation/review-2026-10-07.json固定当前源码/证据hash。新agent-workboard列Gemini视觉V1–V5、GLM优先G1–G8及Codex语义/整合任务；这是交接清单，未启动其他Agent。分工依据任务/工具/验证能力而非未经评测的模型排名，按用户无限额度偏好优先明确的GLM任务。
+- 更新ROADMAP当前阶段和顺序：先恢复正确性/宿主边界，再统一服务、可信测量和实际Plasma；全目录/长期/安装按真实证据验收。AGENTS新增ABI边界、证据统计、输入安全和协同规则，提交正文Agent/Model/Context。源码修复留给后续明确领用任务；本次未复跑Release性能、完整115/目录或长期运行。

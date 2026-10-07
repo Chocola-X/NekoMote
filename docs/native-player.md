@@ -1,6 +1,6 @@
 # 原生窗口播放器与设备服务
 
-当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。代表模型的115组冻结数值/几何/图像矩阵已通过（docs/validation/p6-rigid-grid.json）；全目录的局部继承、嵌套mask等仍明确拒绝。窗口体验和代表模型验证不等于全素材认证。
+当前普通窗口入口是 `nekomote_player`。它使用本项目 runtime 求值和 GL 后端，加载独立模型及会话资产，支持自动眨眼、主/差分动画、物理、视线、触摸反应、真实声音/口型和 PNG 背景。473d12d的115组冻结矩阵是历史通过基线；当前版本目录/UI/C ABI已有新增，但接续审查发现Fraise遮罩回归、局部继承近似、背景时钟和宿主边界问题。当前并非完整认证产物，详见 [2026-10-07审查](review-2026-10-07.md) 和 [协作任务](agent-workboard.md)。
 
 ## 构建与素材
 
@@ -12,11 +12,11 @@ cmake --build --preset release
 build/release/bin/nekomote_import \
   ../NekoWebShow/model_conversion/chocola/chocola-date-a/chocola-date-a.json \
   ../NekoWebShow/model_conversion/chocola/chocola-date-a/chocola-date-a.resx.json \
-  --output build/assets/chocola-date-a
+  --output assets/characters/chocola-date-a
 python3 tools/import_session/import_session.py --reference-root ../NekoWebShow \
-  --model chocola-date-a --output build/assets/chocola-date-a/session.nks.json
-build/release/bin/nekomote_player --model build/assets/chocola-date-a/model.nkm.json \
-  --session build/assets/chocola-date-a/session.nks.json --fit \
+  --model chocola-date-a --output assets/characters/chocola-date-a/session.nks.json
+build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model.nkm.json \
+  --session assets/characters/chocola-date-a/session.nks.json --fit \
   --background ../NekoWebShow/background/BG_07A.png
 ```
 
@@ -81,3 +81,13 @@ build/dev/bin/nekomote_player --model /path/model.nkm.json \
 Debug/Release 的窗口自检均通过。Release 曾在EGL初始drawable分配前取到仅1×1有效内容的800×1080截图；失败材料保留，自检先预热实际surface再比较暂停像素。
 
 2026-10-05 刚性四角修复后，旧隔离动画7/7、完整代表模型矩阵均通过。上述2026-10-04失败是历史记录；所有原始材料保留。当前播放器固定h01及自有窗口检查均回归通过。
+
+## 目录模式与当前限制（2026-10-07）
+
+```sh
+build/dev/bin/nekomote_player --assets assets --character chocola-date-a --mute --fit --no-save
+```
+
+目录模式扫描characters、backgrounds和icons，提供角色/UI选择、背景和角色过渡。`--no-save`用于诊断，避免写持久配置；配置目录内已有资产不等于型号通过认证。UI需Fontconfig和可用字体，当前CMake可选探测与代码必需依赖不一致，按G6修复。C/GLFW ABI宿主是实验性调用样例，有独立音频/错误/所有权缺口，不能代替正式桌面适配器。
+
+R1的Fraise待机400步当前165超差像素，R2的Coconut body_LR30当前8.876px误差；文中早期通过和失败材料保留为当时记录。背景暂停/reset、切换失败和新UI状态尚需专门回归；原核心零分配与声音证据不覆盖新增UI及C宿主设备实现。
