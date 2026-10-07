@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """从源 catalog 逐项驱动事务导入，生成 195 行账本。
 
-每项记录 catalog ID、角色/型号、source/resx/纹理来源及 hash；
-新 bundle 先写到临时暂存目录，全部验证后一次发布到目标。
+每项记录 catalog ID、角色/型号、source/resx/纹理来源及 hash、执行的命令、
+节点路径、失败原因；新 bundle 先写到临时暂存目录，全部验证后一次发布到目标。
 失败不留 partial 目录，进程退出非零。已有目标一律拒绝并提示使用新目标，
 不凭文件存在推断当前 schema 有效。保护用户已有生成目录和其中额外文件。
+
+账本保留全部 195 条产品项，结构/CPU/视觉/交互/soak 分别统计；
+未运行状态保持 PENDING，不填 OK，结构 OK 不代表会话或画面可用。
+中断时通过原子检查点文件保留已完成项，重跑使用新输出目录。
 """
 import argparse
-import collections
 import ctypes
-import hashlib
 import json
 import os
 import pathlib
@@ -18,13 +20,8 @@ import subprocess
 import sys
 import tempfile
 
-
-def sha256(path):
-    h = hashlib.sha256()
-    with open(path, 'rb') as f:
-        for chunk in iter(lambda: f.read(1 << 20), b''):
-            h.update(chunk)
-    return h.hexdigest()
+sys.path.insert(0, str(pathlib.Path(__file__).parent / 'import_emote'))
+import catalog_index
 
 
 def publish_bundle(staging, target):
@@ -41,47 +38,55 @@ def publish_bundle(staging, target):
         raise OSError(error, os.strerror(error), str(target))
 
 
-def build_index(reference_root):
-    """索引所有解包模型 JSON，按 stem 去除 .pure 后缀分组。"""
-    index = collections.defaultdict(list)
-    for p in sorted((reference_root / 'model_conversion').rglob('*.json')):
-        if not p.name.endswith('.resx.json'):
-            index[p.stem.removesuffix('.pure')].append(p)
-    return index
+def bundle_schema_version(bundle):
+    """读取已发布 bundle 的 model.nkm.json schema 版本，缺失返回 None。"""
+    manifest = bundle / 'model.nkm.json'
+    if not manifest.is_file():
+        return None
+    try:
+        return json.loads(manifest.read_text()).get('schema')
+    except (json.JSONDecodeError, OSError):
+        return None
 
 
-def resolve_candidates(index, name):
-    """复用 audit_catalog 的 canonical 选择逻辑：优先父目录名等于 key 的候选。"""
-    key = name.removesuffix('.pure')
-    candidates = index.get(key, [])
-    canonical = [p for p in candidates if p.parent.name == key]
-    if len(canonical) == 1:
-        return canonical
-    return candidates
+def bundle_hash(bundle):
+    """计算 bundle 内全部文件的 sha256 摘要（路径→hash），按相对路径排序。"""
+    if not bundle.is_dir():
+        return None
+    digest = {}
+    for p in sorted(bundle.rglob('*')):
+        if p.is_file():
+            rel = str(p.relative_to(bundle))
+            digest[rel] = catalog_index.sha256(p)
+    return digest
 
 
-def find_external_textures(source, src_dir):
-    """读取模型 JSON，找出 pixel==null 的纹理，精确匹配目录下的 PNG。"""
-    document = json.loads(source.read_text())
-    external = {}
-    for texture, value in document.get('source', {}).items():
-        if not isinstance(value, dict):
-            continue
-        tex = value.get('texture', {})
-        if not isinstance(tex, dict) or tex.get('pixel') is not None:
-            continue
-        suffix = 'tex' + (texture.split('#')[-1] if '#' in texture else '000') + '.png'
-        matches = sorted(src_dir.glob('*' + suffix))
-        if len(matches) == 1:
-            external[texture] = str(matches[0].relative_to(src_dir))
-        else:
-            external[texture] = None
-    return external
+def run_cpu_audit(auditor, source, resx, external, audit_output, steps):
+    """运行 CPU 物理采样，返回 (status, detail)。detail 保留 stdout/stderr 摘要。"""
+    cmd = [str(auditor), str(source), str(resx),
+           '--output', str(audit_output),
+           '--steps', str(steps)]
+    for tex, path in external.items():
+        if path is not None:
+            cmd.extend(['--texture', f'{tex}={path}'])
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        return 'TIMEOUT', {'command': cmd, 'reason': 'runtime audit timeout'}
+    detail = {'command': cmd, 'returncode': proc.returncode,
+              'stdout_tail': proc.stdout[-300:], 'stderr_tail': proc.stderr[-300:]}
+    if proc.returncode != 0:
+        return 'FAIL', detail
+    return 'OK', detail
 
 
-def import_one(name, record, reference_root, importer, session_tool,
+def import_one(name, record, reference_root, index, importer, session_tool,
                presentation, output, temporary, runtime_auditor, runtime_steps):
-    """事务导入单个模型：先写到暂存目录，验证后发布到目标。"""
+    """事务导入单个模型：先写到暂存目录，验证后发布到目标。
+
+    `index` 由调用方预先建立并复用，不在每项内重建。
+    失败时 row 仍保留 commands、nodes、errors，便于账本溯源。
+    """
     key = name.removesuffix('.pure')
     target = output / key
     row = {
@@ -93,16 +98,18 @@ def import_one(name, record, reference_root, importer, session_tool,
         'status': {'structure': 'PENDING', 'cpu': 'PENDING',
                    'visual': 'PENDING', 'interaction': 'PENDING', 'soak': 'PENDING'},
         'errors': [],
+        'commands': [],
+        'nodes': [],
     }
 
     if os.path.lexists(target):
         row['status']['structure'] = 'EXISTS_UNCHECKED'
         row['errors'].append('existing output preserved without certification; use a new --output')
+        row['nodes'].append(str(target))
         return row
 
-    index = build_index(reference_root)
-    candidates = resolve_candidates(index, name)
-    alternatives = [str(p.relative_to(reference_root)) for p in candidates]
+    candidates = catalog_index.resolve_candidates(index, name)
+    alternatives = [catalog_index.relative_to(p, reference_root) for p in candidates]
 
     if len(candidates) != 1:
         row['status']['structure'] = 'AMBIGUOUS' if candidates else 'MISSING'
@@ -112,19 +119,20 @@ def import_one(name, record, reference_root, importer, session_tool,
 
     source = candidates[0]
     resx = source.with_suffix('.resx.json')
-    row['source'] = str(source.relative_to(reference_root))
-    row['source_sha256'] = sha256(source)
-    row['resx'] = str(resx.relative_to(reference_root)) if resx.is_file() else None
-    row['resx_sha256'] = sha256(resx) if resx.is_file() else None
+    row['source'] = catalog_index.relative_to(source, reference_root)
+    row['source_sha256'] = catalog_index.sha256(source)
+    row['resx'] = catalog_index.relative_to(resx, reference_root) if resx.is_file() else None
+    row['resx_sha256'] = catalog_index.sha256(resx) if resx.is_file() else None
+    row['nodes'].append(catalog_index.relative_to(source, reference_root))
 
     psb = reference_root / 'data' / (key + '.pure.psb.zip')
     if psb.is_file():
-        row['psb'] = str(psb.relative_to(reference_root))
-        row['psb_sha256'] = sha256(psb)
+        row['psb'] = catalog_index.relative_to(psb, reference_root)
+        row['psb_sha256'] = catalog_index.sha256(psb)
     else:
         row['psb'] = None
 
-    external = find_external_textures(source, source.parent)
+    external = catalog_index.find_external_textures(source, source.parent)
     row['external_textures'] = external
     if any(v is None for v in external.values()):
         row['errors'].append('missing or ambiguous external texture')
@@ -136,7 +144,14 @@ def import_one(name, record, reference_root, importer, session_tool,
     for tex, path in external.items():
         if path is not None:
             cmd.extend(['--texture', f'{tex}={path}'])
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    row['commands'].append(cmd)
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        row['status']['structure'] = 'TIMEOUT'
+        row['errors'].append('importer timeout after 120s')
+        shutil.rmtree(staging, ignore_errors=True)
+        return row
     if proc.returncode != 0:
         row['status']['structure'] = 'FAIL'
         row['errors'].append(proc.stderr.strip()[:300] or proc.stdout.strip()[-300:])
@@ -152,10 +167,17 @@ def import_one(name, record, reference_root, importer, session_tool,
     if session_tool is not None:
         cmd2 = ['python3', str(session_tool), '--reference-root', str(reference_root),
                 '--model', name, '--output', str(staging / 'session.nks.json')]
-        proc2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=60)
+        row['commands'].append(cmd2)
+        try:
+            proc2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=60)
+        except subprocess.TimeoutExpired:
+            row['status']['structure'] = 'SESSION_TIMEOUT'
+            row['errors'].append('session tool timeout after 60s')
+            shutil.rmtree(staging, ignore_errors=True)
+            return row
         if proc2.returncode != 0:
             row['status']['structure'] = 'SESSION_FAIL'
-            row['errors'].append(proc2.stderr.strip()[:300])
+            row['errors'].append(proc2.stderr.strip()[:300] or proc2.stdout.strip()[-300:])
             shutil.rmtree(staging, ignore_errors=True)
             return row
 
@@ -173,26 +195,40 @@ def import_one(name, record, reference_root, importer, session_tool,
         row['errors'].append(f'cannot publish bundle without replacement: {error}')
         return row
     row['status']['structure'] = 'OK'
+    row['schema'] = bundle_schema_version(target)
+    row['bundle_sha256'] = bundle_hash(target)
+    row['nodes'].append(str(target))
 
     if runtime_auditor is not None:
         audit_output = temporary / (key + '.runtime.json')
-        row['status']['cpu'] = run_cpu_audit(
+        status, detail = run_cpu_audit(
             runtime_auditor, source, resx, external, audit_output, runtime_steps)
+        row['status']['cpu'] = status
+        row['cpu_detail'] = detail
+        if status == 'OK' and audit_output.is_file():
+            row['cpu_result'] = json.loads(audit_output.read_text())
 
     return row
 
 
-def run_cpu_audit(auditor, source, resx, external, audit_output, steps):
-    cmd = [str(auditor), str(source), str(resx),
-           '--output', str(audit_output),
-           '--steps', str(steps)]
-    for tex, path in external.items():
-        if path is not None:
-            cmd.extend(['--texture', f'{tex}={path}'])
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    if proc.returncode != 0:
-        return 'FAIL'
-    return 'OK'
+def save_checkpoint(report, checkpoint_path):
+    """原子写检查点：先写 .tmp 再 rename，中断时不破坏上一次完整账本。"""
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = checkpoint_path.with_suffix(checkpoint_path.suffix + '.tmp')
+    tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    tmp.replace(checkpoint_path)
+
+
+def build_summary(rows):
+    """统计结构/CPU/视觉/交互/soak 各状态计数。未运行保持 PENDING 不计入 OK。"""
+    summary = {'total': len(rows)}
+    for field in ('structure', 'cpu', 'visual', 'interaction', 'soak'):
+        counter = {}
+        for r in rows:
+            st = r['status'][field]
+            counter[st] = counter.get(st, 0) + 1
+        summary[field] = counter
+    return summary
 
 
 def main():
@@ -217,11 +253,10 @@ def main():
         parser.error('--runtime-steps requires 1..36000')
 
     root = args.reference_root.resolve()
-    catalog_path = root / 'config/model-catalog.json'
-    if not catalog_path.is_file():
-        parser.error(f'catalog not found: {catalog_path}')
-    catalog = json.loads(catalog_path.read_text())
-    catalog_hash = hashlib.sha256(catalog_path.read_bytes()).hexdigest()
+    try:
+        catalog, catalog_hash = catalog_index.load_catalog(root)
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        parser.error(str(error))
 
     presentation = {}
     if args.presentation is not None:
@@ -234,36 +269,38 @@ def main():
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
 
+    index = catalog_index.build_index(root)
+
     rows = []
     fail_count = 0
+    checkpoint = args.report.with_name(args.report.name + '.checkpoint') if args.report else None
     with tempfile.TemporaryDirectory(prefix='.nekomote-import-staging-', dir=output) as temporary:
         tmp = pathlib.Path(temporary)
+        total = len(catalog)
         for i, (name, record) in enumerate(sorted(catalog.items()), 1):
-            row = import_one(name, record, root, importer, args.session_tool,
+            row = import_one(name, record, root, index, importer, args.session_tool,
                              presentation, output, tmp,
                              args.runtime_auditor, args.runtime_steps)
             rows.append(row)
             st = row['status']['structure']
-            if st != 'OK' or row['status']['cpu'] == 'FAIL':
+            if st not in ('OK', 'EXISTS_UNCHECKED') or row['status']['cpu'] == 'FAIL':
                 fail_count += 1
-            print(f'  [{i}/{len(catalog)}] {st:12s} {name}', flush=True)
+            print(f'  [{i}/{total}] {st:12s} {name}', flush=True)
+            if checkpoint is not None:
+                save_checkpoint(
+                    {'complete': False, 'catalog_sha256': catalog_hash,
+                     'summary': build_summary(rows), 'models': rows},
+                    checkpoint)
 
-    summary = {
-        'catalog_records': len(catalog),
-        'catalog_sha256': catalog_hash,
-        'structure_ok': sum(1 for r in rows if r['status']['structure'] == 'OK'),
-        'structure_existing_unchecked': sum(
-            1 for r in rows if r['status']['structure'] == 'EXISTS_UNCHECKED'),
-        'structure_fail': sum(1 for r in rows if r['status']['structure'] == 'FAIL'),
-        'structure_missing': sum(1 for r in rows if r['status']['structure'] == 'MISSING'),
-        'structure_ambiguous': sum(1 for r in rows if r['status']['structure'] == 'AMBIGUOUS'),
-        'session_fail': sum(1 for r in rows if r['status']['structure'] == 'SESSION_FAIL'),
-    }
-    report = {'summary': summary, 'models': rows}
+    summary = build_summary(rows)
+    report = {'complete': True, 'catalog_records': total,
+              'catalog_sha256': catalog_hash, 'summary': summary, 'models': rows}
 
     if args.report is not None:
         args.report.parent.mkdir(parents=True, exist_ok=True)
-        args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+        save_checkpoint(report, args.report)
+        if checkpoint is not None and checkpoint.exists():
+            checkpoint.unlink()
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
     if fail_count:

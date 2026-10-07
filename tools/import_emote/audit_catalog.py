@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Audit every catalogue record without copying models or modifying the source."""
 import argparse
-import collections
 import hashlib
 import json
 import pathlib
 import shutil
 import subprocess
+import sys
 import tempfile
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+import catalog_index
 
 
 def main():
@@ -22,14 +25,9 @@ def main():
     if not 1 <= args.runtime_steps <= 36000:
         parser.error('--runtime-steps requires 1..36000')
     root = args.reference_root.resolve()
-    catalog_path = root / 'config/model-catalog.json'
-    catalog = json.loads(catalog_path.read_text())
-    index = collections.defaultdict(list)
-    for p in sorted((root / 'model_conversion').rglob('*.json')):
-        if not p.name.endswith('.resx.json'):
-            index[p.stem.removesuffix(".pure")].append(p)
+    catalog, catalog_hash = catalog_index.load_catalog(root)
+    index = catalog_index.build_index(root)
     rows = []
-    catalog_hash = hashlib.sha256(catalog_path.read_bytes()).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     tool_hashes = {}
 
@@ -54,8 +52,6 @@ def main():
         return summary
 
     with tempfile.TemporaryDirectory(prefix='nekomote-audit-') as temporary:
-        # Freeze executables once. Rebuilding the workspace during a long audit
-        # must neither mix runtime versions nor race a linker replacing a binary.
         importer = pathlib.Path(temporary) / 'importer'
         shutil.copy2(args.importer.resolve(), importer)
         tool_hashes['importer'] = hashlib.sha256(importer.read_bytes()).hexdigest()
@@ -65,17 +61,15 @@ def main():
             tool_hashes['runtime_auditor'] = hashlib.sha256(auditor.read_bytes()).hexdigest()
         save_report(False)
         for name, record in catalog.items():
-            key = name.removesuffix('.pure')
-            candidates = index.get(key, [])
-            canonical = [p for p in candidates if p.parent.name == key]
-            alternatives = [str(p.relative_to(root)) for p in candidates]
-            if len(canonical) == 1:
-                candidates = canonical
-            row = dict(model=name, canonical=key, catalog=record, alternatives=alternatives)
-            psb = root / 'data' / (key + '.pure.psb.zip')
+            candidates = catalog_index.resolve_candidates(index, name)
+            alternatives = [str(p.relative_to(root)) for p in index.get(name.removesuffix('.pure'), [])]
+            row = dict(model=name, canonical=name.removesuffix('.pure'),
+                       catalog=record, alternatives=alternatives)
+            psb = root / 'data' / (name.removesuffix('.pure') + '.pure.psb.zip')
             row['psb'] = str(psb.relative_to(root)) if psb.is_file() else None
             if len(candidates) != 1:
-                row.update(ok=False, errors=['missing or ambiguous unpacked model'], candidates=[str(p.relative_to(root)) for p in candidates])
+                row.update(ok=False, errors=['missing or ambiguous unpacked model'],
+                           candidates=[str(p.relative_to(root)) for p in candidates])
             else:
                 source = candidates[0]
                 resx = source.with_suffix('.resx.json')

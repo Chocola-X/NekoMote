@@ -2,50 +2,17 @@
 """批量导入测试：从源 catalog 逐项驱动，尝试导入到临时目录，不发布到 assets/。
 
 验证导入器能处理所有 catalog 记录。失败退出非零。
+账本保留命令、节点、原因；超时和异常显式记录，不静默跳过。
 """
 import argparse
-import collections
-import hashlib
 import json
 import pathlib
 import subprocess
 import sys
 import tempfile
 
-
-def build_index(reference_root):
-    index = collections.defaultdict(list)
-    for p in sorted((reference_root / 'model_conversion').rglob('*.json')):
-        if not p.name.endswith('.resx.json'):
-            index[p.stem.removesuffix('.pure')].append(p)
-    return index
-
-
-def resolve_candidates(index, name):
-    key = name.removesuffix('.pure')
-    candidates = index.get(key, [])
-    canonical = [p for p in candidates if p.parent.name == key]
-    if len(canonical) == 1:
-        return canonical
-    return candidates
-
-
-def find_external_textures(source, src_dir):
-    document = json.loads(source.read_text())
-    external = {}
-    for texture, value in document.get('source', {}).items():
-        if not isinstance(value, dict):
-            continue
-        tex = value.get('texture', {})
-        if not isinstance(tex, dict) or tex.get('pixel') is not None:
-            continue
-        suffix = 'tex' + (texture.split('#')[-1] if '#' in texture else '000') + '.png'
-        matches = sorted(src_dir.glob('*' + suffix))
-        if len(matches) == 1:
-            external[texture] = str(matches[0].relative_to(src_dir))
-        else:
-            external[texture] = None
-    return external
+sys.path.insert(0, str(pathlib.Path(__file__).parent / 'import_emote'))
+import catalog_index
 
 
 def main():
@@ -59,42 +26,47 @@ def main():
     args = parser.parse_args()
 
     root = args.reference_root.resolve()
-    catalog_path = root / 'config/model-catalog.json'
-    if not catalog_path.is_file():
-        parser.error(f'catalog not found: {catalog_path}')
-    catalog = json.loads(catalog_path.read_text())
+    try:
+        catalog, catalog_hash = catalog_index.load_catalog(root)
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        parser.error(str(error))
 
     importer = args.importer.resolve()
     if not importer.is_file():
         parser.error(f'importer not found: {importer}')
 
-    index = build_index(root)
+    index = catalog_index.build_index(root)
     rows = []
     ok = fail = missing = 0
 
     with tempfile.TemporaryDirectory(prefix='nekomote_import_test_') as tmp_str:
         tmp = pathlib.Path(tmp_str)
+        total = len(catalog)
         for i, (name, record) in enumerate(sorted(catalog.items()), 1):
-            candidates = resolve_candidates(index, name)
-            row = {'model': name, 'status': 'PENDING', 'errors': []}
+            candidates = catalog_index.resolve_candidates(index, name)
+            row = {'model': name, 'status': 'PENDING', 'errors': [],
+                   'commands': [], 'nodes': []}
 
             if len(candidates) != 1:
                 row['status'] = 'AMBIGUOUS' if candidates else 'MISSING'
+                row['alternatives'] = [catalog_index.relative_to(p, root) for p in candidates]
                 missing += 1
                 rows.append(row)
-                print(f'  [{i}/{len(catalog)}] {row["status"]:12s} {name}', flush=True)
+                print(f'  [{i}/{total}] {row["status"]:12s} {name}', flush=True)
                 continue
 
             source = candidates[0]
             resx = source.with_suffix('.resx.json')
-            external = find_external_textures(source, source.parent)
+            external = catalog_index.find_external_textures(source, source.parent)
             out = tmp / name.removesuffix('.pure')
+            row['nodes'].append(catalog_index.relative_to(source, root))
 
             cmd = [str(importer), str(source), str(resx),
                    '--output', str(out), '--resource-root', str(source.parent)]
             for tex, path in external.items():
                 if path is not None:
                     cmd.extend(['--texture', f'{tex}={path}'])
+            row['commands'].append(cmd)
 
             try:
                 proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
@@ -107,6 +79,7 @@ def main():
                     fail += 1
             except subprocess.TimeoutExpired:
                 row['status'] = 'TIMEOUT'
+                row['errors'].append('importer timeout after 120s')
                 fail += 1
             except Exception as e:
                 row['status'] = 'ERROR'
@@ -114,10 +87,11 @@ def main():
                 fail += 1
 
             rows.append(row)
-            print(f'  [{i}/{len(catalog)}] {row["status"]:12s} {name}', flush=True)
+            print(f'  [{i}/{total}] {row["status"]:12s} {name}', flush=True)
 
     summary = {
-        'catalog_records': len(catalog),
+        'catalog_records': total,
+        'catalog_sha256': catalog_hash,
         'ok': ok,
         'fail': fail,
         'missing_or_ambiguous': missing,
