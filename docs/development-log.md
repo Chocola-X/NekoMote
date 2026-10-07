@@ -633,4 +633,12 @@
 - 独立合成复现确认 `ecab3ce` 会删除已有partial目录中的额外文件、将schema0当SKIP；CPU审计输出目标为参考素材目录。旧实现的“事务导入已完成”结论不成立，复现仅使用build内临时fixture，未运行危险路径处理用户素材。
 - 已有目标包括文件、目录和dangling symlink全部EXISTS_UNCHECKED并保持不动；不认证、不覆盖。新bundle在output文件系统暂存，以Linux renameat2/RENAME_NOREPLACE原子发布；竞争创建目标不会被覆盖，不再使用跨文件系统shutil.move。CPU报告写任务暂存路径，CPU FAIL计为非零退出。
 - 新增5项保护回归，统一Python工具测试 **14/14 PASS**。真实Chocola单条隔离catalog新目录导入/CPU一步exit0；重复exit1且用户额外文件保持。第一次smoke使用目录symlink导致rglob MISSING，失败保留；改成文件symlink后通过。没有195条新验收、完整会话/视觉或性能收益结论。
-- 复核G2/G6及V3/V5后，保留正确模块拆分/测试/观测；C宿主确定性与截图、G4完整账本、UI动态证据及无ABI构建仍有缺口。V5报告部分修复在父提交已存在，V3仅零步两个样本且缺colorMask直接记录。新整合摘要与G7/G8/G9/V6交接见 `docs/review-agents-current.md` 和workboard。
+- 复核G2/G6及V3/V5后，保留正确模块拆分/测试/观测；C宿主确定性与截图、G4完整账本、UI动态证据及无ABI构建仍有缺口。V5报告部分修复在父提交已存在，V3仅零步两个样本；draw.glState的colorMask已核对，10项hash匹配。新整合摘要与G7/G8/G9/V6交接见 `docs/review-agents-current.md` 和workboard。
+
+## 2026-10-07 Codex：接手文档清理与桌面路线
+
+- README/AGENTS/ROADMAP统一指向当前整合摘要、剩余缺口及新协作清单；删除路线图旧接续点，清理building/native-player中已修复的旧待办和重复历史测试/性能叙述。历史审查加显著日期/基线提示，原始证据与Git历史不删除。
+- 修正V5报告把父提交已有功能当新修复、用状态偏移计算宣称实际图元0px误差的问题；保留实际改动、8项测试、静态截图和动态缺口。V3保留有效shader/blend/FBO/glState证据及10项匹配hash，纠正6/3错误枚举说明，限制为已观测零步范围。
+- 新任务：GLM G7目录账本→G8确定C宿主→G9构建入口；Gemini V6只补可复核视觉/源GPU证据；Codex C5混合/继承/遮罩、C6应用、C7宿主。保持低风险任务优先GLM，不将额度或模型名作为正确性证据。
+- 正式桌面插件延后，当前先完善壁纸应用。最小Qt Quick宿主试验可在代表模型已验证范围独立开展，仍需实际后端、GPU目标、线程/context/resize/DPI和重建证据；不改全局桌面或走CPU像素桥接。全目录、长期/多屏和安装未认证。
+- 文档阶段检查本地链接、diff和当前状态一致性，不为文字清理新增测试。本轮实现验证为dev136/136、独立UI8/8、Python14/14及真实启动/窗口/单条导入；未重跑115WebGL或ASan，未宣称整机性能收益。

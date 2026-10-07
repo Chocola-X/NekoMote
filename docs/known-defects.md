@@ -1,41 +1,29 @@
-# 当前已知缺陷与验收限制
+# 当前缺口
 
-更新：2026-10-07第二轮整合，源码基线`cb7e677`。旧失败见 [首次审查](review-2026-10-07.md)，当前修复范围见 [接续报告](review-followup-2026-10-07.md)，下一任务见 [协作清单](agent-workboard.md)。未认证项不得放宽阈值或通过改写目标标完成。
+更新：2026-10-07。已经闭合的修复不再列为待办；成果与验证范围见 [整合摘要](review-agents-current.md)，任务所有权见 [协作清单](agent-workboard.md)。Fraise代表add_mask、ABI主边界、背景共享时间预算及C++候选事务已通过对应验证。
 
-| 缺陷/范围 | 当前观察 | 下一任务 |
+| 范围 | 当前缺口 | 所有者 |
 | --- | --- | --- |
-| Fraise眼缘遮罩回归 | **已修复并独立验收**：真实add_mask恢复，Fraise400零超差，115冻结矩阵通过；Fraise-b缺失/嵌套来源仍拒绝 | V1已闭合；嵌套遮罩由Codex |
-| Coconut/Azuki局部继承 | 原Coconut8.876191px/13,111像素FAIL保留；近似已移除，正式0x7fc路径UnsupportedTransform。公式未还原 | Codex / R2 |
-| bm/非标准attr | 非零bm、attr非0/1已恢复明确拒绝；Gemini V3已交付源GPU观测，原生映射/跨姿态验证未完成。milk-summer的首帧胸揺れ节点bm=19因此拒绝 | Codex独立复核V3并实现映射 |
-| 默认启动的型号支持与诊断 | 保存角色milk-summer会因既有严格门槛退出，非新Agent引入的段错误；已补角色/几何错误/节点信息并前置CPU首帧校验。尚无不支持型号的恢复界面/目录能力提示 | 优先正确实现bm=19；产品恢复体验另行处理，不放行近似 |
-| C ABI边界 | 0.3.0长度/固定宽度/RAII/异常/帧失效/字段复制/预分配与headless已验证；更精确源诊断、真实宿主上下文丢失/卸载未验证 | Codex后续；G2限定只读容量getter |
-| C宿主音频/线程与错误流程 | **G2已修复**：abi_host收敛为显式静音C ABI诊断工具，删除PCM/Pulse/thread/WAVE/RMS和角色目录/壁纸策略；预分配用nekomote_program_renderer_capacity；生命周期正确 | 已闭合；正式声音由player提供 |
-| 会话/切换/渐变 | 能力查询、背景暂停/共享250ms预算和C++候选事务已修复；角色过渡仍使用墙钟且两遍over，背景reset/重入/声音候选失败尚未验收 | V4 / Codex；Gemini后续视觉 |
-| UI状态与稳态 | UI截图/拖动/输入隔离与字形绘制分配尚未完整验证；核心136项不能代替这些测试 | Gemini V5，后续GLM G8 |
-| 资产/目录/构建 | G4/G6已完成：catalog驱动事务导入、195账本、素材移出索引、clang-format、依赖核查；noabi构建有GCC15现有误报 | noabi GCC15误报待后续 |
-| 性能测量 | 直接改外部index.php已停止；握手/条件/实际呈现/共享RSS/整卡GPU归属等方法仍未闭合 | GLM G5，Codex复核 |
+| 非标准混合/属性 | bm19/attr2仍拒绝。milk-summer默认保存角色因此加载失败；源GPU零步证据已交付，原生映射及更多姿态未验收 | Codex C5，Gemini V6 |
+| 局部继承/遮罩 | 0x7fc近似已撤下；Coconut候选8.876191px、Azuki候选.0064996px均未过.001px门槛。Fraise-b嵌套/缺失遮罩范围未闭合 | Codex C5 |
+| 默认启动/恢复 | 首帧诊断已补；不支持角色仍退出，缺恢复界面/目录能力标记；未知角色名的选择行为也需明确 | Codex C6 |
+| UI | 状态8项通过不认证实际标题0px同步或淡出画面；动态参照/输入隔离未闭合，注视会穿透；字体及图元稳态分配未测 | Codex C6，Gemini V6 |
+| 会话与资源 | 角色过渡墙钟/两遍over、背景reset/重入、声音候选失败和连续切换回收尚未验收 | Codex C6 |
+| 目录/导入 | 覆盖/删除旧输出及向源写CPU报告已修复；已有输出保持EXISTS_UNCHECKED。完整195账本、逐项异常/检查点、输出来源和公共选择逻辑未验收 | GLM G7 |
+| 诊断/构建 | C宿主墙钟推进、raw截图及参数/失败边界待修复；UI未登记CTest；无ABI构建问题未闭合 | GLM G8/G9 |
+| 性能/稳定性 | 核心零分配不覆盖UI/整机；网页收益方法、同条件资源/功耗及8–24小时未认证 | 后续profile/长期阶段 |
+| 桌面/发布 | Qt Quick实际图形宿主、Plasma、多屏卸载/重建、195视觉/交互及安装包未验收 | Codex C7及P9/P10 |
 
+正式拒绝是开发期保护，不是最终功能完成。不得通过放宽阈值、型号特判或近似开关消除上述缺口；源码及当前资产需要真实WebGL证据。
 
-## 局部继承调查的适用范围
+## 素材来源限制
 
-早期“coconut-casual 93%差异”来自背景与透明参照混用，不能作为模型误差。本次Coconut maid采用同尺寸/比例/原点、透明输出、相同原PSB零步，排除该条件问题。之前158px畸变下降到8.87px的候选仍然不符合 .001px 门槛。
+coconut-dress已有外部纹理修复历史，但解包工具/版本未知，全姿态未认证。G7账本需保留来源，不能把本地存在等同于受控输入验收：
 
-inheritShape字段含义不自动给出精确原点/旋转/子节点公式。见 [历史分析及新审查标注](coconut-hand-stretch-defect-analysis.md)。实际影响不只五个Coconut型号，应按所有0x7fc结构筛选；其他参数/动作范围需受控复测，不能宣布完整修复。
+| 来源 | SHA256 |
+| --- | --- |
+| data/coconut-dress.pure.psb.zip | 6dfc2bb95c098267081f6cd3d58d612fecb199ffc4331637d3a38a03ab257d9d |
+| model_conversion/coconut/coconut-dress/coconut-dress.json | 63b02025535aa6d6f301e6e6cba9f9b73f5e2d40ddb1f7007c0f8d518272e19e |
+| coconut-dress-a_tex000.png | f6d32dafa122de947640730b40eefa29e20dd2292648f96a9f8a3999c2821e1c |
 
-## 素材来源问题
-
-先前调查称coconut-dress资源映射指向空图，另从原PSB解包取得纹理后重新导入。本次未重做该修复或认证其全部姿态；G4应记录输入PSB、工具版本、解包输出/纹理hash和导入状态，不把本地替换等同于受控来源验收。milk-winter等缺项继续在目录账本占位，不能因为缺文件而从"全目录"分母移除。
-
-### coconut-dress 纹理来源记录（G4）
-
-- 源 PSB：`data/coconut-dress.pure.psb.zip`，sha256 `6dfc2bb95c098267081f6cd3d58d612fecb199ffc4331637d3a38a03ab257d9d`
-- 解包模型 JSON：`model_conversion/coconut/coconut-dress/coconut-dress.json`，sha256 `63b02025535aa6d6f301e6e6cba9f9b73f5e2d40ddb1f7007c0f8d518272e19e`
-- 解包工具/版本：未知（原仓库外部工具，非本项目工具链）
-- 目录内外部纹理：`coconut-dress-a_tex000.png`，sha256 `f6d32dafa122de947640730b40eefa29e20dd2292648f96a9f8a3999c2821e1c`
-- resources 子目录：`coconut-dress-resources/tex-texture.png`（32KB）
-- 导入状态：结构导入 OK；模型 JSON 中 `tex` 为 inline（4096×2048），external_textures 为空
-- 认证状态：未认证。解包工具/版本未知，未重做修复或认证全部姿态；不把本地 inline 纹理等同于受控来源验收
-
-## 尚未开展的产品验收
-
-实际Plasma壁纸插件、宿主后端/多屏/卸载重建、8–24小时运行、完整目录画面/反应、同条件性能收益与安装产物尚未闭合。C/GLFW窗口可用于接口实验，不能认证这些能力。当前115组代表回归已经通过，但不替代新增语义、完整目录、UI、实际桌面或长期验收。
+历史Coconut“93%差异”曾混用背景/透明参照，不能作为当前误差；真实手部失败以冻结同条件几何/图片为准。缺素材型号仍占195账本一行，不从分母删除。

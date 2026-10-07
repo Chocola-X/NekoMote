@@ -76,10 +76,26 @@ ctest --preset dev -L gpu  # 需要显示服务器，执行真实 GPU 像素/生
 
 上述入口为部件诊断。当前整模型普通窗口入口为 `nekomote_player`；导入会话、真实声音、完整适配和交互见 [原生播放器](native-player.md)。无显示环境运行 `ctest --preset dev -LE gpu`；`asan` 不构建 GPU 测试。参考截图命令见 [reference_capture/README.md](../tools/reference_capture/README.md)。
 
-## 新宿主与清洁构建注意（2026-10-07审查）
+## 当前检查边界
 
-当前dev128项、无窗口ASan126项；ASan不编译ABI/C宿主/UI。ABI集成测试目前依赖assets中的真实Chocola文件，缺素材的clean checkout还不能把此测试计为通过。拆分合成契约测试/显式真实素材集成入口见G1/G6。
+ABI已与窗口解耦；asan包含CPU ABI合成契约，不构建player/预览/GPU。缺真实素材时相应集成项显式Skipped。C ABI诊断宿主不再依赖Pulse/thread，正式player保留声音服务。
 
-播放器UI使用Fontconfig；目前CMake可选探测、源码无条件使用，需统一为明确依赖。C ABI宿主仍直接链接pulse-simple/pulse/pthread，关闭PLAYER不能保证不需要这些依赖；这是待修复项，不把当前构建组织写作目标设计。
+UI测试尚未登记CTest，当前独立执行；Python工具检查同样独立：
 
-源仓库只读。真实素材在assets中导入，截图/trace/基准在build/evidence中；已跟踪的大型资产需移出索引保留本地文件，不能只新增ignore规则。批量导入工具当前有绝对路径/partial输出缺口，正式使用前执行G4。
+```sh
+build/dev/bin/nekomote_ui_tests
+python3 -m unittest discover -s tests/reference_capture -v
+```
+
+Fontconfig为UI的可选字体发现入口，未安装时使用源码中的字体路径候选；无可用字体不能宣称UI成功。无ABI纯CPU的GCC15构建问题尚待G9，完整构建矩阵不能只凭dev通过。
+
+源仓库只读；真实资产和截图放ignored assets/build目录，已跟踪的大型素材已移出索引。本批导入采用新输出目录，已有目录一律EXISTS_UNCHECKED、非零拒绝且保留，不覆盖或认证：
+
+```sh
+python3 tools/import_all_assets.py --reference-root ../NekoWebShow \
+  --importer build/release/bin/nekomote_import \
+  --session-tool tools/import_session/import_session.py \
+  --output build/import-new/characters --report build/import-new/report.json
+```
+
+当前文件保护已修复，完整账本/异常/CPU结果保留仍待G7；不将结构导入等同于画面通过。阶段验证范围见 [整合摘要](review-agents-current.md)。

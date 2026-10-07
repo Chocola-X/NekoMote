@@ -1,5 +1,7 @@
 # V3 源 GPU 混合模式与属性观测证据报告
 
+> 证据报告：各一组零步源GPU观察，原生映射尚未验收。当前状态见 [整合摘要](review-agents-current.md)，更多姿态/alpha条件由V6补齐。
+
 - 记录日期：2026-10-07
 - 执行者：Antigravity
 - 模型：Gemini 3.8 Flash (High)
@@ -44,7 +46,7 @@
   - **UV 范围**：`min(u,v) = (1758, 529)`, `max(u,v) = (2056, 653)`（纹理尺寸 4096×2048，Y轴翻转精确匹配：`2048 - (1395 + 124) = 529`）
   - **屏幕包围盒**：`[x: 251..549, y: 270..394]`
   - **FBO 绑定**：`true`（离屏颜色缓冲区）
-  - **colorMask**：`[GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE]`
+  - **colorMask**：`[GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE]`（draw.glState.colorMask已复核）
   - **blendFuncSeparate**：
     - `srcRGB = GL_DST_COLOR`（774）
     - `dstRGB = GL_ONE_MINUS_SRC_ALPHA`（771）
@@ -86,7 +88,7 @@ $$A_{\text{result}} = A_{\text{frag}} \cdot 0 + A_{\text{dst}} \cdot 1 = A_{\tex
 **推导结论**：
 1. **RGB 语义**：当 $A_{\text{src}} = 1$ 时，$C_{\text{result}} = C_{\text{dst}} \cdot C_{\text{src}}$，为纯正的正片叠底（Multiply）；当 $A_{\text{src}} = 0$ 时，$C_{\text{result}} = C_{\text{dst}}$，背景不受影响；在半透明区域以 $A_{\text{src}}$ 作为权重向 $1.0$ 线性混合。这是在直通 Alpha 图集上进行**正片叠底（Multiply）**的标准精确工业公式。
 2. **Alpha 语义**：目标 Alpha 保持原样不被覆盖或稀释（$A_{\text{result}} = A_{\text{dst}}$）。
-3. **E-mote 枚举确认**：**`bm = 19` 对应正片叠底（Multiply）**。
+3. **该样本结论**：`bm = 19` 在此零步draw呈现上述Multiply方程；其他有效opacity/姿态与原生映射待验证。
 
 ---
 
@@ -100,7 +102,7 @@ $$A_{\text{result}} = A_{\text{frag}} \cdot 0 + A_{\text{dst}} \cdot 1 = A_{\tex
   - **UV 范围**：`min(u,v) = (4080, 3901)`, `max(u,v) = (4091, 3912)`（图集 4096×4096，`4096 - (184+11) = 3901`）
   - **屏幕包围盒**：`[x: 376..387, y: 937..948]`
   - **FBO 绑定**：`true`
-  - **colorMask**：`[GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE]`
+  - **colorMask**：`[GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE]`（draw.glState.colorMask已复核）
   - **blendFuncSeparate**：
     - `srcRGB = GL_SRC_ALPHA`（770）
     - `dstRGB = GL_ONE_MINUS_SRC_ALPHA`（771）
@@ -152,10 +154,10 @@ $$A_{\text{result}} = A_{\text{frag}} \cdot 0 + A_{\text{dst}} \cdot 1 = A_{\tex
 为防止未验证公式过早放行，已对原生播放器进行实机调用校验：
 ```sh
 build/dev/bin/nekomote_player --assets assets --character fraise-maid-a --mute --no-save
-# 输出：NekoMote: session failure 6/3 (NEKOMOTE_ERROR_UNSUPPORTED)
+# 输出：NekoMote: session failure 6/3 （SessionError::Playback / PlaybackError::Geometry；底层UnsupportedTransform）
 
 build/dev/bin/nekomote_player --assets assets --character fraise-france-maid-b --mute --no-save
-# 输出：NekoMote: session failure 6/3 (NEKOMOTE_ERROR_UNSUPPORTED)
+# 输出：NekoMote: session failure 6/3 （SessionError::Playback / PlaybackError::Geometry；底层UnsupportedTransform）
 ```
 **原生合规状态**：原生引擎当前严格执行对非零 `bm` 和 `attr != 0 && attr != 1` 的明确拒绝，未通过伪装跳过或无证据近似掩盖缺陷。
 
