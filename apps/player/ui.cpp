@@ -578,6 +578,8 @@ void Renderer::resize(int viewport_width, int viewport_height)
 void Renderer::begin_frame()
 {
     global_alpha_ = 1.0f;
+    if (!initialized_)
+        return;
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -596,6 +598,8 @@ void Renderer::begin_frame()
 void Renderer::end_frame()
 {
     global_alpha_ = 1.0f;
+    if (!initialized_)
+        return;
     glDisable(GL_SCISSOR_TEST);
     flush_rects();
     flush_text();
@@ -604,6 +608,8 @@ void Renderer::end_frame()
 
 void Renderer::push_clip_rect(float x, float y, float w, float h)
 {
+    if (!initialized_)
+        return;
     glEnable(GL_SCISSOR_TEST);
     const GLint sx = static_cast<GLint>(x);
     const GLint sy = static_cast<GLint>(static_cast<float>(viewport_height_) - (y + h));
@@ -614,6 +620,8 @@ void Renderer::push_clip_rect(float x, float y, float w, float h)
 
 void Renderer::pop_clip_rect()
 {
+    if (!initialized_)
+        return;
     glDisable(GL_SCISSOR_TEST);
 }
 
@@ -622,6 +630,8 @@ void Renderer::draw_rounded_rect(float x, float y, float w, float h, float radiu
 {
     fill.a *= global_alpha_;
     border.a *= global_alpha_;
+    if (!initialized_)
+        return;
     const float r = std::min(radius, std::min(w, h) * 0.5f);
     rect_vertices_.insert(rect_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
@@ -662,7 +672,7 @@ void Renderer::flush_rects()
 
 void Renderer::draw_text(float x, float y, const char* text, float size, Color color)
 {
-    if (!font_)
+    if (!initialized_ || !font_)
         return;
     color.a *= global_alpha_;
     font_->draw_text(text_vertices_, text_uvs_, x, y, text, size);
@@ -675,7 +685,7 @@ void Renderer::draw_text(float x, float y, const char* text, float size, Color c
 
 void Renderer::flush_text()
 {
-    if (text_vertices_.empty())
+    if (!initialized_ || text_vertices_.empty())
         return;
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
@@ -702,6 +712,8 @@ void Renderer::flush_text()
 void Renderer::draw_icon(float x, float y, float w, float h, std::uint32_t texture_id, Color tint)
 {
     tint.a *= global_alpha_;
+    if (!initialized_)
+        return;
     icon_vertices_.insert(icon_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     icon_uvs_.insert(icon_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
@@ -713,7 +725,7 @@ void Renderer::draw_icon(float x, float y, float w, float h, std::uint32_t textu
 
 void Renderer::flush_icons()
 {
-    if (icon_vertices_.empty())
+    if (!initialized_ || icon_vertices_.empty())
         return;
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
@@ -748,6 +760,8 @@ void Renderer::draw_circle(float cx, float cy, float radius, Color fill, Color b
 void Renderer::draw_solid_rect(float x, float y, float w, float h, Color color)
 {
     color.a *= global_alpha_;
+    if (!initialized_)
+        return;
     const std::vector<float> tri_verts = {x, y, x + w, y,     x + w, y + h,
                                           x, y, x + w, y + h, x,     y + h};
     glBindVertexArray(vao_);
@@ -767,6 +781,8 @@ void Renderer::draw_solid_rect(float x, float y, float w, float h, Color color)
 void Renderer::draw_arrow(float cx, float cy, float size, bool points_up, Color fill)
 {
     fill.a *= global_alpha_;
+    if (!initialized_)
+        return;
     std::vector<float> tri_verts;
     if (points_up)
     {
@@ -851,6 +867,11 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
         icon.y = 8.0f;
         icon.initialized = true;
     }
+    else if (!icon.dragging)
+    {
+        icon.x = std::clamp(icon.x, 8.0f, std::max(8.0f, vw - icon.size - 8.0f));
+        icon.y = std::clamp(icon.y, 8.0f, std::max(8.0f, vh - icon.size - 8.0f));
+    }
     icon.hover = mouse_in_rect(icon.x, icon.y, icon.size, icon.size);
     if (icon.hover && mouse_pressed_ && !icon.dragging)
     {
@@ -870,10 +891,10 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
         icon.y = std::clamp(icon.y, 8.0f, std::max(8.0f, vh - icon.size - 8.0f));
         if (std::abs(icon.x - icon.start_x) + std::abs(icon.y - icon.start_y) > 3.0f)
             icon.moved = true;
-        if (mouse_released_)
+        if (mouse_released_ || !mouse_down_)
         {
             icon.dragging = false;
-            if (!icon.moved && icon.hover)
+            if (mouse_released_ && !icon.moved && icon.hover)
                 clicked = true;
         }
     }
@@ -894,6 +915,18 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
     const float vw = static_cast<float>(renderer_->viewport_width());
     const float vh = static_cast<float>(renderer_->viewport_height());
     const float header_h = 44.0f;
+    const float eff_h = std::max(sidebar.height, header_h);
+
+    // If reopening while partially/completely out of viewport, reset to docked initial
+    if (sidebar.open && sidebar.animation <= 0.001f && sidebar.is_free)
+    {
+        if (sidebar.x + sidebar.width < 16.0f || sidebar.x > vw - 16.0f || sidebar.y > vh - 16.0f)
+        {
+            sidebar.is_free = false;
+            sidebar.x = 8.0f;
+            sidebar.y = 8.0f;
+        }
+    }
 
     // 1. Process drag start, movement, and release
     if (sidebar.animation > 0.001f)
@@ -911,7 +944,7 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
             sidebar.x = mouse_x_ - sidebar.drag_offset_x;
             sidebar.y = mouse_y_ - sidebar.drag_offset_y;
             sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
-            sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - sidebar.height - 8.0f));
+            sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - eff_h - 8.0f));
             if (mouse_released_ || !mouse_down_)
                 sidebar.dragging = false;
         }
@@ -948,7 +981,7 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
     else if (!sidebar.dragging)
     {
         sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
-        sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - sidebar.height - 8.0f));
+        sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - eff_h - 8.0f));
     }
 }
 

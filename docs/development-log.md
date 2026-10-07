@@ -588,3 +588,35 @@
 - 重新安排文件所有权：GLM G4→G2→G6，有余力G5；Gemini V3/V5，允许有视觉证据且限定UI边界的小型修复；Codex继续0x7fc/嵌套遮罩/混合、渐变及真实宿主整合。G2收敛静音诊断程序，正式声音保留既有C++服务，不复制音频实现。
 - Release单次Chocola CPU基线 P50/P95/P99=0.267144/0.292427/0.314846ms，预热120、样本2000，范围和hash见 `docs/validation/integration-cpu-2026-10-07.json`。时钟未锁定、无GPU/呈现/UI/音频/背景/功耗，不能与历史或WebGL推导收益。
 - 本批交接相互独立，GPU使用共同非阻塞flock串行、长采样冻结binary/hash；没有通过工具启动另外两个外部Agent。文档变更只做链接、diff、提交溯源检查，不新增无意义测试。
+
+## 2026-10-07 V5：UI 视觉对齐、拖拽滞后与动画修复（Antigravity / Gemini 3.8 Flash）
+
+- 领用 docs/agent-workboard.md V5。
+- **用户反馈缺陷定位与修复**：
+  1. **标题拖拽脱节滞后（0px 同帧对齐）**：原 `Context::sidebar(...)` 先绘制 `sidebar_header`，后处理鼠标拖拽位移并更新 `sidebar.x / y`，导致文字与底板出现一帧滞后。修复将拖拽状态机、位移计算与视口边界 clamp 统一前置到 `sidebar(...)` 顶层，标题文本与底板严格在同帧绑定最新实时坐标，拖拽无延迟与脱节。
+  2. **自由拖动后淡入淡出及关闭延迟**：原逻辑在拖动变自由态（`is_free = true`）后缺少透明度渐变，且关闭判定存在多帧滞后。修复在 `Renderer` 引入 `set_global_alpha(float)` 调制所有图元透明度；基于固定时间步（展开 0.28s，关闭 0.24s）线性插值 `sidebar.animation`；无论停靠或自由拖拽态，统一按 `animation` 调制 `global_alpha` 原位淡入淡出；关闭时平滑退出，消除视觉迟滞。
+  3. **边缘越界保护**：对齐 NekoWebShow `resetTopbarToInitial`，当重新展开且坐标完全/部分脱离视口边界时，自动重置回左上角初始停靠位置；为 `Renderer` 所有 `draw_*` 添加 `if (!initialized_) return;`，支持无 OpenGL 上下文的纯 CPU 状态机安全运行。
+- **独立单元测试**（`apps/player/test_ui.cpp`）：
+  - 新增构建目标 `nekomote_ui_tests`（Catch2 v3.5.3），完全独立于核心 136 项测试；
+  - 覆盖展开/关闭动画时序、拖拽位移同帧对齐（0px）、视口边界 clamp、自由态原位淡入淡出、中途反向打断、输入捕获状态机、图标点击与拖动区分、越界重置等 8 组用例，**8 passed / 0 failed, 124 assertions passed (100%)**。
+- **视觉报告与缺陷上报**：
+  - 实机捕获收起、展开角色、展开香草、展开设置 4 张状态截图（`build/evidence/v5-next/`），目视核实视觉风格、阴影、层级与 NekoWebShow 一致，交付 [docs/v5-ui-visual-report.md](v5-ui-visual-report.md)；
+  - 发现并上报 Codex：`apps/player/main.cpp` 的 `Surface::move` 缺失 `captures_mouse()` 检查，导致鼠标在 UI 面板上滑动时注视坐标（gaze）穿透到底层模型，建议后续修复。
+
+## 2026-10-07 V3：源 GPU 混合模式与属性保护证据（Antigravity / Gemini 3.8 Flash）
+
+- 领用 docs/agent-workboard.md V3。
+- **全目录检索（195个模型）**：
+  - 非零 `bm`：全目录仅存在 `bm = 19`（在 `fraise-maid-a`、`fraise-maid-b`、`milk-summer`、`milk-winter` 4 个模型中出现 5 处），`bm = 16` 出现 0 次；
+  - 非 0/1 `attr`：全目录仅存在 `attr = 2`（在 `fraise-france-maid-b` 的 `■胸(予備)` 出现 1 处）；
+  - 结构验证：以上模型均无 `0x7fc` 手部异常，是受控隔离混合与属性的理想最小样本。
+- **增强无头 WebGL Trace 观测**：
+  - 增强 `tools/reference_capture/trace.js`，加入 `blendEquationSeparate` 捕获；
+  - 使用 Playwright Chromium 在无头环境下对 `fraise-maid-a` 与 `fraise-france-maid-b` 冻结步进（steps=0）捕获完整 Draw Call 流：
+    - `bm = 19`（`fraise-maid-a` Draw #33，`icon: "0105"`，头饰阴影）：`blendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE)`，方程为 `GL_FUNC_ADD`，着色器预乘 Alpha。数学推导证实其为标准的**透明度加权正片叠底（Multiply）**，保持目标 Alpha 不变：
+      $$C_{\text{result}} = C_{\text{dst}} \cdot \text{lerp}(1.0, \, C_{\text{src}}, \, A_{\text{src}}),\quad A_{\text{result}} = A_{\text{dst}}$$
+    - `attr = 2`（`fraise-france-maid-b` Draw #9，`icon: "0029"`）：`blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)`，为单遍标准 Over 混合，无颜色保护双遍绘制，对应 `ColorProtection::None`。
+- **严格门槛与证据交付**：
+  - 原生播放器加载验证：严格返回 `session failure 6/3`（`NEKOMOTE_ERROR_UNSUPPORTED`），遵守规范未提前放行未闭合语义；
+  - 保存 WebGL 参考图、黑白合成图及高倍局部裁切图至 `build/evidence/v3/`；交付完整报告 [docs/v3-source-blending-report.md](v3-source-blending-report.md)，移交 Codex 依据数学公式完成原生求值与 GPU 映射。
+

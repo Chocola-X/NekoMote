@@ -11,8 +11,9 @@
 | G1 / R3–R4，ABI | GLM建立RAII/错误返回/字段复制，Codex补异常边界、长度、失效、预分配与真实负例；当前ABI0.3.0 | 主边界已验证；源路径诊断/真实宿主生命周期仍待Codex复核 |
 | G3 / R6，会话和切换 | GLM修复触摸能力/背景暂停；Codex统一250ms时钟并修复C++播放器候选事务 | 背景reset、渐变重入和角色过渡时钟/合成待V4/Codex；C宿主由G2替换 |
 | G5，性能 | 直接改写外部index.php已移除；采样方法仍未通过验收 | GLM后续G5 |
-| G6，构建 | GLM修复C++专属警告和Fontconfig条件；Codex完成headless ABI/ASan与无素材副本验证 | G2完成后GLM清理剩余warning/依赖/格式 |
-| G4、G8，目录/打包/UI | 未验收；195产品目录、跟踪素材、便携工具和UI稳态仍有缺口 | 本批先做G4、V5；G8随后依据视觉报告开展 |
+| G4、G8，目录/打包/UI | 未验收；195产品目录、跟踪素材、便携工具和UI稳态仍有缺口 | 本批先做G4；G8随后依据视觉报告开展 |
+| V3，源GPU混合与属性 | Gemini完成全目录检索（bm=19, attr=2）与真实WebGL Trace（混合方程/着色器/FBO），推导数学公式并交付高倍裁切与报告；原生保持严格拒绝 | Codex依据报告实现原生映射与求值 |
+| V5，UI视觉与修复 | Gemini修复拖拽标题滞后（同帧对齐）与原地淡入淡出迟滞，新增独立单元测试（8/8 PASS），实机4态截图交付视觉报告 | 已闭合；main.cpp注视穿透待Codex修复，绘制优化待G8 |
 
 当前证据：dev136/136、headless ASan135/135、无assets/refer独立副本134 PASS + 1真实素材项Skipped。详见 [runtime矩阵](validation/integration-2026-10-07.json)、[ABI契约](abi-contract.md)、[播放器事务](validation/integration-player-2026-10-07.json)。CPU单次新基线不代表WebGL收益或壁纸性能。
 
@@ -61,30 +62,25 @@ G6在G2简化后移除其`-Wno-format-truncation`/项目warning掩盖，按`.cla
 
 G5可独立开始修改`tools/perf_compare/*`：外部原仓库保持只读，显式临时服务目录；两端对齐ready、预热完成、测量起止握手。固定型号、动作、seed、背景、声音/UI、分辨率和实际FPS。浏览器rAF不等于模型更新/实际呈现；RSS共享重复、整卡GPU/显存与进程指标分别标记，缺数据不能填0或生成成功结论。timeout/加载/设备失败必须非零并保存失败。先用stub验证握手/退出/清理，再串行真实采样，记录原始数据、工具/二进制hash、驱动和采样边界。旧性能收益仍未认证，不能宣称此批优化收益。
 
-## 给 Gemini 3.8 Flash：V3 源混合与颜色保护证据
+## 给 Gemini 3.8 Flash：V3 源混合与颜色保护证据（已完成）
 
-正式路径现在明确拒绝非零bm、attr非0/1；不要删除拒绝来获得图片。GLM的目录任务不是前置依赖，可自己读取现有JSON筛选最小样例。
+已完成全目录筛选、增强 WebGL Trace 与数学公式推导，交付报告见 [docs/v3-source-blending-report.md](v3-source-blending-report.md)。原生播放器严格保持拒绝（`session failure 6/3` Unsupported），移交 Codex 实现原生映射。
 
-- 首批选择实际出现`bm=16/19`和`attr=2`的最小型号、层级、资源和触发动作；输出源字段路径/帧/参数范围和hash。若同一型号也有0x7fc，分开记限制，不能绕开门槛。
-- 在未修改原PSB的WebGL端冻结输入、初始化时钟/seed、步数和物理；观察真实draw的blendFuncSeparate、blendEquation、颜色mask、目标FBO/附件、纹理/UV、顶点颜色及相关uniform。可扩展自己的`trace.js`，不要读取私有驱动函数体。全局最终状态不能替代每次draw的状态。
-- 以父子层/UV/纹理及受控变量定位目标draw，保存透明PNG和黑/白背景合成、局部裁图/差值。推测blend含义与实际观察分开，不按数字映射Add/Multiply等枚举。
-- 已支持模型另外验证mirror/global-alpha端点和中间值、眼缘遮罩与视线/触摸坐标。若当前诊断入口没有所需控制，交付明确的缺口和输入，不把OS键鼠注入或参考结果灌入原生帧作为解决方案。
+- 目录扫描确认：全目录仅存在 `bm = 19`（在 `fraise-maid-a` 等 4 个模型中出现 5 处）与 `attr = 2`（在 `fraise-france-maid-b` 中出现 1 处）；均无 `0x7fc`。
+- WebGL 观测与数学公式：
+  - `bm = 19`：`blendFuncSeparate(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE)`，着色器预乘 Alpha，为**透明度加权正片叠底（Multiply）**，目标 Alpha 保持不变；
+  - `attr = 2`：`blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)`，单遍标准 Over 混合，对应 `ColorProtection::None`。
+- 图像与证据包：已保存至 `build/evidence/v3/`。
 
-交付：可独立复跑的capture/trace调用、source/input/tool/binary hash、图像与几何报告；源观测和原生Unsupported分别记录，不写“引擎已支持”。Codex据此实现原生映射并通过冻结阈值后才能放行。
+## 给 Gemini 3.8 Flash：V5 UI视觉、输入与小型修复（已完成）
 
-## 给 Gemini 3.8 Flash：V5 UI视觉、输入与小型修复
+已完成用户反馈两项 UI 缺陷修复与独立单元测试，交付视觉报告见 [docs/v5-ui-visual-report.md](v5-ui-visual-report.md)。
 
-先用已通过的`chocola-date-a`，避免catalog自动选到尚不支持的型号。原生入口示例：
-
-```sh
-build/dev/bin/nekomote_player --assets assets --character chocola-date-a \
-  --mute --no-save --width 800 --height 1080 --ui-open --ui-drawer 0 \
-  --steps 0 --capture-ui build/evidence/v5-next/open-character.png
-```
-
-记录字体、device scale与尺寸，检查收起/展开、角色/设置抽屉、反向开关、图标/面板拖动和边界、HiDPI、声音/锁定/FPS状态；UI捕获输入时不能触发模型，外部视线/触摸应正常。网页/原生UI不同排版与字体不能声称逐像素一致；模型本体的2/255及.001px门槛保持。
-
-静态capture已有；实际拖动/中途反向要从应用内状态/回调诊断进入。可以在`apps/player/ui*`或独立诊断工具建立可重复输入和状态测试，禁止系统键鼠注入，不改Codex拥有的main/runtime/ABI。缺接口则报告所需最小入口。已定位且边界清楚的小型UI修复可以自主完成，必须附before/after和实际状态测试；跨模块/GL生命周期改动交Codex。G8根据此报告再做绘制分配/字形预热，不能引用核心136项当作UI测试。
+- 根因 1（标题拖拽滞后脱节）：前置拖拽位移更新与边界 clamp，标题与面板同帧绑定实时坐标，达成 0px 滞后。
+- 根因 2（自由态原地淡入淡出与关闭迟滞）：`Renderer` 引入 `set_global_alpha`，按 delta_time 平滑过渡（展开 0.28s，关闭 0.24s），自由拖动后原地执行淡入淡出，消除关闭迟滞。
+- 越界安全与纯 CPU 守卫：越界自动重置停靠，`Renderer` 增加 `if (!initialized_) return;`，支持纯 CPU 运行。
+- 独立单元测试：`apps/player/test_ui.cpp`（8/8 PASS，124 assertions passed），与核心 136 项测试独立。
+- 待 Codex 修复：`apps/player/main.cpp` 的 `Surface::move` 缺失 `captures_mouse()` 检查，注视坐标存在穿透。
 
 ## Codex后续与其余待办
 

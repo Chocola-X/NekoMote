@@ -118,6 +118,7 @@ window.maskPixels = [];
             texture:textures.get(gl.getParameter(gl.TEXTURE_BINDING_2D)),
             framebuffer:!!gl.getParameter(gl.FRAMEBUFFER_BINDING),
             blend:[gl.getParameter(gl.BLEND_SRC_RGB),gl.getParameter(gl.BLEND_DST_RGB),gl.getParameter(gl.BLEND_SRC_ALPHA),gl.getParameter(gl.BLEND_DST_ALPHA)],
+            blendEquation:[gl.getParameter(gl.BLEND_EQUATION_RGB),gl.getParameter(gl.BLEND_EQUATION_ALPHA)],
             shaders:gl.getAttachedShaders(program).map(s=>gl.getShaderSource(s))};
         if(window.traceEnabled) window.drawTrace.push(record);
         if(window.isolateRect && record.texture===2) {

@@ -137,6 +137,11 @@ class Renderer
         return viewport_height_;
     }
 
+    bool is_initialized() const
+    {
+        return initialized_;
+    }
+
   private:
     bool initialized_{false};
     float global_alpha_{1.0f};
@@ -223,6 +228,15 @@ class Context
     void set_captures_mouse(bool cap)
     {
         captures_mouse_ = cap;
+    }
+
+    bool eval_captures_mouse(const IconState& icon, const SidebarState& sidebar) const
+    {
+        const bool mouse_over_icon = mouse_in_rect(icon.x, icon.y, icon.size, icon.size);
+        const float eff_h = std::max(sidebar.height, 44.0f);
+        const bool mouse_over_sidebar =
+            sidebar.animation > 0.05f && mouse_in_rect(sidebar.x, sidebar.y, sidebar.width, eff_h);
+        return mouse_over_icon || mouse_over_sidebar || icon.dragging || sidebar.dragging;
     }
 
     bool toggle_icon(IconState& icon, std::uint32_t texture_id);

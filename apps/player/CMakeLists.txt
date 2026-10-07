@@ -16,3 +16,21 @@ target_include_directories(nekomote_player PRIVATE
     ${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS nekomote_player RUNTIME DESTINATION bin)
+
+if(NEKOMOTE_BUILD_TESTS)
+    add_executable(nekomote_ui_tests test_ui.cpp ui.cpp)
+    target_link_libraries(nekomote_ui_tests PRIVATE
+        nekomote_gl_loader
+        OpenGL::GL
+        Catch2::Catch2WithMain
+        nekomote_warnings)
+    if(FONTCONFIG_FOUND)
+        target_link_libraries(nekomote_ui_tests PRIVATE PkgConfig::FONTCONFIG)
+        target_compile_definitions(nekomote_ui_tests PRIVATE NEKOMOTE_HAVE_FONTCONFIG)
+    endif()
+    target_include_directories(nekomote_ui_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${stb_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include)
+    target_compile_features(nekomote_ui_tests PRIVATE cxx_std_20)
+endif()
