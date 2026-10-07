@@ -1,5 +1,3 @@
-#include "asset_catalog.hpp"
-#include "ui.hpp"
 #include <nekomote/application/session.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/audio.hpp>
@@ -7,6 +5,9 @@
 #include <nekomote/asset_io/session_asset.hpp>
 #include <nekomote/audio/device.hpp>
 #include <nekomote/render_gl/renderer.hpp>
+
+#include "asset_catalog.hpp"
+#include "ui.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -42,10 +43,10 @@ enum class CharacterFadeState
 
 struct Options
 {
-    fs::path model, session, background, capture, check_window, assets;
+    fs::path model, session, background, capture, check_window, assets, capture_ui;
     std::string reaction, character, background_name;
-    int width{1920}, height{1080}, steps{0}, measure{0}, fps{30};
-    bool mute{false}, transparent{false}, fit{false}, no_save{false};
+    int width{1920}, height{1080}, steps{0}, measure{0}, fps{30}, ui_drawer{-1};
+    bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
     std::uint32_t seed{1};
     float scale{1};
     Vec2 origin{0, 400};
@@ -96,6 +97,12 @@ Options options(int argc, char** argv)
             o.check_window = value();
         else if (key == "--capture")
             o.capture = value();
+        else if (key == "--capture-ui")
+            o.capture_ui = value();
+        else if (key == "--ui-open")
+            o.ui_open = true;
+        else if (key == "--ui-drawer")
+            o.ui_drawer = std::stoi(value());
         else if (key == "--steps")
             o.steps = std::stoi(value());
         else if (key == "--fps")
@@ -130,6 +137,7 @@ Options options(int argc, char** argv)
                 "400]\n"
                 "  [--width 800 --height 1080] [--fps 30] [--seed 1] [--reaction label]\n"
                 "  [--capture output.png --steps N --mute --transparent] [--measure-frames N]\n"
+                "  [--capture-ui output.png --steps N --mute --ui-open --ui-drawer N]\n"
                 "  Diagnostic: --check-window output-directory --mute (no OS input injection)\n"
                 "Assets mode keys: Tab/1-9 switch character, B/N switch background, C clear "
                 "background.\n"
@@ -140,6 +148,10 @@ Options options(int argc, char** argv)
         }
         else
             throw std::runtime_error("unknown option " + key);
+    }
+    if (!o.capture_ui.empty())
+    {
+        o.capture = o.capture_ui;
     }
     if (o.assets.empty() && (o.model.empty() || o.session.empty()))
         throw std::runtime_error("--assets or (--model and --session) required; see --help");
@@ -237,12 +249,11 @@ CharacterHolder load_character(const player::CharacterEntry& entry, const Option
                                      "); use --mute for silent playback");
     }
     holder.instance = std::make_unique<application::SessionInstance>(
-        program,
-        application::SessionConfig{{o.seed},
-                                   o.seed,
-                                   application::PointerScope::LocalSurface,
-                                   o.mute ? application::AudioMode::Disabled
-                                          : application::AudioMode::Device});
+        program, application::SessionConfig{{o.seed},
+                                            o.seed,
+                                            application::PointerScope::LocalSurface,
+                                            o.mute ? application::AudioMode::Disabled
+                                                   : application::AudioMode::Device});
     check(holder.instance->set_origin(o.origin));
     check(holder.instance->set_scale(o.scale));
     check(holder.instance->start());
@@ -289,10 +300,9 @@ void apply_background(CharacterHolder& holder, const fs::path& bg_path, double f
     const TextureId old_id{1}, new_id{2};
     holder.background_renderer->upload_texture(old_id, old_image.image);
     holder.background_renderer->upload_texture(new_id, new_image.image);
-    check(holder.instance->set_background(old_id, old_image.image.width,
-                                          old_image.image.height));
-    check(holder.instance->fade_background(new_id, new_image.image.width,
-                                           new_image.image.height, fade_duration));
+    check(holder.instance->set_background(old_id, old_image.image.width, old_image.image.height));
+    check(holder.instance->fade_background(new_id, new_image.image.width, new_image.image.height,
+                                           fade_duration));
     holder.current_background_id = new_id;
     holder.has_background = true;
     holder.current_background_path = bg_path;
@@ -305,6 +315,7 @@ struct Surface
     Vec2 origin, previous{};
     float scale;
     bool dragging{false}, paused{false}, minimized{false}, output_unavailable{false};
+    bool locked{false};
     application::SessionStatus error;
     float cutoff_y{0};
     bool has_cutoff{false};
@@ -334,7 +345,7 @@ struct Surface
         const auto p = s.point(x, y);
         if (s.ui_context)
             s.ui_context->mouse_move(x, y);
-        if (s.dragging)
+        if (s.dragging && !s.locked)
         {
             s.origin.x += p.x - s.previous.x;
             s.origin.y += p.y - s.previous.y;
@@ -371,13 +382,15 @@ struct Surface
         glfwGetCursorPos(w, &x, &y);
         if (s.ui_context)
             s.ui_context->mouse_button(button, action);
-        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+        if (s.ui_context && s.ui_context->captures_mouse())
+            return;
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && !s.locked)
         {
             s.dragging = action == GLFW_PRESS;
             s.previous = s.point(x, y);
         }
         else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !s.paused &&
-                 !s.minimized)
+                 !s.minimized && !s.locked)
         {
             auto p = s.point(x, y);
             if (s.mirror)
@@ -388,6 +401,14 @@ struct Surface
     static void scroll(GLFWwindow* w, double, double amount) noexcept
     {
         auto& s = get(w);
+        if (s.ui_context)
+        {
+            s.ui_context->mouse_scroll(amount);
+            if (s.ui_context->captures_mouse())
+                return;
+        }
+        if (s.locked)
+            return;
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         const auto p = s.point(x, y);
@@ -402,8 +423,8 @@ struct Surface
     void synchronize_pause() noexcept
     {
         accept(session->set_playback_state(paused || minimized || output_unavailable
-                                              ? runtime::PlaybackState::Paused
-                                              : runtime::PlaybackState::Running));
+                                               ? runtime::PlaybackState::Paused
+                                               : runtime::PlaybackState::Running));
     }
     void fit() noexcept
     {
@@ -437,8 +458,8 @@ struct Surface
             const auto new_scale = std::clamp(scale * ratio / 1.21f, .05f, 5.0f);
             const auto actual_ratio = new_scale / scale;
             origin = {(origin.x - (left + right) * .5f) * actual_ratio,
-                      static_cast<float>(h) * .5f -
-                          (effective_bottom - top) * new_scale * .5f - 100.0f};
+                      static_cast<float>(h) * .5f - (effective_bottom - top) * new_scale * .5f -
+                          100.0f};
             scale = new_scale;
         }
         else
@@ -484,7 +505,7 @@ struct Surface
 
 int run(int argc, char** argv)
 {
-    const auto o = options(argc, argv);
+    auto o = options(argc, argv);
     const bool assets_mode = !o.assets.empty();
     player::AssetCatalog catalog;
     player::WallpaperConfig config;
@@ -566,17 +587,34 @@ int run(int argc, char** argv)
         if (bg)
             apply_background(holder, bg->path, 0);
     }
-    Surface surface{holder.instance.get(), window.get(), o.origin, {}, o.scale,
-                    false, false, false, false, {},
-                    initial->cutoff_y, initial->has_cutoff, holder.program->mirror()};
+    Surface surface{holder.instance.get(),
+                    window.get(),
+                    o.origin,
+                    {},
+                    o.scale,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    {},
+                    initial->cutoff_y,
+                    initial->has_cutoff,
+                    holder.program->mirror()};
     player::ui::FontAtlas ui_font;
     player::ui::Renderer ui_renderer;
     player::ui::Context ui_context;
     player::ui::IconState ui_icon{};
     player::ui::SidebarState ui_sidebar{};
+    if (o.ui_open)
+    {
+        ui_sidebar.open = true;
+        ui_sidebar.animation = 1.0f;
+        ui_sidebar.expanded_drawer = o.ui_drawer;
+    }
     std::uint32_t ui_icon_texture = 0;
     bool ui_ready = false;
-    if (assets_mode && ui_font.init("", 18))
+    if (assets_mode && ui_font.init("", 36))
     {
         int fw = 0, fh = 0;
         glfwGetFramebufferSize(window.get(), &fw, &fh);
@@ -592,9 +630,8 @@ int run(int argc, char** argv)
                 {
                     glGenTextures(1, &ui_icon_texture);
                     glBindTexture(GL_TEXTURE_2D, ui_icon_texture);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.image.width,
-                                 image.image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                                 image.image.pixels.data());
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.image.width, image.image.height,
+                                 0, GL_RGBA, GL_UNSIGNED_BYTE, image.image.pixels.data());
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -654,6 +691,7 @@ int run(int argc, char** argv)
             if (catalog.backgrounds[i].name == config.background)
                 current_background_index = static_cast<int>(i);
     }
+    int current_fps_limit = o.fps > 0 ? o.fps : (config.fps > 0 ? config.fps : 60);
     bool need_bg_switch = false;
     int target_background_index = current_background_index;
     bool need_bg_clear = false;
@@ -705,69 +743,75 @@ int run(int argc, char** argv)
         key_state.switch_background = switch_background;
         key_state.clear_background = [&]() { need_bg_clear = true; };
         key_state.next_character = [&]()
-        { switch_character((current_character_index + 1) % static_cast<int>(catalog.characters.size())); };
+        {
+            switch_character((current_character_index + 1) %
+                             static_cast<int>(catalog.characters.size()));
+        };
         key_state.next_background = [&]()
         {
             if (catalog.backgrounds.empty())
                 return;
-            switch_background((current_background_index + 1) % static_cast<int>(catalog.backgrounds.size()));
+            switch_background((current_background_index + 1) %
+                              static_cast<int>(catalog.backgrounds.size()));
         };
         key_state.character_count = static_cast<int>(catalog.characters.size());
         key_state.background_count = static_cast<int>(catalog.backgrounds.size());
-        glfwSetKeyCallback(window.get(), [](GLFWwindow* w, int key, int, int action, int)
-        {
-            if (action != GLFW_PRESS)
-                return;
-            if (key == GLFW_KEY_ESCAPE)
-                glfwSetWindowShouldClose(w, GLFW_TRUE);
-            else if (key == GLFW_KEY_SPACE)
-            {
-                key_state.surface->paused = !key_state.surface->paused;
-                key_state.surface->synchronize_pause();
-            }
-            else if (key == GLFW_KEY_F)
-                key_state.surface->fit();
-            else if (key == GLFW_KEY_R)
-            {
-                key_state.surface->accept(key_state.surface->session->reset());
-                key_state.surface->synchronize_pause();
-            }
-            else if (key == GLFW_KEY_TAB)
-                key_state.next_character();
-            else if (key == GLFW_KEY_B || key == GLFW_KEY_N)
-                key_state.next_background();
-            else if (key == GLFW_KEY_C)
-                key_state.clear_background();
-            else if (key >= GLFW_KEY_1 && key <= GLFW_KEY_9)
-            {
-                const int index = key - GLFW_KEY_1;
-                if (index < key_state.character_count)
-                    key_state.switch_character(index);
-            }
-        });
+        glfwSetKeyCallback(window.get(),
+                           [](GLFWwindow* w, int key, int, int action, int)
+                           {
+                               if (action != GLFW_PRESS)
+                                   return;
+                               if (key == GLFW_KEY_ESCAPE)
+                                   glfwSetWindowShouldClose(w, GLFW_TRUE);
+                               else if (key == GLFW_KEY_SPACE)
+                               {
+                                   key_state.surface->paused = !key_state.surface->paused;
+                                   key_state.surface->synchronize_pause();
+                               }
+                               else if (key == GLFW_KEY_F)
+                                   key_state.surface->fit();
+                               else if (key == GLFW_KEY_R)
+                               {
+                                   key_state.surface->accept(key_state.surface->session->reset());
+                                   key_state.surface->synchronize_pause();
+                               }
+                               else if (key == GLFW_KEY_TAB)
+                                   key_state.next_character();
+                               else if (key == GLFW_KEY_B || key == GLFW_KEY_N)
+                                   key_state.next_background();
+                               else if (key == GLFW_KEY_C)
+                                   key_state.clear_background();
+                               else if (key >= GLFW_KEY_1 && key <= GLFW_KEY_9)
+                               {
+                                   const int index = key - GLFW_KEY_1;
+                                   if (index < key_state.character_count)
+                                       key_state.switch_character(index);
+                               }
+                           });
     }
     else if (o.capture.empty())
     {
-        glfwSetKeyCallback(window.get(), [](GLFWwindow* w, int key, int, int action, int)
-        {
-            if (action != GLFW_PRESS)
-                return;
-            auto& s = Surface::get(w);
-            if (key == GLFW_KEY_ESCAPE)
-                glfwSetWindowShouldClose(w, GLFW_TRUE);
-            else if (key == GLFW_KEY_SPACE)
-            {
-                s.paused = !s.paused;
-                s.synchronize_pause();
-            }
-            else if (key == GLFW_KEY_F)
-                s.fit();
-            else if (key == GLFW_KEY_R)
-            {
-                s.accept(s.session->reset());
-                s.synchronize_pause();
-            }
-        });
+        glfwSetKeyCallback(window.get(),
+                           [](GLFWwindow* w, int key, int, int action, int)
+                           {
+                               if (action != GLFW_PRESS)
+                                   return;
+                               auto& s = Surface::get(w);
+                               if (key == GLFW_KEY_ESCAPE)
+                                   glfwSetWindowShouldClose(w, GLFW_TRUE);
+                               else if (key == GLFW_KEY_SPACE)
+                               {
+                                   s.paused = !s.paused;
+                                   s.synchronize_pause();
+                               }
+                               else if (key == GLFW_KEY_F)
+                                   s.fit();
+                               else if (key == GLFW_KEY_R)
+                               {
+                                   s.accept(s.session->reset());
+                                   s.synchronize_pause();
+                               }
+                           });
     }
     while (!glfwWindowShouldClose(window.get()))
     {
@@ -937,81 +981,226 @@ int run(int argc, char** argv)
             fade_state == CharacterFadeState::CrossFade && old_holder.instance;
         if (in_crossfade)
         {
-            old_holder.renderer->render(
-                target,
-                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 1.0f - fade_alpha, old_holder.program->mirror()},
-                target_contents);
-            holder.renderer->render(
-                target,
-                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 fade_alpha, holder.program->mirror()},
-                render_gl::TargetContents::Preserve);
+            old_holder.renderer->render(target,
+                                        {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f,
+                                         1, clear, 1.0f - fade_alpha, old_holder.program->mirror()},
+                                        target_contents);
+            holder.renderer->render(target,
+                                    {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
+                                     clear, fade_alpha, holder.program->mirror()},
+                                    render_gl::TargetContents::Preserve);
         }
         else
         {
-            holder.renderer->render(
-                target,
-                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 fade_state == CharacterFadeState::None ? 1.0f : fade_alpha,
-                 holder.program->mirror()},
-                target_contents);
+            holder.renderer->render(target,
+                                    {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
+                                     clear,
+                                     fade_state == CharacterFadeState::None ? 1.0f : fade_alpha,
+                                     holder.program->mirror()},
+                                    target_contents);
         }
-        if (ui_ready && o.capture.empty() && o.check_window.empty())
+        if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
             const player::ui::Style style;
+
             if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
                 ui_sidebar.open = !ui_sidebar.open;
+
             ui_context.sidebar(ui_sidebar, style);
-            if (ui_sidebar.animation > 0.01f)
+
+            const bool mouse_over_icon =
+                ui_context.mouse_in_rect(ui_icon.x, ui_icon.y, ui_icon.size, ui_icon.size);
+            const bool mouse_over_sidebar =
+                ui_sidebar.animation > 0.05f &&
+                ui_context.mouse_in_rect(ui_sidebar.x, ui_sidebar.y, ui_sidebar.width,
+                                         ui_sidebar.height);
+            ui_context.set_captures_mouse(mouse_over_icon || mouse_over_sidebar ||
+                                          ui_icon.dragging || ui_sidebar.dragging);
+
+            if (mouse_over_sidebar && ui_context.scroll_delta() != 0.0f)
             {
-                const float sidebar_w = 264;
-                const float anim = player::ui::ease_out_back(ui_sidebar.animation);
-                const float sidebar_x = -sidebar_w * (1.0f - anim);
-                const float sidebar_h = static_cast<float>(h) - 16;
-                ui_renderer.draw_rounded_rect(sidebar_x, 8, sidebar_w, sidebar_h,
-                                               style.corner_radius, style.panel_bg,
-                                               style.accent, 2);
-                float y = 20;
-                ui_context.label("角色", sidebar_x + style.padding, y,
-                                 style.title_size, style.text);
-                y += 30;
-                for (std::size_t i = 0; i < catalog.characters.size(); ++i)
+                ui_sidebar.scroll_y -= ui_context.scroll_delta() * 32.0f;
+            }
+
+            if (ui_sidebar.animation > 0.005f)
+            {
+                float sidebar_x = ui_sidebar.x;
+                float sidebar_y = ui_sidebar.y;
+                if (!ui_sidebar.is_free)
                 {
-                    if (ui_context.radio_button(
-                            catalog.characters[i].name.c_str(),
-                            static_cast<int>(i) == current_character_index,
-                            sidebar_x + 4, y, sidebar_w - 8, 28, style))
-                        switch_character(static_cast<int>(i));
-                    y += 30;
+                    const float anim = player::ui::ease_out_back(ui_sidebar.animation);
+                    sidebar_x = 8.0f - ui_sidebar.width * (1.0f - anim);
+                    sidebar_y = 8.0f;
+                    ui_sidebar.x = sidebar_x;
+                    ui_sidebar.y = sidebar_y;
                 }
-                y += 8;
-                ui_context.divider_line(sidebar_x + style.padding, y,
-                                        sidebar_w - style.padding * 2, style);
-                y += 16;
-                ui_context.label("背景", sidebar_x + style.padding, y,
-                                 style.title_size, style.text);
-                y += 30;
-                for (std::size_t i = 0; i < catalog.backgrounds.size(); ++i)
+
+                float content_scrollable_h = 0.0f;
+                for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
                 {
-                    if (ui_context.radio_button(
-                            catalog.backgrounds[i].name.c_str(),
-                            static_cast<int>(i) == current_background_index,
-                            sidebar_x + 4, y, sidebar_w - 8, 28, style))
+                    content_scrollable_h += 42.0f;
+                    if (ui_sidebar.expanded_drawer == static_cast<int>(g))
                     {
-                        target_background_index = static_cast<int>(i);
-                        need_bg_switch = true;
+                        content_scrollable_h +=
+                            static_cast<float>(catalog.character_groups[g].items.size()) * 34.0f;
                     }
-                    y += 30;
                 }
-                if (current_background_index >= 0)
+                content_scrollable_h += 42.0f;
+                if (ui_sidebar.expanded_drawer == 8)
                 {
-                    y += 8;
-                    if (ui_context.text_button("清除背景", sidebar_x + 4, y,
-                                               sidebar_w - 8, 28, style))
-                        need_bg_clear = true;
+                    content_scrollable_h += 30.0f + 4.0f * 32.0f;
+                    content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
+                    content_scrollable_h +=
+                        30.0f + 30.0f + static_cast<float>(catalog.backgrounds.size()) * 32.0f;
                 }
+                content_scrollable_h += 68.0f;
+
+                const float max_sidebar_h = std::max(64.0f, static_cast<float>(h) - 16.0f);
+                const float content_total_h = 44.0f + content_scrollable_h;
+                ui_sidebar.height = std::min(max_sidebar_h, content_total_h);
+
+                const float max_scroll =
+                    std::max(0.0f, content_scrollable_h - (ui_sidebar.height - 44.0f));
+                ui_sidebar.scroll_y = std::clamp(ui_sidebar.scroll_y, 0.0f, max_scroll);
+
+                ui_renderer.draw_rounded_rect(sidebar_x, sidebar_y, ui_sidebar.width,
+                                              ui_sidebar.height, style.corner_radius,
+                                              style.panel_bg, style.accent, 2.0f);
+
+                ui_context.sidebar_header(ui_sidebar, "猫娘乐园角色E-mote图鉴", style);
+
+                const float clip_y = sidebar_y + 44.0f;
+                const float clip_h = ui_sidebar.height - 44.0f;
+                ui_renderer.push_clip_rect(sidebar_x, clip_y, ui_sidebar.width, clip_h);
+
+                float curr_y = clip_y - ui_sidebar.scroll_y;
+
+                for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
+                {
+                    const auto& group = catalog.character_groups[g];
+                    const bool is_open = (ui_sidebar.expanded_drawer == static_cast<int>(g));
+                    if (ui_context.drawer_header(group.title.c_str(), is_open, sidebar_x, curr_y,
+                                                 ui_sidebar.width, 42.0f, style))
+                    {
+                        ui_sidebar.expanded_drawer = is_open ? -1 : static_cast<int>(g);
+                    }
+                    curr_y += 42.0f;
+                    if (is_open)
+                    {
+                        for (const auto& item : group.items)
+                        {
+                            const bool is_selected =
+                                (item.character_index == current_character_index);
+                            if (ui_context.drawer_item(item.display_name.c_str(), is_selected,
+                                                       sidebar_x, curr_y, ui_sidebar.width, 34.0f,
+                                                       style))
+                            {
+                                switch_character(item.character_index);
+                            }
+                            curr_y += 34.0f;
+                        }
+                    }
+                }
+
+                const bool is_settings_open = (ui_sidebar.expanded_drawer == 8);
+                if (ui_context.drawer_header("设置", is_settings_open, sidebar_x, curr_y,
+                                             ui_sidebar.width, 42.0f, style))
+                {
+                    ui_sidebar.expanded_drawer = is_settings_open ? -1 : 8;
+                }
+                curr_y += 42.0f;
+                if (is_settings_open)
+                {
+                    ui_context.section_header("帧率限制", sidebar_x, curr_y, ui_sidebar.width,
+                                              30.0f, style);
+                    curr_y += 30.0f;
+                    const struct
+                    {
+                        int fps;
+                        const char* label;
+                        const char* badge;
+                    } fps_opts[] = {{0, "无上限", "∞"},
+                                    {30, "30 FPS", ""},
+                                    {60, "60 FPS", "推荐"},
+                                    {120, "120 FPS", ""}};
+                    for (const auto& opt : fps_opts)
+                    {
+                        const bool selected = (current_fps_limit == opt.fps);
+                        if (ui_context.radio_row(opt.label, opt.badge, selected, sidebar_x, curr_y,
+                                                 ui_sidebar.width, 32.0f, style))
+                        {
+                            current_fps_limit = opt.fps;
+                            config.fps = opt.fps;
+                            if (!o.no_save)
+                                config.save(config_path);
+                        }
+                        curr_y += 32.0f;
+                    }
+
+                    ui_context.section_header("角色", sidebar_x, curr_y, ui_sidebar.width, 30.0f,
+                                              style);
+                    curr_y += 30.0f;
+                    ui_context.switch_row("锁定人物位置与大小", surface.locked, sidebar_x, curr_y,
+                                          ui_sidebar.width, 34.0f, style);
+                    curr_y += 34.0f;
+                    bool is_muted = o.mute;
+                    if (ui_context.switch_row("关闭声音", is_muted, sidebar_x, curr_y,
+                                              ui_sidebar.width, 34.0f, style))
+                    {
+                        o.mute = is_muted;
+                        config.mute = is_muted;
+                        if (!o.no_save)
+                            config.save(config_path);
+                    }
+                    curr_y += 34.0f;
+                    if (ui_context.reset_button("重设角色位置", sidebar_x, curr_y, ui_sidebar.width,
+                                                34.0f, style))
+                    {
+                        surface.fit();
+                    }
+                    curr_y += 34.0f;
+
+                    ui_context.section_header("壁纸选择", sidebar_x, curr_y, ui_sidebar.width,
+                                              30.0f, style);
+                    curr_y += 30.0f;
+                    ui_context.section_header("固定背景", sidebar_x, curr_y, ui_sidebar.width,
+                                              30.0f, style);
+                    curr_y += 30.0f;
+                    for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+                    {
+                        const auto& bg = catalog.backgrounds[b];
+                        const bool selected = (static_cast<int>(b) == current_background_index);
+                        if (ui_context.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
+                                                 curr_y, ui_sidebar.width, 32.0f, style))
+                        {
+                            switch_background(static_cast<int>(b));
+                        }
+                        curr_y += 32.0f;
+                    }
+                }
+
+                ui_context.divider_line(sidebar_x, curr_y, ui_sidebar.width, style);
+                curr_y += 10.0f;
+                const char* author_txt = "作者：GTX690战术核显卡导弹";
+                const float atw =
+                    ui_renderer.font() ? ui_renderer.font()->text_width(author_txt, 12.0f) : 160.0f;
+                ui_context.label(author_txt, sidebar_x + (ui_sidebar.width - atw) * 0.5f, curr_y,
+                                 12.0f, style.text);
+                curr_y += 24.0f;
+                ui_context.divider_line(sidebar_x, curr_y, ui_sidebar.width, style);
+                curr_y += 10.0f;
+                const char* gh_txt = "Github项目：NekoWebShow";
+                const float gtw =
+                    ui_renderer.font() ? ui_renderer.font()->text_width(gh_txt, 12.0f) : 170.0f;
+                ui_context.label(gh_txt, sidebar_x + (ui_sidebar.width - gtw) * 0.5f, curr_y, 12.0f,
+                                 style.text);
+                curr_y += 24.0f;
+
+                ui_renderer.pop_clip_rect();
+
+                ui_context.draw_scrollbar(sidebar_x, clip_y, ui_sidebar.width, clip_h,
+                                          content_scrollable_h, ui_sidebar.scroll_y, style);
             }
             ui_context.end_frame();
             ui_renderer.end_frame();
@@ -1085,14 +1274,18 @@ int run(int argc, char** argv)
         }
         const auto cpu_ms = std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
         glfwSwapBuffers(window.get());
-        const auto deadline = now + std::chrono::duration_cast<Clock::duration>(
-                                        std::chrono::duration<double>(1.0 / o.fps));
-        while (!glfwWindowShouldClose(window.get()))
+        if (current_fps_limit > 0)
         {
-            const auto remaining = std::chrono::duration<double>(deadline - Clock::now()).count();
-            if (remaining <= 0)
-                break;
-            glfwWaitEventsTimeout(remaining);
+            const auto deadline = now + std::chrono::duration_cast<Clock::duration>(
+                                            std::chrono::duration<double>(1.0 / current_fps_limit));
+            while (!glfwWindowShouldClose(window.get()))
+            {
+                const auto remaining =
+                    std::chrono::duration<double>(deadline - Clock::now()).count();
+                if (remaining <= 0)
+                    break;
+                glfwWaitEventsTimeout(remaining);
+            }
         }
         if (o.measure != 0 && !surface.minimized)
         {
@@ -1158,7 +1351,7 @@ int run(int argc, char** argv)
     glfwSetWindowUserPointer(window.get(), nullptr);
     return 0;
 }
-}
+} // namespace
 int main(int argc, char** argv)
 {
     try
