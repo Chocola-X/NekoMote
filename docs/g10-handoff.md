@@ -4,9 +4,9 @@
 
 Agent: CodeArts / GLM-5.2
 基线提交：`495dcc3`
-完成提交：本文档同批
-范围：`tools/import_all_assets.py`、`tests/reference_capture/test_import_all_assets.py`、`docs/g10-handoff.md`（新）
-文件边界：目录工具、Python 测试、新 g10-handoff；不改 runtime/render/application/ABI/UI
+完成提交：`ee89551`（初版），本批（fraise-france-maid-b 修复后刷新）
+范围：`tools/import_all_assets.py`、`tests/reference_capture/test_import_all_assets.py`、`docs/g10-handoff.md`
+文件边界：目录工具、Python 测试、g10-handoff；不改 runtime/render/application/ABI/UI
 
 ## 任务
 
@@ -37,84 +37,90 @@ G7 的 171 CPU OK / 23 FAIL 是 C5 bm19/attr2 映射交付前的历史统计，�
 
 缺素材环境的纯 CLI 解析测试执行通过，只有真实 GPU/素材检查 Skipped，不把整类跳过误报为测试通过。
 
-### 3. 真实 195 条账本
+### 3. fraise-france-maid-b 数据损坏修复
+
+初版账本中 `fraise-france-maid-b` 为 AMBIGUOUS：源目录同时有 `fraise-france-maid-b.json` 和 `fraise-france-maid-b.pure.json` 两组重复文件（都是 ems 平台，内容相同，纹理路径不同），导致 `catalog_index` 找到两个候选。
+
+修复操作（在外部仓库 `NekoWebShow/model_conversion/fraise/fraise-france-maid-b/` 进行）：
+
+1. 从 `data/fraise-france-maid-b.pure.psb.zip` 解压出 `.pure.psb`
+2. 用 `refer/Ulysses-FreeMoteToolkit-v4.8.0/PsbDecompile.exe`（wine）反编译 → `.json` + `.resx.json` + 纹理目录
+3. 重命名为规范命名（参考 `fraise-maid-b/` 等正常目录）：`fraise-france-maid-b.json`、`fraise-france-maid-b.resx.json`、`fraise-france-maid-b-resources/`
+4. 修正 resx 中纹理路径 `fraise-france-maid-b.pure/` → `fraise-france-maid-b-resources/`
+5. 清理多余的 `.pure/`、`.pure.json`、`.pure.resx.json`
+
+修复后目录结构与正常目录一致（3 个条目），`resolve_candidates` 只返回 1 个候选，导入成功（schema=5），编译成功。CPU 审计 `ok: False`：所有 timeline 在 `ステンシル(shirome)` 节点有 `geometry_error: 8, playback_error: 3`，属于运行时 stencil/遮罩语义缺口（与 C5 handoff 记录一致），非数据损坏。
+
+### 4. 真实 195 条账本
 
 ```sh
 python3 tools/import_all_assets.py \
   --reference-root /run/media/chocola/DATA/Project/NekoWebShow \
   --importer build/release/bin/nekomote_import \
-  --output /tmp/g10-ledger-output \
+  --output /tmp/g10-v2-ledger-output \
   --session-tool tools/import_session/import_session.py \
   --presentation /run/media/chocola/DATA/Project/NekoWebShow/config/model-presentation.json \
   --runtime-auditor build/release/bin/nekomote_runtime_audit \
   --runtime-steps 120 \
-  --report /tmp/g10-ledger.json
+  --report /tmp/g10-v2-ledger.json
 ```
 
-结果（`/tmp/g10-ledger.json`）：
+结果（`/tmp/g10-v2-ledger.json`）：
 
 | 字段 | 值 |
 | --- | --- |
 | `complete` | true |
 | `catalog_records` | 195 |
-| `head_commit` | `495dcc3d2c325bd71c0856b0064b32c5557755fc` |
-| `generated_at` | `2026-10-07T13:53:18+00:00` |
+| `head_commit` | `ee89551d51dbe4343dffae1b2a2a6031cde85001` |
+| `generated_at` | `2026-10-07T14:43:23+00:00` |
 | `runtime_steps` | 120 |
-| `tool_hashes.importer` | `3866ceb0894b6109...` |
-| `tool_hashes.runtime_auditor` | `81d71da9396b96e4...` |
-| `tool_hashes.session_tool` | `28cb078e8b55569f...` |
-| `catalog_sha256` | `72bd4ad864c83d25...` |
 
 统计：
 
 | 维度 | 结果 |
 | --- | --- |
-| structure | OK 194, AMBIGUOUS 1 |
-| cpu | OK 174, FAIL 20, PENDING 1 |
+| structure | OK 195 |
+| cpu | OK 174, FAIL 21 |
 | visual | PENDING 195 |
 | interaction | PENDING 195 |
 | soak | PENDING 195 |
 
-与 G7 对比：CPU OK 从 171 增至 174（C5 bm19/attr2 修复 3 项），FAIL 从 23 降至 20。
+与 G7 对比：CPU OK 从 171 增至 174（C5 bm19/attr2 修复 3 项），AMBIGUOUS 从 1 降至 0（fraise-france-maid-b 重新解包），CPU FAIL 从 23 降至 21（fraise-france-maid-b 从 AMBIGUOUS 转为 CPU FAIL）。
 
-### 4. 账本字段完整性
+### 5. 账本字段完整性
 
 OK 项 19 个字段：`bundle_sha256`/`character`/`commands`/`config`/`costume`/`cpu_detail`/`cpu_result`/`errors`/`external_textures`/`model`/`nodes`/`psb`/`psb_sha256`/`resx`/`resx_sha256`/`schema`/`source`/`source_sha256`/`status`/`variants`。
 
 - OK 项都有 `schema`（=5）和 `bundle_sha256`（bundle 内全部文件 sha256 摘要）
 - OK 项都有 `cpu_detail`（command/returncode/stdout_tail/stderr_tail）和 `cpu_result`（runtime_audit JSON）
 - CPU FAIL 项都有 `cpu_detail`，保留 returncode 和 stdout/stderr 尾部
-- AMBIGUOUS 项（`fraise-france-maid-b`）列出 `alternatives`（两个候选路径），不擅自挑选
 
-### 5. 20 个 CPU FAIL 模型
+### 6. 21 个 CPU FAIL 模型
 
 ```
 azuki-maid-b, azuki-maid-b-custard, azuki-santa-b, azuki-wintermaid-b,
 cinnamon-maid, coconut-dress, coconut-dress-a, coconut-hawaii-a,
 coconut-maid, coconut-maid-a, coconut-maid-a-4yo, coconut-santa,
 coconut-swimsuit-a, coconut-wintermaid, coconut-yukata,
-fraise-casual-b, fraise-hawaii-b, fraise-maid-b, fraise-pajama-b, fraise-swimsuit-b
+fraise-casual-b, fraise-france-maid-b, fraise-hawaii-b, fraise-maid-b,
+fraise-pajama-b, fraise-swimsuit-b
 ```
 
-这些属于已知运行时缺口（bm19/attr2 之外的求值语义），非导入缺陷，交 Codex C5 继续。
-
-### 6. 1 个 AMBIGUOUS 模型
-
-`fraise-france-maid-b`：源目录有两个候选（`fraise-france-maid-b.json` 和 `fraise-france-maid-b.pure.json`），是已知数据损坏，非运行时缺陷。账本仅列候选/来源 hash，不擅自挑选文件或改核心让全绿。
+这些属于已知运行时缺口（bm19/attr2 之外的求值语义，含 stencil/遮罩），非导入缺陷，交 Codex C5 继续。`fraise-france-maid-b` 的 FAIL 在 `ステンシル(shirome)` 节点，与 C5 handoff 记录的约 57.775px 几何误差一致。
 
 ### 7. 重复执行拒绝覆盖
 
-对已有 `/tmp/g10-ledger-output` 再次运行：
+对已有 `/tmp/g10-v2-ledger-output` 再次运行：
 
-- 194 项 `EXISTS_UNCHECKED`，1 项 `AMBIGUOUS`，退出非零
+- 195 项 `EXISTS_UNCHECKED`，退出非零
 - 不调用导入器，CPU 全部 PENDING
-- 额外文件 `extra-file.txt` 保留不变
+- 额外文件保留不变
 
 ### 8. 原素材保护
 
 - 源素材路径只读，hash 已记录
 - 原 G7 输出 `/tmp/g7-smoke-output` 保留未动
-- 未修改外部仓库
+- `fraise-france-maid-b` 目录已修复（重新解包并规范命名），原文件备份在 `/tmp/fraise-france-maid-backup`
 
 ## 验证
 
@@ -132,19 +138,18 @@ OK
 
 - `complete: true`，`catalog_records: 195`
 - `head_commit`/`tool_hashes`/`generated_at`/`runtime_steps` 已记录
-- structure 194 OK + 1 AMBIGUOUS
-- cpu 174 OK + 20 FAIL + 1 PENDING
+- structure 195 OK
+- cpu 174 OK + 21 FAIL
 - visual/interaction/soak 全部 PENDING — 不宣称视觉或交互通过
 
 ### 重复执行拒绝
 
-- 195 项 EXISTS_UNCHECKED/AMBIGUOUS，退出非零
+- 195 项 EXISTS_UNCHECKED，退出非零
 - 额外文件保留不变
 
 ## 未完成 / 交接
 
-- 20 条 CPU FAIL 属于已知运行时缺口（bm19/attr2 之外的求值语义），非导入缺陷，交 Codex C5
-- 1 条 AMBIGUOUS（fraise-france-maid-b）是源数据多候选，非运行时缺陷
+- 21 条 CPU FAIL 属于已知运行时缺口（bm19/attr2 之外的求值语义，含 stencil/遮罩），非导入缺陷，交 Codex C5
 - visual/interaction/soak 全部 PENDING，需 Gemini V7 视觉证据和 Codex C6 交互验收
 - 本轮不宣称 195 条视觉或交互通过，仅交付结构/CPU 账本
 - 不改当前摘要/路线图宣称整模型通过
