@@ -80,14 +80,39 @@ ctest --preset dev -L gpu  # 需要显示服务器，执行真实 GPU 像素/生
 
 ABI已与窗口解耦；asan包含CPU ABI合成契约，不构建player/预览/GPU。缺真实素材时相应集成项显式Skipped。C ABI诊断宿主不再依赖Pulse/thread，正式player保留声音服务。
 
-UI测试尚未登记CTest，当前独立执行；Python工具检查同样独立：
+UI测试和Python工具检查已注册CTest：
 
 ```sh
-build/dev/bin/nekomote_ui_tests
-python3 -m unittest discover -s tests/reference_capture -v
+ctest --test-dir build/dev                    # 全部测试（含 player_ui、python_tools、python_abi_host）
+ctest --test-dir build/dev -LE gpu           # 排除GPU测试（无显示服务器）
+ctest --test-dir build/dev -L python         # 仅Python工具检查
+ctest --test-dir build/dev -L gpu            # 仅GPU测试（player_ui、renderer_gpu、python_abi_host）
 ```
 
-Fontconfig为UI的可选字体发现入口，未安装时使用源码中的字体路径候选；无可用字体不能宣称UI成功。无ABI纯CPU的GCC15构建问题尚待G9，完整构建矩阵不能只凭dev通过。
+| 测试名 | 标签 | 说明 |
+| --- | --- | --- |
+| `player_ui` | gpu | 独立UI状态测试（8 cases / 124 assertions） |
+| `python_tools` | python | 导入/资产保护负例（31 cases） |
+| `python_abi_host` | python,gpu | ABI确定性测试（10 cases，需 abi_host + 真实模型） |
+
+缺 `assets/` 时 `python_abi_host` 显式 Skipped（`@unittest.skipUnless`），合成项仍执行。
+
+Fontconfig为UI的可选字体发现入口，未安装时使用源码中的字体路径候选；无可用字体不能宣称UI成功。
+
+## 构建矩阵
+
+G9 验证的构建配置（GCC 15.1.1，全部通过）：
+
+| 配置 | ABI | Preview | Player | Tests | 类型 | 结果 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `dev` preset | ON | ON | ON | ON | Debug | 138/138 PASS |
+| `release` preset | ON | ON | ON | ON | Release+LTO | 通过 |
+| `asan` preset | ON | OFF | OFF | ON | Debug+ASan | 136/136 PASS |
+| 无ABI纯CPU | OFF | OFF | OFF | ON | Debug | 133/133 PASS |
+| 无ABI纯CPU | OFF | OFF | OFF | ON | Release+LTO | 构建通过 |
+| preview-only | ON | ON | OFF | ON | Debug | 138/138 PASS |
+
+GCC15 无ABI构建的 `-Wmissing-declarations` 误报已由 G6 的 `$<COMPILE_LANGUAGE:CXX>` 生成器表达式解决，不扩大禁用。
 
 源仓库只读；真实资产和截图放ignored assets/build目录，已跟踪的大型素材已移出索引。本批导入采用新输出目录，已有目录一律EXISTS_UNCHECKED、非零拒绝且保留，不覆盖或认证：
 
@@ -98,4 +123,4 @@ python3 tools/import_all_assets.py --reference-root ../NekoWebShow \
   --output build/import-new/characters --report build/import-new/report.json
 ```
 
-当前文件保护已修复，完整账本/异常/CPU结果保留仍待G7；不将结构导入等同于画面通过。阶段验证范围见 [整合摘要](review-agents-current.md)。
+当前文件保护已修复，完整账本/异常/CPU结果保留已由G7实现；不将结构导入等同于画面通过。阶段验证范围见 [整合摘要](review-agents-current.md)。

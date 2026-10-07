@@ -21,9 +21,9 @@ import tempfile
 import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-HOST = REPO / 'build/release/bin/nekomote_abi_host'
-MODEL = REPO / 'assets/characters/chocola-date-a/model.nkm.json'
-SESSION = REPO / 'assets/characters/chocola-date-a/session.nks.json'
+HOST = pathlib.Path(os.environ.get('NEKOMOTE_ABI_HOST', REPO / 'build/release/bin/nekomote_abi_host'))
+MODEL = pathlib.Path(os.environ.get('NEKOMOTE_MODEL', REPO / 'assets/characters/chocola-date-a/model.nkm.json'))
+SESSION = pathlib.Path(os.environ.get('NEKOMOTE_SESSION', REPO / 'assets/characters/chocola-date-a/session.nks.json'))
 
 
 def read_png_pixels(path):

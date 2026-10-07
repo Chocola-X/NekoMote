@@ -33,4 +33,6 @@ if(NEKOMOTE_BUILD_TESTS)
         ${stb_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include)
     target_compile_features(nekomote_ui_tests PRIVATE cxx_std_20)
+    add_test(NAME player_ui COMMAND nekomote_ui_tests)
+    set_tests_properties(player_ui PROPERTIES LABELS gpu)
 endif()

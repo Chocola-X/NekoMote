@@ -91,4 +91,19 @@ if(NEKOMOTE_BUILD_TESTS)
     if(NEKOMOTE_BUILD_PREVIEW)
         add_subdirectory(tests/render)
     endif()
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME python_tools
+            COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+        set_tests_properties(python_tools PROPERTIES LABELS python)
+        if(NEKOMOTE_BUILD_PREVIEW AND NEKOMOTE_BUILD_ABI)
+            add_test(NAME python_abi_host
+                COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/abi_host
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            set_tests_properties(python_abi_host PROPERTIES
+                LABELS "python;gpu"
+                ENVIRONMENT "NEKOMOTE_ABI_HOST=$<TARGET_FILE:nekomote_abi_host>")
+        endif()
+    endif()
 endif()
