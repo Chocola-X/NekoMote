@@ -1158,15 +1158,23 @@ int main(int argc, char **argv)
         if (g_app.fade_state == FADE_PENDING)
         {
             printf("Switching to character: %s\n", g_app.catalog.characters[g_app.char_index].name);
-            /* Stop audio thread before shallow-copy: the worker's dev pointer
-               points at g_app.current.audio, so memset below would zero its
-               mutex while the thread still holds it — deadlock. */
             if (g_app.current.has_audio) audio_destroy(&g_app.current.audio);
             g_app.current.has_audio = 0;
             g_app.old = g_app.current;
             g_app.has_old = 1;
             memset(&g_app.current, 0, sizeof(g_app.current));
             load_holder_with_gl(&g_app.current, &g_app.catalog.characters[g_app.char_index]);
+            if (!g_app.current.session)
+            {
+                fprintf(stderr, "Failed to load character '%s', keeping current session\n",
+                        g_app.catalog.characters[g_app.char_index].name);
+                destroy_holder(&g_app.current);
+                g_app.current = g_app.old;
+                g_app.has_old = 0;
+                memset(&g_app.old, 0, sizeof(g_app.old));
+                g_app.fade_state = FADE_NONE;
+                goto skip_switch;
+            }
             nekomote_session_set_output_size(g_app.current.session, g_app.width, g_app.height);
             g_app.origin_x = 0.0f;
             g_app.origin_y = 400.0f;
@@ -1175,7 +1183,6 @@ int main(int argc, char **argv)
             nekomote_session_set_scale(g_app.current.session, g_app.scale);
             fit_character();
 
-            /* Re-apply background to new session */
             if (g_app.bg.has_background)
             {
                 g_app.bg.has_background = 0;
@@ -1188,6 +1195,7 @@ int main(int argc, char **argv)
             printf("  mirror=%d, textures=%zu\n", g_app.current.mirror,
                    nekomote_program_texture_count(g_app.current.program));
         }
+    skip_switch: ;
 
         /* Update cross-fade */
         if (g_app.fade_state == FADE_CROSSFADE)

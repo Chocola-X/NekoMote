@@ -1,9 +1,9 @@
 #include <nekomote/application/session.hpp>
-#include <cstdio>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <stdexcept>
 #include <utility>
@@ -127,7 +127,12 @@ bool SessionProgram::gaze_available() const noexcept
 }
 bool SessionProgram::touch_available() const noexcept
 {
-    return impl_->zones[0].size() + impl_->zones[1].size() > 0;
+    for (std::size_t i = 0; i < impl_->zones.size(); ++i)
+    {
+        if (impl_->interaction.regions[i] && !impl_->zones[i].empty())
+            return true;
+    }
+    return false;
 }
 bool SessionProgram::mirror() const noexcept
 {
@@ -636,7 +641,8 @@ SessionStatus SessionInstance::advance(double elapsed, runtime::PhysicsInputs in
     if (auto status = start(); !status)
         return status;
     data.callback_status = {};
-    if (data.bg_target.texture.value != 0 && data.bg_fade_duration > 0)
+    if (data.playback_state == runtime::PlaybackState::Running &&
+        data.bg_target.texture.value != 0 && data.bg_fade_duration > 0)
     {
         data.bg_fade_progress += elapsed / data.bg_fade_duration;
         if (data.bg_fade_progress >= 1.0)
@@ -729,7 +735,7 @@ SessionStatus SessionInstance::set_background(TextureId id, int width, int heigh
     return {};
 }
 SessionStatus SessionInstance::fade_background(TextureId id, int width, int height,
-                                                double duration_seconds) noexcept
+                                               double duration_seconds) noexcept
 {
     auto& data = *impl_;
     if (data.faulted)
@@ -759,15 +765,15 @@ void SessionInstance::clear_background() noexcept
 RenderFrame SessionInstance::background_frame() const noexcept
 {
     auto& data = *impl_;
-    if (data.faulted || data.bg_current.texture.value == 0 ||
-        data.output_width <= 0 || data.output_height <= 0)
+    if (data.faulted || data.bg_current.texture.value == 0 || data.output_width <= 0 ||
+        data.output_height <= 0)
         return {};
     const bool fading = data.bg_target.texture.value != 0 && data.bg_fade_progress < 1.0;
     if (!fading)
     {
-        fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(),
-                             data.output_width, data.output_height,
-                             data.bg_current.width, data.bg_current.height, 1.0f, 0);
+        fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(), data.output_width,
+                             data.output_height, data.bg_current.width, data.bg_current.height,
+                             1.0f, 0);
         data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
         return {std::span<const RenderVertex>(data.bg_vertices.data(), 4),
                 std::span<const std::uint32_t>(data.bg_indices.data(), 6),
@@ -775,12 +781,11 @@ RenderFrame SessionInstance::background_frame() const noexcept
                 ColorComposition::PremultipliedOver};
     }
     const auto alpha = static_cast<float>(data.bg_fade_progress);
-    fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(),
-                         data.output_width, data.output_height,
-                         data.bg_current.width, data.bg_current.height, 1.0f, 0);
-    fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6,
-                         data.output_width, data.output_height,
-                         data.bg_target.width, data.bg_target.height, alpha, 4);
+    fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(), data.output_width,
+                         data.output_height, data.bg_current.width, data.bg_current.height, 1.0f,
+                         0);
+    fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6, data.output_width,
+                         data.output_height, data.bg_target.width, data.bg_target.height, alpha, 4);
     data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
     data.bg_commands[1] = {data.bg_target.texture, 6, 6, BlendMode::Over};
     return {std::span<const RenderVertex>(data.bg_vertices.data(), 8),

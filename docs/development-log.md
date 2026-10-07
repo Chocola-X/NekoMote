@@ -519,3 +519,17 @@
   - clang-format 检查通过。
 - **未覆盖**：R3 的"失败后不能继续画旧帧"需要 GPU 上下文的集成测试，留待 G2/G6 构建矩阵完善。renderer prepare 的帧数据逐字段拷贝有性能开销，但这是 ABI 边界安全性优先于性能的决策；热路径优化在 P7。
 - 待 Codex 复核：ABI 接口草案和负例表。后续 G2（精简 C 验证宿主）依赖本任务的错误诊断 API。
+
+## 2026-10-07 G3/R6：application时钟与能力负例（CodeArts/GLM-5.2）
+
+- 领用 docs/agent-workboard.md G3。base commit 85371f6。
+- **touch_available 修复**（session.cpp:128）：原代码只检查 zones[0]+zones[1]，忽略其余3个zone和 regions 定义。移除全部 region 后仍报告 true。修复为遍历全部 zone，要求对应 region 有值且 zones 非空，与 touch() 的检查逻辑一致。
+- **背景暂停契约修复**（session.cpp:644）：原代码在 advance() 中总是更新背景渐变进度，不管播放状态。暂停时模型动画停止但背景继续渐变，恢复策略不一致。修复为仅在 PlaybackState::Running 时更新背景渐变。
+- **角色切换失败恢复**（abi_host/main.c:1158）：原代码先保存当前到 old、清空 current、加载新角色，加载失败时 current.session 为 NULL 但仍进入 cross-fade，旧会话丢失。修复为加载失败时从 old 恢复 current，不进入 cross-fade，保持当前会话继续运行。
+- **新增测试**（test_session.cpp）：
+  - touch_available 无 regions 时返回 false，touch 不触发反应
+  - touch_available 无 reactions 时返回 false
+  - 背景渐变在暂停时停止，恢复后继续，大 delta 正确完成
+  - reset 清除背景状态（bg_current/bg_target/fade_progress）
+- **验证**：dev 133/133 CTest 通过（新增4测试），clang-format 通过。
+- **未覆盖**：大 delta 追赶限制的数值契约（模型最多15步 vs 背景直接完成）需 Codex 推导统一策略；application 层零分配测试待 G6 构建矩阵完善。

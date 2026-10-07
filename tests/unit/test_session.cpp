@@ -258,3 +258,68 @@ TEST_CASE("Undrained audio commands fault a partial scheduled reaction until res
     REQUIRE(session.react(reference.program->find_reaction("reaction")));
     REQUIRE(session.advance(1.0 / 60));
 }
+
+TEST_CASE("touch_available is false when no regions are defined", "[application]")
+{
+    Reference reference;
+    REQUIRE(reference.program->touch_available());
+    for (auto& region : reference.session.interaction.regions)
+        region.reset();
+    reference.compile();
+    REQUIRE_FALSE(reference.program->touch_available());
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.start());
+    REQUIRE(session.touch({0, 0}));
+    REQUIRE_FALSE(session.active_reaction().valid());
+}
+
+TEST_CASE("touch_available is false when zones have no reactions", "[application]")
+{
+    Reference reference;
+    reference.session.reactions.clear();
+    reference.compile();
+    REQUIRE_FALSE(reference.program->touch_available());
+}
+
+TEST_CASE("Background fade pauses during playback pause", "[application]")
+{
+    Reference reference;
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.start());
+    REQUIRE(session.set_output_size(800, 600));
+    REQUIRE(session.set_background(nekomote::TextureId{1}, 800, 600));
+    REQUIRE(session.fade_background(nekomote::TextureId{2}, 800, 600, 1.0));
+    REQUIRE(session.advance(0.25));
+    auto frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE(session.set_playback_state(runtime::PlaybackState::Paused));
+    REQUIRE(session.advance(0.5));
+    frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE(session.set_playback_state(runtime::PlaybackState::Running));
+    REQUIRE(session.advance(0.25));
+    frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE(session.advance(0.5));
+    frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 1);
+}
+
+TEST_CASE("Background reset clears fade state", "[application]")
+{
+    Reference reference;
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.start());
+    REQUIRE(session.set_output_size(800, 600));
+    REQUIRE(session.set_background(nekomote::TextureId{1}, 800, 600));
+    REQUIRE(session.fade_background(nekomote::TextureId{2}, 800, 600, 1.0));
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.background_frame().commands.size() == 2);
+    session.clear_background();
+    REQUIRE(session.background_frame().commands.size() == 0);
+    REQUIRE(session.reset());
+    REQUIRE(session.background_frame().commands.size() == 0);
+}
