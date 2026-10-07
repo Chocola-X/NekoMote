@@ -209,3 +209,74 @@ P0 建立统一 presets、格式配置和检查命令，之后变更以这些入
 5. 阻塞时保留最小复现、字段路径、输入和观察结果，继续独立可推进的任务。
 6. 外部桌面修改、网络发布、提交以及工作区之外的操作按当前任务授权执行；不要建立额外无依据的确认流程。
 7. 本文件若需要调整，与实际结构同步更新；规范是可维护的工程约束，不以复杂流程替代必要判断。
+
+## 12. 提交记录与 Agent 溯源
+
+本项目允许多个 Agent 协同开发，因此每次提交必须能在提交记录中识别：
+
+- 执行任务的 Agent harness；
+- 完成任务所使用的模型；
+- 该提交对应的任务来源或上下文。
+
+### 12.1 提交信息格式
+
+提交标题仍遵循项目现有提交规范；如果项目尚未规定提交标题格式，则采用：
+
+```text
+(): <简要说明>
+```
+
+例如：
+
+```text
+feat(model): add parameter evaluation skeleton
+```
+
+提交正文中必须包含 `Agent:` 和 `Model:` 两行，格式如下：
+
+```text
+Agent: 
+Model: 
+```
+
+完整示例：
+
+```text
+feat(model): add parameter evaluation skeleton
+
+- 新增参数求值基础结构
+- 补充相关单元测试
+- 未涉及 GPU 绘制路径
+
+Agent: CodeArts
+Model: GLM-5.2
+```
+
+如果一次提交由多个 Agent 或模型协作完成，可以追加多行：
+
+```text
+Agent: CodeArts
+Agent: Codex
+Model: GLM-5.2
+Model: ChatGPT-6.1-Sol
+```
+
+### 12.2 字段含义
+
+| 字段 | 含义 | 示例 |
+|---|---|---|
+| `Agent` | 执行或辅助执行本次提交的 Agent harness、工具链或运行环境 | `CodeArts`、`Cursor`、`Codex` |
+| `Model` | 实际生成、修改或辅助生成代码的模型名称 | `GLM-5.2`、`Qwen3.8-Max`、`ChatGPT-6.1-Sol` |
+
+### 12.3 适用范围
+
+- 所有由 Agent 生成、修改、整理或辅助完成的提交都必须标注。
+- 纯人工提交如果不涉及 Agent 辅助，可以不写 `Agent:` / `Model:`。
+- 如果提交内容包含 Agent 生成代码，但经过人工大幅修改，仍需标注原始 Agent 和模型，并可在正文中补充说明人工修改范围。
+
+### 12.4 禁止做法
+
+- 不得只写 `AI generated`、`by agent`、`auto commit` 等模糊描述。
+- 不得省略 `Agent:` 或 `Model:` 字段后，仍声称该提交由 Agent 完成。
+- 不得把 harness 和模型混写成同一个字段，例如 `CodeArts GLM-5.2`。
+- 不得在提交标题中塞入完整溯源信息；溯源字段应放在提交正文。

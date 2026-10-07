@@ -2501,7 +2501,7 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
     // 親変形無視 reference node. Its subtree keeps position/rotation inheritance
     // but drops the parent's mesh_path, so children render rigid quads instead
     // of inheriting the parent's tessellated deformation grid.
-    auto build_rig = [](std::uint64_t reference_mask)
+    auto build_rig = [](std::uint64_t reference_mask, int child_sync = 0)
     {
         auto asset = rig();
         asset.parts.resize(1);
@@ -2533,7 +2533,7 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
         parent_content.mesh = field(mesh);
         auto parent = layer("mesh_parent", 0, parent_content);
         parent.mesh_division = 4;
-        parent.mesh_sync_child_mask = 0;
+        parent.mesh_sync_child_mask = child_sync;
         parent.children = {reference_node};
         asset.parts[0].layers = {parent};
         return asset;
@@ -2541,6 +2541,16 @@ TEST_CASE("親変形無視 reference nodes drop parent mesh deformation for thei
     // inheritShape=0: subtree drops mesh_path, child renders a 4-vertex quad.
     {
         auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc));
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().vertices.size() == 4);
+    }
+    // inheritShape=0 with parent child_sync=8: curve_parent is dropped and child stays 4-vertex
+    // quad.
+    {
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc, 8));
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
         REQUIRE(instance.evaluate());

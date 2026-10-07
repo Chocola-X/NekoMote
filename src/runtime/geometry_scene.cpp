@@ -470,10 +470,9 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
         for (const auto& name : names)
         {
             const auto& r = asset.icons.at(name);
-            require(
-                r.width > 0 && r.height > 0 && std::isfinite(r.width) && std::isfinite(r.height) &&
-                    textures.contains(r.texture),
-                name, "invalid sprite rectangle");
+            require(r.width > 0 && r.height > 0 && std::isfinite(r.width) &&
+                        std::isfinite(r.height) && textures.contains(r.texture),
+                    name, "invalid sprite rectangle");
             const ResourceId id{static_cast<std::uint32_t>(data->resources.size())};
             data->resources.push_back(
                 {name, ResourceKind::Sprite, textures.at(r.texture), r, nullptr});
@@ -856,8 +855,17 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
         const auto& transform_parent = instance.states[state.transform_parent.value];
         state.world = compose(transform_parent.world, local);
-        state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
-                                                              : transform_parent.curve_parent;
+        if (!n.inherit_shape)
+        {
+            state.world.translation =
+                instance.deform(transform_parent.curve_parent, state.world.translation);
+            state.curve_parent = NodeId{};
+        }
+        else
+        {
+            state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
+                                                                  : transform_parent.curve_parent;
+        }
         // Mask one bends the direct child origin, leaving its geometry rigid.
         // Mask eight retains the curve in the descendant vertex chain.
         if (transform_parent.child_sync == 1 && transform_parent.transform.mesh)
