@@ -1,4 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
+#ifdef NEKOMOTE_HAS_ABI
+#include <nekomote/abi.h>
+#endif
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 
@@ -17,6 +20,7 @@
 
 namespace
 {
+thread_local bool fail_allocations = false;
 thread_local bool track_allocations = false;
 thread_local std::size_t allocation_count = 0;
 } // namespace
@@ -24,6 +28,8 @@ thread_local std::size_t allocation_count = 0;
 // malloc and screenshot/test-framework allocations are outside this measurement.
 void* operator new(std::size_t size)
 {
+    if (fail_allocations)
+        throw std::bad_alloc();
     if (track_allocations)
         ++allocation_count;
     if (void* p = std::malloc(size ? size : 1))
@@ -416,3 +422,90 @@ TEST_CASE("Model compositing preserves a host background in both composition mod
         REQUIRE(p[3] == 128);
     }
 }
+
+#ifdef NEKOMOTE_HAS_ABI
+TEST_CASE("C renderer validates real handles and cannot reuse failed frames", "[gpu][abi]")
+{
+    Context context;
+    auto* renderer = nekomote_renderer_create(glfwGetProcAddress);
+    REQUIRE(renderer);
+    const std::unique_ptr<nekomote_renderer, decltype(&nekomote_renderer_destroy)> owner(
+        renderer, nekomote_renderer_destroy);
+    Output output;
+    output.resize(64, 64);
+    const std::array<std::uint8_t, 4> red{255, 0, 0, 255};
+    REQUIRE(nekomote_renderer_reserve(renderer, {0, 0, 0, 1, 0, 0}) == NEKOMOTE_OK);
+    REQUIRE(nekomote_renderer_upload_texture(renderer, 1, 1, 1, red.data(), 3) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_renderer_upload_texture(renderer, 1, -1, 1, red.data(), 4) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_renderer_upload_texture(renderer, 1, 1, 1, red.data(), 4) == NEKOMOTE_OK);
+    REQUIRE(nekomote_renderer_resize_output(renderer, 0, 64) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_renderer_resize_output(renderer, 64, 64) == NEKOMOTE_OK);
+    std::array<nekomote_vertex, 4> vertices{{{0, 0, 0, 0, {1, 1, 1, 1}},
+                                             {64, 0, 1, 0, {1, 1, 1, 1}},
+                                             {64, 64, 1, 1, {1, 1, 1, 1}},
+                                             {0, 64, 0, 1, {1, 1, 1, 1}}}};
+    nekomote_draw_command command{1, 0, 6, NEKOMOTE_BLEND_OVER, NEKOMOTE_PROTECTION_NONE, 0};
+    nekomote_render_frame frame{vertices.data(),
+                                vertices.size(),
+                                kIndices.data(),
+                                6,
+                                &command,
+                                1,
+                                NEKOMOTE_COMPOSITION_PREMULTIPLIED_OVER,
+                                nullptr,
+                                0,
+                                nullptr,
+                                0};
+    // No reserve yet: the copy must allocate, and the C entry must contain OOM.
+    fail_allocations = true;
+    const auto failure = nekomote_renderer_prepare(renderer, frame);
+    fail_allocations = false;
+    REQUIRE(failure == NEKOMOTE_ERROR_OUT_OF_MEMORY);
+    REQUIRE(nekomote_last_error() == NEKOMOTE_ERROR_OUT_OF_MEMORY);
+    REQUIRE(nekomote_error_message());
+    REQUIRE(nekomote_renderer_reserve(renderer, {4, 6, 1, 1, 0, 0}) == NEKOMOTE_OK);
+    REQUIRE(nekomote_renderer_prepare(renderer, frame) == NEKOMOTE_OK);
+    nekomote_render_view view{};
+    view.scale = view.alpha = 1;
+    const nekomote_render_target target{output.framebuffer, 64, 64};
+    REQUIRE(nekomote_renderer_render(renderer, target, view, NEKOMOTE_TARGET_CLEAR) == NEKOMOTE_OK);
+    render_gl::Renderer inspector(glfwGetProcAddress);
+    REQUIRE(pixel(inspector.capture({output.framebuffer, 64, 64}), 32, 32) == red);
+    for (const auto invalid : {0, 1, 2, 3})
+    {
+        auto bad = frame;
+        auto bad_command = command;
+        bad.commands = &bad_command;
+        if (invalid == 0)
+            bad_command.blend = static_cast<nekomote_blend_mode>(999);
+        else if (invalid == 1)
+            bad_command.protection = static_cast<nekomote_color_protection>(999);
+        else if (invalid == 2)
+            bad.composition = static_cast<nekomote_color_composition>(999);
+        else
+            bad.vertices = nullptr;
+        REQUIRE(nekomote_renderer_prepare(renderer, bad) == NEKOMOTE_ERROR_INVALID_INPUT);
+        glBindFramebuffer(GL_FRAMEBUFFER, output.framebuffer);
+        glClearColor(1, 1, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        REQUIRE(nekomote_renderer_render(renderer, target, view, NEKOMOTE_TARGET_PRESERVE) ==
+                NEKOMOTE_ERROR_RENDERER);
+        REQUIRE(pixel(inspector.capture({output.framebuffer, 64, 64}), 32, 32) ==
+                std::array<std::uint8_t, 4>{255, 255, 255, 255});
+        REQUIRE(nekomote_renderer_prepare(renderer, frame) == NEKOMOTE_OK);
+    }
+    allocation_count = 0;
+    track_allocations = true;
+    for (int i = 0; i < 100; ++i)
+    {
+        (void)nekomote_renderer_prepare(renderer, frame);
+        (void)nekomote_renderer_render(renderer, target, view, NEKOMOTE_TARGET_CLEAR);
+    }
+    track_allocations = false;
+    REQUIRE(allocation_count == 0);
+    REQUIRE(nekomote_renderer_prepare(renderer, {}) == NEKOMOTE_OK);
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+#endif

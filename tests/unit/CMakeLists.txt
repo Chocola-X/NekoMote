@@ -41,10 +41,10 @@ include(Catch)
 catch_discover_tests(nekomote_unit_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # C ABI tests (pure C, verifies the C boundary is usable without C++).
-if(NEKOMOTE_BUILD_PREVIEW)
+if(NEKOMOTE_BUILD_ABI)
     # Negative tests: no assets, no GPU, safe for ASan/headless/LSan.
-    # Verifies NULL rejection, invalid enum rejection, dimension/overflow
-    # checks, error diagnostic API, and RAII (no leak on failed init).
+    # Verifies NULL rejection, error diagnostics and failed-init RAII.
+    # Live-handle input checks use the synthetic test below and GPU tests.
     add_executable(nekomote_abi_negative_test test_abi_negative.c)
     target_link_libraries(nekomote_abi_negative_test PRIVATE nekomote::abi)
     target_compile_features(nekomote_abi_negative_test PRIVATE c_std_11)
@@ -65,4 +65,14 @@ if(NEKOMOTE_BUILD_PREVIEW)
     add_test(NAME abi_test
         COMMAND nekomote_abi_test "${NEKOMOTE_ABI_TEST_MODEL}" "${NEKOMOTE_ABI_TEST_SESSION}"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set_tests_properties(abi_test PROPERTIES SKIP_RETURN_CODE 77 LABELS integration)
+endif()
+
+if(NEKOMOTE_BUILD_ABI)
+    add_executable(nekomote_abi_boundary_tests test_abi_boundary.cpp)
+    target_link_libraries(nekomote_abi_boundary_tests PRIVATE nekomote::abi
+        Catch2::Catch2WithMain nlohmann_json::nlohmann_json nekomote_warnings)
+    target_compile_definitions(nekomote_abi_boundary_tests PRIVATE
+        NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")
+    add_test(NAME abi_synthetic_boundary COMMAND nekomote_abi_boundary_tests)
 endif()

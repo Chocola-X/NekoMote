@@ -7,6 +7,8 @@
 
 #include <nekomote/abi.h>
 
+#include <array>
+#include <cstdio>
 #include <cstring>
 #include <exception>
 #include <filesystem>
@@ -24,24 +26,20 @@ namespace
 struct ErrorState
 {
     nekomote_error code{NEKOMOTE_OK};
-    std::string message;
+    std::array<char, 1024> message{};
 };
 
 thread_local ErrorState g_error;
 
-void set_error(nekomote_error code, std::string msg)
+// Reporting allocation failures must itself be allocation-free. Long source
+// paths are truncated only in this diagnostic; the error code stays intact.
+void set_error(nekomote_error code, const char* msg) noexcept
 {
     g_error.code = code;
-    g_error.message = std::move(msg);
+    std::snprintf(g_error.message.data(), g_error.message.size(), "%s", msg ? msg : "");
 }
 
-void set_error(nekomote_error code, const char* msg)
-{
-    g_error.code = code;
-    g_error.message = msg ? msg : "";
-}
-
-nekomote_error to_c_error(nekomote::application::SessionError e)
+nekomote_error session_error_code(nekomote::application::SessionError e)
 {
     switch (e)
     {
@@ -63,6 +61,14 @@ nekomote_error to_c_error(nekomote::application::SessionError e)
             return NEKOMOTE_ERROR_FAULTED;
     }
     return NEKOMOTE_ERROR_FAULTED;
+}
+
+nekomote_error to_c_error(nekomote::application::SessionError e) noexcept
+{
+    const auto code = session_error_code(e);
+    if (code != NEKOMOTE_OK)
+        set_error(code, "session operation failed");
+    return code;
 }
 
 /* ---- Enum conversions with validation ---- */
@@ -336,7 +342,10 @@ bool copy_frame_from_c(const nekomote_render_frame& c,
         cpp_verts[i].color[3] = c.vertices[i].color[3];
     }
 
-    cpp_indices.assign(c.indices, c.indices + c.index_count);
+    if (c.index_count)
+        cpp_indices.assign(c.indices, c.indices + c.index_count);
+    else
+        cpp_indices.clear();
 
     auto copy_cmds = [](std::vector<nekomote::DrawCommand>& dst, const nekomote_draw_command* src,
                         size_t n) -> bool
@@ -420,6 +429,7 @@ struct nekomote_renderer
     std::vector<nekomote::DrawCommand> prep_commands;
     std::vector<nekomote::DrawCommand> prep_mask_commands;
     std::vector<nekomote::MaskDefinition> prep_masks;
+    bool frame_ready{false};
 };
 
 struct nekomote_image
@@ -441,18 +451,18 @@ extern "C"
 
     const char* nekomote_error_message(void)
     {
-        return g_error.message.empty() ? nullptr : g_error.message.c_str();
+        return g_error.message[0] == 0 ? nullptr : g_error.message.data();
     }
 
     void nekomote_clear_error(void)
     {
         g_error.code = NEKOMOTE_OK;
-        g_error.message.clear();
+        g_error.message[0] = 0;
     }
 
     const char* nekomote_version(void)
     {
-        return "0.2.0";
+        return "0.3.0";
     }
 
     /* ---- Asset loading ---- */
@@ -552,7 +562,7 @@ extern "C"
                     msg += ": ";
                     msg += compiled.errors[0];
                 }
-                set_error(NEKOMOTE_ERROR_UNSUPPORTED, msg);
+                set_error(NEKOMOTE_ERROR_UNSUPPORTED, msg.c_str());
                 return nullptr;
             }
             auto p = std::make_unique<nekomote_program>();
@@ -676,6 +686,15 @@ extern "C"
             auto s = std::make_unique<nekomote_session>();
             s->instance =
                 std::make_unique<nekomote::application::SessionInstance>(*program->program, cfg);
+            const auto capacity = program->program->playback().scene().frame_capacity();
+            s->frame_vertices.reserve(capacity.vertices);
+            s->frame_indices.reserve(capacity.indices);
+            s->frame_commands.reserve(capacity.commands);
+            s->frame_mask_commands.reserve(capacity.mask_commands);
+            s->frame_masks.reserve(capacity.masks);
+            s->bg_vertices.reserve(8);
+            s->bg_indices.reserve(12);
+            s->bg_commands.reserve(2);
             return s.release();
         }
         catch (const std::bad_alloc&)
@@ -871,11 +890,25 @@ extern "C"
             set_error(NEKOMOTE_ERROR_PLAYBACK, "prepare_frame failed");
             return to_c_error(st.error);
         }
-        auto frame = session->instance->frame();
-        copy_frame_to_c(frame, session->frame_vertices, session->frame_indices,
-                        session->frame_commands, session->frame_mask_commands, session->frame_masks,
-                        session->frame);
-        return NEKOMOTE_OK;
+        session->frame = {};
+        try
+        {
+            auto frame = session->instance->frame();
+            copy_frame_to_c(frame, session->frame_vertices, session->frame_indices,
+                            session->frame_commands, session->frame_mask_commands,
+                            session->frame_masks, session->frame);
+            return NEKOMOTE_OK;
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "frame copy allocation failed");
+            return NEKOMOTE_ERROR_OUT_OF_MEMORY;
+        }
+        catch (...)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, "frame copy failed");
+            return NEKOMOTE_ERROR_FAULTED;
+        }
     }
 
     nekomote_error nekomote_session_reset(nekomote_session* session)
@@ -892,7 +925,8 @@ extern "C"
     {
         if (!session || !session->instance)
             return nekomote_render_frame{};
-        return session->frame;
+        return session->instance->frame().commands.empty() ? nekomote_render_frame{}
+                                                           : session->frame;
     }
 
     nekomote_reaction_phase nekomote_session_reaction_phase(const nekomote_session* session)
@@ -990,10 +1024,23 @@ extern "C"
         if (!session || !session->instance)
             return nekomote_render_frame{};
         auto* s = const_cast<nekomote_session*>(session);
-        auto frame = s->instance->background_frame();
-        copy_frame_to_c(frame, s->bg_vertices, s->bg_indices, s->bg_commands, s->bg_mask_commands,
-                        s->bg_masks, s->bg_frame);
-        return s->bg_frame;
+        s->bg_frame = {};
+        try
+        {
+            auto frame = s->instance->background_frame();
+            copy_frame_to_c(frame, s->bg_vertices, s->bg_indices, s->bg_commands,
+                            s->bg_mask_commands, s->bg_masks, s->bg_frame);
+            return s->bg_frame;
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "background frame allocation failed");
+        }
+        catch (...)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, "background frame copy failed");
+        }
+        return {};
     }
 
     /* ---- Renderer ---- */
@@ -1008,8 +1055,7 @@ extern "C"
         try
         {
             auto r = std::make_unique<nekomote_renderer>();
-            r->renderer = std::make_unique<nekomote::render_gl::Renderer>(
-                reinterpret_cast<nekomote::render_gl::GlLoader>(loader));
+            r->renderer = std::make_unique<nekomote::render_gl::Renderer>(loader);
             return r.release();
         }
         catch (const std::bad_alloc&)
@@ -1044,10 +1090,20 @@ extern "C"
         }
         try
         {
+            renderer->prep_vertices.reserve(capacity.vertices);
+            renderer->prep_indices.reserve(capacity.indices);
+            renderer->prep_commands.reserve(capacity.commands);
+            renderer->prep_mask_commands.reserve(capacity.mask_commands);
+            renderer->prep_masks.reserve(capacity.masks);
             renderer->renderer->reserve({capacity.vertices, capacity.indices, capacity.commands,
                                          capacity.textures, capacity.mask_commands,
                                          capacity.masks});
             return NEKOMOTE_OK;
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "renderer reserve allocation failed");
+            return NEKOMOTE_ERROR_OUT_OF_MEMORY;
         }
         catch (const std::exception& e)
         {
@@ -1062,7 +1118,8 @@ extern "C"
     }
 
     nekomote_error nekomote_renderer_upload_texture(nekomote_renderer* renderer, uint32_t id,
-                                                    int width, int height, const uint8_t* pixels)
+                                                    int width, int height, const uint8_t* pixels,
+                                                    size_t pixel_bytes)
     {
         if (!renderer || !renderer->renderer)
         {
@@ -1088,6 +1145,11 @@ extern "C"
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
         const size_t byte_count = w * h * kBytesPerPixel;
+        if (pixel_bytes != byte_count)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "RGBA8 byte length does not match dimensions");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
         try
         {
             nekomote::ImageRgba8 image;
@@ -1122,16 +1184,17 @@ extern "C"
             set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null renderer");
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
-        nekomote::ColorComposition composition;
-        if (!copy_frame_from_c(frame, renderer->prep_vertices, renderer->prep_indices,
-                               renderer->prep_commands, renderer->prep_mask_commands,
-                               renderer->prep_masks, composition))
-        {
-            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid frame data or enum");
-            return NEKOMOTE_ERROR_INVALID_INPUT;
-        }
+        renderer->frame_ready = false;
         try
         {
+            nekomote::ColorComposition composition;
+            if (!copy_frame_from_c(frame, renderer->prep_vertices, renderer->prep_indices,
+                                   renderer->prep_commands, renderer->prep_mask_commands,
+                                   renderer->prep_masks, composition))
+            {
+                set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid frame data or enum");
+                return NEKOMOTE_ERROR_INVALID_INPUT;
+            }
             nekomote::RenderFrame f;
             f.vertices = renderer->prep_vertices;
             f.indices = renderer->prep_indices;
@@ -1140,7 +1203,13 @@ extern "C"
             f.mask_commands = renderer->prep_mask_commands;
             f.masks = renderer->prep_masks;
             renderer->renderer->prepare(f);
+            renderer->frame_ready = true;
             return NEKOMOTE_OK;
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "frame preparation allocation failed");
+            return NEKOMOTE_ERROR_OUT_OF_MEMORY;
         }
         catch (const std::exception& e)
         {
@@ -1193,6 +1262,12 @@ extern "C"
         {
             set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null renderer");
             return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        if (!renderer->frame_ready)
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER,
+                      "no valid prepared frame; prepare again after failure");
+            return NEKOMOTE_ERROR_RENDERER;
         }
         if (target.width <= 0 || target.height <= 0)
         {
@@ -1274,6 +1349,11 @@ extern "C"
     int nekomote_image_height(const nekomote_image* image)
     {
         return image ? image->height : 0;
+    }
+
+    size_t nekomote_image_byte_count(const nekomote_image* image)
+    {
+        return image ? image->pixels.size() : 0;
     }
 
     const uint8_t* nekomote_image_pixels(const nekomote_image* image)

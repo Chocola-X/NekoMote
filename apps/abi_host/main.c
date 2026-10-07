@@ -533,9 +533,8 @@ static int load_textures(Holder *h)
         if (!img)
             continue;
         nekomote_error ue = nekomote_renderer_upload_texture(
-            h->renderer, tex.id,
-            nekomote_image_width(img), nekomote_image_height(img),
-            nekomote_image_pixels(img));
+            h->renderer, tex.id, nekomote_image_width(img), nekomote_image_height(img),
+            nekomote_image_pixels(img), nekomote_image_byte_count(img));
         check_renderer("upload_texture", ue);
         nekomote_image_destroy(img);
         if (ue == NEKOMOTE_OK)
@@ -648,7 +647,9 @@ static void apply_background(BackgroundState *bg, nekomote_session *session,
         nekomote_renderer_capacity cap = {0};
         cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
         check_renderer("bg reserve", nekomote_renderer_reserve(bg->renderer, cap));
-        check_renderer("bg upload", nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(new_img)));
+        check_renderer("bg upload", nekomote_renderer_upload_texture(
+                                        bg->renderer, 1, w, h, nekomote_image_pixels(new_img),
+                                        nekomote_image_byte_count(new_img)));
         nekomote_session_set_background(session, 1, w, h);
         bg->has_background = 1;
         strncpy(bg->current_path, bg_path, MAX_PATH - 1);
@@ -667,8 +668,12 @@ static void apply_background(BackgroundState *bg, nekomote_session *session,
         nekomote_renderer_capacity cap = {0};
         cap.vertices = 8; cap.indices = 12; cap.commands = 2; cap.textures = 2;
         check_renderer("bg reserve", nekomote_renderer_reserve(bg->renderer, cap));
-        check_renderer("bg upload old", nekomote_renderer_upload_texture(bg->renderer, 1, w, h, nekomote_image_pixels(old_img)));
-        check_renderer("bg upload new", nekomote_renderer_upload_texture(bg->renderer, 2, w, h, nekomote_image_pixels(new_img)));
+        check_renderer("bg upload old", nekomote_renderer_upload_texture(
+                                            bg->renderer, 1, w, h, nekomote_image_pixels(old_img),
+                                            nekomote_image_byte_count(old_img)));
+        check_renderer("bg upload new", nekomote_renderer_upload_texture(
+                                            bg->renderer, 2, w, h, nekomote_image_pixels(new_img),
+                                            nekomote_image_byte_count(new_img)));
         nekomote_session_set_background(session, 1,
             nekomote_image_width(old_img), nekomote_image_height(old_img));
         nekomote_session_fade_background(session, 2, w, h, fade_duration);

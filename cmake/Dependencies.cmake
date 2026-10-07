@@ -59,8 +59,9 @@ if(NEKOMOTE_BUILD_PREVIEW)
     FetchContent_MakeAvailable(glfw)
 endif()
 
-# GL loader stays inside render_gl; bundled registry makes generation reproducible.
-if(NEKOMOTE_BUILD_PREVIEW)
+# The backend/ABI uses function pointers only; no GLFW or display is needed.
+# The bundled registry makes GL loader generation reproducible.
+if(NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_ABI)
     FetchContent_Declare(glad
         GIT_REPOSITORY https://github.com/Dav1dde/glad.git
         GIT_TAG v2.0.8

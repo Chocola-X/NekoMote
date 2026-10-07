@@ -42,7 +42,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "NEKOMOTE_ENABLE_ASAN": "ON",
                 "NEKOMOTE_WERROR": "ON",
-                "NEKOMOTE_BUILD_PREVIEW": "ON",
+                "NEKOMOTE_BUILD_PREVIEW": "OFF",
+                "NEKOMOTE_BUILD_ABI": "ON",
                 "NEKOMOTE_BUILD_PLAYER": "OFF",
                 "NEKOMOTE_BUILD_TESTS": "ON"
             }

@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.2.0
+ * @version 0.3.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -18,7 +18,7 @@
  *   set_scale, set_output_size, set_background, fade_background,
  *   clear_background, react, touch, pointer_*, set_audio_level,
  *   set_playback_state, start). The renderer is not affected.
- * - Strings returned by nekomote_program_texture_info, audio_path,
+ * - Strings returned by nekomote_program_texture, audio_path,
  *   reaction_label are non-owning views into storage owned by the
  *   program. They are valid until nekomote_program_destroy.
  * - nekomote_image_pixels is valid until nekomote_image_destroy.
@@ -45,7 +45,10 @@ extern "C"
     /* Error codes                                                        */
     /* ------------------------------------------------------------------ */
 
-    typedef enum
+    /* ABI codes and modes have an explicit width. Constants below define the
+     * accepted values; the int32_t boundary can safely reject any other value. */
+    typedef int32_t nekomote_error;
+    enum
     {
         NEKOMOTE_OK = 0,
         NEKOMOTE_ERROR_INVALID_INPUT,
@@ -60,7 +63,7 @@ extern "C"
         NEKOMOTE_ERROR_UNSUPPORTED,
         NEKOMOTE_ERROR_IO,
         NEKOMOTE_ERROR_RENDERER,
-    } nekomote_error;
+    };
 
     /* Per-thread error diagnostic. nekomote_last_error returns the most
      * recent error code set by the calling thread; NEKOMOTE_OK if no error
@@ -81,38 +84,43 @@ extern "C"
         float x, y;
     } nekomote_vec2;
 
-    typedef enum
+    typedef int32_t nekomote_pointer_scope;
+    enum
     {
         NEKOMOTE_POINTER_UNAVAILABLE = 0,
         NEKOMOTE_POINTER_LOCAL_SURFACE,
-    } nekomote_pointer_scope;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_audio_mode;
+    enum
     {
         NEKOMOTE_AUDIO_DISABLED = 0,
         NEKOMOTE_AUDIO_DEVICE,
-    } nekomote_audio_mode;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_playback_state;
+    enum
     {
         NEKOMOTE_PLAYBACK_RUNNING = 0,
         NEKOMOTE_PLAYBACK_PAUSED,
-    } nekomote_playback_state;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_reaction_phase;
+    enum
     {
         NEKOMOTE_REACTION_IDLE = 0,
         NEKOMOTE_REACTION_PLAYING,
         NEKOMOTE_REACTION_RECOVERING,
-    } nekomote_reaction_phase;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_audio_command_kind;
+    enum
     {
         NEKOMOTE_AUDIO_PLAY = 0,
         NEKOMOTE_AUDIO_STOP,
         NEKOMOTE_AUDIO_PAUSE,
         NEKOMOTE_AUDIO_RESUME,
-    } nekomote_audio_command_kind;
+    };
 
     typedef struct
     {
@@ -137,25 +145,28 @@ extern "C"
         float color[4];
     } nekomote_vertex;
 
-    typedef enum
+    typedef int32_t nekomote_blend_mode;
+    enum
     {
         NEKOMOTE_BLEND_OVER = 0,
         NEKOMOTE_BLEND_ADD,
         NEKOMOTE_BLEND_MULTIPLY,
         NEKOMOTE_BLEND_SCREEN,
-    } nekomote_blend_mode;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_color_protection;
+    enum
     {
         NEKOMOTE_PROTECTION_NONE = 0,
         NEKOMOTE_PROTECTION_PRESERVE_TRANSLUCENT,
-    } nekomote_color_protection;
+    };
 
-    typedef enum
+    typedef int32_t nekomote_color_composition;
+    enum
     {
         NEKOMOTE_COMPOSITION_PREMULTIPLIED_OVER = 0,
         NEKOMOTE_COMPOSITION_PROTECTED_STRAIGHT,
-    } nekomote_color_composition;
+    };
 
     typedef struct
     {
@@ -303,11 +314,12 @@ extern "C"
         int flip_x;
     } nekomote_render_view;
 
-    typedef enum
+    typedef int32_t nekomote_target_contents;
+    enum
     {
         NEKOMOTE_TARGET_CLEAR = 0,
         NEKOMOTE_TARGET_PRESERVE,
-    } nekomote_target_contents;
+    };
 
     typedef struct
     {
@@ -320,8 +332,12 @@ extern "C"
 
     nekomote_error nekomote_renderer_reserve(nekomote_renderer* renderer,
                                              nekomote_renderer_capacity capacity);
+    /* Packed RGBA8: pixel_bytes must equal width * height * 4. */
     nekomote_error nekomote_renderer_upload_texture(nekomote_renderer* renderer, uint32_t id,
-                                                    int width, int height, const uint8_t* pixels);
+                                                    int width, int height, const uint8_t* pixels,
+                                                    size_t pixel_bytes);
+    /* prepare failure invalidates the frame. render then fails without drawing
+     * until a later successful prepare; previously prepared pixels are not reused. */
     nekomote_error nekomote_renderer_prepare(nekomote_renderer* renderer,
                                              nekomote_render_frame frame);
     nekomote_error nekomote_renderer_resize_output(nekomote_renderer* renderer, int width,
@@ -343,6 +359,7 @@ extern "C"
     /* Access image data (valid until nekomote_image_destroy) */
     int nekomote_image_width(const nekomote_image* image);
     int nekomote_image_height(const nekomote_image* image);
+    size_t nekomote_image_byte_count(const nekomote_image* image);
     const uint8_t* nekomote_image_pixels(const nekomote_image* image);
 
     /* ------------------------------------------------------------------ */

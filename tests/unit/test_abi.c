@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <errno.h>
 #include <nekomote/abi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +41,7 @@ static void test_version(void)
     TEST("version");
     const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.2.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.3.0") == 0, "version mismatch");
     PASS();
 }
 
@@ -319,6 +320,22 @@ int main(int argc, char** argv)
     }
     g_model_path = argv[1];
     g_session_path = argv[2];
+
+    const char* paths[2] = {g_model_path, g_session_path};
+    for (int i = 0; i < 2; ++i)
+    {
+        FILE* input = fopen(paths[i], "rb");
+        if (!input)
+        {
+            if (errno == ENOENT)
+            {
+                fprintf(stderr, "SKIP: optional integration asset missing: %s\n", paths[i]);
+                return 77;
+            }
+            return 1;
+        }
+        fclose(input);
+    }
 
     printf("C ABI unit tests\n");
     printf("  model: %s\n", g_model_path);
