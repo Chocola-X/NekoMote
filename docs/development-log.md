@@ -648,3 +648,31 @@
 - 按用户请求明确顺序：GLM先G7→G8→G9，Gemini随后V6，Codex最后独立验收并优先C5/C6。顺序冻结工作区和证据，不虚构所有任务都有依赖。
 - 每个任务验证后commit及handoff；GLM不扩展G5/语义/UI，Gemini缺原生回放接口时报告并完成独立源观察，Codex负责实现后再安排必要视觉复验。未通过195项不通过更改引擎门槛抹除，不提前交付Plasma插件。
 - 仅更新调度文档，检查diff；没有启动外部Agent或执行新的构建/测试。
+
+## 2026-10-07 V6：可复核视觉证据与源 GPU 条件采样（Antigravity / Gemini 3.8 Flash）
+
+- 领用 docs/agent-workboard.md V6，基线提交 `6247dbd`（HEAD / G9 构建矩阵）。
+- **V3 / V5 报告修正与归属界定**：
+  - 明确父提交 `5a4dc13` 已有的展开拖拽优先更新坐标、Renderer `global_alpha` 及 0.28s/0.24s 展开与关闭过渡时长属于已有特性，不作为 `97c9409` 的新修复；`97c9409` 贡献为边界 clamp/释放保护、最小 44px 高度保护、越界重开 reset 及纯 CPU 守卫。
+  - 纠正 0px 误差结论：`test_ui.cpp` 的 8 组状态测试仅验证了内存数据结构的逻辑偏移，未测量 OpenGL 图元或屏幕像素，不作为 0px 视觉误差或动态拖拽/淡出已验收证明。
+  - 纠正错误码说明：原生退出输出 `6/3` 为内部 `SessionError::Playback (6)` / `PlaybackError::Geometry (3)`（`UnsupportedTransform`），非公共 C ABI 枚举。
+  - 局限性说明：明确 V3 所观测到的混合模式仅为单一零步初态样本，不能推断全范围。
+- **源 GPU 受控条件采样（19 组采样，全过程受 `flock -n build/gpu-validation.lock` 保护）**：
+  - 工具与输入冻结：记录 `trace.js`、`capture.py`、`reference.html`、浏览器及 PSB、Driver 的 SHA-256（`build/evidence/v6/tool_hashes.json`）。
+  - `bm = 19`（`fraise-maid-a` 发饰投影）：采样 10 组条件（初态基准、opacity 0.5、head_LR ±30、head_UD 30、head_slant 30、body_LR 30、act_sp 30、step 30、face_invariance）。
+    - 状态机恒定性：全部 10 组采样中，混合参数恒为 `(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE)`，方程恒为 `GL_FUNC_ADD`，`colorMask` 恒为全开，着色器预乘 Alpha，FBO 离屏绑定。
+    - 有效 Opacity：证明内部 Multiply Pass 在 FBO 离屏中直通，全局透明度仅在最终呈现 Blit Pass 中通过 uniform `u_texColor` 统一施加，内部 `a_color` 并不随全局透明度缩放。
+    - 参数局限性：`face_invariance` 条件下，眼/口/眉参数变更使前置面部 Draw Call 数量改变（Draw 索引由 #33 移至 #19），但该 ribbon 阴影图元屏幕位移严格为 (0.0, 0.0) px，证明其独立于面部形变。
+  - `attr = 2`（`fraise-france-maid-b` 围裙装饰）：采样 9 组条件（初态基准、opacity 0.5、body_LR ±30、body_UD 30、body_slant 30、act_sp 30、step 30、head_invariance）。
+    - 单遍绘制验证：全部 9 组采样均确认只执行单遍标准 Over 绘制（`GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA`），无双遍保护 Pass，对应 `ColorProtection::None`。
+    - 运动学耦合：身体扭转与俯仰直接驱动位移；头部旋转产生弱运动学胸部联动（dX=-1.8, dY=+5.2）。
+  - 产物：生成 19 组 MVP 投影屏幕包围盒与高倍局部裁切（`build/evidence/v6/crop_*`）及结构化 JSON 数据。
+- **静态 UI 4 态受控核对（Web 参照 vs 原生 Player）**：
+  - 对照状态：`closed`（收起）、`open-character`（巧克力抽屉）、`open-vanilla`（香草抽屉）、`open-settings`（设置抽屉）。统一使用 `chocola-date-a` 与 800×1080 视口。
+  - 几何与布局核验：面板宽度 264px、圆角 18px、内边距 16px、猫爪图标 44×44px、标题文字与字号、手风琴折叠展开排版结构均对齐（PASS）。
+  - 发现的差异：猫爪切换图标初始停靠坐标微差（Web: top 8, right 8 即 x=748, y=8；Native: x=740, y=16，即 Δx=-8px, Δy=+8px）；Web 拥有 2px solid 粉色外边框描边，Native 目前使用分割线与圆角背景组合。
+  - 生成 4 态完整 Side-by-Side 对照图与局部裁切（`build/evidence/v6/ui_comparison/`）及审计报告 `ui_static_comparison.json`。
+- **动态拖拽与过渡未测项上报与接口契约**：
+  - 明确动态拖拽轨迹与逐帧渐变核验由于原生端缺乏应用内确定性回放入口，标记为未测项（UNTESTED）。
+  - 遵循规范不向系统注入 OS 键鼠、不修改 main；向 Codex 提出最小所需事件回放接口契约（`SimulatedMouseEvent` 与 `replay_mouse_events`），由 Codex 在 C6 闭合。
+- 交付完整报告 [docs/v6-visual-report.md](v6-visual-report.md) 与产物完整账本（115 个条目）。

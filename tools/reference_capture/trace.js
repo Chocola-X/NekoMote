@@ -117,6 +117,8 @@ window.maskPixels = [];
         const record={mode,count,indices,attributes,uniforms,glState:state(gl),
             texture:textures.get(gl.getParameter(gl.TEXTURE_BINDING_2D)),
             framebuffer:!!gl.getParameter(gl.FRAMEBUFFER_BINDING),
+            colorMask:Array.from(gl.getParameter(gl.COLOR_WRITEMASK)),
+            blendColor:Array.from(gl.getParameter(gl.BLEND_COLOR)),
             blend:[gl.getParameter(gl.BLEND_SRC_RGB),gl.getParameter(gl.BLEND_DST_RGB),gl.getParameter(gl.BLEND_SRC_ALPHA),gl.getParameter(gl.BLEND_DST_ALPHA)],
             blendEquation:[gl.getParameter(gl.BLEND_EQUATION_RGB),gl.getParameter(gl.BLEND_EQUATION_ALPHA)],
             shaders:gl.getAttachedShaders(program).map(s=>gl.getShaderSource(s))};
