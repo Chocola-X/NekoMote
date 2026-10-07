@@ -11,7 +11,7 @@
 | C宿主音频/线程与错误流程 | **G2已修复**：abi_host收敛为显式静音C ABI诊断工具，删除PCM/Pulse/thread/WAVE/RMS和角色目录/壁纸策略；预分配用nekomote_program_renderer_capacity；生命周期正确 | 已闭合；正式声音由player提供 |
 | 会话/切换/渐变 | 能力查询、背景暂停/共享250ms预算和C++候选事务已修复；角色过渡仍使用墙钟且两遍over，背景reset/重入/声音候选失败尚未验收 | V4 / Codex；Gemini后续视觉 |
 | UI状态与稳态 | UI截图/拖动/输入隔离与字形绘制分配尚未完整验证；核心136项不能代替这些测试 | Gemini V5，后续GLM G8 |
-| 资产/目录/构建 | G4已完成：catalog驱动事务导入、195账本、显式参数、素材移出索引；C宿主warning/依赖/格式待G2简化后清理 | GLM G6；G2进行中 |
+| 资产/目录/构建 | G4/G6已完成：catalog驱动事务导入、195账本、素材移出索引、clang-format、依赖核查；noabi构建有GCC15现有误报 | noabi GCC15误报待后续 |
 | 性能测量 | 直接改外部index.php已停止；握手/条件/实际呈现/共享RSS/整卡GPU归属等方法仍未闭合 | GLM G5，Codex复核 |
 
 
