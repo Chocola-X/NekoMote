@@ -7,6 +7,7 @@ if(PkgConfig_FOUND)
     pkg_check_modules(FONTCONFIG IMPORTED_TARGET fontconfig)
     if(FONTCONFIG_FOUND)
         target_link_libraries(nekomote_player PRIVATE PkgConfig::FONTCONFIG)
+        target_compile_definitions(nekomote_player PRIVATE NEKOMOTE_HAVE_FONTCONFIG)
     endif()
 endif()
 

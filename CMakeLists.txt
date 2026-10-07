@@ -35,10 +35,12 @@ endif()
 
 add_library(nekomote_warnings INTERFACE)
 target_compile_options(nekomote_warnings INTERFACE
-    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wnon-virtual-dtor
-    -Wold-style-cast -Wcast-align -Wdouble-promotion -Wformat=2
-    -Wnull-dereference -Woverloaded-virtual -Wpointer-arith
-    -Wmissing-declarations)
+    -Wall -Wextra -Wpedantic -Wconversion -Wshadow
+    -Wcast-align -Wdouble-promotion -Wformat=2
+    -Wnull-dereference -Wpointer-arith -Wmissing-declarations
+    $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast>
+    $<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>)
 if(NEKOMOTE_WERROR)
     target_compile_options(nekomote_warnings INTERFACE -Werror)
 endif()

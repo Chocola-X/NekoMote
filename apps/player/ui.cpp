@@ -17,7 +17,9 @@
 #include <stb_truetype.h>
 #pragma GCC diagnostic pop
 
+#ifdef NEKOMOTE_HAVE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
+#endif
 
 namespace nekomote::player::ui
 {
@@ -27,6 +29,7 @@ namespace
 
 std::pair<std::string, int> find_system_font()
 {
+#ifdef NEKOMOTE_HAVE_FONTCONFIG
     if (!FcInit())
         return {"", 0};
     FcConfig* config = FcInitLoadConfigAndFonts();
@@ -63,6 +66,23 @@ std::pair<std::string, int> find_system_font()
     }
     FcConfigDestroy(config);
     return {result_file, result_index};
+#else
+    const char* candidates[] = {
+        "/usr/share/fonts/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/wenquanyi/wqy-microhei/wqy-microhei.ttc",
+        "/usr/share/fonts/truetype/droid/DroidSansFallback.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    };
+    for (const auto* path : candidates)
+    {
+        if (FILE* f = fopen(path, "rb"))
+        {
+            fclose(f);
+            return {path, 0};
+        }
+    }
+    return {"", 0};
+#endif
 }
 
 constexpr const char* kRectVertexShader = R"(
