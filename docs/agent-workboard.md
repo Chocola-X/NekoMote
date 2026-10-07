@@ -1,100 +1,97 @@
 # Agent 协作与下一批任务
 
-基线：`ccc5745`；依据 [2026-10-07 审查](review-2026-10-07.md)。这是可交接清单，不表示已启动其他 Agent 或任务已完成。状态由执行者记录到 development-log，验收后再更新 ROADMAP。
+更新基线：`cb7e677`（2026-10-07）；复核结论见 [本轮接续报告](review-followup-2026-10-07.md)。用户会在本轮之后分别启动 CodeArts 和 Antigravity；本清单不表示已通过工具启动他们。接手时先看实际 HEAD/Git 状态和本文件，不能继续执行已替代的旧任务。
 
-## 分工原则
+## 当前验收状态
 
-用户希望优先使用有无限额度的 CodeArts / GLM-5.2，视觉工作交给 Antigravity / Gemini 3.8 Flash。下面是本项目任务安排，不是模型能力排行榜：没有统一能力评测或当前工具列表，不能仅凭模型名断言支持/不支持某能力。Agent接手时先确认实际工具；缺视觉读取就准备证据包交接，不能声称看过截图。
-
-| Agent / 模型 | 优先任务 | 需要另一执行者复核的边界 |
+| 原任务 | 实际结果 | 后续所有者 |
 | --- | --- | --- |
-| CodeArts / GLM-5.2 | 批量资产/证据采集、显式路径与构建工具、共同契约已明确的实现和负例测试、ABI错误码/长度/RAII、格式和文档同步 | 不能从“运行成功”推出画面正确；未知求值公式、遮罩来源、GPU混合、浮点顺序需数值及视觉复核；并发/ABI所有权设计先评审 |
-| Antigravity / Gemini 3.8 Flash | 原生/WebGL并列图与局部差异定位，真实遮罩/手部轮廓、UI排版/拖动/缩放/捕获状态，产生可复现的视觉报告 | 视觉改善不能放宽误差门槛；不能单凭字段名/图层名推导求值公式；涉及runtime/GL生命周期改动需契约和独立数值审查 |
-| Codex / 本会话实际模型 | 求值语义推导与架构整合、ABI/线程/生命周期审查、跨模块依赖和测量方法、冻结门槛与最终阶段验收 | 同样必须提供实测证据；本次未获知的精确模型变体不猜写，提交记录使用会话提供的实际信息 |
+| V1 / R1，真实 add_mask | Gemini修复已由Codex独立验收；115/115冻结矩阵通过，Fraise400零超差像素 | 已闭合；嵌套遮罩另列待办 |
+| V2 / R2，手部0x7fc | Gemini视觉报告完成；数学公式未闭合，Codex撤下近似，正式路径明确拒绝 | Codex继续公式与数值验证 |
+| G1 / R3–R4，ABI | GLM建立RAII/错误返回/字段复制，Codex补异常边界、长度、失效、预分配与真实负例；当前ABI0.3.0 | 主边界已验证；源路径诊断/真实宿主生命周期仍待Codex复核 |
+| G3 / R6，会话和切换 | GLM修复触摸能力/背景暂停；Codex统一250ms时钟并修复C++播放器候选事务 | 背景reset、渐变重入和角色过渡时钟/合成待V4/Codex；C宿主由G2替换 |
+| G5，性能 | 直接改写外部index.php已移除；采样方法仍未通过验收 | GLM后续G5 |
+| G6，构建 | GLM修复C++专属警告和Fontconfig条件；Codex完成headless ABI/ASan与无素材副本验证 | G2完成后GLM清理剩余warning/依赖/格式 |
+| G4、G8，目录/打包/UI | 未验收；195产品目录、跟踪素材、便携工具和UI稳态仍有缺口 | 本批先做G4、V5；G8随后依据视觉报告开展 |
 
-尽量将明确、可自动验收的工作先交GLM-5.2；Gemini集中处理需要读图的任务；Codex处理跨模块或语义不确定性。资源额度决定调度优先级，不降低任何Agent的交付标准，也不要求进行无意义重复测试。
+当前证据：dev136/136、headless ASan135/135、无assets/refer独立副本134 PASS + 1真实素材项Skipped。详见 [runtime矩阵](validation/integration-2026-10-07.json)、[ABI契约](abi-contract.md)、[播放器事务](validation/integration-player-2026-10-07.json)。CPU单次新基线不代表WebGL收益或壁纸性能。
 
-## 视觉清单：交给 Gemini 3.8 Flash
+## 分工与文件所有权
 
-每项交付包括：模型/输入/步数/seed/资产和源码hash，参照与原生PNG、差异图和区域裁图，标量/几何/alpha/黑白合成报告，严格PASS/FAIL，已观察现象与候选原因分别记录。来源数据只能用于对照，不能写回原生正式帧。先做V1，再做V2；V3–V5可在没有核心修改时分别开展。
+这是一项项目调度策略，没有统一的模型能力评测；不把模型名字当作正确性证据。用户有无限GLM额度，优先安排契约明确、可自动验证的工作；具备读图工具的Gemini集中做视觉和源GPU观察；Codex处理未知求值、生命周期与整合。若任务重复失败或指导成本超过直接修复成本，由Codex接管，不增加审批流程。
 
-- [x] **V1 / R1：Fraise已通过样例的遮罩回归，最高优先。**
-  - 输入：`docs/validation/playback-blink-inputs.json` 的 `fraise-seed1-long400`，固定seed1、400作者步、待机差分。
-  - 根因：`src/runtime/geometry_scene.cpp` 中无条件 `if (name == "add_mask") continue;` 错误跳过了 `fraise-casual-a` 等模型中真实存在的 `add_mask` 图层节点，导致遮罩漏切眼缘（超差 165 像素）。
-  - 修复：移除字符串硬编码跳过，恢复真实图层作为遮罩几何源的解析。当图层存在时正常加入 `roots`；当源图层缺失时（如 `fraise-b` 系列尚未解析的嵌套来源）保持严格拒绝（`UnsupportedMask`），不再虚假放行。
-  - 验证证据：
-    - `fraise-seed1-long400`：超差像素由 165 降为 **0**，原生 PNG sha256 为 `f1a258aba1c734cd004dff35875ff6ba5050b3b6ca5d98600f6d4007d426342a`，最大 RGBA 误差 1/255，黑白背景合成误差均为 0；
-    - `playback-blink-inputs.json` (blink11)：**11/11 Passed**，全部 0 超差像素；
-    - `playback-eye-inputs.json` (Eye10)：**10/10 Passed**，全部 0 超差像素；
-    - `playback-fraise-inputs.json` (Fraise3)：**3/3 Passed**，全部 0 超差像素；
-    - `static-inputs.json` (static30)：**30/30 Passed**，全部 0 超差像素；
-    - CTest 单元测试：**133/133 Passed**（新增真实图层解析及缺失时严格拒绝的双向测试）。
-- [ ] **V2 / R2：Coconut手部与局部继承。**
-  - 当前复现：coconut-maid，body_LR=30，零步，scale=.45，origin=(0,100)，800×1080，透明背景、SDK物理scale0；几何8.876191px、13,111超差像素。
-  - 范围：coconut-maid、maid-a、maid-a-4yo、santa、wintermaid 及 catalog 中全部 0x7fc 型号。
-  - 视觉交付已完成（详见 [docs/coconut-hand-local-inheritance-report.md](coconut-hand-local-inheritance-report.md)）：
-    - 输出左右手高分辨率裁切对照图与差异二值图（`build/evidence/v2_analysis/`）；
-    - 量化确认：其余身体节点误差全部小于 0.000106 px，误差 100% 集中在 0x7fc 挂接点；
-    - 关键顶点抽样：Y 坐标完全重合（0.000000 px 误差），X 坐标偏移精准为 +8.876129 px；
-    - 几何数据与挂接矩阵已整理，待 Codex 进行最终数值公式闭合或恢复严格拒绝。
-- [ ] **V3：混合、attr、mirror与透明合成。**
-  - GLM提供按字段筛选的最小型号/节点清单；对bm=16/19、attr=2等做源GPU协议观察和真实图像，不按数字猜blend。
-  - 同输入分别在透明、黑、白及指定真实背景比较；检查翻转后的遮罩裁剪、触摸/视线坐标和global alpha端点/中间值。
-  - renderer新增alpha/flip尚无针对性GPU回归；与现有保护透明色模式交叉验证。
-- [ ] **V4：角色/背景切换与生命周期画面。**
-  - 固定作者时间、0/.1/.2/.4s角色过渡、0/.4/.8s背景过渡，含重入、暂停/恢复、reset、resize及加载失败。
-  - 检查重叠区域是否符合约定的cross-fade，背景alpha/旧角色残影/位置跳变；先写出期望行为再比较。
-  - 通过应用内诊断调用触发；不得xdotool或系统键鼠注入，不切换实际桌面配置。
-- [ ] **V5：控制UI可见状态与输入隔离。**
-  - 收起/展开、角色/设置抽屉、打开关闭中途反向、图标及面板拖动、视口边界、HiDPI与不同窗口尺寸、声音/锁定/帧率状态。
-  - 比较风格和排版时记录字体/字号/device scale；网页与原生UI不同排版/抗锯齿不应伪称逐像素相同。模型渲染阈值和UI布局/行为验收分开定义。
-  - 面板上点击/拖动/滚轮不触发模型；面板外视线和触摸正常。补实际状态机回归，不能引用现有128项当UI测试。
+| 执行者 | 本批顺序与主要文件 | 避免交叉修改 |
+| --- | --- | --- |
+| CodeArts / GLM-5.2 | **G4 → G2 → G6**；有余力继续G5。`tools/import_all_assets.py`、`import_all_test.py`、`import_emote/audit_catalog.py`、目录账本、`.gitignore`及素材索引；`apps/abi_host/*`；随后构建/依赖文件 | 不改runtime公式、render_gl、C++播放器main、Gemini的视觉工具/UI；G2的只读容量getter是下方限定例外 |
+| Antigravity / Gemini 3.8 Flash | **V3 → V5**，可以先做V5；源GPU观察/受控截图、`tools/reference_capture/trace.js`及新的视觉诊断工具、视觉报告；有证据的小型UI修复限`apps/player/ui*` | 不放行bm/attr/0x7fc，不改runtime/render_gl/ABI、播放器main或GLM导入工具；涉及新构建目标先记录其修改范围 |
+| Codex / 会话提供的实际模型 | 0x7fc精确挂接、嵌套遮罩、源混合映射；ABI/音频/宿主生命周期复核；V4共同渐变契约、实际Qt Quick/Plasma图形接入 | 后续读取其他Agent的新提交再整合，不重写历史或丢弃其工作 |
 
-V2最小复现命令（先用显式外部素材导入到assets；输出目录自行选择新的名称，保留旧FAIL）：
+主任务相互独立。长采样先复制冻结可执行文件，记录hash。GPU任务串行：本机有`flock`，可用`flock -n build/gpu-validation.lock <命令>`；拿不到锁时继续CPU工作，不能同时跑截图/性能。编译与长采样不能竞态替换采样中的二进制。共享高风险文件先在development-log声明领用；用户可能另有新提交，不能盲目reset。
+
+## 给 GLM-5.2：G4 可移植导入与195目录账本（第一优先）
+
+问题是工具仍硬编码本机路径、按目录第一个文件猜素材，而且已被git跟踪的素材不因.gitignore而自动退出索引。
+
+1. 给现有批量导入/测试入口加入显式`--reference-root`、`--importer`、`--output`及需要的session工具参数；模块导入时不读取素材、创建临时目录或启动任务。不要添加旧路径fallback。
+2. 从`config/model-catalog.json`逐项驱动。复用/提取`audit_catalog.py`的目录及alias选择逻辑，不能另造os.listdir首文件猜选。每项记录catalog ID、角色/型号、实际source/resx/纹理来源及hash；歧义明确失败。
+3. 新bundle先写到自己的临时目录，模型/session/meta全部验证后一次发布到新目标。失败不得留下可被播放器扫描成成功的partial目录；失败进程退出非零。现有有效输出不覆盖；旧schema或partial明确提示重建到新目标。保护用户已有生成目录和其中额外文件。
+4. 为195条产品目录保留独立`structure/cpu/visual/interaction/soak`状态。缺素材也占一行，`milk-winter`不能从分母消失。源目录可能超过195，不能当作产品分母；CPU成功不能填视觉PASS。当前0x7fc/bm/attr拒绝是已有语义限制，应记录字段/节点，不能改runtime使账本更好看。
+5. 用`git ls-files assets`盘点，把已跟踪的生成模型JSON、纹理、背景、音频和图标移出索引，**保留磁盘原文件**和必要`.gitkeep`；不要改历史。小型合成测试fixture不属于这一素材清理。
+6. Coconut-dress的纹理修复要记录原PSB、解包工具/输出/hash和导入过程；不得修改原仓库或复制全素材进受跟踪源码。资料不足则留未认证状态。
+
+验收：从第二个不同路径的临时源码目录，用显式同级reference-root运行小型成功/歧义/缺失/partial/旧版本/失败退出测试；真实catalog输出195行且每项可追溯。先小范围验证工具，再完整审计，逐项检查点；长审计冻结importer/auditor。不要求本批认证195个模型的画面。开发生成真实bundle到忽略的`assets/characters/`，报告到`build/evidence/`。
+
+## 给 GLM-5.2：G2 精简C验证宿主（第二优先）
+
+当前`apps/abi_host/main.c`复制WAVE/Pulse/RMS和catalog/壁纸策略，活pthread/设备对象被浅拷贝。上次失败回退仍先销毁旧音频，且错误只打印后继续；不适合继续补丁修补。
+
+**本批将它收敛为显式静音的C ABI诊断宿主**，正式声音和壁纸会话仍由现有C++播放器/`audio::Device`提供；不是削减产品声音目标。真实C设备服务等到首个有需求的外部宿主再定义，不建立第二套实现或隐藏静音fallback。
+
+- 删除该C程序中的PCM/WAVE/Pulse/thread/RMS实现和角色目录/壁纸应用副本。使用`--model`、`--session`、`--mute`、seed、尺寸、固定steps/指定reaction等明确输入；静音模式设`NEKOMOTE_AUDIO_DISABLED`。未请求静音则明确说明这是诊断工具，使用正式player；设备失败不能被当作静音成功。
+- 保留纯C的CPU会话、GL加载/纹理、固定作者步与预览用途；所有renderer/session返回值检查，缺纹理/不支持模型/prepare失败即非零退出，不打印后继续画旧帧。路径有长度和截断检查；不写系统设置或自动保存用户壁纸配置。
+- 生命周期为program先于session创建、后于session销毁；GPU资源先于其拥有上下文销毁。部分加载失败统一收尾，不能浅拷贝拥有句柄。单模型验证不需要角色切换或另一个声音worker。
+- 预分配不能硬编码65536等容量。如果需要C端容量查询，允许只在`abi.h/abi.cpp`加入一个**只读**`nekomote_program_renderer_capacity`，在现有`nekomote_renderer_capacity`声明后定义；按`scene.frame_capacity()`及textures数量逐字段返回，NULL返回全零并设InvalidInput。补合成CPU容量负例，不能改其余ABI、错误/帧契约或添加兼容签名。这是此批共享文件的限定领用范围。
+- 截图/GL读回仅用于显式诊断，不进正常帧路径。用应用内诊断或确定步数自动退出，不使用xdotool。验证最终帧与同输入的C++player/WebGL已冻结图像，不能只检验窗口创建成功。
+
+验收：无需Pulse/pthread依赖的C宿主；合法合成/真实模型、缺模型/session/纹理、非法尺寸/模式、失败退出和关闭清理；`--mute --no-save`等迁移以新的明确CLI为准，不保留旧参数别名。需要GPU时拿共同锁。正文写清它是ABI验证工具，不是Plasma插件。以后确需C音频时必须复用现有服务，另交Codex评审契约。
+
+## 给 GLM-5.2：G6 构建与格式，随后G5测量
+
+G6在G2简化后移除其`-Wno-format-truncation`/项目warning掩盖，按`.clang-format`整理余下代码。核查Fontconfig/FreeType/Pulse等实际目标依赖、版本/许可与安装说明；公开头不泄漏依赖。验证无assets/refer副本、ABI关闭的纯CPU、headless ABI、preview开/player关、完整player及ASan CPU ABI。缺真实资产只有集成项可Skipped，合成负例必须执行。
+
+G5可独立开始修改`tools/perf_compare/*`：外部原仓库保持只读，显式临时服务目录；两端对齐ready、预热完成、测量起止握手。固定型号、动作、seed、背景、声音/UI、分辨率和实际FPS。浏览器rAF不等于模型更新/实际呈现；RSS共享重复、整卡GPU/显存与进程指标分别标记，缺数据不能填0或生成成功结论。timeout/加载/设备失败必须非零并保存失败。先用stub验证握手/退出/清理，再串行真实采样，记录原始数据、工具/二进制hash、驱动和采样边界。旧性能收益仍未认证，不能宣称此批优化收益。
+
+## 给 Gemini 3.8 Flash：V3 源混合与颜色保护证据
+
+正式路径现在明确拒绝非零bm、attr非0/1；不要删除拒绝来获得图片。GLM的目录任务不是前置依赖，可自己读取现有JSON筛选最小样例。
+
+- 首批选择实际出现`bm=16/19`和`attr=2`的最小型号、层级、资源和触发动作；输出源字段路径/帧/参数范围和hash。若同一型号也有0x7fc，分开记限制，不能绕开门槛。
+- 在未修改原PSB的WebGL端冻结输入、初始化时钟/seed、步数和物理；观察真实draw的blendFuncSeparate、blendEquation、颜色mask、目标FBO/附件、纹理/UV、顶点颜色及相关uniform。可扩展自己的`trace.js`，不要读取私有驱动函数体。全局最终状态不能替代每次draw的状态。
+- 以父子层/UV/纹理及受控变量定位目标draw，保存透明PNG和黑/白背景合成、局部裁图/差值。推测blend含义与实际观察分开，不按数字映射Add/Multiply等枚举。
+- 已支持模型另外验证mirror/global-alpha端点和中间值、眼缘遮罩与视线/触摸坐标。若当前诊断入口没有所需控制，交付明确的缺口和输入，不把OS键鼠注入或参考结果灌入原生帧作为解决方案。
+
+交付：可独立复跑的capture/trace调用、source/input/tool/binary hash、图像与几何报告；源观测和原生Unsupported分别记录，不写“引擎已支持”。Codex据此实现原生映射并通过冻结阈值后才能放行。
+
+## 给 Gemini 3.8 Flash：V5 UI视觉、输入与小型修复
+
+先用已通过的`chocola-date-a`，避免catalog自动选到尚不支持的型号。原生入口示例：
 
 ```sh
-python3 tools/reference_capture/capture.py --reference-root ../NekoWebShow \
-  --browser /opt/chrome-linux/chrome --model coconut-maid \
-  --output build/evidence/v2/coconut-body30-reference \
-  --scale 0.45 --x 0 --y 100 --variables '{"body_LR":30}' \
-  --physics-scales '{"hair":0,"parts":0,"bust":0}' --steps 0 --trace
-build/dev/bin/nekomote_preview --geometry-diagnostic \
-  --asset assets/characters/coconut-maid/model.nkm.json --origin 400 640 --scale 0.45 \
-  --variable body_LR 30 --hidden --screenshot build/evidence/v2/coconut-body30-native.png
-build/dev/bin/nekomote_pose --asset assets/characters/coconut-maid/model.nkm.json \
-  --variables '{"body_LR":30}' --sample-trace build/evidence/v2/coconut-body30-reference.trace.json \
-  --output build/evidence/v2/coconut-geometry.json
-python3 tools/reference_capture/compare_images.py \
-  build/evidence/v2/coconut-body30-reference.png build/evidence/v2/coconut-body30-native.png \
-  --output build/evidence/v2/coconut-body30-comparison --tolerance 2
+build/dev/bin/nekomote_player --assets assets --character chocola-date-a \
+  --mute --no-save --width 800 --height 1080 --ui-open --ui-drawer 0 \
+  --steps 0 --capture-ui build/evidence/v5-next/open-character.png
 ```
 
-浏览器路径是此次诊断的显式参数，不是正式构建/运行依赖；换电脑时选择实际可用浏览器。pose从trace对应metadata取得原点/比例，不额外传不存在的`--origin`选项。
+记录字体、device scale与尺寸，检查收起/展开、角色/设置抽屉、反向开关、图标/面板拖动和边界、HiDPI、声音/锁定/FPS状态；UI捕获输入时不能触发模型，外部视线/触摸应正常。网页/原生UI不同排版与字体不能声称逐像素一致；模型本体的2/255及.001px门槛保持。
 
-## 优先给 GLM-5.2 的清单
+静态capture已有；实际拖动/中途反向要从应用内状态/回调诊断进入。可以在`apps/player/ui*`或独立诊断工具建立可重复输入和状态测试，禁止系统键鼠注入，不改Codex拥有的main/runtime/ABI。缺接口则报告所需最小入口。已定位且边界清楚的小型UI修复可以自主完成，必须附before/after和实际状态测试；跨模块/GL生命周期改动交Codex。G8根据此报告再做绘制分配/字形预热，不能引用核心136项当作UI测试。
 
-以下G任务的契约来自审查记录。涉及公共ABI/服务重构时，先提交接口草案和负例表供Codex复核，随后自主实现、迁移调用者、测试；不是每个普通编辑都重新向用户确认。
+## Codex后续与其余待办
 
-- [ ] **G1 / R3–R4：ABI可观测失败与RAII。** 明确renderer各失败返回值/错误来源及失败后的帧有效性，所有wrapper部分初始化用RAII，长度/溢出/枚举/空指针负例可重复测试。完成真实C数据布局边界；借用寿命/销毁顺序必须写入header。CPU ABI测试从图形开关及本地真素材依赖中解耦，GL错误另设GPU测试。验收含非法enum999拒绝、无效loader不泄漏、失败不能继续画旧帧。
-- [ ] **G2 / R5：精简C验证宿主。** 不再复制WAVE/Pulse/RMS服务；先列服务边界和线程/队列/失败契约，复用现有audio后测试pause、stop、重播、满队列、设备失败和候选模型切换。禁止把活pthread对象浅拷贝/清零；无共享锁跨设备阻塞调用。初期不要另造一套C宿主壁纸应用。
-- [ ] **G3 / R6：application时钟与能力负例。** 修复触摸能力对全部区域的检查，建立背景暂停/大delta/reset/重入的显式契约，补时间分区及零分配测试；新旧角色候选加载失败保留当前会话。数值问题交Codex，画面交V4复核。共同策略确定后再同步preview和C宿主。
-- [ ] **G4：可移植资产与目录账本。** 修改现有工具接受reference-root/importer/output；优先复用`tools/import_emote/audit_catalog.py`已有的catalog/alias映射，不新增按os.listdir首文件猜选。事务导入、失败非零退出、已有partial/旧schema明确重建。195目录每项保留结构/CPU/视觉/交互/稳定性独立状态，milk-winter等缺项仍占一行；磁盘目录200不替代产品目录195。清理已跟踪资产只移出索引、保留本地文件，不改历史或外部素材。素材来源修复记录hash和方法。
-- [ ] **G5：可信性能工具。** 停止改写原仓库；使用只读服务或隔离临时副本。两端明确就绪/预热完成/测量开始结束握手，固定模型、动作、seed、背景、声音、UI、输出和实际FPS；fail/timeout/error不得生成成功报告。进程CPU、PSS/共享RSS、整卡GPU/显存、实际呈现分开，重复串行测量并记录驱动/时钟/功耗。先撤回未控制条件的收益结论，再输出可复核原始数据。验收前无需追求优化数量。
-- [ ] **G6：构建、格式和依赖矩阵。** 按.clang-format整理新ABI/C宿主/application代码；修正C/C++语言专属warning和target依赖，移除项目代码-Wno-error/截断掩盖；Fontconfig实际必需就明确find_package并登记许可/版本。验证clean checkout无assets、headless、player关闭、图形宿主配置、ASan CPU ABI。缺真素材测试明确Skipped并给显式集成入口，核心负例不能Skipped。
-- [ ] **G7：证据整理，适合批量工作。** 针对V1–V5准备源节点路径、参数范围、source/input/binary hash、截图/trace对照索引；导出mask命令不能只导主几何。现有原始数字/FAIL不覆盖；图像由Gemini读取并确认，GLM没有读图能力时只汇总机器结果。
-- [ ] **G8：UI绘制成本与真实状态测试。** 根据Gemini给出的V5缺陷逐项实现，补无窗口状态机测试、加载阶段字形准备及绘制分配测量；不按每帧glyph创建/纹理上传。数据驱动UI目录，动作/反应/设备策略保持在共同模块。尺寸/性能的改变均需V5截图回归。
+1. 精确闭合Coconut/Azuki的0x7fc挂接及旋转/子节点公式；此前Azuki候选虽图像零超差仍有.0064996px误差，不得作为通过。现有视觉V2不再要求Gemini重复，必要数值采样由Codex组织。
+2. 依据V3实现源混合/保护映射；调查Fraise-b缺失/嵌套遮罩。已通过115组不认证这些新范围。
+3. V4共同契约：角色过渡0/.1/.2/.4s与背景0/.4/.8s，重入、暂停/恢复、大delta、reset和加载失败；明确线性混合与当前两遍over的区别。先冻结行为再请视觉Agent验收；本批C3只认证候选事务，未认证完整cross-fade。
+4. 复核G2设备/ABI边界和G5测量方法；补更精确源错误诊断。核心/工具通过后，读取实际Qt Quick图形后端并做小型宿主验证，再推进WallpaperItem/QML；不改变全局桌面设置或走CPU像素桥接。
+5. 完整195视觉/反应、实际桌面、多屏卸载/重建、8–24小时、安装/来源许可待后续阶段；没有实测就不标P9/P10完成。
 
-## Codex整合与阶段门槛
-
-- [ ] 审核G1/G2边界，推导R2挂接点公式及V3混合语义；恢复严格拒绝未验证能力。
-- [ ] R1/R2闭合后重跑115组冻结矩阵；本次Chocola4通过不代替全量回归。重新导入造成hash变化时记录合法schema变化和输入版本，不修改参照hash或阈值使其通过。
-- [ ] 完成共同会话/设备/错误契约后，读取实际Plasma/Qt Quick图形后端，建立小型原生宿主GPU验证，再开发WallpaperItem/QML。验证失败不改全局桌面后端、不采用CPU像素桥接。
-- [ ] 可安装产物和实际桌面/长期验收分开：不得在8–24小时未运行时认证P9，其他桌面留到已验收范围之后。
-
-## 共用工作区操作与交接
-
-1. 开始前记录base commit、Git状态、任务ID、拟改文件及依赖；在development-log注明领用。一个高风险文件同一时间只由一个执行者修改。可以用隔离worktree开展候选实验；共享目录时明确文件所有者，不能重置别人的未提交工作。
-2. GLM负责批量检查与具体修复，Gemini负责有输入的视觉检查，Codex负责跨模块整合；可交换角色，但先证明所需工具/验证能力。角色安排不是用户权限授权或对外发布授权。
-3. 相依任务顺序执行；独立证据可同时采集，但GPU正确性/性能测量串行、不能与构建替换正在使用的二进制竞态。长任务冻结二进制并记录hash，逐case保存检查点。
-4. 每个阶段输出：修改内容、实际命令、PASS/FAIL/Skipped、图片hash、性能范围、剩余问题、下一任务ID。提交正文含Agent、Model、Context；集成者记录被整合的提交，不重写来源信息。
-5. 即使截图改善/全部现有单测通过，只要必需语义仍未验证，就保留明确不支持及失败证据。禁止用文档把现有偏离改写成新的正式目标。
+每个Agent按小阶段验证后commit，正文含`Agent:`、`Model:`、`Context:`；保存FAIL与剩余未知，更新development-log，本批完成后由Codex复核。不要覆盖本轮证据或把旧任务反复实施。

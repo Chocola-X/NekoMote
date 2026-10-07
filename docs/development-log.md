@@ -580,3 +580,11 @@
 - 使用真实生产事务的应用内 `--check-window`：模型缺失（早期）与背景缺失（CPU/GPU初始化之后）均拒绝并保留旧会话。失败后的暂停图与原图逐像素相同；合法切换正确移动所有权并保留暂停，新会话的连续暂停图也逐像素相同。resize/fit/minimize/restore/reset/close 均通过，已查看 resize 截图。没有系统键鼠注入。
 - dev 136/136 通过；当前资产 `chocola/h01` 36步800×1080透明截图直接对照冻结 WebGL reaction36，0超差像素、alpha/黑白合成误差0，原始RGB最大1/255。首条遗漏 reaction 的 `chocola/` 前缀导致明确 InvalidReaction，日志保留；纠正调用参数后通过，没有修改数据或阈值。
 - 报告：`docs/validation/integration-player-2026-10-07.json`。验证使用 --mute/--no-save，未触碰系统桌面或持久设置；音频开启的候选失败、角色渐变合成/时钟、背景reset政策仍待V4和服务复核。正常帧路径未改，加载与失败诊断不计稳态零分配。
+
+
+## 2026-10-07 Codex：阶段状态与独立交接（C4）
+
+- 保留旧审查及失败证据，新增 `docs/review-followup-2026-10-07.md` 总结六个新提交的实际完成/缺口和C1–C3整合。同步AGENTS当前状态、负例有效性要求、ABI入口、ROADMAP和known-defects，避免其他Agent重做已修复项。
+- 重新安排文件所有权：GLM G4→G2→G6，有余力G5；Gemini V3/V5，允许有视觉证据且限定UI边界的小型修复；Codex继续0x7fc/嵌套遮罩/混合、渐变及真实宿主整合。G2收敛静音诊断程序，正式声音保留既有C++服务，不复制音频实现。
+- Release单次Chocola CPU基线 P50/P95/P99=0.267144/0.292427/0.314846ms，预热120、样本2000，范围和hash见 `docs/validation/integration-cpu-2026-10-07.json`。时钟未锁定、无GPU/呈现/UI/音频/背景/功耗，不能与历史或WebGL推导收益。
+- 本批交接相互独立，GPU使用共同非阻塞flock串行、长采样冻结binary/hash；没有通过工具启动另外两个外部Agent。文档变更只做链接、diff、提交溯源检查，不新增无意义测试。

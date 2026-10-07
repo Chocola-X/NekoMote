@@ -22,6 +22,9 @@
  *   reaction_label are non-owning views into storage owned by the
  *   program. They are valid until nekomote_program_destroy.
  * - nekomote_image_pixels is valid until nekomote_image_destroy.
+ * - Each CPU session is single-threaded: input, advance, frame preparation
+ *   and view queries must not run concurrently. Immutable programs may be
+ *   shared by independently owned sessions.
  * - The caller must not call renderer functions on a handle from a
  *   different graphics thread than the one that created it.
  * - The program handle must outlive all session instances created from
