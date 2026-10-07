@@ -11,7 +11,7 @@
 | C宿主音频/线程与错误流程 | 重复PCM/Pulse、quitting竞争和pthread浅拷贝仍存在，回退先毁旧声音；打印错误后继续不是成功 | GLM G2：收敛显式静音诊断宿主，删除重复服务 |
 | 会话/切换/渐变 | 能力查询、背景暂停/共享250ms预算和C++候选事务已修复；角色过渡仍使用墙钟且两遍over，背景reset/重入/声音候选失败尚未验收 | V4 / Codex；Gemini后续视觉 |
 | UI状态与稳态 | UI截图/拖动/输入隔离与字形绘制分配尚未完整验证；核心136项不能代替这些测试 | Gemini V5，后续GLM G8 |
-| 资产/目录/构建 | 跟踪生成素材、绝对路径与首文件选择、partial输出、195账本仍待修；C宿主warning/依赖/格式待简化后清理 | GLM G4 / G6 |
+| 资产/目录/构建 | G4已完成：catalog驱动事务导入、195账本、显式参数、素材移出索引；C宿主warning/依赖/格式待G2简化后清理 | GLM G6；G2进行中 |
 | 性能测量 | 直接改外部index.php已停止；握手/条件/实际呈现/共享RSS/整卡GPU归属等方法仍未闭合 | GLM G5，Codex复核 |
 
 
@@ -23,7 +23,17 @@ inheritShape字段含义不自动给出精确原点/旋转/子节点公式。见
 
 ## 素材来源问题
 
-先前调查称coconut-dress资源映射指向空图，另从原PSB解包取得纹理后重新导入。本次未重做该修复或认证其全部姿态；G4应记录输入PSB、工具版本、解包输出/纹理hash和导入状态，不把本地替换等同于受控来源验收。milk-winter等缺项继续在目录账本占位，不能因为缺文件而从“全目录”分母移除。
+先前调查称coconut-dress资源映射指向空图，另从原PSB解包取得纹理后重新导入。本次未重做该修复或认证其全部姿态；G4应记录输入PSB、工具版本、解包输出/纹理hash和导入状态，不把本地替换等同于受控来源验收。milk-winter等缺项继续在目录账本占位，不能因为缺文件而从"全目录"分母移除。
+
+### coconut-dress 纹理来源记录（G4）
+
+- 源 PSB：`data/coconut-dress.pure.psb.zip`，sha256 `6dfc2bb95c098267081f6cd3d58d612fecb199ffc4331637d3a38a03ab257d9d`
+- 解包模型 JSON：`model_conversion/coconut/coconut-dress/coconut-dress.json`，sha256 `63b02025535aa6d6f301e6e6cba9f9b73f5e2d40ddb1f7007c0f8d518272e19e`
+- 解包工具/版本：未知（原仓库外部工具，非本项目工具链）
+- 目录内外部纹理：`coconut-dress-a_tex000.png`，sha256 `f6d32dafa122de947640730b40eefa29e20dd2292648f96a9f8a3999c2821e1c`
+- resources 子目录：`coconut-dress-resources/tex-texture.png`（32KB）
+- 导入状态：结构导入 OK；模型 JSON 中 `tex` 为 inline（4096×2048），external_textures 为空
+- 认证状态：未认证。解包工具/版本未知，未重做修复或认证全部姿态；不把本地 inline 纹理等同于受控来源验收
 
 ## 尚未开展的产品验收
 

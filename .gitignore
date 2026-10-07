@@ -20,3 +20,4 @@ __pycache__/
 # Compiled model assets (large, regenerate via import tools)
 assets/characters/
 assets/config.json
+assets/backgrounds/
