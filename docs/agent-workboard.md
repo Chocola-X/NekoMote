@@ -25,12 +25,11 @@
 
 ## V7：受控镜像与遮罩观察
 
-用户确认正式镜像必须保留。先读V6及C5失败：原生Preview已按asset.mirror翻转，但Fraise france-maid-b闭眼混合姿态仍有约57.775px几何误差；默认眼态被stencil拒绝。观察目标是定位差异，**不能把取消镜像作为修复**。
+已由 Gemini 完成并交付：[V7 报告](v7-mirror-mask-report.md) 与证据目录 `build/evidence/v7/`（账本：`v7_ledger.json`）。
+- **镜像姿态几何误差确证**：定位根本原因为缺少 `metadata.mirrorControl.variableMatchList`（`_LR`, `_slant`）的变量符号反转。闭眼初态（`head_LR=0, body_LR=0`）几何 0.000000000px，黑白底合成 RGB 差异 [[0,0,0], [0,0,0]]，整图 0 超差像素（PASS）；直选姿态未反转导致 81.7px / 138.0px 误差，而输入反转后（Native `head_LR=-30` vs WebGL `head_LR=+30`）几何误差骤降至 0.000191px，全图像素差为 0（PASS）；`body_LR` 同样降至 0.000266px 与 0 像素差（PASS）。C5 `head_invariance` 原 57.775px 误差反转后降至 0.000280px。保持正式镜像 `asset.mirror`。
+- **默认眼态 Stencil 拒绝确证**：模型中左右眼 `ステンシル(shirome)` 声明 `["shirome", "add_mask"]`，其中 `shirome` 真实存在（左眼 icon 0065，右眼 icon 0067），而 `add_mask` 在整个源模型中不存在任何节点（属模板预留空插槽）。原生 `geometry_scene.cpp:551` 要求全项解析否则 `mask.resolved = false`，导致睁眼选中时退出码 8 拒绝。WebGL 真实 GPU 行为是将 `shirome` 绘制至 FBO 2（Attachment Texture 3）并将 alpha 复制至 G 通道（`tmp.g = tmp.a`），静默跳过不存在的 `add_mask`；瞳孔图元通过纹理单元 1 采样 G 通道完成遮罩。
+- 交付 5 组 Side-by-Side 对比图、局部高倍裁切、拓扑与 GPU 流 JSON 分析及全 SHA-256 账本；未改原生核心，交接 Codex C5 闭合。
 
-- PSB保持原始，固定800×1080、x=0/y=400、scale1、opacity1、clock1000ms/seed1、steps0、物理幅度0。分别采样face_eye_open=10的中立、head_LR±30、body_LR±30，再采样默认眼态。以实际源默认值/最终变量及asset来源说明条件；不把不同控制器/衣装/素材当同条件。
-- 保存完整WebGL和现有原生截图/几何、按相同icon/UV定位的GPU顶点、MVP、a_color、blend/colorMask/FBO/遮罩draw顺序。给出X/Y/UV及黑白合成误差、局部裁切和PASS/FAIL/未测，区别镜像呈现与形变后剩余差异，不根据字段名猜公式。
-- 列出source JSON和当前asset的stencil_composite_mask_layers、同/父scope中实际标签。不存在/嵌套来源只记录事实及源GPU行为，不改原生忽略缺失引用。需要额外诊断入口时写最小需求并继续可独立部分。
-- 输入/工具/二进制hash先冻结；GPU以 `flock -n build/gpu-validation.lock` 串行，不覆盖旧证据，不放宽.001px/1e-5/2字节门槛，不注入系统键鼠。动态UI回放入口仍未建立，本任务不承担UI动态验收。
 
 ## Codex接续
 
