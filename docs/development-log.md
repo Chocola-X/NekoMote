@@ -627,3 +627,10 @@
 - dev构建及CTest **136/136 PASS**；Release播放器/UI测试构建通过，独立UI **8/8、124 assertions PASS**。真实milk静音/音频模式均明确exit1；Chocola静音截图、音频设备初始化及121显示帧、应用内窗口/候选事务检查均exit0。声音检查无反应音频，因此不认证发声/口型。
 - Chocola首帧改动前后1920×1080 RGBA逐字节相同，已读图；本次没有变更求值/绘制公式，没有重跑115组WebGL矩阵或声称新增型号通过。`--no-save`全过程保持assets/config.json hash不变。证据 `build/evidence/startup-2026-10-07/results.json` 及日志/截图；未注入系统键鼠。
 - 预检只增加加载时的一次CPU prepare；错误字符串仅失败时构建，正常稳态路径未新增分配。没有测量或宣称性能收益。
+
+## 2026-10-07 Codex：G4文件保护补修及本批复核
+
+- 独立合成复现确认 `ecab3ce` 会删除已有partial目录中的额外文件、将schema0当SKIP；CPU审计输出目标为参考素材目录。旧实现的“事务导入已完成”结论不成立，复现仅使用build内临时fixture，未运行危险路径处理用户素材。
+- 已有目标包括文件、目录和dangling symlink全部EXISTS_UNCHECKED并保持不动；不认证、不覆盖。新bundle在output文件系统暂存，以Linux renameat2/RENAME_NOREPLACE原子发布；竞争创建目标不会被覆盖，不再使用跨文件系统shutil.move。CPU报告写任务暂存路径，CPU FAIL计为非零退出。
+- 新增5项保护回归，统一Python工具测试 **14/14 PASS**。真实Chocola单条隔离catalog新目录导入/CPU一步exit0；重复exit1且用户额外文件保持。第一次smoke使用目录symlink导致rglob MISSING，失败保留；改成文件symlink后通过。没有195条新验收、完整会话/视觉或性能收益结论。
+- 复核G2/G6及V3/V5后，保留正确模块拆分/测试/观测；C宿主确定性与截图、G4完整账本、UI动态证据及无ABI构建仍有缺口。V5报告部分修复在父提交已存在，V3仅零步两个样本且缺colorMask直接记录。新整合摘要与G7/G8/G9/V6交接见 `docs/review-agents-current.md` 和workboard。

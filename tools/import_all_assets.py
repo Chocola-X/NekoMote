@@ -3,13 +3,15 @@
 
 每项记录 catalog ID、角色/型号、source/resx/纹理来源及 hash；
 新 bundle 先写到临时暂存目录，全部验证后一次发布到目标。
-失败不留 partial 目录，进程退出非零。现有有效输出不覆盖；
-旧 schema 或 partial 明确提示重建到新目标。保护用户已有生成目录和其中额外文件。
+失败不留 partial 目录，进程退出非零。已有目标一律拒绝并提示使用新目标，
+不凭文件存在推断当前 schema 有效。保护用户已有生成目录和其中额外文件。
 """
 import argparse
 import collections
+import ctypes
 import hashlib
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -23,6 +25,20 @@ def sha256(path):
         for chunk in iter(lambda: f.read(1 << 20), b''):
             h.update(chunk)
     return h.hexdigest()
+
+
+def publish_bundle(staging, target):
+    """Publish on Linux atomically, without replacing even an empty existing target."""
+    rename = ctypes.CDLL(None, use_errno=True).renameat2
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int,
+                       ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    at_fdcwd = -100
+    rename_noreplace = 1
+    if rename(at_fdcwd, os.fsencode(staging), at_fdcwd, os.fsencode(target),
+              rename_noreplace) != 0:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error), str(target))
 
 
 def build_index(reference_root):
@@ -79,6 +95,11 @@ def import_one(name, record, reference_root, importer, session_tool,
         'errors': [],
     }
 
+    if os.path.lexists(target):
+        row['status']['structure'] = 'EXISTS_UNCHECKED'
+        row['errors'].append('existing output preserved without certification; use a new --output')
+        return row
+
     index = build_index(reference_root)
     candidates = resolve_candidates(index, name)
     alternatives = [str(p.relative_to(reference_root)) for p in candidates]
@@ -107,11 +128,6 @@ def import_one(name, record, reference_root, importer, session_tool,
     row['external_textures'] = external
     if any(v is None for v in external.values()):
         row['errors'].append('missing or ambiguous external texture')
-
-    if target.exists() and (target / 'model.nkm.json').is_file():
-        row['status']['structure'] = 'SKIP'
-        row['status']['reason'] = 'already exists'
-        return row
 
     staging = temporary / key
 
@@ -150,21 +166,25 @@ def import_one(name, record, reference_root, importer, session_tool,
     (staging / 'meta.json').write_text(json.dumps(meta, indent=2) + '\n')
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.move(str(staging), str(target))
+    try:
+        publish_bundle(staging, target)
+    except (OSError, AttributeError) as error:
+        row['status']['structure'] = 'FAIL'
+        row['errors'].append(f'cannot publish bundle without replacement: {error}')
+        return row
     row['status']['structure'] = 'OK'
 
     if runtime_auditor is not None:
+        audit_output = temporary / (key + '.runtime.json')
         row['status']['cpu'] = run_cpu_audit(
-            runtime_auditor, source, resx, external, source.parent, runtime_steps)
+            runtime_auditor, source, resx, external, audit_output, runtime_steps)
 
     return row
 
 
-def run_cpu_audit(auditor, source, resx, external, resource_root, steps):
+def run_cpu_audit(auditor, source, resx, external, audit_output, steps):
     cmd = [str(auditor), str(source), str(resx),
-           '--output', str(source.parent / '_runtime_audit.json'),
+           '--output', str(audit_output),
            '--steps', str(steps)]
     for tex, path in external.items():
         if path is not None:
@@ -216,7 +236,7 @@ def main():
 
     rows = []
     fail_count = 0
-    with tempfile.TemporaryDirectory(prefix='nekomote-import-staging-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='.nekomote-import-staging-', dir=output) as temporary:
         tmp = pathlib.Path(temporary)
         for i, (name, record) in enumerate(sorted(catalog.items()), 1):
             row = import_one(name, record, root, importer, args.session_tool,
@@ -224,7 +244,7 @@ def main():
                              args.runtime_auditor, args.runtime_steps)
             rows.append(row)
             st = row['status']['structure']
-            if st not in ('OK', 'SKIP'):
+            if st != 'OK' or row['status']['cpu'] == 'FAIL':
                 fail_count += 1
             print(f'  [{i}/{len(catalog)}] {st:12s} {name}', flush=True)
 
@@ -232,7 +252,8 @@ def main():
         'catalog_records': len(catalog),
         'catalog_sha256': catalog_hash,
         'structure_ok': sum(1 for r in rows if r['status']['structure'] == 'OK'),
-        'structure_skip': sum(1 for r in rows if r['status']['structure'] == 'SKIP'),
+        'structure_existing_unchecked': sum(
+            1 for r in rows if r['status']['structure'] == 'EXISTS_UNCHECKED'),
         'structure_fail': sum(1 for r in rows if r['status']['structure'] == 'FAIL'),
         'structure_missing': sum(1 for r in rows if r['status']['structure'] == 'MISSING'),
         'structure_ambiguous': sum(1 for r in rows if r['status']['structure'] == 'AMBIGUOUS'),
