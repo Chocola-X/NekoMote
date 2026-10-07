@@ -12,7 +12,7 @@ NekoMote 原生引擎 vs 原 WebGL 引擎性能对比工具。
         [--fps 60] [--output docs/p7-webgl-vs-native-performance.md]
 """
 
-import argparse, json, os, subprocess, sys, time, threading, re, statistics
+import argparse, json, os, subprocess, sys, time, threading, re, statistics, tempfile, shutil
 
 CLK_TCK = os.sysconf(os.sysconf_names['SC_CLK_TCK'])
 PAGE = os.sysconf(os.sysconf_names['SC_PAGE_SIZE'])
@@ -170,15 +170,25 @@ def measure_webgl(model, width, height, fps, warmup, measure, port):
     index_php = os.path.join(WEBGL_ROOT, 'index.php')
     with open(index_php) as f:
         original_content = f.read()
-    modified = False
-    if '$local_mode = false;' in original_content:
-        with open(index_php, 'w') as f:
-            f.write(original_content.replace('$local_mode = false;', '$local_mode = true;', 1))
-        modified = True
 
-    php = subprocess.Popen(
-        ['php', '-S', f'127.0.0.1:{port}', '-t', WEBGL_ROOT],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    tmp_root = tempfile.mkdtemp(prefix='nekomote_webgl_')
+    try:
+        for entry in os.listdir(WEBGL_ROOT):
+            src = os.path.join(WEBGL_ROOT, entry)
+            dst = os.path.join(tmp_root, entry)
+            if entry == 'index.php':
+                modified_content = original_content
+                if '$local_mode = false;' in original_content:
+                    modified_content = original_content.replace(
+                        '$local_mode = false;', '$local_mode = true;', 1)
+                with open(dst, 'w') as f:
+                    f.write(modified_content)
+            else:
+                os.symlink(src, dst)
+
+        php = subprocess.Popen(
+            ['php', '-S', f'127.0.0.1:{port}', '-t', tmp_root],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     samples = []
     result = {}
@@ -258,9 +268,7 @@ def measure_webgl(model, width, height, fps, warmup, measure, port):
             php.wait(timeout=3)
         except subprocess.TimeoutExpired:
             php.kill()
-        if modified:
-            with open(index_php, 'w') as f:
-                f.write(original_content)
+        shutil.rmtree(tmp_root, ignore_errors=True)
 
 
 def res_row(stats, key, unit):
