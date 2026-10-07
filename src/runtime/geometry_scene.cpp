@@ -6,10 +6,12 @@
 #include <charconv>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <numbers>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace nekomote::runtime
@@ -89,7 +91,9 @@ struct CompiledMask
 };
 struct CompiledData
 {
+    bool presentation_mirror{false};
     std::vector<VariableSymbol> variables;
+    std::vector<ParamId> mirrored_parameters;
     std::vector<TextureBinding> textures;
     std::vector<Resource> resources{1};
     std::vector<Node> nodes{1};
@@ -452,7 +456,22 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
     try
     {
         auto data = std::make_unique<GeometryScene::Impl>();
+        data->presentation_mirror = asset.mirror;
         Compiler compiler{*data, {}, {}, {}};
+        std::unordered_set<std::string> declared_labels, declared_parameters;
+        model::visit_parameter_names(asset,
+                                     [&](const auto& name) { declared_parameters.insert(name); });
+        const auto collect_layer = [&](const auto& self, const model::Layer& layer) -> void
+        {
+            declared_labels.insert(layer.label);
+            for (const auto& child : layer.children)
+                self(self, child);
+        };
+        for (const auto& part : asset.parts)
+        {
+            for (const auto& layer : part.layers)
+                collect_layer(collect_layer, layer);
+        }
         std::unordered_map<std::string, TextureId> textures;
         for (const auto& t : asset.textures)
         {
@@ -538,6 +557,17 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                 "not a motion");
         compiler.motion(*data->resources[base->second.value].motion, {}, {},
                         asset.base_group + "/" + asset.base_motion);
+        for (const auto& name : asset.mirrored_parameters)
+        {
+            require(asset.mirror && !name.empty(), "mirrored_parameters", "invalid direction");
+            require(compiler.variables.contains(name) || declared_parameters.contains(name), name,
+                    "undeclared mirrored parameter");
+            const auto id = compiler.variable(name);
+            require(std::find(data->mirrored_parameters.begin(), data->mirrored_parameters.end(),
+                              id) == data->mirrored_parameters.end(),
+                    name, "duplicate mirrored parameter");
+            data->mirrored_parameters.push_back(id);
+        }
         // Resolve labels within each expanded motion scope, not across instances.
         for (std::size_t i = 1; i < data->nodes.size(); ++i)
         {
@@ -559,14 +589,25 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                     }
                 if (!root.valid())
                 {
-                    mask.resolved = false;
-                    data->diagnostics.push_back(node.label + "/" + name +
-                                                ": unresolved mask source; reject if selected");
+                    // Missing optional template labels contribute no coverage.
+                    // A label existing in another expanded scope remains unverified.
+                    const bool exists_elsewhere = declared_labels.contains(name);
+                    if (exists_elsewhere)
+                    {
+                        mask.resolved = false;
+                        data->diagnostics.push_back(
+                            node.label + "/" + name +
+                            ": mask source outside scope; reject if selected");
+                    }
                 }
                 else
                     roots.push_back(root);
             }
             require(!node.mask_sources.empty(), node.label, "empty stencil source list");
+            // Empty unions have not been verified against the source player.
+            mask.resolved = mask.resolved && !roots.empty();
+            if (roots.empty())
+                data->diagnostics.push_back(node.label + ": empty mask union; reject if selected");
             for (std::size_t j = 1; j < data->nodes.size(); ++j)
             {
                 auto ancestor = NodeId{static_cast<std::uint32_t>(j)};
@@ -583,6 +624,32 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             require(data->mask_command_capacity <= 1000000, node.label, "mask capacity exceeded");
             data->masks.push_back(std::move(mask));
         }
+        // A referenced motion is clipped as a group, even when its sprites
+        // sort around another motion's draws. Distinct motions using the same
+        // stencil keep separate clips (Chocola pupil/highlight); sprites within
+        // one motion share it (Fraise pupil/small highlight). Keep that boundary
+        // in mask IDs without exporting author motion fields to the renderer.
+        std::map<std::pair<std::uint32_t, std::uint32_t>, MaskId> mask_groups;
+        std::vector<CompiledMask> grouped_masks;
+        data->mask_command_capacity = 0;
+        for (auto& node : data->nodes)
+        {
+            if (!node.mask.valid())
+                continue;
+            const auto key = std::pair{node.mask.value, node.scope};
+            const auto [group, inserted] = mask_groups.try_emplace(
+                key, MaskId{static_cast<std::uint32_t>(grouped_masks.size() + 1)});
+            if (inserted)
+            {
+                const auto& source = data->masks[node.mask.value - 1];
+                data->mask_command_capacity += source.members.size();
+                require(data->mask_command_capacity <= 1000000, node.label,
+                        "mask capacity exceeded");
+                grouped_masks.push_back(source);
+            }
+            node.mask = group->second;
+        }
+        data->masks = std::move(grouped_masks);
         for (std::size_t i = data->nodes.size() - 1; i > 0; --i)
         {
             const auto& n = data->nodes[i];
@@ -714,6 +781,10 @@ GeometryStatus GeometryInstance::set_origin(Vec2 origin) noexcept
     if (!std::isfinite(origin.x) || !std::isfinite(origin.y))
         return {GeometryError::NonfiniteParameter, {}, {}};
     impl_->origin = origin;
+    // Placement keeps its presented direction; the frame itself is mirrored by
+    // the GPU later. Pre-invert X so that presentation does not reverse placement.
+    if (impl_->scene.presentation_mirror)
+        impl_->origin.x = -impl_->origin.x;
     impl_->evaluated = false;
     impl_->frame_ready = false;
     return {};
@@ -747,6 +818,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     instance.frame_ready = false;
     std::copy(instance.input.begin(), instance.input.end(), instance.parameters.begin());
     const auto& scene = instance.scene;
+    for (const auto id : scene.mirrored_parameters)
+        instance.parameters[id.value] = -instance.parameters[id.value];
     instance.states[0] = {};
     instance.states[0].world.translation = instance.origin;
     instance.states[0].world.a = instance.scale;

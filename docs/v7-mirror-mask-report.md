@@ -1,5 +1,6 @@
 # V7 镜像与遮罩受控视觉观察与定位报告
 
+> 本报告记录 V7 旧实现及手工反向输入的观察，不代表当前源码状态。正式同作者输入、子串匹配和动画方向复核见 [C5 交接](c5-mirror-mask-handoff.md)。`build_v7_evidence.py` 是硬编码结果的后处理器，已被通用 `build_visual_evidence.py` 替代；旧工具可由 Git `c3a7c33` 追溯，冻结证据不改写。
 > 报告属性：交接与证据文档  
 > 记录日期：2026-10-07  
 > 执行者：Antigravity  
@@ -27,7 +28,7 @@
    ```
 2. **官方 WebGL 引擎行为**：
    - 当模型声明 `metadata.mirror: 1` 时，模型最终画布会在水平方向进行镜像呈现（presentation flip）；
-   - 与此同时，为了保证角色向左偏头（`head_LR < 0`）或身体向右偏转（`body_LR > 0`）在镜像呈现后依然符合直觉视角，**E-mote 播放器会自动对名称匹配 `variableMatchList`（即以 `_LR` 和 `_slant` 结尾/包含）的输入控制变量取反（`val = -val`）后再进行网格形变求值**！
+   - 与此同时，为了保证角色向左偏头（`head_LR < 0`）或身体向右偏转（`body_LR > 0`）在镜像呈现后依然符合直觉视角，**E-mote 播放器会自动对名称匹配 `variableMatchList`（V7 未区分后缀与子串匹配）的输入控制变量取反（`val = -val`）后再进行网格形变求值**！
 3. **原生项目现有实现的缺口**：
    - `src/asset_io/import_emote.cpp:807` 仅读取了 `metadata.mirror` 存为 `asset.mirror`，而将 `metadata.mirrorControl` 丢弃；
    - 原生 `nekomote_preview`（`apps/preview/main.cpp:487`）和 `tools/pose_probe/main.cpp` 在呈现阶段正确应用了镜像翻转（`view.flip_x = true` / `-vertex.x`），**但未在变量求值阶段对匹配 `_LR` 和 `_slant` 的变量进行符号反转**；
@@ -40,13 +41,13 @@
 
 ### 1.2 默认眼态 Stencil 拒绝（`GeometryError::UnsupportedMask`, code 8）成因
 
-1. **发现**：模型中共有 6 处活动 stencil 节点（`stencilType: 5`）。其中左右眼 `ステンシル(shirome)` 声明：
+1. **发现**：源码共有 6 处 stencil 定义（不表示同时活动）（`stencilType: 5`）。其中左右眼 `ステンシル(shirome)` 声明：
    ```json
    "stencilCompositeMaskLayerList": ["shirome", "add_mask"]
    ```
 2. **实际节点拓扑**：
    - `shirome` 真实存在于当前 motion scope（左眼使用 icon `0065`，右眼使用 icon `0067`，为眼白图元）；
-   - `add_mask` 在整个 6.7MB 的源 JSON 中**没有任何节点定义**（仅在左右眼 `stencilCompositeMaskLayerList` 字符串列表中出现 2 次，属于 E-mote 模板预留的辅助遮罩槽位）；
+   - `add_mask` 在整个 6.7MB 的源 JSON 中**没有任何节点定义**（仅在左右眼 `stencilCompositeMaskLayerList` 字符串列表中出现 2 次，其模板来源是推断；直接证据是全源无对应定义）；
    - 同样，`頭部変形基礎` 中的 stencil 声明了 `["■輪郭", "■耳L", "■耳R"]`，其中 `■耳L` 与 `■耳R` 在该模型中也完全不存在。
 3. **原生运行时代码瓶颈**：
    - `src/runtime/geometry_scene.cpp:551-565` 在解析遮罩来源时，强制要求 `node.mask_sources` 中的每一项都必须解析出有效节点，否则直接标记 `mask.resolved = false`；
@@ -132,11 +133,11 @@
 本任务生成的所有高清对比图、裁切图及诊断数据已完整落盘于 `build/evidence/v7/`：
 
 ### 5.1 Side-by-Side 对比图（三联画：WebGL 参考 | 原生输出 | x4 放大差分）
-- [sbs_fraise-france-maid-b_eye10_neutral.png](file:///run/media/chocola/DATA/Project/NekoMote/build/evidence/v7/sbs_fraise-france-maid-b_eye10_neutral.png)：初态基准（差分全黑，PASS）
-- [sbs_fraise-france-maid-b_eye10_head_lr30_direct.png](file:///run/media/chocola/DATA/Project/NekoMote/build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_direct.png)：未反转直选对比（清晰展现头部形变反向发散，差分高亮）
-- [sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png](file:///run/media/chocola/DATA/Project/NekoMote/build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png)：输入反转确证（差分全黑，证明 100% 对齐）
-- [sbs_fraise-france-maid-b_eye10_body_lr30_direct.png](file:///run/media/chocola/DATA/Project/NekoMote/build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_direct.png)：身体未反转直选对比（胸围围裙反向位移）
-- [sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png](file:///run/media/chocola/DATA/Project/NekoMote/build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png)：身体反转确证（差分全黑，证明 100% 对齐）
+- [sbs_fraise-france-maid-b_eye10_neutral.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_neutral.png)：初态基准（差分全黑，PASS）
+- [sbs_fraise-france-maid-b_eye10_head_lr30_direct.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_direct.png)：未反转直选对比（清晰展现头部形变反向发散，差分高亮）
+- [sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png)：输入反转确证（差分全黑，证明 100% 对齐）
+- [sbs_fraise-france-maid-b_eye10_body_lr30_direct.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_direct.png)：身体未反转直选对比（胸围围裙反向位移）
+- [sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png)：身体反转确证（差分全黑，证明 100% 对齐）
 
 ### 5.2 局部高倍裁切
 - **头部轮廓裁切**：`nat_eye10_head_lr30_crop_head.png` vs `ref_eye10_head_lr30_crop_head.png`
@@ -170,8 +171,8 @@
 
 1. **镜像控制变量反转支持（`mirrorControl`）**：
    - 在 `import_emote.cpp` 中解析 `metadata.mirrorControl.variableMatchList` 并存入 `ModelAsset`；
-   - 在运行时变量设置 / 时间线求值入口（如 `Instance` / `Playback`），当 `asset.mirror == true` 时，自动对名称匹配 `variableMatchList` 的变量取反（`effective_value = -user_value`），或在参数化查表阶段反向映射；
+   - 以下为旧 V7 建议，不能直接推广到动作/差分通道；当前契约以 C5 交接为准。当 `asset.mirror == true` 时，自动对名称匹配 `variableMatchList` 的变量取反（`effective_value = -user_value`），或在参数化查表阶段反向映射；
    - **注意**：绝对不要取消 `asset.mirror` 的呈现翻转，两者是正交且协同运作的。
 2. **容错性 Stencil 复合图层解析（`stencilCompositeMaskLayerList`）**：
-   - 在 `src/runtime/geometry_scene.cpp:551-568` 中，当遍历 `node.mask_sources` 时，若某个名称在当前 scope 未找到，**不应将整个 `mask.resolved` 设为 `false`**，而应仅在 `roots` 为空时才标记未解析；只要存在至少一个有效 source，就应正常编译遮罩；
+   - 若名称全模型无定义，可跳过该可选项；名称有定义但不能在当前 scope 定位时仍保持未解析。跳过后全空的 union 也拒绝，不能用另一有效 source 掩盖作用域错误。当前实现以 C5 交接为准；
    - 这样既能严格抵御真正空遮罩的非法引用，又能容纳 E-mote 资产中普遍存在的未绑可选遮罩（如 `add_mask`, `■耳L` 等）。

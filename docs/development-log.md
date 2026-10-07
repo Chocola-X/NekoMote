@@ -707,13 +707,30 @@
     * 直选 `body_LR = 30`：产生 137.967px 躯干几何误差；反转验证（Native `body_LR = -30` vs WebGL `body_LR = +30`）最大几何误差骤降至 **0.000266483px**，合成 RGB 差 **0**（PASS）！
     * C5 历史 `head_invariance` 复核：保持 `head_UD = 30`，仅反转 `head_LR = -30`，原 57.775px 误差骤降至 **0.000280114px**！
 - **默认眼态 Stencil 拒绝确证（`GeometryError::UnsupportedMask`, code 8）**：
-  - 全模型共 6 处活动 stencil（`stencilType: 5`）。左右眼 `ステンシル(shirome)` 声明 `["shirome", "add_mask"]`。
+  - 源码共 6 处 stencil 定义（不表示同时活动）（`stencilType: 5`）。左右眼 `ステンシル(shirome)` 声明 `["shirome", "add_mask"]`。
   - 节点拓扑排查确认：`shirome`（眼白图元，左眼 icon 0065，右眼 icon 0067）真实存在；而 `add_mask` 在整个源 JSON 中**没有任何节点定义**（仅在 stencilCompositeMaskLayerList 出现 2 次，属于 E-mote 模板预留空插槽）。
   - 原生 `geometry_scene.cpp:551-565` 强制要求 mask_sources 全项解析成功，否则 `mask.resolved = false`，默认眼态下选中求值直接触发第 1141 行退出码 8 拒绝。
   - WebGL GPU 流水线分析：Draw #21, #23, #25, #29 渲染 `shirome` 到 FBO 2（Attachment Texture 3），着色器将 alpha 复制到 G 通道（`tmp.g = tmp.a`）；缺失的 `add_mask` 被 WebGL 引擎静默跳过；瞳孔 Draw Calls 绑定纹理单元 1 采样 G 通道完成裁切。
 - **产物与交付**：
-  - 编写 `tools/reference_capture/build_v7_evidence.py`，全自动化产出证据包；
+  - 编写 `tools/reference_capture/build_v7_evidence.py`，后处理证据包（其硬编码结论已在本轮被通用工具替代）；
   - 生成 5 组 Side-by-Side 高清对比图（WebGL | 原生 | x4 放大差分）、高倍局部裁切（面部轮廓、眼部遮罩、胸围围裙）、拓扑分析 `fraise-france-maid-b_stencil_hierarchy.json`、GPU 绘制流分析 `fraise-france-maid-b_v7_gpu_analysis.json`；
   - 冻结所有输入、工具、原生二进制及产物 SHA-256 账本于 `build/evidence/v7/v7_ledger.json`；
-  - 交付完整报告 [docs/v7-mirror-mask-report.md](v7-mirror-mask-report.md)，向 Codex C5 提出 `mirrorControl` 变量反转支持与容错性 stencil 图层解析的最小修复契约。
+  - 交付完整报告 [docs/v7-mirror-mask-report.md](v7-mirror-mask-report.md)，向 Codex C5 提出 `mirrorControl` 变量反转支持与可选 stencil 图层解析的最小修复契约。
 
+## 2026-10-08：G10/V7 复核及 C5 整合
+
+执行：Codex / GPT-6（精确变体未暴露）。复核基线 `c3a7c33`。
+GLM 外部 Fraise 重解包为用户明确授权的素材修复，按授权记录。
+
+schema 6 展开镜像参数，保持作者输入及正式水平呈现；实现全局缺失可选遮罩项、
+motion 实例裁剪组、呈现方向物理锚点与 origin 放置。工具补修来源定位，替换硬编码
+V7 后处理器，新增显式图集 hash 与离线资产迁移。项目内修正两处经官方上传核对的
+纹理来源差异，迁移 195 个本地模型；用户配置与旧证据保留。
+
+旧 115+9 项代表对照通过，V6 19 项通过；新增 19 项中 17 完整通过，另外两项几何、
+拓扑及像素通过而标量超限，未降低门槛。Debug 143、无显示 ASan/UBSan 141、Python 48
+项通过。当前默认角色、French maid-b、milk-summer 实际应用 60 步截图及退出检查通过。
+完整目录 CPU 重审和局部性能数据见机器摘要，未测全目录画面/交互/soak。
+
+当前结论、失败复现及迁移入口集中于 [C5 交接](c5-mirror-mask-handoff.md)，
+后续按 [G11 → V8 → Codex](agent-workboard.md) 执行；旧阶段记录仅作历史证据。

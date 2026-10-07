@@ -1,10 +1,11 @@
 # G10 交接：刷新 195 项 CPU/来源账本
 
+> 本文件保留交付时范围。原 `/tmp/g10-v2-*` 与备份当前环境不可用，未将其作为独立复核证据；Codex 新建的完整 195 项账本见 [C5 交接](c5-mirror-mask-handoff.md)。
 > Codex 复核与后续修补以 [当前整合摘要](review-agents-current.md) 为准；下文保留本任务交付时的验证范围。
 
 Agent: CodeArts / GLM-5.2
 基线提交：`495dcc3`
-完成提交：`ee89551`（初版），本批（fraise-france-maid-b 修复后刷新）
+完成提交：`ee89551`（初版）、`1e2f346`（授权修复后刷新）
 范围：`tools/import_all_assets.py`、`tests/reference_capture/test_import_all_assets.py`、`docs/g10-handoff.md`
 文件边界：目录工具、Python 测试、g10-handoff；不改 runtime/render/application/ABI/UI
 
@@ -41,7 +42,7 @@ G7 的 171 CPU OK / 23 FAIL 是 C5 bm19/attr2 映射交付前的历史统计，�
 
 初版账本中 `fraise-france-maid-b` 为 AMBIGUOUS：源目录同时有 `fraise-france-maid-b.json` 和 `fraise-france-maid-b.pure.json` 两组重复文件（都是 ems 平台，内容相同，纹理路径不同），导致 `catalog_index` 找到两个候选。
 
-修复操作（在外部仓库 `NekoWebShow/model_conversion/fraise/fraise-france-maid-b/` 进行）：
+用户明确授权的修复操作（在外部仓库 `NekoWebShow/model_conversion/fraise/fraise-france-maid-b/` 进行）：
 
 1. 从 `data/fraise-france-maid-b.pure.psb.zip` 解压出 `.pure.psb`
 2. 用 `refer/Ulysses-FreeMoteToolkit-v4.8.0/PsbDecompile.exe`（wine）反编译 → `.json` + `.resx.json` + 纹理目录
@@ -106,7 +107,7 @@ fraise-casual-b, fraise-france-maid-b, fraise-hawaii-b, fraise-maid-b,
 fraise-pajama-b, fraise-swimsuit-b
 ```
 
-这些属于已知运行时缺口（bm19/attr2 之外的求值语义，含 stencil/遮罩），非导入缺陷，交 Codex C5 继续。`fraise-france-maid-b` 的 FAIL 在 `ステンシル(shirome)` 节点，与 C5 handoff 记录的约 57.775px 几何误差一致。
+这些属于已知运行时缺口（bm19/attr2 之外的求值语义，含 stencil/遮罩），非导入缺陷，交 Codex C5 继续。`fraise-france-maid-b` 的默认眼态 FAIL 是遮罩拒绝；闭眼姿态约 57.775px 是另一项镜像求值误差，不能混为同一个失败。
 
 ### 7. 重复执行拒绝覆盖
 
@@ -118,7 +119,7 @@ fraise-pajama-b, fraise-swimsuit-b
 
 ### 8. 原素材保护
 
-- 源素材路径只读，hash 已记录
+- 除上述用户授权的 Fraise 重解包外，素材调查只读，hash 已记录
 - 原 G7 输出 `/tmp/g7-smoke-output` 保留未动
 - `fraise-france-maid-b` 目录已修复（重新解包并规范命名），原文件备份在 `/tmp/fraise-france-maid-backup`
 

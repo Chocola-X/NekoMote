@@ -19,7 +19,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -81,7 +81,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -146,7 +146,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -208,7 +208,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "1c42dc18f58068bec025712df7ae8c2d37f50e7d38388b0dcd3a40ed3358fb44",
+      "asset_sha256": "7559212aaa08f158fd21c4c4117382b5e21fd8c81d3626709a1abcbbf4dd404f",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -270,7 +270,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "1c42dc18f58068bec025712df7ae8c2d37f50e7d38388b0dcd3a40ed3358fb44",
+      "asset_sha256": "7559212aaa08f158fd21c4c4117382b5e21fd8c81d3626709a1abcbbf4dd404f",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -335,7 +335,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "1c42dc18f58068bec025712df7ae8c2d37f50e7d38388b0dcd3a40ed3358fb44",
+      "asset_sha256": "7559212aaa08f158fd21c4c4117382b5e21fd8c81d3626709a1abcbbf4dd404f",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -397,7 +397,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "756bea25c7ca118c3b20d91e60aca9cc96c93e917a86291f88607a06d28adc23",
+      "asset_sha256": "7e54a69a84abc24cab692a9fe7ab404cc7c1639457513b0a193bf874024c95c9",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -459,7 +459,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "756bea25c7ca118c3b20d91e60aca9cc96c93e917a86291f88607a06d28adc23",
+      "asset_sha256": "7e54a69a84abc24cab692a9fe7ab404cc7c1639457513b0a193bf874024c95c9",
       "observed_variables": [
         "move_UD",
         "move_LR",
@@ -524,7 +524,7 @@
         "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
         "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
       },
-      "asset_sha256": "756bea25c7ca118c3b20d91e60aca9cc96c93e917a86291f88607a06d28adc23",
+      "asset_sha256": "7e54a69a84abc24cab692a9fe7ab404cc7c1639457513b0a193bf874024c95c9",
       "observed_variables": [
         "move_UD",
         "move_LR",

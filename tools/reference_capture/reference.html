@@ -5,6 +5,8 @@
 <canvas id="canvas"></canvas>
 <script>
 window.ready = false;
+window.traceAtlasHashes=false;
+window.atlasHashPromises=[];
 window.requestAnimationFrame = () => 0; // fixed stepping only; no wall-clock loop
 window.mathTrace=[];
 window.fixedClockMs=null;
@@ -288,6 +290,7 @@ window.capture = async function(options) {
         observedVariables[label]=EmotePlayer_GetVariable(id,label);
     const renderer=gl.getExtension('WEBGL_debug_renderer_info');
     const metadata={defaults:variables, observedVariables, timelineInfo, variableSamples:samples,
+        atlasUploadHashes:await Promise.all(window.atlasHashPromises),
         timelineBlendQueryAvailable:hasBlendQuery,
         mathTrace:window.mathTrace, width:canvas.width,height:canvas.height,
         clockTrace:window.clockTrace,clockTraceTruncated:window.clockTraceTruncated,

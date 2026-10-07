@@ -6,6 +6,9 @@ import json
 import pathlib
 import subprocess
 import zipfile
+import sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "import_emote"))
+import catalog_index
 
 
 def run(command, log):
@@ -16,10 +19,24 @@ def run(command, log):
         raise RuntimeError(f'command failed ({result.returncode}); see {log}')
 
 
+def configure_asset_input(parser):
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--importer', type=pathlib.Path)
+    group.add_argument('--asset-root', type=pathlib.Path,
+                       help='explicit prebuilt bundles; frozen asset hashes still required')
+
+
+def resolve_source(index, model):
+    candidates = catalog_index.resolve_candidates(index, model)
+    if len(candidates) != 1:
+        raise ValueError(f'expected exactly one source for {model}: {candidates}')
+    return candidates[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--reference-root', type=pathlib.Path, required=True)
-    parser.add_argument('--importer', type=pathlib.Path, required=True)
+    configure_asset_input(parser)
     parser.add_argument('--preview', type=pathlib.Path, required=True)
     parser.add_argument('--evaluator', type=pathlib.Path, required=True)
     parser.add_argument('--browser', type=pathlib.Path, required=True)
@@ -31,15 +48,17 @@ def main():
     baseline = json.loads((root / 'docs/validation/static-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
+    source_index = catalog_index.build_index(args.reference_root) if args.importer else None
     current_sources = {name: hashlib.sha256((args.reference_root / 'driver' / name).read_bytes()).hexdigest()
                        for name in ('FreeMoteDriver.js', 'emoteplayer.js')}
     for case in baseline['cases']:
         model, name = case['model'], case['case']
-        asset = args.output / model / 'model.nkm.json'
+        asset = (args.asset_root or args.output) / model / 'model.nkm.json'
         if model not in imported:
-            source = args.reference_root / 'model_conversion' / model.split('-')[0] / model / model
-            run([args.importer, str(source)+'.json', str(source)+'.resx.json',
-                 '--output', asset.parent], args.output / (model+'-import.log'))
+            if args.importer:
+                source = resolve_source(source_index, model)
+                run([args.importer, source, source.with_suffix('.resx.json'),
+                     '--output', asset.parent], args.output / (model+'-import.log'))
             imported.add(model)
             with zipfile.ZipFile(args.reference_root / 'data' / (model+'.pure.psb.zip')) as archive:
                 members = [name for name in archive.namelist() if name.endswith('.psb')]

@@ -10,6 +10,8 @@ import numpy as np
 def compare(native, draws):
     frame = native['frame']
     vertices = np.array(frame['vertices'])
+    if native['presentation_mirror']:
+        vertices[:, 0] = -vertices[:, 0]
     indices = np.array(frame['indices'])
     textures = frame['textures']
     if len(textures) != 1:

@@ -57,6 +57,7 @@ struct PhysicsProgram::Impl
 {
     const GeometryScene* scene{nullptr}; // borrowed, for ID ownership validation
     float author_scale{1};
+    bool mirrored_coordinates{false};
     std::vector<SpringBinding> springs;
     std::vector<ChainBinding> chains;
 };
@@ -82,6 +83,7 @@ PhysicsCompileResult compile_physics(const model::ModelAsset& asset, const Geome
     {
         auto data = std::make_unique<PhysicsProgram::Impl>();
         data->scene = &scene;
+        data->mirrored_coordinates = asset.mirror;
         std::vector<ParamId> outputs;
         for (const auto& control : asset.spring_controls)
         {
@@ -320,6 +322,11 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
             instance.anchors[i] = {
                 static_cast<float>(static_cast<double>(sample.position.x) * inverse_scale),
                 static_cast<float>(static_cast<double>(sample.position.y) * inverse_scale)};
+            // Source physical locators use the presented model coordinates.
+            // Geometry remains unflipped for GPU presentation; transform its
+            // horizontal locator before integrating, not its output afterwards.
+            if (program.mirrored_coordinates)
+                instance.anchors[i].x = -instance.anchors[i].x;
             if (!finite(instance.anchors[i]))
                 return {PhysicsError::InvalidAnchor, i, {}};
             active = true;

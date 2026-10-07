@@ -50,7 +50,7 @@
         "quake_UD_spare",
         "quake_LR_M_spare"
       ],
-      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "asset_sha256": "28059164251a9c5aed8eda64fa23524e9e7e0c4654307027d331c58224bffc69",
       "scale": 0.8,
       "reference_metadata_sha256": "71a4656dcf0c36041ab4ebdcfa10ddf1b69b1a6e17bc7f10c53817e0667cf569",
       "reference_png_sha256": "0d686bd06b608c452c4db15cf956b9f08d942a774e0c120c94140be3bea9e447",
@@ -101,7 +101,7 @@
         "quake_UD_spare",
         "quake_LR_M_spare"
       ],
-      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "asset_sha256": "28059164251a9c5aed8eda64fa23524e9e7e0c4654307027d331c58224bffc69",
       "scale": 1.25,
       "reference_metadata_sha256": "f144fdb63d38dd60efdc947601a6a2850f53b46ed424a04ebf4cc19bf7e30bb4",
       "reference_png_sha256": "b37ebd83e4e1008359f4ddeb715b2e60e2fec6240dc132cebfba5599fe2928b1",
@@ -152,7 +152,7 @@
         "quake_UD_spare",
         "quake_LR_M_spare"
       ],
-      "asset_sha256": "2bda6890637857b4d33bd942a7bd10074ef4b2c650924a5d6f0c50dffb3a8f74",
+      "asset_sha256": "28059164251a9c5aed8eda64fa23524e9e7e0c4654307027d331c58224bffc69",
       "scale": 1.25,
       "reference_metadata_sha256": "2c0071483df7ec23e1a6ef2edd636b776443e3961c0798eccc8e1b4de0b15c34",
       "reference_png_sha256": "3e98d121c3e94e8613609076cc698d159e5f091a7d6d36837a5984130f708b9e",

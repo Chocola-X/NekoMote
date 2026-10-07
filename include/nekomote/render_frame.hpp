@@ -51,7 +51,9 @@ struct DrawCommand
 // geometry buffers. IDs are one-based indices
 // into RenderFrame::masks; zero means no mask. Current raster contract: five-bit
 // stored coverage, bilinear sampling, floor-power-of-two output dimensions, and
-// a two-output-pixel border for intersected source/draw region clipping.
+// a two-output-pixel border for intersected source/content-group clipping.
+// Commands sharing an ID share a content clip. A runtime referenced motion
+// owns that clip; separate motions retain separate IDs even with equal sources.
 struct MaskDefinition
 {
     std::uint32_t first_command{0}, command_count{0};

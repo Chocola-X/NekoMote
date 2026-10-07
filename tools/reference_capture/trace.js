@@ -17,6 +17,15 @@ window.maskPixels = [];
         if(args.length===9) Object.assign(info,{width:args[3],height:args[4],format:args[6],type:args[7]});
         else Object.assign(info,{width:args[5].width,height:args[5].height});
         textureInfo.set(texture,info);
+        if(window.traceAtlasHashes && args.length===9 && args[6]===this.RGBA &&
+           args[7]===this.UNSIGNED_BYTE && args[8] &&
+           args[3]*args[4]*4===args[8].byteLength) {
+            const bytes=new Uint8Array(args[8].buffer,args[8].byteOffset,args[8].byteLength).slice();
+            window.atlasHashPromises.push(crypto.subtle.digest('SHA-256',bytes).then(hash=>({
+                width:args[3],height:args[4],bytes:bytes.length,
+                rgba_sha256:Array.from(new Uint8Array(hash),v=>v.toString(16).padStart(2,'0')).join('')
+            })));
+        }
         return original.texImage2D.apply(this,args);
     };
     proto.texParameteri=function(target,pname,param) {

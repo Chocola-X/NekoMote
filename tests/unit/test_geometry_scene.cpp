@@ -676,6 +676,43 @@ TEST_CASE("Warmed bending output retains independent resettable state without he
     REQUIRE(first.gain == second.gain);
 }
 
+TEST_CASE("Mirrored physical locators integrate in presented coordinates", "[runtime][physics]")
+{
+    using namespace runtime;
+    auto asset = spring_rig();
+    const auto check = [&](bool mirror)
+    {
+        asset.mirror = mirror;
+        auto scene = compile_geometry_scene(asset);
+        REQUIRE(scene.scene);
+        auto program = compile_physics(asset, *scene.scene);
+        REQUIRE(program.program);
+        GeometryInstance geometry(*scene.scene);
+        REQUIRE(geometry.set_origin({10, 20}));
+        REQUIRE(geometry.set_scale(0.5f));
+        PhysicsInstance physics(*program.program);
+        REQUIRE(geometry.evaluate());
+        REQUIRE(physics.step(geometry));
+        const float sign = mirror ? -1.0f : 1.0f;
+        REQUIRE(physics.observe_spring(0)->anchor.x == 10.0f + sign * 5.0f);
+        REQUIRE(geometry.set_parameter(scene.scene->find_variable("pick"), 1));
+        REQUIRE(geometry.evaluate());
+        REQUIRE(physics.step(geometry));
+        REQUIRE_THAT(
+            physics.values()[0].value,
+            Catch::Matchers::WithinAbs(static_cast<double>(sign) * -0.6467359066009521, 1e-5));
+        // External author displacement keeps its direction, independent of
+        // mirroring. Reinitialization discards the previous physical state.
+        physics.reset();
+        REQUIRE(physics.step(geometry));
+        REQUIRE(physics.step(geometry, {1, {1, 0}}));
+        REQUIRE_THAT(physics.values()[0].value,
+                     Catch::Matchers::WithinAbs(-0.6467359066009521, 1e-5));
+    };
+    check(false);
+    check(true);
+}
+
 TEST_CASE("Bound physical instances normalize anchors and preserve state on failed steps",
           "[runtime]")
 {
@@ -1945,6 +1982,40 @@ TEST_CASE("Opacity-zero sprites still supply mask geometry without color draws",
     REQUIRE(inactive.frame().mask_commands.empty());
 }
 
+TEST_CASE("Referenced motions sharing a stencil retain independent content clips",
+          "[runtime][scene]")
+{
+    auto asset = rig();
+    asset.parts[1].layers.push_back(layer("small highlight", 0, sprite()));
+    FrameContent blank;
+    blank.src = field(std::string{"blank"});
+    blank.icon = field(std::string{"32:32:16:16"});
+    auto mask = layer("mask", 12, blank);
+    mask.inherit_mask = 0x24007fc;
+    mask.stencil_type = 5;
+    mask.stencil_composite_mask_layers = {"source"};
+    FrameContent reference;
+    reference.src = field(std::string{"rig"});
+    reference.icon = field(std::string{"A"});
+    mask.children.push_back(layer("pupil", 3, reference));
+    reference.icon = field(std::string{"B"});
+    mask.children.push_back(layer("separate highlight", 3, reference));
+    asset.parts[0].layers = {layer("source", 0, sprite()), mask};
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    std::vector<MaskId> masked;
+    for (const auto& command : instance.frame().commands)
+        if (command.mask.valid())
+            masked.push_back(command.mask);
+    REQUIRE(masked.size() == 3);
+    REQUIRE(masked[0] == masked[1]);
+    REQUIRE(masked[0] != masked[2]);
+    REQUIRE(instance.frame().mask_commands.size() == 2);
+}
+
 TEST_CASE("Blank mask sources produce empty coverage while retaining their visible target",
           "[runtime][scene]")
 {
@@ -2599,13 +2670,14 @@ TEST_CASE("Verified source multiply is explicit and unknown blend modes fail", "
     }
 }
 
-TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][scene]")
+TEST_CASE("Stencil unions preserve real sources and omit absent optional labels",
+          "[runtime][scene]")
 {
     // E-mote models like fraise-casual-a have a real sprite layer named "add_mask"
     // referenced in stencil_composite_mask_layers alongside "shirome".
     // When the real layer is present, it must be resolved as a geometry mask source.
-    // When absent (as in fraise-b variants before nested scope resolution is implemented),
-    // the unverified source must not be silently skipped; evaluate() must reject it.
+    // V7 observes absent optional template labels contributing no coverage.
+    // Empty unions and sources outside the current scope remain unverified.
     auto asset = rig();
     asset.parts.resize(1);
     asset.textures[0].width = 64;
@@ -2634,7 +2706,7 @@ TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][sc
     root_content.src = field(std::string{"blank"});
     root_content.icon = field(std::string{"100:100:0:0"});
 
-    SECTION("rejects when add_mask layer is missing")
+    SECTION("absent optional label leaves the existing source intact")
     {
         auto root = layer("root", 0, root_content);
         root.children = {shirome, stencil};
@@ -2644,9 +2716,8 @@ TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][sc
         runtime::GeometryInstance instance(*compiled.scene);
         const auto status = instance.evaluate();
         REQUIRE(status);
-        const auto frame_status = instance.build_frame();
-        REQUIRE(!frame_status);
-        REQUIRE(frame_status.error == runtime::GeometryError::UnsupportedMask);
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().mask_commands.size() == 1);
     }
 
     SECTION("resolves real add_mask layer as geometry source")
@@ -2661,7 +2732,96 @@ TEST_CASE("add_mask resolves when present and fails when missing", "[runtime][sc
         const auto status = instance.evaluate();
         REQUIRE(status);
         REQUIRE(instance.build_frame());
+        REQUIRE(instance.frame().mask_commands.size() == 2);
     }
+    SECTION("all missing labels remain rejected")
+    {
+        stencil.stencil_composite_mask_layers = {"absent", "also_absent"};
+        auto root = layer("root", 0, root_content);
+        root.children = {shirome, stencil};
+        asset.parts[0].layers = {root};
+        auto compiled = runtime::compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame().error == runtime::GeometryError::UnsupportedMask);
+    }
+    SECTION("a label declared in an unexpanded motion is not an optional slot")
+    {
+        auto root = layer("root", 0, root_content);
+        root.children = {shirome, stencil};
+        asset.parts[0].layers = {root};
+        Part unused;
+        unused.group = "rig";
+        unused.name = "unused";
+        unused.layers = {layer("add_mask", 0, mask_content)};
+        asset.parts.push_back(unused);
+        auto compiled = runtime::compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame().error == runtime::GeometryError::UnsupportedMask);
+    }
+}
+
+TEST_CASE("Mirrored geometry reverses normalized parameters once without changing inputs",
+          "[runtime][scene]")
+{
+    auto asset = rig();
+    auto normal = runtime::compile_geometry_scene(asset);
+    REQUIRE(normal.scene);
+    asset.mirror = true;
+    asset.mirrored_parameters = {"pick"};
+    auto mirrored = runtime::compile_geometry_scene(asset);
+    REQUIRE(mirrored.scene);
+    runtime::GeometryInstance a(*normal.scene), b(*mirrored.scene);
+    REQUIRE(a.set_parameter(normal.scene->find_variable("pick"), 0.75f));
+    REQUIRE(b.set_parameter(mirrored.scene->find_variable("pick"), -0.75f));
+    REQUIRE(a.evaluate());
+    REQUIRE(a.build_frame());
+    for (int step = 0; step < 3; ++step)
+    {
+        REQUIRE(b.evaluate());
+        REQUIRE(b.build_frame());
+        REQUIRE(a.frame().vertices.size() == b.frame().vertices.size());
+        for (std::size_t i = 0; i < a.frame().vertices.size(); ++i)
+        {
+            REQUIRE(a.frame().vertices[i].x == b.frame().vertices[i].x);
+            REQUIRE(a.frame().vertices[i].y == b.frame().vertices[i].y);
+        }
+    }
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int step = 0; step < 100; ++step)
+    {
+        (void)b.evaluate();
+        (void)b.build_frame();
+    }
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Mirrored parameter compilation rejects invalid normalized references",
+          "[runtime][scene]")
+{
+    auto asset = rig();
+    asset.mirror = true;
+    asset.mirrored_parameters = {"pick"};
+    SECTION("unknown parameter")
+    {
+        asset.mirrored_parameters = {"plick"};
+    }
+    SECTION("duplicate parameter")
+    {
+        asset.mirrored_parameters.push_back("pick");
+    }
+    SECTION("unmirrored model")
+    {
+        asset.mirror = false;
+    }
+    const auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE_FALSE(compiled.scene);
+    REQUIRE_FALSE(compiled.errors.empty());
 }
 
 TEST_CASE("Observed attr2 uses ordinary alpha and unknown protection flags fail",

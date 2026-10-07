@@ -105,6 +105,12 @@ void validate_asset(const model::ModelAsset& a)
                 a.screen_height <= 32768,
             "screen dimensions");
     require(!a.textures.empty() && !a.parts.empty(), "empty model");
+    std::unordered_set<std::string> mirrored, declared_parameters;
+    model::visit_parameter_names(a, [&](const auto& name) { declared_parameters.insert(name); });
+    for (const auto& name : a.mirrored_parameters)
+        require(a.mirror && !name.empty() && declared_parameters.contains(name) &&
+                    mirrored.insert(name).second,
+                "invalid mirrored parameter " + name);
     std::unordered_set<std::string> textures, motions;
     for (const auto& t : a.textures)
     {

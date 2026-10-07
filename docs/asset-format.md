@@ -1,43 +1,44 @@
 # 当前资产格式
 
-离线导入命令：
+当前只支持 **schema 6**。运行时不读取历史 schema 或原 E-mote JSON。旧资产须显式重建，版本不支持时明确拒绝。
 
 ```bash
-build/dev/bin/nekomote_import model.json model.resx.json --output build/assets/model
-# 有外置 PNG 时，重复传入 --texture 'tex#000=relative-atlas.png'
+build/release/bin/nekomote_import model.json model.resx.json --output assets/new-model
+# 外置 PNG 可重复传 --texture 'tex#000=relative-atlas.png'
 ```
 
-输出目录必须不存在。写入先在本项目指定输出目录旁创建临时目录，成功后重命名；失败只清理本次临时目录。输出只复制引用的图集，不复制全素材。
+输出目录必须不存在。导入先写旁边的临时目录，成功后重命名；失败仅清理本次临时文件。资源路径相对于 bundle，不包含本机绝对路径。
 
-- `model.nkm.json`：`schema=5` 与强类型模型数据。只支持当前 schema；不支持的版本要求重新导入。
-- `textures/N.png`：相对于 bundle 的 PNG 路径。
-- `report.json`：结构导入状态、尚未支持的字段及警告。`playback_certified=false`，不是完整模型运行时能力声明。
-- `source.json`：完整源模型离线调查归档，不作为运行时输入。后续增加规范化字段时从原素材重新构建。
+| 文件 | 用途 |
+| --- | --- |
+| `model.nkm.json` | `schema=6` 与规范化强类型模型 |
+| `textures/N.png` | 仅引用的 PNG 图集 |
+| `report.json` | 结构状态、警告和未支持字段；不是播放认证 |
+| `source.json` | 离线调查归档，运行时不依赖 |
 
-`Field<T>` 编码为 `{ "state": 0|1|2, "value": ... }`，分别表示缺字段、null、存在值。只有 state=2 带 value；0 值不等同于缺失。frame 的 content 也保留状态，末尾空帧不转成可见默认帧。icon 使用 `texture/icon` 键，motion 引用使用 group/name 组合；图集引用和 motion 引用在加载时校验。
+加载阶段验证数量、有限数值、引用和路径；解析/图片解码不进入稳态帧路径。`Field<T>` 编码为 `{ "state": 0|1|2, "value": ... }`，表示缺失、null、存在；只有 state=2 带 value。末尾空帧不转为可见默认帧。icon 键为 `texture/icon`，motion 键为 `group/name`。
 
-加载期间完成 JSON、数量、数值、引用和资源路径检查。此格式仅用于当前开发阶段，允许在字段语义确认后直接演进；不增加历史格式回退。
+## 镜像与参数
 
-Schema 2 增加 `paired_clamps`，保存成对变量控制的类型、变量、范围和启用状态。Schema 1 明确拒绝：用同一导入命令写入新目录重建，不自动回退。
+`mirror` 和 `mirrored_parameters` 都必须存在。后者保存需反向求值的**完整参数名**，不能重复、为空或引用未声明参数；mirror=false 时须为空。
 
-## Schema 3 控制规则
+离线导入将已观察的 `metadata.mirrorControl.variableMatchList` 中 `_LR`、`_slant` 按子串匹配展开为名字列表，其他模式明确拒绝。声明范围包含公共变量、控制器、时间线、物理输出及所有 motion 的参数绑定。运行时不进行模式/字符串匹配。
 
-加入 variable_controls：显式 kind（Linear/Immediate/Expression/Eye/Mouth/Selector）、enabled、变量/口型绑定、edge 区间和 junction 拓扑、眨眼参数、选择器 on/off 输出。字段名与类型已规范化，运行时不读 source.json。它们的结构保留不代表全部行为已认证；当前 nonlinear expression routing、selector fade 和自动控制器仍未通过。
+作者输入、动画状态及公开观测值保持作者方向；几何求值复制最终参数后反向一次，再执行成对 clamp 和参数化。原 PSB 的纯差分/叠加/主动作已分别核对，不按通道猜测方向。物理将 locator 转到呈现模型坐标后积分，输出仍是作者参数。输出呈现仍保留水平镜像。这两步均需要，不通过删除呈现镜像解决方向差异。证据与适用范围见 [C5 交接](c5-mirror-mask-handoff.md)。
 
-当前只支持 schema 5，schema 1/2/3/4 明确拒绝；用相同 `nekomote_import <源 JSON> <resx> --output <新目录>` 重建。四型号新旧 model 对象除新增 variable_controls 外逐字段相同；当前固定输入 hash 见 docs/validation/static-inputs.json，历史阶段材料不改写。
+## 控制与物理
 
-## Schema 4 物理数据
+资产包含 `paired_clamps`、强类型 `variable_controls`、`author_scale`、`spring_controls`、`chain_controls`。物理保存作者系数、三分量快照、锚点与输出绑定；未知非 null 字段保留来源并报告，编译时明确处理或拒绝。结构可读不代表求值已认证。
 
-新增 `author_scale`（保留 Field 状态）、`spring_controls` 与 `chain_controls`。胸部弹簧保存 stiffness、friction、gravity、axis_scale、vertical_offset、三分量 position/velocity/previous_anchor；头发与配件链用显式 Hair/Parts kind 区分，保存两个粒子的 length、rest_position、position、velocity，方向摩擦、伸长系数、速度边界、水平/竖直缩放、竖直效果模式、弯曲参数和保存的 phase/gain。输入数值规范化为 Float32，保持源 z 和快照前锚点，未验证语义不丢弃。
+有物理控制器时 author_scale 必须有限且为正。链条末端使用 `normal_velocity_damping`：1 去除法向速度，2 反射；无旧字段别名。保存 Float32 作者数值，绑定和锚点在编译时解析。物理输出参数即使没有 drawable 使用也声明，空显示帧的已选资源定位点与未选资源区分。
 
-每个控制器的 binding 保存原字段路径、label、anchor、preset、输出变量、enabled 及 `unsupported_fields`。未知控制器/快照/向量字段的非 null 路径同时写入资产和离线报告，后续编译器须明确处理或拒绝。preset 是保存的作者配置名称，不能据名称选择未验证公式。锚点资源作用域和变量 ID 在场景/物理编译时绑定，不在每帧解析字符串。
+## 一次性 5 → 6 迁移
 
-存在物理控制器时要求 author_scale 为有限正数；必需系数与保存快照不得缺省或 null。校验两个粒子及三分量向量形状、非负系数、正长度、摩擦范围、数值有限和不同输出绑定。`velocity_retention` 不限制为 <=1：真实素材有 `v_bound=2`。这只认证规范化和结构，不认证该边界值的求值公式或完整播放器。
+首选从明确、已核实来源重新导入到新目录。现有会话/背景/音频配置可以保留。需要发布到已有角色目录时：
 
-schema 3 及更早资产需用页面开头命令重新导入到新目录；不提供历史读取或隐式迁移。四型号的新旧 model 对象除上述三个新增字段外逐字段相同，迁移与 hash 见 [记录](validation/p6-schema4-migration.json)。当前静态/动态基线更新为 schema 4 资产 hash，原 PSB/驱动/输入/参考图片与历史阶段报告保持原记录。
+```bash
+python3 tools/rebuild_asset_schema.py --assets assets/characters \
+  --rebuilt <逐项核实的新bundle根目录> --backup <不存在的备份目录>
+```
 
-## Schema 5 链条法向阻尼命名
-
-独立物理验证确认源 v_bound 是末端约束的法向速度阻尼，1 去除法向速度、2 反射；schema 5 使用 `normal_velocity_damping`，删除 schema 4 中含义不准确的 velocity_retention。无旧字段别名/回退，旧资产用同一导入命令重建。五型号迁移除该字段名称和 schema 外逐字段相同；见 docs/validation/p6-chain-binding.json。当前静态/动态资产 hash 更新为 schema 5，原 PSB、驱动、输入和旧截图 hash 不修改。
-
-GeometryInstance 在场景编译时声明物理输出参数，包含没有 drawable 使用的绑定。启用的 vertical_effect=0 链条已可绑定原生锚点；没有导出锚点的链条仍围绕固定零点积分，不暗中禁用。所选资源内的零局部原点导出标记在显示空帧时仍可提供锚点；资源未被选中与该情况不同。模型放置原点参加 Float32 父矩阵累计，渲染投影/输出尺寸独立。复杂动作的完整精度验收仍进行中。
+这是显式离线迁移工具：全量比较作者数据和解码图集像素，通过后备份旧模型，再逐项发布；失败回滚本次写入。只允许 schema 与新镜像参数字段变化，以及旧格式 documented mirror=false 缺省的显式规范化。纹理差异须先独立核实，不能静默覆盖。冻结历史资产不迁移，输入矩阵只在内容等价证据成立时更新 asset SHA；源 PSB、驱动、输入与参照图片 hash 保持原记录。

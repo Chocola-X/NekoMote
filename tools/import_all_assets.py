@@ -29,7 +29,8 @@ def head_commit():
     """返回当前仓库 HEAD commit hash，不在 git 仓库中或失败时返回 None。"""
     try:
         proc = subprocess.run(
-            ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10)
+            ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, timeout=10,
+            cwd=pathlib.Path(__file__).resolve().parents[1])
         if proc.returncode == 0:
             return proc.stdout.strip()
     except (OSError, subprocess.SubprocessError):
@@ -44,7 +45,10 @@ def tool_hash(path):
     resolved = pathlib.Path(path)
     if not resolved.is_file():
         return None
-    return catalog_index.sha256(resolved)
+    try:
+        return catalog_index.sha256(resolved)
+    except OSError:
+        return None
 
 
 def publish_bundle(staging, target):

@@ -138,7 +138,9 @@ class GeometryInstance
     GeometryStatus set_parameter(ParamId id, float value) noexcept;
     // Model placement, in model units (Y down), participates in Float32 parent
     // matrix accumulation. Rendering view/projection remains a separate step.
-    // Changes invalidate geometry and locator samples; default is zero.
+    // Placement retains its presented direction for mirrored assets; frame X
+    // is pre-inverted to cancel the later GPU flip. Changes invalidate geometry
+    // and locator samples; default is zero.
     GeometryStatus set_origin(Vec2 origin) noexcept;
     // Uniform model scale participates in world matrices, independently of
     // placement and the render view. Positive finite scale/inverse required.

@@ -115,7 +115,9 @@ int run(int argc, char** argv)
                       static_cast<ColorComposition>(frame.at("composition").get<int>()),
                       mask_commands, masks});
     renderer.resize_output(800, 1080);
-    renderer.render({0, 800, 1080}, {400, 540, 1, {0, 0, 0, 0}});
+    render_gl::View view{400, 540, 1, {0, 0, 0, 0}};
+    view.flip_x = asset.asset.mirror;
+    renderer.render({0, 800, 1080}, view);
     const auto error = asset_io::write_png(argv[3], renderer.capture({0, 800, 1080}));
     if (!error.empty())
         throw std::runtime_error(error);

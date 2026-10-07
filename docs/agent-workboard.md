@@ -1,38 +1,43 @@
-# Agent协作任务
+# Agent 协作任务
 
-更新：2026-10-07。当前结论见 [整合摘要](review-agents-current.md)，阶段见 [ROADMAP](../ROADMAP.md)，新实现见 [C5交接](c5-handoff.md)。G7/G8/G9/V6已执行并复核，不重复旧任务；原handoff仅保留交付证据。本文件由用户独立启动外部Agent执行，不表示Codex已通过工具启动他们。
+更新：2026-10-08。现状见 [整合摘要](review-agents-current.md)，实现与证据见 [C5 镜像/遮罩交接](c5-mirror-mask-handoff.md)。G10、V7 已交付并复核，不再重复领用。以下外部任务由用户启动，各任务验证后 commit，正文记录真实 Agent、Model 和 Context。
 
-## 当前任务与顺序
+## 下一批安排
 
-**GLM G10 → Gemini V7 → Codex复核。** 两项文件所有权独立，可使用独立工作区并行；同一工作区及GPU证据需要串行。每项验证后commit，正文包含Agent/Model/Context，交付对应handoff和真实未通过项。
+推荐 **GLM G11 → Gemini V8 → Codex 整合**。G11 和 V8 文件所有权独立；GPU 采样共享 `flock build/gpu-validation.lock`，不要与性能测量并发。额度用于覆盖实际缺口，不降低门槛。
 
-| Agent | 当前任务 | 文件边界 |
+| 执行者 | 任务 | 修改边界 |
 | --- | --- | --- |
-| CodeArts / GLM-5.2 | G10：刷新195项CPU/来源账本；优先有明确契约的工具与负例 | 目录工具、Python测试、新g10-handoff；不改runtime/render/application/ABI/UI |
-| Antigravity / Gemini 3.8 Flash | V7：镜像与遮罩的受控观察、整模型FAIL定位 | 参考采样工具、新v7报告；不改原生求值/后端/main，不读私有asm |
-| Codex | C5精确继承/遮罩/镜像求值，C6应用，C7宿主整合 | 核心语义、GPU合成、声音/时间/生命周期和跨模块复核 |
+| CodeArts / GLM-5.2 | G11：195 项原始 PSB 图集与解包 PNG 来源审计 | 离线目录/采样工具、Python 测试、新 `docs/g11-handoff.md`；不改 runtime/render/application/ABI |
+| Antigravity / Gemini 3.8 Flash | V8：新镜像与遮罩实现的独立画面复核 | 新截图/裁图/报告与显式输入清单；不改核心公式或外部素材 |
+| Codex | C5 剩余求值、C6 应用、C7 宿主 | 语义、GPU、会话/音频/线程生命周期及最终整合 |
 
-额度用于独立覆盖，不作为数学或实现正确性的证明。GLM适合可执行契约和负例；Gemini适合图像与GPU观测；未知公式及整合仍由Codex负责。反复错误或指导成本超过修复成本的工作由Codex接管。
+这些是按当前工具条件制定的分工。GLM 无图像读取能力时提供字节和来源证据，不声称目视通过；Gemini 的视觉判断必须与几何、拓扑和像素报告一起交付。反复错误或指导成本超过修复成本时由 Codex 接管。
 
-## G10：当前CPU账本
+## G11：图集来源审计
 
-读取G7交接与C5实际HEAD，使用当前Release runtime_audit、统一catalog_index和**新的输出目录**，重新生成全部195条结构/CPU账本（建议120作者步）。记录提交、工具/hash、schema、source/resx/PNG/会话来源、每项命令与失败详情。原G7的171 CPU OK/23 FAIL是混合实现前的历史统计，不能直接复用为当前结果。
+基线使用本轮 C5 提交，先读交接中的两处纹理差异。GLM 此前修复外部 Fraise 素材有用户明确授权，记录为授权修复；本任务默认只读外部素材，需要新增外部修复时记录用户对该操作的授权。
 
-- 不覆盖assets/characters、原G7输出、冻结115组资产或外部源文件；EXISTS_UNCHECKED、歧义、缺失、CPU FAIL/TIMEOUT/ERROR一律非零。只读已有产物不等于认证，不能通过删除或自动回退绕过保护。
-- 账本保留195行；visual/interaction/soak全部未测。对Fraise france-maid-b的歧义仅列候选/来源hash，不擅自挑选文件或改核心让全绿。
-- 用实际负例补齐CPU详细失败报告保留、超时非零、逐项I/O错误继续账本；已有测试覆盖时不重复写镜像测试。缺素材环境的纯CLI解析测试也应执行，只有真实GPU/素材检查Skipped；不得把整类跳过误报为测试通过。
-- 交付真实新导入、重复拒绝且额外文件hash不变、完整195统计及失败节点。写docs/g10-handoff.md，不改当前摘要/路线图宣称整模型通过。
+1. 用统一 `catalog_index` 保留全部 195 条目录记录；新输出目录，不覆盖旧账本、冻结矩阵或 `assets/characters`。
+2. `capture.py --trace-atlas-hashes` 在公共 `texImage2D` 上传边界记录实际 RGBA8 图集的尺寸、字节数和 SHA256；与解包 PNG 解码为 RGBA8 的字节核对。捕获是诊断，不属于播放/性能路径。不要读取驱动私有函数。
+3. 明确关联每个 PSB 上传与每个 resx 资源；多图集不能只取第一张。遇到非 RGBA8、无法关联、缺失或超时保留未认证状态，退出非零，不伪造零误差。
+4. 账本保留 PSB/JSON/resx/PNG/工具/浏览器/binary hash、提交、实际命令、时间、逐项状态与失败详情；来源发生变化不能继续复用旧截图。Coconut dress 已确认外部 PNG 与官方上传不符，本轮隔离修正仅在项目内，不覆盖原 G10/C5 账本。
+5. 工具先用合成正/负例验证关联、重复输出拒绝和错误保留，再批量执行。冻结所有工具后采样；中途修工具使用新的目录/检查点，不混称同一版本。
 
-## V7：受控镜像与遮罩观察
+验收：195 行可复核来源账本、实际成功/失败/未测统计、已知两个纹理例的回归、新交接及提交。**图集一致不等于全模型视觉/交互/soak 通过。** 不重复 CPU 长跑，除非来源改变或出现新的 CPU 风险。
 
-已由 Gemini 完成并交付：[V7 报告](v7-mirror-mask-report.md) 与证据目录 `build/evidence/v7/`（账本：`v7_ledger.json`）。
-- **镜像姿态几何误差确证**：定位根本原因为缺少 `metadata.mirrorControl.variableMatchList`（`_LR`, `_slant`）的变量符号反转。闭眼初态（`head_LR=0, body_LR=0`）几何 0.000000000px，黑白底合成 RGB 差异 [[0,0,0], [0,0,0]]，整图 0 超差像素（PASS）；直选姿态未反转导致 81.7px / 138.0px 误差，而输入反转后（Native `head_LR=-30` vs WebGL `head_LR=+30`）几何误差骤降至 0.000191px，全图像素差为 0（PASS）；`body_LR` 同样降至 0.000266px 与 0 像素差（PASS）。C5 `head_invariance` 原 57.775px 误差反转后降至 0.000280px。保持正式镜像 `asset.mirror`。
-- **默认眼态 Stencil 拒绝确证**：模型中左右眼 `ステンシル(shirome)` 声明 `["shirome", "add_mask"]`，其中 `shirome` 真实存在（左眼 icon 0065，右眼 icon 0067），而 `add_mask` 在整个源模型中不存在任何节点（属模板预留空插槽）。原生 `geometry_scene.cpp:551` 要求全项解析否则 `mask.resolved = false`，导致睁眼选中时退出码 8 拒绝。WebGL 真实 GPU 行为是将 `shirome` 绘制至 FBO 2（Attachment Texture 3）并将 alpha 复制至 G 通道（`tmp.g = tmp.a`），静默跳过不存在的 `add_mask`；瞳孔图元通过纹理单元 1 采样 G 通道完成遮罩。
-- 交付 5 组 Side-by-Side 对比图、局部高倍裁切、拓扑与 GPU 流 JSON 分析及全 SHA-256 账本；未改原生核心，交接 Codex C5 闭合。
+## V8：镜像与遮罩独立复核
 
+使用本轮提交的 schema 6、正式 `asset.mirror` 和相同作者输入；不再手工对原生输入取反。先核对 C5 证据中的工具/资产 hash。旧 V7 六组是源码定义及受控样本，不能把六个定义都称为同时活动节点。
 
-## Codex接续
+- Fraise france-maid-b：默认睁眼、闭眼、head/body `_LR` 正负端点、`_slant`、组合姿态、60 步物理。重点裁图眼白/瞳孔/小高光、轮廓及耳部边缘，保持同初态、seed、clock、作者步长和透明背景。
+- Chocola date-a：旧矩阵中的 idle/jump、瞳孔与独立高光边界；验证同遮罩的不同 motion 裁剪仍独立。Fraise maid-a 的真实 `add_mask` 仍须参与，不允许按名称删除。
+- 每例交付原始参照和原生整图、局部裁图、几何/拓扑报告、黑白底合成与 alpha 像素报告。动画另交公共变量逐步标量比较，检查步数和初态一致。通用 `build_visual_evidence.py` 只整理几何/像素，不负责捕获或标量认证；完整状态合并全部报告。拒绝帧记 REJECTED/未测，不能把零顶点或硬编码数字作为 PASS。
+- 可增加受控输入作为反例；失败保留字段路径、命令、图像和 hash，交 Codex 推导。C5 新动画组合失败不靠手工改符号、放宽阈值或改原素材消除。
+- 所有输入只用应用回调/诊断或页面内事件，禁止向系统窗口注入键鼠。GPU 正确性与性能串行；不改冻结旧证据。
 
-- C5：bm19/attr2映射已交付，Milk默认启动恢复，新完整播放9/9和旧矩阵115/115通过；继续Fraise-b遮罩、受控镜像姿态与精确0x7fc，C5整体尚未完成。
-- C6：恢复界面/能力提示、UI注视与触摸隔离及确定回放、线性角色渐变/共同时间、背景reset/重入、声音候选失败和资源回收。
-- C7：最小Qt Quick宿主验证实际GPU后端、图形线程/context、resize/DPI与重建，再进入Plasma插件。全目录视觉/交互、8–24小时、多屏和安装包仍是最终条件。
+门槛：几何 ≤ .001px、拓扑全匹配、标量 ≤ 1e-5、alpha 与黑白底合成 RGB ≤ 2 字节且无超差像素。目视结论独立记录；通过代表范围不能升级为 195 项认证。交付 `docs/v8-visual-report.md` 和新证据目录。
+
+## Codex 接续
+
+C5：剩余 15 项 CPU 失败、精确 0x7fc 与嵌套遮罩，以及新增动画组合反例。C6：可恢复错误界面、UI 注视/触摸隔离及确定回放、角色渐变/共同时间、背景 reset/重入、声音失败与切换回收。C7：最小 Qt Quick 实际 GPU 宿主的线程/context、resize/DPI、重建，随后 Plasma。全目录视觉/交互、8–24 小时、多屏与安装包仍是最终交付条件。

@@ -6,13 +6,13 @@ import json
 import pathlib
 import subprocess
 import zipfile
-from validate_static import run
+from validate_static import run, configure_asset_input, resolve_source, catalog_index
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--reference-root', type=pathlib.Path, required=True)
-    p.add_argument('--importer', type=pathlib.Path, required=True)
+    configure_asset_input(p)
     p.add_argument('--preview', type=pathlib.Path, required=True)
     p.add_argument('--evaluator', type=pathlib.Path, required=True)
     p.add_argument('--browser', type=pathlib.Path, required=True)
@@ -23,17 +23,19 @@ def main():
     baseline = json.loads((repo / 'docs/validation/animation-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
+    source_index = catalog_index.build_index(args.reference_root) if args.importer else None
     driver_hashes = {n: hashlib.sha256((args.reference_root / 'driver' / n).read_bytes()).hexdigest()
                      for n in ('FreeMoteDriver.js', 'emoteplayer.js')}
     source_hashes = {}
     for case in baseline['cases']:
         model, name = case['model'], case['case']
         stem = model + '-' + name
-        asset = args.output / model / 'model.nkm.json'
+        asset = (args.asset_root or args.output) / model / 'model.nkm.json'
         if model not in imported:
-            source = args.reference_root / 'model_conversion' / model.split('-')[0] / model / model
-            run([args.importer, str(source)+'.json', str(source)+'.resx.json', '--output', asset.parent],
-                args.output / (model+'-import.log'))
+            if args.importer:
+                source = resolve_source(source_index, model)
+                run([args.importer, source, source.with_suffix('.resx.json'),
+                     '--output', asset.parent], args.output / (model+'-import.log'))
             imported.add(model)
             with zipfile.ZipFile(args.reference_root / 'data' / (model+'.pure.psb.zip')) as archive:
                 members = [n for n in archive.namelist() if n.endswith('.psb')]

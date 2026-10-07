@@ -40,7 +40,10 @@ struct PhysicsStatus
 struct PhysicsInputs
 {
     // SDK amplitude is an output parameter, not an enable flag. External
-    // displacement uses author units. Placed scene anchors use the saved inverse
+    // displacement uses author units in the presented model direction (before
+    // View projection). Mirroring flips geometry locators into this space, not
+    // the supplied displacement or stored physical snapshots.
+    // Placed scene anchors use the saved inverse
     // combined model/author scale. Springs subtract saved absolute anchors;
     // chains use absolute anchors plus their initial/force offset. The first
     // author tick initializes the anchor and skips external displacement.

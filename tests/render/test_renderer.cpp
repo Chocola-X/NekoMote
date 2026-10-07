@@ -438,6 +438,53 @@ TEST_CASE("GPU alpha masks union with observed five-bit precision and reuse resi
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
 
+TEST_CASE("Small masked highlights share the group clip at reduced mask resolution", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(800, 1080);
+    renderer.reserve({12, 18, 3, 2, 1, 1});
+    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, {1, 1, {0, 0, 0, 255}});
+    auto color = quad(0, 0, 1, 1);
+    color[0].x = color[3].x = 447;
+    color[1].x = color[2].x = 455;
+    color[0].y = color[1].y = 545;
+    color[2].y = color[3].y = 572;
+    auto mask = quad(0, 0, 1, 1);
+    mask[1].x = mask[2].x = 800;
+    mask[2].y = mask[3].y = 1080;
+    std::array<RenderVertex, 12> vertices{};
+    std::copy(color.begin(), color.end(), vertices.begin());
+    std::copy(mask.begin(), mask.end(), vertices.begin() + 4);
+    for (std::size_t i = 0; i < 4; ++i)
+    {
+        vertices[i + 8] = mask[i];
+        vertices[i + 8].color[3] = 0;
+    }
+    const std::array<DrawCommand, 3> commands{
+        {{TextureId{1}, 12, 6, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{1}, 0, 0, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{1}, 0, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    const std::array<std::uint32_t, 18> indices{0, 1, 2, 0, 2, 3,  4, 5,  6,
+                                                4, 6, 7, 8, 9, 10, 8, 10, 11};
+    const std::array<DrawCommand, 1> mask_commands{{{TextureId{2}, 6, 6, BlendMode::Over}}};
+    const std::array<MaskDefinition, 1> masks{{{0, 1}}};
+    renderer.prepare(
+        {vertices, indices, commands, ColorComposition::ProtectedStraight, mask_commands, masks});
+    renderer.resize_output(800, 1080);
+    render_gl::View view;
+    renderer.render({output.framebuffer, 800, 1080}, view);
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 800, 1080}), 454, 550) ==
+            std::array<std::uint8_t, 4>{255, 0, 0, 255});
+    view.flip_x = true;
+    renderer.render({output.framebuffer, 800, 1080}, view);
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 800, 1080}), 345, 550) ==
+            std::array<std::uint8_t, 4>{255, 0, 0, 255});
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
 TEST_CASE("Opacity-zero source vertices retain full texture mask coverage", "[gpu]")
 {
     Context context;

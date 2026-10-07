@@ -187,6 +187,7 @@ int run(int argc, char** argv)
     auto loaded = asset_io::load_asset(argv[1]);
     if (!loaded.ok)
         throw std::runtime_error(loaded.errors.front());
+    const bool presentation_mirror = loaded.asset.mirror;
     const auto sources = variable_sources(request);
     auto compiled = runtime::compile_playback(loaded.asset, runtime::PhysicsMode::Enabled, sources);
     if (!compiled.program)
@@ -311,6 +312,7 @@ int run(int argc, char** argv)
     check(player.prepare_frame());
     Json report{{"production_playback_certified", false},
                 {"physics_enabled", true},
+                {"presentation_mirror", presentation_mirror},
                 {"origin", origin},
                 {"scale", scale},
                 {"steps", player.tick_count()},

@@ -12,7 +12,7 @@ import pathlib
 import subprocess
 import zipfile
 from compare_playback_frame import compare
-from validate_static import run
+from validate_static import run, configure_asset_input, resolve_source, catalog_index
 
 
 def sha(path):
@@ -21,26 +21,29 @@ def sha(path):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    for name in ('reference-root', 'importer', 'preview', 'evaluator', 'reuse-reference', 'output'):
+    for name in ('reference-root', 'preview', 'evaluator', 'reuse-reference', 'output'):
         p.add_argument('--' + name, type=pathlib.Path, required=True)
     p.add_argument("--inputs", type=pathlib.Path,
                    help="explicit frozen input matrix; defaults to playback-inputs.json")
+    configure_asset_input(p)
     args = p.parse_args()
     repo = pathlib.Path(__file__).resolve().parents[2]
     baseline = json.loads((args.inputs or repo / 'docs/validation/playback-inputs.json').read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     imported, results = set(), []
+    source_index = catalog_index.build_index(args.reference_root) if args.importer else None
     def save_report():
         (args.output / 'report.json').write_text(json.dumps(dict(
             stage_complete=False, production_playback_certified=False,
             passed=all(c['passed'] for c in results), cases=results), indent=2) + '\n')
     for case in baseline['cases']:
         name, model = case['case'], case['model']
-        asset = args.output / model / 'model.nkm.json'
+        asset = (args.asset_root or args.output) / model / 'model.nkm.json'
         if model not in imported:
-            source = args.reference_root / 'model_conversion' / model.split('-')[0] / model / model
-            run([args.importer, str(source) + '.json', str(source) + '.resx.json',
-                 '--output', asset.parent], args.output / (model + '-import.log'))
+            if args.importer:
+                source = resolve_source(source_index, model)
+                run([args.importer, source, source.with_suffix('.resx.json'),
+                     '--output', asset.parent], args.output / (model+'-import.log'))
             imported.add(model)
             with zipfile.ZipFile(args.reference_root / 'data' / (model + '.pure.psb.zip')) as archive:
                 members = [n for n in archive.namelist() if n.endswith('.psb')]

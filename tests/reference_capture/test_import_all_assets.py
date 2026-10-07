@@ -497,6 +497,20 @@ class CliParseTest(unittest.TestCase):
             self.assertEqual(len(commit), 40)
             self.assertTrue(all(c in '0123456789abcdef' for c in commit))
 
+    def test_head_commit_uses_tool_repository(self):
+        with mock.patch.object(batch.subprocess, 'run') as run:
+            run.return_value = mock.Mock(returncode=0, stdout='a' * 40 + '\n')
+            self.assertEqual(batch.head_commit(), 'a' * 40)
+            self.assertEqual(run.call_args.kwargs['cwd'],
+                             pathlib.Path(batch.__file__).resolve().parents[1])
+
+    def test_unreadable_tool_is_reported_as_missing_hash(self):
+        with tempfile.TemporaryDirectory() as name:
+            tool = pathlib.Path(name) / 'tool'
+            tool.write_bytes(b'binary')
+            with mock.patch.object(batch.catalog_index, 'sha256', side_effect=PermissionError):
+                self.assertIsNone(batch.tool_hash(tool))
+
 
 if __name__ == '__main__':
     import subprocess

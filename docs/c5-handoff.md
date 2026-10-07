@@ -1,3 +1,5 @@
+> 本文件记录上一批 bm19/attr2 交付；其中 Fraise-b 镜像/可选遮罩失败已由 [本轮交接](c5-mirror-mask-handoff.md) 闭合。当前缺口与任务见 [摘要](review-agents-current.md)。
+
 # C5：bm19/attr2原生映射与整模型验收
 
 2026-10-07，基线 `8514d87`。执行：Codex / GPT-6。结果索引：[c5-blending-results.json](validation/c5-blending-results.json)。未认证整个目录或完成全部C5。

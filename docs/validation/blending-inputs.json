@@ -15,7 +15,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_base",
       "reference_hashes": {
         ".json": "a6da7f52287ef2f9aedd5bb9add689ca0c92f95f333d4bc8f4f23d28cd196dbb",
@@ -41,7 +41,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_opacity05",
       "reference_hashes": {
         ".json": "0c3ae0599ca945bc3d3ba7b346d625adaeb916c502e8f22cc19370caa8d4180f",
@@ -69,7 +69,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_head_lr30",
       "reference_hashes": {
         ".json": "1b50df0cb69f7fef7b7230ece391ffdc72e50de70bde155b0937427d1030d4e1",
@@ -97,7 +97,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_head_lr_minus30",
       "reference_hashes": {
         ".json": "0d7df9f2a0e45f77e98731e0c5d3c060454baa8ff9d4cb3e744a59234f713498",
@@ -125,7 +125,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_head_ud30",
       "reference_hashes": {
         ".json": "9ff5ae1979ef36eb6519a17b8e720ace03fcf3373585200a65f2ac6efad0a28a",
@@ -153,7 +153,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_head_slant30",
       "reference_hashes": {
         ".json": "bae98ee1bf9db792bcf77fbca593358433bc57aeb485f5dbd592a9cbc4bb8ca1",
@@ -181,7 +181,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_body_lr30",
       "reference_hashes": {
         ".json": "e44f4a148a1ab7a539892151d9707b83ec22d05f978c6cb74222caee66a335bf",
@@ -209,7 +209,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_act_sp30",
       "reference_hashes": {
         ".json": "7d50b80ae002972105f51c99bab73fd1c016510195c9fc33374b440e137b20d6",
@@ -235,7 +235,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_step30",
       "reference_hashes": {
         ".json": "108f0d574a9d4518fc327044ca302483906b8192e3a2a2baca44158397a82bb8",
@@ -265,7 +265,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-maid-a/model.nkm.json",
-      "asset_sha256": "299f021584d7b5de2c80f57b8012e9d1e90d187385a2e131e5c1f5a8f566e33c",
+      "asset_sha256": "fde6c41dff5812df937afd2da86c5c702363891a93289feb9fc7220ad654095c",
       "reference": "build/evidence/v6/fraise-maid-a_face_invariance",
       "reference_hashes": {
         ".json": "7369db9a7fa52bab10a68781e8d7b19fec27b552834682e6de502a09b8c39a36",
@@ -291,7 +291,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_base",
       "reference_hashes": {
         ".json": "8e9490f1761743babff2450015284067f751927d54bd8ef6d09a00bc68b01781",
@@ -317,7 +317,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_opacity05",
       "reference_hashes": {
         ".json": "847daaa2b2b7d2efcfbffd48151e0ec2e1eb4c19355c7f039cb78c8d6684b958",
@@ -345,7 +345,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_body_lr30",
       "reference_hashes": {
         ".json": "70b9843b13a4abd323459b1dda99c1fd1d49e2d81a209a3f643411beaffc6cff",
@@ -373,7 +373,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_body_lr_minus30",
       "reference_hashes": {
         ".json": "2fb1b1b08b09c20a325f99378e83e314ff157ca2543ae34894e8fe6a4aff6272",
@@ -401,7 +401,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_body_ud30",
       "reference_hashes": {
         ".json": "f0ddd32d368d74dc3eb9f256500d3a573cf5672781cedb49a0d82697ac4a7bf1",
@@ -429,7 +429,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_body_slant30",
       "reference_hashes": {
         ".json": "c95ab39a9df8dca8fb3e691567f9bd63a0d033c0325562df81d8c0fc41602a5e",
@@ -457,7 +457,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_act_sp30",
       "reference_hashes": {
         ".json": "4acdd828d1b73514164f77aa560e44529e5c2e041cc818d63a0095edfa01325d",
@@ -483,7 +483,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_step30",
       "reference_hashes": {
         ".json": "817c537ac3b0e524778ff37eebad78255183118461ceeaa1d391177ab0484956",
@@ -513,7 +513,7 @@
       ],
       "scale": 1.0,
       "asset": "assets/characters/fraise-france-maid-b/model.nkm.json",
-      "asset_sha256": "a5442bea99468cce47466a77bc0869701845826d829c1532b55d77f78e5d1f7a",
+      "asset_sha256": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
       "reference": "build/evidence/v6/fraise-france-maid-b_head_invariance",
       "reference_hashes": {
         ".json": "d7a3bf6721d20b49794adcae111aa21fc84717cb6e64c39e604b79a97d3e5120",

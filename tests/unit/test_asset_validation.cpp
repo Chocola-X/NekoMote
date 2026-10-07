@@ -179,6 +179,46 @@ TEST_CASE("Missing or invalid resx is an error", "[import]")
     REQUIRE_FALSE(result.ok);
     REQUIRE_FALSE(result.report.errors.empty());
 }
+TEST_CASE("Mirror import normalizes observed patterns and rejects unknown rules", "[asset][import]")
+{
+    Workspace w;
+    auto source = read(fs::path(NEKOMOTE_FIXTURES_DIR) / "minimal.json");
+    source["metadata"]["mirror"] = 1;
+    source["metadata"]["mirrorControl"] = {{"variableMatchList", {"_LR", "_slant"}}};
+    source["metadata"]["variableList"][0]["label"] = "head_LR";
+    source["object"]["body_parts"]["motion"]["torso"]["layer"][0]["parameter"][0]["id"] = "head_LR";
+    SECTION("normalized and roundtripped")
+    {
+        auto imported = import_modified(w, source);
+        REQUIRE(imported.ok);
+        REQUIRE(imported.asset.mirror);
+        REQUIRE(imported.asset.mirrored_parameters == std::vector<std::string>{"head_LR"});
+        const auto bundle = w.path / "bundle";
+        REQUIRE(nekomote::asset_io::write_bundle(imported, fs::path(NEKOMOTE_FIXTURES_DIR), bundle)
+                    .empty());
+        auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+        REQUIRE(loaded.ok);
+        REQUIRE(loaded.asset.mirrored_parameters == imported.asset.mirrored_parameters);
+    }
+    SECTION("nonmirrored assets keep author values")
+    {
+        source["metadata"]["mirror"] = 0;
+        auto imported = import_modified(w, source);
+        REQUIRE(imported.ok);
+        REQUIRE(imported.asset.mirrored_parameters.empty());
+    }
+    SECTION("unobserved pattern")
+    {
+        source["metadata"]["mirrorControl"]["variableMatchList"] = {".*"};
+        REQUIRE_FALSE(import_modified(w, source).ok);
+    }
+    SECTION("invalid pattern type")
+    {
+        source["metadata"]["mirrorControl"]["variableMatchList"] = {3};
+        REQUIRE_FALSE(import_modified(w, source).ok);
+    }
+}
+
 TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", "[asset]")
 {
     Workspace w;
@@ -200,6 +240,28 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
     SECTION("schema")
     {
         j["schema"] = 999;
+    }
+    SECTION("previous schema requires reimport")
+    {
+        j["schema"] = 5;
+    }
+    SECTION("normalized directions required")
+    {
+        j["model"].erase("mirrored_parameters");
+    }
+    SECTION("directions require mirrored presentation")
+    {
+        j["model"]["mirrored_parameters"] = {"move_UD"};
+    }
+    SECTION("direction must refer to a declared parameter")
+    {
+        j["model"]["mirror"] = true;
+        j["model"]["mirrored_parameters"] = {"typo_LR"};
+    }
+    SECTION("direction references unique")
+    {
+        j["model"]["mirror"] = true;
+        j["model"]["mirrored_parameters"] = {"move_UD", "move_UD"};
     }
     SECTION("bounds")
     {

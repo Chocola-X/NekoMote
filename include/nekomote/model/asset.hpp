@@ -251,6 +251,58 @@ struct ModelAsset
     std::vector<std::string> parts_order; // meaning unverified; not draw order
     int total_layers{0}, total_frames{0}, bp_nonnull{0}, cc_nonnull{0};
     bool mirror{false}; // metadata.mirror: render model horizontally flipped
+    // Exact parameter names normalized by the importer. Values remain in the
+    // public author space; geometry reverses these once before parameterization.
+    std::vector<std::string> mirrored_parameters;
 };
+
+// Loading/compilation helper: includes inactive motion bindings and controller
+// outputs, which need not appear in metadata's public variable list.
+template <typename Visitor>
+void visit_parameter_names(const ModelAsset& asset, Visitor&& visit)
+{
+    for (const auto& variable : asset.variables)
+        visit(variable.label);
+    for (const auto& timeline : asset.timelines)
+        for (const auto& track : timeline.tracks)
+            visit(track.label);
+    for (const auto& control : asset.variable_controls)
+    {
+        visit(control.variable);
+        visit(control.talk_variable);
+        for (const auto& option : control.options)
+            visit(option.variable);
+    }
+    for (const auto& clamp : asset.paired_clamps)
+    {
+        visit(clamp.variable_x);
+        visit(clamp.variable_y);
+    }
+    for (const auto& control : asset.spring_controls)
+    {
+        visit(control.binding.variable_x);
+        visit(control.binding.variable_y);
+    }
+    for (const auto& control : asset.chain_controls)
+    {
+        visit(control.binding.variable_x);
+        visit(control.binding.variable_y);
+        visit(control.variable_middle);
+    }
+    const auto layer_names = [&](const auto& self, const Layer& layer) -> void
+    {
+        for (const auto& parameter : layer.parameter)
+            visit(parameter.id);
+        for (const auto& child : layer.children)
+            self(self, child);
+    };
+    for (const auto& part : asset.parts)
+    {
+        for (const auto& parameter : part.parameter)
+            visit(parameter.id);
+        for (const auto& layer : part.layers)
+            layer_names(layer_names, layer);
+    }
+}
 
 } // namespace nekomote::model

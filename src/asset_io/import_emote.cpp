@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <string_view>
@@ -805,6 +806,35 @@ ImportResult parse(const ImportOptions& opts)
         const auto value = get_int(md, "mirror", "/metadata/mirror", 0);
         check(value == 0 || value == 1, "/metadata/mirror", "expected 0 or 1");
         a.mirror = value == 1;
+    }
+    if (md.contains("mirrorControl"))
+    {
+        const auto& mirror_control = md.at("mirrorControl");
+        const std::string path = "/metadata/mirrorControl";
+        check(mirror_control.is_object() && mirror_control.contains("variableMatchList") &&
+                  mirror_control.at("variableMatchList").is_array(),
+              path, "expected variableMatchList array");
+        std::vector<std::string> patterns;
+        for (const auto& item : mirror_control.at("variableMatchList"))
+        {
+            const auto pattern = string(item, path + "/variableMatchList");
+            check(pattern == "_LR" || pattern == "_slant", path + "/variableMatchList",
+                  "unsupported mirror pattern; only observed _LR and _slant are accepted");
+            patterns.push_back(pattern);
+        }
+        unknown_fields(mirror_control, path, {"variableMatchList"}, result.report);
+        if (a.mirror)
+        {
+            std::set<std::string> names;
+            const auto collect = [&](const std::string& name)
+            {
+                if (std::any_of(patterns.begin(), patterns.end(), [&](const auto& pattern)
+                                { return name.find(pattern) != std::string::npos; }))
+                    names.insert(name);
+            };
+            visit_parameter_names(a, collect);
+            a.mirrored_parameters.assign(names.begin(), names.end());
+        }
     }
     unknown_fields(md, "/metadata",
                    {"variableList", "instantVariableList", "customPartsOrder", "timelineControl",

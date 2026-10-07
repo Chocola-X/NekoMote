@@ -196,6 +196,10 @@ struct Clip
 {
     int x{0}, y{0}, width{0}, height{0};
 };
+struct MaskBounds
+{
+    Bounds source, content;
+};
 Clip clip(const Bounds& bounds, Target target, const View& view) noexcept
 {
     if (!std::isfinite(bounds.left))
@@ -246,7 +250,7 @@ struct Renderer::Impl
     std::vector<Texture> textures;
     std::vector<DrawCommand> commands, mask_commands;
     std::vector<MaskDefinition> masks;
-    std::vector<Bounds> command_bounds, mask_bounds;
+    std::vector<MaskBounds> mask_bounds;
     std::size_t mask_command_capacity{0}, mask_capacity{0};
     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
     ~Impl()
@@ -317,7 +321,6 @@ void Renderer::reserve(Capacity capacity)
 {
     const auto [vertices, indices, commands, textures, mask_commands, masks] = capacity;
     auto& p = *impl_;
-    p.command_bounds.reserve(commands);
     p.mask_bounds.reserve(masks);
     p.mask_commands.reserve(mask_commands);
     p.masks.reserve(masks);
@@ -433,9 +436,6 @@ void Renderer::prepare(RenderFrame frame)
         }
         return result;
     };
-    p.command_bounds.clear();
-    for (const auto& command : frame.commands)
-        p.command_bounds.push_back(bounds(command));
     p.mask_bounds.clear();
     for (const auto& mask : frame.masks)
     {
@@ -449,8 +449,19 @@ void Renderer::prepare(RenderFrame frame)
                 result.include(bound.right, bound.bottom);
             }
         }
-        p.mask_bounds.push_back(result);
+        p.mask_bounds.push_back({result, {}});
     }
+    for (const auto& command : frame.commands)
+        if (command.mask.valid())
+        {
+            const auto b = bounds(command);
+            if (std::isfinite(b.left))
+            {
+                auto& content = p.mask_bounds[command.mask.value - 1].content;
+                content.include(b.left, b.top);
+                content.include(b.right, b.bottom);
+            }
+        }
     glBindVertexArray(p.vao);
     glBindBuffer(GL_ARRAY_BUFFER, p.vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ebo);
@@ -539,10 +550,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    std::size_t command_index = 0;
     for (const auto& command : p.commands)
     {
-        const auto& bounds = p.command_bounds[command_index++];
         if (command.mask.valid())
         {
             glActiveTexture(GL_TEXTURE1);
@@ -553,10 +562,13 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             glDisable(GL_SCISSOR_TEST);
             glClearColor(0, 0, 0, 0);
             glClear(GL_COLOR_BUFFER_BIT);
-            const auto output_clip =
-                intersect(intersect(clip(bounds, target, view),
-                                    clip(p.mask_bounds[command.mask.value - 1], target, view)),
-                          {0, 0, target.width, target.height});
+            // The masked group owns its clip, shared by pupil and highlights.
+            // V7 #25/#29 retain that clip across child draws. Clipping each small
+            // child truncates filtered coverage; unclipped sources also diverge.
+            const auto& bounds = p.mask_bounds[command.mask.value - 1];
+            const auto output_clip = intersect(
+                intersect(clip(bounds.source, target, view), clip(bounds.content, target, view)),
+                {0, 0, target.width, target.height});
             const auto scaled = [](int value, int size, int original)
             { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
             glEnable(GL_SCISSOR_TEST);
