@@ -1,5 +1,7 @@
 # G8 交接：确定性 C ABI 诊断工具
 
+> Codex复核与后续修补以 [当前整合摘要](review-agents-current.md) 为准；下文保留本任务交付时的验证范围。
+
 Agent: CodeArts / GLM-5.2
 基线提交：`679a8ce`（G7）
 完成提交：本文档同批

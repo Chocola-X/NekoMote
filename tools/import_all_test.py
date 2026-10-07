@@ -28,7 +28,7 @@ def main():
     root = args.reference_root.resolve()
     try:
         catalog, catalog_hash = catalog_index.load_catalog(root)
-    except (FileNotFoundError, json.JSONDecodeError) as error:
+    except (OSError, ValueError) as error:
         parser.error(str(error))
 
     importer = args.importer.resolve()

@@ -87,8 +87,6 @@ def import_one(name, record, reference_root, index, importer, session_tool,
     `index` 由调用方预先建立并复用，不在每项内重建。
     失败时 row 仍保留 commands、nodes、errors，便于账本溯源。
     """
-    key = name.removesuffix('.pure')
-    target = output / key
     row = {
         'model': name,
         'character': record.get('character'),
@@ -101,6 +99,23 @@ def import_one(name, record, reference_root, index, importer, session_tool,
         'commands': [],
         'nodes': [],
     }
+    try:
+        catalog_index.validate_model_name(name)
+        return import_into_row(row, name, reference_root, index, importer, session_tool,
+                               presentation, output, temporary, runtime_auditor, runtime_steps)
+    except (OSError, ValueError, TypeError, subprocess.SubprocessError) as error:
+        if row['status']['structure'] == 'OK':
+            row['status']['cpu'] = 'ERROR'
+        else:
+            row['status']['structure'] = 'ERROR'
+        row['errors'].append(f'{type(error).__name__}: {error}')
+        return row
+
+
+def import_into_row(row, name, reference_root, index, importer, session_tool,
+                    presentation, output, temporary, runtime_auditor, runtime_steps):
+    key = name.removesuffix('.pure')
+    target = output / key
 
     if os.path.lexists(target):
         row['status']['structure'] = 'EXISTS_UNCHECKED'
@@ -205,7 +220,7 @@ def import_one(name, record, reference_root, index, importer, session_tool,
             runtime_auditor, source, resx, external, audit_output, runtime_steps)
         row['status']['cpu'] = status
         row['cpu_detail'] = detail
-        if status == 'OK' and audit_output.is_file():
+        if audit_output.is_file():
             row['cpu_result'] = json.loads(audit_output.read_text())
 
     return row
@@ -255,7 +270,7 @@ def main():
     root = args.reference_root.resolve()
     try:
         catalog, catalog_hash = catalog_index.load_catalog(root)
-    except (FileNotFoundError, json.JSONDecodeError) as error:
+    except (OSError, ValueError) as error:
         parser.error(str(error))
 
     presentation = {}
@@ -283,7 +298,7 @@ def main():
                              args.runtime_auditor, args.runtime_steps)
             rows.append(row)
             st = row['status']['structure']
-            if st not in ('OK', 'EXISTS_UNCHECKED') or row['status']['cpu'] == 'FAIL':
+            if st != 'OK' or row['status']['cpu'] not in ('OK', 'PENDING'):
                 fail_count += 1
             print(f'  [{i}/{total}] {st:12s} {name}', flush=True)
             if checkpoint is not None:

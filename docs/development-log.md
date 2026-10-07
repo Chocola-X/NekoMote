@@ -676,3 +676,10 @@
   - 明确动态拖拽轨迹与逐帧渐变核验由于原生端缺乏应用内确定性回放入口，标记为未测项（UNTESTED）。
   - 遵循规范不向系统注入 OS 键鼠、不修改 main；向 Codex 提出最小所需事件回放接口契约（`SimulatedMouseEvent` 与 `replay_mouse_events`），由 Codex 在 C6 闭合。
 - 交付完整报告 [docs/v6-visual-report.md](v6-visual-report.md) 与产物完整账本（115 个条目）。
+
+## 2026-10-07 Codex：G7/G8/G9/V6独立复核与补修
+
+- 接手1157139，工作区干净。保留共享索引、完整账本、固定步PNG、检查入口和19组源GPU采样；115项V6产物及9项输入/工具hash全部匹配。
+- 补修EXISTS_UNCHECKED和CPU TIMEOUT被当成功、逐项解析/I/O错误中断账本、失败CPU详情丢失及非法catalog ID路径；已有输出保持，新增4项CLI边界回归。有限截图必须指定正步数，限制8192尺寸/100000作者步，隐藏截图窗口，清理旧交换后截图注释；新增3项宿主负例。
+- dev CTest138/138、headless ASan/UBSan136/136、工具Python35/35、C宿主13/13；纯CPU UI无DISPLAY下8组/124断言通过。Release播放器/C宿主重建，同输入Chocola320×240、seed42、30步、origin_y=0，C/C++截图RGBA完全一致。证据integration-next-2026-10-07，截图不用于性能报告。
+- G7原账本195项：194结构OK/1歧义、171 CPU OK/23 FAIL/1未测；全部视觉/交互/soak未测。V6动态UI仍未测。未修改外部素材、配置或桌面，未注入OS输入；继续C5原生混合和真实画面验证。

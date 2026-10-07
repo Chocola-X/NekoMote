@@ -9,14 +9,14 @@
  *   固定步模式（--steps N，N>0）：每步 dt=1/60 秒，不依赖墙钟，N 步后自动退出。
  *     截图在最后一帧 render 后、swap 前读回，保证确定像素。
  *   交互模式（--steps 0，默认）：用墙钟 dt，运行直到 Esc 或窗口关闭。
- *     截图在退出前读回，像素可能受 swap 后 framebuffer 不确定影响，仅作粗略诊断。
+ *     不支持截图；截图必须使用有界固定步模式。
  *
  * 用法：
  *   nekomote_abi_host --model <model.nkm.json> --session <session.nks.json> [options]
  *
  * 选项：
- *   --width <N>       窗口宽度（默认 800，1..65535）
- *   --height <N>      窗口高度（默认 600，1..65535）
+ *   --width <N>       窗口宽度（默认 800，1..8192）
+ *   --height <N>      窗口高度（默认 600，1..8192）
  *   --steps <N>       固定步数后自动退出（默认 0=交互模式，墙钟 dt）
  *   --seed <N>        随机种子（默认 42，0..4294967295）
  *   --reaction <name> 指定初始反应名称
@@ -42,6 +42,8 @@
 
 #define MAX_PATH 4096
 #define FIXED_DT (1.0 / 60.0)
+#define MAX_WINDOW_SIZE 8192
+#define MAX_AUTHOR_STEPS 100000
 
 /* ------------------------------------------------------------------ */
 /* Error checking                                                     */
@@ -110,9 +112,9 @@ static int parse_window_size(const char* s, int* out)
     long v;
     if (!parse_long(s, &v))
         return 0;
-    if (v < 1 || v > 65535)
+    if (v < 1 || v > MAX_WINDOW_SIZE)
     {
-        fprintf(stderr, "[abi_host] window size out of range 1..65535: '%s'\n", s);
+        fprintf(stderr, "[abi_host] window size out of range 1..%d: '%s'\n", MAX_WINDOW_SIZE, s);
         return 0;
     }
     *out = (int)v;
@@ -334,8 +336,8 @@ static void print_usage(const char* prog)
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  %s --model <model.nkm.json> --session <session.nks.json> [options]\n", prog);
     fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "  --width <N>       Window width (default 800, range 1..65535)\n");
-    fprintf(stderr, "  --height <N>      Window height (default 600, range 1..65535)\n");
+    fprintf(stderr, "  --width <N>       Window width (default 800, range 1..8192)\n");
+    fprintf(stderr, "  --height <N>      Window height (default 600, range 1..8192)\n");
     fprintf(stderr, "  --steps <N>       Fixed-step mode: N author steps at dt=1/60s, then exit\n");
     fprintf(stderr, "                     (default 0=interactive mode, wall-clock dt)\n");
     fprintf(stderr, "  --seed <N>        Random seed (default 42, range 0..4294967295)\n");
@@ -385,9 +387,9 @@ int main(int argc, char** argv)
         {
             if (!parse_long(argv[++i], &steps))
                 return 2;
-            if (steps < 0)
+            if (steps < 0 || steps > MAX_AUTHOR_STEPS)
             {
-                fprintf(stderr, "[abi_host] --steps must be >= 0\n");
+                fprintf(stderr, "[abi_host] --steps must be in 0..%d\n", MAX_AUTHOR_STEPS);
                 return 2;
             }
         }
@@ -419,6 +421,11 @@ int main(int argc, char** argv)
     }
 
     int fixed_mode = steps > 0;
+    if (capture_path && !fixed_mode)
+    {
+        fprintf(stderr, "[abi_host] --capture requires bounded --steps greater than zero\n");
+        return 2;
+    }
     printf("nekomote_abi_host — C ABI diagnostic tool (muted)\n");
     printf("  version: %s\n", nekomote_version());
     printf("  model: %s\n", model_path);
@@ -475,6 +482,8 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_VISIBLE, capture_path ? GLFW_FALSE : GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
 
     GLFWwindow* window = glfwCreateWindow(width, height, "NekoMote ABI Host", NULL, NULL);
     if (!window)
@@ -658,11 +667,13 @@ int main(int argc, char** argv)
         }
     }
 
-    /* In interactive mode, capture after loop (pixels may be less stable) */
+    /* Bounded captures must have been written before the final buffer swap. */
+    if (fixed_mode && frame_count != steps && exit_code == 0)
+        exit_code = 1;
     if (capture_path && !captured && exit_code == 0)
     {
-        if (!save_screenshot_png(capture_path, fb_width, fb_height))
-            exit_code = 1;
+        fprintf(stderr, "[abi_host] fixed-step capture did not complete\n");
+        exit_code = 1;
     }
 
     printf("\nRendered %ld frames. Shutting down.\n", frame_count);

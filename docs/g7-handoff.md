@@ -1,5 +1,7 @@
 # G7 交接：可靠目录账本与导入负例
 
+> Codex复核与后续修补以 [当前整合摘要](review-agents-current.md) 为准；下文保留本任务交付时的验证范围。
+
 Agent: CodeArts / GLM-5.2
 基线提交：`658e3ae`
 完成提交：本文档同批

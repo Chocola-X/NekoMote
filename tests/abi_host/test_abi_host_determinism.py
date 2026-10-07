@@ -88,6 +88,19 @@ class AbiHostDeterminismTest(unittest.TestCase):
         r = self._run('--model', 'x', '--session', 'y', '--steps', '')
         self.assertEqual(r.returncode, 2)
 
+    def test_capture_requires_bounded_fixed_steps(self):
+        r = self._run('--model', 'x', '--session', 'y', '--capture', 'unused.png')
+        self.assertEqual(r.returncode, 2)
+        self.assertIn('--steps', r.stderr)
+
+    def test_excessive_steps_rejected(self):
+        r = self._run('--model', 'x', '--session', 'y', '--steps', '100001')
+        self.assertEqual(r.returncode, 2)
+
+    def test_excessive_capture_dimensions_rejected(self):
+        r = self._run('--model', 'x', '--session', 'y', '--width', '8193')
+        self.assertEqual(r.returncode, 2)
+
     def test_fixed_step_png_is_decodable(self):
         with tempfile.TemporaryDirectory() as tmp:
             cap = pathlib.Path(tmp) / 'cap.png'

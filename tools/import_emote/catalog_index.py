@@ -10,6 +10,14 @@ import json
 import pathlib
 
 
+def validate_model_name(name):
+    """Catalog IDs form one directory component, never an output path."""
+    if (not isinstance(name, str) or not name or name in ('.', '..') or
+            '/' in name or '\\' in name or '\0' in name or
+            name.removesuffix('.pure') in ('', '.', '..')):
+        raise ValueError(f'invalid model ID: {name!r}')
+
+
 def sha256(path):
     h = hashlib.sha256()
     with open(path, 'rb') as f:
@@ -24,6 +32,12 @@ def load_catalog(reference_root):
     if not catalog_path.is_file():
         raise FileNotFoundError(f'catalog not found: {catalog_path}')
     data = json.loads(catalog_path.read_text())
+    if not isinstance(data, dict):
+        raise ValueError('catalog must be an object')
+    for name, record in data.items():
+        validate_model_name(name)
+        if not isinstance(record, dict):
+            raise ValueError(f'catalog record must be an object: {name!r}')
     digest = hashlib.sha256(catalog_path.read_bytes()).hexdigest()
     return data, digest
 

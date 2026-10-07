@@ -1,5 +1,7 @@
 # G9 交接：检查入口与构建矩阵
 
+> Codex复核与后续修补以 [当前整合摘要](review-agents-current.md) 为准；下文保留本任务交付时的验证范围。
+
 Agent: CodeArts / GLM-5.2
 基线提交：`5a54bdd`（G8）
 完成提交：本文档同批
@@ -12,10 +14,10 @@ Agent: CodeArts / GLM-5.2
 `apps/player/CMakeLists.txt` 新增：
 ```cmake
 add_test(NAME player_ui COMMAND nekomote_ui_tests)
-set_tests_properties(player_ui PROPERTIES LABELS gpu)
+set_tests_properties(player_ui PROPERTIES LABELS player_ui)
 ```
 
-UI 测试需要 OpenGL（链接 `OpenGL::GL` 和 `nekomote_gl_loader`），标记为 `gpu` label。`-LE gpu` 可排除。
+UI状态测试不创建图形上下文；虽然链接图形库，仍可在没有DISPLAY时执行。Codex已将标签纠正为 `player_ui`。
 
 ### 2. Python 工具检查注册 CTest
 
