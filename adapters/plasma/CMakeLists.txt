@@ -40,7 +40,9 @@ set_source_files_properties(${NEKOMOTE_QML_GENERATED_SOURCES} PROPERTIES
 add_executable(nekomote_plasma_probe probe/main.cpp)
 set_target_properties(nekomote_plasma_probe PROPERTIES AUTOMOC ON)
 target_compile_definitions(nekomote_plasma_probe PRIVATE
-    NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
+    NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}"
+    NEKOMOTE_WALLPAPER_QML="${CMAKE_CURRENT_SOURCE_DIR}/package/contents/ui/main.qml"
+    NEKOMOTE_CONFIG_QML="${CMAKE_CURRENT_SOURCE_DIR}/package/contents/config/main.qml")
 target_link_libraries(nekomote_plasma_probe PRIVATE
     nekomote::plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_qmlplugin_init
     Qt6::Qml Qt6::Quick Qt6::OpenGL nekomote_warnings)

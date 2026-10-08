@@ -4,6 +4,7 @@
 
 #include <QQuickItem>
 #include <QString>
+#include <QTimer>
 #include <QUrl>
 #include <memory>
 
@@ -66,6 +67,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData& data) override;
 
   private:
     nekomote::qt_quick::ItemState get_item_state() const override;
@@ -74,6 +76,9 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void try_load();
     void set_status(int value);
     void set_error(const QString& value);
+    void check_backend();
+    void start_timer();
+    void stop_timer();
 
     std::shared_ptr<nekomote::qt_quick::SessionState> state_;
     QUrl model_file_;
@@ -87,5 +92,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     std::uint64_t playback_revision_{0};
     std::array<nekomote::qt_quick::Input, 32> inputs_{};
     std::size_t input_count_{0};
+    QTimer* timer_{nullptr};
+    bool backend_checked_{false};
 };
 } // namespace nekomote::plasma

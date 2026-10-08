@@ -25,9 +25,10 @@ namespace
 struct Options
 {
     std::filesystem::path model, session, capture, lifecycle;
-    int width{800}, height{1080}, steps{0};
+    int width{800}, height{1080}, steps{0}, max_steps{0};
     float x{0}, y{400}, scale{1}, dpi{1};
     bool marker{false};
+    std::string graphics_api{"opengl"};
 };
 long integer(const std::string& text, long minimum, long maximum)
 {
@@ -71,6 +72,8 @@ Options options(int argc, char** argv)
             result.height = static_cast<int>(integer(value(), 1, 8192));
         else if (key == "--steps")
             result.steps = static_cast<int>(integer(value(), 0, 100000));
+        else if (key == "--max-steps")
+            result.max_steps = static_cast<int>(integer(value(), 1, 1000000));
         else if (key == "--origin-x")
             result.x = number(value());
         else if (key == "--origin-y")
@@ -83,8 +86,10 @@ Options options(int argc, char** argv)
             result.marker = true;
         else if (key == "--graphics-api")
         {
-            if (value() != "opengl")
-                throw std::runtime_error("only the OpenGL Qt Quick backend is supported");
+            const auto api = value();
+            if (api != "opengl" && api != "software")
+                throw std::runtime_error("graphics-api must be opengl or software");
+            result.graphics_api = api;
         }
         else if (key == "--help")
         {
@@ -93,7 +98,9 @@ Options options(int argc, char** argv)
                 "  [--width 800 --height 1080 --origin-x 0 --origin-y 400 --scale 1]\n"
                 "  [--dpi 1] [--capture NEW.png --steps N] [--qt-marker]\n"
                 "  [--check-lifecycle NEW-directory --steps N]\n"
-                "Isolated QML wallpaper probe. OpenGL only; no desktop settings changed.");
+                "  [--max-steps N] [--graphics-api opengl|software]\n"
+                "Loads the actual wallpaper main.qml. OpenGL default; software asserts\n"
+                "UnsupportedBackend. No desktop settings changed.");
             std::exit(0);
         }
         else
@@ -108,28 +115,6 @@ Options options(int argc, char** argv)
     if (!result.lifecycle.empty() && std::filesystem::exists(result.lifecycle))
         throw std::runtime_error("lifecycle output already exists; choose a new path");
     return result;
-}
-QString qml_source(const Options& config)
-{
-    const auto model_url = QUrl::fromLocalFile(QString::fromStdString(config.model.string()));
-    const auto session_url = QUrl::fromLocalFile(QString::fromStdString(config.session.string()));
-    return QStringLiteral(
-        "import QtQuick\n"
-        "import NekoMote.Wallpaper\n"
-        "NekoWallpaperItem {\n"
-        "    width: %1; height: %2\n"
-        "    mirrorVertically: true\n"
-        "    originX: %5; originY: %6; scale: %7\n"
-        "    modelFile: \"%3\"\n"
-        "    sessionFile: \"%4\"\n"
-        "}")
-        .arg(config.width)
-        .arg(config.height)
-        .arg(model_url.toString())
-        .arg(session_url.toString())
-        .arg(static_cast<double>(config.x))
-        .arg(static_cast<double>(config.y))
-        .arg(static_cast<double>(config.scale));
 }
 QImage grab(QQuickWindow& window)
 {
@@ -149,7 +134,6 @@ QImage grab(QQuickWindow& window)
 int run(int argc, char** argv)
 {
     const auto config = options(argc, argv);
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
     QSurfaceFormat format;
     format.setVersion(3, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
@@ -161,22 +145,42 @@ int run(int argc, char** argv)
     int qt_argc = 1;
     char* qt_argv[] = {argv[0], nullptr};
     QGuiApplication application(qt_argc, qt_argv);
+    if (config.graphics_api == "opengl")
+        QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    else
+        QQuickWindow::setSceneGraphBackend(QStringLiteral("software"));
     QQmlEngine engine;
 #ifdef NEKOMOTE_QML_IMPORT_PATH
     engine.addImportPath(QStringLiteral(NEKOMOTE_QML_IMPORT_PATH));
 #endif
-    QQmlComponent component(&engine);
-    component.setData(qml_source(config).toUtf8(), QUrl{});
+    const auto model_url = QUrl::fromLocalFile(QString::fromStdString(config.model.string()));
+    const auto session_url = QUrl::fromLocalFile(QString::fromStdString(config.session.string()));
+    const auto qml_path = QString::fromStdString(
+        std::filesystem::path(NEKOMOTE_WALLPAPER_QML).string());
+    QQmlComponent component(&engine, QUrl::fromLocalFile(qml_path));
     if (component.isError())
     {
         for (const auto& error : component.errors())
             std::fprintf(stderr, "QML error: %s\n", error.toString().toUtf8().constData());
         return 1;
     }
-    auto* wallpaper = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(component.create());
+    auto* root = qobject_cast<QQuickItem*>(component.beginCreate(engine.rootContext()));
+    if (!root)
+    {
+        std::fprintf(stderr, "QML root is not a QQuickItem\n");
+        return 1;
+    }
+    root->setProperty("modelFile", model_url.toString());
+    root->setProperty("sessionFile", session_url.toString());
+    root->setProperty("originX", static_cast<double>(config.x));
+    root->setProperty("originY", static_cast<double>(config.y));
+    root->setProperty("scale", static_cast<double>(config.scale));
+    component.completeCreate();
+    auto* wallpaper = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(
+        root->findChild<QObject*>("wallpaper"));
     if (!wallpaper)
     {
-        std::fprintf(stderr, "QML component creation failed\n");
+        std::fprintf(stderr, "NekoWallpaperItem child not found\n");
         return 1;
     }
     QQuickWindow window;
@@ -186,11 +190,23 @@ int run(int argc, char** argv)
     window.setPersistentSceneGraph(false);
     window.setPersistentGraphics(false);
     window.resize(config.width, config.height);
-    wallpaper->setParentItem(window.contentItem());
+    root->setWidth(config.width);
+    root->setHeight(config.height);
+    root->setParentItem(window.contentItem());
     const auto status = wallpaper->status();
     const auto error_string = wallpaper->errorString();
     std::fprintf(stdout, "wallpaper status=%d errorString=%s\n", status,
                  error_string.toUtf8().constData());
+    if (config.graphics_api == "software")
+    {
+        if (status != 3)
+        {
+            std::fprintf(stderr, "software backend must report UnsupportedBackend (status=3)\n");
+            return 1;
+        }
+        std::fprintf(stdout, "software backend correctly rejected\n");
+        return 0;
+    }
     if (status != 1)
     {
         std::fprintf(stderr, "wallpaper did not load successfully\n");
@@ -204,19 +220,30 @@ int run(int argc, char** argv)
     int lifecycle_stage = 0;
     unsigned original_generation = 0;
     unsigned resumed_generation = 0;
+    unsigned rendered_frames = 0;
     QSize wanted_size;
     QImage initial_image;
     QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::failed, &application,
                      [&exit_code, &application](const QString& message)
                      {
-                         std::fprintf(stderr, "wallpaper failed: %s\n", message.toUtf8().constData());
+                         std::fprintf(stderr, "wallpaper failed: %s\n",
+                                      message.toUtf8().constData());
                          exit_code = 1;
                          application.quit();
                      });
-    QTimer timer;
-    timer.setInterval(33);
-    QObject::connect(&timer, &QTimer::timeout, &application, [&] { wallpaper->update(); });
-    timer.start();
+    QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::frame_ready, &application,
+                     [&](QSize, unsigned generation, double, const QString&)
+                     {
+                         ++rendered_frames;
+                         if (config.max_steps > 0 && rendered_frames >= static_cast<unsigned>(config.max_steps) && complete == false)
+                         {
+                             std::fprintf(stdout,
+                                          "max-steps reached: rendered_frames=%u generation=%u\n",
+                                          rendered_frames, generation);
+                             complete = true;
+                             application.quit();
+                         }
+                     });
     if (!config.capture.empty())
     {
         QTimer::singleShot(100, &application,
@@ -265,11 +292,12 @@ int run(int argc, char** argv)
                                      lifecycle_stage = 1;
                                      wanted_size = QSize(640, 480) * window.devicePixelRatio();
                                      window.resize(640, 480);
-                                     wallpaper->setWidth(640);
-                                     wallpaper->setHeight(480);
+                                     root->setWidth(640);
+                                     root->setHeight(480);
                                      wallpaper->update();
                                  }
-                                 else if (lifecycle_stage == 1 && window.size() == QSize(640, 480) &&
+                                 else if (lifecycle_stage == 1 &&
+                                          window.size() == QSize(640, 480) &&
                                           framebuffer_size == wanted_size)
                                  {
                                      const auto image = grab(window);
@@ -286,14 +314,15 @@ int run(int argc, char** argv)
                                                         {
                                                             window.resize(config.width,
                                                                           config.height);
-                                                            wallpaper->setWidth(config.width);
-                                                            wallpaper->setHeight(config.height);
+                                                            root->setWidth(config.width);
+                                                            root->setHeight(config.height);
                                                             wallpaper->setPaused(false);
                                                             window.show();
                                                             wallpaper->update();
                                                         });
                                  }
-                                 else if (lifecycle_stage == 2 && generation > original_generation)
+                                 else if (lifecycle_stage == 2 &&
+                                          generation > original_generation)
                                  {
                                      if (resumed_generation != generation)
                                      {
@@ -311,7 +340,8 @@ int run(int argc, char** argv)
                                      {
                                          const auto image = grab(window);
                                          if (image.isNull())
-                                             throw std::runtime_error("recreated capture failed");
+                                             throw std::runtime_error(
+                                                 "recreated capture failed");
                                          image.save(QString::fromStdString(
                                              (config.lifecycle / "recreated.png").string()));
                                          if (image.size() != initial_image.size())
@@ -326,8 +356,8 @@ int run(int argc, char** argv)
                                      else
                                      {
                                          window.resize(config.width, config.height);
-                                         wallpaper->setWidth(config.width);
-                                         wallpaper->setHeight(config.height);
+                                         root->setWidth(config.width);
+                                         root->setHeight(config.height);
                                          wallpaper->update();
                                      }
                                  }
@@ -357,10 +387,10 @@ int run(int argc, char** argv)
     timeout.start();
     window.show();
     application.exec();
-    timer.stop();
     timeout.stop();
     window.hide();
     window.releaseResources();
+    std::fprintf(stdout, "plasma probe rendered_frames=%u\n", rendered_frames);
     std::fprintf(stdout, "plasma probe renderer created=%u destroyed=%u\n",
                  state->renderer_created.load(), state->renderer_destroyed.load());
     if (state->renderer_created.load() != state->renderer_destroyed.load())

@@ -28,6 +28,9 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : SessionItemBase(paren
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
     connect(this, &SessionItemBase::failed, this, &NekoWallpaperItem::set_error);
+    timer_ = new QTimer(this);
+    timer_->setInterval(33);
+    connect(timer_, &QTimer::timeout, this, [this] { update(); });
 }
 
 NekoWallpaperItem::~NekoWallpaperItem() = default;
@@ -145,6 +148,10 @@ void NekoWallpaperItem::setPaused(bool value)
         return;
     paused_ = value;
     ++playback_revision_;
+    if (paused_)
+        stop_timer();
+    else
+        start_timer();
     emit pausedChanged();
     update();
 }
@@ -162,6 +169,7 @@ void NekoWallpaperItem::set_error(const QString& value)
     error_string_ = value;
     emit errorStringChanged();
     set_status(2);
+    stop_timer();
 }
 
 void NekoWallpaperItem::try_load()
@@ -241,5 +249,43 @@ void NekoWallpaperItem::componentComplete()
 {
     SessionItemBase::componentComplete();
     try_load();
+}
+
+void NekoWallpaperItem::itemChange(ItemChange change, const ItemChangeData& data)
+{
+    SessionItemBase::itemChange(change, data);
+    if (change == ItemSceneChange && data.window && !backend_checked_)
+        check_backend();
+}
+
+void NekoWallpaperItem::check_backend()
+{
+    backend_checked_ = true;
+    auto* window = this->window();
+    if (!window)
+        return;
+    const auto backend = QQuickWindow::sceneGraphBackend();
+    const auto api = window->graphicsApi();
+    if ((!backend.isEmpty() && backend != QStringLiteral("opengl")) ||
+        api != QSGRendererInterface::OpenGL)
+    {
+        set_status(3);
+        stop_timer();
+        return;
+    }
+    if (status_ == 1 && !paused_)
+        start_timer();
+}
+
+void NekoWallpaperItem::start_timer()
+{
+    if (timer_ && !timer_->isActive() && status_ == 1 && !paused_)
+        timer_->start();
+}
+
+void NekoWallpaperItem::stop_timer()
+{
+    if (timer_)
+        timer_->stop();
 }
 } // namespace nekomote::plasma
