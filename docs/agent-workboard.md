@@ -1,6 +1,6 @@
 # Agent 协作任务
 
-更新：2026-10-08。现状见 [整合摘要](review-agents-current.md)，实现与证据见 [C5 镜像/遮罩交接](c5-mirror-mask-handoff.md)。G10、V7 已交付并复核，不再重复领用。以下外部任务由用户启动，各任务验证后 commit，正文记录真实 Agent、Model 和 Context。
+更新：2026-10-08。现状见 [整合摘要](review-agents-current.md)，实现与证据见 [C5 镜像/遮罩交接](c5-mirror-mask-handoff.md)。G10、V7、G11、V8 已交付并复核，不再重复领用。以下外部任务由用户启动，各任务验证后 commit，正文记录真实 Agent、Model 和 Context。
 
 ## 下一批安排
 
@@ -26,17 +26,14 @@
 
 验收：195 行可复核来源账本、实际成功/失败/未测统计、已知两个纹理例的回归、新交接及提交。**图集一致不等于全模型视觉/交互/soak 通过。** 不重复 CPU 长跑，除非来源改变或出现新的 CPU 风险。
 
-## V8：镜像与遮罩独立复核
+## V8：镜像与遮罩独立复核（已完成）
 
-使用本轮提交的 schema 6、正式 `asset.mirror` 和相同作者输入；不再手工对原生输入取反。先核对 C5 证据中的工具/资产 hash。旧 V7 六组是源码定义及受控样本，不能把六个定义都称为同时活动节点。
+已完成独立验收与报告交付，详见 [V8 复核报告](v8-visual-report.md) 与完整账本 `build/evidence/v8/v8_ledger.json`。测试由 Gemini 3.8 Flash 独立执行，在 `flock build/gpu-validation.lock` 下完成 22 组案例验证：
 
-- Fraise france-maid-b：默认睁眼、闭眼、head/body `_LR` 正负端点、`_slant`、组合姿态、60 步物理。重点裁图眼白/瞳孔/小高光、轮廓及耳部边缘，保持同初态、seed、clock、作者步长和透明背景。
-- Chocola date-a：旧矩阵中的 idle/jump、瞳孔与独立高光边界；验证同遮罩的不同 motion 裁剪仍独立。Fraise maid-a 的真实 `add_mask` 仍须参与，不允许按名称删除。
-- 每例交付原始参照和原生整图、局部裁图、几何/拓扑报告、黑白底合成与 alpha 像素报告。动画另交公共变量逐步标量比较，检查步数和初态一致。通用 `build_visual_evidence.py` 只整理几何/像素，不负责捕获或标量认证；完整状态合并全部报告。拒绝帧记 REJECTED/未测，不能把零顶点或硬编码数字作为 PASS。
-- 可增加受控输入作为反例；失败保留字段路径、命令、图像和 hash，交 Codex 推导。C5 新动画组合失败不靠手工改符号、放宽阈值或改原素材消除。
-- 所有输入只用应用回调/诊断或页面内事件，禁止向系统窗口注入键鼠。GPU 正确性与性能串行；不改冻结旧证据。
-
-门槛：几何 ≤ .001px、拓扑全匹配、标量 ≤ 1e-5、alpha 与黑白底合成 RGB ≤ 2 字节且无超差像素。目视结论独立记录；通过代表范围不能升级为 195 项认证。交付 `docs/v8-visual-report.md` 和新证据目录。
+- 20 / 20 标准用例全部 PASS（几何最大 $7.1976\times 10^{-5}\text{px} \le 0.001\text{px}$，拓扑全匹配，标量 $\le 10^{-5}$，超差像素全部为 0）。
+- 2 个物理标量反例（`force-negative30`, `force-half-positive30`）成功复现并记录为 counterexample（几何与图像 PASS，标量最大 $1.6689\times 10^{-5}$ 及 $1.1444\times 10^{-5}$）。
+- Fraise france-maid-b 默认眼态、极值 head/body `_LR`、`_slant` 与复合姿态验证直接作者输入自动取反与可选遮罩解析；Chocola date-a 验证 idle/jump 动作裁剪组隔离；Fraise maid-a 验证真实 `add_mask` 主动参与。
+- 交付完整 WebGL 对比图、局部特征裁切图（眼眶、瞳孔、高光、面部轮廓、耳尖、围裙）、alpha 及黑白底合成公差报告。结论不扩大为 195 项全目录认证。
 
 ## Codex 接续
 

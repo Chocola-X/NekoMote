@@ -734,3 +734,18 @@ V7 后处理器，新增显式图集 hash 与离线资产迁移。项目内修�
 
 当前结论、失败复现及迁移入口集中于 [C5 交接](c5-mirror-mask-handoff.md)，
 后续按 [G11 → V8 → Codex](agent-workboard.md) 执行；旧阶段记录仅作历史证据。
+
+## 2026-10-08：V8 镜像与遮罩独立复核
+
+执行：Antigravity / Gemini 3.8 Flash (High)。复核基线 `1343172`。
+
+针对 schema 6 镜像参数展开、可选遮罩源优雅降级、motion 裁剪组独立隔离及呈现镜像物理锚点，
+组织 22 组案例（20 标准组 + 2 保留标量反例）全覆盖独立复核：
+
+1. **直接作者输入与镜像反转**：Fraise france-maid-b 直接输入 `head_LR = ±30`、`body_LR = ±30`、`head_slant = 30`、`body_slant = 30` 及复合姿态（`head_LR=30, head_UD=30, body_LR=-15`），不进行手动取反，几何误差 $\le 6.56\times 10^{-5}\text{px}$，像素超差均为 0。
+2. **可选遮罩与默认眼态**：Fraise france-maid-b 默认睁眼状态（`face_eye_open = 0`）缺省 `add_mask` 被安全跳过，眼白（`shirome`）遮罩正确生效，虹膜、竖瞳及小高光（`tex/0096`）精准裁切，无错误码 8 崩溃，像素差 0。
+3. **动作裁剪组隔离**：Chocola date-a 待机 `full-idle24` 与跳跃 `full-jump24` 动作下，不同 motion 共享 stencil 保持裁剪组独立，高光边界整洁无溢出，几何误差 $\le 1.80\times 10^{-5}\text{px}$，像素差 0。
+4. **真实遮罩保留**：Fraise maid-a 局部作用域的真实 `add_mask` 被正确解析并参与绘制，未被按名称误删，几何误差 0.0px，像素差 0。
+5. **反例复现**：精确复现 C5 遗留的两个缩放外力标量反例（`force-negative30` 最大标量误差 $1.6689\times 10^{-5}$，`force-half-positive30` 最大标量误差 $1.1444\times 10^{-5}$），图像与几何均 PASS，保留字段、日志及 hash 移交 Codex。
+6. **视觉与产物交付**：生成多部位高分辨率局部裁切图（眼眶、轮廓、耳尖、围裙）及 3-panel 复合对照图，建立冻结账本 `build/evidence/v8/v8_ledger.json`，交付完整报告 [docs/v8-visual-report.md](v8-visual-report.md)。
+
