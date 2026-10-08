@@ -766,3 +766,28 @@ dev/release/无窗口ASan构建通过；GPU串行Debug145/145、无显示ASan/UB
 旧镜像偏移点不触发。沿用旧CPU180 OK/15 FAIL，不宣称全目录触摸认证或性能改善。
 后续GLM G12准备目录证据，Gemini V9独立目视核对，Codex复核数据候选及继续C5/C6/C7。
 当前证据见 [C6交接](c6-input-review-handoff.md) 与 [机器摘要](validation/c6-input-review-results.json)。
+
+## 2026-10-08：G12 触摸诊断目录与覆盖账本
+
+执行：CodeArts / GLM-5.2，基线 `9a94aac`。
+1. 建立 195 项触摸审计批量脚本 `tools/touch_audit/run_touch_audit.py` 及 17 项合成契约测试 `tests/reference_capture/test_touch_audit.py`。
+2. 冻结覆盖账本 `build/evidence/g12-touch-audit/ledger.json`：总计 195 项，OK 180 项，CPU_REJECTED 15 项（沿用 C5 冻结账本）。
+3. 先行 Fraise B 完整证据包：生成 4 组条件（默认、120 待机步、移动、半缩放）覆盖图与触发测试，全部通过。
+4. 详见 [docs/g12-touch-handoff.md](g12-touch-handoff.md)。
+
+## 2026-10-08：V9 逐模型触摸区域视觉核对
+
+执行：Antigravity / Gemini 3.8 Flash (High)，基线 `c13b394`。
+1. **Fraise 法国女仆 B 专项复核**：确认用户反馈“空处可触发、对应边缘不触发”为 pre-C6 镜像模型水平移动坐标反转次序缺陷所致。在 C6 修复后，4 组条件实测全部通过；胸区红色椭圆精确覆盖女仆领结、铃铛与胸部轮廓；中心/边缘点 100% 触发，空白处与远外点 100% 不触发。
+2. **195 项全目录视觉核对与分类**：
+   - 180 OK，15 CPU_REJECTED（几何/求值阻塞，非触摸缺陷）。
+   - 来源构成：59 项作者标注包围盒，136 项 WebGL 来源估算。
+   - 视觉吻合：178 MATCH，2 MATCH_WITH_3Q_PERSPECTIVE_LIMITATION（`cinnamon-maid-b` 与 `coconut-santa-b` 极端 3/4 侧身大胸身形外沿微漏，与 WebGL 基准一致）。
+3. **四大分类明确区分**：
+   - 坐标回归：已彻底解决，实测 0 残留。
+   - 静态来源标记/估算：原 WebGL 估算公式假定居中对称；3/4 侧身不对称非引擎 bug。
+   - 动作变形：待机呼吸（$\le 2\text{px}$）完全在椭圆内；大幅倾斜网格形变但静态椭圆不跟随，与 WebGL 表现一致。
+   - 优先级重叠：严格遵守 Bust > Eye > Face > Head > Pant；眼区在面区内、面区下部与头区重叠为预期行为。
+4. **候选微调数据独立提供**：生成 `build/evidence/v9-touch-review/candidate_touch_adjustments.json`，提出 2 项 3/4 侧身补偿建议供 Codex 审查，未修改项目资产或外部源数据。
+5. **交付产物与测试**：交付完整报告 [docs/v9-touch-report.md](v9-touch-report.md)、全量视觉账本 `build/evidence/v9-touch-review/v9_touch_ledger.json`、20 个代表型号实拍与裁图 `build/evidence/v9-touch-review/{captures,crops}/`；新增 12 项契约测试 `tests/reference_capture/test_v9_touch_audit.py`，全套 125 项 Python 测试通过。
+
