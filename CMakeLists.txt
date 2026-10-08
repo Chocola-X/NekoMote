@@ -120,5 +120,13 @@ if(NEKOMOTE_BUILD_TESTS)
                 LABELS "python;gpu"
                 ENVIRONMENT "NEKOMOTE_ABI_HOST=$<TARGET_FILE:nekomote_abi_host>")
         endif()
+        if(NEKOMOTE_BUILD_QT_QUICK)
+            add_test(NAME python_qt_quick_host
+                COMMAND ${Python3_EXECUTABLE} -m unittest tests.reference_capture.test_qt_quick_host
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+            set_tests_properties(python_qt_quick_host PROPERTIES
+                LABELS "python;gpu"
+                ENVIRONMENT "NEKOMOTE_QT_QUICK_HOST=$<TARGET_FILE:nekomote_qt_quick_host>")
+        endif()
     endif()
 endif()
