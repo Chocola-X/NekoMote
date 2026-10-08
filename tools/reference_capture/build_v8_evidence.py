@@ -13,15 +13,15 @@ import argparse
 import fcntl
 import hashlib
 import json
+import math
 import os
 import pathlib
 import subprocess
 import sys
-import numpy as np
+from datetime import datetime, timezone
 from PIL import Image, ImageChops
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-EVIDENCE_DIR = ROOT / 'build' / 'evidence' / 'v8'
 LOCK_FILE = ROOT / 'build' / 'gpu-validation.lock'
 
 # Binaries
@@ -43,7 +43,163 @@ def sha256_file(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def run_command(cmd, log_path: pathlib.Path):
+def new_output_directory(path):
+    """Only a new directory may receive evidence, including empty existing directories."""
+    path = pathlib.Path(path).resolve()
+    path.mkdir(parents=True, exist_ok=False)
+    return path
+
+
+def artifact_path(path):
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def asset_input_hashes(asset):
+    data = json.loads(asset.read_text())
+    files = [asset] + [(asset.parent / texture['path']).resolve()
+                       for texture in data['model']['textures']]
+    return {str(path): sha256_file(path) for path in files}
+
+
+def finite_number(value):
+    try:
+        return type(value) in (int, float) and math.isfinite(value)
+    except OverflowError:
+        return False
+
+
+def pose_geometry_passed(data):
+    counts = ('missing_reference_triangles', 'unmatched_reference_vertices',
+              'unused_native_triangles', 'unused_native_vertices')
+    error = data.get('frame_max_error_px')
+    return bool(finite_number(error) and 0 <= error <= .001 and
+                type(data.get('frame_error')) is int and data['frame_error'] == 0 and
+                data.get('missing_primitives') == [] and
+                type(data.get('frame_vertices')) is int and data['frame_vertices'] > 0 and
+                type(data.get('frame_indices')) is int and data['frame_indices'] > 0 and
+                all(type(data.get(key)) is int and data[key] == 0 for key in counts))
+
+
+# These two public SDK GetVariable observations do not expose the active head_LR
+# differential contribution. Geometry still checks it; all other scalar keys remain gated.
+PUBLIC_SCALAR_SKIPS = {
+    'fraise-france-maid-b_direction-diff': {'head_LR'},
+    'fraise-france-maid-b_source-timeline60': {'head_LR'},
+}
+PUBLIC_SKIP_REASON = ('Public SDK GetVariable head_LR retains the base value and omits the '
+                      'active differential contribution; geometry remains strictly checked.')
+
+
+def compare_scalar_samples(reference, native, case_name):
+    """Validate all observations; compare identical states after updates 1..steps."""
+    report = {'status': 'FAIL', 'passed': False, 'samples': 0, 'max_error': None,
+              'threshold': 1e-5, 'skipped': [],
+              'initialization_boundary': {
+                  'step': 0, 'compared': False,
+                  'reason': ('Public SDK GetVariable cache has not been refreshed by the first '
+                             'Update; native step 0 already reflects configured inputs. '
+                             'Both step 0 records are structurally and numerically validated.')
+              }}
+    try:
+        source_samples = reference.get('variableSamples')
+        native_samples = native.get('samples')
+        if not isinstance(source_samples, list) or not source_samples:
+            raise ValueError('reference variableSamples must be nonempty')
+        if not isinstance(native_samples, list) or len(native_samples) != len(source_samples):
+            raise ValueError('native/reference sample counts disagree')
+        steps = reference.get('steps')
+        if (type(steps) is not int or steps < 1 or type(native.get('steps')) is not int or
+                native['steps'] != steps):
+            raise ValueError('native/reference steps must agree and be positive')
+        if len(source_samples) != steps + 1:
+            raise ValueError('observations must include every step 0..steps')
+        observed_keys = None
+        errors = []
+        for step, (source, target) in enumerate(zip(source_samples, native_samples)):
+            if (not isinstance(source, dict) or not isinstance(target, dict) or
+                    type(source.get('step')) is not int or source['step'] != step or
+                    type(target.get('step')) is not int or target['step'] != step):
+                raise ValueError('native/reference step sequence must be exactly 0..steps')
+            a, b = source.get('values'), target.get('values')
+            if not isinstance(a, dict) or not a or not isinstance(b, dict) or not b:
+                raise ValueError('each step requires nonempty variable values')
+            if observed_keys is None:
+                observed_keys = set(a)
+                # sampleVariables is the SDK capture's Boolean enumeration switch;
+                # observeVariables is the explicit list of additional requested keys.
+                requested = reference.get('observeVariables', [])
+                if not isinstance(requested, list) or any(
+                        not isinstance(key, str) or key not in observed_keys for key in requested):
+                    raise ValueError('requested scalar observations are absent from reference')
+            elif set(a) != observed_keys:
+                raise ValueError('reference variable keys must remain identical across steps')
+            compared = 0
+            for key, value in a.items():
+                if not isinstance(key, str) or not key or not finite_number(value):
+                    raise ValueError('reference variable names/values must be valid and finite')
+                if key not in b or not finite_number(b[key]):
+                    raise ValueError(f'native variable {key!r} is absent or nonfinite')
+                if step == 0:
+                    continue
+                if key in PUBLIC_SCALAR_SKIPS.get(case_name, set()):
+                    report['skipped'].append({'step': step, 'variable': key,
+                                              'reason': PUBLIC_SKIP_REASON})
+                    continue
+                error = abs(value - b[key])
+                if not math.isfinite(error):
+                    raise ValueError('scalar subtraction produced a nonfinite error')
+                errors.append(error)
+                compared += 1
+            if step > 0 and not compared:
+                raise ValueError('each step needs at least one comparable scalar observation')
+        report['samples'] = len(errors)
+        report['max_error'] = max(errors)
+        report['passed'] = report['max_error'] <= report['threshold']
+        report['status'] = 'PASS' if report['passed'] else 'FAIL'
+    except ValueError as error:
+        report['error'] = str(error)
+    return report
+
+
+def finalize_case(case):
+    scalar = case['scalar']
+    scalar_ok = (scalar.get('status') == 'NOT_APPLICABLE' and case['type'] == 'static' or
+                 scalar.get('status') == 'PASS' and scalar.get('passed') is True)
+    case['passed'] = bool(case['geometry']['passed'] and scalar_ok and case['image']['passed'])
+    reproduced = bool(case['is_counterexample'] and case['geometry']['passed'] and
+                      case['image']['passed'] and scalar.get('status') == 'FAIL' and
+                      finite_number(scalar.get('max_error')) and scalar['max_error'] > 1e-5)
+    case['expected_failure_reproduced'] = reproduced
+    case['verdict'] = ('DOCUMENTED_COUNTEREXAMPLE' if reproduced else
+                       'PASS' if case['passed'] else 'FAIL')
+    return case
+
+
+def suite_acceptance(results):
+    return bool(results) and all(case['passed'] for case in results)
+
+
+def tool_metadata():
+    directory = pathlib.Path(__file__).resolve().parent
+    dependencies = ('build_v8_evidence.py', 'compare_playback_frame.py', 'capture.py',
+                    'capture.cjs', 'reference.html', 'trace.js', 'psb_fixture.py',
+                    'package.json', 'package-lock.json')
+    return {
+        'commit': subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
+                                          text=True).strip(),
+        'working_tree_dirty': bool(subprocess.check_output(
+            ['git', '-C', str(ROOT), 'status', '--porcelain'], text=True).strip()),
+        'dependencies_sha256': {name: sha256_file(directory / name) for name in dependencies},
+        'python': sys.version,
+        'commands': [],
+    }
+
+
+def run_command(cmd, log_path: pathlib.Path, commands):
+    commands.append({'argv': [str(c) for c in cmd], 'log': artifact_path(log_path)})
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open('w') as f:
         res = subprocess.run([str(c) for c in cmd], stdout=f, stderr=subprocess.STDOUT)
@@ -155,12 +311,12 @@ def generate_region_crops(ref_path: pathlib.Path, nat_path: pathlib.Path, out_di
         
         crop_records[region_name] = {
             'box': list(box),
-            'ref_crop': str(ref_crop_file.relative_to(ROOT)),
+            'ref_crop': artifact_path(ref_crop_file),
             'ref_crop_sha256': sha256_file(ref_crop_file),
-            'nat_crop': str(nat_crop_file.relative_to(ROOT)),
+            'nat_crop': artifact_path(nat_crop_file),
             'nat_crop_sha256': sha256_file(nat_crop_file),
             'diff_crop_sha256': sha256_file(diff_crop_file),
-            'sbs_crop': str(sbs_crop_file.relative_to(ROOT)),
+            'sbs_crop': artifact_path(sbs_crop_file),
             'sbs_crop_sha256': sha256_file(sbs_crop_file),
         }
     return crop_records
@@ -169,7 +325,17 @@ def generate_region_crops(ref_path: pathlib.Path, nat_path: pathlib.Path, out_di
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cases', nargs='*', help='Optional subset of cases to run')
+    parser.add_argument('--output', type=pathlib.Path, required=True,
+                        help='New evidence directory; existing directories are rejected')
+    parser.add_argument('--browser', type=pathlib.Path,
+                        help='Required when selected cases need new reference captures')
     args = parser.parse_args()
+
+    try:
+        EVIDENCE_DIR = new_output_directory(args.output)
+    except FileExistsError:
+        parser.error('--output must be a new directory; existing evidence cannot be overwritten')
+    metadata = tool_metadata()
 
     LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
     lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
@@ -180,9 +346,12 @@ def main():
         sys.exit(1)
 
     print("=== Acquiring GPU Validation Lock: SUCCESS ===")
-    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     crops_dir = EVIDENCE_DIR / 'crops'
-    crops_dir.mkdir(parents=True, exist_ok=True)
+    crops_dir.mkdir()
+
+    if args.browser is not None:
+        metadata['browser'] = {'path': str(args.browser.resolve()),
+                               'sha256': sha256_file(args.browser)}
 
     # 1. Audit Tool & Binary Hashes
     binary_hashes = {
@@ -196,6 +365,8 @@ def main():
         'chocola-date-a': sha256_file(ASSET_CHOCOLA),
         'fraise-maid-a': sha256_file(ASSET_FRAISE_MAID_A),
     }
+    asset_inputs = {str(asset): asset_input_hashes(asset) for asset in
+                    (ASSET_FRAISE_FRANCE, ASSET_CHOCOLA, ASSET_FRAISE_MAID_A)}
 
     # Define crop bounding boxes
     FRAISE_BOXES = {
@@ -370,7 +541,7 @@ def main():
             'type': 'playback',
             'asset': ASSET_CHOCOLA,
             'model': 'chocola-date-a',
-            'ref_json': ROOT / 'docs' / 'validation' / 'playback-inputs.json', # case in json
+            'ref_json': p6_dir / 'full-idle24.json',
             'ref_png': p6_dir / 'full-idle24.png',
             'ref_trace': p6_dir / 'full-idle24.trace.json',
             'input_json': c5_dir / 'regression-accepted' / 'base' / 'full-idle24-inputs.json',
@@ -383,7 +554,7 @@ def main():
             'type': 'playback',
             'asset': ASSET_CHOCOLA,
             'model': 'chocola-date-a',
-            'ref_json': ROOT / 'docs' / 'validation' / 'playback-inputs.json',
+            'ref_json': p6_dir / 'full-jump24.json',
             'ref_png': p6_dir / 'full-jump24.png',
             'ref_trace': p6_dir / 'full-jump24.trace.json',
             'input_json': c5_dir / 'regression-accepted' / 'base' / 'full-jump24-inputs.json',
@@ -533,25 +704,33 @@ def main():
         },
     ]
 
+    if args.cases is not None:
+        requested = set(args.cases)
+        unknown = requested - {case['name'] for case in cases}
+        if not requested or unknown:
+            parser.error('--cases requires known nonempty case names: ' + ', '.join(sorted(unknown)))
+        cases = [case for case in cases if case['name'] in requested]
+
     # Pre-capture any references that are defined to live directly in EVIDENCE_DIR
     for c in cases:
-        if str(c['ref_json']).startswith(str(EVIDENCE_DIR)) and not c['ref_png'].exists():
+        if c['ref_json'].parent == EVIDENCE_DIR and not c['ref_png'].exists():
+            if args.browser is None:
+                parser.error('--browser is required for fresh WebGL references')
             print(f"[*] Capturing WebGL reference for {c['name']}...")
             cap_cmd = [
                 'python3', str(ROOT / 'tools' / 'reference_capture' / 'capture.py'),
                 '--reference-root', '../NekoWebShow',
                 '--model', c['model'],
-                '--browser', '/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
+                '--browser', str(args.browser.resolve()),
                 '--width', 800, '--height', 1080, '--x', 0, '--y', 400,
                 '--variables', json.dumps(c['variables']),
                 '--trace',
                 '--output', str(EVIDENCE_DIR / c['name'])
             ]
-            run_command(cap_cmd, EVIDENCE_DIR / f"{c['name']}_capture.log")
+            run_command(cap_cmd, EVIDENCE_DIR / f"{c['name']}_capture.log", metadata['commands'])
 
     # Run evaluations
     results = []
-    overall_all_passed = True
 
     for c in cases:
         name = c['name']
@@ -563,12 +742,24 @@ def main():
             'description': c['desc'],
             'is_counterexample': c['is_counterexample'],
             'counterexample_reason': c.get('counterexample_reason', None),
-            'inputs': c['variables'] if 'variables' in c else json.loads(pathlib.Path(c['input_json']).read_text()),
+            'inputs': ({'variables': c['variables'], 'origin': c['origin'], 'scale': 1,
+                        'viewport': [800, 1080]} if 'variables' in c else
+                       json.loads(pathlib.Path(c['input_json']).read_text())),
             'reference_hashes': {
                 'png_sha256': sha256_file(c['ref_png']),
                 'trace_sha256': sha256_file(c['ref_trace']),
+                'metadata_sha256': sha256_file(c['ref_json']),
             }
         }
+
+        case_res['input_hashes'] = dict(asset_inputs[str(c['asset'])])
+        if 'input_json' in c:
+            case_res['input_hashes'][str(c['input_json'])] = sha256_file(c['input_json'])
+        else:
+            case_res['authored_variables_sha256'] = hashlib.sha256(
+                json.dumps(c['variables'], sort_keys=True, allow_nan=False).encode()).hexdigest()
+        case_res['reference_files'] = {key: str(c[key]) for key in
+                                       ('ref_json', 'ref_png', 'ref_trace')}
 
         native_png = EVIDENCE_DIR / f"{name}_native.png"
         geo_json = EVIDENCE_DIR / f"{name}_geo.json"
@@ -583,17 +774,9 @@ def main():
                 '--variables', json.dumps(c['variables']),
                 '--output', str(geo_json)
             ]
-            run_command(pose_cmd, EVIDENCE_DIR / f"{name}_pose.log")
+            run_command(pose_cmd, EVIDENCE_DIR / f"{name}_pose.log", metadata['commands'])
             g_data = json.load(geo_json.open())
-            geo_passed = bool(
-                g_data['frame_error'] == 0 and
-                not g_data['missing_primitives'] and
-                g_data['frame_max_error_px'] <= 0.001 and
-                g_data['missing_reference_triangles'] == 0 and
-                g_data['unmatched_reference_vertices'] == 0 and
-                g_data['unused_native_triangles'] == 0 and
-                g_data['unused_native_vertices'] == 0
-            )
+            geo_passed = pose_geometry_passed(g_data)
             case_res['geometry'] = {
                 'passed': geo_passed,
                 'frame_max_error_px': g_data['frame_max_error_px'],
@@ -604,7 +787,9 @@ def main():
                 'missing_primitives': g_data['missing_primitives'],
                 'frame_error': g_data['frame_error']
             }
-            case_res['scalar'] = {'passed': True, 'samples': 0, 'max_error': 0.0}
+            case_res['scalar'] = {'status': 'NOT_APPLICABLE', 'passed': None,
+                                  'samples': 0, 'max_error': None,
+                                  'reason': 'Static pose has no dynamic scalar observations'}
 
             # 2. Preview Render
             prev_cmd = [
@@ -617,7 +802,7 @@ def main():
             ]
             for k, v in c['variables'].items():
                 prev_cmd += ['--variable', k, str(v)]
-            run_command(prev_cmd, EVIDENCE_DIR / f"{name}_preview.log")
+            run_command(prev_cmd, EVIDENCE_DIR / f"{name}_preview.log", metadata['commands'])
 
         else:
             # Playback Dynamic Evaluation
@@ -628,12 +813,14 @@ def main():
                 str(c['input_json']),
                 str(native_json)
             ]
-            run_command(play_cmd, EVIDENCE_DIR / f"{name}_playback.log")
+            run_command(play_cmd, EVIDENCE_DIR / f"{name}_playback.log", metadata['commands'])
             n_data = json.load(native_json.open())
             trace_data = json.load(c['ref_trace'].open())
             g_comp = compare_playback_frame(n_data, trace_data)
             geo_json.write_text(json.dumps(g_comp, indent=2))
-            geo_passed = g_comp['passed']
+            geo_passed = bool(g_comp['passed'] and n_data['frame_vertices'] > 0 and
+                              n_data['frame_indices'] > 0 and g_comp['commands'] and
+                              all(command['samples'] > 0 for command in g_comp['commands']))
             case_res['geometry'] = {
                 'passed': geo_passed,
                 'frame_max_error_px': g_comp['frame_max_error_px'],
@@ -650,26 +837,11 @@ def main():
                 str(native_json),
                 str(native_png)
             ]
-            run_command(rend_cmd, EVIDENCE_DIR / f"{name}_render.log")
+            run_command(rend_cmd, EVIDENCE_DIR / f"{name}_render.log", metadata['commands'])
 
-            # Scalar variable comparison
-            if c['ref_json'].exists() and c['ref_json'].suffix == '.json' and 'variableSamples' in json.loads(c['ref_json'].read_text()):
-                ref_meta = json.loads(c['ref_json'].read_text())
-                scalar_errs = []
-                for a, b in zip(ref_meta.get('variableSamples', [])[1:], n_data.get('samples', [])[1:]):
-                    for k, v in a.get('values', {}).items():
-                        if name in ('fraise-france-maid-b_direction-diff', 'fraise-france-maid-b_source-timeline60') and k == 'head_LR':
-                            continue
-                        scalar_errs.append(abs(v - b.get('values', {}).get(k, 0.0)))
-                max_s = max(scalar_errs, default=0.0)
-                scalar_passed = max_s <= 1e-5
-                case_res['scalar'] = {
-                    'passed': scalar_passed,
-                    'samples': len(scalar_errs),
-                    'max_error': max_s
-                }
-            else:
-                case_res['scalar'] = {'passed': True, 'samples': 0, 'max_error': 0.0}
+            # Public observations must cover identical, nonempty step sequences.
+            ref_meta = json.loads(c['ref_json'].read_text())
+            case_res['scalar'] = compare_scalar_samples(ref_meta, n_data, name)
 
         # 3. Image Comparison
         im_report = compare_images_detailed(c['ref_png'], native_png, comp_base, tolerance=2)
@@ -678,33 +850,27 @@ def main():
             'png_sha256': sha256_file(native_png),
             'geo_sha256': sha256_file(geo_json),
         }
+        if c['type'] == 'playback':
+            case_res['native_hashes']['samples_sha256'] = sha256_file(native_json)
 
         # 4. Regional Crops & Side-by-Side Images
         crop_data = generate_region_crops(c['ref_png'], native_png, crops_dir, name, c['boxes'])
         case_res['crops'] = crop_data
 
-        # Overall Case Status
-        strict_pass = bool(case_res['geometry']['passed'] and case_res['scalar']['passed'] and case_res['image']['passed'])
-        if c['is_counterexample']:
-            # Counterexample passes geometry and image, but intentionally fails scalar threshold
-            case_res['passed'] = bool(case_res['geometry']['passed'] and case_res['image']['passed'] and not case_res['scalar']['passed'])
-            case_res['verdict'] = 'DOCUMENTED_COUNTEREXAMPLE'
-        else:
-            case_res['passed'] = strict_pass
-            case_res['verdict'] = 'PASS' if strict_pass else 'FAIL'
-            if not strict_pass:
-                overall_all_passed = False
-
-        print(f"    Verdict: {case_res['verdict']} | GeoMax: {case_res['geometry']['frame_max_error_px']:.6e}px | ScalarMax: {case_res['scalar']['max_error']:.6e} | PixOverTol: {case_res['image']['pixels_over_tolerance']}")
+        finalize_case(case_res)
+        scalar_max = case_res['scalar']['max_error']
+        print(f"    Verdict: {case_res['verdict']} | "
+              f"GeoMax: {case_res['geometry']['frame_max_error_px']:.6e}px | "
+              f"ScalarMax: {scalar_max!r} | "
+              f"PixOverTol: {case_res['image']['pixels_over_tolerance']}")
         results.append(case_res)
 
     # 3. Write Complete Ledger
     ledger = {
-        'generated_at': subprocess.check_output(['date', '-u', '+%Y-%m-%dT%H:%M:%SZ']).decode().strip(),
-        'agent': 'Antigravity',
-        'model': 'Gemini 3.8 Flash (High)',
+        'generated_at': datetime.now(timezone.utc).isoformat(),
         'context': 'docs/agent-workboard.md V8',
-        'overall_acceptance': overall_all_passed,
+        'overall_acceptance': suite_acceptance(results),
+        'tool_metadata': metadata,
         'thresholds': {
             'geometry_px': 0.001,
             'topology': 'all matched',
@@ -715,6 +881,7 @@ def main():
         'binary_hashes': binary_hashes,
         'asset_hashes': asset_hashes,
         'total_cases': len(results),
+        'expected_failures_reproduced': sum(1 for r in results if r['expected_failure_reproduced']),
         'counterexamples_count': sum(1 for r in results if r['is_counterexample']),
         'standard_cases_passed': sum(1 for r in results if not r['is_counterexample'] and r['passed']),
         'standard_cases_failed': sum(1 for r in results if not r['is_counterexample'] and not r['passed']),
@@ -724,12 +891,11 @@ def main():
     ledger_path = EVIDENCE_DIR / 'v8_ledger.json'
     ledger_path.write_text(json.dumps(ledger, indent=2) + '\n')
     print(f"\n[+] Ledger written to {ledger_path}")
-    print(f"[+] Summary: {ledger['standard_cases_passed']}/{len(results) - ledger['counterexamples_count']} standard cases PASSED. {ledger['counterexamples_count']} documented counterexamples VERIFIED.")
+    print(f"[+] Summary: {ledger['standard_cases_passed']}/{len(results) - ledger['counterexamples_count']} standard cases PASSED. {ledger['expected_failures_reproduced']}/{ledger['counterexamples_count']} expected failures reproduced; acceptance={ledger['overall_acceptance']}.")
 
     os.close(lock_fd)
-    if not overall_all_passed:
-        sys.exit(1)
+    return 0 if ledger['overall_acceptance'] else 1
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

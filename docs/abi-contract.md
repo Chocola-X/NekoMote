@@ -4,6 +4,8 @@
 
 ## 所有权与失败
 
+输入 gaze/touch 均为呈现方向的中心 framebuffer 像素，Y 向下。宿主转换逻辑窗口/DPI 并减去半个画幅，不再翻转 X；session 负责作者触摸区的缩放、放置与镜像逆变换。诊断及本轮验证见 [C6 输入交接](c6-input-review-handoff.md)。
+
 - CPU session由一个求值线程顺序调用，不能并发advance/prepare/输入；immutable program可供各自独立的session借用。
 - model/session_asset 可在 program 编译成功后销毁；program 必须比借用它的 session 活得更久。GPU renderer 与 CPU session 分别拥有资源；renderer 创建、调用和销毁都要求宿主提供同一有效上下文及图形线程。
 - C/C++ 帧逐字段复制到各自预分配的存储，不互转对象指针。session 创建时按 scene 容量预分配主帧，背景预留 8 顶点/12 索引/2 命令；renderer reserve 同时预留复制缓冲区和 GPU 容量。
@@ -24,10 +26,10 @@ env -u DISPLAY -u WAYLAND_DISPLAY ctest --preset asan
 
 asan preset 关闭 preview/player，启用 ABI。`abi_negative_test` 是纯 C 的 NULL/无效 loader/重复初始化失败测试；`abi_synthetic_boundary` 使用仓库的小型合成 fixture、有效程序和会话，检查非法模式999、NaN、尺寸、帧失效、背景和 OOM 诊断。它们不依赖真实模型或显示服务。`abi_test` 为真实资产集成入口；缺少文件时返回77、CTest 明确 Skipped；文件存在但损坏仍失败。
 
-本轮 dev 136/136；无 DISPLAY/WAYLAND_DISPLAY 的 ASan/UBSan 135/135。另从当前源码导出不含 assets/refer 的独立副本，headless + ABI + 无离线工具构建通过：134 PASS、1 个真实资产集成项 Skipped。使用明确的本地已固定依赖缓存，未测试网络重新下载。证据目录：`build/evidence/integration-2026-10-07/`。
+早期边界验证记录在 `build/evidence/integration-2026-10-07/`：独立副本不含 assets/refer，headless + ABI + 无离线工具构建通过，134 PASS、1 个真实资产集成项 Skipped。使用明确的本地已固定依赖缓存，未测试网络重新下载。当前整体数量以 C6 交接为准，不用历史数量说明当前执行范围。
 
 GPU 负例使用真正的 renderer：纹理长度/尺寸、非法 blend/protection/composition、NULL 非空帧、复制 OOM，失败后白色宿主目标保持白色，重新 prepare 后可绘制。预热后100次 ABI prepare/render 普通 C++ new 为0；合成 CPU session 的120次 advance/prepare/frame/background 查询为0。这些不包含驱动 malloc、初始化、截图或整个 UI 的分配。
 
 ## 尚未认证
 
-C/GLFW 宿主仍有重复音频服务、pthread 所有权、加载失败和错误处理缺陷，不能代表 ABI 的正确用法或正式壁纸应用。G2 必须精简/迁移，不能再复制音频服务。部分 CPU 运行错误的诊断仍为通用文字，下一步补源节点/字段路径及更完整失败注入。上下文丢失/宿主卸载、多线程生命周期、实际 Qt Quick/Plasma 宿主以及最终共享库安装没有验收。
+C/GLFW 宿主已经收敛为显式静音诊断工具，G8 确定步 PNG 与 C++ 像素一致；它不代表实际桌面插件，也不承担正式音频服务。更完整源诊断/失败注入、上下文丢失/宿主卸载、多线程生命周期、实际 Qt Quick/Plasma 宿主及最终共享库安装仍待验收。

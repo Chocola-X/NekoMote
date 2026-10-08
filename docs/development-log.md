@@ -749,3 +749,20 @@ V7 后处理器，新增显式图集 hash 与离线资产迁移。项目内修�
 5. **反例复现**：精确复现 C5 遗留的两个缩放外力标量反例（`force-negative30` 最大标量误差 $1.6689\times 10^{-5}$，`force-half-positive30` 最大标量误差 $1.1444\times 10^{-5}$），图像与几何均 PASS，保留字段、日志及 hash 移交 Codex。
 6. **视觉与产物交付**：生成多部位高分辨率局部裁切图（眼眶、轮廓、耳尖、围裙）及 3-panel 复合对照图，建立冻结账本 `build/evidence/v8/v8_ledger.json`，交付完整报告 [docs/v8-visual-report.md](v8-visual-report.md)。
 
+## 2026-10-08：G11/V8 复核与 C6 触摸诊断
+
+执行：Codex / GPT-6（精确变体未暴露），基线 `7a9b39a`。确认用户授权的GLM gaze修复正确，
+补修触摸先翻转整点再减origin造成的镜像水平偏移，统一C/C++宿主输入契约。
+新增 `--show-touch-regions` 半透明区域、固定容量GPU诊断和session probe实际投影。
+不更改区域数据、外部素材或桌面配置，不注入系统输入。
+
+G11补修27项漏审、资源错误假MATCH、尺寸关联及来源记录，冻结工具重新采样195项，
+194 MATCH/1已知Coconut dress差异。V8补修空/缺失/截断标量、Chocola漏测、反例状态及输出覆盖；
+新目录22项为20标准PASS/2标量FAIL，全部几何/拓扑/图像通过，静态标量11项不适用。
+原账本保留；两类已知失败均明确非零退出，未降低门槛。
+
+dev/release/无窗口ASan构建通过；GPU串行Debug145/145、无显示ASan/UBSan143/143、Python96/96。
+四种真实布局各生成原图/覆盖图及区域JSON，目视读取Fraise B两图；胸中心/左右内边缘触发，
+旧镜像偏移点不触发。沿用旧CPU180 OK/15 FAIL，不宣称全目录触摸认证或性能改善。
+后续GLM G12准备目录证据，Gemini V9独立目视核对，Codex复核数据候选及继续C5/C6/C7。
+当前证据见 [C6交接](c6-input-review-handoff.md) 与 [机器摘要](validation/c6-input-review-results.json)。

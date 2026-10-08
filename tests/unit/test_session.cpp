@@ -169,6 +169,75 @@ TEST_CASE("Application input regions, capabilities and placement are explicit", 
     REQUIRE_THAT(reference.value(session, "body_LR"),
                  Catch::Matchers::WithinAbs(20.0 * std::sqrt(1.0 / 120), 1e-5));
 }
+TEST_CASE("Presented touch coordinates follow mirrored placement and authored scale",
+          "[application][input]")
+{
+    for (const bool mirror : {false, true})
+    {
+        CAPTURE(mirror);
+        Reference reference;
+        reference.model.mirror = mirror;
+        reference.model.author_scale = {model::FieldState::Value, 2};
+        for (auto& region : reference.session.interaction.regions)
+            region.reset();
+        reference.session.interaction.regions[0] = model::TouchEllipse{{30, -40}, {10, 15}};
+        reference.compile();
+        SessionInstance session(*reference.program,
+                                {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+        REQUIRE(session.set_origin({50, 80}));
+        REQUIRE(session.set_scale(.75f));
+        const float center_x = mirror ? 5.0f : 95.0f;
+        const auto regions = session.touch_regions();
+        REQUIRE(regions[0]);
+        REQUIRE(regions[0]->center.x == center_x);
+        REQUIRE(regions[0]->center.y == 20.0f);
+        REQUIRE(regions[0]->radius.x == 15.0f);
+        REQUIRE(regions[0]->radius.y == 22.5f);
+        for (std::size_t i = 1; i < regions.size(); ++i)
+            REQUIRE_FALSE(regions[i]);
+        for (const float offset : {-15.0f, 0.0f, 15.0f})
+        {
+            REQUIRE(session.reset());
+            REQUIRE(session.touch({center_x + offset, 20}));
+            REQUIRE(session.active_reaction() == reference.program->find_reaction("reaction"));
+        }
+        for (const float offset : {-15.1f, 15.1f})
+        {
+            REQUIRE(session.reset());
+            REQUIRE(session.touch({center_x + offset, 20}));
+            REQUIRE_FALSE(session.active_reaction().valid());
+        }
+        REQUIRE(session.reset());
+        REQUIRE(session.touch({center_x, 42.6f}));
+        REQUIRE_FALSE(session.active_reaction().valid());
+        REQUIRE(session.set_origin({-50, -80}));
+        REQUIRE(session.set_scale(1));
+        REQUIRE(session.touch_regions()[0]->center.x == (mirror ? -110.0f : 10.0f));
+        REQUIRE(session.touch_regions()[0]->center.y == -160.0f);
+    }
+}
+TEST_CASE("Mirrored gaze keeps the presented input direction on enter and move",
+          "[application][input]")
+{
+    Reference reference;
+    reference.model.mirror = true;
+    reference.model.mirrored_parameters = {"face_eye_LR", "head_LR", "body_LR", "head_slant",
+                                           "body_slant"};
+    reference.compile();
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.set_origin({50, 80}));
+    REQUIRE(session.pointer_move({230, -20}));
+    REQUIRE(session.advance(.25));
+    REQUIRE(reference.value(session, "face_eye_LR") > 0.0f);
+    REQUIRE(reference.value(session, "head_LR") > 0.0f);
+    REQUIRE(session.pointer_leave());
+    REQUIRE(session.pointer_enter({-130, -20}));
+    for (int i = 0; i < 8; ++i)
+        REQUIRE(session.advance(.25));
+    REQUIRE(reference.value(session, "face_eye_LR") < 0.0f);
+    REQUIRE(reference.value(session, "head_LR") < 0.0f);
+}
 TEST_CASE("Application pause, audio snapshots, partitions and resets preserve independent state",
           "[application]")
 {

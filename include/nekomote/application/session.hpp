@@ -3,6 +3,7 @@
 #include <nekomote/model/session_asset.hpp>
 #include <nekomote/runtime/playback.hpp>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -101,8 +102,9 @@ struct SessionCompileResult
 };
 SessionCompileResult compile_session(const model::ModelAsset&, const model::SessionAsset&);
 // Single evaluation thread, borrowed program must outlive instances. Input
-// coordinates are centered output pixels (Y down). Hosts convert their surface
-// coordinates explicitly; no hidden global pointer or graphics/audio calls.
+// coordinates are centered output pixels (Y down), in presented direction for
+// both gaze and touch. Hosts must not mirror input. The session owns conversion
+// to authored touch coordinates; no hidden pointer or graphics/audio calls.
 class SessionInstance
 {
   public:
@@ -119,6 +121,11 @@ class SessionInstance
     // Touch selects a seeded reaction from the first eligible region in authored
     // bust/eye/face/head/pant priority. Empty means no region; Busy preserves state.
     SessionStatus touch(Vec2 position) noexcept;
+    // Diagnostic projection of eligible static authored regions into centered
+    // output pixels. Same placement/scale/mirror contract as touch(); not a
+    // deformed mesh hit test. Index order is TouchZone priority. No allocation.
+    std::array<std::optional<model::TouchEllipse>, model::kTouchZoneCount>
+    touch_regions() const noexcept;
     SessionStatus react(ReactionId id) noexcept;
     // Latest RMS snapshot from actual PCM playback, in 0..1. No fake audio.
     SessionStatus set_audio_level(float rms) noexcept;

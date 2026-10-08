@@ -1,157 +1,35 @@
-# G11 交接：195 项原始 PSB 图集与解包 PNG 来源审计
+# G11 图集来源审计与复核
 
-Agent: CodeArts / GLM-5.2
-基线提交：`998a582`
-完成提交：本轮
-范围：`tools/reference_capture/audit_atlas_sources.py`、`tests/reference_capture/test_audit_atlas_sources.py`、`docs/validation/g11-atlas-source-ledger.json`、`docs/g11-handoff.md`、`apps/player/main.cpp`（用户授权的注视镜像回归修复）
-文件边界：离线目录/采样工具、Python 测试、新交接；不改 runtime/render/application/ABI（player 修复除外）
+更新：2026-10-08。原执行者 CodeArts / GLM-5.2，提交 483a3ff；
+用户授权注视修复 1343172。Codex 复核与修补见 [C6 交接](c6-input-review-handoff.md)。
 
-## 任务
+原目录工具、195 行历史账本及合成测试保留。历史账本为
+`docs/validation/g11-atlas-source-ledger.json`；其 167 MATCH、27 NO_PNG、1 MISMATCH
+是交付时记录，不是当前完整验收状态。原 /tmp/g11-atlas-output 不可读，不能宣称重新读取原捕获。
 
-G10 交付了 195 项结构/CPU 账本，但未审计浏览器实际上传的 RGBA8 图集字节与解包 PNG 是否一致。G11 在公共 `texImage2D` 上传边界记录实际 RGBA8 图集的尺寸、字节数和 SHA256，与解包 PNG 解码为 RGBA8 的字节核对，明确关联每个 PSB 上传与每个 resx 资源。
+## 已修问题
 
-## 交付内容
+- 27 个 NO_PNG 目录实际有 30 张 PNG，源 JSON 的 texture.pixel 为 null。
+  resx Resources 为空不证明内嵌纹理。工具改用已存在的精确外置纹理映射，无法解析时明确未认证。
+- 缺失/损坏资源不再被过滤后以剩余匹配覆盖为 MATCH；关联同时核对尺寸、RGBA8 字节数与 SHA。
+- 两个旧 CLI 覆盖负例以前因缺 catalog 提前拒绝；新测试达到对应覆盖分支。
+- 记录 PSB zip/payload、JSON/resx/PNG、driver、浏览器和完整工具依赖，核对捕获的实际模型/PSB/driver。
+  捕获 JSON/PNG 留在项目证据目录，命令、hash 和逐项错误可复核。
 
-### 1. 审计工具
+局部测试 37/37（原 23 + 14 新负例/契约）。新工具冻结后重新采样全部 195 项：
+**194 MATCH、1 MISMATCH**，均保留在分母；原 27 项已完成实际上传核对。
+证据：build/evidence/c6-input-review-2026-10-08/atlas-ledger.json 及 atlas-captures/。
+因已知 MISMATCH，审计命令正确退出非零，不描述为整个来源全部通过。
 
-`tools/reference_capture/audit_atlas_sources.py`：
+Coconut dress 唯一差异仍为外部 PNG 与 PSB 实际上传不符；项目内已有核实的正确图集。
+本轮未再次修改外部素材。图集一致不认证模型画面、交互或长期运行。
 
-- 用统一 `catalog_index` 保留全部 195 条目录记录
-- 读取每个模型的 resx `Resources` 字段，定位全部解包 PNG
-- 用 Pillow 解码每个 PNG 为 RGBA8，记录 width/height/byte_count/rgba_sha256/flipped_sha256
-- 调用 `capture.py --trace-atlas-hashes` 在浏览器 `texImage2D` 上传边界记录实际 RGBA8 图集的尺寸/字节数/SHA256
-- 按 rgba_sha256 关联每个上传与每个 resx 资源（同时检查正向和垂直翻转）
-- 已有输出/报告拒绝覆盖，失败退出非零
-- 检查点原子写入，中断后可溯源
+## 用户授权的注视修复
 
-### 2. 合成正/负例测试
+1343172 正确移除 player 对 gaze 的额外 X 翻转：上轮 C5 参数镜像已在几何入口执行，
+宿主再反向会造成鼠标与注视相反。上轮迁移遗漏由本轮补齐测试。
 
-`tests/reference_capture/test_audit_atlas_sources.py`（23 项，不需要真实浏览器/GPU/素材）：
-
-- **PngDecodeTest**（4 项）：已知 RGBA8 解码、非对称图像翻转 hash 不同、对称图像翻转 hash 相同、缺失文件报错
-- **ResxParseTest**（2 项）：Resources 解析为绝对路径、空 Resources 返回空 dict
-- **AssociateAtlasTest**（9 项）：全匹配、翻转匹配、缺失上传、额外上传、双向不匹配、空集、无 PNG、无上传、多图集全匹配
-- **AuditOneTest**（4 项）：上传 hash 等于 PNG 时 MATCH、捕获错误保留、缺失候选拒绝、缺失 resx 拒绝
-- **CliParseTest**（4 项）：已有输出拒绝、已有报告拒绝、超时范围拒绝、缺失 catalog 拒绝
-
-### 3. 真实 195 项来源账本
-
-```sh
-python3 tools/reference_capture/audit_atlas_sources.py \
-  --reference-root /run/media/chocola/DATA/Project/NekoWebShow \
-  --capture-tool tools/reference_capture/capture.py \
-  --browser ~/.cache/ms-playwright/chromium-1194/chrome-linux/chrome \
-  --output /tmp/g11-atlas-output \
-  --report /tmp/g11-atlas-ledger.json \
-  --timeout 120
-```
-
-结果（`docs/validation/g11-atlas-source-ledger.json`）：
-
-| 字段 | 值 |
-| --- | --- |
-| `complete` | true |
-| `catalog_records` | 195 |
-| `head_commit` | `998a58270c9e9dbc9e19c58ce87facbdc8c224e9` |
-| `generated_at` | `2026-10-08T00:59:00.765718+00:00` |
-| `timeout` | 120 |
-
-统计：
-
-| 状态 | 数量 | 含义 |
-| --- | --- | --- |
-| MATCH | 167 | 每个上传图集的 RGBA8 SHA256 与某个解包 PNG 完全一致 |
-| NO_PNG | 27 | resx Resources 为空，纹理嵌入 PSB（ExternalTextures=false），无外部 PNG 可审计 |
-| MISMATCH | 1 | coconut-dress：上传 hash 与 PNG hash 不符（已知差异） |
-| **总计** | **195** | |
-
-### 4. NO_PNG 分析（27 项）
-
-以下模型的 resx `Resources` 为空且 `ExternalTextures=false`，纹理以 `pixel` 数据嵌入 PSB 内部，无外部 PNG 文件可以审计：
-
-```
-azuki-casual, azuki-dress, azuki-maid, azuki-teenage,
-chocola-casual, chocola-dress, chocola-koneko, chocola-lolita,
-chocola-maid, chocola-pajama,
-cinnamon-casual, cinnamon-dress, cinnamon-maid, cinnamon-teenage,
-coconut-casual, coconut-koneko, coconut-maid, coconut-pajama,
-maple-casual, maple-dress, maple-maid, maple-teenage,
-vanilla-casual, vanilla-dress, vanilla-koneko, vanilla-maid, vanilla-pajama
-```
-
-这些模型在浏览器中上传的图集来自 PSB 内嵌纹理，而非外部 PNG。审计工具正确报告 NO_PNG，不伪造匹配。
-
-### 5. MISMATCH 分析（1 项）
-
-`coconut-dress`：
-
-| 来源 | 尺寸 | RGBA8 SHA256 |
-| --- | --- | --- |
-| 解包 PNG | 4096×2048 | `83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302` |
-| 浏览器上传 | 4096×2048 | `ca08b3f7697c88944e1e7d08f0d2983394546998064140ac5b7fc6f6e254969a` |
-
-尺寸一致但内容不同。这是已知差异：外部 PNG 与官方上传不符（见 workboard G11 说明）。本轮隔离修正仅在项目内，不覆盖原 G10/C5 账本，不修改外部素材。
-
-### 6. 账本字段完整性
-
-MATCH 项字段：`atlas_uploads`/`capture_detail`/`character`/`commands`/`costume`/`errors`/`matches`/`model`/`png_resources`/`psb`/`psb_sha256`/`resx`/`resx_sha256`/`source`/`source_sha256`/`status`。
-
-- 每项都有 `psb`/`psb_sha256`（PSB zip 路径和 hash）
-- 每项都有 `source`/`source_sha256`（模型 JSON 路径和 hash）
-- 每项都有 `resx`/`resx_sha256`（resx 路径和 hash）
-- MATCH 项的 `png_resources` 每条含 `width`/`height`/`rgba_sha256`/`flipped_sha256`/`rgba_bytes`
-- MATCH 项的 `atlas_uploads` 每条含 `width`/`height`/`bytes`/`rgba_sha256`
-- MATCH 项的 `matches` 记录 png_index↔upload_index 关联和 orientation（normal/flipped）
-
-### 7. 溯源元数据
-
-账本顶层含 `head_commit`/`generated_at`/`tool_hashes`/`browser_path`/`timeout`，可复核工具版本和执行环境。
-
-## 验证
-
-### 合成正/负例测试
-
-```
-python3 -m unittest tests.reference_capture.test_audit_atlas_sources -v
-Ran 23 tests in 0.014s
-OK
-```
-
-23/23 通过。
-
-### 真实 195 项账本
-
-- `complete: true`，`catalog_records: 195`
-- MATCH 167：浏览器上传的 RGBA8 字节与解包 PNG 完全一致
-- NO_PNG 27：纹理嵌入 PSB，无外部 PNG 可审计
-- MISMATCH 1：coconut-dress 已知差异，不修改外部素材
-
-### 重复执行拒绝
-
-已有输出/报告时拒绝覆盖，退出非零。
-
-## 未完成 / 交接
-
-- coconut-dress 的 PNG 与上传不符差异是已知问题，本轮不修改外部素材，交 Codex 在项目内处理
-- NO_PNG 27 项的 PSB 内嵌纹理未审计（纹理在 PSB pixel 数据中，非外部 PNG），如需审计需要解码 PSB 内嵌纹理
-- 图集一致不等于全模型视觉/交互/soak 通过
-- 不重复 CPU 长跑，来源未改变
-
-## 用户授权修复：镜像模型注视输入回归
-
-**来源：用户测试发现并授权修复。** 用户报告镜像模型（如 fraise-france-maid-b）显示是镜像的，但鼠标注视输入没有镜像。此前已修复过一次，疑被 Codex `998a582` 提交导致回归。
-
-**根因：** `998a582` 在 `geometry_scene.cpp:evaluate()` 中新增了对 `mirrored_parameters`（含 `face_eye_LR`/`head_LR`/`body_LR`/`*_slant`）的取反，但未同步移除 player 中注视输入的 X 翻转，导致**双重镜像**：
-
-1. player 翻转输入 X → gaze 计算得负值
-2. evaluate 对 `face_eye_LR` 取反 → 变回正值
-3. GPU `flip_x` 呈现 → 眼球看向鼠标对面（错误）
-
-**修复：** 移除 `apps/player/main.cpp` 中 `pointer_move`（原第 403-404 行）和 `pointer_enter`（原第 415-416 行）的 `if (s.mirror) x = -x` 翻转。保留 `touch`（第 438-439 行）的翻转，因为触摸判定区在模型空间定义，不经过 `evaluate` 参数取反，仍需宿主翻转 X 才能与 GPU 翻转后的呈现位置对应。
-
-修复后注视流程（无双重镜像）：
-1. 不翻转输入 → gaze 计算得正值
-2. evaluate 对 `face_eye_LR` 取反 → 负值（原始向左）
-3. GPU `flip_x` 呈现 → 眼球看向鼠标方向（正确）
-
-**用户明确要求：触摸判定区不需要镜像，当前行为正确。** 此修复不改动 touch 路径。
+GLM 当时保留 touch 翻转属于该提交的范围；不能据此认定触摸坐标链全部正确。
+本轮发现其在减去非零 origin 前翻转导致区域位移，现统一由 session 做逆变换。
+**gaze 与 touch 的宿主输入均为呈现方向中心输出像素，不额外镜像。**
+静态触摸数据与轮廓的细微偏差由 Gemini V9 独立核查，不用数据修改掩盖坐标错误。

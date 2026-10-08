@@ -265,6 +265,9 @@ extern "C"
     nekomote_error nekomote_session_start(nekomote_session* session);
     nekomote_error nekomote_session_set_origin(nekomote_session* session, float x, float y);
     nekomote_error nekomote_session_set_scale(nekomote_session* session, float scale);
+    /* Input XY is centered output pixels, Y down, in presented direction.
+     * Hosts convert logical/window pixels to framebuffer pixels, but must not
+     * mirror pointer or touch coordinates. Session owns authored-region mapping. */
     nekomote_error nekomote_session_pointer_move(nekomote_session* session, float x, float y);
     nekomote_error nekomote_session_pointer_leave(nekomote_session* session);
     nekomote_error nekomote_session_pointer_enter(nekomote_session* session, float x, float y);

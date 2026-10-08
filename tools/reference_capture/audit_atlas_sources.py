@@ -15,11 +15,11 @@ import argparse
 import datetime
 import hashlib
 import json
-import os
 import pathlib
+import shutil
 import subprocess
 import sys
-import tempfile
+import zipfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / '..' / 'import_emote'))
 import catalog_index
@@ -55,16 +55,17 @@ def tool_hash(path):
 
 
 def decode_png_rgba8(path):
-    """解码 PNG 为 RGBA8 字节，返回 (width, height, data, sha256_hex)。
-
-    同时计算垂直翻转版本（OpenGL 纹理坐标原点在左下角），
+    """解码 PNG 为 RGBA8，同时计算垂直翻转版本，
     返回 (width, height, rgba_sha256, flipped_sha256, byte_count)。
     """
     if PilImage is None:
         raise RuntimeError('Pillow is required for PNG decoding')
-    img = PilImage.open(path).convert('RGBA')
-    width, height = img.width, img.height
-    data = img.tobytes()
+    with PilImage.open(path) as source:
+        if source.format != 'PNG':
+            raise ValueError('resource is not a PNG image')
+        img = source.convert('RGBA')
+        width, height = img.width, img.height
+        data = img.tobytes()
     sha = hashlib.sha256(data).hexdigest()
     row = width * 4
     flipped = b''.join(data[y * row:(y + 1) * row] for y in range(height - 1, -1, -1))
@@ -75,10 +76,25 @@ def decode_png_rgba8(path):
 def parse_resx_resources(resx_path):
     """读取 resx 的 Resources 字段，返回 dict[key -> absolute png path]。"""
     document = json.loads(resx_path.read_text())
+    if not isinstance(document, dict) or not isinstance(document.get('Resources'), dict):
+        raise ValueError('resx Resources must be an object')
     resources = {}
-    for key, value in document.get('Resources', {}).items():
+    for key, value in document['Resources'].items():
+        if not isinstance(value, str) or not value:
+            raise ValueError(f'resx resource {key!r} must be a nonempty path')
         resources[key] = (resx_path.parent / value).resolve()
     return resources
+
+
+def valid_upload(record):
+    if not isinstance(record, dict):
+        return False
+    width, height, size = (record.get(k) for k in ('width', 'height', 'bytes'))
+    sha = record.get('rgba_sha256')
+    return (type(width) is int and type(height) is int and type(size) is int and
+            width > 0 and height > 0 and size == width * height * 4 and
+            isinstance(sha, str) and len(sha) == 64 and
+            all(c in '0123456789abcdef' for c in sha))
 
 
 def associate_atlas(png_records, upload_records):
@@ -88,8 +104,7 @@ def associate_atlas(png_records, upload_records):
                       rgba_sha256, flipped_sha256, rgba_bytes, status}
     每条 upload_record: {width, height, bytes, rgba_sha256}
 
-    匹配规则：upload.rgba_sha256 == png.rgba_sha256
-              或 upload.rgba_sha256 == png.flipped_sha256
+    匹配要求尺寸和 RGBA8 字节数相同，再检查正常或垂直翻转字节 SHA256。
     返回 (overall_status, match_details, errors)
     """
     errors = []
@@ -97,11 +112,19 @@ def associate_atlas(png_records, upload_records):
     matched_png = set()
     matched_upload = set()
 
+    if not isinstance(upload_records, list) or any(not valid_upload(u) for u in upload_records):
+        return 'INVALID_UPLOAD', [], ['atlas uploads require RGBA8 dimensions, bytes and SHA256']
+    if any(p.get('status') != 'OK' for p in png_records):
+        return 'PNG_ERROR', [], ['one or more PNG resources could not be decoded']
+
     for ui, upload in enumerate(upload_records):
         upload_hash = upload['rgba_sha256']
         found = False
         for pi, png in enumerate(png_records):
             if pi in matched_png:
+                continue
+            if (upload['width'] != png['width'] or upload['height'] != png['height'] or
+                    upload['bytes'] != png['rgba_bytes']):
                 continue
             if upload_hash == png['rgba_sha256']:
                 matches.append({'png_index': pi, 'upload_index': ui,
@@ -151,7 +174,7 @@ def associate_atlas(png_records, upload_records):
 
 def run_capture(capture_tool, reference_root, model, browser, output_prefix, timeout):
     """运行 capture.py --trace-atlas-hashes，返回 (atlas_uploads, detail)。"""
-    cmd = ['python3', str(capture_tool),
+    cmd = [sys.executable, str(capture_tool),
            '--reference-root', str(reference_root),
            '--model', model,
            '--browser', str(browser),
@@ -160,8 +183,8 @@ def run_capture(capture_tool, reference_root, model, browser, output_prefix, tim
            '--steps', '0']
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return None, {'command': cmd, 'reason': 'capture timeout'}
+    except (OSError, subprocess.SubprocessError) as error:
+        return None, {'command': cmd, 'reason': f'capture failed: {error}'}
     detail = {'command': cmd, 'returncode': proc.returncode,
               'stdout_tail': proc.stdout[-300:], 'stderr_tail': proc.stderr[-300:]}
     if proc.returncode != 0:
@@ -170,12 +193,28 @@ def run_capture(capture_tool, reference_root, model, browser, output_prefix, tim
     if not json_output.is_file():
         detail['reason'] = 'capture output json missing'
         return None, detail
+    png_output = pathlib.Path(str(output_prefix) + '.png')
     try:
-        result = json.loads(json_output.read_text())
-    except (json.JSONDecodeError, OSError) as error:
+        metadata_bytes = json_output.read_bytes()
+        result = json.loads(metadata_bytes)
+        if not isinstance(result, dict):
+            raise ValueError('capture metadata must be an object')
+        if result.get('model') != model or result.get('glError') != 0:
+            raise ValueError('capture model mismatch or missing/nonzero WebGL status')
+        if not isinstance(result.get('atlasUploadHashes'), list):
+            raise ValueError('capture atlasUploadHashes must be an array')
+        if not isinstance(result.get('source_hashes'), dict):
+            raise ValueError('capture source hashes are missing')
+        detail.update({'metadata_path': str(json_output),
+                       'metadata_sha256': hashlib.sha256(metadata_bytes).hexdigest(),
+                       'png_path': str(png_output), 'png_sha256': catalog_index.sha256(png_output),
+                       'source_hashes': result['source_hashes'],
+                       'renderer': result.get('renderer'), 'version': result.get('version'),
+                       'glError': result['glError']})
+    except (ValueError, OSError) as error:
         detail['reason'] = f'cannot parse capture output: {error}'
         return None, detail
-    return result.get('atlasUploadHashes', []), detail
+    return result['atlasUploadHashes'], detail
 
 
 def audit_one(name, record, reference_root, index, capture_tool, browser,
@@ -218,6 +257,20 @@ def audit_one(name, record, reference_root, index, capture_tool, browser,
         row['psb_sha256'] = catalog_index.sha256(psb)
     else:
         row['psb'] = None
+        row['status'] = 'NO_PSB'
+        row['errors'].append('source PSB archive missing')
+        return row
+    try:
+        with zipfile.ZipFile(psb) as archive:
+            entries = [p for p in archive.namelist() if p.endswith('.psb')]
+            if len(entries) != 1:
+                raise ValueError('expected exactly one PSB archive member')
+            row['psb_member'] = entries[0]
+            row['psb_payload_sha256'] = hashlib.sha256(archive.read(entries[0])).hexdigest()
+    except (OSError, ValueError, zipfile.BadZipFile) as error:
+        row['status'] = 'PSB_ERROR'
+        row['errors'].append(f'cannot read PSB archive: {error}')
+        return row
 
     if not resx.is_file():
         row['status'] = 'NO_RESX'
@@ -226,10 +279,27 @@ def audit_one(name, record, reference_root, index, capture_tool, browser,
 
     try:
         resources = parse_resx_resources(resx)
-    except (json.JSONDecodeError, OSError) as error:
+    except (ValueError, OSError) as error:
         row['status'] = 'ERROR'
         row['errors'].append(f'cannot parse resx: {error}')
         return row
+
+    row['resource_mapping'] = 'resx'
+    if not resources:
+        row['resource_mapping'] = 'model_external_textures'
+        try:
+            external = catalog_index.find_external_textures(source, source.parent)
+            if not external or any(path is None for path in external.values()):
+                row['status'] = 'SOURCE_MAPPING_UNRESOLVED'
+                row['errors'].append('empty resx resources; external texture mapping is absent or ambiguous')
+                row['external_texture_candidates'] = external
+                return row
+            resources = {texture: (source.parent / path).resolve()
+                         for texture, path in external.items()}
+        except (OSError, ValueError, AttributeError, TypeError) as error:
+            row['status'] = 'SOURCE_MAPPING_UNRESOLVED'
+            row['errors'].append(f'cannot resolve external textures: {error}')
+            return row
 
     png_records = []
     for resx_key in sorted(resources):
@@ -247,20 +317,19 @@ def audit_one(name, record, reference_root, index, capture_tool, browser,
             entry.update({'width': width, 'height': height,
                           'rgba_sha256': sha, 'flipped_sha256': flipped_sha,
                           'rgba_bytes': byte_count, 'status': 'OK'})
-        except (OSError, RuntimeError) as error:
+        except (OSError, RuntimeError, ValueError) as error:
             entry['status'] = 'PNG_DECODE_ERROR'
             row['errors'].append(f'PNG decode error for {resx_key}: {error}')
         png_records.append(entry)
     row['png_resources'] = png_records
 
-    if not png_records:
-        row['status'] = 'NO_PNG'
-        row['errors'].append('resx has no PNG resources')
+    if any(p.get('status') != 'OK' for p in png_records):
+        row['status'] = 'PNG_ERROR'
         return row
 
     capture_output = output_dir / (key + '.capture')
     atlas_uploads, capture_detail = run_capture(
-        capture_tool, reference_root, name, browser, capture_output, timeout)
+        capture_tool, reference_root, key, browser, capture_output, timeout)
     row['commands'].append(capture_detail.get('command', []))
     row['capture_detail'] = {k: v for k, v in capture_detail.items() if k != 'command'}
 
@@ -271,8 +340,20 @@ def audit_one(name, record, reference_root, index, capture_tool, browser,
         return row
 
     row['atlas_uploads'] = atlas_uploads
+    hashes = capture_detail.get('source_hashes', {})
+    if (hashes.get('psb') != row['psb_payload_sha256'] or
+            hashes.get('original_psb') != row['psb_payload_sha256']):
+        row['status'] = 'CAPTURE_PROVENANCE_ERROR'
+        row['errors'].append('capture PSB payload hashes do not match the selected source archive')
+        return row
+    for driver in ('FreeMoteDriver.js', 'emoteplayer.js'):
+        expected_hash = tool_hash(reference_root / 'driver' / driver)
+        if expected_hash is None or hashes.get(driver) != expected_hash:
+            row['status'] = 'CAPTURE_PROVENANCE_ERROR'
+            row['errors'].append(f'capture driver hash mismatch: {driver}')
+            return row
     overall, matches, assoc_errors = associate_atlas(
-        [p for p in png_records if p.get('status') == 'OK'], atlas_uploads)
+        png_records, atlas_uploads)
     row['status'] = overall
     row['matches'] = matches
     row['errors'].extend(assoc_errors)
@@ -285,6 +366,37 @@ def build_summary(rows):
         st = r['status']
         summary[st] = summary.get(st, 0) + 1
     return summary
+
+
+def collect_provenance(capture_tool, browser, reference_root):
+    capture_dependencies = ('capture.cjs', 'reference.html', 'trace.js', 'psb_fixture.py',
+                            'package.json', 'package-lock.json')
+    paths = {'audit_tool': pathlib.Path(__file__).resolve(), 'capture_tool': capture_tool,
+             'catalog_index': pathlib.Path(catalog_index.__file__).resolve(),
+             'python_binary': pathlib.Path(sys.executable).resolve(), 'browser_binary': browser}
+    paths.update({name: capture_tool.parent / name for name in capture_dependencies})
+    paths.update({name: reference_root / 'driver' / name
+                  for name in ('FreeMoteDriver.js', 'emoteplayer.js')})
+    node = shutil.which('node')
+    if node:
+        paths['node_binary'] = pathlib.Path(node).resolve()
+    versions = {}
+    for name, executable in (('browser', browser), ('node', node)):
+        if executable:
+            try:
+                proc = subprocess.run([str(executable), '--version'], capture_output=True,
+                                      text=True, timeout=10)
+                versions[name] = {'returncode': proc.returncode, 'stdout': proc.stdout.strip(),
+                                  'stderr': proc.stderr.strip()}
+            except (OSError, subprocess.SubprocessError) as error:
+                versions[name] = {'error': str(error)}
+    return {'head_commit': head_commit(),
+            'generated_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'tool_hashes': {name: tool_hash(path) for name, path in paths.items()},
+            'tool_paths': {name: str(path) for name, path in paths.items()},
+            'browser_path': str(browser), 'versions': versions,
+            'python_version': sys.version, 'pillow_version': PilImage.__version__,
+            'command': [sys.executable, str(pathlib.Path(__file__).resolve()), *sys.argv[1:]]}
 
 
 def save_report(report, path):
@@ -324,33 +436,41 @@ def main():
     output = args.output.resolve()
     if output.exists():
         parser.error(f'output already exists, use a new --output: {output}')
-    output.mkdir(parents=True)
 
     report_path = args.report.resolve()
     if report_path.exists():
         parser.error(f'report already exists, use a new --report: {report_path}')
+    checkpoint = report_path.with_name(report_path.name + '.checkpoint')
+    if checkpoint.exists():
+        parser.error(f'checkpoint already exists, use a new --report: {checkpoint}')
+    if report_path == output:
+        parser.error('--report must not be the --output directory')
 
     index = catalog_index.build_index(root)
     capture_tool = args.capture_tool.resolve()
     browser = args.browser.resolve()
-
-    provenance = {
-        'head_commit': head_commit(),
-        'generated_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        'tool_hashes': {
-            'capture_tool': tool_hash(capture_tool),
-            'audit_tool': catalog_index.sha256(pathlib.Path(__file__)),
-        },
-        'browser_path': str(browser),
-        'timeout': args.timeout,
-    }
+    if not capture_tool.is_file() or not browser.is_file():
+        parser.error('capture tool and browser must be existing files')
+    provenance = collect_provenance(capture_tool, browser, root)
+    provenance['timeout'] = args.timeout
+    required = ('capture_tool', 'browser_binary', 'FreeMoteDriver.js', 'emoteplayer.js',
+                'capture.cjs', 'reference.html', 'trace.js', 'psb_fixture.py',
+                'package.json', 'package-lock.json', 'node_binary')
+    if any(provenance['tool_hashes'].get(key) is None for key in required):
+        parser.error('required capture dependency or driver is missing')
+    output.mkdir(parents=True)
 
     rows = []
     fail_count = 0
     total = len(catalog)
     for i, (name, record) in enumerate(sorted(catalog.items()), 1):
-        row = audit_one(name, record, root, index, capture_tool, browser,
-                        output, args.timeout)
+        try:
+            row = audit_one(name, record, root, index, capture_tool, browser,
+                            output, args.timeout)
+        except (OSError, ValueError, TypeError, KeyError, zipfile.BadZipFile) as error:
+            row = {'model': name, 'character': record.get('character'),
+                   'costume': record.get('costume'), 'status': 'ERROR',
+                   'commands': [], 'errors': [f'audit source/capture error: {error}']}
         rows.append(row)
         st = row['status']
         if st != 'MATCH':

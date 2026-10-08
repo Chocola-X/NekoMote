@@ -3,6 +3,7 @@
 #include <nekomote/asset_io/session_asset.hpp>
 #include <nlohmann/json.hpp>
 
+#include <array>
 #include <cstdio>
 #include <fstream>
 #include <limits>
@@ -135,10 +136,23 @@ int run(int argc, char** argv)
     }
     check(session.prepare_frame());
     Json output{{"production_playback_certified", false},
+                {"presentation_mirror", program.mirror()},
                 {"steps", session.playback().tick_count()},
                 {"samples", samples},
                 {"audio_commands", commands},
                 {"frame", diagnostics::frame_json(session.frame(), scene.textures())}};
+    constexpr std::array<const char*, nekomote::model::kTouchZoneCount> zones{"bust", "eye", "face",
+                                                                              "head", "pant"};
+    const auto regions = session.touch_regions();
+    for (std::size_t i = 0; i < regions.size(); ++i)
+    {
+        if (!regions[i])
+            output["touch_regions"][zones[i]] = nullptr;
+        else
+            output["touch_regions"][zones[i]] = {
+                {"center", {regions[i]->center.x, regions[i]->center.y}},
+                {"radius", {regions[i]->radius.x, regions[i]->radius.y}}};
+    }
     std::ofstream file(argv[4]);
     if (!file)
         throw std::runtime_error("cannot open output");

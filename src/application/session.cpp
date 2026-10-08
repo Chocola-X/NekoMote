@@ -555,8 +555,9 @@ SessionStatus SessionInstance::touch(Vec2 position) noexcept
         return {SessionError::Busy, {}};
     const double total_scale = static_cast<float>(static_cast<double>(data.scale) *
                                                   static_cast<double>(data.program.author_scale));
-    const double x =
-        (static_cast<double>(position.x) - static_cast<double>(data.origin.x)) / total_scale;
+    double x = (static_cast<double>(position.x) - static_cast<double>(data.origin.x)) / total_scale;
+    if (data.program.mirror)
+        x = -x;
     const double y =
         (static_cast<double>(position.y) - static_cast<double>(data.origin.y)) / total_scale;
     for (std::size_t i = 0; i < data.program.zones.size(); ++i)
@@ -580,6 +581,31 @@ SessionStatus SessionInstance::touch(Vec2 position) noexcept
         return react(choices[static_cast<std::size_t>(next) % choices.size()]);
     }
     return {};
+}
+std::array<std::optional<model::TouchEllipse>, model::kTouchZoneCount>
+SessionInstance::touch_regions() const noexcept
+{
+    const auto& data = *impl_;
+    auto regions = data.program.interaction.regions;
+    const double scale = static_cast<float>(static_cast<double>(data.scale) *
+                                            static_cast<double>(data.program.author_scale));
+    const double direction = data.program.mirror ? -1 : 1;
+    for (std::size_t i = 0; i < regions.size(); ++i)
+    {
+        if (data.program.zones[i].empty())
+            regions[i].reset();
+        if (!regions[i])
+            continue;
+        auto& region = *regions[i];
+        region.center = {
+            static_cast<float>(static_cast<double>(data.origin.x) +
+                               direction * scale * static_cast<double>(region.center.x)),
+            static_cast<float>(static_cast<double>(data.origin.y) +
+                               scale * static_cast<double>(region.center.y))};
+        region.radius = {static_cast<float>(scale * static_cast<double>(region.radius.x)),
+                         static_cast<float>(scale * static_cast<double>(region.radius.y))};
+    }
+    return regions;
 }
 SessionStatus SessionInstance::react(ReactionId id) noexcept
 {

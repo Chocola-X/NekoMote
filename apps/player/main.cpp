@@ -7,6 +7,7 @@
 #include <nekomote/render_gl/renderer.hpp>
 
 #include "asset_catalog.hpp"
+#include "touch_overlay.hpp"
 #include "ui.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -48,6 +49,7 @@ struct Options
     std::string reaction, character, background_name;
     int width{1920}, height{1080}, steps{0}, measure{0}, fps{30}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
+    bool show_touch_regions{false};
     std::uint32_t seed{1};
     float scale{1};
     Vec2 origin{0, 400};
@@ -84,6 +86,8 @@ Options options(int argc, char** argv)
             o.mute = true;
         else if (key == "--transparent")
             o.transparent = true;
+        else if (key == "--show-touch-regions")
+            o.show_touch_regions = true;
         else if (key == "--scale")
             o.scale = std::stof(value());
         else if (key == "--origin-x")
@@ -140,6 +144,8 @@ Options options(int argc, char** argv)
                 "  [--capture output.png --steps N --mute --transparent] [--measure-frames N]\n"
                 "  [--capture-ui output.png --steps N --mute --ui-open --ui-drawer N]\n"
                 "  Diagnostic: --check-window output-directory --mute (no OS input injection)\n"
+                "  Diagnostic: --show-touch-regions (bust red, eye yellow, face green, "
+                "head cyan, pant purple); also included in captures.\n"
                 "Assets mode keys: Tab/1-9 switch character, B/N switch background, C clear "
                 "background.\n"
                 "Mouse: gaze; left click: touch; right drag: move; wheel: zoom.\n"
@@ -169,6 +175,8 @@ Options options(int argc, char** argv)
         throw std::runtime_error("--check-window requires --mute and excludes capture/measurement");
     if (o.capture.empty() && o.steps != 0)
         throw std::runtime_error("--steps requires --capture");
+    if (o.show_touch_regions && o.measure != 0)
+        throw std::runtime_error("touch-region diagnostics exclude performance measurement");
     return o;
 }
 std::string_view geometry_error_name(runtime::GeometryError error) noexcept
@@ -366,7 +374,6 @@ struct Surface
     application::SessionStatus error;
     float cutoff_y{0};
     bool has_cutoff{false};
-    bool mirror{false};
     player::ui::Context* ui_context{nullptr};
     void accept(application::SessionStatus s) noexcept
     {
@@ -434,10 +441,7 @@ struct Surface
         else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !s.paused &&
                  !s.minimized && !s.locked)
         {
-            auto p = s.point(x, y);
-            if (s.mirror)
-                p.x = -p.x;
-            s.accept(s.session->touch(p));
+            s.accept(s.session->touch(s.point(x, y)));
         }
     }
     static void scroll(GLFWwindow* w, double, double amount) noexcept
@@ -568,7 +572,6 @@ bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, S
         candidate_surface.dragging = false;
         candidate_surface.cutoff_y = entry.cutoff_y;
         candidate_surface.has_cutoff = entry.has_cutoff;
-        candidate_surface.mirror = candidate.program->mirror();
         if (!background.empty())
             apply_background(candidate, background, 0);
         check(candidate.instance->prepare_frame(), candidate.program.get(), candidate.name);
@@ -679,6 +682,9 @@ int run(int argc, char** argv)
         initial = &temp_entry;
     }
     CharacterHolder holder = load_character(*initial, o);
+    std::unique_ptr<player::TouchOverlay> touch_overlay;
+    if (o.show_touch_regions)
+        touch_overlay = std::make_unique<player::TouchOverlay>(glfwGetProcAddress);
     CharacterHolder old_holder;
     if (!o.reaction.empty())
         check(holder.instance->react(holder.program->find_reaction(o.reaction)));
@@ -702,8 +708,7 @@ int run(int argc, char** argv)
                     false,
                     {},
                     initial->cutoff_y,
-                    initial->has_cutoff,
-                    holder.program->mirror()};
+                    initial->has_cutoff};
     player::ui::FontAtlas ui_font;
     player::ui::Renderer ui_renderer;
     player::ui::Context ui_context;
@@ -1090,6 +1095,8 @@ int run(int argc, char** argv)
                                      holder.program->mirror()},
                                     target_contents);
         }
+        if (touch_overlay)
+            touch_overlay->render(*holder.instance, target);
         if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
