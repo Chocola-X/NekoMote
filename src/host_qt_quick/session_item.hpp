@@ -51,7 +51,49 @@ std::shared_ptr<SessionState> load_session(const std::filesystem::path& model,
                                            float origin_x, float origin_y, float scale, int steps,
                                            bool deterministic);
 
-class SessionItem final : public QQuickFramebufferObject
+enum class InputKind
+{
+    Enter,
+    Move,
+    Leave,
+    Touch
+};
+struct Input
+{
+    InputKind kind;
+    float x, y;
+};
+
+// Snapshot of GUI-side state copied into the renderer during synchronize.
+// Inputs are bounded to 32 entries; exceeding capacity reports an error.
+struct ItemState
+{
+    bool paused{false};
+    std::uint64_t playback_revision{0};
+    std::array<Input, 32> inputs{};
+    std::size_t input_count{0};
+};
+
+// Abstract base for FBO items sharing the session renderer. Concrete items
+// provide synchronize state and clear consumed inputs after sync.
+class SessionItemBase : public QQuickFramebufferObject
+{
+    Q_OBJECT
+  public:
+    explicit SessionItemBase(QQuickItem* parent = nullptr) : QQuickFramebufferObject(parent) {}
+    ~SessionItemBase() override = default;
+    virtual ItemState get_item_state() const = 0;
+    virtual void clear_inputs() = 0;
+  signals:
+    void frame_ready(QSize framebuffer_size, unsigned generation, double clock_delta,
+                     QString reaction);
+    void failed(QString diagnostic);
+};
+
+// Factory used by SessionItemBase subclasses' createRenderer().
+QQuickFramebufferObject::Renderer* create_session_renderer(std::shared_ptr<SessionState> state);
+
+class SessionItem final : public SessionItemBase
 {
     Q_OBJECT
   public:
@@ -61,11 +103,6 @@ class SessionItem final : public QQuickFramebufferObject
     // Diagnostic GUI callback; goes through the same bounded queue as mouse input.
     void replay_touch(QPointF logical_position);
 
-  signals:
-    void frame_ready(QSize framebuffer_size, unsigned generation, double clock_delta,
-                     QString reaction);
-    void failed(QString diagnostic);
-
   protected:
     void hoverEnterEvent(QHoverEvent* event) override;
     void hoverMoveEvent(QHoverEvent* event) override;
@@ -73,19 +110,8 @@ class SessionItem final : public QQuickFramebufferObject
     void mousePressEvent(QMouseEvent* event) override;
 
   private:
-    friend class SessionRenderer;
-    enum class InputKind
-    {
-        Enter,
-        Move,
-        Leave,
-        Touch
-    };
-    struct Input
-    {
-        InputKind kind;
-        float x, y;
-    };
+    ItemState get_item_state() const override;
+    void clear_inputs() override;
     void enqueue(InputKind kind, QPointF position = {});
     std::shared_ptr<SessionState> state_;
     bool paused_{false};

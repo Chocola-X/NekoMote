@@ -97,12 +97,12 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     }
     void synchronize(QQuickFramebufferObject* base) override
     {
-        auto* item = static_cast<SessionItem*>(base);
+        auto* item = static_cast<SessionItemBase*>(base);
         if (!connected_)
         {
-            connect(this, &SessionRenderer::frame_ready, item, &SessionItem::frame_ready,
+            connect(this, &SessionRenderer::frame_ready, item, &SessionItemBase::frame_ready,
                     Qt::QueuedConnection);
-            connect(this, &SessionRenderer::failed, item, &SessionItem::failed,
+            connect(this, &SessionRenderer::failed, item, &SessionItemBase::failed,
                     Qt::QueuedConnection);
             if (state_->deterministic)
                 connect(
@@ -119,15 +119,16 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             connected_ = true;
         }
         logical_size_ = item->size();
-        paused_ = item->paused_;
-        if (playback_revision_ != item->playback_revision_)
+        const auto item_state = item->get_item_state();
+        paused_ = item_state.paused;
+        if (playback_revision_ != item_state.playback_revision)
         {
             clock_attached_ = false;
-            playback_revision_ = item->playback_revision_;
+            playback_revision_ = item_state.playback_revision;
         }
-        input_count_ = item->input_count_;
-        inputs_ = item->inputs_;
-        item->input_count_ = 0;
+        input_count_ = item_state.input_count;
+        inputs_ = item_state.inputs;
+        item->clear_inputs();
         graphics_api_ = item->window()->rendererInterface()->graphicsApi();
     }
     void render() override
@@ -269,16 +270,16 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             nekomote_error result = NEKOMOTE_OK;
             switch (input.kind)
             {
-                case SessionItem::InputKind::Enter:
+                case InputKind::Enter:
                     result = nekomote_session_pointer_enter(state_->session.get(), x, y);
                     break;
-                case SessionItem::InputKind::Move:
+                case InputKind::Move:
                     result = nekomote_session_pointer_move(state_->session.get(), x, y);
                     break;
-                case SessionItem::InputKind::Leave:
+                case InputKind::Leave:
                     result = nekomote_session_pointer_leave(state_->session.get());
                     break;
-                case SessionItem::InputKind::Touch:
+                case InputKind::Touch:
                     result = nekomote_session_touch(state_->session.get(), x, y);
                     break;
             }
@@ -299,12 +300,17 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     unsigned generation_{0};
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
-    std::array<SessionItem::Input, 32> inputs_{};
+    std::array<Input, 32> inputs_{};
     std::size_t input_count_{0};
 };
 
+QQuickFramebufferObject::Renderer* create_session_renderer(std::shared_ptr<SessionState> state)
+{
+    return new SessionRenderer(std::move(state));
+}
+
 SessionItem::SessionItem(std::shared_ptr<SessionState> state, QQuickItem* parent)
-    : QQuickFramebufferObject(parent), state_(std::move(state))
+    : SessionItemBase(parent), state_(std::move(state))
 {
     setMirrorVertically(true);
     // Real pointer motion must not contaminate deterministic captures. Diagnostic
@@ -314,7 +320,7 @@ SessionItem::SessionItem(std::shared_ptr<SessionState> state, QQuickItem* parent
 }
 QQuickFramebufferObject::Renderer* SessionItem::createRenderer() const
 {
-    return new SessionRenderer(state_);
+    return create_session_renderer(state_);
 }
 void SessionItem::set_paused(bool paused)
 {
@@ -323,6 +329,14 @@ void SessionItem::set_paused(bool paused)
     paused_ = paused;
     ++playback_revision_;
     update();
+}
+ItemState SessionItem::get_item_state() const
+{
+    return {paused_, playback_revision_, inputs_, input_count_};
+}
+void SessionItem::clear_inputs()
+{
+    input_count_ = 0;
 }
 void SessionItem::enqueue(InputKind kind, QPointF position)
 {

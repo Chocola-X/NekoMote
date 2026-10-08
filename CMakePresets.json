@@ -43,6 +43,15 @@
             }
         },
         {
+            "name": "plasma",
+            "inherits": "release",
+            "displayName": "Plasma wallpaper QML module and probe",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_QT_QUICK": "ON",
+                "NEKOMOTE_BUILD_PLASMA": "ON"
+            }
+        },
+        {
             "name": "asan",
             "inherits": "base",
             "displayName": "Debug with AddressSanitizer + UBSan",
@@ -62,7 +71,8 @@
         { "name": "dev",     "configurePreset": "dev" },
         { "name": "release", "configurePreset": "release" },
         { "name": "asan",    "configurePreset": "asan" },
-        { "name": "qt-quick", "configurePreset": "qt-quick" }
+        { "name": "qt-quick", "configurePreset": "qt-quick" },
+        { "name": "plasma",   "configurePreset": "plasma" }
     ],
     "testPresets": [
         {

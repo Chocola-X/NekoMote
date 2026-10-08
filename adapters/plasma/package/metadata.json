@@ -1,0 +1,16 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Id": "org.nekomote.wallpaper",
+        "Name": "NekoMote",
+        "Name[zh_CN]": "NekoMote 壁纸",
+        "Description": "Native 2D model live wallpaper",
+        "Description[zh_CN]": "原生二维模型动态壁纸",
+        "Version": "0.1.0",
+        "License": "GPL-3.0-or-later",
+        "Website": "https://github.com/nekomote"
+    },
+    "X-Plasma-DropMimeTypes": [
+        "image/png"
+    ]
+}
