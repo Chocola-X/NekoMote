@@ -35,12 +35,21 @@
             }
         },
         {
+            "name": "qt-quick",
+            "inherits": "release",
+            "displayName": "Isolated Qt Quick OpenGL host",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_QT_QUICK": "ON"
+            }
+        },
+        {
             "name": "asan",
             "inherits": "base",
             "displayName": "Debug with AddressSanitizer + UBSan",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "NEKOMOTE_ENABLE_ASAN": "ON",
+                "NEKOMOTE_BUILD_QT_QUICK": "OFF",
                 "NEKOMOTE_WERROR": "ON",
                 "NEKOMOTE_BUILD_PREVIEW": "OFF",
                 "NEKOMOTE_BUILD_ABI": "ON",
@@ -52,7 +61,8 @@
     "buildPresets": [
         { "name": "dev",     "configurePreset": "dev" },
         { "name": "release", "configurePreset": "release" },
-        { "name": "asan",    "configurePreset": "asan" }
+        { "name": "asan",    "configurePreset": "asan" },
+        { "name": "qt-quick", "configurePreset": "qt-quick" }
     ],
     "testPresets": [
         {

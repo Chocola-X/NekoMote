@@ -1,0 +1,638 @@
+{
+  "generated_at": "2026-10-08T06:40:47.312831+00:00",
+  "base_commit": "1970306c0f0081ee79ea18fd8d2df6e3376fec44",
+  "working_tree_dirty": true,
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "context": "G12/V9 review continuation; C7 Qt Quick GPU host exploration",
+  "scope": "isolated Qt Quick content scene graph, not an installed Plasma wallpaper",
+  "environment": {
+    "desktop": "KDE Plasma 6.3.6/X11",
+    "qt": "6.9.1",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "575.64.03",
+    "gl_context": "3.3 core",
+    "screen_refresh_hz": 165.019,
+    "compiler": "GCC 15.1.1",
+    "build": "Release LTO warnings as errors",
+    "render_loop": "threaded",
+    "swap_interval": 1
+  },
+  "capture_method": "QQuickItem::grabToImage content scene graph, diagnostic offscreen target",
+  "scoped_pass": true,
+  "image_comparisons": [
+    {
+      "tag": "chocola-default",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola-default-qt.png",
+      "a_sha256": "fe67c87c07d420e33b741536be92250712d264933fa900fc987a991f909538b8",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola-default-glfw.png",
+      "b_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "chocola30",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola30-qt.png",
+      "a_sha256": "13934bad2a0005dac784bc9391d39e5b9538ca72f67cb780c941b04288e989c4",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola30-glfw.png",
+      "b_sha256": "8e5317482db67906a55f84bf34514014729cdf3b456994b3d8dfac724da74930",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "fraise-default",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-default-qt.png",
+      "a_sha256": "d88edb2f7a25745827e4d821474858d955c0393e38410519ded3da964e1f2368",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-default-glfw.png",
+      "b_sha256": "03fc2d958ffe3026b9485d215ea1a82f89a481ab6e8a02cc0ea82d6dc8d44680",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "fraise-placed60",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-placed60-qt.png",
+      "a_sha256": "a8e1f01af27013d954779fbb651a540a76714811aba2a776a7d644d47a7571da",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-placed60-glfw.png",
+      "b_sha256": "4cb48959354567e157e22aec76d49a2aba83c16c72f139f91a2b3dc6080e82c1",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "milk30",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/milk30-qt.png",
+      "a_sha256": "1c72396ad9294bdceace80e059311277cc2210e04ae74401c9520675528a8b26",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/milk30-glfw.png",
+      "b_sha256": "10ac8475e7726b41fc5ca0e494338379bcd2d15f0a64238c3a3c84f91d57a5d0",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "qt-marker",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/qt-marker-qt.png",
+      "a_sha256": "2598b4136ac672088e75dbd4d27a3b03b3ded5c9ef07512db063eef475d5b90f",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/qt-marker-glfw.png",
+      "b_sha256": "03fc2d958ffe3026b9485d215ea1a82f89a481ab6e8a02cc0ea82d6dc8d44680",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": true,
+      "passed": true
+    },
+    {
+      "tag": "chocola-default-webgl",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola-default-qt.png",
+      "a_sha256": "fe67c87c07d420e33b741536be92250712d264933fa900fc987a991f909538b8",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola-default-webgl.png",
+      "b_sha256": "0f681f4d4f88a5ab2857c0d4dcdffdd97d170d674798eb454529c29f9122d1e6",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "fraise-default-webgl",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-default-qt.png",
+      "a_sha256": "d88edb2f7a25745827e4d821474858d955c0393e38410519ded3da964e1f2368",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-default-webgl.png",
+      "b_sha256": "94fe9d644b3fd0e498f11e441258e6422634cf66f58fad86a5e83c712dd3646b",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "fraise-dpi-webgl",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-dpi-qt.png",
+      "a_sha256": "42cb48b7acd01132e50d50cc52187f8c8716f95c7822cded5979ee692b761039",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-dpi-webgl.png",
+      "b_sha256": "2e0ef8407da683282ee3647e3ff6b3d9b3ea6dcc92a6bdcc9215bd5abc8a86ad",
+      "size": [
+        1200,
+        1620
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "lifecycle-restored",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/lifecycle/initial.png",
+      "a_sha256": "13934bad2a0005dac784bc9391d39e5b9538ca72f67cb780c941b04288e989c4",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/lifecycle/recreated.png",
+      "b_sha256": "13934bad2a0005dac784bc9391d39e5b9538ca72f67cb780c941b04288e989c4",
+      "size": [
+        800,
+        1080
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    },
+    {
+      "tag": "lifecycle-resized",
+      "a": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/lifecycle/resized.png",
+      "a_sha256": "8b04d47b832955cb12fb06454bdcb3cd5cb89033a7cba9579a3d5a78b4b6d68d",
+      "b": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/verified-content-final/resized-glfw.png",
+      "b_sha256": "f2496c3bf8cfd71fcee869230291c14e7030b31bcec811fc41d578ab9db57235",
+      "size": [
+        640,
+        480
+      ],
+      "alpha_max": 0,
+      "composed_max_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "pixels_over_2": 0,
+      "marker_verified": false,
+      "passed": true
+    }
+  ],
+  "image_comparison_count": 11,
+  "reference_source_hashes": {
+    "chocola-default": {
+      "metadata": "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/chocola-default-webgl.json",
+      "metadata_sha256": "4bb66c22907e88dd5d7dc86eb0bc430733a8b249e5c77026b059223c0d2fc7bd",
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "visible_pixels": 498997,
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)"
+    },
+    "fraise-default": {
+      "metadata": "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-default-webgl.json",
+      "metadata_sha256": "8e281d9feebaefe7e2be1ac7240d0aeaa35016e18dbb6434cd3a60871dabfc90",
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "visible_pixels": 408927,
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)"
+    },
+    "fraise-dpi": {
+      "metadata": "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/fraise-dpi-webgl.json",
+      "metadata_sha256": "abbf8501d5440bab75c601e93ff9406d9ef777c896bec401bfdeda5d42ea865e",
+      "source_hashes": {
+        "psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "original_psb": "92a03929e9ab9fc86a9f3ef2569cd82e380c02d937b1e105f617e50ede42323d",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "visible_pixels": 561422,
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)"
+    }
+  },
+  "image_gate": {
+    "alpha_byte_max": 2,
+    "black_white_composed_rgb_byte_max": 2,
+    "pixels_over_threshold_allowed": 0,
+    "raw_rgb_diagnostic_only": true
+  },
+  "lifecycle": {
+    "deterministic_steps": 30,
+    "first_recreated_clock_delta_seconds": 0,
+    "matrix_pass": true,
+    "additional_repeat_runs": 5,
+    "repeat_rgba_pixel_identical": true,
+    "created_destroyed_each_repeat": [
+      2,
+      2
+    ],
+    "cpu_state_survives_graphics_resource_recreation": true,
+    "gpu_driver_loss_certified": false,
+    "captures_actual_window_drawable": false
+  },
+  "input": {
+    "local_callback_replay_cases": 3,
+    "moved_and_dpi_hit": "fraise/b02",
+    "outside_miss": true,
+    "system_input_injected": false
+  },
+  "cli_negative_cases": 4,
+  "gpu_tests": {
+    "debug_cases": 10,
+    "debug_assertions": 181,
+    "release_cases": 10,
+    "release_assertions": 181,
+    "real_incomplete_fbo_negative_before_returned_abi_ok": true,
+    "negative_after_returns_renderer_error": true,
+    "valid_target_recovers": true,
+    "existing_warmed_renderer_cpp_allocation_test_passes": true
+  },
+  "normal_playback": {
+    "argv": [
+      "flock",
+      "--no-fork",
+      "build/gpu-validation.lock",
+      "/run/media/chocola/DATA/Project/NekoMote/build/qt-quick/bin/nekomote_qt_quick_host",
+      "--model",
+      "assets/characters/chocola-date-a/model.nkm.json",
+      "--session",
+      "assets/characters/chocola-date-a/session.nks.json",
+      "--run-seconds",
+      "12"
+    ],
+    "env_overrides": {
+      "QT_SCALE_FACTOR": "1",
+      "QSG_RENDER_LOOP": "threaded",
+      "QT_LOGGING_RULES": "qt.scenegraph.general=true;qt.rhi.general=true"
+    },
+    "returncode": 0,
+    "log": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/c7-qt-quick-2026-10-08/normal-playback-content-final.log",
+    "log_sha256": "004625b35ade1b18436dbaa2f21b294672e2d93e7350686910159f92ab1abd69",
+    "total_rendered_frames": 684,
+    "warmup_wall_seconds": 3,
+    "samples": [
+      {
+        "monotonic": 53200.608203762,
+        "cpu_seconds": 0.66,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53201.608469232,
+        "cpu_seconds": 0.84,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53202.608880741,
+        "cpu_seconds": 0.94,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53203.609415101,
+        "cpu_seconds": 1.0,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53204.609783937,
+        "cpu_seconds": 1.06,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53205.610429415,
+        "cpu_seconds": 1.12,
+        "rss_bytes": 236474368
+      },
+      {
+        "monotonic": 53206.610917819,
+        "cpu_seconds": 1.19,
+        "rss_bytes": 236474368
+      }
+    ],
+    "sampled_average_cpu_percent": 8.829339444909612,
+    "sampled_rss_min_bytes": 236474368,
+    "sampled_rss_max_bytes": 236474368,
+    "scope": "whole diagnostic process CPU/RSS; no audio/device/UI, no per-frame timing, GPU/VRAM/power or WebGL performance comparison"
+  },
+  "remaining": {
+    "plasma_plugin_certified": false,
+    "full_catalog_certified": false,
+    "whole_qt_application_zero_allocation_certified": false,
+    "background_audio_integration": false,
+    "multi_output_soak_power_and_frame_percentiles_certified": false,
+    "oversized_glfw_capture": "1200x1620 bottom-edge mismatch retained; same Qt content vs original WebGL passes. Separate EGL red-clear probe does not establish root cause.",
+    "transient_qt_throughput": "Prior default 12s/13 submissions and several ~1s intervals retained. Default rechecks 3s/91 and final 12s/684 submissions; no service/vsync disabling retained, root cause unresolved. Submissions are not measured presentation FPS.",
+    "qt_callback_allocation_failures_certified": false
+  },
+  "headless": "asan reconfigured: Qt OFF, preview/player OFF, no Qt6 cache dependencies; CPU tests not rerun, previous 145 dev/143 ASan evidence retained",
+  "external_assets_modified": false,
+  "desktop_configuration_modified": false,
+  "normal_playback_readback": false,
+  "performance_improvement_claimed": false,
+  "source_sha256": {
+    "CMakeLists.txt": "188cc059c7329c2c91779f6a9a976e00027f1f15982a832f1a8bbc885306149d",
+    "CMakePresets.json": "0c99c97d7ccc8242e9c2f39b6040e393a3a1947f169585e2a3b65f0b1650cd07",
+    "apps/qt_quick_host/CMakeLists.txt": "4826c39ab4df854cbcce302d2c4bc5504f2cfa1d73afe2820e56935585a1c16c",
+    "apps/qt_quick_host/main.cpp": "16ed37c75fe482d28d283646cbcdd7d875192b3ba6e228aa2b838b2a2bc30e89",
+    "apps/qt_quick_host/session_item.cpp": "a447771213cbc2c65c76e6bf9d69f76a00e4d8e6f282a655f492cb9b2a807ec5",
+    "apps/qt_quick_host/session_item.hpp": "f6443c9455220d63c8a9e19dffefcb6b9eddf777b376d325e43d0d30aa8ebcba",
+    "src/render_gl/renderer.cpp": "851435ae121aad0d36e7fd8fddb3d95c7e6216a190576437cdebe1b2420a2763",
+    "tests/render/test_renderer.cpp": "1f79f537254c8f02b7d769a6fa789d5d3b2c1fd70845a25c23059486f627c81a"
+  },
+  "binary_sha256": {
+    "/run/media/chocola/DATA/Project/NekoMote/build/qt-quick/bin/nekomote_qt_quick_host": "1cee91553926764652c1307c1a4dad085b6a79c77a403034ff5a08cbb5ef410e",
+    "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player": "3bff78d9d31f1180fe82ee5bd5b74e4faefda7f8a46bb396a334f8f19b2f5257"
+  },
+  "gpu_test_binary_sha256": {
+    "build/dev/bin/nekomote_render_tests": "9d07c38aeba15bd6e317a09abf8777c5d929d8f341efa7d2ac7af6b44f983328",
+    "build/qt-quick/bin/nekomote_render_tests": "2235727090639e6055fa96701f0cfb95dd4fd0aa894aa691bc8b65db8ddc6a24"
+  },
+  "input_asset_sha256": {
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/session.nks.json": "88b5500ed9af6c3df8f62b73a3c706cdd43427481784abf3a62d512a90aacbdd",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/meta.json": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/model.nkm.json": "eddc226dd2056ccf96ab8cf179824386f427d2db9b20f6420689c316a0368690",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/textures/0.png": "0404f69a42405a4fc3f8f3ed7f381dfc3215bb2c57d938555c79f6db78b29642",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b01.wav": "467cc010f38d35e55927a0694e0e378457925ee222a0b698f0600c58a9ffb10e",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b02.wav": "82ac4fcc644e99e3d6670bec59f86c254f79fc38c39ffcbfc8319ef79bcdabdc",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b03.wav": "772a7d19f311f21331efccbd70e341be512f39575300b21e06f5aa66510cdbe3",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b04.wav": "7671e44a74d776cea24e5fb0746e2655a2a1443be748832227d5e3b4788c62ee",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b05.wav": "f9e61cdc2008c6c468a4f6fef7454b6fe12066c62a6e30fe6f1f06882a6ab875",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/b06.wav": "05402111eb41b5c3c4ae6cf0c7399d99a890170bd3f9689d49cf9478ec0e42b5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h01.wav": "a11c5bea67f53f8abf02fc742dccd020064bfa3fc9ac8901d69bab8ca9a30535",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h02.wav": "c7bf7b3e7d81fd129a8ca6075a4179a7bf32bcfab1959ab5758e7353d4cae1bb",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h04.wav": "fde4a8d7b9556fb60ff56e0f73454d171b8509b7869d6855855abbd6f2d55e0b",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h05.wav": "eeab398231c0ba24e781800d99f129ed735a59ba45a8caed589c089b4cd444e6",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h06.wav": "fa9dfeec8ead9df709ee3279ab4afed44249218c61406d08b902395e0b53f612",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h03.wav": "b7bf3080ca2e392518bb948628cd80059ac732891c69ecf476429edaf5fb57ae",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h07.wav": "c871aac64c7a6e8383314956a86ce8a60c8cd2e92e6574a50792d03e68fac3ff",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/h08.wav": "7972720599d9bff125e62e32fc695f955180e133f074ff5af4188a8a1ab5fbc6",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/u01.wav": "d6ca100ddf7484aa9776e899f370d80145e8f4a1ace7a249ee2ee8a60fcec03d",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/u02.wav": "e875ba74a6ca3f200e44269163360bb2784a78fac309c2c0eb8ffcb568ff4c17",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/u03.wav": "543a0323b03b34fcb86790702e054faa02f7f8be895c25f9b8a217d587bc2b26",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/u04.wav": "aa53106de94ea6a9a22816cdc3720148d7fdeb4ebab449c9219e34eafbfe69ee",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola-date-a/audio/chocola/u05.wav": "6a8a025a86cf4a6e886b8004b4b73e9cb6fdc9beab1a075407ef4179b69938e8",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/source.json": "35aafa062c3b0fc0c211e598743ed84d4b645fdabe88d94dbf344d4aca1f1db5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/report.json": "8b80434e0b95d7c6c1b8d33354e9e5ceea46f557130da0d2a67d73691936ecc5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/session.nks.json": "41aab58bbf530afe03ad203a5b253a9ec3613bd3abda17b0035b4ca698b255ab",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/session.nks.json.report.json": "3639dc159bea39c0b87a5d6287235b8baef8d0874c80b09fd79ed4eab6ea1f5f",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/meta.json": "d118c2212aafb848fd5c8aee6ac1b230acf512c6de75abd8a0f4d0197784f84d",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/model.nkm.json": "2f85c928364d656596be0d48ac35af34bfab27e3caff7bc4b0053bcdf7fab2d5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/textures/0.png": "7e0a3a873fc623df9d9f7af54aa0114c45624e970e63b5ce4b8f59b9ab2ef233",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b01.wav": "eacca57b94ac5424189681178a3393e592eefbf7e1d055769e9f39ba028444e1",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b02.wav": "ce1a4e7ae4b150a286e2f0c42b406a3266cc26870e5843a02620cb23e597f112",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b03.wav": "ca504c8c79cb5344d198de7ae5411c01b3837819fefaf9f58fef2248d63758b4",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b04.wav": "75d8295e44b237ae3de9f1105935148ffa3771526a121a2b6afc70d600da8568",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b05.wav": "f80ab7a80491bb011d67001f8e282d89333777bbbb287000c4959ed976eb7f85",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/b06.wav": "dc88a828040d8f994cc71d65852718ab0557474c21e76d1a687824bd8dc9c45b",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h01.wav": "d3093f6c67600b0a48537682a197cff7c85f92cd0b1250b948051f893184bfc5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h02.wav": "732f62f75d2f185e01a7b90aba253d999c5be918f068d60736a473abd4a34e44",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h04.wav": "f1ef6f5640456bde2477bd2512d6e4024fc9f33a66ca5f37b03de29c33acc38f",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h05.wav": "6d9a43a9e6ee80599ffd512c8eb013606426e48a470b03686f272fbb49d447e6",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h06.wav": "94af36c2bd4a322bd84917aec210aa77a9eababbf5f9ff0ad9eacae971688e3a",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/h03.wav": "f6c41b33d437f016e7e80691b4c97fd089df74c477dadb71a5240303baebc0b0",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/u01.wav": "dcf2bac31b87e757aee3efcc786cf08a9fd4c84e9139e275b6d2ba35e7b93eab",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/u02.wav": "306ffdfe02d403ee871157884a28218093a87777ccf1e3d9a092f959aeb456c7",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/u03.wav": "d43b9ed600adf7965f6e5bfc750fc5a9e2dbf2cae1bd080227f80a336e4b86a4",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/u04.wav": "944446df0c0da698ccbf44f9f624b8baf715a0f233b7c1c758d2c859d987b5ec",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/fraise-france-maid-b/audio/fraise/u05.wav": "dd1de0fe8c69698c68a2e986eaf1e78d6010d81665815ccecc028fad173cc2e9",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/source.json": "6e38cd607ec97715373b3aa421720f79b0502a2ac7cc71d77c167c0cb4876958",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/report.json": "683cc143d9d67e12a571342cf73ec18ae0e6a183156ed8702b4ad9117bd6ffd7",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/session.nks.json": "cef02b9f2563e69cc14cd431d33bc4e09da7279935c82ccc3ae70bdb2b5a14f4",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/session.nks.json.report.json": "7ac8c634ff21e34d3406735398e3ba7084a902e227aaa73e19ad1ae105ae9e7e",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/meta.json": "0dc537aca181b218c8b198f5f6404b19fe6b465ba307d71c345e6ab5a552fb5c",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/model.nkm.json": "7559212aaa08f158fd21c4c4117382b5e21fd8c81d3626709a1abcbbf4dd404f",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/textures/0.png": "fac319c3d2eff049e29e7d8a2f6deb73cd07810d6e26f94c5409ac99e2632922",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b01.wav": "aace765eed15c90ade88eb9a2c1296a391f4088313c596f9c16a8030d8787fdf",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b02.wav": "28c4e9cb335ed98f9d0cc60fe392b9479572a04000eeebf90760611967932bfe",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b03.wav": "c3862a16a318a34a0153191a984dbdc91b29326bf479b38742998d77a7fbdf68",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b04.wav": "20a1ecc9bff08d2ae60aa4153522545a768e06089497583f4a8eda221a9fd4f5",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b05.wav": "9808b69811d8fcf6e3ff097e7b2a57a214c6abf06275664bd737daf519ba0e01",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/b06.wav": "c05aa121a1691b21bef63d5109a44b5da886ed27db4f6c799003a423b3762dd7",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h01.wav": "33fff3a3dce0ade6f174eb7fef6874938350f1afea61dd9d4249dbee37f8fa8f",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h02.wav": "7aea8fca12046c9cfdb875ca6683c207c933361e00f821b68dcbfa7a817d7af7",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h04.wav": "af21f65226a5ce00875a3ccd796e317522532ea6aa50b46b4c2056d6bfc4d338",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h05.wav": "bcb2c7ca1a76fc5d47ce7ff8e79c5ba4672fb90f4e9ff20e4e0f9c6ad0b8206b",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h06.wav": "c28a9b25b5bfbc2eab022d2a3aac060c944bff89da13b1270e2eefcd7872c9e6",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/h03.wav": "bf520cd9c8ead590ebdb86a1f8d9e3ff73803d79542a8d60584d6b5a783dc196",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/u01.wav": "ae4245ffd7cdc3c9365d0ec71d9224f6df8195a75d0771b4597b553eb89d384b",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/u02.wav": "673175531c00e88188c70c698138c3f0c5231af220b4374e256119067b4e5159",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/u03.wav": "faec888229a83d7414b6873be06c22e387bb6f407d94b5d6422195be45dd11cf",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/u04.wav": "134c5e227722492d4e41ee1e6298a8ae3d8a56850bc69462dc44ffff8c54a94b",
+    "/run/media/chocola/DATA/Project/NekoMote/assets/characters/milk-summer/audio/milk/u05.wav": "9f89115dd21c3f3d1b920ed8d7c80d3b0089351f35ce298e48e9d2c646651692"
+  },
+  "artifact_sha256": {
+    "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/ledger.json": "7d7997e0d15c0b747760ce00c2709d238d6872efb15f981a47d8358ec8fba5da",
+    "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/commands.json": "1f48fd638aecc57e76506f86936cd90b57d8cacec8789c5d401c6249e16fd4eb",
+    "build/evidence/c7-qt-quick-2026-10-08/verified-content-final/visual-contact-sheet.png": "e914b9aae63c1d72f763f7fa570b7955b1a958461823cf303682c350796edc81",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-and-repeat-content-final.json": "9e52e21dbe6da9ef73e8c068a166a1ffec19d7fe650670a90cc93e95d17f3a20",
+    "build/evidence/c7-qt-quick-2026-10-08/gpu-debug-final.log": "e564f62a946e3acd1d6f61e79fdb5cced8e70e6e67af0153dfe8d11f9b076ba2",
+    "build/evidence/c7-qt-quick-2026-10-08/gpu-release-final.log": "c41f5427952752e3347007d36f517f1eb49ee3e0ec9b5d5ad3403599c141f750",
+    "build/evidence/c7-qt-quick-2026-10-08/gpu-error-negative-before.log": "7cb1c9ce72bbdff2cf8cb20df68f4934670a832967c2d6a5137db4e6e475114c",
+    "build/evidence/c7-qt-quick-2026-10-08/configure-headless-asan.log": "4237605b3023bb52b79a203d21a7cfd73c99701cb28093a0ca2b3921e3750b30",
+    "build/evidence/c7-qt-quick-2026-10-08/build-content-grab.log": "31e5072a10c4b7e81af85c56ca47a7b1e31b8c5913f79dc926e34a2d96ab994e",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-playback-content-final.log": "004625b35ade1b18436dbaa2f21b294672e2d93e7350686910159f92ab1abd69",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-and-repeat-host-final-summary.log": "2e87baa9ea9990272730e41da880f3847a8f14910dd24af96f7f93a398cd166b",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-and-repeat-fresh.json": "f5130fc76db9fb32819c492cb25ec756fb23a3653d6bbb03f765e31fca1c6a82",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-platform-diagnostics.json": "be8227837ea97e5462a20ac890c83b0651e65dd130f1c35ad192b87753ce1e98",
+    "build/evidence/c7-qt-quick-2026-10-08/normal-service-diagnostics.json": "20bd232ddb0f3a1342cadd8806846b1569ddd1ee4bc4c6b731040660033fc48d",
+    "build/evidence/c7-qt-quick-2026-10-08/trace-default-recheck.log": "b73db506f14529112dab31ebfabdb4b80d576c02fcb2d692d4295c14574eaa7f",
+    "build/evidence/c7-qt-quick-2026-10-08/egl_surface_probe-valid.log": "f858a74b2191ce3257aed1061d4e3bc97466ff3d4190b20b0a5329e09e2ad558",
+    "build/evidence/c7-qt-quick-2026-10-08/configure-headless-asan-final.log": "4237605b3023bb52b79a203d21a7cfd73c99701cb28093a0ca2b3921e3750b30",
+    "build/evidence/c7-qt-quick-2026-10-08/build-player-final.log": "87daa3e64b5c1314437775f0c6d2558fa6e5ab31fe598235db04cc0e84bac30a"
+  },
+  "reproduction_scripts": {
+    "build/evidence/c7-qt-quick-2026-10-08/check_matrix_content_final.py": "b488186dd805d62bbb2ef0fdfe7c125d7905b600a577ab48cd072502336e670a",
+    "build/evidence/c7-qt-quick-2026-10-08/normal_and_repeat_content_final.py": "2ee8e8bfc64a8fb0102470ba8521354d26a3fe89447874473a6e4f87beb083e2"
+  },
+  "refreshed_player": {
+    "artifact": "build/evidence/c7-qt-quick-2026-10-08/refreshed-player-results.json",
+    "sha256": "a6a7b715ac31f160331c16873636f93d1a7fc5c46b6b0bfeb888f03628d11596",
+    "binary_sha256": "04c0477efb0664d7ba4c7ce685ed02c92a7c992a03b7b49ec3863f18c0e22245",
+    "additional_image_comparisons": [
+      {
+        "tag": "chocola30",
+        "alpha_max": 0,
+        "black_white_composed_rgb_max": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "pixels_over_2": 0,
+        "png": "build/evidence/c7-qt-quick-2026-10-08/chocola30-player-refreshed-fixed.png",
+        "png_sha256": "8e5317482db67906a55f84bf34514014729cdf3b456994b3d8dfac724da74930"
+      },
+      {
+        "tag": "fraise-default",
+        "alpha_max": 0,
+        "black_white_composed_rgb_max": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "pixels_over_2": 0,
+        "png": "build/evidence/c7-qt-quick-2026-10-08/fraise-default-player-refreshed-fixed.png",
+        "png_sha256": "03fc2d958ffe3026b9485d215ea1a82f89a481ab6e8a02cc0ea82d6dc8d44680"
+      }
+    ]
+  }
+}

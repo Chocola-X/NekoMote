@@ -647,6 +647,9 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
+    // Surface draw/blit failures at the call boundary, before a host accepts the
+    // frame. No pixel readback or explicit completion wait is needed.
+    check_gl("render frame");
 }
 ImageRgba8 Renderer::capture(Target target)
 {

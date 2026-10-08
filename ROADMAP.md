@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-08最新整合。G12/V9已复核补修工具，新Fraise B触摸先行通过；V9实际20代表截图，原全目录视觉PASS撤回，严格195行为180 UNREVIEWED/15 BLOCKED_INPUT。schema6镜像与输入坐标保持，CPU180 OK/15 FAIL、V8两标量反例仍未闭合。GLM G13→Gemini V10补齐真实证据，Codex同步C7独立Qt Quick GPU探索；正式Plasma、长期运行与完整目录尚未认证。见 [当前摘要](docs/review-agents-current.md)、[协作清单](docs/agent-workboard.md)、[G12](docs/g12-touch-handoff.md)/[V9](docs/v9-touch-report.md)。规范：[AGENTS.md](AGENTS.md)。
+版本：执行中，2026-10-08最新整合。G12/V9已复核补修工具，新Fraise B触摸先行通过；V9实际20代表截图，原全目录视觉PASS撤回，严格195行为180 UNREVIEWED/15 BLOCKED_INPUT。schema6镜像与输入坐标保持，CPU180 OK/15 FAIL、V8两标量反例仍未闭合。GLM G13→Gemini V10补齐真实证据，C7独立Qt Quick GPU合成/resize/DPI/释放重建小矩阵已通过，GLM接G15隔离Plasma/QML原型、G14自动验收，Codex最终复核；正式Plasma、长期运行与完整目录尚未认证。见 [当前摘要](docs/review-agents-current.md)、[协作清单](docs/agent-workboard.md)、[G12](docs/g12-touch-handoff.md)/[V9](docs/v9-touch-report.md)。规范：[AGENTS.md](AGENTS.md)。
 
 ## 1. 产品与开发策略
 
@@ -120,7 +120,7 @@ flowchart TD
 | P5 | 时间线、差分与动态播放 | P4 | 可控动态播放器 | 已实现独立动态播放；当前冻结代表动画/眼睛/差分/缩放/物理矩阵全通过，新增型号需逐项验收 |
 | P6 | 物理、反应、背景和音频 | P5 | 完整原生预览体验 | 代表会话/声音、薄C宿主已实现；触摸坐标/区域诊断、背景暂停/250ms预算和C++候选事务已验证；全目录区域、UI隔离、角色渐变及背景reset待闭合 |
 | P7 | 资产与稳态性能优化 | P6 | 当前资产打包与性能基线 | 进行中：核心零分配基线存在；新WebGL收益结论方法未闭合，资产/依赖/UI稳态与打包待验收 |
-| P8 | 首个 Plasma 适配器 | P7 | 原生桌面壁纸 | ABI0.3.0主边界已验证，C/GLFW确定性诊断已通过同输入像素核对；允许最小Qt Quick宿主探索，正式Plasma插件尚未验证 |
+| P8 | 首个 Plasma 适配器 | P7 | 原生桌面壁纸 | ABI0.3.0主边界已验证，C/GLFW确定性诊断已通过同输入像素核对；独立Qt GPU合成/resize/DPI/释放重建及输入小矩阵已通过，下一步隔离Plasma/QML原型；正式插件未验证 |
 | P9 | 全素材覆盖与长期运行 | P8 | 型号矩阵、稳定性和生命周期报告 | 部分CPU审计已开展：当前195结构OK、180 CPU OK/15 FAIL，视觉/交互认证待补；8–24小时与桌面生命周期未进行 |
 | P10 | 发布与其他桌面扩展 | P9 | 可安装产物、按目标新增适配器 | 未开始：可安装包、来源/许可和卸载待确定；其他桌面延后 |
 
@@ -130,7 +130,7 @@ P1 的素材调查和 P2 的通用 GPU 基础可交错推进；P3/P4 的语义�
 
 1. C5镜像/可选遮罩/物理整合及V8复核已推进；Codex继续15项CPU失败的精确继承/嵌套遮罩及两项缩放外力精度。保持正式镜像及冻结门槛，新增语义另行独立验收。
 2. 完善默认启动恢复、UI输入隔离、角色/背景渐变与reset、声音失败及切换回收。GLM G13用已修工具准备195项完整诊断包，Gemini V10保存逐型号有证据观察；坐标修复后观察，数据候选复核后应用。已复核G7/G8/G9/G10/G11/G12/V7/V8/V9不重新实现。
-3. 用已验证复杂模型开展最小Qt Quick图形宿主试验，确认实际GPU后端、线程/context、重建和resize/DPI；不改全局桌面配置，不走常态CPU像素桥接。
+3. C7独立Qt GPU试验已通过小矩阵；现在实施隔离WallpaperItem/QML包、宿主后端能力与错误显示，再真实Plasma验证。不改全局桌面配置，不走常态CPU像素桥接；Qt短时等待和超高GLFW裁切继续排查。
 4. 当前应用与宿主边界稳定后实施Plasma插件；完整195视觉/交互、持续运行、多屏生命周期及安装仍是最终交付要求。
 
 最小宿主探索不必等待全目录完成，但不替代应用验收，也不改变P8正式交付的前置条件。
@@ -330,7 +330,7 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 1. 记录目标 Plasma、Qt 和实际 Qt Quick 图形后端，不按桌面名称猜测 GPU 接入能力。
 2. 在已验证ABI0.3.0主边界上验证真实宿主契约。
    - headless/ASan已覆盖合成ABI；长度/模式、异常、借用帧失效和RAII已有证据，不重复列为待实现。真实素材集成缺资产时显式Skipped。
-   - 更精确源诊断、实际宿主线程/context、卸载和资源重建仍待验证。
+   - 独立Qt宿主线程/图形资源释放重建已有小矩阵证据；实际Plasma/context失效、多屏和卸载仍待验证。
    - `apps/abi_host/main.c` 已收敛为静音C/GLFW诊断程序；G8确定步/截图/负例及同输入像素已复核，它不是Plasma实现，也不承载正式声音或壁纸策略。
 3. 实现 WallpaperItem/QML 接入层和原生绘制模块；配置界面保持简单。
 4. 图形后端匹配后直接接入宿主 GPU 目标/纹理。若非 OpenGL，先评估必要的后端实现，不用 CPU 读回通用桥接，也不擅自改整个桌面后端。

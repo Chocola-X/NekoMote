@@ -9,6 +9,7 @@
 - 图形 loader 生成需要 Python 3 与 Jinja2。
 - 图形宿主额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
 - 普通播放器额外需要：pkg-config 和 libpulse 17.x 开发包（`NEKOMOTE_BUILD_PLAYER=OFF` 可关闭）
+- 可选Qt宿主需要Qt 6.9.1 Quick/OpenGL开发组件；默认关闭，详见 [Qt宿主](qt-quick-host.md)。
 
 ## Presets
 
@@ -17,6 +18,7 @@
 | `dev` | Debug | 警告即错误、compile_commands.json | ✓ | ✓ |
 | `release` | Release | LTO、警告即错误 | ✓ | ✓ |
 | `asan` | Debug | ASan + UBSan、警告即错误 | ✗ | ✓ |
+| `qt-quick` | Release | LTO、可选Qt Quick OpenGL宿主 | ✓ | ✓ |
 
 `asan` 不构建预览：GLFW + 图形驱动与 ASan 混用会产生大量非项目噪声，核心与测试路径已覆盖语义。
 
@@ -91,28 +93,20 @@ ctest --test-dir build/dev -L gpu            # 仅GPU测试（player_ui、render
 
 | 测试名 | 标签 | 说明 |
 | --- | --- | --- |
-| `player_ui` | gpu | 独立UI状态测试（8 cases / 124 assertions） |
-| `python_tools` | python | 导入/资产保护负例（31 cases） |
-| `python_abi_host` | python,gpu | ABI确定性测试（10 cases，需 abi_host + 真实模型） |
+| `player_ui` | gpu | 独立UI状态测试 |
+| `python_tools` | python | 导入/资产保护与证据工具检查 |
+| `python_abi_host` | python,gpu | ABI确定性测试（需abi_host与真实模型，缺失显式Skipped） |
 
 缺 `assets/` 时 `python_abi_host` 显式 Skipped（`@unittest.skipUnless`），合成项仍执行。
 
 Fontconfig为UI的可选字体发现入口，未安装时使用源码中的字体路径候选；无可用字体不能宣称UI成功。
 
-## 构建矩阵
+## 构建边界
 
-G9 验证的构建配置（GCC 15.1.1，全部通过）：
-
-| 配置 | ABI | Preview | Player | Tests | 类型 | 结果 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `dev` preset | ON | ON | ON | ON | Debug | 138/138 PASS |
-| `release` preset | ON | ON | ON | ON | Release+LTO | 通过 |
-| `asan` preset | ON | OFF | OFF | ON | Debug+ASan | 136/136 PASS |
-| 无ABI纯CPU | OFF | OFF | OFF | ON | Debug | 133/133 PASS |
-| 无ABI纯CPU | OFF | OFF | OFF | ON | Release+LTO | 构建通过 |
-| preview-only | ON | ON | OFF | ON | Debug | 138/138 PASS |
-
-GCC15 无ABI构建的 `-Wmissing-declarations` 误报已由 G6 的 `$<COMPILE_LANGUAGE:CXX>` 生成器表达式解决，不扩大禁用。
+历史G9构建数字不代表当前全目录或当前测试总数。当前执行证据与未重跑范围见
+[整合摘要](review-agents-current.md) 和 [Qt机器记录](validation/c7-qt-quick-results.json)。
+ABI可独立于preview/player构建；`NEKOMOTE_BUILD_QT_QUICK=ON`要求ABI开启。
+默认/asan关闭Qt选项，Qt依赖只由可选宿主目标引入。核心无显示服务器依赖。
 
 源仓库只读；真实资产和截图放ignored assets/build目录，已跟踪的大型素材已移出索引。本批导入采用新输出目录，已有目录一律EXISTS_UNCHECKED、非零拒绝且保留，不覆盖或认证：
 

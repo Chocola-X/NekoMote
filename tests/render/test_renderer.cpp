@@ -17,6 +17,7 @@
 #include <memory>
 #include <new>
 #include <stdexcept>
+#include <string>
 
 namespace
 {
@@ -598,6 +599,13 @@ TEST_CASE("C renderer validates real handles and cannot reuse failed frames", "[
     nekomote_render_view view{};
     view.scale = view.alpha = 1;
     const nekomote_render_target target{output.framebuffer, 64, 64};
+    // A real incomplete GPU target must produce a renderer error, not ABI OK.
+    Output incomplete;
+    REQUIRE(nekomote_renderer_render(renderer, {incomplete.framebuffer, 64, 64}, view,
+                                     NEKOMOTE_TARGET_CLEAR) == NEKOMOTE_ERROR_RENDERER);
+    REQUIRE(std::string(nekomote_error_message()).find("render frame: GL error") !=
+            std::string::npos);
+    REQUIRE(glGetError() == GL_NO_ERROR);
     REQUIRE(nekomote_renderer_render(renderer, target, view, NEKOMOTE_TARGET_CLEAR) == NEKOMOTE_OK);
     render_gl::Renderer inspector(glfwGetProcAddress);
     REQUIRE(pixel(inspector.capture({output.framebuffer, 64, 64}), 32, 32) == red);
