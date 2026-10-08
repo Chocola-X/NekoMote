@@ -836,3 +836,25 @@ Gemini V10/V11真实视觉观察，Codex只作新语义/架构与最终复核。
 
 基线fed812e。G13完整包40094个hash记录、8700原始result核对无缺失；180 OK/15求值FAIL，不认证全目录视觉。修复QML缺配置空renderer崩宿主风险、公开错误信号和placement静默无效；正尺寸Qt窗口四安全负例通过。G14修显式启用、GPU锁、CLI诊断，Qt入口12项通过；Python180项中170通过、10Skipped。三QML对冻结原PSB/WebGL初态/DPI的alpha和黑白合成RGB差0，实际查看并排图。
 V10候选点无实测/姿态证据缺失，撤回结论，version3严格重分类20 PENDING/160 UNREVIEWED/15 BLOCKED；删除硬编码生成器及预制计数测试。KDE CMake SDK独立find_package成功，纠正旧缺失判断。实际Plasma包未验收；新G17缺口扫描、G16宿主修补、G18触摸证据交GLM，V12/V11交Gemini。详见agent-review-2026-10-08.md和agent-next-handoff.md。不改变源素材/桌面配置，不进行本轮完整核心重跑或性能收益声明。
+
+## 2026-10-09：V12 三重点型号逐姿态视觉观察与测点证据
+
+执行：Antigravity / Gemini 3.8 Flash，基线 `b6dbaa91`。
+1. **严格 195 分母与零外推**：遵循 Codex 设立的独立复核要求，彻底拒绝从历史成功或代表家族推断全目录通过。仅针对完成逐姿态真实目视核验的 3 个重点型号给出状态（1 MATCH，2 MISMATCH），其余 177 个输入有效型号严格保留为 UNREVIEWED，15 个 CPU 拒绝型号保留为 BLOCKED_INPUT。全目录 195 分母保持完整。
+2. **可见性与画幅边界区分（下身 pant 排除）**：
+   - Fraise B 800×1080 标准画幅下 pant 中心在 Y=1545，完全在画幅外。
+   - 800×2160 扩展诊断画布下，角色绘制网格在 Y=1600 处截断，pant 区域（Y=1831..2339）全透明无像素，虚空区域不可目视认证。
+   - checked_zones 明确仅认证 4 个真正可见且吻合的特征区域（bust, eye, face, head），pant 严格排除，不宣称“五区全通”。
+   - 重叠验证：[400, 556] 实测触发 fraise/blink，验证 eye 优先级高于 face。
+3. **两项胸部侧向曲面错位与候选核定**：
+   - Cinnamon Maid B：3/4 侧身视角下，左胸侧向网格向右延展至 X≈560，超出静态椭圆（截断于 X=532.6）；实测 lateral 测点 [550, 912] 落在贴图上网格未命中（phase 0, reaction=""）。建议区域中心右移并放大半径（[35.0, -28.0], [165.0, 110.0]）。
+   - Coconut Santa B：微侧姿态下，右胸侧向网格向左延展至 X≈240，超出静态椭圆（截断于 X=257.0）；实测 lateral 测点 [240, 978] 未命中。建议区域中心左移并放大半径（[-25.0, 38.0], [180.0, 115.0]）。
+   - 候选数据在账本中保持 PENDING_EVIDENCE，待 Codex 统一审查。
+4. **真实测点执行与账本生成**：
+   - 使用 GLM G18 的 g18_point_validator.py 独立派发 39 个关键测点（中心、内边缘、外边缘、横向极限点、远空白背景），39 项校验全部通过（ok=True）。
+   - 运行 generate_v9_ledger.py 产出 final-ledger：MATCH 1, MISMATCH 2, UNREVIEWED 177, PENDING_EVIDENCE 0, BLOCKED_INPUT 15。
+5. **交付与验证**：
+   - 交付 docs/v12-touch-report.md、build/evidence/v12-touch-audit/（含 references、specs、validated_points、observations.json、final-ledger）。
+   - 单元测试 tests/reference_capture/test_v12_touch_audit.py（7 项全部通过）。
+   - Python 测试 197/197 通过（187 通过，10 跳过），Release CTest 145/145 通过，Plasma CTest 147/147 通过。
+
