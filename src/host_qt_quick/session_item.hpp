@@ -84,6 +84,7 @@ class SessionItemBase : public QQuickFramebufferObject
     ~SessionItemBase() override = default;
     virtual ItemState get_item_state() const = 0;
     virtual void clear_inputs() = 0;
+    virtual std::shared_ptr<SessionState> session_state() const = 0;
   signals:
     void frame_ready(QSize framebuffer_size, unsigned generation, double clock_delta,
                      QString reaction);
@@ -112,6 +113,7 @@ class SessionItem final : public SessionItemBase
   private:
     ItemState get_item_state() const override;
     void clear_inputs() override;
+    std::shared_ptr<SessionState> session_state() const override;
     void enqueue(InputKind kind, QPointF position = {});
     std::shared_ptr<SessionState> state_;
     bool paused_{false};

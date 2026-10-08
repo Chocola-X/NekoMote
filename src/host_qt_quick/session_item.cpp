@@ -334,6 +334,10 @@ ItemState SessionItem::get_item_state() const
 {
     return {paused_, playback_revision_, inputs_, input_count_};
 }
+std::shared_ptr<SessionState> SessionItem::session_state() const
+{
+    return state_;
+}
 void SessionItem::clear_inputs()
 {
     input_count_ = 0;

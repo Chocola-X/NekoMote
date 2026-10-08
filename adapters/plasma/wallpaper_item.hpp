@@ -48,6 +48,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void setScale(float value);
     void setPaused(bool value);
 
+    std::shared_ptr<nekomote::qt_quick::SessionState> session_state() const override;
+
   signals:
     void modelFileChanged();
     void sessionFileChanged();
@@ -63,6 +65,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void hoverMoveEvent(QHoverEvent* event) override;
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void componentComplete() override;
 
   private:
     nekomote::qt_quick::ItemState get_item_state() const override;

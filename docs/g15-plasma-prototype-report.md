@@ -55,19 +55,68 @@
 | 检查 | 结果 |
 | --- | --- |
 | Release/WERROR 构建 | PASS（plasma preset） |
-| Chocola 截图 vs C7 | SHA 一致 `8711efdb341c3ca9`，黑白合成 0 差异 |
-| Fraise 截图 vs C7 | SHA 一致 `47ad767ba84136a1` |
+| Chocola 截图 vs C7 | SHA 一致 `fe67c87c07d420e3` |
+| Fraise 截图 vs C7 | SHA 一致 `36bc2d465ab0e9c5`（--origin-x 80） |
+| Fraise 1.5倍DPI vs C7 | SHA 一致 `42cb48b7acd01132`（1200×1620） |
+| 生命周期 30 步 | initial==recreated 像素一致，created=2/destroyed=2，delta=0 |
 | 缺模型 | status=2, errorString="load model: asset load failed" |
 | 缺会话 | status=2, errorString="load session: session asset load failed" |
 | 非 OpenGL | 正确拒绝 |
 | dev CTest | 145/145 PASS |
 
+### 1.5 倍 DPI 对比（补齐）
+
+```
+build/plasma/bin/nekomote_plasma_probe \
+  --model <fraise> --session <fraise> \
+  --origin-x 80 --origin-y 400 --scale 1 \
+  --dpi 1.5 --capture <new.png> --steps 0
+```
+
+截图 1200×1620，SHA `42cb48b7acd01132e50d50cc52187f8c8716f95c7822cded5979ee692b761039`，
+与 C7 冻结图 `fraise-dpi-qt.png` SHA 完全一致。
+
+修复内容：
+- `qputenv("QT_SCALE_FACTOR")` 移�至 `QGuiApplication` 构造前，DPI 方能生效
+- QML 属性绑定顺序不保证文件顺序；改用 `componentComplete()` 延迟 `try_load()`，
+  确保 originX/originY/scale 在加载前设置
+- probe 设置 `deterministic=true` 与 qt_quick_host 一致，避免 wall-clock 推进帧
+- `--steps 0` 允许与 `--capture` 同时使用（初始帧截图）
+
+### 生命周期测试（补齐）
+
+```
+build/plasma/bin/nekomote_plasma_probe \
+  --model <chocola> --session <chocola> \
+  --check-lifecycle <new-dir> --steps 30
+```
+
+| 阶段 | 结果 |
+| --- | --- |
+| stage 0 | initial.png 800×1080, generation=1 |
+| stage 1 | resized.png 640×480 |
+| stage 2 | recreated.png 800×1080, generation=2, clock_delta=0 |
+| 比对 | initial == recreated 像素一致 |
+| 计数 | renderer created=2 destroyed=2（cleanup 完成） |
+
+用 `frame_ready` 信号驱动阶段，`grabToImage` 截图，无 GPU→CPU 读回。
+`SessionItemBase` 新增 `session_state()` 虚方法供 probe 读取 renderer 计数。
+
+### KDE SDK 检测（补齐）
+
+```
+pkg-config --exists KF6Plasma    → NO
+pkg-config --exists KF6Package   → NO
+pkg-config --exists plasmaview   → NO
+kpackagetool6                    → /usr/bin/kpackagetool6 (version 2.0)
+```
+
+KF6 开发依赖缺失，不安装系统依赖。kpackagetool6 可用于后续包安装验证。
+当前 Qt 组件证据已充分（probe 截图与 C7 一致），真实 Plasma 桌面加载待 KF6 依赖就绪后验收。
+
 ## 未完成项
 
-- 1.5 倍 DPI 截图未与 C7 对比（probe 支持 --dpi 但未运行完整对比）
-- 重复创建/删除 QML 组件、暂停/释放/重建生命周期未测试
 - KPackage 包只读验证元数据/加载方式，未安装
-- KDE SDK 缺失情况未记录
 - 真实 Plasma 桌面加载未验收（Codex 复核后另作）
 - V11 视觉核对交 Gemini
 

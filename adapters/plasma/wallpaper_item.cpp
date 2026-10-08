@@ -24,7 +24,6 @@ std::filesystem::path to_local_path(const QUrl& url)
 NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : SessionItemBase(parent)
 {
     setMirrorVertically(true);
-    setFlag(ItemHasContents, true);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 }
@@ -58,7 +57,6 @@ void NekoWallpaperItem::setModelFile(const QUrl& value)
     }
     model_file_ = value;
     emit modelFileChanged();
-    try_load();
 }
 
 void NekoWallpaperItem::setSessionFile(const QUrl& value)
@@ -72,7 +70,6 @@ void NekoWallpaperItem::setSessionFile(const QUrl& value)
     }
     session_file_ = value;
     emit sessionFileChanged();
-    try_load();
 }
 
 void NekoWallpaperItem::setOriginX(float value)
@@ -138,7 +135,7 @@ void NekoWallpaperItem::try_load()
         const auto model_path = to_local_path(model_file_);
         const auto session_path = to_local_path(session_file_);
         state_ = nekomote::qt_quick::load_session(model_path, session_path, 1, origin_x_,
-                                                   origin_y_, scale_, 0, false);
+                                                    origin_y_, scale_, 0, false);
         set_error(QString{});
         set_status(1);
         update();
@@ -156,6 +153,11 @@ nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
 }
 
 void NekoWallpaperItem::clear_inputs() { input_count_ = 0; }
+
+std::shared_ptr<nekomote::qt_quick::SessionState> NekoWallpaperItem::session_state() const
+{
+    return state_;
+}
 
 void NekoWallpaperItem::enqueue(nekomote::qt_quick::InputKind kind, QPointF position)
 {
@@ -185,6 +187,12 @@ void NekoWallpaperItem::mousePressEvent(QMouseEvent* event)
 {
     enqueue(nekomote::qt_quick::InputKind::Touch, event->position());
     event->accept();
+}
+
+void NekoWallpaperItem::componentComplete()
+{
+    SessionItemBase::componentComplete();
+    try_load();
 }
 } // namespace nekomote::plasma
 
