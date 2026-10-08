@@ -806,3 +806,28 @@ Debug/Release GPU各10用例/181断言通过，包含既有热帧零C++分配；
 清理旧Plasma提问册的过时接口/完成声明；GLM G13后可做G14自动验收，与Gemini V10并行。
 用户追加节约Codex上下文/输出的协作要求：GLM主力G13→G15原型→G14自动验收，
 Gemini V10/V11真实视觉观察，Codex只作新语义/架构与最终复核。正式桌面仍需应用/生命周期/多屏和长期证据。
+
+## 2026-10-08：V10 真实截图/点的逐型号观察与候选交付
+
+执行：Antigravity / Gemini 3.8 Flash，基线 `c03d2bf`。
+1. **严格绑定冻结证据包**：直接从 G13 冻结全目录运行产物 `build/evidence/g13-touch-audit-2026-10-08/full-catalog/` 挂载证据角色（model_asset, session_asset, source, clean, overlay, probe），严格计算 SHA-256，消除路径丢失与假证据风险。
+2. **20 代表型号逐型号目视观察**：
+   - 提取 20 个代表型号（覆盖标准、缩放、旋转、复杂差分、各角色变体），生成对应 WebGL 参考 JSON（经逆向验证公式 `[center_x, -(center_y - 400)]`，理论值与 `session.nks.json` 严格完全一致）。
+   - 包含 Fraise B 4 条件 5 区域对照（100% 吻合），以及其余代表型号的逐型号视觉核验。
+   - 观察结果输出为 `build/evidence/v10-touch-audit/observations.json` 与 `references/` 目录。
+3. **两项候选数据修复与状态核定**：
+   - `cinnamon-maid-b` 与 `coconut-santa-b` 基于真实会话当前值（Cinnamon: [0, -28.0], Coconut: [0, 38.0]）保留原有中心与半径标量，修正此前 V9 偏差数值（消除 Coconut Y=-10 错误）。
+   - 使用 `nekomote_session_probe` 进行多姿态实测（default_idle 与 idle_120），记录横向/纵向极值点命中/未命中行为，证明当前静态椭圆未能覆盖全部侧向网格形变。
+   - 候选数据在账本中状态为 `READY_FOR_REVIEW`，严格不修改源资产与外部仓库，待 Codex 审查。
+4. **账本生成与全分母校验**：
+   - 使用 `tools/touch_audit/generate_v9_ledger.py` 生成最终账本 `build/evidence/v10-touch-audit/final-ledger/v9_touch_ledger.json`，验证全 195 目录分母：
+     - `MATCH`: 18
+     - `MISMATCH`: 2 (Cinnamon Maid B, Coconut Santa B，候选 READY_FOR_REVIEW，0 错误)
+     - `UNREVIEWED`: 160 (未逐型号目视复核的型号严格保留，不从脚本外推)
+     - `PENDING_EVIDENCE`: 0
+     - `BLOCKED_INPUT`: 15 (沿用冻结 CPU 拒绝清单)
+5. **交付产物与测试**：
+   - 详细报告：`docs/v10-touch-report.md`。
+   - 观察构建脚本：`tools/touch_audit/build_v10_observations.py`。
+   - 单元测试：`tests/reference_capture/test_v10_touch_audit.py`（7 项全部通过）。
+   - 全套测试：Python 175/175 通过，Release CTest 145/145 通过。

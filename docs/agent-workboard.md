@@ -15,11 +15,11 @@ GPU使用共享 `build/gpu-validation.lock` 串行；工具内部已有锁时不
 
 | 执行者 | 任务 | 修改边界 |
 | --- | --- | --- |
-| CodeArts / GLM-5.2 | G13：修补后全目录触摸与截图覆盖运行 | 新build证据、`docs/g13-touch-handoff.md`；不改工具、核心、区域数据或当前摘要 |
-| Antigravity / Gemini 3.8 Flash | V10：基于真实截图/点的逐型号观察 | 新观察JSON、参考区域/命中证据、`docs/v10-touch-report.md`；不改工具、核心、资产或当前摘要 |
-| CodeArts / GLM-5.2 | G14：可选Qt宿主自动验收入口和独立构建矩阵 | 见 [G14交接](g14-qt-host-handoff.md)，不改宿主/核心公式 |
-| CodeArts / GLM-5.2 | G15：共享Qt桥、QML模块与隔离Plasma包原型 | 见 [G15交接](g15-plasma-prototype-handoff.md)，可独立实现，禁止改求值/GPU公式 |
-| Codex | C5/C6语义及应用、C7图形宿主复核 | 复杂工具维护、候选最终复核、Qt线程/context/资源及Plasma整合 |
+| CodeArts / GLM-5.2 | G13：修补后全目录触摸与截图覆盖运行（已完成，dc5473b） | 新build证据、`docs/g13-touch-handoff.md`；不改工具、核心、区域数据或当前摘要 |
+| Antigravity / Gemini 3.8 Flash | V10：基于真实截图/点的逐型号观察（已完成） | 新观察JSON、参考区域/命中证据、`docs/v10-touch-report.md`；不改工具、核心、资产或当前摘要 |
+| CodeArts / GLM-5.2 | G14：可选Qt宿主自动验收入口和独立构建矩阵（已完成，83db3e9） | 见 [G14交接](g14-qt-host-handoff.md)，不改宿主/核心公式 |
+| CodeArts / GLM-5.2 | G15：共享Qt桥、QML模块与隔离Plasma包原型（已完成，9c72813） | 见 [G15交接](g15-plasma-prototype-handoff.md)，可独立实现，禁止改求值/GPU公式 |
+| Codex | C5/C6语义及应用、C7图形宿主复核（待开展） | 复杂工具维护、候选最终复核、Qt线程/context/资源及Plasma整合 |
 
 领用声明任务/base commit/文件，保护现有未提交工作。测试通过、运行成功、目视核对和独立验收分别记录。
 
