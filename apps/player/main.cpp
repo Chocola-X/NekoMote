@@ -399,10 +399,7 @@ struct Surface
             s.accept(s.session->set_origin(s.origin));
         }
         s.previous = p;
-        Vec2 gaze = p;
-        if (s.mirror)
-            gaze.x = -gaze.x;
-        s.accept(s.session->pointer_move(gaze));
+        s.accept(s.session->pointer_move(p));
     }
     static void enter(GLFWwindow* w, int entered) noexcept
     {
@@ -412,8 +409,6 @@ struct Surface
         if (entered)
         {
             auto p = s.point(x, y);
-            if (s.mirror)
-                p.x = -p.x;
             s.accept(s.session->pointer_enter(p));
         }
         else

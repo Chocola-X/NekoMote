@@ -3,8 +3,8 @@
 Agent: CodeArts / GLM-5.2
 基线提交：`998a582`
 完成提交：本轮
-范围：`tools/reference_capture/audit_atlas_sources.py`、`tests/reference_capture/test_audit_atlas_sources.py`、`docs/validation/g11-atlas-source-ledger.json`、`docs/g11-handoff.md`
-文件边界：离线目录/采样工具、Python 测试、新交接；不改 runtime/render/application/ABI
+范围：`tools/reference_capture/audit_atlas_sources.py`、`tests/reference_capture/test_audit_atlas_sources.py`、`docs/validation/g11-atlas-source-ledger.json`、`docs/g11-handoff.md`、`apps/player/main.cpp`（用户授权的注视镜像回归修复）
+文件边界：离线目录/采样工具、Python 测试、新交接；不改 runtime/render/application/ABI（player 修复除外）
 
 ## 任务
 
@@ -136,3 +136,22 @@ OK
 - NO_PNG 27 项的 PSB 内嵌纹理未审计（纹理在 PSB pixel 数据中，非外部 PNG），如需审计需要解码 PSB 内嵌纹理
 - 图集一致不等于全模型视觉/交互/soak 通过
 - 不重复 CPU 长跑，来源未改变
+
+## 用户授权修复：镜像模型注视输入回归
+
+**来源：用户测试发现并授权修复。** 用户报告镜像模型（如 fraise-france-maid-b）显示是镜像的，但鼠标注视输入没有镜像。此前已修复过一次，疑被 Codex `998a582` 提交导致回归。
+
+**根因：** `998a582` 在 `geometry_scene.cpp:evaluate()` 中新增了对 `mirrored_parameters`（含 `face_eye_LR`/`head_LR`/`body_LR`/`*_slant`）的取反，但未同步移除 player 中注视输入的 X 翻转，导致**双重镜像**：
+
+1. player 翻转输入 X → gaze 计算得负值
+2. evaluate 对 `face_eye_LR` 取反 → 变回正值
+3. GPU `flip_x` 呈现 → 眼球看向鼠标对面（错误）
+
+**修复：** 移除 `apps/player/main.cpp` 中 `pointer_move`（原第 403-404 行）和 `pointer_enter`（原第 415-416 行）的 `if (s.mirror) x = -x` 翻转。保留 `touch`（第 438-439 行）的翻转，因为触摸判定区在模型空间定义，不经过 `evaluate` 参数取反，仍需宿主翻转 X 才能与 GPU 翻转后的呈现位置对应。
+
+修复后注视流程（无双重镜像）：
+1. 不翻转输入 → gaze 计算得正值
+2. evaluate 对 `face_eye_LR` 取反 → 负值（原始向左）
+3. GPU `flip_x` 呈现 → 眼球看向鼠标方向（正确）
+
+**用户明确要求：触摸判定区不需要镜像，当前行为正确。** 此修复不改动 touch 路径。
