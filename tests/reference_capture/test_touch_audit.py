@@ -1,251 +1,276 @@
-#!/usr/bin/env python3
-"""G12 触摸审计账本与工具的合成契约测试.
-
-验证账本 JSON 结构、不变量和工具负例处理。
-不运行 session_probe；账本验证在账本文件存在时执行，否则跳过。
-"""
-
+"""Synthetic input/error/provenance contracts; never reuse a real ledger as a fixture."""
+import importlib.util
 import json
-import os
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-TOOL = ROOT / "tools" / "touch_audit" / "run_touch_audit.py"
-LEDGER = ROOT / "build" / "evidence" / "g12-touch-audit" / "ledger.json"
-
-ZONE_ORDER = ["bust", "eye", "face", "head", "pant"]
-EXPECTED_CONDITIONS = ["default_idle", "idle_120", "moved", "scaled_half"]
-EXPECTED_TOTAL = 195
-
-
-@unittest.skipUnless(LEDGER.exists(), "ledger not generated yet")
-class TestLedgerStructure(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        with open(LEDGER) as f:
-            cls.ledger = json.load(f)
-
-    def test_total_models(self):
-        self.assertEqual(len(self.ledger["models"]), EXPECTED_TOTAL)
-
-    def test_freeze_fields(self):
-        for field in [
-            "generated_at",
-            "head_commit",
-            "dirty",
-            "tool_sha256",
-            "probe_sha256",
-            "catalog_sha256",
-            "summary",
-        ]:
-            self.assertIn(field, self.ledger, f"missing freeze field: {field}")
-
-    def test_status_counts(self):
-        sc = self.ledger["summary"]["status_counts"]
-        self.assertEqual(sum(sc.values()), EXPECTED_TOTAL)
-        self.assertIn("OK", sc)
-        self.assertGreater(sc["OK"], 0)
-
-    def test_condition_names(self):
-        self.assertEqual(
-            self.ledger["conditions"], EXPECTED_CONDITIONS
-        )
-
-    def test_each_model_has_required_fields(self):
-        for m in self.ledger["models"]:
-            for field in ["model", "status", "conditions", "errors"]:
-                self.assertIn(field, m, f"{m.get('model')}: missing {field}")
-
-    def test_ok_models_have_conditions(self):
-        for m in self.ledger["models"]:
-            if m["status"] == "OK":
-                self.assertEqual(
-                    len(m["conditions"]),
-                    len(EXPECTED_CONDITIONS),
-                    f"{m['model']}: wrong condition count",
-                )
-
-    def test_cpu_rejected_have_no_conditions(self):
-        for m in self.ledger["models"]:
-            if m["status"] == "CPU_REJECTED":
-                self.assertEqual(
-                    len(m["conditions"]),
-                    0,
-                    f"{m['model']}: CPU_REJECTED should have no conditions",
-                )
+ROOT = Path(__file__).resolve().parents[2]
+TOOL = ROOT / "tools/touch_audit/run_touch_audit.py"
+spec = importlib.util.spec_from_file_location("touch_audit", TOOL)
+tool = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tool)
 
 
-@unittest.skipUnless(LEDGER.exists(), "ledger not generated yet")
-class TestLedgerInvariants(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        with open(LEDGER) as f:
-            cls.ledger = json.load(f)
-
-    def test_outside_point_never_triggers(self):
-        for m in self.ledger["models"]:
-            if m["status"] != "OK":
-                continue
-            for c in m["conditions"]:
-                ot = c.get("outside_test")
-                if ot is None:
-                    continue
-                self.assertFalse(
-                    ot["reaction"],
-                    f"{m['model']}/{c['name']}: outside point triggered "
-                    f"reaction {ot['reaction']}",
-                )
-
-    def test_ok_model_center_hits(self):
-        for m in self.ledger["models"]:
-            if m["status"] != "OK":
-                continue
-            for c in m["conditions"]:
-                for z in ZONE_ORDER:
-                    zt = c.get("zone_tests", {}).get(z, {})
-                    if zt.get("skipped"):
-                        continue
-                    ct = zt.get("center_test", {})
-                    self.assertTrue(
-                        ct.get("pass"),
-                        f"{m['model']}/{c['name']}/{z}: center did not hit "
-                        f"(reaction={ct.get('reaction')})",
-                    )
-
-    def test_mirror_and_non_mirror_exist(self):
-        mirrors = [m for m in self.ledger["models"] if m.get("mirror") is True]
-        non_mirrors = [
-            m for m in self.ledger["models"] if m.get("mirror") is False
-        ]
-        self.assertGreater(len(mirrors), 0, "no mirror models found")
-        self.assertGreater(len(non_mirrors), 0, "no non-mirror models found")
-
-    def test_projected_regions_match_author_transform(self):
-        for m in self.ledger["models"]:
-            if m["status"] != "OK":
-                continue
-            author = m.get("author_regions", {})
-            for c in m["conditions"]:
-                origin = c["params"]["origin"]
-                scale = c["params"]["scale"]
-                direction = -1 if m.get("mirror") else 1
-                for z in ZONE_ORDER:
-                    ar = author.get(z)
-                    pr = c.get("projected_regions", {}).get(z)
-                    if ar is None or pr is None:
-                        continue
-                    if ar["radius"][0] == 0:
-                        continue
-                    inferred_author_scale = pr["radius"][0] / (
-                        scale * ar["radius"][0]
-                    )
-                    total_scale = scale * inferred_author_scale
-                    expected_cx = origin[0] + direction * total_scale * ar["center"][0]
-                    expected_cy = origin[1] + total_scale * ar["center"][1]
-                    self.assertAlmostEqual(
-                        pr["center"][0],
-                        expected_cx,
-                        places=0,
-                        msg=f"{m['model']}/{c['name']}/{z}: center.x mismatch",
-                    )
-                    self.assertAlmostEqual(
-                        pr["center"][1],
-                        expected_cy,
-                        places=0,
-                        msg=f"{m['model']}/{c['name']}/{z}: center.y mismatch",
-                    )
-                    self.assertAlmostEqual(
-                        pr["radius"][1],
-                        total_scale * ar["radius"][1],
-                        places=0,
-                        msg=f"{m['model']}/{c['name']}/{z}: radius.y mismatch",
-                    )
+def regions():
+    return {z: {"center": [i * 100.0, 0.0], "radius": [10.0, 10.0]}
+            for i, z in enumerate(tool.ZONE_ORDER)}
 
 
-class TestToolNegatives(unittest.TestCase):
-    """合成负例：验证工具对缺失/无效输入的处理."""
+def probe_data(steps=0, projected=None):
+    return {"presentation_mirror": False, "touch_regions": projected or regions(),
+            "samples": [{"step": i, "phase": 0, "reaction": ""} for i in range(steps + 1)]}
 
-    def test_missing_model_dir(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
 
-        assets = ROOT / "assets"
-        output = ROOT / "build" / "evidence" / "g12-touch-audit" / "_test"
-        output.mkdir(parents=True, exist_ok=True)
-        entry = run_touch_audit.audit_model(
-            "dummy_probe",
-            None,
-            assets,
-            "__nonexistent_model__",
-            output,
-            False,
-        )
-        self.assertEqual(entry["status"], "MISSING_MODEL")
-        self.assertTrue(entry["errors"])
+class Contracts(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.assets = self.root / "assets"
+        self.output = self.root / "out"
+        self.output.mkdir()
+        self.model_dir = self.assets / "characters/demo"
+        self.model_dir.mkdir(parents=True)
+        self.author = regions()
+        self.reactions = {z: [z + "_reaction"] for z in tool.ZONE_ORDER}
+        self.definition = {"interaction": {"regions": self.author}, "reactions": [
+            {"label": label, "zones": [z]} for z, labels in self.reactions.items() for label in labels]}
+        self.model = {"model": {"mirror": False, "author_scale": {"state": 2, "value": 1.0}, "textures": []}}
+        tool.write_json(self.model_dir / "model.nkm.json", self.model)
+        tool.write_json(self.model_dir / "session.nks.json", {"session": self.definition})
+        self.reference = self.root / "reference"
+        (self.reference / "config").mkdir(parents=True)
+        tool.write_json(self.reference / "config/model-catalog.json", {"demo": {"config": "demo.js"}, "missing": {"config": "demo.js"}})
 
-    def test_find_zone_of_reaction(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
+    def audit(self, capture=False):
+        return tool.audit_model("probe", "player", self.assets, "demo", self.output, capture,
+                                lock_path=self.root / "gpu.lock")
 
-        zr = {"bust": ["a/b01"], "eye": ["a/blink"]}
-        self.assertEqual(
-            run_touch_audit.find_zone_of_reaction("a/b01", zr), "bust"
-        )
-        self.assertEqual(
-            run_touch_audit.find_zone_of_reaction("a/blink", zr), "eye"
-        )
-        self.assertIsNone(
-            run_touch_audit.find_zone_of_reaction("unknown", zr)
-        )
-        self.assertIsNone(
-            run_touch_audit.find_zone_of_reaction("", zr)
-        )
+    def fake_probe(self, probe, model, session, request, output):
+        cond = {"origin": request["origin"], "scale": request["scale"]}
+        rs = tool.projected_regions(self.author, self.reactions, False, 1, cond)
+        data = probe_data(request["steps"], rs)
+        if request.get("events"):
+            point = request["events"][0]["point"]
+            zone = tool.expected_zone(point, rs)
+            if zone:
+                data["samples"][-1].update(reaction=self.reactions[zone][0], phase=1)
+        return {"ok": True, "data": data}
 
-    def test_inside_point_within_ellipse(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
+    def check_touch(self, result, point=None):
+        with patch.object(tool, "run_probe", return_value=result):
+            return tool.touch_check("probe", Path("model"), Path("session"), tool.CONDITIONS[0],
+                                    point or [0, 0], regions(), self.reactions, self.output, "test")
 
-        center = [100.0, 200.0]
-        radius = [50.0, 80.0]
-        pt = run_touch_audit.inside_point(center, radius)
-        dx = (pt[0] - center[0]) / radius[0]
-        dy = (pt[1] - center[1]) / radius[1]
-        self.assertLess(dx * dx + dy * dy, 1.0)
+    def test_expected_priority_uses_geometry_not_label(self):
+        r = regions()
+        r["face"] = r["head"] = {"center": [200, 0], "radius": [10, 10]}
+        self.assertEqual(tool.expected_zone([200, 0], r), "face")
+        self.assertEqual(tool.expected_zone([300, 0], regions()), "head")
 
-    def test_outside_point_beyond_ellipse(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
+    def test_inside_point_is_strictly_inside(self):
+        p = tool.inside_point([10, 20], [5, 9])
+        self.assertLess(sum(((p[i] - [10, 20][i]) / [5, 9][i]) ** 2 for i in (0, 1)), 1)
 
-        center = [100.0, 200.0]
-        radius = [50.0, 80.0]
-        pt = run_touch_audit.outside_point_for_zone(center, radius)
-        dx = (pt[0] - center[0]) / radius[0]
-        dy = (pt[1] - center[1]) / radius[1]
-        self.assertGreater(dx * dx + dy * dy, 1.0)
+    def test_projection_uses_declared_author_scale(self):
+        r = tool.projected_regions(self.author, self.reactions, True, 2, tool.CONDITIONS[2])
+        self.assertEqual(r["eye"], {"center": [-120, 400], "radius": [20, 20]})
 
-    def test_zone_order_is_priority(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
+    def test_projection_suppresses_zones_without_reactions(self):
+        self.reactions["eye"] = []
+        self.assertIsNone(tool.projected_regions(self.author, self.reactions, False, 1, tool.CONDITIONS[0])["eye"])
 
-        self.assertEqual(
-            run_touch_audit.ZONE_ORDER,
-            ["bust", "eye", "face", "head", "pant"],
-        )
+    def test_wrong_zone_reaction_fails(self):
+        data = probe_data()
+        data["samples"][0].update(reaction="pant_reaction", phase=1)
+        self.assertFalse(self.check_touch({"ok": True, "data": data})["pass"])
 
-    def test_conditions_cover_required_cases(self):
-        sys.path.insert(0, str(ROOT / "tools" / "touch_audit"))
-        import run_touch_audit
+    def test_correct_zone_reaction_passes(self):
+        data = probe_data()
+        data["samples"][0].update(reaction="bust_reaction", phase=1)
+        self.assertTrue(self.check_touch({"ok": True, "data": data})["pass"])
 
-        names = [c["name"] for c in run_touch_audit.CONDITIONS]
-        self.assertIn("default_idle", names)
-        self.assertIn("idle_120", names)
-        self.assertIn("moved", names)
-        self.assertIn("scaled_half", names)
-        for c in run_touch_audit.CONDITIONS:
-            self.assertGreaterEqual(c["steps"], 0)
-            self.assertGreater(c["scale"], 0)
+    def test_outside_process_failure_is_not_miss(self):
+        result = self.check_touch({"ok": False}, tool.OUTSIDE_POINT)
+        self.assertFalse(result["pass"])
+        self.assertIsNone(result["reaction"])
+
+    def test_outside_idle_empty_is_miss(self):
+        self.assertTrue(self.check_touch({"ok": True, "data": probe_data()}, tool.OUTSIDE_POINT)["pass"])
+
+    def test_outside_busy_empty_fails(self):
+        data = probe_data()
+        data["samples"][0]["phase"] = 1
+        self.assertFalse(self.check_touch({"ok": True, "data": data}, tool.OUTSIDE_POINT)["pass"])
+
+    def test_idle_event_after_exact_120_updates(self):
+        with patch.object(tool, "run_probe", return_value={"ok": False}) as probe:
+            tool.touch_check("probe", Path("model"), Path("session"), tool.CONDITIONS[1],
+                             [0, 0], regions(), self.reactions, self.output, "test")
+        request = probe.call_args.args[3]
+        self.assertEqual(request["steps"], 121)
+        self.assertEqual(request["events"][0]["step"], 121)
+
+    def test_missing_model(self):
+        (self.model_dir / "model.nkm.json").unlink()
+        self.assertEqual(self.audit()["status"], "MISSING_MODEL")
+
+    def test_missing_session(self):
+        (self.model_dir / "session.nks.json").unlink()
+        self.assertEqual(self.audit()["status"], "MISSING_SESSION")
+
+    def test_invalid_session_json(self):
+        (self.model_dir / "session.nks.json").write_text("broken")
+        self.assertEqual(self.audit()["status"], "INVALID_ASSET")
+
+    def test_missing_texture(self):
+        self.model["model"]["textures"] = [{"path": "absent.png"}]
+        tool.write_json(self.model_dir / "model.nkm.json", self.model)
+        self.assertEqual(self.audit()["status"], "INVALID_ASSET")
+
+    def test_escaped_texture_path_rejected(self):
+        self.model["model"]["textures"] = [{"path": "../../../secret"}]
+        tool.write_json(self.model_dir / "model.nkm.json", self.model)
+        self.assertEqual(self.audit()["status"], "INVALID_ASSET")
+
+    def test_region_process_failure_is_fail(self):
+        failure = self.output / "stderr.log"
+        failure.write_text("launch failed")
+        with patch.object(tool, "run_probe", return_value={"ok": False, "stderr": {"path": str(failure)}}):
+            self.assertEqual(self.audit()["status"], "FAIL")
+
+    def test_only_diagnosed_geometry_rejection_is_cpu_rejected(self):
+        failure = self.output / "stderr.log"
+        failure.write_text("nekomote_session_probe: session=6 playback=3 geometry=5")
+        with patch.object(tool, "run_probe", return_value={"ok": False, "stderr": {"path": str(failure)}}):
+            self.assertEqual(self.audit()["status"], "CPU_REJECTED")
+
+    def test_projection_mismatch_fails(self):
+        data = probe_data()
+        with patch.object(tool, "run_probe", return_value={"ok": True, "data": data}):
+            row = self.audit()
+        self.assertEqual(row["status"], "FAIL")
+        self.assertIn("projection mismatch", row["errors"][0])
+
+    def test_complete_synthetic_audit_passes(self):
+        with patch.object(tool, "run_probe", side_effect=self.fake_probe):
+            row = self.audit()
+        self.assertEqual(row["status"], "OK")
+        self.assertEqual(len(row["conditions"]), 4)
+        self.assertEqual({p["role"] for p in row["assets"]}, {"model_asset", "session_asset"})
+
+    def test_capture_failure_is_not_ok(self):
+        with patch.object(tool, "run_probe", side_effect=self.fake_probe), patch.object(
+                tool, "capture_pair", return_value={"plain": {"ok": True}, "overlay": {"ok": False}}):
+            self.assertEqual(self.audit(True)["status"], "FAIL")
+
+    def test_outside_reaction_failure_is_not_ok(self):
+        def outside_fails(*args):
+            result = self.fake_probe(*args)
+            if args[3].get("events", [{}])[0].get("point") == tool.OUTSIDE_POINT:
+                result["data"]["samples"][-1].update(reaction="bust_reaction", phase=1)
+            return result
+        with patch.object(tool, "run_probe", side_effect=outside_fails):
+            self.assertEqual(self.audit()["status"], "FAIL")
+
+    def test_no_active_zones_explicitly_measured(self):
+        self.reactions = {z: [] for z in tool.ZONE_ORDER}
+        self.definition["reactions"] = []
+        tool.write_json(self.model_dir / "session.nks.json", {"session": self.definition})
+        with patch.object(tool, "run_probe", side_effect=self.fake_probe):
+            row = self.audit()
+        self.assertEqual(row["status"], "NO_ACTIVE_ZONES")
+        self.assertTrue(all(c["outside_test"]["pass"] for c in row["conditions"]))
+
+    def test_invalid_samples_reject_truncation(self):
+        with self.assertRaisesRegex(ValueError, "incomplete sample"):
+            tool.validate_probe(probe_data(), 1)
+
+    def test_invalid_sample_step_rejected(self):
+        data = probe_data()
+        data["samples"][0]["step"] = 4
+        with self.assertRaisesRegex(ValueError, "invalid sample"):
+            tool.validate_probe(data, 0)
+
+    def test_missing_zone_rejected(self):
+        data = probe_data()
+        del data["touch_regions"]["eye"]
+        with self.assertRaisesRegex(ValueError, "incomplete projected"):
+            tool.validate_probe(data, 0)
+
+    def test_nonfinite_region_rejected(self):
+        data = probe_data()
+        data["touch_regions"]["eye"]["center"][0] = float("nan")
+        with self.assertRaisesRegex(ValueError, "invalid projected"):
+            tool.validate_probe(data, 0)
+
+    def test_zero_radius_rejected(self):
+        data = probe_data()
+        data["touch_regions"]["eye"]["radius"][0] = 0
+        with self.assertRaisesRegex(ValueError, "invalid projected"):
+            tool.validate_probe(data, 0)
+
+    def test_run_process_retains_timeout_and_logs(self):
+        with patch.object(tool.subprocess, "run", side_effect=subprocess.TimeoutExpired(["fake"], 1, stderr=b"partial")):
+            result = tool.run_process(["fake"], self.output / "process", 1)
+        self.assertFalse(result["ok"])
+        self.assertTrue(result["timeout"])
+        self.assertEqual(Path(result["stderr"]["path"]).read_bytes(), b"partial")
+        self.assertTrue((self.output / "process.command.json").exists())
+
+    def test_run_process_retains_nonzero_returncode(self):
+        with patch.object(tool.subprocess, "run", return_value=subprocess.CompletedProcess(["fake"], 3, b"", b"failed")):
+            result = tool.run_process(["fake"], self.output / "process")
+        self.assertEqual(result["returncode"], 3)
+        self.assertFalse(result["ok"])
+
+    def test_run_probe_rejects_stale_output(self):
+        output = self.output / "probe.json"
+        output.write_text("stale")
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            tool.run_probe("dummy", Path("m"), Path("s"), {"steps": 0}, output)
+
+    def cli(self, output, *extra):
+        return subprocess.run([sys.executable, str(TOOL), "--reference-root", str(self.reference),
+                               "--assets", str(self.assets), "--probe", sys.executable,
+                               "--output", str(output), *extra], capture_output=True, text=True)
+
+    def test_cli_existing_output_reaches_rejection(self):
+        p = self.cli(self.output)
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("output/report already exists", p.stderr)
+
+    def test_cli_missing_player_reaches_rejection(self):
+        p = self.cli(self.root / "new", "--capture")
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("probe/player binary missing", p.stderr)
+        self.assertFalse((self.root / "new").exists())
+
+    def test_cli_unknown_model_rejected(self):
+        p = self.cli(self.root / "new", "--model", "unknown")
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("not in catalog", p.stderr)
+
+    def test_cli_empty_catalog_rejected(self):
+        tool.write_json(self.reference / "config/model-catalog.json", {})
+        p = self.cli(self.root / "new")
+        self.assertEqual(p.returncode, 2)
+        self.assertIn("catalog is empty", p.stderr)
+
+    def test_full_catalog_includes_missing_session_and_model(self):
+        (self.model_dir / "session.nks.json").unlink()
+        p = self.cli(self.root / "new")
+        self.assertEqual(p.returncode, 1)
+        ledger = json.loads((self.root / "new/ledger.json").read_text())
+        self.assertEqual(ledger["catalog_total"], 2)
+        self.assertEqual({m["status"] for m in ledger["models"]}, {"MISSING_MODEL", "MISSING_SESSION"})
+        self.assertTrue(ledger["complete"])
+        self.assertFalse(ledger["all_requested_checks_passed"])
+        self.assertEqual(ledger["freeze_errors"], [])
 
 
 if __name__ == "__main__":

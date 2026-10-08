@@ -1,584 +1,431 @@
 #!/usr/bin/env python3
-"""G12: 195 项触摸诊断输入与覆盖账本.
+"""Deterministic touch checks; geometry, screenshots and visual acceptance are separate.
 
-对每个模型生成确定 seed、步数、origin、scale 的输入，通过
-nekomote_session_probe 输出实际 touch_regions 并检查命中样本。
-可选调用 nekomote_player --show-touch-regions --capture 生成覆盖图。
-
-坐标约定：session_probe 的 touch 输入和 touch_regions 输出均为
-中心原点输出像素、Y 向下。PNG 标注点转输入时减去半个画幅，不做镜像。
+All points use centered output pixels, Y down. Retain each request, response and
+process result. Existing output directories are rejected so stale evidence cannot pass.
 """
-
 from __future__ import annotations
 
 import argparse
 import datetime
+import fcntl
 import hashlib
 import json
 import math
-import os
-import shutil
+import struct
 import subprocess
 import sys
-import time
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools/import_emote"))
+import catalog_index
+
 ZONE_ORDER = ["bust", "eye", "face", "head", "pant"]
-ZONE_COLORS = {
-    "bust": "red",
-    "eye": "yellow",
-    "face": "green",
-    "head": "cyan",
-    "pant": "purple",
-}
+ZONE_COLORS = dict(zip(ZONE_ORDER, ["red", "yellow", "green", "cyan", "purple"]))
 CONDITIONS = [
-    {
-        "name": "default_idle",
-        "steps": 0,
-        "origin": [0, 400],
-        "scale": 1.0,
-        "touch_step": 0,
-    },
-    {
-        "name": "idle_120",
-        "steps": 120,
-        "origin": [0, 400],
-        "scale": 1.0,
-        "touch_step": 120,
-    },
-    {
-        "name": "moved",
-        "steps": 0,
-        "origin": [80, 400],
-        "scale": 1.0,
-        "touch_step": 0,
-    },
-    {
-        "name": "scaled_half",
-        "steps": 0,
-        "origin": [0, 400],
-        "scale": 0.5,
-        "touch_step": 0,
-    },
+    {"name": "default_idle", "steps": 0, "origin": [0, 400], "scale": 1.0},
+    {"name": "idle_120", "steps": 120, "origin": [0, 400], "scale": 1.0},
+    {"name": "moved", "steps": 0, "origin": [80, 400], "scale": 1.0},
+    {"name": "scaled_half", "steps": 0, "origin": [0, 400], "scale": 0.5},
 ]
-RANDOM_SEED = 1
-REACTION_SEED = 1
+RANDOM_SEED = REACTION_SEED = 1
 OUTSIDE_POINT = [99999.0, 99999.0]
 
 
-def sha256_file(path: Path) -> str | None:
-    if not path.exists():
-        return None
+def sha256_file(path):
+    path = Path(path)
     h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
 
 
-def git_head(repo: Path) -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=repo, text=True
-        ).strip()
-    except Exception:
-        return "unknown"
+def file_record(path):
+    path = Path(path).resolve()
+    return {"path": str(path), "sha256": sha256_file(path), "bytes": path.stat().st_size}
 
 
-def git_dirty(repo: Path) -> bool:
-    try:
-        out = subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=repo, text=True
-        ).strip()
-        return bool(out)
-    except Exception:
-        return True
+def write_json(path, value):
+    Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n")
 
 
-def load_session(path: Path) -> dict | None:
-    if not path.exists():
-        return None
-    with open(path) as f:
-        d = json.load(f)
-    return d.get("session", {})
+def finite_pair(value, positive=False):
+    return (isinstance(value, list) and len(value) == 2 and
+            all(isinstance(v, (int, float)) and not isinstance(v, bool) and
+                math.isfinite(v) and (not positive or v > 0) for v in value))
 
 
-def author_regions(session: dict) -> dict[str, dict | None]:
-    inter = session.get("interaction", {}) or {}
-    regions = inter.get("regions", {}) or {}
-    result = {}
-    for z in ZONE_ORDER:
-        r = regions.get(z)
-        result[z] = r if r is not None else None
-    return result
+def f32(value):
+    return struct.unpack("f", struct.pack("f", value))[0]
 
 
-def zone_reactions(session: dict) -> dict[str, list[str]]:
+def zone_reactions(session):
     result = {z: [] for z in ZONE_ORDER}
-    for r in session.get("reactions", []):
-        label = r.get("label", "")
-        for z in r.get("zones", []):
-            if z in result:
-                result[z].append(label)
+    for reaction in session["reactions"]:
+        label = reaction["label"]
+        if not isinstance(label, str) or not label:
+            raise ValueError("invalid reaction label")
+        for zone in reaction["zones"]:
+            if zone not in result:
+                raise ValueError("invalid reaction zone")
+            result[zone].append(label)
     return result
 
 
-def run_probe(
-    probe: str, model: Path, session: Path, request: dict, output: Path
-) -> dict | None:
-    input_file = output.with_suffix(".input.json")
-    with open(input_file, "w") as f:
-        json.dump(request, f)
-    try:
-        subprocess.run(
-            [probe, str(model), str(session), str(input_file), str(output)],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return None
-    if not output.exists():
-        return None
-    with open(output) as f:
-        return json.load(f)
+def author_regions(session):
+    result = {z: session.get("interaction", {}).get("regions", {}).get(z) for z in ZONE_ORDER}
+    for region in result.values():
+        if region is not None and (not isinstance(region, dict) or
+                                  not finite_pair(region.get("center")) or
+                                  not finite_pair(region.get("radius"), True)):
+            raise ValueError("invalid author ellipse")
+    return result
 
 
-def probe_regions(
-    probe: str, model: Path, session: Path, cond: dict, tmp: Path
-) -> dict | None:
-    request = {
-        "steps": 0,
-        "random_seed": RANDOM_SEED,
-        "reaction_seed": REACTION_SEED,
-        "origin": cond["origin"],
-        "scale": cond["scale"],
-    }
-    out = tmp / "regions.json"
-    result = run_probe(probe, model, session, request, out)
-    if result is None:
-        return None
-    return result.get("touch_regions", {})
+def projected_regions(author, reactions, mirror, author_scale, cond):
+    scale = f32(f32(cond["scale"]) * f32(author_scale))
+    origin = [f32(v) for v in cond["origin"]]
+    direction = -1 if mirror else 1
+    result = {}
+    for zone in ZONE_ORDER:
+        region = author[zone]
+        if region is None or not reactions[zone]:
+            result[zone] = None
+        else:
+            c, r = region["center"], region["radius"]
+            result[zone] = {"center": [f32(origin[0] + direction * scale * f32(c[0])),
+                                        f32(origin[1] + scale * f32(c[1]))],
+                            "radius": [f32(scale * f32(v)) for v in r]}
+    return result
 
 
-def probe_touch(
-    probe: str,
-    model: Path,
-    session: Path,
-    cond: dict,
-    point: list[float],
-    tmp: Path,
-    tag: str,
-) -> dict | None:
-    request = {
-        "steps": cond["steps"],
-        "random_seed": RANDOM_SEED,
-        "reaction_seed": REACTION_SEED,
-        "origin": cond["origin"],
-        "scale": cond["scale"],
-        "events": [
-            {"step": cond["touch_step"], "kind": "touch", "point": point}
-        ],
-    }
-    out = tmp / f"touch_{tag}.json"
-    result = run_probe(probe, model, session, request, out)
-    if result is None:
-        return None
-    samples = result.get("samples", [])
-    idx = cond["touch_step"]
-    if idx >= len(samples):
-        idx = len(samples) - 1
-    sample = samples[idx] if samples else {}
-    return {
-        "reaction": sample.get("reaction", ""),
-        "phase": sample.get("phase", 0),
-    }
-
-
-def inside_point(center: list, radius: list) -> list[float]:
-    return [
-        center[0] + radius[0] * 0.3,
-        center[1] + radius[1] * 0.3,
-    ]
-
-
-def outside_point_for_zone(center: list, radius: list) -> list[float]:
-    return [
-        center[0] + radius[0] * 1.5 + 10.0,
-        center[1],
-    ]
-
-
-def find_zone_of_reaction(
-    reaction_label: str, zone_reacts: dict[str, list[str]]
-) -> str | None:
-    if not reaction_label:
-        return None
-    for z in ZONE_ORDER:
-        if reaction_label in zone_reacts.get(z, []):
-            return z
+def expected_zone(point, regions):
+    """First eligible ellipse containing the point, independent of reaction labels."""
+    for zone in ZONE_ORDER:
+        r = regions[zone]
+        if r is not None and sum(((point[i] - r["center"][i]) / r["radius"][i]) ** 2
+                                 for i in (0, 1)) <= 1:
+            return zone
     return None
 
 
-def audit_condition(
-    probe: str,
-    model: Path,
-    session_path: Path,
-    cond: dict,
-    zone_reacts: dict[str, list[str]],
-    tmp: Path,
-) -> dict:
-    cond_result = {
-        "name": cond["name"],
-        "params": {
-            "steps": cond["steps"],
-            "origin": cond["origin"],
-            "scale": cond["scale"],
-            "random_seed": RANDOM_SEED,
-            "reaction_seed": REACTION_SEED,
-        },
-        "projected_regions": {},
-        "zone_tests": {},
-        "outside_test": None,
-        "errors": [],
-    }
-
-    regions = probe_regions(probe, model, session_path, cond, tmp)
-    if regions is None:
-        cond_result["errors"].append("failed to probe regions")
-        return cond_result
-
-    for z in ZONE_ORDER:
-        r = regions.get(z)
-        if r is not None:
-            cond_result["projected_regions"][z] = r
-        else:
-            cond_result["projected_regions"][z] = None
-
-    for z in ZONE_ORDER:
-        r = regions.get(z)
-        has_reactions = len(zone_reacts.get(z, [])) > 0
-        if r is None or not has_reactions:
-            cond_result["zone_tests"][z] = {
-                "has_region": r is not None,
-                "has_reactions": has_reactions,
-                "reaction_count": len(zone_reacts.get(z, [])),
-                "skipped": True,
-            }
-            continue
-
-        center = r["center"]
-        radius = r["radius"]
-
-        center_hit = probe_touch(
-            probe, model, session_path, cond, center, tmp, f"{z}_center"
-        )
-        inside_pt = inside_point(center, radius)
-        inside_hit = probe_touch(
-            probe, model, session_path, cond, inside_pt, tmp, f"{z}_inside"
-        )
-
-        center_zone = None
-        inside_zone = None
-        if center_hit:
-            center_zone = find_zone_of_reaction(
-                center_hit["reaction"], zone_reacts
-            )
-        if inside_hit:
-            inside_zone = find_zone_of_reaction(
-                inside_hit["reaction"], zone_reacts
-            )
-
-        cond_result["zone_tests"][z] = {
-            "has_region": True,
-            "has_reactions": True,
-            "reaction_count": len(zone_reacts.get(z, [])),
-            "projected_center": center,
-            "projected_radius": radius,
-            "center_test": {
-                "point": center,
-                "reaction": center_hit["reaction"] if center_hit else None,
-                "hit_zone": center_zone,
-                "expected_zone": z,
-                "pass": center_zone is not None,
-            },
-            "inside_test": {
-                "point": inside_pt,
-                "reaction": inside_hit["reaction"] if inside_hit else None,
-                "hit_zone": inside_zone,
-                "expected_zone": z,
-                "pass": inside_zone is not None,
-            },
-        }
-
-    outside_hit = probe_touch(
-        probe, model, session_path, cond, OUTSIDE_POINT, tmp, "outside"
-    )
-    outside_reaction = outside_hit["reaction"] if outside_hit else None
-    cond_result["outside_test"] = {
-        "point": OUTSIDE_POINT,
-        "reaction": outside_reaction,
-        "pass": not outside_reaction,
-    }
-
-    return cond_result
+def inside_point(center, radius):
+    return [center[i] + radius[i] * 0.3 for i in (0, 1)]
 
 
-def capture_overlay(
-    player: str,
-    model: Path,
-    session: Path,
-    cond: dict,
-    output_png: Path,
-    width: int = 800,
-    height: int = 1080,
-) -> bool:
-    cmd = [
-        player,
-        "--model",
-        str(model),
-        "--session",
-        str(session),
-        "--width",
-        str(width),
-        "--height",
-        str(height),
-        "--origin-x",
-        str(cond["origin"][0]),
-        "--origin-y",
-        str(cond["origin"][1]),
-        "--scale",
-        str(cond["scale"]),
-        "--show-touch-regions",
-        "--transparent",
-        "--mute",
-        "--no-save",
-        "--steps",
-        str(cond["steps"]),
-        "--capture",
-        str(output_png),
-    ]
+def run_process(cmd, stem, timeout=60):
+    result = {"argv": [str(v) for v in cmd], "returncode": None, "timeout": False,
+              "error": None, "ok": False}
     try:
-        subprocess.run(cmd, check=True, capture_output=True, timeout=30)
-        return output_png.exists()
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return False
+        p = subprocess.run(result["argv"], capture_output=True, timeout=timeout)
+        result["returncode"] = p.returncode
+        stdout, stderr = p.stdout, p.stderr
+        result["ok"] = p.returncode == 0
+    except subprocess.TimeoutExpired as error:
+        result["timeout"] = True
+        stdout, stderr = error.stdout or b"", error.stderr or b""
+    except OSError as error:
+        result["error"] = str(error)
+        stdout = stderr = b""
+    for name, contents in (("stdout", stdout), ("stderr", stderr)):
+        path = Path(str(stem) + f".{name}.log")
+        path.write_bytes(contents)
+        result[name] = file_record(path)
+    write_json(Path(str(stem) + ".command.json"), result)
+    return result
 
 
-def audit_model(
-    probe: str,
-    player: str | None,
-    assets: Path,
-    model_name: str,
-    output_dir: Path,
-    do_capture: bool,
-) -> dict:
+def validate_probe(data, steps):
+    if not isinstance(data, dict) or type(data.get("presentation_mirror")) is not bool:
+        raise ValueError("missing presentation_mirror")
+    samples = data.get("samples")
+    if not isinstance(samples, list) or len(samples) != steps + 1:
+        raise ValueError("incomplete sample sequence")
+    for step, sample in enumerate(samples):
+        if (not isinstance(sample, dict) or type(sample.get("step")) is not int or
+                sample["step"] != step or not isinstance(sample.get("reaction"), str) or
+                type(sample.get("phase")) is not int or sample["phase"] not in (0, 1, 2)):
+            raise ValueError("invalid sample sequence/reaction/phase")
+    regions = data.get("touch_regions")
+    if not isinstance(regions, dict) or set(regions) != set(ZONE_ORDER):
+        raise ValueError("incomplete projected region set")
+    for r in regions.values():
+        if r is not None and (not isinstance(r, dict) or not finite_pair(r.get("center")) or
+                              not finite_pair(r.get("radius"), True)):
+            raise ValueError("invalid projected ellipse")
+
+
+def run_probe(probe, model, session, request, output):
+    input_file = output.with_suffix(".input.json")
+    if output.exists() or input_file.exists():
+        raise ValueError("probe evidence output already exists")
+    write_json(input_file, request)
+    result = run_process([probe, model, session, input_file, output], output.with_suffix(""))
+    result["input"] = file_record(input_file)
+    result["data"] = None
+    if result["ok"]:
+        try:
+            data = json.loads(output.read_text())
+            validate_probe(data, request["steps"])
+            result["data"] = data
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            result["ok"] = False
+            result["error"] = str(error)
+    if output.exists():
+        result["output"] = file_record(output)
+    write_json(output.with_suffix(".result.json"), {k: v for k, v in result.items() if k != "data"})
+    return result
+
+
+def request_for(cond):
+    return {"steps": cond["steps"], "random_seed": RANDOM_SEED,
+            "reaction_seed": REACTION_SEED, "origin": cond["origin"], "scale": cond["scale"]}
+
+
+def touch_check(probe, model, session, cond, point, regions, reactions, directory, tag):
+    request = request_for(cond)
+    # Probe dispatches event N before advance N: N=idle_steps+1 touches after
+    # precisely idle_steps updates. Step 0 touches the initial pose directly.
+    event_step = cond["steps"] + 1 if cond["steps"] else 0
+    request["steps"] = event_step
+    request["events"] = [{"step": event_step, "kind": "touch", "point": point}]
+    result = run_probe(probe, model, session, request, directory / f"touch_{tag}.json")
+    zone = expected_zone(point, regions)
+    check = {"point": point, "expected_zone": zone, "pass": False,
+             "reaction": None, "phase": None, "evidence": str(directory / f"touch_{tag}.result.json")}
+    if not result["ok"]:
+        check["error"] = "probe failed; unmeasured, never a miss"
+        return check
+    sample = result["data"]["samples"][event_step]
+    check.update(reaction=sample["reaction"], phase=sample["phase"])
+    if zone is None:
+        check["pass"] = sample["reaction"] == "" and sample["phase"] == 0
+    else:
+        check["pass"] = sample["reaction"] in reactions[zone] and sample["phase"] in (1, 2)
+    return check
+
+
+def capture_pair(player, model, session, cond, directory, lock_path):
+    captures = {}
+    with Path(lock_path).open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        for overlay in (False, True):
+            name = "overlay" if overlay else "plain"
+            png = directory / f"{name}.png"
+            cmd = [player, "--model", model, "--session", session, "--width", "800",
+                   "--height", "1080", "--origin-x", str(cond["origin"][0]),
+                   "--origin-y", str(cond["origin"][1]), "--scale", str(cond["scale"]),
+                   "--seed", str(RANDOM_SEED), "--transparent", "--mute", "--no-save",
+                   "--steps", str(cond["steps"]), "--capture", png]
+            if overlay:
+                cmd.append("--show-touch-regions")
+            result = run_process(cmd, directory / name)
+            if result["ok"]:
+                try:
+                    from PIL import Image
+                    with Image.open(png) as image:
+                        image.load()
+                        if image.size != (800, 1080) or image.format != "PNG":
+                            raise ValueError("invalid capture dimensions/format")
+                        if image.getbbox() is None:
+                            raise ValueError("empty capture")
+                    result["image"] = file_record(png)
+                except (OSError, ValueError) as error:
+                    result["ok"] = False
+                    result["error"] = str(error)
+            captures[name] = result
+            write_json(directory / f"{name}.capture.json", result)
+    return captures
+
+
+def audit_model(probe, player, assets, model_name, output_dir, do_capture,
+                source_files=None, lock_path=None):
+    catalog_index.validate_model_name(model_name)
     model_dir = assets / "characters" / model_name
-    model_path = model_dir / "model.nkm.json"
-    session_path = model_dir / "session.nks.json"
-
-    entry = {
-        "model": model_name,
-        "model_path": str(model_path.relative_to(assets)),
-        "session_path": str(session_path.relative_to(assets)),
-        "status": "OK",
-        "mirror": None,
-        "author_regions": {},
-        "zone_reactions": {},
-        "conditions": [],
-        "errors": [],
-    }
-
-    if not model_path.exists():
-        entry["status"] = "MISSING_MODEL"
-        entry["errors"].append("model.nkm.json not found")
+    model, session = model_dir / "model.nkm.json", model_dir / "session.nks.json"
+    entry = {"model": model_name, "status": "UNMEASURED", "mirror": None,
+             "author_regions": {}, "zone_reactions": {}, "conditions": [], "errors": [],
+             "assets": [], "sources": source_files or [], "visual_acceptance": "NOT_REVIEWED"}
+    for path, status in ((model, "MISSING_MODEL"), (session, "MISSING_SESSION")):
+        if not path.is_file():
+            entry.update(status=status, errors=[str(path) + " missing"])
+            return entry
+    try:
+        definition = json.loads(session.read_text())["session"]
+        asset = json.loads(model.read_text())["model"]
+        author = author_regions(definition)
+        reactions = zone_reactions(definition)
+        entry.update(author_regions=author, zone_reactions=reactions)
+        mirror = asset["mirror"]
+        if type(mirror) is not bool:
+            raise ValueError("invalid model mirror")
+        scale_field = asset["author_scale"]
+        author_scale = scale_field["value"] if scale_field["state"] == 2 else 1
+        if not isinstance(author_scale, (int, float)) or not math.isfinite(author_scale) or author_scale <= 0:
+            raise ValueError("invalid author scale")
+        entry.update(mirror=mirror, author_scale=author_scale)
+        paths = [model, session] + [model_dir / t["path"] for t in asset["textures"]]
+        for path in paths:
+            path.resolve().relative_to(assets.resolve())
+            record = file_record(path)
+            record["role"] = "model_asset" if path == model else "session_asset" if path == session else "texture_asset"
+            entry["assets"].append(record)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        entry.update(status="INVALID_ASSET", errors=[str(error)])
         return entry
-    if not session_path.exists():
-        entry["status"] = "MISSING_SESSION"
-        entry["errors"].append("session.nks.json not found")
-        return entry
-
-    session_data = load_session(session_path)
-    if session_data is None:
-        entry["status"] = "INVALID_SESSION"
-        entry["errors"].append("cannot read session data")
-        return entry
-
-    entry["author_regions"] = author_regions(session_data)
-    zr = zone_reactions(session_data)
-    entry["zone_reactions"] = {z: len(v) for z, v in zr.items()}
-
-    active_zones = [
-        z
-        for z in ZONE_ORDER
-        if entry["author_regions"][z] is not None and len(zr.get(z, [])) > 0
-    ]
-    if not active_zones:
-        entry["status"] = "NO_ACTIVE_ZONES"
-        entry["errors"].append("no zones with both region and reactions")
-        return entry
-
-    tmp = output_dir / "_tmp" / model_name
-    tmp.mkdir(parents=True, exist_ok=True)
-
-    first_cond = CONDITIONS[0]
-    first_regions = probe_regions(
-        probe, model_path, session_path, first_cond, tmp
-    )
-    if first_regions is None:
-        entry["status"] = "CPU_REJECTED"
-        entry["errors"].append(
-            "session_probe failed to compile or start; CPU evaluation rejected"
-        )
-        shutil.rmtree(tmp, ignore_errors=True)
-        return entry
-
-    probe_file = tmp / "regions.json"
-    if probe_file.exists():
-        with open(probe_file) as f:
-            entry["mirror"] = json.load(f).get("presentation_mirror")
-
+    directory = output_dir / model_name
+    directory.mkdir()
+    any_active = any(author[z] is not None and reactions[z] for z in ZONE_ORDER)
     for cond in CONDITIONS:
-        cr = audit_condition(
-            probe, model_path, session_path, cond, zr, tmp
-        )
-        entry["conditions"].append(cr)
-        if cr.get("errors"):
-            entry["errors"].extend(
-                f"{cond['name']}: {e}" for e in cr["errors"]
-            )
-        if cr.get("outside_test") and not cr["outside_test"]["pass"]:
-            entry["errors"].append(
-                f"{cond['name']}: outside point triggered reaction"
-            )
-
-    any_fail = False
-    for cr in entry["conditions"]:
-        for z in ZONE_ORDER:
-            zt = cr.get("zone_tests", {}).get(z, {})
-            if zt.get("skipped"):
-                continue
-            ct = zt.get("center_test", {})
-            it = zt.get("inside_test", {})
-            if not ct.get("pass") or not it.get("pass"):
-                any_fail = True
-    if any_fail and entry["status"] == "OK":
-        entry["status"] = "FAIL"
-
-    if do_capture and player:
-        cap_dir = output_dir / "captures" / model_name
-        cap_dir.mkdir(parents=True, exist_ok=True)
-        for cond in CONDITIONS:
-            png = cap_dir / f"{cond['name']}.png"
-            ok = capture_overlay(
-                player, model_path, session_path, cond, png
-            )
-            for cr in entry["conditions"]:
-                if cr["name"] == cond["name"]:
-                    cr["capture"] = str(png.name) if ok else None
-                    cr["capture_ok"] = ok
-
-    shutil.rmtree(tmp, ignore_errors=True)
+        case_dir = directory / cond["name"]
+        case_dir.mkdir()
+        case = {"name": cond["name"], "params": request_for(cond), "errors": [],
+                "zone_tests": {}, "outside_test": None, "capture": None,
+                "pass": False, "evidence": str(case_dir / "regions.result.json")}
+        entry["conditions"].append(case)
+        result = run_probe(probe, model, session, request_for(cond), case_dir / "regions.json")
+        if not result["ok"]:
+            case["errors"].append("region/initial state probe failed")
+            # Only preserve the known diagnosed geometry error, not all process failures.
+            stderr = Path(result["stderr"]["path"]).read_text(errors="replace")
+            if len(entry["conditions"]) == 1 and "session=6 playback=3 geometry=5" in stderr:
+                entry.update(status="CPU_REJECTED", errors=[stderr.strip()])
+                return entry
+            continue
+        data = result["data"]
+        actual = data["touch_regions"]
+        expected = projected_regions(author, reactions, mirror, author_scale, cond)
+        case.update(projected_regions=actual, expected_regions=expected)
+        if data["presentation_mirror"] != mirror or actual != expected:
+            case["errors"].append("projection mismatch against independent asset transform")
+        before = data["samples"][-1]
+        if before["phase"] != 0 or before["reaction"]:
+            case["errors"].append("initial state not Idle; hit checks unavailable")
+        if expected_zone(OUTSIDE_POINT, expected) is not None:
+            case["errors"].append("global outside point is inside an ellipse")
+        if not case["errors"]:
+            for zone in ZONE_ORDER:
+                r = expected[zone]
+                if r is None:
+                    case["zone_tests"][zone] = {"skipped": True, "reason": "no eligible author region/reaction"}
+                    continue
+                case["zone_tests"][zone] = {"skipped": False}
+                for tag, point in (("center", r["center"]), ("inside", inside_point(r["center"], r["radius"]))):
+                    case["zone_tests"][zone][tag + "_test"] = touch_check(
+                        probe, model, session, cond, point, expected, reactions, case_dir, zone + "_" + tag)
+            case["outside_test"] = touch_check(probe, model, session, cond, OUTSIDE_POINT,
+                                                expected, reactions, case_dir, "outside")
+        if do_capture:
+            case["capture"] = capture_pair(player, model, session, cond, case_dir, lock_path)
+            if not all(c["ok"] for c in case["capture"].values()):
+                case["errors"].append("capture failed")
+        checks = [check for zone in case["zone_tests"].values() if not zone["skipped"]
+                  for check in (zone["center_test"], zone["inside_test"])]
+        case["pass"] = (not case["errors"] and case["outside_test"] is not None and
+                        case["outside_test"]["pass"] and all(check["pass"] for check in checks))
+    entry["status"] = ("OK" if any_active else "NO_ACTIVE_ZONES") if all(
+        c["pass"] for c in entry["conditions"]) else "FAIL"
+    entry["errors"] = [f"{c['name']}: {e}" for c in entry["conditions"] for e in c["errors"]]
     return entry
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(
-        description="G12 touch diagnostic audit for 195 catalog models"
-    )
-    ap.add_argument("--assets", required=True, help="assets root directory")
-    ap.add_argument("--probe", required=True, help="nekomote_session_probe binary")
-    ap.add_argument("--player", help="nekomote_player binary (for captures)")
-    ap.add_argument("--output", required=True, help="output directory")
-    ap.add_argument("--model", help="audit only this model")
-    ap.add_argument("--capture", action="store_true", help="generate overlay PNGs")
-    ap.add_argument("--report", help="ledger JSON path (default: output/ledger.json)")
-    args = ap.parse_args()
-
-    assets = Path(args.assets).resolve()
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--reference-root", required=True)
+    parser.add_argument("--assets", required=True)
+    parser.add_argument("--probe", required=True)
+    parser.add_argument("--player")
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--model")
+    parser.add_argument("--capture", action="store_true")
+    parser.add_argument("--report")
+    args = parser.parse_args()
+    assets, reference, output = (Path(v).resolve() for v in (args.assets, args.reference_root, args.output))
     probe = Path(args.probe).resolve()
     player = Path(args.player).resolve() if args.player else None
-    output_dir = Path(args.output).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    report_path = Path(args.report) if args.report else output_dir / "ledger.json"
-
-    chars_dir = assets / "characters"
-    if args.model:
-        model_names = [args.model]
-    else:
-        model_names = sorted(
-            d.name
-            for d in chars_dir.iterdir()
-            if d.is_dir() and (d / "session.nks.json").exists()
-        )
-
-    print(f"auditing {len(model_names)} model(s)...", file=sys.stderr)
-
-    entries = []
-    t0 = time.time()
-    for i, name in enumerate(model_names):
-        entry = audit_model(
-            str(probe),
-            str(player) if player else None,
-            assets,
-            name,
-            output_dir,
-            args.capture,
-        )
-        entries.append(entry)
-        elapsed = time.time() - t0
-        print(
-            f"  [{i+1}/{len(model_names)}] {name}: {entry['status']} ({elapsed:.1f}s)",
-            file=sys.stderr,
-        )
-
-    status_counts = {}
-    for e in entries:
-        s = e["status"]
-        status_counts[s] = status_counts.get(s, 0) + 1
-
-    repo = Path(__file__).resolve().parent.parent.parent
-    tool_hash = sha256_file(Path(__file__).resolve())
-    probe_hash = sha256_file(probe)
-    player_hash = sha256_file(player) if player else None
-    catalog_path = Path(
-        "/run/media/chocola/DATA/Project/NekoWebShow/config/model-catalog.json"
-    )
-    catalog_hash = sha256_file(catalog_path)
-
-    ledger = {
-        "task": "G12",
-        "generated_at": datetime.datetime.now(
-            datetime.timezone.utc
-        ).isoformat(),
-        "head_commit": git_head(repo),
-        "dirty": git_dirty(repo),
-        "tool": str(Path(__file__).resolve()),
-        "tool_sha256": tool_hash,
-        "probe_binary": str(probe),
-        "probe_sha256": probe_hash,
-        "player_binary": str(player) if player else None,
-        "player_sha256": player_hash,
-        "catalog_sha256": catalog_hash,
-        "conditions": [c["name"] for c in CONDITIONS],
-        "random_seed": RANDOM_SEED,
-        "reaction_seed": REACTION_SEED,
-        "summary": {
-            "total": len(entries),
-            "status_counts": status_counts,
-        },
-        "models": entries,
-    }
-
-    with open(report_path, "w") as f:
-        json.dump(ledger, f, indent=2, ensure_ascii=False)
-
-    print(f"\nledger: {report_path}", file=sys.stderr)
-    print(f"summary: {json.dumps(ledger['summary'], indent=2)}", file=sys.stderr)
-
-    has_fail = any(e["status"] == "FAIL" for e in entries)
-    return 1 if has_fail else 0
+    report = Path(args.report).resolve() if args.report else output / "ledger.json"
+    try:
+        catalog, catalog_hash = catalog_index.load_catalog(reference)
+        if not catalog:
+            raise ValueError("catalog is empty")
+        names = [args.model] if args.model else sorted(catalog)
+        if any(name not in catalog for name in names):
+            raise ValueError("requested model is not in catalog")
+        if output.exists() or report.exists():
+            raise ValueError("output/report already exists; choose a fresh directory")
+        report.relative_to(output)
+        if not probe.is_file() or (args.capture and (player is None or not player.is_file())):
+            raise ValueError("probe/player binary missing")
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    output.mkdir(parents=True)
+    report.parent.mkdir(parents=True, exist_ok=True)
+    index = catalog_index.build_index(reference)
+    lock_path = ROOT / "build/gpu-validation.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    ledger = {"task": "G12", "format_version": 2,
+              "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              "head_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+              "dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
+              "argv": sys.argv, "reference_root": str(reference), "assets_root": str(assets),
+              "catalog": file_record(reference / "config/model-catalog.json"), "catalog_sha256": catalog_hash,
+              "catalog_total": len(catalog), "scope": "single_model" if args.model else "full_catalog",
+              "tools": [file_record(Path(__file__)), file_record(Path(catalog_index.__file__))],
+              "probe": file_record(probe), "player": file_record(player) if player else None,
+              "python": {"version": sys.version, "binary": file_record(sys.executable)},
+              "capture_requested": args.capture, "gpu_lock": str(lock_path),
+              "conditions": CONDITIONS, "models": [], "complete": False,
+              "visual_acceptance": "NOT_REVIEWED", "audio_scope": "muted, audio assets not audited"}
+    for name in names:
+        candidates = catalog_index.resolve_candidates(index, name)
+        files = []
+        for candidate in candidates:
+            files.extend([candidate] + sorted(candidate.parent.glob("*.png")) +
+                         sorted(candidate.parent.glob("*.resx.json")))
+        config = reference / "config" / catalog[name]["config"]
+        source_errors = []
+        if len(candidates) != 1:
+            source_errors.append("source model is missing or ambiguous")
+        if config.is_file():
+            files.append(config)
+        else:
+            source_errors.append("source configuration missing")
+        for path in (reference / "data" / f"{name}.zip", reference / "data" / f"{name}.psb"):
+            if path.is_file():
+                files.append(path)
+        source_files = []
+        for path in sorted(set(files)):
+            record = file_record(path)
+            record["role"] = "source" if path in candidates else "source_resource"
+            source_files.append(record)
+        entry = audit_model(str(probe), str(player) if player else None, assets, name,
+                            output, args.capture, source_files, lock_path)
+        entry["source_resolution"] = "UNIQUE" if not source_errors else "MISSING_OR_AMBIGUOUS"
+        entry["source_errors"] = source_errors
+        if source_errors and entry["status"] in ("OK", "NO_ACTIVE_ZONES"):
+            entry["status"] = "SOURCE_UNRESOLVED"
+        ledger["models"].append(entry)
+        counts = {}
+        for row in ledger["models"]:
+            counts[row["status"]] = counts.get(row["status"], 0) + 1
+        ledger["summary"] = {"total": len(ledger["models"]), "status_counts": counts}
+        write_json(report, ledger)
+        print(f"{len(ledger['models'])}/{len(names)} {name}: {entry['status']}", file=sys.stderr)
+    frozen = ledger["tools"] + [ledger["probe"], ledger["catalog"], ledger["python"]["binary"]]
+    if ledger["player"]:
+        frozen.append(ledger["player"])
+    for row in ledger["models"]:
+        frozen.extend(row["assets"] + row["sources"])
+    ledger["freeze_errors"] = [record["path"] for record in frozen
+                               if not Path(record["path"]).is_file() or
+                               sha256_file(record["path"]) != record["sha256"]]
+    ledger["complete"] = len(ledger["models"]) == len(names)
+    ledger["all_requested_checks_passed"] = (not ledger["freeze_errors"] and
+        all(row["status"] in ("OK", "NO_ACTIVE_ZONES") for row in ledger["models"]))
+    write_json(report, ledger)
+    return 0 if ledger["all_requested_checks_passed"] else 1
 
 
 if __name__ == "__main__":

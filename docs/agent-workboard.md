@@ -1,67 +1,64 @@
 # Agent 协作任务
 
-更新：2026-10-08。现状见 [整合摘要](review-agents-current.md)，本轮实现与复核见
-[C6 输入交接](c6-input-review-handoff.md)。G11/V8 及用户授权的 GLM 注视修复已复核；
-不再重复领用。外部任务由用户启动，每个可验收阶段验证后提交，并记录实际 Agent/Model/Context。
+更新：2026-10-08。当前结论见 [整合摘要](review-agents-current.md)。
+G12/V9工具已由Codex复核修补；历史195行不等于195视觉验收。
+用户启动外部Agent；任务阶段验证后提交实际Agent/Model/Context，不修改外部素材/资产来绕过失败。
 
-## 下一批安排
+## 下一批顺序与所有权
 
-推荐 **GLM G12 → Gemini V9 → Codex 整合**。GLM 可以承担契约明确的调试绘制和工具，
-Gemini 负责独立画面核对。本轮 Codex 已将基础调试绘制与坐标修复一并完成，下一批不重写。
-两个外部任务的文件所有权独立；GPU 采样共享 `flock build/gpu-validation.lock`，不与性能并发。
+**GLM G13 → Gemini V10 → Codex复核**。Codex可独立并行推进C7 Qt Quick/Plasma探索。
+GLM适合执行冻结工具、目录与来源检查，Gemini用图像工具记录实际观察；
+复杂判定/验收工具已反复出错，这轮由Codex修补，不再派两Agent重写。
+GPU使用共享 `build/gpu-validation.lock` 串行；工具内部已有锁时不再外套同一锁。
 
 | 执行者 | 任务 | 修改边界 |
 | --- | --- | --- |
-| CodeArts / GLM-5.2 | G12：195 项触摸诊断输入与覆盖账本（已完成，c13b394） | 离线批量工具、合成 Python 契约测试、`docs/g12-touch-handoff.md`；不改核心/反应数据 |
-| Antigravity / Gemini 3.8 Flash | V9：逐型号触摸区域与立绘核对（已完成） | 新截图、裁图、候选数据清单、`docs/v9-touch-report.md`；不改核心公式或外部素材 |
-| Codex | C5 精度/拒绝语义，C6 输入与应用，C7 宿主（待开展） | 数据候选最终复核、求值与应用/生命周期整合 |
+| CodeArts / GLM-5.2 | G13：修补后全目录触摸与截图覆盖运行 | 新build证据、`docs/g13-touch-handoff.md`；不改工具、核心、区域数据或当前摘要 |
+| Antigravity / Gemini 3.8 Flash | V10：基于真实截图/点的逐型号观察 | 新观察JSON、参考区域/命中证据、`docs/v10-touch-report.md`；不改工具、核心、资产或当前摘要 |
+| Codex | C5/C6语义及应用、C7图形宿主 | 复杂工具维护、候选最终复核、Qt线程/context/资源及Plasma整合 |
 
-此分工依据当前实际工具条件。无法读取图像时只能交字节/来源证据；视觉结论需要可复现输入。
-反复错误或指导成本超过修复成本时由 Codex 接管，额度优势不降低门槛。
+领用声明任务/base commit/文件，保护现有未提交工作。测试通过、运行成功、目视核对和独立验收分别记录。
 
-## G12：触摸诊断目录与安全回放
+## G13：只运行冻结的G12工具
 
-基线为本轮 C6 提交。先读输入交接及工具 `--help`，使用新输出目录；保持原 G11/V8/C6 证据不动。
+先读 [G12复核](g12-touch-handoff.md) 与工具help。必须使用本轮复核提交，保持历史输出。
 
-1. 保留全部 195 条 catalog 记录，核对本地 schema 6 模型、session、图集及工具 SHA。
-   缺资产、正式不支持、无区域/无反应、未测分别记录，不从分母删除。既有 15 项 CPU 拒绝仍拒绝。
-2. 生成确定 seed、步数、输出尺寸、origin、scale 的输入。第一组默认姿态，第二组固定待机步；
-   补镜像/非镜像、水平移动与 .5/1 缩放。先完成 Fraise 法国女仆 B，再扩目录。
-3. `nekomote_player --show-touch-regions` 同时生成原图/覆盖图；
-   `nekomote_session_probe` 输出实际 `touch_regions`，均为**中心原点输出像素、Y 向下**。
-   PNG 标注点转输入时减去半个画幅，不做镜像。禁止 OS 键鼠注入或按窗口标题找窗口。
-4. 保存作者区域、实际投影、区域优先级、是否有反应及所选反应。命中样本用独立初态，记录
-   区域中心、边界内/外点和结果，不能把 Busy/暂停/输入不可用误记为几何 miss。
-   输出未显示的 zone 不伪造为可触发。工具先用合成负例验证缺失、失败、覆盖拒绝及完整分母。
-5. 账本冻结 actual command、commit/dirty 状态、源文件/工具/binary hash、时间与逐项结果。
-   GPU 串行；只在来源变化或明确风险时重跑。**来源一致、命中检查和目视吻合分别统计。**
+```sh
+python3 tools/touch_audit/run_touch_audit.py --reference-root ../NekoWebShow \
+  --assets assets --probe build/release/bin/nekomote_session_probe \
+  --player build/release/bin/nekomote_player --capture --output build/evidence/<全新G13目录>
+```
 
-交付：195 行输入/覆盖账本、先行 Fraise B 完整证据包、批量工具与局部测试、明确未测/拒绝清单。
-不要改 assets、外部配置或反应规则来让账本通过，不必再次进行图集或 CPU 全目录长跑。
+保留全部195条目录及失败来源，执行完整四条件。15项已知CPU失败可能使退出非零；
+明确CPU拒绝与进程崩溃、timeout、PNG缺失、hash变更，不能看最终退出码直接宣布工具成功。
+逐行确认请求/响应、返回码、probe/raw sample、source/model/session/texture/tool/binary SHA可读取并匹配。
+每条件同时有原图和区域覆盖图；pant等画幅外区域明确不可目视，不以CPU命中推断可见。
+先Fraise B小包确认命令环境，再目录长跑，不重复图集或旧CPU时间线全审。
+不重新实现判定、不根据文件名/部位名猜反应，不把缺证据降级为PASS。
+交付完整目录包、状态/缺失清单与机器摘要，未测项计入分母。
 
-## V9：逐模型触摸区域视觉核对
+## V10：真实观察与候选
 
-可现在开展，不必等全部引擎完成。先确认使用已修坐标链；首轮不自动发布数据修正。
-使用 G12 包，必要时独立补捕获。`--show-touch-regions` 是实际判定区的半透明填充和边界：
-胸红、眼黄、脸绿、头青、下身紫。只显示配置了反应的静态作者椭圆，既不是网格轮廓，
-也不保证 Busy/暂停/UI 拦截时立即触发。部位有重叠时按胸/眼/脸/头/下身优先级选取。
+先用G13冻结包；首批Fraise B胸区、Cinnamon maid-b、Coconut santa-b。
+读取原图、覆盖图及至少一个动作姿态，使用source字段或WebGL公共getTouchRegions/pointInRegion
+建立参考；截图存在不等于目视检查，CPU成功不等于视觉MATCH。
+输入记录schema见 `tools/touch_audit/generate_v9_ledger.py` docstring：每型号observer/notes/
+conditions/checked_zones及clean/overlay/probe/reference/source/model_asset/session_asset带hash证据。
+现有工具用 `--observations` 接收JSON，`--output` 必须新目录，只有有效记录才计MATCH/MISMATCH。
 
-- 先复核用户报告的 fraise-france-maid-b 胸区，包含默认、固定待机及水平移动/缩放；
-  检查“空处可触发、角色对应边缘不触发”，记录实际坐标与触发结果。
-- 每个可渲染型号检查所有已启用区域，交原图/覆盖图/局部裁图，记录中心偏差、半径或范围偏差
-  （输出像素及换算作者单位）、误触/漏触点。195 行保留 BLOCKED/无区域/未测等状态。
-- 区分 **坐标回归、静态来源标记/估算、动作变形、优先级重叠**。先核对 WebGL 公共
-  getTouchRegions/pointInRegion 和源 touchMarkers；不按单帧剪影扩大或缩小全部区域。
-- 数据候选只在项目内新清单列出型号/zone、原值、建议值、依据、适用姿态及 hash；
-  不修改外部素材，不批量覆盖当前资产。全局翻转/scale/origin 错误交 Codex，不能用偏移数据补偿。
-- 标准默认及至少一个动作姿态都成立后才建议个别数据调优；若需要跟随变形，作为新核心需求交接。
+区分坐标回归、来源估算、动作变形、优先级重叠；记录近旁空白误触/边缘漏触的实际点和反应，
+独立初态避免Busy。覆盖层为静态作者椭圆，胸红/眼黄/脸绿/头青/下身紫；中心输出像素Y向下，
+PNG点减半画幅，不镜像。暂停/UI拦截和画幅外不可触及分别说明。
+未能确认某型号/zone/姿态就保留UNREVIEWED/PENDING，不用代表家族外推整个目录。
 
-交付：docs/v9-touch-report.md、195 行视觉状态、明确候选数据与反例。Codex 复核后统一迁移
-导入/配置及测试；Gemini 不以自己生成的覆盖图单独宣布实现已验收。
+两旧候选没有验收：Coconut建议还包括48作者单位Y变化。新候选须匹配当前作者旧值与来源hash，
+默认及另一动作姿态的实际误/漏触点支持建议，工具最多READY_FOR_REVIEW；不改assets或外部数据。
+Codex复核后再统一导入/配置迁移。交付可读取的逐项观察与明确状态，不发布无证据量化断言。
 
-## Codex 接续
+## Codex接续与Plasma时机
 
-C5：15 项 CPU FAIL、精确 0x7fc/嵌套遮罩、两个缩放外力标量反例及非零 X 快照。
-C6：触摸数据候选、可恢复错误界面、UI 输入隔离/稳态、角色渐变共同时间、背景 reset/重入、
-声音失败与切换回收。C7：最小 Qt Quick GPU 宿主，再 Plasma。
-全目录视觉/交互、8–24 小时、多屏与安装包仍是最终交付条件。
+C7现在可用已验证模型做独立Qt Quick FBO试验，不要求全部195求值先通过；
+先GPU合成、图形线程/context、resize/DPI、暂停与场景图释放重建，再实际Plasma包。
+不改变全局RHI或桌面配置，不常态读回图像，不复制声音服务。
+C5仍有15项CPU FAIL、精确0x7fc/嵌套、两项外力标量精度；C6仍有可恢复错误/UI隔离/稳态、
+角色/背景渐变及reset、声音失败/切换回收。全目录视觉/交互、8–24小时、多屏与安装为最终交付条件。

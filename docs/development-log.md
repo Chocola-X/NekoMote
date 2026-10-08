@@ -791,3 +791,12 @@ dev/release/无窗口ASan构建通过；GPU串行Debug145/145、无显示ASan/UB
 4. **候选微调数据独立提供**：生成 `build/evidence/v9-touch-review/candidate_touch_adjustments.json`，提出 2 项 3/4 侧身补偿建议供 Codex 审查，未修改项目资产或外部源数据。
 5. **交付产物与测试**：交付完整报告 [docs/v9-touch-report.md](v9-touch-report.md)、全量视觉账本 `build/evidence/v9-touch-review/v9_touch_ledger.json`、20 个代表型号实拍与裁图 `build/evidence/v9-touch-review/{captures,crops}/`；新增 12 项契约测试 `tests/reference_capture/test_v9_touch_audit.py`，全套 125 项 Python 测试通过。
 
+
+## 2026-10-08：G12/V9独立复核与证据判定修补
+
+Codex / GPT-6（精确变体未暴露），基线7c055dd。原G12失败假MISS、label猜部位、漏目录、
+119/120步边界、来源hash与覆盖缺口已修。新工具Fraise B四条件44点/8PNG通过。
+原180行720条件7,920点的保存投影/反应可复算一致，但丢失原始证据且工具hash不符，保留历史范围。
+V9只有20型号60PNG+40裁图；硬编码180视觉评级撤回。严格目录为180 UNREVIEWED/15 BLOCKED_INPUT，
+缺hash/多姿态实际点的两候选不应用，未修改资产/源。合成G12 35、V9 27，全Python158通过。
+当前文档清理过量声明，交接G13冻结工具全目录运行、V10真实观察。C7独立Qt Quick进入构建，未安装桌面。

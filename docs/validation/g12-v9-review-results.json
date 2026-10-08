@@ -1,0 +1,81 @@
+{
+  "generated_at": "2026-10-08T05:39:17.952966+00:00",
+  "base_commit": "7c055dd",
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "context": "G12/V9 independent review",
+  "core_modified": false,
+  "assets_modified": false,
+  "external_source_modified": false,
+  "old_g12": {
+    "total": 195,
+    "claimed_ok": 180,
+    "claimed_cpu_rejected": 15,
+    "runtime_reaccepted": false,
+    "saved_conditions": 720,
+    "saved_touch_points": 7920,
+    "incorrect_label_inferred_zone_count": 764,
+    "raw_requests_commands_responses_missing": true,
+    "tool_hash_differs_from_submitted_source": true
+  },
+  "old_v9": {
+    "full_catalog_visual_accepted": false,
+    "captured_models": 20,
+    "full_pngs": 60,
+    "crops": 40,
+    "other_renderable_models_without_images": 160,
+    "automatic_visual_match_removed": true,
+    "candidate_count": 2,
+    "candidates_applied": 0,
+    "reason": "Missing source hashes, multi-pose measured points; documented current values conflict; Coconut proposed Y changes 48 author units"
+  },
+  "g12_fixed_run": {
+    "ledger": "build/evidence/g12-v9-review-2026-10-08/fraise-verified/ledger.json",
+    "scope": [
+      "fraise-france-maid-b"
+    ],
+    "conditions": 4,
+    "center_inside_touch_points": 40,
+    "outside_touch_points": 4,
+    "plain_overlay_pngs": 8,
+    "complete": true,
+    "passed": true,
+    "freeze_errors": [],
+    "visual_acceptance": false,
+    "boundary_or_nearby_empty_points_not_certified": true
+  },
+  "v9_strict": {
+    "ledger": "build/evidence/g12-v9-review-2026-10-08/v9-reclassified-final/v9_touch_ledger.json",
+    "counts": {
+      "UNREVIEWED": 180,
+      "BLOCKED_INPUT": 15,
+      "MATCH": 0
+    },
+    "expected_exit_code": 1,
+    "no_explicit_observation_records_available": true
+  },
+  "python_tests": {
+    "passed": 158,
+    "total": 158,
+    "included_g12": 35,
+    "included_v9": 27
+  },
+  "dev_asan_tests": "No changed core; reuse previous 145 dev / 143 headless ASan evidence, not rerun this stage",
+  "next": "GLM G13 frozen-tool complete coverage -> Gemini V10 explicit observations; Codex Qt Quick separately",
+  "artifact_sha256": {
+    "build/evidence/g12-v9-review-2026-10-08/fraise-verified/ledger.json": "7fab9bdeb544f5a121c9427f50997dea93b5ac8ada0af409b68703574849073d",
+    "build/evidence/g12-v9-review-2026-10-08/v9-reclassified-final/v9_touch_ledger.json": "efcfd416646e0e2f6c6d113152a12ff71ae5f78133b5b65db7d5dae8be0a7086",
+    "build/evidence/g12-v9-review-2026-10-08/python-tests-final.log": "2cb007865897790d8468b625820981b9891d992144c9ceae81debc372fd1afb9",
+    "build/evidence/g12-v9-review-2026-10-08/fraise-audit.log": "976f79decf4dac4d3ba6001e1c0e565339d2be30ce6e1a7ecff0901c8b151959",
+    "build/evidence/g12-touch-audit/ledger.json": "e813fbb41a9ff5f4c80ca0c6a60331b2917aacbca31814f05772cf027813c339",
+    "build/evidence/v9-touch-review/v9_touch_ledger.json": "3a438fc166e205ab3f3d16fd9f77fef788fde09106251ce23620dc79748867e6",
+    "build/evidence/v9-touch-review/candidate_touch_adjustments.json": "b42ccdccbf0ef633edd5d28371abe7a40a9c07942c5011dd1e1bf08a68f019cb"
+  },
+  "tool_sha256": {
+    "tools/touch_audit/run_touch_audit.py": "b2d6fc5335030154e9acd939a49ae6867b1422ef67bd5dd7fc1936ce21d6f173",
+    "tools/touch_audit/generate_v9_ledger.py": "5140460c0cf504540e92b672542a53cf23077673c465f1c618fb945a8c7580f1",
+    "tools/touch_audit/v9_visual_capture.py": "653c8ca2a3a62b749a88a91a6ab989bc068775ebf7fe63f81c5e10076a25e0fe",
+    "tests/reference_capture/test_touch_audit.py": "b62284123035ec42400c674187f5472ee150660334e866a28576bf690ecc3121",
+    "tests/reference_capture/test_v9_touch_audit.py": "2b225be48ce72999a132d76322d541ff9a41a84475168cbcc53aa10678326357"
+  }
+}

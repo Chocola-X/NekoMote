@@ -1,150 +1,218 @@
 #!/usr/bin/env python3
-"""Generate V9 comprehensive touch audit ledger and candidate adjustments."""
+"""Build a touch visual ledger from explicit observations, never from CPU success.
 
+Observation JSON: {observations: [{model, status: MATCH|MISMATCH, observer,
+notes, conditions: [name], checked_zones: [zone], evidence: [{role, path, sha256}]}],
+candidates: [{model, zone, current_author_region, suggested_author_region,
+rationale, conditions: [default_idle, another_pose], measured_points: [...],
+evidence: [...]}]}. Evidence paths are relative to this input JSON. Required roles
+are model_asset, session_asset, source, clean, overlay, probe and reference.
+Reference may be public WebGL region/point output or a source-field comparison.
+Statuses describe the listed conditions/zones only; they do not certify all poses.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
 import json
+import math
 from pathlib import Path
 
-# Load G12 ledger
-g12_path = Path("build/evidence/g12-touch-audit/ledger.json")
-with open(g12_path) as f:
-    g12 = json.load(f)
+ZONES = {"bust", "eye", "face", "head", "pant"}
+ROLES = {"model_asset", "session_asset", "source", "clean", "overlay", "probe", "reference"}
 
-# Load catalog & presentation from NekoWebShow
-root = Path("../NekoWebShow")
-catalog = json.loads((root / "config/model-catalog.json").read_text())
-presentation = json.loads((root / "config/model-presentation.json").read_text())
 
-v9_models = []
-candidate_adjustments = []
+def file_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
-for m in g12["models"]:
-    name = m["model"]
-    status = m["status"]
-    char = name.split("-")[0]
-    costume = catalog.get(name, {}).get("costume", name)
-    
-    # Check authored vs estimated markers
-    model_dir = root / "model_conversion" / char / name
-    if not model_dir.exists():
-        model_dir = root / "model_conversion" / char / costume
-    src = model_dir / f"{name}.json"
-    if not src.exists():
-        src = model_dir / f"{name}.pure.json"
-    
-    meta = json.loads(src.read_text())["metadata"]
-    markers = dict(meta.get("charaProfile", {}).get("pixelMarker", {}))
-    pres = presentation.get(name, {})
-    markers.update(pres.get("touchMarkers", {}))
-    
-    is_authored = all(isinstance(markers.get("bust" + s), (int, float)) for s in ["AX", "AY", "BX", "BY"])
-    marker_source = "authored" if is_authored else "estimated"
-    
-    if status == "CPU_REJECTED":
-        v9_models.append({
-            "model": name,
-            "character": char,
-            "status": "CPU_REJECTED",
-            "mirror": None,
-            "marker_source": marker_source,
-            "active_zones": [],
-            "visual_alignment": "BLOCKED_CPU_REJECTED",
-            "priority_verified": False,
-            "coordinate_chain_verified": False,
-            "notes": "Blocked by C5 geometry/playback failure in session probe; inherited from frozen ledger."
-        })
-        continue
-    
-    mirror = m.get("mirror", False)
-    author_regs = m.get("author_regions", {})
-    active_zones = [z for z in ["bust", "eye", "face", "head", "pant"] if author_regs.get(z) is not None]
-    
-    # Visual alignment notes
-    notes = []
-    visual_alignment = "MATCH"
-    
-    if mirror:
-        notes.append("Mirrored model; verified with C6 coordinate fix (origin subtracted before mirror inversion).")
-    
-    if is_authored:
-        notes.append("Authored markers from pixelMarker/touchMarkers; custom bounding box matches pose.")
-    else:
-        notes.append("Estimated markers using WebGL fallback formula (eye, mouth, bust, cutoffY).")
-    
-    # Specific observations on notable models
-    if name == "fraise-france-maid-b":
-        notes.append("User reported bust zone verified: empty space does NOT trigger, chest collar/bow triggers b01..b06.")
-    elif name in ["cinnamon-maid-b", "coconut-santa-b"]:
-        visual_alignment = "MATCH_WITH_3Q_PERSPECTIVE_LIMITATION"
-        notes.append("3/4 perspective pose: symmetric estimated ellipse (X=0) covers cleavage/center chest; extreme lateral curve outside ellipse, matching WebGL reference behavior.")
-        
-        # Propose candidate adjustment for potential future tuning
-        if name == "cinnamon-maid-b":
-            candidate_adjustments.append({
-                "model": name,
-                "zone": "bust",
-                "current_author_region": author_regs["bust"],
-                "suggested_author_region": {
-                    "center": [35.0, -24.0],
-                    "radius": [165.0, 110.0]
-                },
-                "rationale": "Compensate 3/4 perspective shift: character right breast extends to X=+200 in author space.",
-                "source_hash": m.get("model_path_sha256", ""),
-                "applicable_pose": "default rest pose",
-                "status": "CANDIDATE_FOR_CODEX_REVIEW"
-            })
-        elif name == "coconut-santa-b":
-            candidate_adjustments.append({
-                "model": name,
-                "zone": "bust",
-                "current_author_region": author_regs["bust"],
-                "suggested_author_region": {
-                    "center": [-25.0, -10.0],
-                    "radius": [180.0, 115.0]
-                },
-                "rationale": "Compensate 3/4 perspective shift: chest cleavage and volume shifted towards negative X in author space.",
-                "source_hash": m.get("model_path_sha256", ""),
-                "applicable_pose": "default rest pose",
-                "status": "CANDIDATE_FOR_CODEX_REVIEW"
-            })
-    
-    v9_models.append({
-        "model": name,
-        "character": char,
-        "status": "OK",
-        "mirror": mirror,
-        "marker_source": marker_source,
-        "active_zones": active_zones,
-        "visual_alignment": visual_alignment,
-        "priority_verified": True,
-        "coordinate_chain_verified": True,
-        "notes": "; ".join(notes)
-    })
 
-v9_ledger = {
-    "version": "1.0",
-    "generated_at": "2026-10-08T03:50:00Z",
-    "total_models": len(v9_models),
-    "summary": {
-        "total": len(v9_models),
-        "ok": sum(1 for m in v9_models if m["status"] == "OK"),
-        "cpu_rejected": sum(1 for m in v9_models if m["status"] == "CPU_REJECTED"),
-        "authored_markers": sum(1 for m in v9_models if m["marker_source"] == "authored"),
-        "estimated_markers": sum(1 for m in v9_models if m["marker_source"] == "estimated"),
-        "mirrored_models": sum(1 for m in v9_models if m["mirror"] is True),
-        "visual_match": sum(1 for m in v9_models if m["visual_alignment"] == "MATCH"),
-        "visual_match_3q_limitation": sum(1 for m in v9_models if m["visual_alignment"] == "MATCH_WITH_3Q_PERSPECTIVE_LIMITATION"),
-        "blocked": sum(1 for m in v9_models if m["visual_alignment"] == "BLOCKED_CPU_REJECTED")
-    },
-    "models": v9_models
-}
+def check_evidence(items, base: Path) -> tuple[list[dict], list[str]]:
+    checked, errors = [], []
+    if not isinstance(items, list):
+        return [], ["evidence must be a list"]
+    for item in items:
+        if not isinstance(item, dict):
+            errors.append("invalid evidence entry")
+            continue
+        role, value = item.get("role"), item.get("path")
+        expected = item.get("sha256")
+        if not isinstance(value, str) or not value or not isinstance(role, str):
+            errors.append("evidence role/path missing")
+            continue
+        path = (base / value).resolve()
+        if not path.is_file():
+            errors.append(f"missing evidence: {role}: {value}")
+            continue
+        actual = file_hash(path)
+        if expected != actual:
+            errors.append(f"hash mismatch: {role}: {value}")
+            continue
+        checked.append({"role": role, "path": str(path), "sha256": actual})
+    missing = ROLES - {item["role"] for item in checked}
+    errors.extend(f"missing evidence role: {role}" for role in sorted(missing))
+    return checked, errors
 
-out_dir = Path("build/evidence/v9-touch-review")
-with open(out_dir / "v9_touch_ledger.json", "w", encoding="utf-8") as f:
-    json.dump(v9_ledger, f, indent=2, ensure_ascii=False)
 
-with open(out_dir / "candidate_touch_adjustments.json", "w", encoding="utf-8") as f:
-    json.dump({"candidates": candidate_adjustments}, f, indent=2, ensure_ascii=False)
+def conditions_valid(value) -> bool:
+    return isinstance(value, list) and bool(value) and all(
+        isinstance(item, str) and bool(item) for item in value
+    ) and len(set(value)) == len(value)
 
-print("Generated v9_touch_ledger.json and candidate_touch_adjustments.json successfully:")
-print(json.dumps(v9_ledger["summary"], indent=2))
-print(f"Total candidate adjustments proposed: {len(candidate_adjustments)}")
+
+def check_frozen_inputs(model: dict, checked: list[dict]) -> list[str]:
+    """Bind per-model evidence to the G12 frozen source and imported assets."""
+    errors = []
+    for role, collection, basename in (("model_asset", "assets", "model.nkm.json"),
+                                       ("session_asset", "assets", "session.nks.json"),
+                                       ("source", "sources", None)):
+        records = model.get(collection, [])
+        expected = [item for item in records if isinstance(item, dict) and (
+            item.get("role") == role or
+            (basename is not None and Path(item.get("path", "")).name == basename)
+        )]
+        hashes = {item.get("sha256") for item in expected if item.get("sha256")}
+        supplied = [item for item in checked if item["role"] == role]
+        if not hashes:
+            errors.append(f"frozen G12 input hash unavailable: {role}")
+        elif len(supplied) != 1 or supplied[0]["sha256"] not in hashes:
+            errors.append(f"evidence differs from frozen G12 model input: {role}")
+    return errors
+
+
+def region_valid(value) -> bool:
+    if not isinstance(value, dict):
+        return False
+    for key in ("center", "radius"):
+        pair = value.get(key)
+        if not isinstance(pair, list) or len(pair) != 2 or not all(
+            isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+            for x in pair
+        ):
+            return False
+    return all(x > 0 for x in value["radius"])
+
+
+def build_ledger(g12: dict, records: dict, base: Path) -> dict:
+    if not isinstance(g12, dict) or not isinstance(records, dict):
+        raise ValueError("G12 and observation inputs must be objects")
+    models = g12.get("models")
+    if not isinstance(models, list) or not models or any(not isinstance(m, dict) for m in models):
+        raise ValueError("G12 model coverage is empty")
+    names = [m.get("model") for m in models]
+    if any(not isinstance(n, str) or not n for n in names) or len(set(names)) != len(names):
+        raise ValueError("G12 model names missing/duplicated")
+    observations = records.get("observations", [])
+    candidates = records.get("candidates", [])
+    if not isinstance(observations, list) or not isinstance(candidates, list):
+        raise ValueError("observations/candidates must be lists")
+    by_name = {}
+    for item in observations:
+        if not isinstance(item, dict) or item.get("model") not in names:
+            raise ValueError("observation model not in coverage")
+        if item["model"] in by_name:
+            raise ValueError("duplicate observation model")
+        by_name[item["model"]] = item
+    result, by_model = [], {m["model"]: m for m in models}
+    for model in models:
+        name = model["model"]
+        row = {"model": name, "input_status": model.get("status", "UNKNOWN"),
+               "visual_alignment": "UNREVIEWED", "evidence": [], "errors": [],
+               "conditions": [], "checked_zones": [], "observer": None}
+        if model.get("status") != "OK":
+            row["visual_alignment"] = "BLOCKED_INPUT"
+        elif name in by_name:
+            record = by_name[name]
+            checked, errors = check_evidence(record.get("evidence"), base)
+            errors.extend(check_frozen_inputs(model, checked))
+            zones = record.get("checked_zones")
+            if record.get("status") not in {"MATCH", "MISMATCH"}:
+                errors.append("invalid observation status")
+            if not isinstance(record.get("observer"), str) or not record["observer"].strip():
+                errors.append("observer missing")
+            if not isinstance(record.get("notes"), str) or not record["notes"].strip():
+                errors.append("observations/notes missing")
+            if not conditions_valid(record.get("conditions")):
+                errors.append("observation conditions missing/invalid")
+            if not isinstance(zones, list) or not zones or any(z not in ZONES for z in zones):
+                errors.append("checked zones missing/invalid")
+            row.update(evidence=checked, errors=errors)
+            if not errors:
+                row.update(visual_alignment=record["status"], observer=record["observer"],
+                           notes=record["notes"], conditions=record["conditions"], checked_zones=zones)
+            else:
+                row["visual_alignment"] = "PENDING_EVIDENCE"
+        result.append(row)
+    reviewed_candidates = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            raise ValueError("candidate must be an object")
+        checked, errors = check_evidence(candidate.get("evidence"), base)
+        model = by_model.get(candidate.get("model"))
+        zone = candidate.get("zone")
+        if model is None or model.get("status") != "OK" or zone not in ZONES:
+            errors.append("candidate model/zone unavailable")
+        elif candidate.get("current_author_region") != model.get("author_regions", {}).get(zone):
+            errors.append("candidate current value differs from frozen G12")
+        if model is not None:
+            errors.extend(check_frozen_inputs(model, checked))
+        if not region_valid(candidate.get("current_author_region")) or not region_valid(
+            candidate.get("suggested_author_region")
+        ):
+            errors.append("candidate region invalid")
+        poses = candidate.get("conditions")
+        if not conditions_valid(poses) or "default_idle" not in poses or len(poses) < 2:
+            errors.append("candidate requires default and another observed pose")
+        points = candidate.get("measured_points")
+        if not isinstance(points, list) or not points:
+            errors.append("candidate measured points missing")
+        else:
+            for point in points:
+                if not isinstance(point, dict) or point.get("condition") not in (poses or []) or not all(
+                    isinstance(point.get(key), list) and len(point[key]) == 2 and all(
+                        isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+                        for x in point[key]
+                    ) for key in ("author_point", "output_point")
+                ) or point.get("expected") not in {"hit", "miss"}:
+                    errors.append("candidate measured point invalid")
+            if conditions_valid(poses) and not set(poses).issubset(
+                {p.get("condition") for p in points if isinstance(p, dict)}
+            ):
+                errors.append("candidate points do not cover declared poses")
+        if not isinstance(candidate.get("rationale"), str) or not candidate["rationale"].strip():
+            errors.append("candidate rationale missing")
+        reviewed_candidates.append({**candidate, "evidence": checked, "errors": errors,
+                                    "status": "PENDING_EVIDENCE" if errors else "READY_FOR_REVIEW"})
+    statuses = {status: sum(r["visual_alignment"] == status for r in result)
+                for status in ("MATCH", "MISMATCH", "UNREVIEWED", "PENDING_EVIDENCE", "BLOCKED_INPUT")}
+    return {"task": "V9", "version": 2, "total_models": len(result), "summary": statuses,
+            "scope": "Visual status covers only explicit observed conditions and zones; candidates are never applied.",
+            "models": result, "candidates": reviewed_candidates}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--g12-ledger", type=Path, required=True)
+    parser.add_argument("--observations", type=Path)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    if args.output.exists():
+        parser.error("output already exists; use a new evidence directory")
+    try:
+        records = json.loads(args.observations.read_text()) if args.observations else {}
+        ledger = build_ledger(json.loads(args.g12_ledger.read_text()), records,
+                              args.observations.resolve().parent if args.observations else Path.cwd())
+        ledger["inputs"] = {"g12_ledger": str(args.g12_ledger.resolve()),
+                            "g12_sha256": file_hash(args.g12_ledger),
+                            "tool_sha256": file_hash(Path(__file__)),
+                            "observations": str(args.observations.resolve()) if args.observations else None,
+                            "observations_sha256": file_hash(args.observations) if args.observations else None}
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        parser.error(str(error))
+    args.output.mkdir(parents=True)
+    (args.output / "v9_touch_ledger.json").write_text(json.dumps(ledger, indent=2) + "\n")
+    print(json.dumps(ledger["summary"]))
+    return 1 if any(r["visual_alignment"] != "MATCH" for r in ledger["models"]) else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

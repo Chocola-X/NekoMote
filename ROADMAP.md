@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-08最新整合。P0/P1/P2完成；G11/V8复核重采样完成，图集194 MATCH/1差异，视觉20标准通过/2标量失败。schema6与镜像保持，触摸非零origin偏移已修并交付半透明区域诊断。CPU180 OK/15 FAIL沿用冻结账本；全目录触摸/画面/交互及实际Plasma未认证。执行GLM G12→Gemini V9→Codex整合，继续C5/C6/C7。现状见 [整合摘要](docs/review-agents-current.md)，分工见 [协作清单](docs/agent-workboard.md)，本轮证据见 [C6交接](docs/c6-input-review-handoff.md)。规范入口：[AGENTS.md](AGENTS.md)。
+版本：执行中，2026-10-08最新整合。G12/V9已复核补修工具，新Fraise B触摸先行通过；V9实际20代表截图，原全目录视觉PASS撤回，严格195行为180 UNREVIEWED/15 BLOCKED_INPUT。schema6镜像与输入坐标保持，CPU180 OK/15 FAIL、V8两标量反例仍未闭合。GLM G13→Gemini V10补齐真实证据，Codex同步C7独立Qt Quick GPU探索；正式Plasma、长期运行与完整目录尚未认证。见 [当前摘要](docs/review-agents-current.md)、[协作清单](docs/agent-workboard.md)、[G12](docs/g12-touch-handoff.md)/[V9](docs/v9-touch-report.md)。规范：[AGENTS.md](AGENTS.md)。
 
 ## 1. 产品与开发策略
 
@@ -129,7 +129,7 @@ P1 的素材调查和 P2 的通用 GPU 基础可交错推进；P3/P4 的语义�
 ### 当前执行顺序
 
 1. C5镜像/可选遮罩/物理整合及V8复核已推进；Codex继续15项CPU失败的精确继承/嵌套遮罩及两项缩放外力精度。保持正式镜像及冻结门槛，新增语义另行独立验收。
-2. 完善默认启动恢复、UI输入隔离、角色/背景渐变与reset、声音失败及切换回收。GLM G12准备195项触摸诊断账本，Gemini V9逐型号核对静态区域与立绘；坐标修复后观察，数据候选复核后应用。已完成G7/G8/G9/G10/G11/V7/V8不重做。
+2. 完善默认启动恢复、UI输入隔离、角色/背景渐变与reset、声音失败及切换回收。GLM G13用已修工具准备195项完整诊断包，Gemini V10保存逐型号有证据观察；坐标修复后观察，数据候选复核后应用。已复核G7/G8/G9/G10/G11/G12/V7/V8/V9不重新实现。
 3. 用已验证复杂模型开展最小Qt Quick图形宿主试验，确认实际GPU后端、线程/context、重建和resize/DPI；不改全局桌面配置，不走常态CPU像素桥接。
 4. 当前应用与宿主边界稳定后实施Plasma插件；完整195视觉/交互、持续运行、多屏生命周期及安装仍是最终交付要求。
 
