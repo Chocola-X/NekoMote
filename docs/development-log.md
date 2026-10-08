@@ -831,3 +831,8 @@ Gemini V10/V11真实视觉观察，Codex只作新语义/架构与最终复核。
    - 观察构建脚本：`tools/touch_audit/build_v10_observations.py`。
    - 单元测试：`tests/reference_capture/test_v10_touch_audit.py`（7 项全部通过）。
    - 全套测试：Python 175/175 通过，Release CTest 145/145 通过。
+
+## 2026-10-08 G13/G14/G15/V10独立复核与支持缺口交接
+
+基线fed812e。G13完整包40094个hash记录、8700原始result核对无缺失；180 OK/15求值FAIL，不认证全目录视觉。修复QML缺配置空renderer崩宿主风险、公开错误信号和placement静默无效；正尺寸Qt窗口四安全负例通过。G14修显式启用、GPU锁、CLI诊断，Qt入口12项通过；Python180项中170通过、10Skipped。三QML对冻结原PSB/WebGL初态/DPI的alpha和黑白合成RGB差0，实际查看并排图。
+V10候选点无实测/姿态证据缺失，撤回结论，version3严格重分类20 PENDING/160 UNREVIEWED/15 BLOCKED；删除硬编码生成器及预制计数测试。KDE CMake SDK独立find_package成功，纠正旧缺失判断。实际Plasma包未验收；新G17缺口扫描、G16宿主修补、G18触摸证据交GLM，V12/V11交Gemini。详见agent-review-2026-10-08.md和agent-next-handoff.md。不改变源素材/桌面配置，不进行本轮完整核心重跑或性能收益声明。

@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Build a touch visual ledger from explicit observations, never from CPU success.
 
-Observation JSON: {observations: [{model, status: MATCH|MISMATCH, observer,
-notes, conditions: [name], checked_zones: [zone], evidence: [{role, path, sha256}]}],
+Observation JSON version 3: {version: 3, observations: [{model,
+status: MATCH|MISMATCH, observer, notes, conditions: [name], checked_zones: [zone],
+evidence: [{role, path, sha256, condition}]}],
 candidates: [{model, zone, current_author_region, suggested_author_region,
 rationale, conditions: [default_idle, another_pose], measured_points: [...],
 evidence: [...]}]}. Evidence paths are relative to this input JSON. Required roles
 are model_asset, session_asset, source, clean, overlay, probe and reference.
 Reference may be public WebGL region/point output or a source-field comparison.
+Each clean/overlay/probe entry must name a declared condition and match that
+condition's frozen G13 capture/probe output, with exactly one entry per role.
+Candidates remain PENDING_EVIDENCE until real per-point request/response validation
+is implemented; syntactically valid point lists do not certify actual execution.
 Statuses describe the listed conditions/zones only; they do not certify all poses.
 """
 from __future__ import annotations
@@ -47,7 +52,8 @@ def check_evidence(items, base: Path) -> tuple[list[dict], list[str]]:
         if expected != actual:
             errors.append(f"hash mismatch: {role}: {value}")
             continue
-        checked.append({"role": role, "path": str(path), "sha256": actual})
+        checked.append({"role": role, "path": str(path), "sha256": actual,
+                        "condition": item.get("condition")})
     missing = ROLES - {item["role"] for item in checked}
     errors.extend(f"missing evidence role: {role}" for role in sorted(missing))
     return checked, errors
@@ -76,6 +82,56 @@ def check_frozen_inputs(model: dict, checked: list[dict]) -> list[str]:
             errors.append(f"frozen G12 input hash unavailable: {role}")
         elif len(supplied) != 1 or supplied[0]["sha256"] not in hashes:
             errors.append(f"evidence differs from frozen G12 model input: {role}")
+    return errors
+
+
+def check_frozen_conditions(model: dict, checked: list[dict], poses, base: Path) -> list[str]:
+    """Bind every declared pose to its frozen screenshots and successful probe output."""
+    if not conditions_valid(poses):
+        return ["declared conditions missing/invalid"]
+    frozen = model.get("conditions")
+    if not isinstance(frozen, list) or any(not isinstance(c, dict) for c in frozen):
+        return ["frozen G13 conditions unavailable"]
+    names = [c.get("name") for c in frozen]
+    if not conditions_valid(names):
+        return ["frozen G13 condition names missing/duplicated"]
+    by_name = {c["name"]: c for c in frozen}
+    errors = []
+    for item in checked:
+        if item["role"] in {"clean", "overlay", "probe"} and item["condition"] not in poses:
+            errors.append(f"evidence condition missing/undeclared: {item['role']}")
+    for pose in poses:
+        condition = by_name.get(pose)
+        if condition is None:
+            errors.append(f"unknown frozen G13 condition: {pose}")
+            continue
+        if condition.get("pass") is not True or condition.get("errors") != []:
+            errors.append(f"frozen G13 condition unsuccessful: {pose}")
+        for role, capture_name in (("clean", "plain"), ("overlay", "overlay"), ("probe", None)):
+            supplied = [e for e in checked if e["role"] == role and e["condition"] == pose]
+            if len(supplied) != 1:
+                errors.append(f"condition requires exactly one {role} evidence: {pose}")
+                continue
+            expected = None
+            if capture_name is not None:
+                captures = condition.get("capture")
+                capture = captures.get(capture_name) if isinstance(captures, dict) else None
+                if isinstance(capture, dict) and capture.get("ok") is True and capture.get("returncode") == 0:
+                    expected = capture.get("image")
+            else:
+                # G13 stores probe output provenance in the retained result manifest.
+                manifest_path = condition.get("evidence")
+                if isinstance(manifest_path, str) and manifest_path:
+                    try:
+                        manifest = json.loads((base / manifest_path).read_text())
+                        if isinstance(manifest, dict) and manifest.get("ok") is True and manifest.get("returncode") == 0:
+                            expected = manifest.get("output")
+                    except (ValueError, OSError):
+                        pass
+            if not isinstance(expected, dict) or not isinstance(expected.get("path"), str) or not expected.get("sha256"):
+                errors.append(f"frozen G13 {role} output unavailable: {pose}")
+            elif supplied[0]["sha256"] != expected["sha256"] or supplied[0]["path"] != str((base / expected["path"]).resolve()):
+                errors.append(f"evidence differs from frozen G13 condition output: {pose}: {role}")
     return errors
 
 
@@ -124,6 +180,9 @@ def build_ledger(g12: dict, records: dict, base: Path) -> dict:
             record = by_name[name]
             checked, errors = check_evidence(record.get("evidence"), base)
             errors.extend(check_frozen_inputs(model, checked))
+            if records.get("version") != 3:
+                errors.append("observation input version unsupported; rebuild version 3 evidence")
+            errors.extend(check_frozen_conditions(model, checked, record.get("conditions"), base))
             zones = record.get("checked_zones")
             if record.get("status") not in {"MATCH", "MISMATCH"}:
                 errors.append("invalid observation status")
@@ -147,6 +206,8 @@ def build_ledger(g12: dict, records: dict, base: Path) -> dict:
         if not isinstance(candidate, dict):
             raise ValueError("candidate must be an object")
         checked, errors = check_evidence(candidate.get("evidence"), base)
+        if records.get("version") != 3:
+            errors.append("observation input version unsupported; rebuild version 3 evidence")
         model = by_model.get(candidate.get("model"))
         zone = candidate.get("zone")
         if model is None or model.get("status") != "OK" or zone not in ZONES:
@@ -155,6 +216,7 @@ def build_ledger(g12: dict, records: dict, base: Path) -> dict:
             errors.append("candidate current value differs from frozen G12")
         if model is not None:
             errors.extend(check_frozen_inputs(model, checked))
+            errors.extend(check_frozen_conditions(model, checked, candidate.get("conditions"), base))
         if not region_valid(candidate.get("current_author_region")) or not region_valid(
             candidate.get("suggested_author_region")
         ):
@@ -180,11 +242,12 @@ def build_ledger(g12: dict, records: dict, base: Path) -> dict:
                 errors.append("candidate points do not cover declared poses")
         if not isinstance(candidate.get("rationale"), str) or not candidate["rationale"].strip():
             errors.append("candidate rationale missing")
+        errors.append("candidate point request/response validator unavailable; actual per-point execution is unverified")
         reviewed_candidates.append({**candidate, "evidence": checked, "errors": errors,
-                                    "status": "PENDING_EVIDENCE" if errors else "READY_FOR_REVIEW"})
+                                    "status": "PENDING_EVIDENCE"})
     statuses = {status: sum(r["visual_alignment"] == status for r in result)
                 for status in ("MATCH", "MISMATCH", "UNREVIEWED", "PENDING_EVIDENCE", "BLOCKED_INPUT")}
-    return {"task": "V9", "version": 2, "total_models": len(result), "summary": statuses,
+    return {"task": "V9", "version": 3, "total_models": len(result), "summary": statuses,
             "scope": "Visual status covers only explicit observed conditions and zones; candidates are never applied.",
             "models": result, "candidates": reviewed_candidates}
 

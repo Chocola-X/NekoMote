@@ -86,18 +86,30 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
   public:
     explicit SessionRenderer(std::shared_ptr<SessionState> state) : state_(std::move(state))
     {
-        generation_ = state_->renderer_created.fetch_add(1) + 1;
+        if (state_)
+            generation_ = state_->renderer_created.fetch_add(1) + 1;
     }
     ~SessionRenderer() override
     {
         // Qt deletes FBO renderers on the render thread while cleaning scene
         // graph resources. GPU destruction precedes release of borrowed CPU state.
         renderer_.reset();
-        state_->renderer_destroyed.fetch_add(1);
+        if (state_)
+            state_->renderer_destroyed.fetch_add(1);
     }
     void synchronize(QQuickFramebufferObject* base) override
     {
         auto* item = static_cast<SessionItemBase*>(base);
+        // An unconfigured QML item still needs a non-null Qt renderer. Loading
+        // happens on the GUI thread; only acquire its completed state while
+        // Qt has blocked that thread for synchronization.
+        if (!state_)
+        {
+            state_ = item->session_state();
+            if (!state_)
+                return;
+            generation_ = state_->renderer_created.fetch_add(1) + 1;
+        }
         if (!connected_)
         {
             connect(this, &SessionRenderer::frame_ready, item, &SessionItemBase::frame_ready,
@@ -133,6 +145,19 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     }
     void render() override
     {
+        if (!state_)
+        {
+            if (auto* context = QOpenGLContext::currentContext())
+            {
+                auto* gl = context->functions();
+                gl->glDisable(GL_SCISSOR_TEST);
+                gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                gl->glClearColor(0, 0, 0, 0);
+                gl->glClear(GL_COLOR_BUFFER_BIT);
+                QQuickOpenGLUtils::resetOpenGLState();
+            }
+            return;
+        }
         if (faulted_)
             return;
         try

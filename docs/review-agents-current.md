@@ -1,25 +1,17 @@
 # 当前整合与接手摘要
 
-更新：2026-10-08。Codex复核 `c13b394` G12、`7c055dd` V9并补修工具。
-执行见 [协作清单](agent-workboard.md)，本轮复核见 [G12交接](g12-touch-handoff.md)、
-[V9复核](v9-touch-report.md)。历史求值证据见 [C5](c5-mirror-mask-handoff.md)、输入见 [C6](c6-input-review-handoff.md)。
+更新2026-10-08，独立复核基线 `fed812e`。只按本页、[ROADMAP](../ROADMAP.md)、[协作清单](agent-workboard.md)及[下一批交接](agent-next-handoff.md)执行；旧报告仅供溯源。
 
 | 范围 | 当前结论 |
 | --- | --- |
-| G12 | 原195行180 OK/15拒绝仅为历史记录，缺原始来源与失败证据；已修失败假MISS、label猜部位、漏目录、119/120步混淆及冻结。新Fraise B四条件、44个点、8PNG通过，全目录严格新工具重跑待G13 |
-| V9 | 实际20代表型号60PNG+40裁图，不能认证180型号；硬编码MATCH已删除。严格账本180 UNREVIEWED/15 BLOCKED_INPUT。两项无hash/多姿态点的候选不应用，逐行观察待V10 |
-| 输入 | C6呈现方向中心framebuffer像素、Y向下，宿主不镜像；session做作者触摸逆变换。静态椭圆不跟随网格，区域细偏差尚未全目录认证 |
-| 求值 | G11图集194 MATCH/1已知差异；V8标准20通过/2标量失败，22项几何/图像通过；CPU180 OK/15 FAIL沿用冻结账本，精确继承/嵌套仍待处理 |
-| 宿主 | C7独立Qt Quick GPU合成、resize/DPI、释放重建及输入小矩阵通过；三条件与真实WebGL alpha/黑白合成RGB一致。渲染末尾GL错误已返回ABI，真实不完整FBO负例先红后绿。实际Plasma未验收，详见 [Qt宿主](qt-quick-host.md) |
+| 目录/求值 | G13完整195条，180 CPU诊断OK/15FAIL；720条件、7200点、1440PNG及来源hash核对通过。图集194 MATCH/1已知差异、V8标准20通过/2标量失败及22几何图像通过沿用冻结证据 |
+| 触摸 | C6逆变换及正式镜像保持；宿主输入为中心framebuffer像素/Y向下，不预先镜像。静态椭圆不跟随网格；G13不证明可见/近空白/所有边缘正确 |
+| 视觉 | V10实测结论撤回。version3重分类20 PENDING_EVIDENCE、160 UNREVIEWED、15 BLOCKED_INPUT；候选无真实边缘/近空白请求响应，不应用。画幅外下身不可目视认证 |
+| Qt | C7既有线程/合成/resize/DPI/重建小矩阵通过；本轮共享桥/QML三初态对原PSB/WebGL alpha及黑白合成RGB最大差0。已修空配置崩溃风险；正尺寸窗口四安全负例通过 |
+| Plasma | G15-B尚未验收：动态部署、真实包配置、独立播放、非GL错误等缺口交G16。本机KDE CMake SDK存在且独立配置成功；未安装/改桌面/真实插件验收 |
 
-本轮Python158项通过（G12合成35、V9合成27均包含在总数），G12/V9阶段没有新增核心实现。
-既有Debug145/无显示ASan143沿用上一轮证据，不声称本轮重新执行。
-全目录画面/触摸/交互、UI隔离/稳态、渐变/reset、长期资源与正式安装仍未认证。
+本轮Release/WERROR宿主构建、Qt入口12项通过；默认Python180项中170通过、10显式跳过。核心dev145/ASan143沿用以前证据，本轮未全量重跑；未测全应用零分配/功耗/长期资源。
 
-下一批GLM G13执行已修工具，不再重写判定；Gemini V10保存实际逐项观察，不从CPU/截图存在推定PASS。
-GLM按G15独立实现最小Plasma/QML原型，Codex继续C5/C6及宿主最终复核，未知型号不阻塞已验证型号的宿主试验。
+`coconut-hawaii-a`等15项拒绝包含尚未验证的继承语义。旧版本近似接受不等于正确，历史验收失败后恢复拒绝；GLM G17归并当前实际支持缺口，Codex处理准确公式。首个失败节点不等于全部缺口。
 
-C7新增可选Qt宿主；Debug及Release GPU各10用例/181断言通过，含真实GPU错误和热帧零C++分配。
-默认无窗口ASan重新配置确认Qt关闭，CPU用例仍沿用既有记录。本轮未测全应用零分配或功耗。
-超高GLFW底部裁切及Qt短时1FPS仍记录；正常更新复测见 [机器记录](validation/c7-qt-quick-results.json)。
-下一步GLM可按G15开始隔离Plasma/QML原型，G14接入持续检查，Gemini做V10/V11真实观察；全目录和应用完善并行，不推迟到全部195通过。
+GLM **G17 → G16 → G18**；Gemini **V12三重点型号 → G16后V11 → 扩展目录**。详细来源/反例/本轮修复见[独立复核](agent-review-2026-10-08.md)。全目录视觉/交互、UI隔离/稳态、渐变/reset、声音失败回收、8–24小时、多屏与正式安装仍未认证。

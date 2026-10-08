@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至 2026-10-08 最新整合，P0/P1/P2完成；G12/V9已复核并修补工具，但原全目录视觉结论不成立。G12新Fraise B四条件44点/8PNG通过，V9实际20代表型号截图，严格目录180 UNREVIEWED/15 BLOCKED_INPUT，两数据候选未验收不应用。Python158通过，旧dev145/ASan143沿用。图集194 MATCH/1已知差异，V8标准20通过/2标量失败，CPU180 OK/15 FAIL仍冻结；schema6镜像及C6触摸坐标保持。C7独立Qt Quick GPU合成/resize/DPI/释放重建及输入已过小矩阵，可开始隔离Plasma/QML原型；Qt短时1FPS和超高GLFW裁切保留未知；全目录视觉/交互、UI/渐变/reset、精确继承/嵌套与实际Plasma仍未认证。接手只按 [当前摘要](docs/review-agents-current.md)、[ROADMAP.md](ROADMAP.md)、[协作清单](docs/agent-workboard.md)；旧记录仅作历史。
+截至2026-10-08本轮独立复核，P0/P1/P2完成，代表求值/播放证据沿用冻结矩阵。G13完整195条：180诊断OK/15求值FAIL，720条件原始证据/hash完整；不是195视觉认证。G14显式Qt测试入口已修，G15共享桥及三QML初态对WebGL通过，正式Plasma包尚缺部署/配置/播放调度/非GL等验收；空配置崩溃风险已修。V10实测结论撤回，20 PENDING_EVIDENCE/160 UNREVIEWED/15 BLOCKED_INPUT，候选不应用；观察账本只支持version3逐条件证据。当前只按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[协作清单](docs/agent-workboard.md)与[下一批交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. 按当前协作清单领用任务：GLM主力执行G13并实现G15隔离Plasma/QML、G14自动验收，Gemini负责V10/V11有证据视觉观察，Codex负责新语义、架构/生命周期与最终整合。旧G2/G4/G7/G8/G9/G10/G11/G12/V3/V5/V6/V7/V8/V9不重复领用；证据交付、实现完成和独立验收分别记录。
+3. 按当前清单领用：GLM G17支持缺口→G16实际隔离Plasma包→G18真实触摸证据；Gemini V12三重点型号实际观察→G16后V11包视觉核对。Codex负责新语义、架构/生命周期与最终整合；G13/G14不重复实现。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 

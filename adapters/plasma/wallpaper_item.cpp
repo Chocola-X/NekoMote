@@ -5,6 +5,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QUrl>
+#include <cmath>
 #include <filesystem>
 #include <stdexcept>
 
@@ -26,25 +27,50 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : SessionItemBase(paren
     setMirrorVertically(true);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+    connect(this, &SessionItemBase::failed, this, &NekoWallpaperItem::set_error);
 }
 
 NekoWallpaperItem::~NekoWallpaperItem() = default;
 
 QQuickFramebufferObject::Renderer* NekoWallpaperItem::createRenderer() const
 {
-    if (!state_)
-        return nullptr;
+    // Qt dereferences createRenderer() without a null check, including when
+    // configuration/loading failed. The shared renderer clears an empty item.
     return nekomote::qt_quick::create_session_renderer(state_);
 }
 
-QUrl NekoWallpaperItem::modelFile() const { return model_file_; }
-QUrl NekoWallpaperItem::sessionFile() const { return session_file_; }
-float NekoWallpaperItem::originX() const { return origin_x_; }
-float NekoWallpaperItem::originY() const { return origin_y_; }
-float NekoWallpaperItem::scale() const { return scale_; }
-bool NekoWallpaperItem::paused() const { return paused_; }
-int NekoWallpaperItem::status() const { return status_; }
-QString NekoWallpaperItem::errorString() const { return error_string_; }
+QUrl NekoWallpaperItem::modelFile() const
+{
+    return model_file_;
+}
+QUrl NekoWallpaperItem::sessionFile() const
+{
+    return session_file_;
+}
+float NekoWallpaperItem::originX() const
+{
+    return origin_x_;
+}
+float NekoWallpaperItem::originY() const
+{
+    return origin_y_;
+}
+float NekoWallpaperItem::scale() const
+{
+    return scale_;
+}
+bool NekoWallpaperItem::paused() const
+{
+    return paused_;
+}
+int NekoWallpaperItem::status() const
+{
+    return status_;
+}
+QString NekoWallpaperItem::errorString() const
+{
+    return error_string_;
+}
 
 void NekoWallpaperItem::setModelFile(const QUrl& value)
 {
@@ -52,7 +78,8 @@ void NekoWallpaperItem::setModelFile(const QUrl& value)
         return;
     if (state_)
     {
-        set_error(QStringLiteral("changing modelFile after load is not supported in this prototype"));
+        set_error(
+            QStringLiteral("changing modelFile after load is not supported in this prototype"));
         return;
     }
     model_file_ = value;
@@ -65,7 +92,8 @@ void NekoWallpaperItem::setSessionFile(const QUrl& value)
         return;
     if (state_)
     {
-        set_error(QStringLiteral("changing sessionFile after load is not supported in this prototype"));
+        set_error(
+            QStringLiteral("changing sessionFile after load is not supported in this prototype"));
         return;
     }
     session_file_ = value;
@@ -76,6 +104,11 @@ void NekoWallpaperItem::setOriginX(float value)
 {
     if (origin_x_ == value)
         return;
+    if (state_ || !std::isfinite(value))
+    {
+        set_error(QStringLiteral("originX must be finite and set before loading"));
+        return;
+    }
     origin_x_ = value;
     emit originXChanged();
 }
@@ -84,6 +117,11 @@ void NekoWallpaperItem::setOriginY(float value)
 {
     if (origin_y_ == value)
         return;
+    if (state_ || !std::isfinite(value))
+    {
+        set_error(QStringLiteral("originY must be finite and set before loading"));
+        return;
+    }
     origin_y_ = value;
     emit originYChanged();
 }
@@ -92,6 +130,11 @@ void NekoWallpaperItem::setScale(float value)
 {
     if (scale_ == value)
         return;
+    if (state_ || !std::isfinite(value) || value <= 0)
+    {
+        set_error(QStringLiteral("scale must be positive, finite and set before loading"));
+        return;
+    }
     scale_ = value;
     emit scaleChanged();
 }
@@ -125,7 +168,10 @@ void NekoWallpaperItem::try_load()
 {
     if (model_file_.isEmpty() || session_file_.isEmpty())
         return;
-    if (scale_ <= 0)
+    if (!error_string_.isEmpty())
+        return;
+    if (!std::isfinite(origin_x_) || !std::isfinite(origin_y_) || !std::isfinite(scale_) ||
+        scale_ <= 0)
     {
         set_error(QStringLiteral("scale must be positive"));
         return;
@@ -134,9 +180,8 @@ void NekoWallpaperItem::try_load()
     {
         const auto model_path = to_local_path(model_file_);
         const auto session_path = to_local_path(session_file_);
-        state_ = nekomote::qt_quick::load_session(model_path, session_path, 1, origin_x_,
-                                                    origin_y_, scale_, 0, false);
-        set_error(QString{});
+        state_ = nekomote::qt_quick::load_session(model_path, session_path, 1, origin_x_, origin_y_,
+                                                  scale_, 0, false);
         set_status(1);
         update();
     }
@@ -152,7 +197,10 @@ nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
     return {paused_, playback_revision_, inputs_, input_count_};
 }
 
-void NekoWallpaperItem::clear_inputs() { input_count_ = 0; }
+void NekoWallpaperItem::clear_inputs()
+{
+    input_count_ = 0;
+}
 
 std::shared_ptr<nekomote::qt_quick::SessionState> NekoWallpaperItem::session_state() const
 {
@@ -195,5 +243,3 @@ void NekoWallpaperItem::componentComplete()
     try_load();
 }
 } // namespace nekomote::plasma
-
-#include "wallpaper_item.moc"

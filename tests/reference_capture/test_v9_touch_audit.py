@@ -37,10 +37,35 @@ class TestV9Evidence(unittest.TestCase):
                                {"model": "rejected", "status": "CPU_REJECTED"}]}
         self.evidence = []
         for role in sorted(ledger_tool.ROLES):
-            path = self.root / f"{role}.json"
-            path.write_text(json.dumps({"role": role}))
+            path = self.root / f"{role}.{'png' if role in {'clean', 'overlay'} else 'json'}"
+            if role in {"clean", "overlay"}:
+                Image.new("RGBA", (4, 4), (20, 40, 60, 255)).save(path)
+            else:
+                path.write_text(json.dumps({"role": role}))
             self.evidence.append({"role": role, "path": path.name,
                                   "sha256": ledger_tool.file_hash(path)})
+        default_evidence = [e for e in self.evidence if e["role"] in {"clean", "overlay", "probe"}]
+        for e in default_evidence:
+            e["condition"] = "default_idle"
+        idle_evidence = []
+        for role in ("clean", "overlay", "probe"):
+            path = self.root / f"{role}_idle_120.{'png' if role in {'clean', 'overlay'} else 'json'}"
+            if role in {"clean", "overlay"}:
+                Image.new("RGBA", (4, 4), (40, 60, 80, 255)).save(path)
+            else:
+                path.write_text(json.dumps({"role": role, "pose": "idle_120"}))
+            idle_evidence.append({"role": role, "path": path.name,
+                                  "sha256": ledger_tool.file_hash(path), "condition": "idle_120"})
+        self.idle_evidence = idle_evidence
+        conditions = []
+        for pose, evidence in (("default_idle", default_evidence), ("idle_120", idle_evidence)):
+            outputs = {e["role"]: {"path": e["path"], "sha256": e["sha256"]} for e in evidence}
+            manifest = self.root / f"{pose}_regions.result.json"
+            manifest.write_text(json.dumps({"ok": True, "returncode": 0, "output": outputs["probe"]}))
+            conditions.append({"name": pose, "pass": True, "errors": [], "evidence": manifest.name,
+                               "capture": {"plain": {"ok": True, "returncode": 0, "image": outputs["clean"]},
+                                           "overlay": {"ok": True, "returncode": 0, "image": outputs["overlay"]}}})
+        self.g12["models"][0]["conditions"] = conditions
         self.g12["models"][0]["assets"] = [
             e for e in self.evidence if e["role"] in {"model_asset", "session_asset"}
         ]
@@ -52,7 +77,7 @@ class TestV9Evidence(unittest.TestCase):
                             "checked_zones": ["bust"], "evidence": self.evidence}
 
     def build(self, observations=None, candidates=None):
-        return ledger_tool.build_ledger(self.g12, {"observations": observations or [],
+        return ledger_tool.build_ledger(self.g12, {"version": 3, "observations": observations or [],
                                                   "candidates": candidates or []}, self.root)
 
     def test_no_observation_preserves_denominator_without_pass(self):
@@ -68,6 +93,95 @@ class TestV9Evidence(unittest.TestCase):
         self.assertEqual(result["models"][0]["visual_alignment"], "MATCH")
         self.assertEqual(result["models"][0]["checked_zones"], ["bust"])
         self.assertEqual(len(result["models"][0]["evidence"]), 7)
+        self.assertEqual(result["version"], 3)
+
+    def test_each_declared_pose_has_frozen_images_and_probe(self):
+        record = copy.deepcopy(self.observation)
+        record["conditions"].append("idle_120")
+        record["evidence"].extend(self.idle_evidence)
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "MATCH")
+        self.assertEqual(result["errors"], [])
+        self.assertEqual(len(result["evidence"]), 10)
+
+    def test_default_only_evidence_cannot_certify_another_pose(self):
+        record = copy.deepcopy(self.observation)
+        record["conditions"].append("idle_120")
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        for role in ("clean", "overlay", "probe"):
+            self.assertIn(f"condition requires exactly one {role} evidence: idle_120", result["errors"])
+
+    def test_missing_wrong_or_unknown_condition_cannot_pass(self):
+        for value in (None, "idle_120", "unknown"):
+            record = copy.deepcopy(self.observation)
+            next(e for e in record["evidence"] if e["role"] == "clean")["condition"] = value
+            result = self.build([record])["models"][0]
+            with self.subTest(condition=value):
+                self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+                self.assertIn("evidence condition missing/undeclared: clean", result["errors"])
+
+    def test_unknown_declared_condition_cannot_pass(self):
+        record = copy.deepcopy(self.observation)
+        record["conditions"] = ["unknown"]
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        self.assertIn("unknown frozen G13 condition: unknown", result["errors"])
+
+    def test_valid_hash_for_different_pose_cannot_pass(self):
+        record = copy.deepcopy(self.observation)
+        for role in ("clean", "overlay", "probe"):
+            item = next(e for e in record["evidence"] if e["role"] == role)
+            other = next(e for e in self.idle_evidence if e["role"] == role)
+            item.update(path=other["path"], sha256=other["sha256"])
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        for role in ("clean", "overlay", "probe"):
+            self.assertIn(f"evidence differs from frozen G13 condition output: default_idle: {role}", result["errors"])
+
+    def test_duplicate_condition_evidence_cannot_pass(self):
+        record = copy.deepcopy(self.observation)
+        record["evidence"].append(copy.deepcopy(next(e for e in self.evidence if e["role"] == "clean")))
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        self.assertIn("condition requires exactly one clean evidence: default_idle", result["errors"])
+
+    def test_unconditioned_legacy_evidence_cannot_pass(self):
+        record = copy.deepcopy(self.observation)
+        for item in record["evidence"]:
+            item.pop("condition", None)
+        result = self.build([record])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        self.assertIn("condition requires exactly one probe evidence: default_idle", result["errors"])
+
+    def test_version_two_or_missing_version_cannot_pass(self):
+        for version in (2, None):
+            records = {"observations": [self.observation]}
+            if version is not None:
+                records["version"] = version
+            result = ledger_tool.build_ledger(self.g12, records, self.root)["models"][0]
+            with self.subTest(version=version):
+                self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+                self.assertIn("observation input version unsupported; rebuild version 3 evidence", result["errors"])
+
+    def test_frozen_probe_failure_or_missing_manifest_cannot_pass(self):
+        manifest = self.root / "default_idle_regions.result.json"
+        for data in ("not JSON", '{"ok": false, "returncode": 1}', '{"ok": true, "returncode": 0}'):
+            manifest.write_text(data)
+            result = self.build([self.observation])["models"][0]
+            with self.subTest(data=data):
+                self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+                self.assertIn("frozen G13 probe output unavailable: default_idle", result["errors"])
+        manifest.unlink()
+        result = self.build([self.observation])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        self.assertIn("frozen G13 probe output unavailable: default_idle", result["errors"])
+
+    def test_frozen_condition_failure_cannot_pass(self):
+        self.g12["models"][0]["conditions"][0]["pass"] = False
+        result = self.build([self.observation])["models"][0]
+        self.assertEqual(result["visual_alignment"], "PENDING_EVIDENCE")
+        self.assertIn("frozen G13 condition unsuccessful: default_idle", result["errors"])
 
     def test_hash_mismatch_cannot_pass(self):
         record = copy.deepcopy(self.observation)
@@ -132,11 +246,12 @@ class TestV9Evidence(unittest.TestCase):
                 "measured_points": [{"condition": pose, "author_point": [100, 38],
                                      "output_point": [100, 438], "expected": "hit"}
                                     for pose in ("default_idle", "idle_120")],
-                "evidence": self.evidence}
+                "evidence": self.evidence + self.idle_evidence}
 
-    def test_valid_candidate_only_ready_for_review(self):
+    def test_candidate_syntax_cannot_certify_unexecuted_points(self):
         result = self.build(candidates=[self.candidate()])["candidates"][0]
-        self.assertEqual(result["status"], "READY_FOR_REVIEW")
+        self.assertEqual(result["status"], "PENDING_EVIDENCE")
+        self.assertEqual(result["errors"], ["candidate point request/response validator unavailable; actual per-point execution is unverified"])
 
     def test_candidate_bad_current_values_are_pending(self):
         candidate = self.candidate()
@@ -146,13 +261,16 @@ class TestV9Evidence(unittest.TestCase):
         self.assertTrue(any("frozen G12" in e for e in result["errors"]))
 
     def test_candidate_missing_hash_pose_points_and_nonfinite_are_pending(self):
-        changes = [{"evidence": []}, {"conditions": ["default_idle"]}, {"measured_points": []},
-                   {"suggested_author_region": {"center": [float("nan"), 0], "radius": [1, 1]}},
-                   {"suggested_author_region": {"center": [0, 0], "radius": [0, 1]}}]
-        for change in changes:
+        changes = [({"evidence": []}, "missing evidence role"),
+                   ({"conditions": ["default_idle"]}, "candidate requires default and another observed pose"),
+                   ({"measured_points": []}, "candidate measured points missing"),
+                   ({"suggested_author_region": {"center": [float("nan"), 0], "radius": [1, 1]}}, "candidate region invalid"),
+                   ({"suggested_author_region": {"center": [0, 0], "radius": [0, 1]}}, "candidate region invalid")]
+        for change, expected_error in changes:
             with self.subTest(change=change):
                 result = self.build(candidates=[{**self.candidate(), **change}])["candidates"][0]
                 self.assertEqual(result["status"], "PENDING_EVIDENCE")
+                self.assertTrue(any(expected_error in error for error in result["errors"]))
 
     def test_cli_existing_output_refused_before_mutation(self):
         source = self.root / "g12.json"

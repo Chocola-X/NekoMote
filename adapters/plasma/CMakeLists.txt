@@ -45,3 +45,11 @@ target_link_libraries(nekomote_plasma_probe PRIVATE
     nekomote::plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_qmlplugin_init
     Qt6::Qml Qt6::Quick Qt6::OpenGL nekomote_warnings)
 qt_import_qml_plugins(nekomote_plasma_probe)
+
+if(NEKOMOTE_BUILD_TESTS)
+    add_executable(nekomote_plasma_item_safety ../../tests/render/plasma_item_safety.cpp)
+    target_link_libraries(nekomote_plasma_item_safety PRIVATE
+        nekomote::plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_qmlplugin_init
+        Qt6::Qml Qt6::Quick nekomote_warnings)
+    qt_import_qml_plugins(nekomote_plasma_item_safety)
+endif()

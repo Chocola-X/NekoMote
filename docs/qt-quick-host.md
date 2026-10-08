@@ -70,5 +70,5 @@ X11隐藏/show/resize的旧尺寸回执会晚到，直接window读回可能得�
 不包含声音/UI，未测GPU/显存/功耗、帧时间分位或全应用分配，不作性能改善结论。
 Qt框架创建renderer/synchronize的极端分配失败尚未完整注入验证；普通矩阵不认证所有异常情况。
 
-下一步GLM按G15使用已验证模型实现隔离WallpaperItem/QML包与后端能力报告，G14接入自动验收；
-Gemini核对画面，Codex复核后再验证真实Plasma。
+G15共享桥/QML已交付，包验收缺口与本轮修复见[独立复核](agent-review-2026-10-08.md)。
+下一步GLM G16完善实际隔离包，Gemini V11核对；G14自动入口已接入并修补。

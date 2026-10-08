@@ -80,7 +80,9 @@ class SessionItemBase : public QQuickFramebufferObject
 {
     Q_OBJECT
   public:
-    explicit SessionItemBase(QQuickItem* parent = nullptr) : QQuickFramebufferObject(parent) {}
+    explicit SessionItemBase(QQuickItem* parent = nullptr) : QQuickFramebufferObject(parent)
+    {
+    }
     ~SessionItemBase() override = default;
     virtual ItemState get_item_state() const = 0;
     virtual void clear_inputs() = 0;
@@ -91,7 +93,8 @@ class SessionItemBase : public QQuickFramebufferObject
     void failed(QString diagnostic);
 };
 
-// Factory used by SessionItemBase subclasses' createRenderer().
+// Factory used by SessionItemBase subclasses' createRenderer(). Empty state
+// produces a transparent item; Qt requires a non-null renderer even on failure.
 QQuickFramebufferObject::Renderer* create_session_renderer(std::shared_ptr<SessionState> state);
 
 class SessionItem final : public SessionItemBase

@@ -107,6 +107,13 @@ if(NEKOMOTE_BUILD_TESTS)
         add_subdirectory(tests/render)
     endif()
     find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(TARGET nekomote_plasma_item_safety)
+        find_program(NEKOMOTE_FLOCK flock REQUIRED)
+        add_test(NAME plasma_item_safety
+            COMMAND ${NEKOMOTE_FLOCK} ${CMAKE_SOURCE_DIR}/build/gpu-validation.lock
+                $<TARGET_FILE:nekomote_plasma_item_safety>)
+        set_tests_properties(plasma_item_safety PROPERTIES LABELS "qt;gpu" TIMEOUT 30)
+    endif()
     if(Python3_Interpreter_FOUND)
         add_test(NAME python_tools
             COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture

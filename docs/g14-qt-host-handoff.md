@@ -1,5 +1,6 @@
 # G14：Qt诊断宿主的自动验收入口
 
+历史契约：入口已实现并复核修补，当前状态见[g14报告](g14-qt-host-report.md)及[协作清单](agent-workboard.md)，不重新领用。
 所有者CodeArts / GLM-5.2。G15交付后执行，可与Gemini视觉核对并行。
 基线使用本轮C7交付提交，先声明实际HEAD与修改文件。契约见 [Qt宿主](qt-quick-host.md)，
 已有命令/像素证据见 `build/evidence/c7-qt-quick-2026-10-08/`。

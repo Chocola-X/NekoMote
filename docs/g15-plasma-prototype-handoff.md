@@ -1,5 +1,7 @@
 # G15：独立实现最小Plasma/QML原型
 
+此为历史交接契约；当前G15复核与待修项见[独立复核](agent-review-2026-10-08.md)，新实现领G16，不重复领G15。
+
 执行CodeArts / GLM-5.2；本轮C7交付提交为基线，先声明实际HEAD/修改文件。
 可以独立处理此复杂任务；接口、生命周期与验收已明确，不需要等Codex逐段编写代码。
 先读 [Qt宿主](qt-quick-host.md)、[ABI契约](abi-contract.md)、[协作清单](agent-workboard.md)。
