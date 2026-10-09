@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""G26-3: Real model evaluate/build_frame steady-state allocation count and timing.
+"""G26 timing samples, retained for investigation rather than allocation certification.
 
-Reports P50/P95/P99 for evaluate+build_frame on real models with real CPU/driver/
-model/action/resolution/warmup/sample/build metadata. Uses /usr/bin/time for RSS
-and page-fault accounting. Allocation count is measured via a preloaded malloc
-counter library; the counter is not injected into production hot paths.
-
-Layers reported separately:
-  runtime:    nekomote_pose --benchmark (evaluate + build_frame)
-  renderer:   nekomote_preview --frames N (GPU render)
-  application: nekomote_player --steps N (full application loop)
+The runtime CLI reports evaluate/build_frame frame-time percentiles. Renderer and
+application runs report whole-process elapsed time including load and capture.
+This tool contains no allocation counter or sanitizer run. RUSAGE_CHILDREN RSS
+is cumulative across children and cannot establish per-process peak memory.
+Use G29's replacement measurements for steady-state application acceptance.
 """
 import argparse
 import hashlib
@@ -124,7 +120,9 @@ def main():
     gpu = get_gpu_info()
 
     manifest = {
-        "scope": "real model evaluate/build_frame steady-state allocation and timing",
+        "scope": "runtime CLI timing and whole-process capture samples",
+        "allocations_measured": False,
+        "sanitizers_run": False,
         "warmup": WARMUP,
         "samples": SAMPLES,
         "cpu": cpu,
@@ -229,7 +227,7 @@ def main():
     manifest["layers"]["application_player"] = app_results
 
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"\nallocation benchmark complete", flush=True)
+    print(f"\ntiming sample collection complete", flush=True)
     return 0
 
 

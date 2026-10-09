@@ -166,9 +166,10 @@ int run(int argc, char** argv)
         return 1;
     }
     const bool fixed = !config.capture.empty() || !config.lifecycle.empty();
-    auto state = wallpaper->session_state();
-    if (config.graphics_api != "software" && !wallpaper->configure_diagnostics(config.steps, fixed))
+    if (config.graphics_api != "software" &&
+        !wallpaper->configure_diagnostics(config.steps, fixed, 1))
         throw std::runtime_error(wallpaper->errorString().toStdString());
+    auto state = wallpaper->session_state();
     auto host_window = std::make_unique<QQuickWindow>();
     auto& window = *host_window;
     window.setTitle(QStringLiteral("NekoMote Plasma probe"));

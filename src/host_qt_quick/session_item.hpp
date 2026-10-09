@@ -38,13 +38,13 @@ struct SessionState
     int fixed_steps{0};
     int trace_frames{0};
     bool deterministic{false};
-    bool notify_frames{false};
     bool initialized_time{false};
     bool paused{false};
     std::chrono::steady_clock::time_point previous_time;
     std::atomic<unsigned> renderer_created{0};
     std::atomic<unsigned> renderer_destroyed{0};
     std::atomic<unsigned> rendered_frames{0};
+    std::atomic<unsigned> fixed_steps_executed{0}; // fixed diagnostics only
 };
 
 std::shared_ptr<SessionState> load_session(const std::filesystem::path& model,
@@ -73,6 +73,7 @@ struct ItemState
     std::uint64_t playback_revision{0};
     std::array<Input, 32> inputs{};
     std::size_t input_count{0};
+    bool notify_frames{false};
 };
 
 // Abstract base for FBO items sharing the session renderer. Concrete items

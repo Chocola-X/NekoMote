@@ -391,7 +391,7 @@ int run(int argc, char** argv)
         auto* native = native_item(containment);
         if (!native)
             throw std::runtime_error("native item not found after load");
-        if (!native->configure_diagnostics(0, false))
+        if (!native->configure_diagnostics(0, false, 1))
             throw std::runtime_error("cannot configure diagnostics for lifecycle test");
         const QPointer diagnostic_native(native);
         window.show();
@@ -522,11 +522,10 @@ int run(int argc, char** argv)
         {
             const auto expected_fbo = QSize(640, 480) * window.devicePixelRatio();
             if (resize_fbo != expected_fbo)
-                throw std::runtime_error(
-                    "resize FBO size " + std::to_string(resize_fbo.width()) + "x" +
-                    std::to_string(resize_fbo.height()) + " != expected " +
-                    std::to_string(expected_fbo.width()) + "x" +
-                    std::to_string(expected_fbo.height()));
+                throw std::runtime_error("resize FBO size " + std::to_string(resize_fbo.width()) +
+                                         "x" + std::to_string(resize_fbo.height()) +
+                                         " != expected " + std::to_string(expected_fbo.width()) +
+                                         "x" + std::to_string(expected_fbo.height()));
         }
         std::printf("lifecycle: resize 640x480 confirmed (FBO=%dx%d)\n", resize_fbo.width(),
                     resize_fbo.height());
@@ -564,7 +563,7 @@ int run(int argc, char** argv)
                                old_state->renderer_destroyed.load();
                 });
             auto* n = get_native();
-            if (!n->configure_diagnostics(0, false))
+            if (!n->configure_diagnostics(0, false, 1))
                 throw std::runtime_error("diagnostic isolation failed for round " +
                                          std::to_string(i));
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
@@ -602,7 +601,7 @@ int run(int argc, char** argv)
                                old_state->renderer_destroyed.load();
                 });
             auto* n = get_native();
-            if (!n->configure_diagnostics(0, false))
+            if (!n->configure_diagnostics(0, false, 1))
                 throw std::runtime_error("diagnostic isolation failed for config round " +
                                          std::to_string(i));
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
@@ -648,8 +647,7 @@ int run(int argc, char** argv)
                 [&]
                 {
                     auto* n = get_native();
-                    return n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0;
+                    return n && n->property("status").toInt() == 1 && n->queryRendererCreated() > 0;
                 });
         };
         auto wait_failed = [&]()
@@ -664,7 +662,7 @@ int run(int argc, char** argv)
         auto isolate_inputs = [&](int step)
         {
             auto* n = get_native();
-            if (!n || !n->configure_diagnostics(0, false))
+            if (!n || !n->configure_diagnostics(0, false, 1))
                 throw std::runtime_error("diagnostic isolation failed at step " +
                                          std::to_string(step));
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
@@ -856,32 +854,40 @@ int run(int argc, char** argv)
     }
     else
     {
-        window.show();
         wait_for(
             [&]
             {
-                auto* native = find_native(containment);
-                if (native && (native->property("status").toInt() == 2 ||
-                               native->property("status").toInt() == 3))
-                    throw std::runtime_error(
-                        native->property("errorString").toString().toStdString());
-                return native && native->property("status").toInt() == 1;
+                auto* n = native_item(containment);
+                return n && n->status() != 0;
             });
-        wait_for([&] { return window.isSceneGraphInitialized(); });
-        auto* native = find_native(containment);
-        auto* wallpaper_item = qobject_cast<QQuickItem*>(native);
-        std::printf("actual WallpaperItem: %s, native status=%d, dynamic package=%s\n",
-                    wallpaper_item ? wallpaper_item->metaObject()->className() : "null",
-                    native->property("status").toInt(), package.path().toUtf8().constData());
-        if (opts.steps > 0)
-        {
-            auto* diag_item = native_item(containment);
-            if (!diag_item->configure_diagnostics(opts.steps, true))
-                throw std::runtime_error("fixed-step diagnostics configuration failed");
-            wait_for([&] { return diag_item->queryRenderedFrames() > 0; });
-            std::printf("capture: fixed steps=%d rendered_frames=%u\n", opts.steps,
-                        diag_item->queryRenderedFrames());
-        }
+        auto* native = native_item(containment);
+        if (native->status() != 1)
+            throw std::runtime_error(native->errorString().toStdString());
+        if (!native->configure_diagnostics(opts.steps, true, opts.seed))
+            throw std::runtime_error("fixed-step diagnostics must precede rendering");
+        bool frame_complete = false;
+        QSize frame_size;
+        double frame_delta = -1;
+        QObject::connect(native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+                         [&](QSize size, unsigned, double delta, const QString&)
+                         {
+                             if (frame_complete)
+                                 return;
+                             frame_size = size;
+                             frame_delta = delta;
+                             frame_complete = true;
+                         });
+        window.show();
+        wait_for([&] { return frame_complete; });
+        const QSize expected_size(
+            qRound(static_cast<qreal>(opts.width) * static_cast<qreal>(opts.dpi)),
+            qRound(static_cast<qreal>(opts.height) * static_cast<qreal>(opts.dpi)));
+        const auto executed = native->session_state()->fixed_steps_executed.load();
+        if (frame_size != expected_size || frame_delta != 0 ||
+            executed != static_cast<unsigned>(opts.steps))
+            throw std::runtime_error("fixed frame has unexpected size, clock delta or step count");
+        std::printf("capture: fixed steps=%d executed=%u seed=%u rendered_frames=%u\n", opts.steps,
+                    executed, opts.seed, native->queryRenderedFrames());
         if (!save_grab(window, abs_output / "package.png"))
         {
             std::fprintf(stderr, "capture: screenshot failed\n");

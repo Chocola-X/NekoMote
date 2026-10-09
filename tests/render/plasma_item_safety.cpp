@@ -49,10 +49,8 @@ void verify_playback(QQmlEngine& engine, const QString& model, const QString& se
                       {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
-    if (!item || item->status() != 1 || !item->configure_diagnostics(0, false))
+    if (!item || item->status() != 1)
         throw std::runtime_error("playback fixture did not load");
-    if (item->acceptHoverEvents() || item->acceptedMouseButtons() != Qt::NoButton)
-        throw std::runtime_error("diagnostic setup did not isolate real pointer input");
     auto state = item->session_state();
     auto window = std::make_unique<QQuickWindow>();
     window->setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
@@ -64,6 +62,13 @@ void verify_playback(QQmlEngine& engine, const QString& model, const QString& se
                      [&](QSize, unsigned, double delta, const QString&)
                      { deltas.push_back(delta); });
     window->show();
+    wait_for([&] { return item->queryRenderedFrames() >= 2; });
+    if (item->configure_diagnostics(120, true, 1) || item->status() != 1 ||
+        item->session_state() != state || state->deterministic)
+        throw std::runtime_error("late fixed request mutated a live session");
+    if (!item->configure_diagnostics(0, false, 1) || item->acceptHoverEvents() ||
+        item->acceptedMouseButtons() != Qt::NoButton)
+        throw std::runtime_error("late input isolation failed");
     wait_for([&] { return deltas.size() >= 2 && deltas.back() > 0; });
     auto* timer = item->findChild<QTimer*>();
     if (!timer || !timer->isActive())

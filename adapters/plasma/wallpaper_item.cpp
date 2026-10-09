@@ -214,7 +214,8 @@ void NekoWallpaperItem::try_load()
 
 nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
 {
-    return {effective_paused_, playback_revision_, inputs_, input_count_};
+    return {effective_paused_, playback_revision_, inputs_, input_count_,
+            diagnostic_notifications_};
 }
 
 void NekoWallpaperItem::clear_inputs()
@@ -357,25 +358,34 @@ void NekoWallpaperItem::refresh_playback()
         start_timer();
 }
 
-bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed)
+bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32_t seed)
 {
-    if (!state_ || steps < 0 || steps > 100000)
-    {
-        set_error(
-            QStringLiteral("diagnostics require a loaded item and valid steps"));
+    if (!state_ || steps < 0 || steps > 100000 || (!fixed && steps != 0))
         return false;
+    if (fixed)
+    {
+        // Renderer creation is synchronized by Qt with the GUI thread. Once it
+        // has acquired the state, diagnostic timing/initial state are immutable.
+        if (state_->renderer_created.load() != 0)
+            return false;
+        try
+        {
+            state_ = nekomote::qt_quick::load_session(to_local_path(model_file_),
+                                                      to_local_path(session_file_), seed, origin_x_,
+                                                      origin_y_, scale_, steps, true);
+        }
+        catch (const std::exception& error)
+        {
+            set_error(QString::fromUtf8(error.what()));
+            return false;
+        }
     }
-    // Fixed-step diagnostics configure the advance mode. For idle animation
-    // (no user input) free-running and fixed-step produce identical results,
-    // so allowing configuration after rendering started is safe for capture.
-    // Pure input isolation (steps==0, !fixed) is always safe.
-    state_->fixed_steps = steps;
-    state_->deterministic = fixed;
-    state_->notify_frames = true;
     diagnostic_inputs_ = true;
+    diagnostic_notifications_ = true;
     setAcceptHoverEvents(false);
     setAcceptedMouseButtons(Qt::NoButton);
     input_count_ = 0;
+    update();
     return true;
 }
 

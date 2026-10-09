@@ -53,9 +53,10 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void setOriginY(float value);
     void setScale(float value);
     void setPaused(bool value);
-    // GUI diagnostic setup before the item starts rendering. Real pointer
-    // events are disabled; fixed playback and frame notifications are separate.
-    bool configure_diagnostics(int steps, bool fixed);
+    // Input isolation/notifications may be enabled at any time via synchronize.
+    // Fixed playback replaces the CPU initial state before renderer creation only;
+    // late requests fail without mutating the live session or its status.
+    bool configure_diagnostics(int steps, bool fixed, std::uint32_t seed);
 
     std::shared_ptr<nekomote::qt_quick::SessionState> session_state() const override;
 
@@ -99,7 +100,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     float scale_{1};
     bool paused_{false};
     bool effective_paused_{true};
-    bool diagnostic_inputs_{false};
+    bool diagnostic_inputs_{false}, diagnostic_notifications_{false};
     int status_{0};
     QString error_string_;
     std::uint64_t playback_revision_{0};

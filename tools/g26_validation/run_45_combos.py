@@ -218,15 +218,9 @@ def main():
                 row["status"] = "PASS"
                 passed_count += 1
             else:
-                physics_vars = {"bust_LR", "bust_UD", "bust_LR_spare", "bust_UD_spare"}
-                if set(variables.keys()) & physics_vars:
-                    row["status"] = "PHYSICS_UNSUPPORTED"
-                    row["known_difference"] = (
-                        "bust_LR/UD are spring/chain control binding variables; "
-                        "nekomote_pose does not implement physical controllers, "
-                        "so native output equals default pose. Not a formula regression.")
-                else:
-                    row["status"] = "FAIL"
+                # A parameter name cannot establish the cause of a failed comparison.
+                # Keep failures visible until matched-input reference evidence diagnoses them.
+                row["status"] = "FAIL"
 
             row["hashes"] = {
                 p.name: sha256(p) for p in args.output.glob(case + "-*")

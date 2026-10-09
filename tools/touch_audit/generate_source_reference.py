@@ -106,9 +106,9 @@ def projected_regions(author, mirror, author_scale, cond):
 
 
 def png_center(projected_center):
-    """条件投影中心 → PNG 像素坐标（Y 向下，中心 X=width/2）。"""
+    """条件投影中心 → PNG 像素坐标（Y 向下，原点为窗口中心）。"""
     return [PNG_WIDTH // 2 + int(round(projected_center[0])),
-            int(round(projected_center[1] + PNG_HEIGHT / 2 - 540))]
+            int(round(projected_center[1] + PNG_HEIGHT / 2))]
 
 
 def compare_regions(source, session):

@@ -116,22 +116,26 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
                     Qt::QueuedConnection);
             connect(this, &SessionRenderer::failed, item, &SessionItemBase::failed,
                     Qt::QueuedConnection);
-            if (state_->deterministic || state_->notify_frames)
-                connect(
-                    item->window(), &QQuickWindow::afterFrameEnd, this,
-                    [this]
-                    {
-                        if (!diagnostic_pending_)
-                            return;
-                        diagnostic_pending_ = false;
-                        emit frame_ready(output_size_, generation_, diagnostic_delta_,
-                                         diagnostic_reaction_);
-                    },
-                    Qt::DirectConnection);
             connected_ = true;
         }
-        logical_size_ = item->size();
         const auto item_state = item->get_item_state();
+        notify_frames_ = state_->deterministic || item_state.notify_frames;
+        if (notify_frames_ && !notifications_connected_)
+        {
+            connect(
+                item->window(), &QQuickWindow::afterFrameEnd, this,
+                [this]
+                {
+                    if (!diagnostic_pending_)
+                        return;
+                    diagnostic_pending_ = false;
+                    emit frame_ready(output_size_, generation_, diagnostic_delta_,
+                                     diagnostic_reaction_);
+                },
+                Qt::DirectConnection);
+            notifications_connected_ = true;
+        }
+        logical_size_ = item->size();
         paused_ = item_state.paused;
         if (playback_revision_ != item_state.playback_revision)
         {
@@ -215,9 +219,12 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
                 std::chrono::duration<double>(now - state_->previous_time).count();
             dispatch_inputs();
             if (first && state_->deterministic && !paused_)
+            {
                 for (int step = 0; step < state_->fixed_steps; ++step)
                     check(nekomote_session_advance(state_->session.get(), 1.0 / 60),
                           "fixed advance");
+                state_->fixed_steps_executed.store(static_cast<unsigned>(state_->fixed_steps));
+            }
             if (!state_->deterministic && !first)
                 check(nekomote_session_advance(state_->session.get(), elapsed), "advance session");
             state_->initialized_time = state_->initialized_time || !paused_;
@@ -255,7 +262,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             }
             state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
             // Notifications are diagnostic only and not the playback frame path.
-            if ((state_->deterministic || state_->notify_frames) && state_->initialized_time)
+            if (notify_frames_ && state_->initialized_time)
             {
                 const auto reaction = nekomote_session_active_reaction(state_->session.get());
                 const auto* label =
@@ -325,6 +332,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     unsigned generation_{0};
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
+    bool notify_frames_{false}, notifications_connected_{false};
     std::array<Input, 32> inputs_{};
     std::size_t input_count_{0};
 };

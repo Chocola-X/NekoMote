@@ -15,6 +15,19 @@ tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tool)
 
 
+class OverlayCoordinates(unittest.TestCase):
+    def test_model_origin_maps_to_canvas_center_and_positive_y_points_down(self):
+        for filename in ("generate_overlay_images.py", "generate_source_reference.py"):
+            with self.subTest(tool=filename):
+                overlay_spec = importlib.util.spec_from_file_location(
+                    "overlay_coordinates", ROOT / "tools/touch_audit" / filename)
+                overlay = importlib.util.module_from_spec(overlay_spec)
+                overlay_spec.loader.exec_module(overlay)
+                self.assertEqual(overlay.png_center([0, 0]), [400, 540])
+                self.assertEqual(overlay.png_center([80, 400]), [480, 940])
+                self.assertEqual(overlay.png_center([-400, -540]), [0, 0])
+
+
 def regions():
     return {z: {"center": [i * 100.0, 0.0], "radius": [10.0, 10.0]}
             for i, z in enumerate(tool.ZONE_ORDER)}

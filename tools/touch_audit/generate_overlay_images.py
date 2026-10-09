@@ -44,7 +44,7 @@ def file_record(path, role=None):
 
 def png_center(projected_center):
     return [PNG_WIDTH // 2 + int(round(projected_center[0])),
-            int(round(projected_center[1] + PNG_HEIGHT / 2 - 540))]
+            int(round(projected_center[1] + PNG_HEIGHT / 2))]
 
 
 def draw_ellipse(draw, center, radius, color, label):

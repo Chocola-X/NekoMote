@@ -14,22 +14,21 @@
 
 namespace
 {
-void check_status(QQmlEngine& engine, const QByteArray& properties, int expected,
-                  const char* label)
+void check_status(QQmlEngine& engine, const QByteArray& properties, int expected, const char* label)
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 64; height: 64; " +
-                           properties + " }",
-                       {});
+                      "NekoWallpaperItem { width: 64; height: 64; " +
+                          properties + " }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item)
         throw std::runtime_error(std::string(label) + ": QML creation failed");
     if (item->status() != expected)
-        throw std::runtime_error(std::string(label) + ": expected status=" +
-                                 std::to_string(expected) + " got=" +
-                                 std::to_string(item->status()));
+        throw std::runtime_error(std::string(label) +
+                                 ": expected status=" + std::to_string(expected) +
+                                 " got=" + std::to_string(item->status()));
     std::printf("%s: status=%d OK\n", label, expected);
 }
 
@@ -37,15 +36,15 @@ void check_input_isolation(QQmlEngine& engine, const QString& model, const QStri
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 64; height: 64; modelFile: '" +
-                           QUrl::fromLocalFile(model).toString().toUtf8() + "'; sessionFile: '" +
-                           QUrl::fromLocalFile(session).toString().toUtf8() + "'; }",
-                       {});
+                      "NekoWallpaperItem { width: 64; height: 64; modelFile: '" +
+                          QUrl::fromLocalFile(model).toString().toUtf8() + "'; sessionFile: '" +
+                          QUrl::fromLocalFile(session).toString().toUtf8() + "'; }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item || item->status() != 1)
         throw std::runtime_error("input isolation: item did not load");
-    if (!item->configure_diagnostics(0, false))
+    if (!item->configure_diagnostics(0, false, 1))
         throw std::runtime_error("input isolation: configure_diagnostics failed");
     if (item->acceptHoverEvents() || item->acceptedMouseButtons() != Qt::NoButton)
         throw std::runtime_error("input isolation: diagnostic mode did not disable input");
@@ -76,16 +75,16 @@ int main(int argc, char** argv)
         check_status(engine, ("sessionFile: '" + missing.toUtf8() + "';").constData(), 0,
                      "only session");
         // Missing files
-        check_status(engine,
-                     ("modelFile: '" + missing.toUtf8() + "'; sessionFile: '" +
-                      missing.toUtf8() + "';")
-                         .constData(),
-                     2, "missing files");
+        check_status(
+            engine,
+            ("modelFile: '" + missing.toUtf8() + "'; sessionFile: '" + missing.toUtf8() + "';")
+                .constData(),
+            2, "missing files");
         // Bad JSON
-        check_status(engine,
-                     ("modelFile: '" + bad.toUtf8() + "'; sessionFile: '" + bad.toUtf8() + "';")
-                         .constData(),
-                     2, "bad JSON");
+        check_status(
+            engine,
+            ("modelFile: '" + bad.toUtf8() + "'; sessionFile: '" + bad.toUtf8() + "';").constData(),
+            2, "bad JSON");
         // Invalid scale
         check_status(engine, "scale: 0;", 2, "scale zero");
         check_status(engine, "scale: -1;", 2, "scale negative");
