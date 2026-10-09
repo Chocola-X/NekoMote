@@ -11,7 +11,7 @@
 | V12 | 撤回认证：3 PENDING、177 UNREVIEWED、15 BLOCKED；候选不应用 | Gemini V14真实观察 |
 | G19 | 已完成：生命周期/错误恢复/配置测试全通，40轮重建平衡，见 docs/g19-plasma-report.md | 沿用 |
 | G20 | 候选完成：隔离worktree验证误差8.95px未过门槛，正式拒绝保持，见 docs/g20-inheritance-evidence.md | Codex复核候选与根因 |
-| G21 | 待领用：Qt触摸布局/真实点/独立来源 | GLM按Gemini点单执行 |
+| G21 | 已完成：独立source-field参考验证通过，moved/scaled_half 30点+边缘12点全OK，见 docs/g21-touch-handoff.md | Gemini V14视觉观察 |
 | V13 | 已完成：实际包视觉与配置交互通过，QML对WebGL差0，见 docs/v13-plasma-visual-report.md | 沿用 |
 | V14 | 待领用：三重点型号真实触摸观察 | Gemini按G21新包执行 |
 | C5/C6/C7 | 正式语义及声音/背景/应用/宿主最终整合未完成 | Codex风险审查；明确局部实现继续交GLM |
