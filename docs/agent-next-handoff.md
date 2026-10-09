@@ -1,8 +1,25 @@
 # 下一批独立任务
 
-基线：包含[2026-10-09复核](agent-review-2026-10-09.md)的最新Codex提交。声明实际base/文件，阶段验证后提交真实Agent/Model/Context；摘要≤一页，大图/日志放新build目录。原素材只读，GPU共享锁。用户要求GLM承担实现/批量运行大头，Codex集中风险抽核。
+基线：`4552236`（G19/G20/G21/V13/V14全部完成）。声明实际base/文件，阶段验证后提交真实Agent/Model/Context；摘要≤一页，大图/日志放新build目录。原素材只读，GPU共享锁。用户要求GLM承担实现/批量运行大头，Codex集中风险抽核。
 
-## GLM G19：Plasma包配置、生命周期与部署验证（优先主任务）
+## 已完成
+
+- **G19** ✅ Plasma包配置/生命周期/部署：见 [docs/g19-plasma-report.md](g19-plasma-report.md)
+- **G20** ✅ 0x7fc继承候选：误差8.95px未过≤0.001px门槛，正式拒绝保持，见 [docs/g20-inheritance-evidence.md](g20-inheritance-evidence.md)，待Codex复核根因
+- **G21** ✅ 触摸source-field参考+moved/scaled_half+边缘42点全OK，见 [docs/g21-touch-handoff.md](g21-touch-handoff.md)
+- **V13** ✅ 实际Plasma包视觉：QML对WebGL差0，见 [docs/v13-plasma-visual-report.md](v13-plasma-visual-report.md)
+- **V14** ✅ 三重点型号触摸观察：3 PENDING/177 UNREVIEWED/15 BLOCKED保持，见 [docs/v14-touch-report.md](v14-touch-report.md)
+
+## 待推进
+
+- **Codex复核G20候选根因**：0x7fc继承8.95px X偏移的根因未闭合
+- **C5/C6/C7**：正式语义及声音/背景/应用/宿主最终整合；明确局部实现交GLM
+  - 2标量FAIL（force-negative30/force-half-positive30，1.67e-5/1.14e-5超1e-5）：后续由Codex推导
+  - 嵌套遮罩：仍拒绝，P4工作项
+  - UI/渐变/reset：未完成，P6工作项
+  - 195动态视觉/8-24h/多屏/安装：后续退出条件
+
+## 历史：GLM G19：Plasma包配置、生命周期与部署验证（优先主任务）
 
 已有动态模块+真实WallpaperItem+main.xml/config.qml，实际隔离KPackage/Containment宿主已显示Chocola/Fraise；不要重新实现它们或声称SDK缺失。
 
