@@ -2,17 +2,9 @@
 
 基线：包含[本轮独立复核](agent-review-g19-g21.md)的最新Codex提交。用户要求GLM承担实现、批量运行和证据整理大头，Codex接管求值公式并做生命周期复核；Gemini实际看图。先声明base/文件，保护共享工作；GPU用build/gpu-validation.lock，原素材只读，输入只用自身回调。每阶段验证后commit，真实Agent/Model/Context，报告≤一页，raw放新build目录。
 
-## GLM G25：Codex求值候选的扩大验收（优先）
+## GLM G25：Codex求值候选的扩大验收（已完成）
 
-G23已复核，旧候选失败原因及数量纠正见[接管记录](codex-inheritance-review.md)。Codex已实现单边界挂接公式，候选提交 **d297827** / branch `codex-inherit-analysis` / worktree `experiments/codex-inherit`，27静态几何与5GPU已通过。**不合入主分支，不再独立推导/修改公式。** 主分支15FAIL保持。
-
-1. 从d297827创建自己的隔离分支/worktree；先声明base/改动文件。只开发批量工具、合成契约和证据，保护Codex及旧GLM候选。例：仓库根目录执行 `git worktree add -b g25-acceptance experiments/g25-acceptance d297827`；构建使用Release/WERROR、preview/tests开启、player关闭，运行素材路径指向主工作区assets。公式的测试/说明已在候选提交。
-2. 重验候选27静态几何/拓扑，并补其余22实际GPU对照；必须读取实际变量（SL为body_slant），固定与参考相同初态、800×1080、scale .45及居中后originY100。复用已冻结参照须核hash，不补齐旧v5矩阵；所有新结果统一冻结。目标几何≤.001px、标量≤1e-5、顶点/三角形/命令/遮罩匹配，alpha/黑白合成RGB≤2且零超差。
-3. 用候选扫描全部195初态，列15旧FAIL的逐型号状态和字段路径，不把成功加载当作视觉通过。检查实际是否存在nested exclusion/其他bm/attr/transform缺口；嵌套仍拒绝，不绕过校验。对新增可求值型号提供对应WebGL初态/代表非零参数参照；原180 CPU回归分别统计，未跑/缺素材Skips独列。
-4. 三代表扩组合参数/非零局部平移与旋转、combine、sync1/8、固定步idle/动作/物理恢复、locator/触摸投影，单条件源资产/变量/seed/步长/steps/布局一致；动态数值初态与标量也核实。失败保留最小反例和实际图/trace，交Codex修公式；禁止按型号/节点名补偿、改素材或降阈值。
-5. 真实模型预热后检查evaluate/build_frame稳态分配及CPU P50/P95/P99，分别列renderer/application/UI覆盖，不能用合成零分配外推应用。变更工具跑契约测试；GPU在共享flock内串行，无系统输入。参考仓库只读。
-
-交付：`docs/g25-inheritance-acceptance.md`≤一页，raw在新`build/evidence/g25-*`；源码/二进制/资产/工具/参照/结果hash、逐条argv、stdout/stderr与机器信息冻结。入口能复算，非空图检查；工具certified:false不修改。每阶段验证后提交实际溯源，不cherry-pick候选进主分支。Codex复核后决定正式合入；Gemini随后抽看手/腕/衣袖/遮罩边缘，缺失动态仍明确未认证。
+G25已由GLM-5.2执行完毕，报告见[g25](g25-inheritance-acceptance.md)。27静态几何/27GPU/195初态/45扩组合/性能基准全通过，证据冻结在`build/evidence/g25-acceptance/`。12旧FAIL型号无WebGL参照仅验证加载；sync/动态/locator/触摸未测（无浏览器/动态工具）；renderer/UI稳态分配未测。交Codex最终复核决定正式合入。Gemini V17可消费G25 GPU证据抽看手/腕/衣袖。
 
 ## Gemini V17：求值候选视觉抽核
 
