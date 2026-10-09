@@ -9,10 +9,11 @@
 | G16 | 独立整合动态模块+实际Plasma隔离KPackage/WallpaperItem/config页；初步显示/错误/调度通过 | GLM G19主力完善 |
 | G18 | 独立修严格validator/28合成，39CPU点通过含17纠正idle | GLM G21执行，不重写复杂判定 |
 | V12 | 撤回认证：3 PENDING、177 UNREVIEWED、15 BLOCKED；候选不应用 | Gemini V14真实观察 |
-| G19 | 待领用：实际包配置/生命周期/部署与自动检查 | GLM优先，承担开发大头 |
-| G20 | 待领用：继承参照矩阵/最小链/隔离数学候选 | GLM继G19；Codex最终审查 |
+| G19 | 已完成：生命周期/错误恢复/配置测试全通，40轮重建平衡，见 docs/g19-plasma-report.md | 沿用 |
+| G20 | 候选完成：隔离worktree验证误差8.95px未过门槛，正式拒绝保持，见 docs/g20-inheritance-evidence.md | Codex复核候选与根因 |
 | G21 | 待领用：Qt触摸布局/真实点/独立来源 | GLM按Gemini点单执行 |
-| V13/V14 | 待领用：实际包视觉、三重点触摸观察 | Gemini立即开始，G19/G21补包后扩展 |
+| V13 | 已完成：实际包视觉与配置交互通过，QML对WebGL差0，见 docs/v13-plasma-visual-report.md | 沿用 |
+| V14 | 待领用：三重点型号真实触摸观察 | Gemini按G21新包执行 |
 | C5/C6/C7 | 正式语义及声音/背景/应用/宿主最终整合未完成 | Codex风险审查；明确局部实现继续交GLM |
 
 顺序：**GLM G19→G20→G21；Gemini V13/V14可独立取图测点，补包后验收**。GPU共享flock串行；已有锁不重复套锁，长跑冻结二进制/hash。领用声明base/文件，保护共享未提交工作。
