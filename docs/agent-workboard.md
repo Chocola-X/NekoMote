@@ -13,7 +13,7 @@
 | G20 | 候选完成：隔离worktree验证误差8.95px未过门槛，正式拒绝保持，见 docs/g20-inheritance-evidence.md | Codex复核候选与根因 |
 | G21 | 已完成：独立source-field参考验证通过，moved/scaled_half 30点+边缘12点全OK，见 docs/g21-touch-handoff.md | Gemini V14视觉观察 |
 | V13 | 已完成：实际包视觉与配置交互通过，QML对WebGL差0，见 docs/v13-plasma-visual-report.md | 沿用 |
-| V14 | 待领用：三重点型号真实触摸观察 | Gemini按G21新包执行 |
+| V14 | 已完成：三重点型号逐条件真实目视观察与81测点复核，3 PENDING/177 UNREVIEWED/15 BLOCKED保持，见 docs/v14-touch-report.md | 沿用 |
 | C5/C6/C7 | 正式语义及声音/背景/应用/宿主最终整合未完成 | Codex风险审查；明确局部实现继续交GLM |
 
 顺序：**GLM G19→G20→G21；Gemini V13/V14可独立取图测点，补包后验收**。GPU共享flock串行；已有锁不重复套锁，长跑冻结二进制/hash。领用声明base/文件，保护共享未提交工作。
