@@ -8,6 +8,6 @@
 
 入口：`build/plasma/bin/nekomote_plasma_package_probe --model MODEL --session SESSION --output NEW_DIR --lifecycle`。普通截图不加lifecycle；bad-asset/invalid-config目前只证明错误公开与GUI存活，仍不验证恢复。仅workspace隔离XDG，不安装/修改真实桌面。
 
-实际20位置+20缩放重建已重测，每轮旧renderer1/1，最终1/1，恢复首delta0；隐藏先排空已提交帧再检无后续帧。新原始日志/hash/PNG见 `build/evidence/review-g19-g21-2026-10-09/`。配置拒绝默认9项；第10项真实资产输入隔离需显式环境变量，不能算默认10合成PASS。完整错误恢复/model-session切换、DPI/FBO尺寸断言、CPU内存/峰值、自动实际包入口、无预链接native的干净部署仍交GLM G22；不据截图宣布长期稳定。
+实际20位置+20缩放重建已重测，每轮旧renderer1/1，最终1/1，恢复首delta0；隐藏先排空已提交帧再检无后续帧。新原始日志/hash/PNG见 `build/evidence/review-g19-g21-2026-10-09/`。配置拒绝默认9项；第10项真实资产输入隔离需显式环境变量，不能算默认10合成PASS。以上为G19历史范围；后续G22恢复/DPI/自动测试已有部分证据，完整安装/独立动态部署尚未验收，见[当前复核](review-g22-g26.md)及GLM G27[交接](agent-next-handoff.md)。不据截图宣布长期稳定。
 
 后续Loader实例目前未重复诊断输入隔离，40轮计数有效但最终图不是受控输入对照；G22需每代在渲染前通过明确诊断接口禁用实际hover/mouse，不改共享渲染状态。

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Plasma wallpaper install/uninstall to user-local XDG directories.
+# Experimental KPackage-only installer; not a complete Plasma deployment.
+# QML/native module installation and relocation acceptance are pending G27.
+# Use temporary prefixes for investigation; see docs/agent-next-handoff.md.
 # Does NOT install to system paths, change real desktop settings, restart
 # the shell, or copy PCM/audio services. All steps are auditable.
 #
@@ -9,7 +11,7 @@
 #   tools/plasma_install.sh --status    [--prefix DIR]
 #
 # Default stage: build/plasma/adapters/plasma/stage
-# Default prefix: ~/.local/share/plasma (XDG_DATA_HOME)
+# Current default prefix: ~/.local/share/plasma; XDG_DATA_HOME handling pending G27.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"

@@ -21,4 +21,4 @@ V17的27原图/裁图及静态观察可保留。三条带实际顺序default,-30
 
 raw：`build/evidence/codex-g25-integration/`，`integration-manifest.json`、`new-models/manifest.json`、`dynamic/manifest.json`、`release-initial/manifest.json`及各日志；源码/binary/asset/tool/参照/结果/机器信息冻结。源参考仓库只读，未修改素材或桌面配置。实际查看新增Hawaii及Coconut idle120对照，手臂/衣袖匹配。几何和最终截图PASS与完整动态认证分开；SDK原始GetVariable不含差分，标量只比较显式物理绑定，不混用差分后的body通道。
 
-节点挂接位移按evaluate缓存，顶点复用，合成稳态零分配；正式Release Coconut/body_LR30 CPU evaluate+build_frame，预热120/4000样本，P50/P95/P99=0.379661/0.404664/0.422823ms；记在release-benchmark.stdout，未声称应用性能改善。45组合参照、其他动作/过渡、暂停恢复、locator/触摸、实际应用分配和长期运行仍待验。GLM下一步G22→G24→G26；遇到求值反例只阻塞该条件并交Codex，其余独立任务继续。见[交接](agent-next-handoff.md)。
+节点挂接位移按evaluate缓存，顶点复用，合成稳态零分配；正式Release Coconut/body_LR30 CPU evaluate+build_frame，预热120/4000样本，P50/P95/P99=0.379661/0.404664/0.422823ms；记在release-benchmark.stdout，未声称应用性能改善。45组合参照、其他动作/过渡、暂停恢复、locator/触摸、实际应用分配和长期运行仍待验。以上为该阶段历史范围；G22/G24/G26后续执行与独立复核见[当前复核](review-g22-g26.md)，最新分工以[交接](agent-next-handoff.md)为准。
