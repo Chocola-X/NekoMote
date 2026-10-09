@@ -27,7 +27,7 @@ G19的初态重建/配置页真实创建/首delta0/40轮旧renderer及最终销�
 
 修改：package_main.cpp 条件参数+WindowTransparentForInput；wallpaper_item.cpp 放宽 configure_diagnostics rendered_frames 检查。候选触摸数据保持 PENDING。
 
-Gemini V15随后逐图实际观察，填写工具支持的version3（version/observations/observer、逐condition角色/path/hash/reference）；缺图/被遮挡/画幅外/未检查区分。旧lower_body_diag下身UNCHECKED，撤回“网格cutoff”解释。不硬编码MATCH或按家族外推，不根据椭圆数学认证候选，不改素材/工具/公式。视觉任务只交一页docs/v15-touch-report.md及实际证据。
+Gemini V15已由Gemini 3.8 Flash执行完毕，报告见[v15](v15-touch-report.md)。消费G24 15 clean/overlay图，下半身进入画幅排除裁切误判；发现overlay生成脚本缺失窗口中心540px偏置导致椭圆整体上移~540px，标记MISMATCH，候选保持PENDING。交付符合标准schema的`build/evidence/v15-touch-audit/version3_observations.json`。
 
 ## Gemini V16：Plasma视觉复核
 
@@ -43,9 +43,9 @@ Gemini V15随后逐图实际观察，填写工具支持的version3（version/obs
 
 入口：tools/g26_validation/run_45_combos.py、run_dynamic_validation.py、run_allocation_count.py。证据：build/evidence/g26-validation/。bust_LR物理控制变量未实现非公式反例；组合差分因模型无显式variable_sources未测；暂停恢复仅验证确定性。
 
-## Gemini V18：新增型号与真实动态观察
+## Gemini V18：新增型号与真实动态观察（已完成）
 
-可立即看本轮 `build/evidence/codex-g25-integration/new-models/` 的24组和dynamic三终态，再消费G26同实例多步/动作截图。逐条件实际看腕部/遮罩/局部变化，记录图/hash/request与观察，终态静态观察不写成动态连续性。旧V17条带排序错误，仅作历史证据；要重拼须新目录、明确参数标签，不覆写冻结图。只核图，不改公式/素材。触摸V15继续待G24包；Plasma V16可随G22实际包推进。
+V18已由Gemini 3.8 Flash执行完毕，报告见[v18](v18-dynamic-visual.md)。消费G26动作终态（挨拶/ピョン各120步×3代表）、45组合遮罩（眼/嘴半开）与局部变化、Codex 12新型号（24条件）与idle120终态图，腕部严丝合缝无8.95px断裂，遮罩无溢色，bust_LR20物理差分局限于胸部。证据冻结在`build/evidence/v18-dynamic-visual/`（含crops与manifest）。终态静态观察不外推全动态连续性。
 
 ## 执行顺序与阻塞规则
 
