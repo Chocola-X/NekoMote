@@ -1,242 +1,206 @@
 #!/usr/bin/env python3
-"""G18: Per-point touch validator.
+"""Execute a frozen independent touch request in a fresh evidence directory.
 
-Takes a test point specification (model, condition, PNG coordinates, expected
-zone/reaction), executes a touch via nekomote_session_probe, and validates
-the response. Does NOT generate observation conclusions — only validates.
-
-Rejects: no request, wrong coords/steps/seed/response, Busy/failure, wrong hash.
-
-Usage:
-  g18_point_validator.py SPEC.json OUTPUT.json
-  g18_point_validator.py --batch SPECS_DIR/ OUTPUT_DIR/
-
-Spec format:
-{
-  "model": "fraise-france-maid-b",
-  "condition": "default_idle",
-  "png_point": [400, 897],       // PNG pixel coordinates
-  "width": 800, "height": 1080,
-  "origin": [0, 400], "scale": 1.0,
-  "steps": 0, "seed": 1, "reaction_seed": 1,
-  "expected_zone": "bust",       // or null for expected miss
-  "expected_phase_in": [1, 2],   // [Playing, Recovering] or [0] for miss
-  "expected_reaction_prefix": "fraise/"  // prefix check, or null
-}
+Explicit --probe/--assets/--ledger inputs are required. PNG coordinates become
+centered pixels without an extra mirror. Event N=idle_steps+1 dispatches after
+exactly idle_steps advances. Current session behavior is tested; visual alignment
+and candidate changes are never accepted by this tool.
 """
 from __future__ import annotations
-
-import hashlib
+import argparse
 import json
 import math
-import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
-PROBE = REPO / "build" / "release" / "bin" / "nekomote_session_probe"
-ASSETS = REPO / "assets" / "characters"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import run_touch_audit as audit
 
-ZONES = ["bust", "eye", "face", "head", "pant"]
-PHASE_NAMES = {0: "Idle", 1: "Playing", 2: "Recovering"}
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
+ZONES = audit.ZONE_ORDER
+CONDITION_STEPS = {c['name']: c['steps'] for c in audit.CONDITIONS}
+CONDITION_STEPS['lower_body_diag'] = 0
 
 
-def validate_spec(spec: dict) -> list[str]:
-    errors = []
-    for key in ["model", "condition", "png_point", "width", "height",
-                "origin", "scale", "steps", "seed", "reaction_seed"]:
-        if key not in spec:
-            errors.append(f"missing required field: {key}")
+def validate_spec(spec):
+    if not isinstance(spec, dict):
+        return ['spec must be an object']
+    required = {'model', 'condition', 'png_point', 'width', 'height', 'origin', 'scale',
+                'steps', 'seed', 'reaction_seed', 'expected_zone', 'expected_phase_in'}
+    errors = [f'missing required field: {k}' for k in sorted(required - spec.keys())]
     if errors:
         return errors
-    pt = spec["png_point"]
-    if not (isinstance(pt, list) and len(pt) == 2 and
-            all(isinstance(v, (int, float)) and math.isfinite(v) for v in pt)):
-        errors.append("png_point must be [x, y] with finite values")
-    if spec["width"] <= 0 or spec["height"] <= 0:
-        errors.append("width/height must be positive")
-    if spec["scale"] <= 0 or not math.isfinite(spec["scale"]):
-        errors.append("scale must be positive and finite")
-    if not isinstance(spec["steps"], int) or spec["steps"] < 0:
-        errors.append("steps must be non-negative integer")
-    if not isinstance(spec["seed"], int) or spec["seed"] < 0:
-        errors.append("seed must be non-negative integer")
-    if not isinstance(spec["reaction_seed"], int) or spec["reaction_seed"] < 0:
-        errors.append("reaction_seed must be non-negative integer")
-    orig = spec["origin"]
-    if not (isinstance(orig, list) and len(orig) == 2 and
-            all(isinstance(v, (int, float)) and math.isfinite(v) for v in orig)):
-        errors.append("origin must be [x, y] with finite values")
-    ez = spec.get("expected_zone")
-    if ez is not None and ez not in ZONES:
-        errors.append(f"expected_zone must be one of {ZONES} or null")
-    ep = spec.get("expected_phase_in")
-    if ep is not None and not (isinstance(ep, list) and all(p in [0, 1, 2] for p in ep)):
-        errors.append("expected_phase_in must be list of 0/1/2")
+    model = spec['model']
+    if not isinstance(model, str) or not model or model in {'.', '..'} or any(c in model for c in '/\\'):
+        errors.append('model must be a single nonempty asset directory name')
+    condition = spec['condition']
+    if not isinstance(condition, str) or condition not in CONDITION_STEPS:
+        errors.append('condition unsupported')
+    for name in ('png_point', 'origin'):
+        if not audit.finite_pair(spec[name]):
+            errors.append(f'{name} must contain two finite numbers, excluding bool')
+    for name in ('width', 'height'):
+        if type(spec[name]) is not int or not 1 <= spec[name] <= 8192:
+            errors.append(f'{name} must be an integer in 1..8192')
+    scale = spec['scale']
+    if isinstance(scale, bool) or not isinstance(scale, (int, float)) or not math.isfinite(scale) or scale <= 0:
+        errors.append('scale must be positive and finite, excluding bool')
+    for name in ('steps', 'seed', 'reaction_seed'):
+        limit = 100000 if name == 'steps' else 0xffffffff
+        if type(spec[name]) is not int or not 0 <= spec[name] <= limit:
+            errors.append(f'{name} must be an integer in 0..{limit}')
+    if isinstance(condition, str) and condition in CONDITION_STEPS and spec['steps'] != CONDITION_STEPS[condition]:
+        errors.append('steps differ from declared condition')
+    zone = spec['expected_zone']
+    if zone is not None and (not isinstance(zone, str) or zone not in ZONES):
+        errors.append('expected_zone invalid')
+    phases = spec['expected_phase_in']
+    if not isinstance(phases, list) or not phases or any(type(p) is not int or p not in (0, 1, 2) for p in phases):
+        errors.append('expected_phase_in must be a nonempty list of phases 0/1/2')
+    elif len(set(phases)) != len(phases):
+        errors.append('expected_phase_in duplicated')
+    prefix = spec.get('expected_reaction_prefix')
+    if prefix is not None and (not isinstance(prefix, str) or not prefix):
+        errors.append('expected_reaction_prefix must be a nonempty string or null')
     return errors
 
 
-def png_to_centered(png_x: float, png_y: float, width: int, height: int) -> list:
-    return [png_x - width / 2, png_y - height / 2]
+def png_to_centered(x, y, width, height):
+    return [x - width / 2, y - height / 2]
 
 
-def run_probe(model: str, session_path: Path, input_data: dict,
-              input_file: Path, output_file: Path) -> dict:
-    input_file.write_text(json.dumps(input_data, indent=2))
-    model_path = ASSETS / model / "model.nkm.json"
-    cmd = [str(PROBE), str(model_path), str(session_path),
-           str(input_file), str(output_file)]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    return {
-        "returncode": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "output_file": str(output_file),
-    }
+def frozen_inputs(spec, assets, probe, ledger):
+    data = json.loads(ledger.read_text())
+    rows = [m for m in data['models'] if m['model'] == spec['model']]
+    if len(rows) != 1 or rows[0].get('status') != 'OK':
+        raise ValueError('model unavailable in frozen ledger')
+    row = rows[0]
+    probe_record = audit.file_record(probe)
+    if probe_record['sha256'] != data.get('probe', {}).get('sha256'):
+        raise ValueError('probe differs from frozen ledger hash')
+    model_dir = (assets / 'characters' / spec['model']).resolve()
+    model_dir.relative_to(assets.resolve())
+    model_path, session_path = model_dir / 'model.nkm.json', model_dir / 'session.nks.json'
+    asset = json.loads(model_path.read_text())['model']
+    session = json.loads(session_path.read_text())['session']
+    if session['model'] != spec['model'] or type(asset['mirror']) is not bool:
+        raise ValueError('invalid model identity/mirror')
+    author, reactions = audit.author_regions(session), audit.zone_reactions(session)
+    scale = asset['author_scale']
+    if type(scale['state']) is not int or scale['state'] not in (0, 1, 2):
+        raise ValueError('invalid author_scale state')
+    author_scale = scale['value'] if scale['state'] == 2 else 1.0
+    if isinstance(author_scale, bool) or not isinstance(author_scale, (int, float)) or not math.isfinite(author_scale) or author_scale <= 0:
+        raise ValueError('invalid author scale')
+    owned = [(model_path, 'model_asset'), (session_path, 'session_asset')]
+    owned += [(model_dir / t['path'], 'texture_asset') for t in asset['textures']]
+    records = []
+    for path, role in owned:
+        path.resolve().relative_to(assets.resolve())
+        record = {**audit.file_record(path), 'role': role}
+        expected = [r for r in row.get('assets', []) if r.get('role') == role and Path(r['path']).name == path.name]
+        if len(expected) != 1 or record['sha256'] != expected[0]['sha256']:
+            raise ValueError(f'{role} differs from frozen ledger hash')
+        records.append(record)
+    if spec['condition'] != 'lower_body_diag':
+        conditions = [c for c in row['conditions'] if c['name'] == spec['condition']]
+        if len(conditions) != 1 or conditions[0].get('pass') is not True:
+            raise ValueError('condition unsuccessful/missing in frozen ledger')
+        params = conditions[0]['params']
+        for key, field in (('steps', 'steps'), ('origin', 'origin'), ('scale', 'scale'), ('seed', 'random_seed'), ('reaction_seed', 'reaction_seed')):
+            if spec[key] != params[field]:
+                raise ValueError(f'{key} differs from frozen condition')
+    projected = audit.projected_regions(author, reactions, asset['mirror'], author_scale, spec)
+    return model_path, session_path, asset['mirror'], reactions, projected, records + [probe_record, audit.file_record(ledger), audit.file_record(Path(__file__)), audit.file_record(Path(audit.__file__))]
 
 
-def validate_point(spec: dict, output_path: Path | None = None) -> dict:
-    errors = validate_spec(spec)
-    if errors:
-        return {"ok": False, "validated": False, "errors": errors, "spec": spec}
-
-    model = spec["model"]
-    session_path = ASSETS / model / "session.nks.json"
-    if not session_path.exists():
-        return {"ok": False, "validated": False,
-                "errors": [f"session not found: {session_path}"], "spec": spec}
-
-    w, h = spec["width"], spec["height"]
-    png_x, png_y = spec["png_point"]
-    cx, cy = png_to_centered(png_x, png_y, w, h)
-
-    event_step = spec["steps"] + 1
-    input_data = {
-        "steps": event_step,
-        "random_seed": spec["seed"],
-        "reaction_seed": spec["reaction_seed"],
-        "origin": spec["origin"],
-        "scale": spec["scale"],
-        "events": [
-            {"step": spec["steps"], "kind": "touch", "point": [cx, cy]}
-        ],
-    }
-
-    if output_path is None:
-        output_path = Path("/tmp") / f"g18_validate_{model}_{spec['condition']}.json"
-    input_path = output_path.with_suffix(".input.json")
-    probe_out_path = output_path.with_suffix(".probe.json")
-
-    probe_result = run_probe(model, session_path, input_data, input_path, probe_out_path)
-
-    result = {
-        "spec": spec,
-        "validated": True,
-        "png_point": [png_x, png_y],
-        "centered_point": [round(cx, 6), round(cy, 6)],
-        "event_step": event_step,
-        "probe": {
-            "returncode": probe_result["returncode"],
-            "input_path": str(input_path),
-            "output_path": str(probe_out_path),
-        },
-    }
-
-    if probe_result["returncode"] != 0:
-        result["ok"] = False
-        result["errors"] = [f"probe failed (rc={probe_result['returncode']}): "
-                            f"{probe_result['stderr'].strip()}"]
+def validate_point(spec, output_dir, *, probe, assets, ledger):
+    output_dir.mkdir(parents=True, exist_ok=False)
+    result = {'spec': spec, 'validated': False, 'ok': False, 'errors': validate_spec(spec),
+              'scope': 'Current session point behavior only; candidates remain pending.'}
+    if result['errors']:
+        try:
+            json.dumps(spec, allow_nan=False)
+        except (ValueError, TypeError):
+            result['spec'] = repr(spec)
+    try:
+        if result['errors']:
+            return result
+        model, session, mirror, reactions, projected, frozen = frozen_inputs(spec, assets, probe, ledger)
+        result['frozen_inputs'] = frozen
+        point = png_to_centered(*spec['png_point'], spec['width'], spec['height'])
+        step = spec['steps'] + 1
+        request = {'steps': step, 'random_seed': spec['seed'], 'reaction_seed': spec['reaction_seed'],
+                   'origin': spec['origin'], 'scale': spec['scale'],
+                   'events': [{'step': step, 'kind': 'touch', 'point': point}]}
+        input_path, response_path = output_dir / 'request.json', output_dir / 'response.json'
+        audit.write_json(input_path, request)
+        request_record = audit.file_record(input_path)
+        result.update(centered_point=point, event_step=step, mirror=mirror, request=request_record)
+        process = audit.run_process([probe, model, session, input_path, response_path], output_dir / 'probe', timeout=30)
+        result['probe'] = process
+        for record in frozen + [request_record]:
+            if audit.sha256_file(record['path']) != record['sha256']:
+                result['errors'].append(f"frozen input changed during execution: {record['path']}")
+        if response_path.exists():
+            result['response'] = audit.file_record(response_path)
+        if not process['ok']:
+            result['errors'].append('probe failed/Busy/timeout; never a measured miss')
+            return result
+        data = json.loads(response_path.read_text())
+        audit.validate_probe(data, step)
+        if type(data.get('steps')) is not int or data['steps'] != step:
+            result['errors'].append('response step count differs from request')
+        if data['presentation_mirror'] != mirror:
+            result['errors'].append('response mirror differs from model')
+        actual_regions = data['touch_regions']
+        for zone in ZONES:
+            expected, actual = projected[zone], actual_regions[zone]
+            if (expected is None) != (actual is None) or (expected is not None and any(abs(actual[k][i] - expected[k][i]) > 0.001 for k in ('center', 'radius') for i in (0, 1))):
+                result['errors'].append(f'response projected region differs: {zone}')
+        if any(s['phase'] != 0 or s['reaction'] != '' for s in data['samples'][:step]):
+            result['errors'].append('independent initial state not idle before touch')
+        zone = audit.expected_zone(point, projected)
+        if zone != spec['expected_zone']:
+            result['errors'].append('expected_zone differs from geometric hit priority')
+        sample = data['samples'][step]
+        phase, reaction = sample['phase'], sample['reaction']
+        result.update(actual_zone=zone, actual_phase=phase, actual_reaction=reaction, touch_regions=actual_regions)
+        if zone is None:
+            if phase != 0 or reaction != '':
+                result['errors'].append('miss requires idle phase and empty reaction')
+        elif phase not in (1, 2) or reaction not in reactions[zone]:
+            result['errors'].append("response phase/reaction differs from selected zone's allowed reactions")
+        if phase not in spec['expected_phase_in']:
+            result['errors'].append('phase differs from expected_phase_in')
+        prefix = spec.get('expected_reaction_prefix')
+        if prefix is not None and not reaction.startswith(prefix):
+            result['errors'].append('reaction differs from additional prefix constraint')
+        result['validated'] = True
+        result['ok'] = not result['errors']
         return result
-
-    if not Path(probe_out_path).exists():
-        result["ok"] = False
-        result["errors"] = ["probe output file not created"]
+    except (ValueError, OSError, KeyError, TypeError, OverflowError) as error:
+        result['errors'].append(str(error))
         return result
-
-    probe_data = json.loads(Path(probe_out_path).read_text())
-    result["probe"]["output_sha256"] = sha256_file(Path(probe_out_path))
-    result["mirror"] = probe_data.get("presentation_mirror")
-
-    samples = probe_data.get("samples", [])
-    touch_sample = None
-    for s in samples:
-        if s["step"] == event_step:
-            touch_sample = s
-            break
-    if touch_sample is None:
-        touch_sample = samples[-1] if samples else {}
-
-    phase = touch_sample.get("phase", -1)
-    reaction = touch_sample.get("reaction", "")
-    result["actual_phase"] = phase
-    result["actual_phase_name"] = PHASE_NAMES.get(phase, f"Unknown({phase})")
-    result["actual_reaction"] = reaction
-
-    touch_regions = probe_data.get("touch_regions", {})
-    result["touch_regions"] = touch_regions
-
-    errors = []
-
-    expected_zone = spec.get("expected_zone")
-    if expected_zone is not None:
-        r = touch_regions.get(expected_zone)
-        if r is not None:
-            dx = (cx - r["center"][0]) / r["radius"][0]
-            dy = (cy - r["center"][1]) / r["radius"][1]
-            inside = dx * dx + dy * dy <= 1.0
-            result["expected_zone_inside"] = inside
-            result["expected_zone_distance"] = round(math.sqrt(dx * dx + dy * dy), 6)
-            if not inside:
-                errors.append(f"point not inside expected zone '{expected_zone}' "
-                              f"(distance={result['expected_zone_distance']:.3f})")
-
-    expected_phases = spec.get("expected_phase_in")
-    if expected_phases is not None:
-        if phase not in expected_phases:
-            errors.append(f"phase {phase} ({result['actual_phase_name']}) not in "
-                          f"expected {expected_phases}")
-
-    expected_prefix = spec.get("expected_reaction_prefix")
-    if expected_prefix is not None:
-        if not reaction.startswith(expected_prefix):
-            errors.append(f"reaction '{reaction}' does not start with "
-                          f"'{expected_prefix}'")
-
-    if expected_zone is None and expected_phases == [0]:
-        if reaction != "":
-            errors.append(f"expected no reaction but got '{reaction}'")
-        if phase != 0:
-            errors.append(f"expected phase 0 (Idle) but got {phase}")
-
-    result["ok"] = len(errors) == 0
-    result["errors"] = errors
-    return result
+    finally:
+        audit.write_json(output_dir / 'result.json', result)
 
 
-def main() -> int:
-    if len(sys.argv) < 3:
-        print(__doc__, file=sys.stderr)
-        return 1
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('spec', type=Path)
+    parser.add_argument('output', type=Path)
+    parser.add_argument('--probe', type=Path, required=True)
+    parser.add_argument('--assets', type=Path, required=True)
+    parser.add_argument('--ledger', type=Path, required=True)
+    args = parser.parse_args()
+    try:
+        result = validate_point(json.loads(args.spec.read_text()), args.output,
+                                probe=args.probe, assets=args.assets, ledger=args.ledger)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    print(json.dumps({'ok': result['ok'], 'validated': result['validated'], 'errors': result['errors']}))
+    return 0 if result['ok'] else 1
 
-    spec_path = Path(sys.argv[1])
-    output_path = Path(sys.argv[2])
-    spec = json.loads(spec_path.read_text())
-    result = validate_point(spec, output_path)
-    output_path.write_text(json.dumps(result, indent=2))
-    print(f"ok={result['ok']} validated={result['validated']}")
-    if result.get("errors"):
-        for e in result["errors"]:
-            print(f"  ERROR: {e}", file=sys.stderr)
-    return 0 if result["ok"] else 1
 
-
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    raise SystemExit(main())

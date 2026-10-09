@@ -38,6 +38,7 @@ struct SessionState
     int fixed_steps{0};
     int trace_frames{0};
     bool deterministic{false};
+    bool notify_frames{false};
     bool initialized_time{false};
     bool paused{false};
     std::chrono::steady_clock::time_point previous_time;

@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至2026-10-08本轮独立复核，P0/P1/P2完成，代表求值/播放证据沿用冻结矩阵。G13完整195条：180诊断OK/15求值FAIL，720条件原始证据/hash完整；不是195视觉认证。G14显式Qt测试入口已修，G15共享桥及三QML初态对WebGL通过，正式Plasma包尚缺部署/配置/播放调度/非GL等验收；空配置崩溃风险已修。V10实测结论撤回，20 PENDING_EVIDENCE/160 UNREVIEWED/15 BLOCKED_INPUT，候选不应用；观察账本只支持version3逐条件证据。当前只按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[协作清单](docs/agent-workboard.md)与[下一批交接](docs/agent-next-handoff.md)执行。
+截至2026-10-09独立复核，G13 195目录180初态OK/15FAIL沿用；G17真实schema帧扫描已修，15独立FAIL/234静态候选，180 NOT_RERUN。G18严格工具重跑39/39含17纠正idle，非视觉认证；V12参考/候选证据缺口，3 PENDING/177 UNREVIEWED/15 BLOCKED，候选不应用。SDK已安装；动态模块与真正Plasma隔离KPackage/Containment/WallpaperItem/config页初步加载显示，软件后端/暂停隐藏失败/资源安全通过，独立QML三个同初态/DPI对WebGL差0。真实桌面/长期/声音背景仍未验收。当前按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. 按当前清单领用：GLM G17支持缺口→G16实际隔离Plasma包→G18真实触摸证据；Gemini V12三重点型号实际观察→G16后V11包视觉核对。Codex负责新语义、架构/生命周期与最终整合；G13/G14不重复实现。
+3. GLM承担开发大头：G19实际包配置/生命周期/部署→G20继承参照与隔离候选→G21触摸证据；Gemini V13实际包视觉/V14三重点触摸观察。Codex集中新语义、架构/生命周期和最终抽核；已修G17/G18不重复写判定。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 

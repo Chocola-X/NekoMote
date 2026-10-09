@@ -1,12 +1,13 @@
 #pragma once
 
-#include "session_item.hpp"
-
+#include <QPointer>
 #include <QQuickItem>
 #include <QString>
 #include <QTimer>
 #include <QUrl>
 #include <memory>
+
+#include "session_item.hpp"
 
 namespace nekomote::plasma
 {
@@ -48,6 +49,9 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void setOriginY(float value);
     void setScale(float value);
     void setPaused(bool value);
+    // GUI diagnostic setup before the item starts rendering. Real pointer
+    // events are disabled; fixed playback and frame notifications are separate.
+    bool configure_diagnostics(int steps, bool fixed);
 
     std::shared_ptr<nekomote::qt_quick::SessionState> session_state() const override;
 
@@ -68,6 +72,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void mousePressEvent(QMouseEvent* event) override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData& data) override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
   private:
     nekomote::qt_quick::ItemState get_item_state() const override;
@@ -77,6 +82,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void set_status(int value);
     void set_error(const QString& value);
     void check_backend();
+    void attach_window(QQuickWindow* window);
+    void refresh_playback();
     void start_timer();
     void stop_timer();
 
@@ -87,6 +94,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     float origin_y_{400};
     float scale_{1};
     bool paused_{false};
+    bool effective_paused_{true};
+    bool diagnostic_inputs_{false};
     int status_{0};
     QString error_string_;
     std::uint64_t playback_revision_{0};
@@ -94,5 +103,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     std::size_t input_count_{0};
     QTimer* timer_{nullptr};
     bool backend_checked_{false};
+    QPointer<QQuickWindow> host_window_;
+    std::array<QMetaObject::Connection, 3> window_connections_{};
 };
 } // namespace nekomote::plasma

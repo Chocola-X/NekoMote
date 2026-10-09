@@ -1,6 +1,5 @@
 #include <QColor>
 #include <QCoreApplication>
-#include <QEventLoop>
 #include <QImage>
 #include <QQmlComponent>
 #include <QQmlEngine>
@@ -14,6 +13,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -93,14 +93,13 @@ Options options(int argc, char** argv)
         }
         else if (key == "--help")
         {
-            std::puts(
-                "nekomote_plasma_probe --model MODEL --session SESSION\n"
-                "  [--width 800 --height 1080 --origin-x 0 --origin-y 400 --scale 1]\n"
-                "  [--dpi 1] [--capture NEW.png --steps N] [--qt-marker]\n"
-                "  [--check-lifecycle NEW-directory --steps N]\n"
-                "  [--max-steps N] [--graphics-api opengl|software]\n"
-                "Loads the actual wallpaper main.qml. OpenGL default; software asserts\n"
-                "UnsupportedBackend. No desktop settings changed.");
+            std::puts("nekomote_plasma_probe --model MODEL --session SESSION\n"
+                      "  [--width 800 --height 1080 --origin-x 0 --origin-y 400 --scale 1]\n"
+                      "  [--dpi 1] [--capture NEW.png --steps N] [--qt-marker]\n"
+                      "  [--check-lifecycle NEW-directory --steps N]\n"
+                      "  [--max-steps N] [--graphics-api opengl|software]\n"
+                      "Loads the actual wallpaper main.qml. OpenGL default; software asserts\n"
+                      "UnsupportedBackend. No desktop settings changed.");
             std::exit(0);
         }
         else
@@ -115,21 +114,6 @@ Options options(int argc, char** argv)
     if (!result.lifecycle.empty() && std::filesystem::exists(result.lifecycle))
         throw std::runtime_error("lifecycle output already exists; choose a new path");
     return result;
-}
-QImage grab(QQuickWindow& window)
-{
-    const auto result = window.contentItem()->grabToImage();
-    if (!result)
-        return {};
-    QEventLoop wait;
-    QTimer deadline;
-    deadline.setSingleShot(true);
-    deadline.setInterval(5000);
-    QObject::connect(result.get(), &QQuickItemGrabResult::ready, &wait, &QEventLoop::quit);
-    QObject::connect(&deadline, &QTimer::timeout, &wait, &QEventLoop::quit);
-    deadline.start();
-    wait.exec();
-    return result->image();
 }
 int run(int argc, char** argv)
 {
@@ -155,8 +139,8 @@ int run(int argc, char** argv)
 #endif
     const auto model_url = QUrl::fromLocalFile(QString::fromStdString(config.model.string()));
     const auto session_url = QUrl::fromLocalFile(QString::fromStdString(config.session.string()));
-    const auto qml_path = QString::fromStdString(
-        std::filesystem::path(NEKOMOTE_WALLPAPER_QML).string());
+    const auto qml_path =
+        QString::fromStdString(std::filesystem::path(NEKOMOTE_WALLPAPER_QML).string());
     QQmlComponent component(&engine, QUrl::fromLocalFile(qml_path));
     if (component.isError())
     {
@@ -164,26 +148,29 @@ int run(int argc, char** argv)
             std::fprintf(stderr, "QML error: %s\n", error.toString().toUtf8().constData());
         return 1;
     }
-    auto* root = qobject_cast<QQuickItem*>(component.beginCreate(engine.rootContext()));
+    std::unique_ptr<QObject> root_object(component.beginCreate(engine.rootContext()));
+    auto* root = qobject_cast<QQuickItem*>(root_object.get());
     if (!root)
-    {
-        std::fprintf(stderr, "QML root is not a QQuickItem\n");
-        return 1;
-    }
+        throw std::runtime_error("QML root is not a QQuickItem");
     root->setProperty("modelFile", model_url.toString());
     root->setProperty("sessionFile", session_url.toString());
     root->setProperty("originX", static_cast<double>(config.x));
     root->setProperty("originY", static_cast<double>(config.y));
     root->setProperty("scale", static_cast<double>(config.scale));
     component.completeCreate();
-    auto* wallpaper = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(
-        root->findChild<QObject*>("wallpaper"));
+    auto* wallpaper =
+        qobject_cast<nekomote::plasma::NekoWallpaperItem*>(root->findChild<QObject*>("wallpaper"));
     if (!wallpaper)
     {
         std::fprintf(stderr, "NekoWallpaperItem child not found\n");
         return 1;
     }
-    QQuickWindow window;
+    const bool fixed = !config.capture.empty() || !config.lifecycle.empty();
+    auto state = wallpaper->session_state();
+    if (config.graphics_api != "software" && !wallpaper->configure_diagnostics(config.steps, fixed))
+        throw std::runtime_error(wallpaper->errorString().toStdString());
+    auto host_window = std::make_unique<QQuickWindow>();
+    auto& window = *host_window;
     window.setTitle(QStringLiteral("NekoMote Plasma probe"));
     window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
     window.setColor(Qt::transparent);
@@ -193,210 +180,235 @@ int run(int argc, char** argv)
     root->setWidth(config.width);
     root->setHeight(config.height);
     root->setParentItem(window.contentItem());
-    const auto status = wallpaper->status();
-    const auto error_string = wallpaper->errorString();
-    std::fprintf(stdout, "wallpaper status=%d errorString=%s\n", status,
-                 error_string.toUtf8().constData());
-    if (config.graphics_api == "software")
-    {
-        if (status != 3)
-        {
-            std::fprintf(stderr, "software backend must report UnsupportedBackend (status=3)\n");
-            return 1;
-        }
-        std::fprintf(stdout, "software backend correctly rejected\n");
-        return 0;
-    }
-    if (status != 1)
-    {
-        std::fprintf(stderr, "wallpaper did not load successfully\n");
-        return 1;
-    }
-    auto state = wallpaper->session_state();
-    state->fixed_steps = config.steps;
-    state->deterministic = true;
     int exit_code = 0;
     bool complete = false;
+    bool capture_pending = false;
     int lifecycle_stage = 0;
     unsigned original_generation = 0;
     unsigned resumed_generation = 0;
     unsigned rendered_frames = 0;
+    double advanced_seconds = 0;
     QSize wanted_size;
     QImage initial_image;
-    QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::failed, &application,
-                     [&exit_code, &application](const QString& message)
-                     {
-                         std::fprintf(stderr, "wallpaper failed: %s\n",
-                                      message.toUtf8().constData());
-                         exit_code = 1;
-                         application.quit();
-                     });
-    QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::frame_ready, &application,
-                     [&](QSize, unsigned generation, double, const QString&)
-                     {
-                         ++rendered_frames;
-                         if (config.max_steps > 0 && rendered_frames >= static_cast<unsigned>(config.max_steps) && complete == false)
-                         {
-                             std::fprintf(stdout,
-                                          "max-steps reached: rendered_frames=%u generation=%u\n",
-                                          rendered_frames, generation);
-                             complete = true;
-                             application.quit();
-                         }
-                     });
-    if (!config.capture.empty())
-    {
-        QTimer::singleShot(100, &application,
-                           [&]
-                           {
-                               const auto image = grab(window);
-                               if (image.isNull() ||
-                                   !image.save(QString::fromStdString(config.capture.string())))
-                               {
-                                   std::fprintf(stderr, "failed to save capture\n");
-                                   exit_code = 1;
-                               }
-                               else
-                                   std::fprintf(stdout, "captured %dx%d\n", image.width(),
-                                                image.height());
-                               complete = true;
-                               application.quit();
-                           });
-    }
-    else if (!config.lifecycle.empty())
-    {
-        std::filesystem::create_directories(config.lifecycle);
-        QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::frame_ready,
-                         &application,
-                         [&](QSize framebuffer_size, unsigned generation, double clock_delta,
-                             const QString&)
-                         {
-                             if (complete)
-                                 return;
-                             std::fprintf(stdout,
-                                          "lifecycle stage=%d size=%dx%d generation=%u delta=%.9f\n",
-                                          lifecycle_stage, framebuffer_size.width(),
-                                          framebuffer_size.height(), generation, clock_delta);
-                             std::fflush(stdout);
-                             try
-                             {
-                                 if (lifecycle_stage == 0)
-                                 {
-                                     const auto image = grab(window);
-                                     if (image.isNull())
-                                         throw std::runtime_error("initial capture failed");
-                                     initial_image = image;
-                                     image.save(QString::fromStdString(
-                                         (config.lifecycle / "initial.png").string()));
-                                     original_generation = generation;
-                                     lifecycle_stage = 1;
-                                     wanted_size = QSize(640, 480) * window.devicePixelRatio();
-                                     window.resize(640, 480);
-                                     root->setWidth(640);
-                                     root->setHeight(480);
-                                     wallpaper->update();
-                                 }
-                                 else if (lifecycle_stage == 1 &&
-                                          window.size() == QSize(640, 480) &&
-                                          framebuffer_size == wanted_size)
-                                 {
-                                     const auto image = grab(window);
-                                     if (image.isNull())
-                                         throw std::runtime_error("resized capture failed");
-                                     image.save(QString::fromStdString(
-                                         (config.lifecycle / "resized.png").string()));
-                                     lifecycle_stage = 2;
-                                     wallpaper->setPaused(true);
-                                     window.hide();
-                                     window.releaseResources();
-                                     QTimer::singleShot(150, &application,
-                                                        [&]
-                                                        {
-                                                            window.resize(config.width,
-                                                                          config.height);
-                                                            root->setWidth(config.width);
-                                                            root->setHeight(config.height);
-                                                            wallpaper->setPaused(false);
-                                                            window.show();
-                                                            wallpaper->update();
-                                                        });
-                                 }
-                                 else if (lifecycle_stage == 2 &&
-                                          generation > original_generation)
-                                 {
-                                     if (resumed_generation != generation)
-                                     {
-                                         if (clock_delta != 0)
-                                             throw std::runtime_error(
-                                                 "scene-graph recreation advanced hidden time");
-                                         resumed_generation = generation;
-                                         wallpaper->update();
-                                         return;
-                                     }
-                                     if (window.size() == QSize(config.width, config.height) &&
-                                         framebuffer_size ==
-                                             QSize(config.width, config.height) *
-                                                 window.devicePixelRatio())
-                                     {
-                                         const auto image = grab(window);
-                                         if (image.isNull())
-                                             throw std::runtime_error(
-                                                 "recreated capture failed");
-                                         image.save(QString::fromStdString(
-                                             (config.lifecycle / "recreated.png").string()));
-                                         if (image.size() != initial_image.size())
-                                             throw std::runtime_error(
-                                                 "recreated size differs from initial");
-                                         if (image != initial_image)
-                                             throw std::runtime_error(
-                                                 "recreated frame differs from initial");
-                                         complete = true;
-                                         application.quit();
-                                     }
-                                     else
-                                     {
-                                         window.resize(config.width, config.height);
-                                         root->setWidth(config.width);
-                                         root->setHeight(config.height);
-                                         wallpaper->update();
-                                     }
-                                 }
-                             }
-                             catch (const std::exception& error)
-                             {
-                                 std::fprintf(stderr, "lifecycle: %s\n", error.what());
-                                 exit_code = 1;
-                                 complete = true;
-                                 application.quit();
-                             }
-                         });
-    }
+    QSharedPointer<QQuickItemGrabResult> pending_grab;
+    auto callbacks = std::make_unique<QObject>();
     QTimer timeout;
     timeout.setSingleShot(true);
     timeout.setInterval(30000);
-    QObject::connect(&timeout, &QTimer::timeout, &application,
-                     [&]
-                     {
-                         if (!complete)
+    const auto fail = [&](const QString& message)
+    {
+        if (complete)
+            return;
+        std::fprintf(stderr, "plasma probe: %s\n", message.toUtf8().constData());
+        exit_code = 1;
+        complete = true;
+        application.quit();
+    };
+    QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::failed, callbacks.get(),
+                     fail);
+    QObject::connect(&timeout, &QTimer::timeout, callbacks.get(),
+                     [&] { fail(QStringLiteral("probe timed out")); });
+    // The screenshot completion is asynchronous. No nested event loop can
+    // re-enter a lifecycle stage before its initial image has completed.
+    const auto capture = [&](const std::filesystem::path& path, auto finished)
+    {
+        capture_pending = true;
+        pending_grab = window.contentItem()->grabToImage();
+        if (!pending_grab)
+        {
+            capture_pending = false;
+            fail(QStringLiteral("failed to begin diagnostic capture"));
+            return;
+        }
+        QObject::connect(pending_grab.get(), &QQuickItemGrabResult::ready, callbacks.get(),
+                         [&, path, finished]
                          {
-                             std::fprintf(stderr, "probe timed out\n");
-                             exit_code = 1;
-                             application.quit();
-                         }
-                     });
+                             if (complete)
+                                 return;
+                             const auto image = pending_grab->image();
+                             if (image.isNull() ||
+                                 !image.save(QString::fromStdString(path.string())))
+                             {
+                                 fail(QStringLiteral("failed to save diagnostic capture: %1")
+                                          .arg(QString::fromStdString(path.string())));
+                                 return;
+                             }
+                             capture_pending = false;
+                             try
+                             {
+                                 finished(image);
+                             }
+                             catch (const std::exception& error)
+                             {
+                                 fail(QString::fromUtf8(error.what()));
+                             }
+                         });
+    };
+    if (!config.lifecycle.empty())
+        std::filesystem::create_directories(config.lifecycle);
+    if (config.graphics_api == "software")
+    {
+        QObject::connect(
+            &window, &QQuickWindow::sceneGraphInitialized, callbacks.get(),
+            [&]
+            {
+                // Item capability reporting is queued to the GUI
+                // thread first; validate after actual initialization.
+                QTimer::singleShot(
+                    0, callbacks.get(),
+                    [&]
+                    {
+                        if (!window.isVisible() || !window.isSceneGraphInitialized() ||
+                            wallpaper->status() != 3 || wallpaper->errorString().isEmpty())
+                        {
+                            fail(QStringLiteral(
+                                "initialized software window did not report UnsupportedBackend"));
+                            return;
+                        }
+                        std::fprintf(stdout, "wallpaper status=3 errorString=%s\n",
+                                     wallpaper->errorString().toUtf8().constData());
+                        complete = true;
+                        application.quit();
+                    });
+            },
+            Qt::QueuedConnection);
+    }
+    else
+        QObject::connect(
+            wallpaper, &nekomote::plasma::NekoWallpaperItem::frame_ready, callbacks.get(),
+            [&](QSize framebuffer_size, unsigned generation, double clock_delta, const QString&)
+            {
+                if (complete || capture_pending)
+                    return;
+                ++rendered_frames;
+                if (!fixed)
+                {
+                    // Paused startup/hidden time is not counted as
+                    // real advancement by the shared bridge.
+                    advanced_seconds += clock_delta;
+                    if (config.max_steps > 0 &&
+                        rendered_frames >= static_cast<unsigned>(config.max_steps))
+                    {
+                        if (advanced_seconds <= 0)
+                            fail(QStringLiteral("normal playback did not advance time"));
+                        else
+                        {
+                            std::fprintf(stdout,
+                                         "max-steps reached: rendered_frames=%u "
+                                         "advanced_seconds=%.9f generation=%u\n",
+                                         rendered_frames, advanced_seconds, generation);
+                            complete = true;
+                            application.quit();
+                        }
+                    }
+                    return;
+                }
+                if (!config.capture.empty())
+                {
+                    capture(config.capture,
+                            [&](const QImage& image)
+                            {
+                                std::fprintf(stdout, "captured %dx%d\n", image.width(),
+                                             image.height());
+                                complete = true;
+                                application.quit();
+                            });
+                    return;
+                }
+                std::fprintf(stdout, "lifecycle stage=%d size=%dx%d generation=%u delta=%.9f\n",
+                             lifecycle_stage, framebuffer_size.width(), framebuffer_size.height(),
+                             generation, clock_delta);
+                if (lifecycle_stage == 0)
+                {
+                    original_generation = generation;
+                    capture(config.lifecycle / "initial.png",
+                            [&](const QImage& image)
+                            {
+                                initial_image = image;
+                                lifecycle_stage = 1;
+                                wanted_size = QSize(640, 480) * window.devicePixelRatio();
+                                window.resize(640, 480);
+                                root->setWidth(640);
+                                root->setHeight(480);
+                                wallpaper->update();
+                            });
+                }
+                else if (lifecycle_stage == 1 && window.size() == QSize(640, 480) &&
+                         framebuffer_size == wanted_size)
+                    capture(config.lifecycle / "resized.png",
+                            [&](const QImage&)
+                            {
+                                lifecycle_stage = 2;
+                                wallpaper->setPaused(true);
+                                window.hide();
+                                window.releaseResources();
+                                QTimer::singleShot(150, callbacks.get(),
+                                                   [&]
+                                                   {
+                                                       window.resize(config.width, config.height);
+                                                       root->setWidth(config.width);
+                                                       root->setHeight(config.height);
+                                                       wallpaper->setPaused(false);
+                                                       window.show();
+                                                       wallpaper->update();
+                                                   });
+                            });
+                else if (lifecycle_stage == 2 && generation > original_generation)
+                {
+                    if (resumed_generation != generation)
+                    {
+                        if (clock_delta != 0)
+                        {
+                            fail(QStringLiteral("scene-graph recreation advanced hidden time"));
+                            return;
+                        }
+                        resumed_generation = generation;
+                        wallpaper->update();
+                        return;
+                    }
+                    if (window.size() == QSize(config.width, config.height) &&
+                        framebuffer_size ==
+                            QSize(config.width, config.height) * window.devicePixelRatio())
+                        capture(config.lifecycle / "recreated.png",
+                                [&](const QImage& image)
+                                {
+                                    if (image != initial_image)
+                                        throw std::runtime_error(
+                                            "recreated frame differs from initial");
+                                    complete = true;
+                                    application.quit();
+                                });
+                    else
+                    {
+                        window.resize(config.width, config.height);
+                        root->setWidth(config.width);
+                        root->setHeight(config.height);
+                        wallpaper->update();
+                    }
+                }
+            });
     timeout.start();
     window.show();
     application.exec();
+    // Cancel queued diagnostics while their captured stack data is still alive.
+    callbacks.reset();
     timeout.stop();
+    pending_grab.reset();
     window.hide();
     window.releaseResources();
+    root->setParentItem(nullptr);
+    root_object.reset();
+    host_window.reset(); // Joins render-thread GPU cleanup before final counts.
     std::fprintf(stdout, "plasma probe rendered_frames=%u\n", rendered_frames);
-    std::fprintf(stdout, "plasma probe renderer created=%u destroyed=%u\n",
-                 state->renderer_created.load(), state->renderer_destroyed.load());
-    if (state->renderer_created.load() != state->renderer_destroyed.load())
+    if (state)
     {
-        std::fprintf(stderr, "renderer cleanup did not complete\n");
-        exit_code = 1;
+        std::fprintf(stdout, "plasma probe renderer created=%u destroyed=%u\n",
+                     state->renderer_created.load(), state->renderer_destroyed.load());
+        if (state->renderer_created.load() != state->renderer_destroyed.load())
+        {
+            std::fprintf(stderr, "renderer cleanup did not complete\n");
+            exit_code = 1;
+        }
     }
     return exit_code;
 }

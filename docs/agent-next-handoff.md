@@ -1,47 +1,45 @@
 # 下一批独立任务
 
-基线：包含 [本轮复核](agent-review-2026-10-08.md) 的最新Codex提交。先在Git声明实际base与改动文件。
-用户启动外部Agent；每阶段验证后提交真实Agent/Model/Context。摘要≤一页，长日志和大图放全新build目录。
+基线：包含[2026-10-09复核](agent-review-2026-10-09.md)的最新Codex提交。声明实际base/文件，阶段验证后提交真实Agent/Model/Context；摘要≤一页，大图/日志放新build目录。原素材只读，GPU共享锁。用户要求GLM承担实现/批量运行大头，Codex集中风险抽核。
 
-## GLM G17：不可选型号的语义缺口清单（先做，无GPU）
+## GLM G19：Plasma包配置、生命周期与部署验证（优先主任务）
 
-用户发现 `coconut-hawaii-a` 不可选，要求批量整理。复用G13冻结195行和G10审计；不重跑完整截图/图集。
+已有动态模块+真实WallpaperItem+main.xml/config.qml，实际隔离KPackage/Containment宿主已显示Chocola/Fraise；不要重新实现它们或声称SDK缺失。
 
-1. 对15个FAIL读取保留的probe请求/响应，使用当前Release `nekomote_session_probe`独立复现初态；另外180行沿用冻结状态，不能把它们认证为所有动作支持。输入/二进制/hash变更明确记录。
-2. 从当前源码实际拒绝条件反查资产与原JSON：每项记录型号、失败阶段/GeometryError、完整节点、源JSON字段路径和值、导入值、复现命令与响应hash。节点名只能定位，不能当语义依据。
-3. 静态收集全部候选不支持字段/位组合，而非仅返回的首个错误；按继承/transform顺序/帧字段/bm/attr/遮罩等归组，标明“实际触发”“静态潜在”“尚未检查”。已验证bm19、普通attr2不能误列未实现。
-4. 区分尚未实现、候选未过图像门槛、配置/资源错误和真正回归。对“旧版能加载”引用实际提交及被拒绝原因，不运行不安全旧版来宣布PASS。
-5. 为每个组提供最小真实节点链和一份代表输入；列WebGL后续需观测的变量/固定步/几何点。只交事实，不推导公式、不清除unsupported、不改源素材或资产。
+入口：`cmake --preset plasma && cmake --build --preset plasma`。
+`nekomote_plasma_package_probe MODEL SESSION NEW_OUTPUT_DIRECTORY`通过实际KDE库加载包，用workspace临时XDG状态；`nekomote_plasma_probe --help`是确定步/常态/软件后端诊断组件入口。后者不是实际包，报告分开。
 
-修改：`tools/`下局部CPU审计脚本及对应必要合成测试、`docs/g17-support-gaps.md`、新build账本。核心只读。
-验收：195分母保留；15FAIL各有可读取证据；每个功能组有源码拒绝条件/字段来源；缺失项明确；不能把分类完成写成核心支持完成。
+1. 完善package_probe和自动Qt/KPackage检查入口：实际配置页/schema加载、改model/session/origin/scale引发一次受控组件重建，旧资源销毁后计数平衡；缺配置/坏资产/非法配置/错误后恢复有公开诊断、GUI存活。配置值不能靠改私有renderer/session状态注入。
+2. 对实际包补受控pause/resume、隐藏/再显示、resize、连续创建/删除20轮、DPI1/1.5、配置切换20轮。动作确实推进、暂停不推进、恢复首delta0、steady无常态读回，记录每轮CPU/GPU所有权/峰值/最终计数。资产缺失显式Skipped，不把普通窗口矩阵当作实际包验收。
+3. 显式资源定位/完整build部署清单与可重复暂存命令：动态插件、依赖库、qmldir、包/schema/配置页，不能复制整个build目录，也不让旧STATIC产物混入。暂存仅workspace，先给出可审查安装/卸载命令，不安装用户/系统、不改桌面配置或重启shell。
+4. 配置界面应易用：文件选择/有效本地URL、origin范围及模型缩放、明确加载/能力错误；不暴露内部步骤计数/ABI字段。使用已有会话，不复制声音/背景/PCM策略；正式声音/背景接入另有C6门槛，当前prototype可显式静音。
+5. 测试用小型合成fixture覆盖配置拒绝/输入类型、真实资产只做显式GPU集成；默认discover及ASan无窗口。Qt生成代码的warning例外不得扩大到正式源码。正常调度计数不能写成呈现FPS。
 
-## GLM G16：把QML样例补成可加载的隔离Plasma壁纸包
+允许改：adapters/plasma、Qt桥的明确宿主/诊断契约、对应CMake/测试、docs/g19-plasma-report.md；不改求值/GPU公式/ABI签名。验收：Release/WERROR、已有Qt12/四安全负例保留；新增实际包的上述分支有raw/hash；三固定QML/WebGL门槛不退化；不宣称已修改真实桌面。先核心小包通过再批量。
 
-继G17，按G15交接与本轮复核实现，现有共享桥/ABI/坐标/求值公式保持。允许改 `src/host_qt_quick` 的明确调度/宿主边界，不复制渲染器。
+## GLM G20：0x7fc继承的准确参照与隔离候选（继G19）
 
-- 动态QML插件/URI及build内完整部署布局；壁纸主组件用目标SDK真正支持的WallpaperItem，配置schema/属性绑定/配置页可加载。明确初次加载与后续source/placement变更策略；若不支持则配置改变通过受控组件重建，不静默无效。
-- 实际组件具备独立持续播放调度，不靠probe外置timer。可见/暂停/失败/卸载时停调度，恢复重置墙钟预算。GUI只给同步快照，不直接操作正在求值实例。确定性采样不受真实鼠标/hover干扰。
-- 实际宿主RHI检测，非OpenGL公开UnsupportedBackend及诊断；组件不得设置全局后端。隔离宿主可选择software等真实非GL后端，必须窗口显示/图形初始化后断言状态；CLI解析拒绝不是该负例。
-- 所有加载/render失败有可见错误；保留本轮四个正尺寸窗口安全负例。重复QML创建/删除、暂停恢复、图形释放重建验收；验证GPU销毁完成后才读取最终计数。
-- probe须能加载实际壁纸主QML及配置组件，而非只直接实例化C++类型。截图save返回值检查，diag回调与栈变量寿命/超时安全。普通播放有有界退出选项，用真实帧数证明持续推进；调度计数不写呈现FPS。
-- 本机CMake SDK存在，使用find_package核实。只在build内验证KPackage/动态导入，无安装、改桌面配置、重启plasmashell。Qt仍可选，ASan核心无窗口；警告配置只对Qt生成代码必要例外，正式源码使用项目warnings。
+当前正式拒绝保持。阅读G17新账本、c5-mirror-mask-handoff、历史030512d/a814cbd/a858f01及手部缺陷记录。新G17的234项是静态候选，不能直接作为234个实际错误。
 
-验收：plasma Release/WERROR；G14显式入口及四安全负例；真实包加载/配置/非GL/持续播放/暂停/重复卸载有独立证据；三个既有WebGL初态/DPI图像门槛不变。未执行实际桌面验收明确记录。
-交付：`docs/g16-plasma-report.md`、全新build原始记录、完整可定位布局与运行命令，不贴长日志。
+复用CPU审计扩展195静态覆盖；从15FAIL选Coconut、Azuki、Cinnamon三代表，提取完整腕部父子链、源字段/资源域/mesh.bp/参数/transform顺序、实际拒绝位置及原JSON来源。不要只看日文节点名。补probe公开错误节点诊断可以做，但错误码/来源不能丢失，不擅自放宽正式拒绝。
+用现有reference_capture取原PSB/WebGL独立初态、固定步、逐变量单独偏移后的拓扑/网格点/屏幕坐标与PNG。GPU锁、冻结源码/PSB/texture/browser/tools/binaries，失败全部保留；物理隔离且初态一致，不复制浏览器私有核心。
+提出能解释全父链组合的独立数学候选，先在隔离worktree/离线工具验证；不提交生产路径放行、型号名分支、标签判断或approx fallback。门槛沿C5：几何≤.001px、拓扑全匹配、标量≤1e-5、alpha/黑白合成RGB≤2且零超差。旧“少拉长一些”不能通过。
+交付docs/g20-inheritance-evidence.md一页+机器矩阵/最小样例/公式依据；未过门槛保存反例。候选通过也先交Codex独立复核，再迁入正式核心。研究和大量采样由GLM承担，Codex不逐条手工跑模型。
 
-## GLM G18 → Gemini V12：补齐真实触摸证据
+## GLM G21 → Gemini V14：真实触摸/来源证据
 
-可在G16后做；Gemini无需等G16即可从G13开始实际观察可见区域。
+严格G18工具已由Codex修复，GLM运行冻结工具，不再改写复杂验证器或生成观察结论。
+首批Fraise B、Cinnamon maid-b、Coconut santa-b：默认、idle120、移动、半缩放原图/覆盖图，及使下身进入画幅的独立诊断布局。优先Qt/FBO取图，原2160 GLFW图恰截1600不作为角色边界；不覆盖G13旧布局。
+依据Gemini实际图像测点，在独立初态执行边缘/近空白/重叠/优先级点；每点PNG/中心输出/作者坐标转换、mirror、origin/scale、steps/seed、真实request/response/hash齐全。idle120在121触摸；X250等未执行点要实际补测，不复制到另一姿态。当前候选只存建议，不改素材/资产。
+建立独立source-field或执行WebGL参考：直接读源字段而不是复制导入session/G13区域；Y向下、作者→中心输出→PNG公式一致，Fraise胸357.5中心/897.5 PNG。明确参考来源类型，不把source重算称WebGL实测。
+交付新包/docs/g21-touch-handoff.md、固定工具hash及每条件原始文件；缺证据不通过。候选验证器当前保持PENDING，不能根据椭圆数学或prefix宣布建议配置通过。
 
-G18由GLM准备Fraise B、Cinnamon maid-b、Coconut santa-b的默认/idle120及必要移动缩放原图+覆盖图，另外取能使下身进入画幅的单独诊断布局。G13旧布局不可改写。全画幅、胸区、下身裁图须保留原坐标映射。
-Gemini先根据实际图像标出边缘/近空白待测点，再由GLM用应用自己的probe在独立初态逐点执行；输出作者坐标、中心输出坐标、PNG坐标、origin/scale/mirror/步骤/seed、请求/响应/返回码/反应/phase/hash。不能复制同一姿态结果，不能以空反应证明没有命中其他区域，明确zone重叠/优先级。
-GLM在冻结账本工具上补充候选逐点验证器与合成负例（无请求、错坐标/步骤/seed/响应、Busy/失败、hash错均拒绝）；不得生成观察结论。两姿态+实际hit/miss证据校验后最多READY_FOR_REVIEW，仍不应用数据。先交Codex复核该小工具，再长跑。
+Gemini V14仅使用图像工具实际观察/测点并填写version3逐condition证据，区分可见、被遮挡、画幅外、未检查；三重点型号先行，再逐目录。3旧记录均PENDING；不能自动生成MATCH/MISMATCH或从家族外推。不给自动账本数字写测试。交docs/v14-touch-report.md一页，不改工具/公式/资产。
 
-V12由Gemini填写version3观察，逐condition绑定G13实际原图/覆盖图/probe或新诊断同契约证据，notes区分看见/画幅外/被遮挡/未检查。来源字段计算参考明确写source-field，不标成执行WebGL。
-原20项均待复核；不复用V10的18/2计数、不外推家族。先三重点型号四区/胸部，目录其余型号逐项推进。任何pant不在画幅内即不可目视，不写五区PASS。
-修改仅真实观察JSON、必要裁图与 `docs/v12-touch-report.md`，不改公式、工具或素材。候选由Codex最终审查。
+## Gemini V13：实际Plasma包视觉
 
-## Gemini V11：G16后的实际QML包视觉复核
+可立即查看本轮实际包Chocola/Fraise及Qt/WebGL三固定图；G19交付后核对配置页、错误显示、DPI/resize、暂停/恢复和受控输入。采用实际Plasma KPackage宿主，普通Qt组件单独标记；原实际包截图为常态不同时间，不能直接作固定像素结论。先保存真实逐条件全图/裁图/hash，测试输入只用自己的回调，不注入系统事件。
 
-使用G16动态模块和实际壁纸主QML，与C7原PSB/WebGL一致初态比较Chocola/Fraise（镜像/遮罩）、DPI1/1.5、resize、恢复及错误显示；保存真正看过的全图/裁图/hash与逐条件说明。受控回调输入，不注入系统事件。普通隔离窗口与真实桌面分别报告。GLM和Gemini GPU都持共享锁。
+## Codex保留
+
+新语义/ABI/线程与最终整合；便宜关键修复或反复错误实现接管。G19/G20/G21的大实现、采样、测试整理交GLM，图像观察交Gemini。正式声音/背景、UI/渐变/reset、195动态视觉、8–24h/多屏/安装为后续退出条件，不因原型显示而宣称最终成品。

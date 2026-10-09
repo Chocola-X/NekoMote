@@ -116,7 +116,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
                     Qt::QueuedConnection);
             connect(this, &SessionRenderer::failed, item, &SessionItemBase::failed,
                     Qt::QueuedConnection);
-            if (state_->deterministic)
+            if (state_->deterministic || state_->notify_frames)
                 connect(
                     item->window(), &QQuickWindow::afterFrameEnd, this,
                     [this]
@@ -214,13 +214,13 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             const double elapsed =
                 std::chrono::duration<double>(now - state_->previous_time).count();
             dispatch_inputs();
-            if (first && state_->deterministic)
+            if (first && state_->deterministic && !paused_)
                 for (int step = 0; step < state_->fixed_steps; ++step)
                     check(nekomote_session_advance(state_->session.get(), 1.0 / 60),
                           "fixed advance");
             if (!state_->deterministic && !first)
                 check(nekomote_session_advance(state_->session.get(), elapsed), "advance session");
-            state_->initialized_time = true;
+            state_->initialized_time = state_->initialized_time || !paused_;
             state_->previous_time = now;
             check(nekomote_session_prepare_frame(state_->session.get()), "prepare session");
             const auto trace_cpu = state_->trace_frames > 0
@@ -255,7 +255,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             }
             state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
             // Notifications are diagnostic only and not the playback frame path.
-            if (state_->deterministic)
+            if ((state_->deterministic || state_->notify_frames) && state_->initialized_time)
             {
                 const auto reaction = nekomote_session_active_reaction(state_->session.get());
                 const auto* label =

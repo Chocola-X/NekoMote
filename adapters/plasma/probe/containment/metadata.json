@@ -1,0 +1,6 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {"Id": "org.nekomote.validation", "Name": "NekoMote isolated validation"},
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-ContainmentType": "Desktop"
+}
