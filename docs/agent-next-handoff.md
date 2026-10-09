@@ -6,9 +6,9 @@
 
 G25已由GLM-5.2执行完毕，报告见[g25](g25-inheritance-acceptance.md)。27静态几何/27GPU/195初态/45扩组合/性能基准全通过，证据冻结在`build/evidence/g25-acceptance/`。12旧FAIL型号无WebGL参照仅验证加载；sync/动态/locator/触摸未测（无浏览器/动态工具）；renderer/UI稳态分配未测。交Codex最终复核决定正式合入。Gemini V17可消费G25 GPU证据抽看手/腕/衣袖。
 
-## Gemini V17：求值候选视觉抽核
+## Gemini V17：求值候选视觉抽核（已完成）
 
-可以先检查本轮 `build/evidence/codex-inheritance-review-2026-10-09/gpu/` 的5组reference/native/diff，再消费G25新证据。逐条件实际看手/腕/衣袖挂接、遮罩边缘、动态连续性，记录真实图路径/hash/输入及观察；像素PASS与目视检查分开。不得按家族外推或调素材/公式。缺图、未运行与被遮挡明确区分；异常给Codex最小复现。交 `docs/v17-inheritance-visual.md` ≤一页，候选仍不正式放行。
+V17已由Gemini 3.8 Flash执行完毕，报告见[v17](v17-inheritance-visual.md)。消费Codex 5组与G25 22组共27组GPU渲染图，手/腕/衣袖挂接消除8.95px断裂撕裂，bodyLR连续性条带与SL30/UD30目视全部通过，证据冻结在`build/evidence/v17-inheritance-visual/`。12旧FAIL无WebGL参照仅加载通过，扩组合新条件无浏览器参照标Skipped；主分支候选仍保持正式拒绝，交Codex最终复核放行。
 
 ## GLM G22：实际Plasma包剩余功能与部署
 
