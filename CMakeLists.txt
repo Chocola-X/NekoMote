@@ -114,6 +114,11 @@ if(NEKOMOTE_BUILD_TESTS)
                 $<TARGET_FILE:nekomote_plasma_item_safety>)
         set_tests_properties(plasma_item_safety PROPERTIES LABELS "qt;gpu" TIMEOUT 30)
     endif()
+    if(TARGET nekomote_plasma_config_reject)
+        add_test(NAME plasma_config_reject
+            COMMAND $<TARGET_FILE:nekomote_plasma_config_reject>)
+        set_tests_properties(plasma_config_reject PROPERTIES LABELS "qt" TIMEOUT 15)
+    endif()
     if(Python3_Interpreter_FOUND)
         add_test(NAME python_tools
             COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture

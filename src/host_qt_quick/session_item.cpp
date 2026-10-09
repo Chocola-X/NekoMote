@@ -254,6 +254,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
                     elapsed);
             }
             state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
+            state_->last_delta.store(elapsed, std::memory_order_relaxed);
             // Notifications are diagnostic only and not the playback frame path.
             if ((state_->deterministic || state_->notify_frames) && state_->initialized_time)
             {

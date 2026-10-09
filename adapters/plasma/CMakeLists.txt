@@ -60,6 +60,14 @@ if(NEKOMOTE_BUILD_TESTS)
     target_compile_definitions(nekomote_plasma_item_safety PRIVATE
         NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
     add_dependencies(nekomote_plasma_item_safety nekomote_plasma_qmlplugin)
+
+    add_executable(nekomote_plasma_config_reject ../../tests/render/plasma_config_reject.cpp)
+    target_link_libraries(nekomote_plasma_config_reject PRIVATE
+        nekomote::plasma_qml
+        Qt6::Qml Qt6::Quick nekomote_warnings)
+    target_compile_definitions(nekomote_plasma_config_reject PRIVATE
+        NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
+    add_dependencies(nekomote_plasma_config_reject nekomote_plasma_qmlplugin)
 endif()
 
 find_package(Qt6 6.9.1 EXACT REQUIRED COMPONENTS Widgets)
@@ -69,6 +77,7 @@ target_compile_definitions(nekomote_plasma_package_probe PRIVATE
     NEKOMOTE_CONTAINMENT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/probe/containment"
     NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(nekomote_plasma_package_probe PRIVATE
+    nekomote::plasma_qml
     Plasma::Plasma Plasma::PlasmaQuick KF6::Package
     Qt6::Widgets Qt6::Quick nekomote_warnings)
 add_dependencies(nekomote_plasma_package_probe nekomote_plasma_qmlplugin nekomote_plasma_package)
