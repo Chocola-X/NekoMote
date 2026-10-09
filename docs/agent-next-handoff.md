@@ -1,14 +1,22 @@
 # 下一批独立任务
 
-基线：包含[本轮独立复核](agent-review-g19-g21.md)的最新Codex提交。用户要求GLM承担实现、批量运行和证据整理大头，Codex做公式/生命周期关键抽核；Gemini实际看图。先声明base/文件，保护共享工作；GPU用build/gpu-validation.lock，原素材只读，输入只用自身回调。每阶段验证后commit，真实Agent/Model/Context，报告≤一页，raw放新build目录。
+基线：包含[本轮独立复核](agent-review-g19-g21.md)的最新Codex提交。用户要求GLM承担实现、批量运行和证据整理大头，Codex接管求值公式并做生命周期复核；Gemini实际看图。先声明base/文件，保护共享工作；GPU用build/gpu-validation.lock，原素材只读，输入只用自身回调。每阶段验证后commit，真实Agent/Model/Context，报告≤一页，raw放新build目录。
 
-## GLM G23：15失败型号的继承候选（已完成，交Codex复核）
+## GLM G25：Codex求值候选的扩大验收（优先）
 
-5候选（v1/v3/v4/v5/v6）×27条件（3代表×{default,body_LR±5/±15/±30,body_UD30,body_SL30}）完整矩阵已交付。v1=v3=v5等价证明（0x7fc局部translation=0）；deform仅修正所需量~44%；均未过≤0.001px门槛。正式拒绝保持。报告见[g23](g23-inheritance-report.md)，证据在build/evidence/g23-inheritance/，候选源码在experiments/（.gitignore排除）。Codex独立验公式/代表再整合。
-3. 用同一源资产/变量/初态分别验证v1、v3及有公式依据的新候选；量化每种公式在哪个挂接空间失配，禁止按型号/层名补偿或试偏移常数。修正旧“纯X”前提；父世界原点、子局部偏移与资源原点不得混用。新语义只在隔离候选实现。
-4. 复用G17扩展195静态来源（234是15型号静态候选，非234实际错误）。CPU候选过门槛才扩大GPU固定初态/单变量/固定步参考截图，并由Gemini抽看手部边缘。失败样例/误差都保留。
+G23已复核，旧候选失败原因及数量纠正见[接管记录](codex-inheritance-review.md)。Codex已实现单边界挂接公式，候选提交 **d297827** / branch `codex-inherit-analysis` / worktree `experiments/codex-inherit`，27静态几何与5GPU已通过。**不合入主分支，不再独立推导/修改公式。** 主分支15FAIL保持。
 
-验收：几何≤.001px、标量≤1e-5、拓扑全匹配，alpha/黑白合成RGB≤2且零超差；候选源码、命令与结果对应且可重算。未通过仍拒绝，不能宣称15型号可用。允许工具/隔离runtime研究，不改正式求值/素材/ABI放行。交docs/g23-inheritance-report.md一页+矩阵，Codex独立验公式/代表再整合；大量采样不交Codex手跑。
+1. 从d297827创建自己的隔离分支/worktree；先声明base/改动文件。只开发批量工具、合成契约和证据，保护Codex及旧GLM候选。例：仓库根目录执行 `git worktree add -b g25-acceptance experiments/g25-acceptance d297827`；构建使用Release/WERROR、preview/tests开启、player关闭，运行素材路径指向主工作区assets。公式的测试/说明已在候选提交。
+2. 重验候选27静态几何/拓扑，并补其余22实际GPU对照；必须读取实际变量（SL为body_slant），固定与参考相同初态、800×1080、scale .45及居中后originY100。复用已冻结参照须核hash，不补齐旧v5矩阵；所有新结果统一冻结。目标几何≤.001px、标量≤1e-5、顶点/三角形/命令/遮罩匹配，alpha/黑白合成RGB≤2且零超差。
+3. 用候选扫描全部195初态，列15旧FAIL的逐型号状态和字段路径，不把成功加载当作视觉通过。检查实际是否存在nested exclusion/其他bm/attr/transform缺口；嵌套仍拒绝，不绕过校验。对新增可求值型号提供对应WebGL初态/代表非零参数参照；原180 CPU回归分别统计，未跑/缺素材Skips独列。
+4. 三代表扩组合参数/非零局部平移与旋转、combine、sync1/8、固定步idle/动作/物理恢复、locator/触摸投影，单条件源资产/变量/seed/步长/steps/布局一致；动态数值初态与标量也核实。失败保留最小反例和实际图/trace，交Codex修公式；禁止按型号/节点名补偿、改素材或降阈值。
+5. 真实模型预热后检查evaluate/build_frame稳态分配及CPU P50/P95/P99，分别列renderer/application/UI覆盖，不能用合成零分配外推应用。变更工具跑契约测试；GPU在共享flock内串行，无系统输入。参考仓库只读。
+
+交付：`docs/g25-inheritance-acceptance.md`≤一页，raw在新`build/evidence/g25-*`；源码/二进制/资产/工具/参照/结果hash、逐条argv、stdout/stderr与机器信息冻结。入口能复算，非空图检查；工具certified:false不修改。每阶段验证后提交实际溯源，不cherry-pick候选进主分支。Codex复核后决定正式合入；Gemini随后抽看手/腕/衣袖/遮罩边缘，缺失动态仍明确未认证。
+
+## Gemini V17：求值候选视觉抽核
+
+可以先检查本轮 `build/evidence/codex-inheritance-review-2026-10-09/gpu/` 的5组reference/native/diff，再消费G25新证据。逐条件实际看手/腕/衣袖挂接、遮罩边缘、动态连续性，记录真实图路径/hash/输入及观察；像素PASS与目视检查分开。不得按家族外推或调素材/公式。缺图、未运行与被遮挡明确区分；异常给Codex最小复现。交 `docs/v17-inheritance-visual.md` ≤一页，候选仍不正式放行。
 
 ## GLM G22：实际Plasma包剩余功能与部署
 
@@ -37,4 +45,4 @@ Gemini V15随后逐图实际观察，填写工具支持的version3（version/obs
 
 ## 顺序与Codex保留
 
-**GLM G23→G22→G24**，优先解决用户仍不能选择的15型号；有明确独立子任务可自行组织，但GPU串行。Gemini V16可立即开始、V15待新包；双方先声明共享文件避免碰撞。Codex审关键公式/模块/线程及最终整合，低成本关键修复直接接管；新研究不能仅因收集文件宣布完成。嵌套遮罩/2标量反例、正式声音背景、UI/渐变/reset、195动态视觉与8–24h/多屏/安装仍在路线图，不是本轮已通过项。
+**GLM G25→G22→G24**，G25优先扩大已通过代表门槛的新公式覆盖；Codex负责反例修复及正式合入；有明确独立子任务可自行组织，但GPU串行。Gemini V17可先看现有候选5图并等待G25扩展；V16可立即开始、V15待新包；双方先声明共享文件避免碰撞。Codex负责求值公式实现/反例、模块/线程及最终整合，低成本关键修复直接接管；新研究不能仅因收集文件宣布完成。嵌套遮罩/2标量反例、正式声音背景、UI/渐变/reset、195动态视觉与8–24h/多屏/安装仍在路线图，不是本轮已通过项。

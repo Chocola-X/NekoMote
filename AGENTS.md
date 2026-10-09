@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至2026-10-09 G19/G20/G21/V13/V14独立复核：195初态180OK/15FAIL沿用，G20候选未达标/正式拒绝保持，纯X假设撤回；G18/G21最终81CPU点有效，来源freeze及真实Qt下身图未齐，V14不符合version3且旧图裁切未排除，3PENDING/177UNREVIEWED/15BLOCKED保持。实际Plasma隔离包已补修初态重建、首delta0和40轮每代/最终renderer销毁；恢复/部署/真实桌面/长期/声音背景未验收。按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
+截至2026-10-09 G19/G20/G21/V13/V14独立复核：195初态180OK/15FAIL沿用，Codex候选d297827已过三代表27静态几何/5GPU，未合入；G25扩大验收，正式拒绝保持；G18/G21最终81CPU点有效，来源freeze及真实Qt下身图未齐，V14不符合version3且旧图裁切未排除，3PENDING/177UNREVIEWED/15BLOCKED保持。实际Plasma隔离包已补修初态重建、首delta0和40轮每代/最终renderer销毁；恢复/部署/真实桌面/长期/声音背景未验收。按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. GLM承担开发大头：G23准确继承证据与隔离候选→G22实际包恢复/部署→G24来源冻结/Qt触摸证据；Gemini V16实际包视觉/V15逐条件触摸观察。Codex集中新语义、架构/生命周期和最终抽核；已修G17/G18不重复写判定。
+3. GLM承担开发大头：G25新求值候选批量验收→G22实际包恢复/部署→G24来源冻结/Qt触摸证据；Gemini V17求值视觉/V16实际包视觉/V15逐条件触摸观察。Codex接管求值公式/反例，集中架构/生命周期和最终整合；已修G17/G18不重复写判定。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 
