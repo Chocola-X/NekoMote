@@ -59,6 +59,11 @@ struct Options
     bool bad_asset{false};
     bool invalid_config{false};
     bool recovery{false};
+    float origin_x{0};
+    float origin_y{400};
+    float scale{1};
+    int steps{0};
+    unsigned seed{1};
 };
 
 Options parse_options(int argc, char** argv)
@@ -101,12 +106,27 @@ Options parse_options(int argc, char** argv)
             result.width = std::stoi(value());
         else if (key == "--height")
             result.height = std::stoi(value());
+        else if (key == "--origin-x")
+            result.origin_x = std::stof(value());
+        else if (key == "--origin-y")
+            result.origin_y = std::stof(value());
+        else if (key == "--scale")
+        {
+            result.scale = std::stof(value());
+            if (result.scale <= 0 || !std::isfinite(result.scale))
+                throw std::runtime_error("--scale must be positive and finite");
+        }
+        else if (key == "--steps")
+            result.steps = std::stoi(value());
+        else if (key == "--seed")
+            result.seed = static_cast<unsigned>(std::stoul(value()));
         else if (key == "--help")
         {
             std::puts(
                 "nekomote_plasma_package_probe --output DIR [--model M --session S]\n"
                 "  [--lifecycle] [--bad-asset] [--invalid-config] [--recovery]\n"
                 "  [--rounds 20] [--config-rounds 20] [--dpi 1] [--width 800 --height 1080]\n"
+                "  [--origin-x 0 --origin-y 400 --scale 1] [--steps 0] [--seed 1]\n"
                 "Default: capture one screenshot. --lifecycle: full lifecycle test.\n"
                 "--bad-asset/--invalid-config: error recovery test. --recovery: bad->good cycles.\n"
                 "No desktop settings changed.");
@@ -309,9 +329,9 @@ int run(int argc, char** argv)
             "sessionFile",
             QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString());
     }
-    config.writeEntry("originX", 0.0);
-    config.writeEntry("originY", 400.0);
-    config.writeEntry("scale", 1.0);
+    config.writeEntry("originX", static_cast<double>(opts.origin_x));
+    config.writeEntry("originY", static_cast<double>(opts.origin_y));
+    config.writeEntry("scale", static_cast<double>(opts.scale));
     containment->setWallpaperPlugin(QStringLiteral("org.nekomote.wallpaper"));
     auto* item = PlasmaQuick::AppletQuickItem::itemForApplet(containment);
     if (!item)
@@ -320,7 +340,7 @@ int run(int argc, char** argv)
         QStringLiteral(NEKOMOTE_QML_IMPORT_PATH));
     auto window_owner = std::make_unique<QQuickWindow>();
     auto& window = *window_owner;
-    window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
+    window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
     window.setColor(Qt::transparent);
     window.resize(opts.width, opts.height);
     item->setParentItem(window.contentItem());
@@ -853,6 +873,15 @@ int run(int argc, char** argv)
         std::printf("actual WallpaperItem: %s, native status=%d, dynamic package=%s\n",
                     wallpaper_item ? wallpaper_item->metaObject()->className() : "null",
                     native->property("status").toInt(), package.path().toUtf8().constData());
+        if (opts.steps > 0)
+        {
+            auto* diag_item = native_item(containment);
+            if (!diag_item->configure_diagnostics(opts.steps, true))
+                throw std::runtime_error("fixed-step diagnostics configuration failed");
+            wait_for([&] { return diag_item->queryRenderedFrames() > 0; });
+            std::printf("capture: fixed steps=%d rendered_frames=%u\n", opts.steps,
+                        diag_item->queryRenderedFrames());
+        }
         if (!save_grab(window, abs_output / "package.png"))
         {
             std::fprintf(stderr, "capture: screenshot failed\n");

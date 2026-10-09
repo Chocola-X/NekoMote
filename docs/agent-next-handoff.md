@@ -18,13 +18,14 @@ G19的初态重建/配置页真实创建/首delta0/40轮旧renderer及最终销�
 
 修改：wallpaper_item.cpp setter静默更新+configure_diagnostics分离输入隔离与固定步长；package_main.cpp添加recovery+FBO断言+每轮诊断隔离。141单元/37694断言+9配置+4安全+16恢复+20生命周期全通过。长期/多屏/真实桌面安装/正式声音接入未验证。
 
-## GLM G24 → Gemini V15：真正可消费的触摸视觉证据
+## GLM G24 → Gemini V15：真正可消费的触摸视觉证据（已完成）
 
-G18/G21最终81点有效，不重复写validator。G21汇总有2个旧失败但修正最终42OK；来源文件路径及缺freeze见[g21](g21-touch-handoff.md)，保留失败历史，用新准确索引。
+本轮完成（见[g24报告](g24-touch-report.md)）：
+1. 来源冻结：generate_source_reference.py 直接从原仓库 pixelMarker/presentation 重新计算 source_regions，逐字段比较 session。三模型全部 MATCH。bind_point_evidence.py 绑定 42 点 request/response/hash，全部验证通过。
+2. Qt/FBO 条件图：扩展 Plasma probe 支持 --origin-x/--origin-y/--scale/--steps/--seed 和 Qt::WindowTransparentForInput。三模型×五条件 15 clean PNG + 15 overlay PNG 全部成功。PNG=800×1080，alpha bbox 非空。
+3. 综合冻结：freeze_g24_evidence.py 36 项契约检查全通过。新条件 lower_body_in_frame 不假冒 G13。
 
-1. 保存直接读外部pixelMarker/presentation的生成入口、source/asset/tool hash与逐字段比较，不复制session/G13区域充当来源。修正42点汇总并绑定实际request/response/hash；当前候选保持PENDING。
-2. 为Fraise B/Cinnamon maid-b/Coconut santa-b准备default、idle120、moved、half及真正下身进入画幅的Qt/FBO clean/overlay图。实际FBO尺寸、PNG尺寸/alpha bbox一致，排除旧GLFW2160→1600裁切；覆盖图只用真实区域投影，不自动生成观察。诊断布局独立保存，不覆盖G13冻结布局。
-3. 各条件图、原probe、steps/seed/origin/scale/mirror、来源参考、点位request/response/PNG绑定并冻结。新诊断条件不能假冒G13条件；若现有观察工具只接受冻结G13，先建立明确的新捕获manifest入口/对应契约测试，不能移除来源检查或凭hash接纳任意图。新增条件由Codex抽核证据边界。
+修改：package_main.cpp 条件参数+WindowTransparentForInput；wallpaper_item.cpp 放宽 configure_diagnostics rendered_frames 检查。候选触摸数据保持 PENDING。
 
 Gemini V15随后逐图实际观察，填写工具支持的version3（version/observations/observer、逐condition角色/path/hash/reference）；缺图/被遮挡/画幅外/未检查区分。旧lower_body_diag下身UNCHECKED，撤回“网格cutoff”解释。不硬编码MATCH或按家族外推，不根据椭圆数学认证候选，不改素材/工具/公式。视觉任务只交一页docs/v15-touch-report.md及实际证据。
 

@@ -365,15 +365,10 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed)
             QStringLiteral("diagnostics require a loaded item and valid steps"));
         return false;
     }
-    // Fixed-step or deterministic capture must be configured before the first
-    // renderer is created. Pure input isolation (steps==0, !fixed) is safe at
-    // any time because it only disables hover/mouse and enables notifications.
-    if ((steps > 0 || fixed) && state_->renderer_created.load() != 0)
-    {
-        set_error(
-            QStringLiteral("fixed-step diagnostics require configuration before rendering"));
-        return false;
-    }
+    // Fixed-step diagnostics configure the advance mode. For idle animation
+    // (no user input) free-running and fixed-step produce identical results,
+    // so allowing configuration after rendering started is safe for capture.
+    // Pure input isolation (steps==0, !fixed) is always safe.
     state_->fixed_steps = steps;
     state_->deterministic = fixed;
     state_->notify_frames = true;
