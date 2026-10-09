@@ -99,11 +99,6 @@ unsigned NekoWallpaperItem::queryRenderedFrames() const
     return state_ ? state_->rendered_frames.load() : 0;
 }
 
-double NekoWallpaperItem::queryLastDelta() const
-{
-    return state_ ? state_->last_delta.load() : 0.0;
-}
-
 void NekoWallpaperItem::setModelFile(const QUrl& value)
 {
     if (model_file_ == value)

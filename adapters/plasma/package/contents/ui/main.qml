@@ -9,10 +9,14 @@ WallpaperItem {
     readonly property real originX: configuration.originX
     readonly property real originY: configuration.originY
     readonly property real modelScale: configuration.scale
+    property bool configurationReady: false
     property bool reloadQueued: false
+    Component.onCompleted: configurationReady = true
 
     function reloadSession() {
-        if (reloadQueued)
+        // Initial bindings configure the Loader directly. Rebuilding it again
+        // after completion would discard the already loaded session.
+        if (!configurationReady || reloadQueued)
             return;
         reloadQueued = true;
         Qt.callLater(function() {

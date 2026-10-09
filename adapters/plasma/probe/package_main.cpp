@@ -1,5 +1,3 @@
-#include "wallpaper_item.hpp"
-
 #include <KConfigGroup>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
@@ -9,6 +7,7 @@
 #include <PlasmaQuick/AppletQuickItem>
 #include <QApplication>
 #include <QDir>
+#include <QPointer>
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QQmlEngine>
@@ -18,6 +17,7 @@
 #include <QTimer>
 #include <QUrl>
 #include <cstdio>
+#include <exception>
 #include <fstream>
 #include <functional>
 #include <memory>
@@ -25,6 +25,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "wallpaper_item.hpp"
 
 namespace
 {
@@ -151,19 +153,32 @@ QObject* configuration_of(Plasma::Containment* containment)
 
 void wait_for(const std::function<bool()>& ready, int timeout_ms = 15000)
 {
+    if (ready())
+        return;
     QEventLoop loop;
+    std::exception_ptr failure;
     QTimer poll;
     poll.setInterval(50);
     QObject::connect(&poll, &QTimer::timeout, &loop,
                      [&]
                      {
-                         if (ready())
+                         try
+                         {
+                             if (ready())
+                                 loop.quit();
+                         }
+                         catch (...)
+                         {
+                             failure = std::current_exception();
                              loop.quit();
+                         }
                      });
     QTimer::singleShot(timeout_ms, &loop, &QEventLoop::quit);
     poll.start();
     loop.exec();
     poll.stop();
+    if (failure)
+        std::rethrow_exception(failure);
     if (!ready())
         throw std::runtime_error("timed out waiting for condition");
 }
@@ -205,10 +220,10 @@ std::filesystem::path setup_workspace(const std::filesystem::path& output)
 int run(int argc, char** argv)
 {
     const auto opts = parse_options(argc, argv);
-    const auto abs_model = opts.model.empty() ? std::filesystem::path{}
-                                               : std::filesystem::absolute(opts.model);
-    const auto abs_session = opts.session.empty() ? std::filesystem::path{}
-                                                   : std::filesystem::absolute(opts.session);
+    const auto abs_model =
+        opts.model.empty() ? std::filesystem::path{} : std::filesystem::absolute(opts.model);
+    const auto abs_session =
+        opts.session.empty() ? std::filesystem::path{} : std::filesystem::absolute(opts.session);
     const auto abs_output = std::filesystem::absolute(opts.output);
     if (!opts.bad_asset && !opts.invalid_config)
     {
@@ -237,34 +252,50 @@ int run(int argc, char** argv)
     const auto schema_path = package.filePath("config", "main.xml");
     if (config_path.isEmpty() || schema_path.isEmpty())
         throw std::runtime_error("wallpaper configuration page/schema missing");
-    std::printf("KPackage config page=%s schema=%s: loaded\n",
-                config_path.toUtf8().constData(), schema_path.toUtf8().constData());
+    QQmlEngine config_engine;
+    QQmlComponent config_component(&config_engine, QUrl::fromLocalFile(config_path));
+    std::unique_ptr<QObject> config_object(config_component.createWithInitialProperties(
+        {{"cfg_modelFile",
+          QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString()},
+         {"cfg_sessionFile",
+          QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString()}}));
+    if (!config_object)
+        throw std::runtime_error("configuration QML failed: " +
+                                 config_component.errorString().toStdString());
+    std::printf("KPackage config page=%s schema=%s: loaded\n", config_path.toUtf8().constData(),
+                schema_path.toUtf8().constData());
     ProbeCorona corona;
     auto* containment = corona.createContainment(QStringLiteral("org.nekomote.validation"));
     if (!containment)
         throw std::runtime_error("validation containment could not be created");
-    auto config = containment->config()
-                      .group("Wallpaper").group("org.nekomote.wallpaper").group("General");
+    auto config =
+        containment->config().group("Wallpaper").group("org.nekomote.wallpaper").group("General");
     if (opts.bad_asset)
     {
-        config.writeEntry("modelFile",
-                          QUrl::fromLocalFile(QStringLiteral("/nonexistent/model.json")).toString());
-        config.writeEntry("sessionFile",
-                          QUrl::fromLocalFile(QStringLiteral("/nonexistent/session.json")).toString());
+        config.writeEntry(
+            "modelFile", QUrl::fromLocalFile(QStringLiteral("/nonexistent/model.json")).toString());
+        config.writeEntry(
+            "sessionFile",
+            QUrl::fromLocalFile(QStringLiteral("/nonexistent/session.json")).toString());
     }
     else if (opts.invalid_config)
     {
         const auto bad_path = abs_output / "bad_model.json";
         std::ofstream(bad_path) << "{\"schema_version\":999999}";
-        config.writeEntry("modelFile", QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
-        config.writeEntry("sessionFile", QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
+        config.writeEntry(
+            "modelFile", QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
+        config.writeEntry(
+            "sessionFile",
+            QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
     }
     else
     {
-        config.writeEntry("modelFile",
-                          QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString());
-        config.writeEntry("sessionFile",
-                          QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString());
+        config.writeEntry(
+            "modelFile",
+            QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString());
+        config.writeEntry(
+            "sessionFile",
+            QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString());
     }
     config.writeEntry("originX", 0.0);
     config.writeEntry("originY", 400.0);
@@ -275,23 +306,28 @@ int run(int argc, char** argv)
         throw std::runtime_error("containment QML item could not be created");
     QQmlEngine::contextForObject(item)->engine()->addImportPath(
         QStringLiteral(NEKOMOTE_QML_IMPORT_PATH));
-    QQuickWindow window;
+    auto window_owner = std::make_unique<QQuickWindow>();
+    auto& window = *window_owner;
     window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
     window.setColor(Qt::transparent);
     window.resize(opts.width, opts.height);
     item->setParentItem(window.contentItem());
     item->setSize({static_cast<qreal>(opts.width), static_cast<qreal>(opts.height)});
+    const auto resize_item = [&] { item->setSize(window.size()); };
+    QObject::connect(&window, &QQuickWindow::widthChanged, item, resize_item);
+    QObject::connect(&window, &QQuickWindow::heightChanged, item, resize_item);
     int exit_code = 0;
     auto callbacks = std::make_unique<QObject>();
 
     if (opts.bad_asset || opts.invalid_config)
     {
         window.show();
-        wait_for([&]
-        {
-            auto* native = find_native(containment);
-            return native && native->property("status").toInt() == 2;
-        });
+        wait_for(
+            [&]
+            {
+                auto* native = find_native(containment);
+                return native && native->property("status").toInt() == 2;
+            });
         auto* native = find_native(containment);
         const auto error = native->property("errorString").toString();
         if (error.isEmpty())
@@ -313,31 +349,36 @@ int run(int argc, char** argv)
     }
     else if (opts.lifecycle)
     {
-        wait_for([&]
-        {
-            auto* native = native_item(containment);
-            return native && native->property("status").toInt() == 1;
-        });
+        wait_for(
+            [&]
+            {
+                auto* native = native_item(containment);
+                return native && native->property("status").toInt() == 1;
+            });
         auto* native = native_item(containment);
         if (!native)
             throw std::runtime_error("native item not found after load");
         if (!native->configure_diagnostics(0, false))
             throw std::runtime_error("cannot configure diagnostics for lifecycle test");
+        const QPointer diagnostic_native(native);
         window.show();
-        wait_for([&]
-        {
-            auto* n = native_item(containment);
-            return n && n->queryRendererCreated() > 0;
-        }, 10000);
+        wait_for(
+            [&]
+            {
+                auto* n = native_item(containment);
+                return n && n->queryRendererCreated() > 0;
+            },
+            10000);
         native = native_item(containment);
-        std::printf("lifecycle: renderer created=%u frames=%u\n",
-                    native->queryRendererCreated(), native->queryRenderedFrames());
+        if (diagnostic_native.isNull() || diagnostic_native != native)
+            throw std::runtime_error(
+                "initial configuration rebuilt the diagnostic item before rendering");
+        std::printf("lifecycle: renderer created=%u frames=%u\n", native->queryRendererCreated(),
+                    native->queryRenderedFrames());
 
         // Helper to re-fetch native safely
         auto get_native = [&]() -> nekomote::plasma::NekoWallpaperItem*
-        {
-            return native_item(containment);
-        };
+        { return native_item(containment); };
 
         // 1. Pause/resume
         std::printf("lifecycle: pause/resume\n");
@@ -361,20 +402,43 @@ int run(int argc, char** argv)
             throw std::runtime_error("pause did not suspend advancement");
         std::printf("lifecycle: pause confirmed (frames=%u)\n", native->queryRenderedFrames());
         native->setProperty("paused", false);
-        // Wait for exactly one new frame after resume
-        wait_for([&] { auto* n = get_native(); return n && n->queryRenderedFrames() > pause_frames; });
+        // Consume the actual first diagnostic notification; polling the latest
+        // delta can observe a later frame and conceal a resume clock error.
+        bool resumed = false;
+        double resume_delta = -1;
+        const auto resume_connection = QObject::connect(
+            native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+            [&](QSize, unsigned, double delta, const QString&)
+            {
+                if (!resumed)
+                {
+                    resumed = true;
+                    resume_delta = delta;
+                }
+            });
+        wait_for([&] { return resumed; });
+        QObject::disconnect(resume_connection);
         native = get_native();
-        // First frame after resume should have delta≈0 (no wall-clock catch-up).
-        // Allow small tolerance for scheduling jitter.
-        if (native->queryLastDelta() > 0.05)
+        if (resume_delta != 0)
             throw std::runtime_error("resume replayed suspended wall-clock time");
-        std::printf("lifecycle: resume confirmed (first delta=%.6f)\n", native->queryLastDelta());
+        std::printf("lifecycle: resume confirmed (first delta=%.6f)\n", resume_delta);
 
         // 2. Hide/show
         std::printf("lifecycle: hide/show\n");
         native = get_native();
-        const auto pre_hide_frames = native->queryRenderedFrames();
         window.hide();
+        const auto* timer = native->findChild<QTimer*>();
+        if (!static_cast<nekomote::qt_quick::SessionItemBase*>(native)->get_item_state().paused ||
+            !timer || timer->isActive())
+            throw std::runtime_error("hidden window did not suspend scheduling/runtime");
+        // A frame submitted before hide may still complete. Drain it before
+        // testing that suspended scheduling produces no further frames.
+        {
+            QEventLoop settle;
+            QTimer::singleShot(100, &settle, &QEventLoop::quit);
+            settle.exec();
+        }
+        const auto pre_hide_frames = get_native()->queryRenderedFrames();
         {
             QEventLoop loop;
             QTimer::singleShot(300, &loop, &QEventLoop::quit);
@@ -387,7 +451,12 @@ int run(int argc, char** argv)
             throw std::runtime_error("hidden window produced frames");
         std::printf("lifecycle: hidden confirmed (no frames)\n");
         window.show();
-        wait_for([&] { auto* n = get_native(); return n && n->queryRenderedFrames() > pre_hide_frames; });
+        wait_for(
+            [&]
+            {
+                auto* n = get_native();
+                return n && n->queryRenderedFrames() > pre_hide_frames;
+            });
         std::printf("lifecycle: show confirmed (frames resumed)\n");
 
         // 3. Resize
@@ -395,12 +464,24 @@ int run(int argc, char** argv)
         native = get_native();
         const auto pre_resize_frames = native->queryRenderedFrames();
         window.resize(640, 480);
-        wait_for([&] { auto* n = get_native(); return n && n->queryRenderedFrames() > pre_resize_frames; });
+        wait_for(
+            [&]
+            {
+                auto* n = get_native();
+                return n && n->queryRenderedFrames() > pre_resize_frames;
+            });
+        if (item->size() != QSizeF(640, 480))
+            throw std::runtime_error("containment did not resize with window");
         std::printf("lifecycle: resize 640x480 confirmed\n");
         native = get_native();
         const auto pre_resize2_frames = native->queryRenderedFrames();
         window.resize(opts.width, opts.height);
-        wait_for([&] { auto* n = get_native(); return n && n->queryRenderedFrames() > pre_resize2_frames; });
+        wait_for(
+            [&]
+            {
+                auto* n = get_native();
+                return n && n->queryRenderedFrames() > pre_resize2_frames;
+            });
         std::printf("lifecycle: resize back confirmed\n");
 
         // 4. Create/destroy rounds (change originX to trigger Loader rebuild)
@@ -410,23 +491,30 @@ int run(int argc, char** argv)
         {
             auto* cfg = configuration_of(containment);
             if (!cfg)
-                throw std::runtime_error("cannot access configuration for round " + std::to_string(i));
-            auto* old_native = get_native();
+                throw std::runtime_error("cannot access configuration for round " +
+                                         std::to_string(i));
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
             const double new_origin = (i % 2 == 0) ? 1.0 : 0.0;
             cfg->setProperty("originX", new_origin);
-            wait_for([&]
-            {
-                auto* n = get_native();
-                return n != old_native && n && n->property("status").toInt() == 1;
-            });
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
             auto* n = get_native();
             const auto created = n->queryRendererCreated();
             total_created += created;
-            std::printf("lifecycle: round %d originX=%.0f renderer_created=%u\n",
-                        i, new_origin, created);
+            std::printf("lifecycle: round %d originX=%.0f renderer_created=%u old=%u/%u\n", i,
+                        new_origin, created, old_state->renderer_created.load(),
+                        old_state->renderer_destroyed.load());
         }
-        std::printf("lifecycle: create/destroy %d rounds complete, total_created=%u\n",
-                    opts.rounds, total_created);
+        std::printf("lifecycle: create/destroy %d rounds complete, total_created=%u\n", opts.rounds,
+                    total_created);
 
         // 5. Config switch rounds (change scale to trigger Loader rebuild)
         std::printf("lifecycle: config switch %d rounds\n", opts.config_rounds);
@@ -435,20 +523,27 @@ int run(int argc, char** argv)
         {
             auto* cfg = configuration_of(containment);
             if (!cfg)
-                throw std::runtime_error("cannot access configuration for config round " + std::to_string(i));
-            auto* old_native = get_native();
+                throw std::runtime_error("cannot access configuration for config round " +
+                                         std::to_string(i));
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
             const double new_scale = (i % 2 == 0) ? 0.9 : 1.0;
             cfg->setProperty("scale", new_scale);
-            wait_for([&]
-            {
-                auto* n = get_native();
-                return n != old_native && n && n->property("status").toInt() == 1;
-            });
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
             auto* n = get_native();
             const auto created = n->queryRendererCreated();
             total_config_created += created;
-            std::printf("lifecycle: config round %d scale=%.1f renderer_created=%u\n",
-                        i, new_scale, created);
+            std::printf("lifecycle: config round %d scale=%.1f renderer_created=%u old=%u/%u\n", i,
+                        new_scale, created, old_state->renderer_created.load(),
+                        old_state->renderer_destroyed.load());
         }
         std::printf("lifecycle: config switch %d rounds complete, total_created=%u\n",
                     opts.config_rounds, total_config_created);
@@ -462,25 +557,29 @@ int run(int argc, char** argv)
             std::printf("lifecycle: final renderer_created=%u destroyed=%u\n", created, destroyed);
         }
         if (!save_grab(window, abs_output / "lifecycle_final.png"))
-            std::fprintf(stderr, "lifecycle: final screenshot failed\n");
+            throw std::runtime_error("lifecycle: final screenshot failed");
         else
             std::printf("lifecycle: final screenshot saved\n");
-        std::printf("lifecycle: all tests passed\n");
+        std::printf("lifecycle: configured checks passed; teardown follows\n");
     }
     else
     {
         window.show();
-        wait_for([&]
-        {
-            auto* native = find_native(containment);
-            return native && native->property("status").toInt() == 1;
-        });
+        wait_for(
+            [&]
+            {
+                auto* native = find_native(containment);
+                if (native && (native->property("status").toInt() == 2 ||
+                               native->property("status").toInt() == 3))
+                    throw std::runtime_error(
+                        native->property("errorString").toString().toStdString());
+                return native && native->property("status").toInt() == 1;
+            });
         auto* native = find_native(containment);
         auto* wallpaper_item = qobject_cast<QQuickItem*>(native);
         std::printf("actual WallpaperItem: %s, native status=%d, dynamic package=%s\n",
                     wallpaper_item ? wallpaper_item->metaObject()->className() : "null",
-                    native->property("status").toInt(),
-                    package.path().toUtf8().constData());
+                    native->property("status").toInt(), package.path().toUtf8().constData());
         if (!save_grab(window, abs_output / "package.png"))
         {
             std::fprintf(stderr, "capture: screenshot failed\n");
@@ -490,10 +589,20 @@ int run(int argc, char** argv)
             std::printf("capture: screenshot saved\n");
     }
 
+    const auto* final_native = native_item(containment);
+    const auto final_state = final_native ? final_native->session_state() : nullptr;
     callbacks.reset();
     window.hide();
     window.releaseResources();
     item->setParentItem(nullptr);
+    window_owner.reset();
+    if (final_state)
+    {
+        std::printf("teardown: renderer created=%u destroyed=%u\n",
+                    final_state->renderer_created.load(), final_state->renderer_destroyed.load());
+        if (final_state->renderer_created.load() != final_state->renderer_destroyed.load())
+            throw std::runtime_error("renderer remained alive after window teardown");
+    }
     return exit_code;
 }
 } // namespace

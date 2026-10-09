@@ -1,23 +1,16 @@
-# Agent协作任务
+# Agent 协作任务
 
-更新2026-10-09，当前以[摘要](review-agents-current.md)、[本轮复核](agent-review-2026-10-09.md)、[下一批交接](agent-next-handoff.md)为准。
+当前基线82ab3b6独立复核，按[摘要](review-agents-current.md)、[本轮记录](agent-review-g19-g21.md)、[下一批交接](agent-next-handoff.md)执行。实现完成、证据交付、独立验收分开。
 
-| 任务 | 当前状态 | 下一步 |
+| 范围 | 实际状态 | 下一步 |
 | --- | --- | --- |
-| G13/G14 | 冻结诊断目录/Qt入口已验收，不重复实现 | 沿用明确范围 |
-| G17 | 独立修真实帧扫描：15FAIL、180 NOT_RERUN、234静态候选，31合成通过 | GLM G20扩展来源/准确继承证据 |
-| G16 | 独立整合动态模块+实际Plasma隔离KPackage/WallpaperItem/config页；初步显示/错误/调度通过 | GLM G19主力完善 |
-| G18 | 独立修严格validator/28合成，39CPU点通过含17纠正idle | GLM G21执行，不重写复杂判定 |
-| V12 | 撤回认证：3 PENDING、177 UNREVIEWED、15 BLOCKED；候选不应用 | Gemini V14真实观察 |
-| G19 | 已完成：生命周期/错误恢复/配置测试全通，40轮重建平衡，见 docs/g19-plasma-report.md | 沿用 |
-| G20 | 候选完成：隔离worktree验证误差8.95px未过门槛，正式拒绝保持，见 docs/g20-inheritance-evidence.md | Codex复核候选与根因 |
-| G21 | 已完成：独立source-field参考验证通过，moved/scaled_half 30点+边缘12点全OK，见 docs/g21-touch-handoff.md | Gemini V14视觉观察 |
-| V13 | 已完成：实际包视觉与配置交互通过，QML对WebGL差0，见 docs/v13-plasma-visual-report.md | 沿用 |
-| V14 | 已完成：三重点型号逐条件真实目视观察与81测点复核，3 PENDING/177 UNREVIEWED/15 BLOCKED保持，见 docs/v14-touch-report.md | 沿用 |
-| C5/C6/C7 | 正式语义及声音/背景/应用/宿主最终整合未完成 | Codex风险审查；明确局部实现继续交GLM |
+| G13/G17 | 195初态180OK/15FAIL；15独立复现/234静态候选，180未重跑 | 不重复工具，补G23矩阵 |
+| G19 | UI改进保留；Codex修初态重建/真实配置页、首delta0、每代40轮与最终renderer1/1 | GLM G22恢复/部署/自动实际包 |
+| G20 | 三代表/8WebGL/6CPU候选真实；8.95px仍失败，纯X假设撤回 | GLM G23最高优先级 |
+| G18/G21 | 39+42最终CPU点有效；来源缺freeze、旧summary有2修正前失败 | GLM G24新来源/Qt布局 |
+| V13 | 22图hash及三QML固定图差0有效，生命周期宽泛结论撤回 | Gemini V16实际包逐条件 |
+| V14 | 有有限目视依据，文件不符合version3；下身裁切仍未排除 | Gemini V15消费G24新图 |
+| G23/G22/G24 | 待领用，GLM开发与批量执行大头 | 按该顺序 |
+| C5/C6/C7 | 准确语义/应用与正式宿主退出条件仍未完成 | Codex关键抽核/整合 |
 
-顺序：**GLM G19→G20→G21；Gemini V13/V14可独立取图测点，补包后验收**。GPU共享flock串行；已有锁不重复套锁，长跑冻结二进制/hash。领用声明base/文件，保护共享未提交工作。
-
-GLM负责契约明确的复杂C++/Qt、构建、批量执行和证据；Gemini负责实际视觉，不硬编码观察或外推；Codex负责新语义、架构/ABI/线程及风险抽核。额度优势不降低质量，摘要≤一页，raw保存在新build目录。证据交付/实现完成/独立验收分开，不把Skipped计PASS。
-
-实际桌面配置/安装、正式声音/背景、长期/多屏、完整195视觉尚未认证。用户已安装SDK；不用重复“缺SDK”或新增无依据的确认流程。外部原素材只读，输入只用自有回调/浏览器事件。
+GPU共享flock，不套重复锁；原素材只读；自身回调输入；声明base/文件，保留别人工作。候选正式拒绝保持，3PENDING/177UNREVIEWED/15BLOCKED保持。真实桌面/声音背景/长期/多屏/195动态视觉未认证。报告≤一页，raw保留新build目录，Skipped不计PASS。

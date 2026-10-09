@@ -863,3 +863,7 @@ V10候选点无实测/姿态证据缺失，撤回结论，version3严格重分�
 
 基线2b4e507。修G17真实Field解包：15FAIL复现、234静态候选（156inherit+39zx+39zy），180 NOT_RERUN；G18修假PASS/idle错一拍与无效测试，28合成及39/39真实点通过。V12撤回参考错误/未执行候选点/超高裁切误判，3PENDING/177UNREVIEWED/15BLOCKED，删伪观察生成器及7预制计数测试。
 动态QML模块、真实WallpaperItem/schema/配置绑定重建、KPackage+Containment隔离宿主已显示Chocola/Fraise，配置页实例及实际坏模型错误通过。组件统一有效暂停/软件后端/诊断输入，异步截图与销毁安全；正常30次提交推进约.928秒，四负例+暂停隐藏失败/资源检查及重建通过，非性能收益。三个一致初态/DPI Qt/WebGL像素差0，实际查看。Python239执行229通过10跳过、Qt12通过；ASan配置无Qt/窗口，核心全量/性能未本轮重跑。后续G19/G20/G21主力GLM，V13/V14 Gemini；实际桌面/正式声音背景/长跑仍未验收。详见agent-review-2026-10-09.md。
+
+## 2026-10-09 G19/G20/G21/V13/V14复核
+
+基线82ab3b6：保留UI/真实81CPU点/三QML固定图；修Plasma初态重复重建、真正配置页创建、首delta0及40轮/最终GPU销毁验证、截图失败和等待异常边界。G20候选8.95px仍失败、Y残差存在，正式拒绝保持；撤回V14非法version3/下身网格解释。状态及新GLM G23→G22→G24/Gemini V15/V16交接见[记录](agent-review-g19-g21.md)，长期/性能/正式安装未认证。

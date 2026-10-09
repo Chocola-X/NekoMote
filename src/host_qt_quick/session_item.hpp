@@ -45,7 +45,6 @@ struct SessionState
     std::atomic<unsigned> renderer_created{0};
     std::atomic<unsigned> renderer_destroyed{0};
     std::atomic<unsigned> rendered_frames{0};
-    std::atomic<double> last_delta{0.0};
 };
 
 std::shared_ptr<SessionState> load_session(const std::filesystem::path& model,

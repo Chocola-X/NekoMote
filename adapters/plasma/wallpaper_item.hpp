@@ -33,10 +33,10 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     explicit NekoWallpaperItem(QQuickItem* parent = nullptr);
     ~NekoWallpaperItem() override;
     Renderer* createRenderer() const override;
-    Q_INVOKABLE unsigned queryRendererCreated() const;
-    Q_INVOKABLE unsigned queryRendererDestroyed() const;
-    Q_INVOKABLE unsigned queryRenderedFrames() const;
-    Q_INVOKABLE double queryLastDelta() const;
+    // C++ diagnostics; excluded from the product QML API.
+    unsigned queryRendererCreated() const;
+    unsigned queryRendererDestroyed() const;
+    unsigned queryRenderedFrames() const;
 
     QUrl modelFile() const;
     QUrl sessionFile() const;
