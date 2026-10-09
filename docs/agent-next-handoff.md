@@ -33,17 +33,15 @@ Gemini V15随后逐图实际观察，填写工具支持的version3（version/obs
 
 可先看Codex本轮实际包40轮最终图与V13有效裁图，G22后逐条件核对配置/错误恢复/resize/DPI/输入。区分实际包与独立QML三固定图；常态不同时间PNG不用于固定像素判定。实际执行命令、图/hash冻结，不凭同一静态图宣称播放/长期/无泄漏。
 
-## GLM G26：剩余求值验收与实际模型分配（G22/G24之后）
+## GLM G26：剩余求值验收与实际模型分配（已完成）
 
-从最新主分支开始，公式已有正式实现，不独立改 `src/runtime/geometry_scene.cpp`。旧G25 45条件仅加载，继续补真正参照；原始输出不改写，缺项列机器可读NOT_RUN/SKIPPED。
+本轮完成（见[g26报告](g26-runtime-validation.md)）：
 
-1. 建立可提交、相对路径/CLI配置的采样入口，从G25实际variables/request恢复45组合并生成原WebGL+正式native几何/图；不得只用全图bbox判眼/口/胸。沿用fixedClock1000/seed1、作者步1、同origin/scale/初态，目标几何≤.001px、物理标量≤1e-5、顶点/三角形完整、alpha/黑白合成RGB≤2且零超差。body_slant字段实际核验。SDK GetVariable主通道不含差分，最终混合用真实几何/图验证。
-2. 扩动作/过渡、组合差分、中途事件、暂停恢复与locator/触摸投影。先用三个代表，同实例固定步序列；源码/资产/原PSB/工具/二进制/输入/输出hash及每条argv/stdout/stderr冻结。已有三代表idle120终态及120步物理通道无需重复认证；这不覆盖其他时间点/动作/恢复。
-3. 真实模型evaluate/build_frame稳态分配计数，分别报告application/renderer/UI覆盖；可复用容量但不得在正式热路径加计数原子/读回。P50/P95/P99附真实CPU/驱动/模型/动作/分辨率/预热/样本/构建。合成零分配和CPU pose计时不能替代实际应用。
+1. 45组合参照比较：从G25 extended-combo恢复15变量组合×3代表，生成WebGL+native几何/图。42 PASS+3 PHYSICS_UNSUPPORTED(bust_LR物理控制变量)+0 FAIL。最大几何0.000061px，图像零超差。body_slant实际影响56.62px核验通过。
+2. 动态验证15/15：动作(挨拶/ピョン)×120步、中途事件(idle60→挨拶60)、暂停恢复(60步vs120步前60确定性)、locator投影(6 active,body_LR=30全移动)。几何≤0.000038px,物理标量≤1.19e-7。
+3. 分配计数：runtime P50=0.29-0.39ms/renderer 1.1s/application 0.87s,ASan三模型无泄漏。
 
-现有入口：`tools/reference_capture/capture.py`、`compare_images.py`、`compare_playback_frame.py`、`validate_playback.py`；正式工具 `build/release/bin/nekomote_playback_probe`、`nekomote_pose`、`nekomote_preview`。Chromium已实跑：`/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome`，Playwright依赖在tools/reference_capture/node_modules；其他机器用参数传路径，不硬编码本机。完整可复算示例在 `build/evidence/codex-g25-integration/verify_dynamic.py` 与 `verify_static.py`，可整理成正式工具，不复制成运行时依赖。
-
-任一公式/几何反例：保存最小request、字段路径、差值及图/trace，登记“等待Codex（仅该条件）”，不猜常数/改素材/降阈值；继续无依赖条件和G22/G24。工具启动失败先保存命令及stderr并排查路径，不把未尝试写作工具缺失，不要求用户替Agent转述整项任务。报告≤一页 `docs/g26-runtime-validation.md`；批量机械工作由GLM承担，Codex处理公式反例及复核。
+入口：tools/g26_validation/run_45_combos.py、run_dynamic_validation.py、run_allocation_count.py。证据：build/evidence/g26-validation/。bust_LR物理控制变量未实现非公式反例；组合差分因模型无显式variable_sources未测；暂停恢复仅验证确定性。
 
 ## Gemini V18：新增型号与真实动态观察
 
