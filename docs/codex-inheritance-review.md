@@ -1,4 +1,6 @@
-# G23复核与核心求值接管
+# G23复核与核心求值接管（历史候选阶段）
+
+当前已正式整合，最新状态见[整合记录](review-g25-integration.md)。本页记录候选阶段，不能据旧15FAIL判断当前运行时。
 
 2026-10-09，审查基线 `b11e175`。Codex接管公式推导与候选实现；GLM继续批量采样、工具和验收，Gemini核查视觉。旧候选已有数值误差，尚未到依靠目视决定是否通过的阶段；不能将失败归因为缺少多模态能力。
 
@@ -22,4 +24,4 @@
 
 证据 `build/evidence/codex-inheritance-review-2026-10-09/`：`cached-matrix/manifest.json`、`gpu/manifest.json`、`unit-all.log`、`benchmark.json/stdout`；source/binary/asset/reference/result hash及argv已保存。参照沿用GLM冻结图/trace，未重采WebGL。工具`certified:false`保持。v7/v8失败假设与一次明确标记的旧二进制误跑保存，不计通过。
 
-**尚未合入主分支。** 正式195初态180OK/15FAIL沿用；新候选仅通过三个代表的部分静态条件，其余型号、组合/动态/物理/locator与稳态性能交G25。主分支继续拒绝0x7fc，重新编译主分支不会解除这些错误。GLM不再反复改公式；新反例交Codex处理，证据通过后Codex再整合。任务见[交接](agent-next-handoff.md)。
+**以下为当时未合入的历史状态，已被正式整合记录替代。** 正式195初态180OK/15FAIL沿用；新候选仅通过三个代表的部分静态条件，其余型号、组合/动态/物理/locator与稳态性能交G25。主分支继续拒绝0x7fc，重新编译主分支不会解除这些错误。GLM不再反复改公式；新反例交Codex处理，证据通过后Codex再整合。任务见[交接](agent-next-handoff.md)。

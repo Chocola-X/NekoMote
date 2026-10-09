@@ -75,6 +75,7 @@ struct Node
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false}, mask_source{false};
     bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
+    bool inherit_shape{true}, partial_shape_path{false};
 };
 struct Clamp
 {
@@ -278,6 +279,9 @@ struct Compiler
         require(n.division >= 0 && n.division <= 256, n.label, "unsupported division capacity");
         n.combine = layer.mesh_combine == 1;
         n.child_sync = layer.mesh_sync_child_mask;
+        n.inherit_shape = (layer.inherit_mask & 0x2000000) != 0;
+        const bool parent_partial_shape = data.nodes[parent.value].partial_shape_path;
+        n.partial_shape_path = parent_partial_shape || !n.inherit_shape;
         const bool unsupported_common =
             layer.coordinate != 0 || (layer.mesh_transform != 0 && layer.mesh_transform != 1) ||
             (layer.mesh_combine != 0 && layer.mesh_combine != 1) ||
@@ -287,12 +291,12 @@ struct Compiler
              layer.transform_order != std::vector<int>{0, 3, 2, 1});
         n.partial_locator_origin =
             !unsupported_common && n.exported_locator && layer.inherit_mask == 0x200020c;
-        // Partial shape inheritance is not validated: Coconut and Azuki hand
-        // attachments fail the frozen geometry threshold. Keep it unsupported
-        // until a source-independent formula passes those captures.
-        n.unsupported =
-            unsupported_common || (layer.inherit_mask != 0x20007fc &&
-                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
+        // Single shape exclusion follows the resolved child origin, preserving
+        // its own curves; see docs/inheritance-semantics.md. Nested exclusions
+        // still lack reference evidence and remain explicitly unsupported.
+        n.unsupported = unsupported_common || (!n.inherit_shape && parent_partial_shape) ||
+                        (layer.inherit_mask != 0x20007fc && layer.inherit_mask != 0x7fc &&
+                         !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
         const auto binding =
             layer.parameterize.has_value() ? layer.parameterize : part.parameterize;
         const auto& parameters = layer.parameter.empty() ? part.parameter : layer.parameter;
@@ -367,11 +371,11 @@ struct State
 {
     Pose pose;
     Pose transform;
-    NodeId transform_parent, curve_parent;
+    NodeId transform_parent, curve_parent, excluded_curve;
     int child_sync{0};
     RigidTransform world;
     Patch world_patch{};
-    Vec2 domain_corner{};
+    Vec2 domain_corner{}, attachment_offset{};
     std::array<float, 4> domain_inverse{};
     float depth{0}, opacity{0};
     bool mesh_path{false};
@@ -734,7 +738,7 @@ struct GeometryInstance::Impl
     {
         return deform(id, states[id.value].world.apply(x, y));
     }
-    Vec2 deform(NodeId id, Vec2 p) const noexcept
+    Vec2 deform_curves(NodeId id, Vec2 p) const noexcept
     {
         while (id.valid())
         {
@@ -743,6 +747,13 @@ struct GeometryInstance::Impl
                 p = warp(s, p);
             id = s.curve_parent;
         }
+        return p;
+    }
+    Vec2 deform(NodeId start, Vec2 p) const noexcept
+    {
+        p = deform_curves(start, p);
+        if (start.valid() && states[start.value].excluded_curve.valid())
+            p = p + states[start.value].attachment_offset;
         return p;
     }
     static Vec2 warp(const State& s, Vec2 p) noexcept
@@ -932,8 +943,18 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
         const auto& transform_parent = instance.states[state.transform_parent.value];
         state.world = compose(transform_parent.world, local);
-        state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
-                                                              : transform_parent.curve_parent;
+        state.excluded_curve = parent.excluded_curve;
+        if (!n.inherit_shape)
+        {
+            state.excluded_curve = transform_parent.child_sync == 8 ? state.transform_parent
+                                                                    : transform_parent.curve_parent;
+            state.curve_parent = NodeId{};
+        }
+        else
+        {
+            state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
+                                                                  : transform_parent.curve_parent;
+        }
         // Mask one bends the direct child origin, leaving its geometry rigid.
         // Mask eight retains the curve in the descendant vertex chain.
         if (transform_parent.child_sync == 1 && transform_parent.transform.mesh)
@@ -982,6 +1003,16 @@ GeometryStatus GeometryInstance::evaluate() noexcept
                     static_cast<float>(saved_b * static_cast<double>(state.transform.patch[j].x) +
                                        saved_d * static_cast<double>(state.transform.patch[j].y) +
                                        offset_y)};
+        }
+        if (state.excluded_curve.valid())
+        {
+            // Retain the child's own curves, then move its resolved origin along
+            // the excluded parent surface. All its vertices share this displacement;
+            // warping the group origin before resolving the child loses local offsets.
+            // Cache per evaluation, after controls are ready, to avoid extra per-vertex
+            // traversals. Parameter/output changes rebuild this state each evaluation.
+            const auto anchor = instance.deform_curves(id, state.world.translation);
+            state.attachment_offset = instance.deform(state.excluded_curve, anchor) - anchor;
         }
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)

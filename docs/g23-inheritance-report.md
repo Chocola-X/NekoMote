@@ -14,4 +14,4 @@
 
 参照SL条件实际设置`body_slant=30`并改变画面，候选低误差不证明“不触发”。旧12连续warp链、全部纯X残差及44%幅度不足推断撤回：combine已经聚合helpers，挂接点需由子节点自身曲面和局部偏移解析，不应倍增位移。
 
-raw：`build/evidence/g23-inheritance/manifest.json`、`matrix_results/`、`residual_analysis/`；旧隔离候选在 `experiments/g20-*`。原报告完整历史保存在Git。新Codex候选 `d297827` 已通过27静态几何/5GPU条件，但仍未正式放行；扩大验收交G25。
+raw：`build/evidence/g23-inheritance/manifest.json`、`matrix_results/`、`residual_analysis/`；旧隔离候选在 `experiments/g20-*`。原报告完整历史保存在Git。新Codex候选 `d297827` 已通过27静态几何/5GPU条件，当时仍未正式放行；现已复核补验并正式整合，见[整合记录](review-g25-integration.md)。

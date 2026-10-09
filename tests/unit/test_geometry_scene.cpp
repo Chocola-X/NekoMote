@@ -26,7 +26,8 @@ thread_local std::size_t measured_allocations = 0;
 } // namespace
 // Project-owned, ordinary C++ heap allocations only; warmed math/framework and
 // diagnostics are excluded. Geometry storage has no over-aligned element types.
-void* operator new(std::size_t size)
+// Keep allocation instrumentation opaque to optimizer allocation-pair inference.
+[[gnu::noinline]] void* operator new(std::size_t size)
 {
     if (measure_allocations)
         ++measured_allocations;
@@ -34,23 +35,23 @@ void* operator new(std::size_t size)
         return p;
     throw std::bad_alloc();
 }
-void* operator new[](std::size_t size)
+[[gnu::noinline]] void* operator new[](std::size_t size)
 {
     return ::operator new(size);
 }
-void operator delete(void* p) noexcept
+[[gnu::noinline]] void operator delete(void* p) noexcept
 {
     std::free(p);
 }
-void operator delete[](void* p) noexcept
+[[gnu::noinline]] void operator delete[](void* p) noexcept
 {
     std::free(p);
 }
-void operator delete(void* p, std::size_t) noexcept
+[[gnu::noinline]] void operator delete(void* p, std::size_t) noexcept
 {
     std::free(p);
 }
-void operator delete[](void* p, std::size_t) noexcept
+[[gnu::noinline]] void operator delete[](void* p, std::size_t) noexcept
 {
     std::free(p);
 }
@@ -2565,7 +2566,7 @@ TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runt
     }
 }
 
-TEST_CASE("Unverified partial shape inheritance rejects the affected sprite subtree",
+TEST_CASE("Single shape exclusion preserves identity curves and rejects unknown masks",
           "[runtime][scene]")
 {
     auto build_rig = [](std::uint64_t reference_mask, int child_sync = 0)
@@ -2608,6 +2609,15 @@ TEST_CASE("Unverified partial shape inheritance rejects the affected sprite subt
     for (const int child_sync : {0, 8})
     {
         auto compiled = runtime::compile_geometry_scene(build_rig(0x7fc, child_sync));
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        near(instance.sample_atlas_point(instance.primitives()[0].node, {3, 1}), {0, 0});
+        near(instance.sample_atlas_point(instance.primitives()[0].node, {3, 3}), {0, 2});
+    }
+    {
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x7fd, 8));
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
         REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
@@ -2847,4 +2857,132 @@ TEST_CASE("Observed attr2 uses ordinary alpha and unknown protection flags fail"
                     (attr == 1 ? ColorProtection::PreserveTranslucent : ColorProtection::None));
         }
     }
+}
+
+TEST_CASE("Shape exclusion moves the resolved child origin without stretching vertices",
+          "[runtime][scene][inheritance]")
+{
+    using namespace runtime;
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.variables = {{"offset", {}}};
+    const auto curve = [](bool outer)
+    {
+        FrameContent content;
+        content.src = field(std::string{"blank"});
+        content.icon = field(std::string{"16:16:0:0"});
+        const auto patch = identity_patch();
+        std::array<float, 32> points{};
+        // Outer surface: x'=x+y*y/32, y'=y. Inner surface: y'=y+2.
+        // These Bernstein coefficients encode the polynomial independently of
+        // the geometry implementation; the expected positions below are analytic.
+        constexpr std::array<float, 4> squared{0, 0, 1.0f / 3.0f, 1};
+        for (std::size_t i = 0; i < patch.size(); ++i)
+        {
+            points[2 * i] = patch[i].x + (outer ? 0.5f * squared[i / 4] : 0);
+            points[2 * i + 1] = patch[i].y + (outer ? 0 : 0.125f);
+        }
+        MeshData mesh;
+        mesh.bp = field(points);
+        content.mesh = field(mesh);
+        return content;
+    };
+    auto inner_content = curve(false);
+    inner_content.coord = field(std::array<float, 3>{2, 3, 0});
+    auto inner = layer("own curve", 0, inner_content);
+    inner.mesh_sync_child_mask = 8;
+    inner.parameterize = field(0);
+    inner.parameter = {{"offset", 0, 1, 1, 0, true}};
+    inner_content.coord = field(std::array<float, 3>{2, 4, 0});
+    inner.frame_list.push_back({1, 2, field(inner_content)});
+    inner.children = {layer("sprite", 0, sprite())};
+    FrameContent group_content;
+    group_content.coord = field(std::array<float, 3>{1, 2, 0});
+    auto group = layer("shape excluded", 0, group_content);
+    group.inherit_mask = 0x7fc;
+    group.children = {inner};
+    auto outer = layer("outer curve", 0, curve(true));
+    outer.mesh_sync_child_mask = 8;
+    outer.children = {group};
+    asset.parts[0].layers = {outer};
+    std::array<Vec2, 5> expected{{{4.53125f, 7}, {4.53125f, 9}, {1.53125f, 6}, {5, 8}, {20, 12}}};
+    SECTION("Vertex-synchronized parent")
+    {
+    }
+    SECTION("Position-synchronized parent only bends the direct child origin")
+    {
+        asset.parts[0].layers[0].mesh_sync_child_mask = 1;
+        expected = {{{3.125f, 7}, {3.125f, 9}, {0.125f, 6}, {3.125f, 8}, {16.25f, 12}}};
+    }
+    SECTION("Rigid rotation applies to the curve and its resolved attachment")
+    {
+        asset.parts[0].layers[0].frame_list[0].content.data.angle = field(90.0f);
+        expected = {{{-7, 4.53125f}, {-9, 4.53125f}, {-6, 1.53125f}, {-8, 5}, {-6, 6}}};
+    }
+    SECTION("Combined own-domain helpers retain their displacement")
+    {
+        auto helper = layer("combined own curve", 0, curve(false));
+        helper.mesh_combine = 1;
+        helper.mesh_sync_child_mask = 8;
+        helper.children = {layer("sprite", 0, sprite())};
+        asset.parts[0].layers[0].children[0].children[0].children = {helper};
+        expected = {{{5.53125f, 9}, {5.53125f, 11}, {2.53125f, 8}, {6.125f, 10}, {22.25f, 16}}};
+    }
+    const auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.primitives().size() == 1);
+    const auto node = instance.primitives()[0].node;
+    // Base attachment is (3,7); sections exercise independently derived
+    // positional synchronization, rigid rotation and combined own-curve variants.
+    near(instance.sample_atlas_point(node, {3, 1}), expected[0]);
+    near(instance.sample_atlas_point(node, {3, 3}), expected[1]);
+    REQUIRE(instance.build_frame());
+    near({instance.frame().vertices[0].x, instance.frame().vertices[0].y}, expected[2]);
+
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("offset"), 1));
+    REQUIRE(instance.evaluate());
+    near(instance.sample_atlas_point(node, {3, 1}), expected[3]);
+    instance.set_origin({10, -4});
+    instance.set_scale(2);
+    REQUIRE(instance.evaluate());
+    near(instance.sample_atlas_point(node, {3, 1}), expected[4]);
+
+    // Repeated changes must refresh attachment caches without steady allocations.
+    for (int i = 0; i < 20; ++i)
+    {
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+    }
+    const auto offset = compiled.scene->find_variable("offset");
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 20; ++i)
+    {
+        (void)instance.set_parameter(offset, static_cast<float>(i % 2));
+        (void)instance.evaluate();
+        (void)instance.build_frame();
+    }
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Nested shape exclusions remain explicitly unsupported", "[runtime][inheritance]")
+{
+    auto asset = rig();
+    asset.parts.resize(1);
+    auto inner = layer("nested exclusion", 0, FrameContent{});
+    inner.inherit_mask = 0x7fc;
+    inner.children = {layer("sprite", 0, sprite())};
+    auto outer = layer("outer exclusion", 0, FrameContent{});
+    outer.inherit_mask = 0x7fc;
+    outer.children = {inner};
+    asset.parts[0].layers = {outer};
+    const auto compiled = nekomote::runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    nekomote::runtime::GeometryInstance instance(*compiled.scene);
+    REQUIRE(instance.evaluate().error == nekomote::runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(instance.primitives().empty());
+    REQUIRE(instance.frame().commands.empty());
 }
