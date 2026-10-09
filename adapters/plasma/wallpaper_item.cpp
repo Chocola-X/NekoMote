@@ -103,12 +103,9 @@ void NekoWallpaperItem::setModelFile(const QUrl& value)
 {
     if (model_file_ == value)
         return;
-    if (state_)
-    {
-        set_error(
-            QStringLiteral("changing modelFile after load is not supported in this prototype"));
-        return;
-    }
+    // When a session is already loaded, the QML Loader rebuilds the item to
+    // switch models. The in-place binding update reaches this setter on the
+    // old item before it is destroyed; accept the value without reloading.
     model_file_ = value;
     emit modelFileChanged();
 }
@@ -117,12 +114,6 @@ void NekoWallpaperItem::setSessionFile(const QUrl& value)
 {
     if (session_file_ == value)
         return;
-    if (state_)
-    {
-        set_error(
-            QStringLiteral("changing sessionFile after load is not supported in this prototype"));
-        return;
-    }
     session_file_ = value;
     emit sessionFileChanged();
 }
@@ -131,9 +122,9 @@ void NekoWallpaperItem::setOriginX(float value)
 {
     if (origin_x_ == value)
         return;
-    if (state_ || !std::isfinite(value))
+    if (!std::isfinite(value))
     {
-        set_error(QStringLiteral("originX must be finite and set before loading"));
+        set_error(QStringLiteral("originX must be finite"));
         return;
     }
     origin_x_ = value;
@@ -144,9 +135,9 @@ void NekoWallpaperItem::setOriginY(float value)
 {
     if (origin_y_ == value)
         return;
-    if (state_ || !std::isfinite(value))
+    if (!std::isfinite(value))
     {
-        set_error(QStringLiteral("originY must be finite and set before loading"));
+        set_error(QStringLiteral("originY must be finite"));
         return;
     }
     origin_y_ = value;
@@ -157,9 +148,9 @@ void NekoWallpaperItem::setScale(float value)
 {
     if (scale_ == value)
         return;
-    if (state_ || !std::isfinite(value) || value <= 0)
+    if (!std::isfinite(value) || value <= 0)
     {
-        set_error(QStringLiteral("scale must be positive, finite and set before loading"));
+        set_error(QStringLiteral("scale must be positive and finite"));
         return;
     }
     scale_ = value;
@@ -368,10 +359,19 @@ void NekoWallpaperItem::refresh_playback()
 
 bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed)
 {
-    if (!state_ || steps < 0 || steps > 100000 || state_->renderer_created.load() != 0)
+    if (!state_ || steps < 0 || steps > 100000)
     {
         set_error(
-            QStringLiteral("diagnostics require a loaded, not yet rendered item and valid steps"));
+            QStringLiteral("diagnostics require a loaded item and valid steps"));
+        return false;
+    }
+    // Fixed-step or deterministic capture must be configured before the first
+    // renderer is created. Pure input isolation (steps==0, !fixed) is safe at
+    // any time because it only disables hover/mouse and enables notifications.
+    if ((steps > 0 || fixed) && state_->renderer_created.load() != 0)
+    {
+        set_error(
+            QStringLiteral("fixed-step diagnostics require configuration before rendering"));
         return false;
     }
     state_->fixed_steps = steps;

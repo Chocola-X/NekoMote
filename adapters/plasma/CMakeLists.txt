@@ -81,3 +81,37 @@ target_link_libraries(nekomote_plasma_package_probe PRIVATE
     Plasma::Plasma Plasma::PlasmaQuick KF6::Package
     Qt6::Widgets Qt6::Quick nekomote_warnings)
 add_dependencies(nekomote_plasma_package_probe nekomote_plasma_qmlplugin nekomote_plasma_package)
+
+# Deployable stage: self-contained directory with native library, QML plugin,
+# qmldir, qmltypes and KPackage. Independent hosts load via QML import + LD path,
+# not build-tree RPATH.
+set(NEKOMOTE_STAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/stage)
+add_custom_target(nekomote_plasma_stage
+    COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/lib
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/package
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:nekomote_plasma_qml>
+        ${NEKOMOTE_STAGE_DIR}/lib/
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir
+        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes
+        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:nekomote_plasma_qmlplugin>
+        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper
+        ${NEKOMOTE_STAGE_DIR}/package/org.nekomote.wallpaper
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/probe/containment
+        ${NEKOMOTE_STAGE_DIR}/package/org.nekomote.validation
+    DEPENDS nekomote_plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_package
+    COMMENT "Staging deployable Plasma wallpaper package")
+
+add_custom_target(nekomote_plasma_stage_clean
+    COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}
+    COMMENT "Cleaning Plasma stage")

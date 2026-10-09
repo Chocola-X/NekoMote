@@ -119,6 +119,16 @@ if(NEKOMOTE_BUILD_TESTS)
             COMMAND $<TARGET_FILE:nekomote_plasma_config_reject>)
         set_tests_properties(plasma_config_reject PROPERTIES LABELS "qt" TIMEOUT 15)
     endif()
+    if(TARGET nekomote_plasma_package_probe AND Python3_Interpreter_FOUND)
+        find_program(NEKOMOTE_FLOCK2 flock REQUIRED)
+        add_test(NAME plasma_package_probe
+            COMMAND ${NEKOMOTE_FLOCK2} ${CMAKE_SOURCE_DIR}/build/gpu-validation.lock
+                ${Python3_EXECUTABLE} -m unittest tests.plasma.test_package_probe
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+        set_tests_properties(plasma_package_probe PROPERTIES
+            LABELS "qt;gpu" TIMEOUT 180
+            ENVIRONMENT "NEKOMOTE_TEST_MODEL=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/model.nkm.json;NEKOMOTE_TEST_SESSION=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/session.nks.json")
+    endif()
     if(Python3_Interpreter_FOUND)
         add_test(NAME python_tools
             COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture

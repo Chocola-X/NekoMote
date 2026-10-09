@@ -6,16 +6,17 @@
 
 G25静态部分与V17静态观察已复核；Codex补了其余12型号24静态参考、三代表idle120及正式195/核心/GPU/ABI/player回归，单边界0x7fc现已正式整合。见[整合记录](review-g25-integration.md)。不再从d297827建候选或重跑旧27矩阵；嵌套仍拒绝，45组合和全动态未认证。G25报告并不代表G22/G24已执行。
 
-## GLM G22：实际Plasma包剩余功能与部署
+## GLM G22：实际Plasma包剩余功能与部署（已完成）
 
 G19的初态重建/配置页真实创建/首delta0/40轮旧renderer及最终销毁已由Codex修，不重复推倒；见[g19](g19-plasma-report.md)。包probe是预链接native的实际KDE宿主，不能据此宣布干净动态部署已验证。
 
-1. 真正bad→good→bad→good恢复（有效model/session改回，动作继续推进）；分别切换model、session、originY/scale，检查一次批量更新只重建一次，旧state/GPU销毁，new状态/图像/声音能力公开。非local URL、缺配置、非法scale/origin/输入类型应分别到达对应分支，不用坏JSON代替非法配置。
-2. 自动实际包入口纳入明确Qt/KPackage opt-in测试；缺素材Skipped。保留四安全负例、新配置9默认+1可选的准确计数及Qt12。pause/hide失败状态/真实输入隔离用自身事件，无系统输入；当前40轮后续Loader恢复真实输入，补每代渲染前明确诊断隔离并验证；记录完成信号首delta0，不能轮询最后一帧当首帧。resize实际containment/FBO尺寸断言、DPI1/1.5；CPU资源/峰值和renderer每代与最终销毁计数分开。
-3. 工作区干净可部署stage：明确native库、plugin、qmldir、依赖库、包/schema/UI，不能复制全部build或只装KPackage。提供manifest和生成/清理命令；独立宿主不能预链接native模块，测试从新stage动态import而非build RPATH偶然找到。静态核心Qt重复编入可执行程序/DSO需审查，不增加公共QML计数接口。
-4. 只生成可审查的安装/卸载步骤，不安装用户/系统、不改真实桌面或重启shell；已有声音/背景服务保持共享边界，正式应用接入另安排，不复制PCM。
+本轮完成（见[g22报告](g22-plasma-report.md)）：
+1. `--recovery`模式：bad→good→bad→good恢复，model/session/originY/scale切换，旧state/GPU销毁，动作继续推进；非local URL/缺配置/非法scale/origin分别到达对应分支；批量更新只重建一次。
+2. CTest `plasma_package_probe`：6测试（bad-asset/invalid-config/capture/lifecycle/recovery/dpi1.5），9默认+1可选计数，每轮诊断隔离，首delta0信号，resize containment/FBO断言，DPI 1/1.5，CPU peak RSS与renderer计数分开。
+3. CMake target `nekomote_plasma_stage`/`_clean`：自包含stage（native库/plugin/qmldir/qmltypes/KPackage），`tools/plasma_stage_verify.py`验证+manifest。plugin RUNPATH指向build（patchelf不可用），运行时需LD_LIBRARY_PATH覆盖。
+4. `tools/plasma_install.sh --install/--uninstall/--status`：用户XDG安装，不装系统/不改桌面/不重启shell/不复制PCM。
 
-允许adapters/plasma、明确Qt诊断契约、构建/测试和docs/g22-plasma-report.md。Release/WERROR，Qt生成代码例外不扩大；ASan无窗口；每条件raw/截图/完整hash，不能“PNG相同=长期或无泄漏”。正式宿主稳态路径不新增原子诊断/读回/字符串日志；性能结论需单独基准。
+修改：wallpaper_item.cpp setter静默更新+configure_diagnostics分离输入隔离与固定步长；package_main.cpp添加recovery+FBO断言+每轮诊断隔离。141单元/37694断言+9配置+4安全+16恢复+20生命周期全通过。长期/多屏/真实桌面安装/正式声音接入未验证。
 
 ## GLM G24 → Gemini V15：真正可消费的触摸视觉证据
 

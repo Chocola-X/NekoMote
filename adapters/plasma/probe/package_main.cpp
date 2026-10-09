@@ -20,6 +20,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -57,6 +58,7 @@ struct Options
     bool lifecycle{false};
     bool bad_asset{false};
     bool invalid_config{false};
+    bool recovery{false};
 };
 
 Options parse_options(int argc, char** argv)
@@ -83,6 +85,8 @@ Options parse_options(int argc, char** argv)
             result.bad_asset = true;
         else if (key == "--invalid-config")
             result.invalid_config = true;
+        else if (key == "--recovery")
+            result.recovery = true;
         else if (key == "--rounds")
             result.rounds = std::stoi(value());
         else if (key == "--config-rounds")
@@ -101,10 +105,11 @@ Options parse_options(int argc, char** argv)
         {
             std::puts(
                 "nekomote_plasma_package_probe --output DIR [--model M --session S]\n"
-                "  [--lifecycle] [--bad-asset] [--invalid-config]\n"
+                "  [--lifecycle] [--bad-asset] [--invalid-config] [--recovery]\n"
                 "  [--rounds 20] [--config-rounds 20] [--dpi 1] [--width 800 --height 1080]\n"
                 "Default: capture one screenshot. --lifecycle: full lifecycle test.\n"
-                "--bad-asset/--invalid-config: error recovery test. No desktop settings changed.");
+                "--bad-asset/--invalid-config: error recovery test. --recovery: bad->good cycles.\n"
+                "No desktop settings changed.");
             std::exit(0);
         }
         else
@@ -114,7 +119,7 @@ Options parse_options(int argc, char** argv)
         throw std::runtime_error("--output is required");
     if (std::filesystem::exists(result.output))
         throw std::runtime_error("output must be a new directory");
-    if (!result.lifecycle && !result.bad_asset && !result.invalid_config)
+    if (!result.lifecycle && !result.bad_asset && !result.invalid_config && !result.recovery)
     {
         if (result.model.empty() || result.session.empty())
             throw std::runtime_error("--model and --session are required for capture mode");
@@ -225,7 +230,14 @@ int run(int argc, char** argv)
     const auto abs_session =
         opts.session.empty() ? std::filesystem::path{} : std::filesystem::absolute(opts.session);
     const auto abs_output = std::filesystem::absolute(opts.output);
-    if (!opts.bad_asset && !opts.invalid_config)
+    if (!opts.bad_asset && !opts.invalid_config && !opts.recovery)
+    {
+        if (!std::filesystem::is_regular_file(abs_model))
+            throw std::runtime_error("model file does not exist");
+        if (!std::filesystem::is_regular_file(abs_session))
+            throw std::runtime_error("session file does not exist");
+    }
+    if (opts.recovery)
     {
         if (!std::filesystem::is_regular_file(abs_model))
             throw std::runtime_error("model file does not exist");
@@ -328,6 +340,7 @@ int run(int argc, char** argv)
                 auto* native = find_native(containment);
                 return native && native->property("status").toInt() == 2;
             });
+        wait_for([&] { return window.isSceneGraphInitialized(); });
         auto* native = find_native(containment);
         const auto error = native->property("errorString").toString();
         if (error.isEmpty())
@@ -459,7 +472,7 @@ int run(int argc, char** argv)
             });
         std::printf("lifecycle: show confirmed (frames resumed)\n");
 
-        // 3. Resize
+        // 3. Resize with containment and FBO size assertion
         std::printf("lifecycle: resize\n");
         native = get_native();
         const auto pre_resize_frames = native->queryRenderedFrames();
@@ -470,9 +483,33 @@ int run(int argc, char** argv)
                 auto* n = get_native();
                 return n && n->queryRenderedFrames() > pre_resize_frames;
             });
+        QSize resize_fbo;
+        bool resize_fbo_captured = false;
+        const auto resize_fbo_connection = QObject::connect(
+            native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+            [&](QSize fbo_size, unsigned, double, const QString&)
+            {
+                if (fbo_size.isValid())
+                {
+                    resize_fbo = fbo_size;
+                    resize_fbo_captured = true;
+                }
+            });
+        wait_for([&] { return resize_fbo_captured; });
+        QObject::disconnect(resize_fbo_connection);
         if (item->size() != QSizeF(640, 480))
             throw std::runtime_error("containment did not resize with window");
-        std::printf("lifecycle: resize 640x480 confirmed\n");
+        {
+            const auto expected_fbo = QSize(640, 480) * window.devicePixelRatio();
+            if (resize_fbo != expected_fbo)
+                throw std::runtime_error(
+                    "resize FBO size " + std::to_string(resize_fbo.width()) + "x" +
+                    std::to_string(resize_fbo.height()) + " != expected " +
+                    std::to_string(expected_fbo.width()) + "x" +
+                    std::to_string(expected_fbo.height()));
+        }
+        std::printf("lifecycle: resize 640x480 confirmed (FBO=%dx%d)\n", resize_fbo.width(),
+                    resize_fbo.height());
         native = get_native();
         const auto pre_resize2_frames = native->queryRenderedFrames();
         window.resize(opts.width, opts.height);
@@ -507,6 +544,12 @@ int run(int argc, char** argv)
                                old_state->renderer_destroyed.load();
                 });
             auto* n = get_native();
+            if (!n->configure_diagnostics(0, false))
+                throw std::runtime_error("diagnostic isolation failed for round " +
+                                         std::to_string(i));
+            if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
+                throw std::runtime_error("round " + std::to_string(i) +
+                                         " did not isolate real pointer input");
             const auto created = n->queryRendererCreated();
             total_created += created;
             std::printf("lifecycle: round %d originX=%.0f renderer_created=%u old=%u/%u\n", i,
@@ -539,6 +582,12 @@ int run(int argc, char** argv)
                                old_state->renderer_destroyed.load();
                 });
             auto* n = get_native();
+            if (!n->configure_diagnostics(0, false))
+                throw std::runtime_error("diagnostic isolation failed for config round " +
+                                         std::to_string(i));
+            if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
+                throw std::runtime_error("config round " + std::to_string(i) +
+                                         " did not isolate real pointer input");
             const auto created = n->queryRendererCreated();
             total_config_created += created;
             std::printf("lifecycle: config round %d scale=%.1f renderer_created=%u old=%u/%u\n", i,
@@ -562,6 +611,229 @@ int run(int argc, char** argv)
             std::printf("lifecycle: final screenshot saved\n");
         std::printf("lifecycle: configured checks passed; teardown follows\n");
     }
+    else if (opts.recovery)
+    {
+        auto set_config = [&](const char* key, const QVariant& value)
+        {
+            auto* cfg = configuration_of(containment);
+            if (!cfg)
+                throw std::runtime_error(std::string("cannot access configuration for ") + key);
+            cfg->setProperty(key, value);
+        };
+        auto get_native = [&]() -> nekomote::plasma::NekoWallpaperItem*
+        { return native_item(containment); };
+        auto wait_loaded = [&]()
+        {
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0;
+                });
+        };
+        auto wait_failed = [&]()
+        {
+            wait_for(
+                [&]
+                {
+                    auto* n = find_native(containment);
+                    return n && n->property("status").toInt() == 2;
+                });
+        };
+        auto isolate_inputs = [&](int step)
+        {
+            auto* n = get_native();
+            if (!n || !n->configure_diagnostics(0, false))
+                throw std::runtime_error("diagnostic isolation failed at step " +
+                                         std::to_string(step));
+            if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
+                throw std::runtime_error("step " + std::to_string(step) +
+                                         " did not isolate real pointer input");
+        };
+        auto wait_frame_advance = [&]()
+        {
+            const auto baseline = get_native()->queryRenderedFrames();
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return n && n->queryRenderedFrames() > baseline + 1;
+                });
+        };
+        const auto good_model_url =
+            QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString();
+        const auto good_session_url =
+            QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString();
+        const auto bad_model_url =
+            QUrl::fromLocalFile(QStringLiteral("/nonexistent/model.json")).toString();
+        const auto bad_session_url =
+            QUrl::fromLocalFile(QStringLiteral("/nonexistent/session.json")).toString();
+
+        set_config("modelFile", good_model_url);
+        set_config("sessionFile", good_session_url);
+        set_config("originX", 0.0);
+        set_config("originY", 400.0);
+        set_config("scale", 1.0);
+        window.show();
+        wait_loaded();
+        isolate_inputs(1);
+        wait_frame_advance();
+        std::printf("recovery: initial good load status=1 frames=%u\n",
+                    get_native()->queryRenderedFrames());
+
+        for (int cycle = 0; cycle < 2; ++cycle)
+        {
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
+            set_config("modelFile", bad_model_url);
+            wait_failed();
+            {
+                auto* n = find_native(containment);
+                if (n->property("errorString").toString().isEmpty())
+                    throw std::runtime_error("bad model: errorString empty");
+                std::printf("recovery: cycle %d bad model status=2 error=%s\n", cycle,
+                            n->property("errorString").toString().toUtf8().constData());
+            }
+            const QPointer bad_native(get_native());
+            const auto bad_state = bad_native ? bad_native->session_state() : nullptr;
+            set_config("modelFile", good_model_url);
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return bad_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           (!bad_state || bad_state->renderer_created.load() ==
+                                              bad_state->renderer_destroyed.load());
+                });
+            isolate_inputs(2 + cycle);
+            wait_frame_advance();
+            std::printf("recovery: cycle %d good model restored status=1 frames=%u\n", cycle,
+                        get_native()->queryRenderedFrames());
+        }
+
+        {
+            set_config("sessionFile", bad_session_url);
+            wait_failed();
+            std::printf("recovery: bad session status=2\n");
+            const QPointer bad_native(get_native());
+            const auto bad_state = bad_native ? bad_native->session_state() : nullptr;
+            set_config("sessionFile", good_session_url);
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return bad_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           (!bad_state || bad_state->renderer_created.load() ==
+                                              bad_state->renderer_destroyed.load());
+                });
+            isolate_inputs(5);
+            wait_frame_advance();
+            std::printf("recovery: good session restored status=1\n");
+        }
+
+        {
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
+            set_config("originY", 300.0);
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
+            isolate_inputs(6);
+            wait_frame_advance();
+            std::printf("recovery: originY switch status=1\n");
+        }
+
+        {
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
+            set_config("scale", 0.9);
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
+            isolate_inputs(7);
+            wait_frame_advance();
+            std::printf("recovery: scale switch status=1\n");
+        }
+
+        {
+            set_config("modelFile", QStringLiteral("http://example.com/model.json"));
+            wait_failed();
+            {
+                auto* n = find_native(containment);
+                std::printf("recovery: non-local URL status=2 error=%s\n",
+                            n->property("errorString").toString().toUtf8().constData());
+            }
+            set_config("modelFile", good_model_url);
+            wait_loaded();
+            isolate_inputs(8);
+            wait_frame_advance();
+            std::printf("recovery: non-local URL recovered\n");
+        }
+
+        {
+            set_config("scale", 0.0);
+            wait_failed();
+            std::printf("recovery: scale=0 status=2\n");
+            set_config("scale", 1.0);
+            wait_loaded();
+            isolate_inputs(9);
+            wait_frame_advance();
+            std::printf("recovery: scale=0 recovered\n");
+        }
+
+        {
+            set_config("originY", std::numeric_limits<float>::quiet_NaN());
+            wait_failed();
+            std::printf("recovery: originY=NaN status=2\n");
+            set_config("originY", 400.0);
+            wait_loaded();
+            isolate_inputs(10);
+            wait_frame_advance();
+            std::printf("recovery: originY=NaN recovered\n");
+        }
+
+        {
+            const QPointer old_native(get_native());
+            const auto old_state = old_native->session_state();
+            set_config("originY", 250.0);
+            set_config("scale", 1.1);
+            wait_for(
+                [&]
+                {
+                    auto* n = get_native();
+                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
+                           n->queryRendererCreated() > 0 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
+            isolate_inputs(11);
+            const auto rebuilds = get_native()->queryRendererCreated();
+            if (rebuilds != 1)
+                throw std::runtime_error("batch update rebuilt " + std::to_string(rebuilds) +
+                                         " times, expected 1");
+            wait_frame_advance();
+            std::printf("recovery: batch originY+scale single rebuild=%u\n", rebuilds);
+        }
+
+        if (!save_grab(window, abs_output / "recovery_final.png"))
+            throw std::runtime_error("recovery: final screenshot failed");
+        std::printf("recovery: all bad->good->bad->good cycles passed\n");
+    }
     else
     {
         window.show();
@@ -575,6 +847,7 @@ int run(int argc, char** argv)
                         native->property("errorString").toString().toStdString());
                 return native && native->property("status").toInt() == 1;
             });
+        wait_for([&] { return window.isSceneGraphInitialized(); });
         auto* native = find_native(containment);
         auto* wallpaper_item = qobject_cast<QQuickItem*>(native);
         std::printf("actual WallpaperItem: %s, native status=%d, dynamic package=%s\n",
