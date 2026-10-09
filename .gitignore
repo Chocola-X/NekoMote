@@ -21,3 +21,6 @@ __pycache__/
 assets/characters/
 assets/config.json
 assets/backgrounds/
+
+# Isolated experiment worktrees (G20/G23 inheritance candidates etc.)
+experiments/

@@ -2,12 +2,9 @@
 
 基线：包含[本轮独立复核](agent-review-g19-g21.md)的最新Codex提交。用户要求GLM承担实现、批量运行和证据整理大头，Codex做公式/生命周期关键抽核；Gemini实际看图。先声明base/文件，保护共享工作；GPU用build/gpu-validation.lock，原素材只读，输入只用自身回调。每阶段验证后commit，真实Agent/Model/Context，报告≤一页，raw放新build目录。
 
-## GLM G23：15失败型号的继承候选（最高优先级）
+## GLM G23：15失败型号的继承候选（已完成，交Codex复核）
 
-G20并未解决支持缺口；先读[g20](g20-inheritance-evidence.md)与C5冻结门槛。正式拒绝保持。保留 `../NekoMote-g20-candidate` 未提交工作，不直接合并或reset；现候选v3与旧报告v1不同，残差有X/Y两个分量。
-
-1. 将当前候选源码patch、base、实际执行命令、binary/compiler/build、输入asset/PSB/texture/browser/tools/reference trace全部hash写入新manifest；先CPU。nekomote_pose --sample-trace实际原生求值对WebGL坐标，不能把复制WebGL的native_trace称原生输出。未达标工具rc0不代表PASS，应核对certified/数值/拓扑。
-2. 三代表default及body_LR±5/±15/±30逐条件矩阵；再逐个独立body_UD/SL（实际参数存在才用）。导出每个残差部件的XY、局部/世界矩阵、curve_parent链、变形挂接原点及资源域；完整根链与mesh.bp/cc控制点原值，来源节点路径明确。先完整保存一个小矩阵再扩展，缺证据写NOT_RUN，不捏造结果。
+5候选（v1/v3/v4/v5/v6）×27条件（3代表×{default,body_LR±5/±15/±30,body_UD30,body_SL30}）完整矩阵已交付。v1=v3=v5等价证明（0x7fc局部translation=0）；deform仅修正所需量~44%；均未过≤0.001px门槛。正式拒绝保持。报告见[g23](g23-inheritance-report.md)，证据在build/evidence/g23-inheritance/，候选源码在experiments/（.gitignore排除）。Codex独立验公式/代表再整合。
 3. 用同一源资产/变量/初态分别验证v1、v3及有公式依据的新候选；量化每种公式在哪个挂接空间失配，禁止按型号/层名补偿或试偏移常数。修正旧“纯X”前提；父世界原点、子局部偏移与资源原点不得混用。新语义只在隔离候选实现。
 4. 复用G17扩展195静态来源（234是15型号静态候选，非234实际错误）。CPU候选过门槛才扩大GPU固定初态/单变量/固定步参考截图，并由Gemini抽看手部边缘。失败样例/误差都保留。
 
