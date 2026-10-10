@@ -13,31 +13,31 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
-#include <vector>
 
 namespace nekomote::qt_quick
 {
 template <typename T, void (*Destroy)(T*)>
 using Handle = std::unique_ptr<T, decltype(Destroy)>;
 
-struct Texture
+// Shared ownership spans the GUI item and its scene-graph renderer. The
+// wallpaper handle is created lazily on the render thread when a GL context
+// is available; config is buffered from the GUI thread and applied at that
+// point. Thereafter only the render thread evaluates the wallpaper instance.
+struct WallpaperState
 {
-    std::uint32_t id;
-    Handle<nekomote_image, nekomote_image_destroy> image{nullptr, nekomote_image_destroy};
-};
-
-// Shared ownership only spans the GUI item and its scene-graph renderer. CPU
-// initialization occurs before showing the window; thereafter only the render
-// thread evaluates the session. GUI writes go through synchronize(), never here.
-// The CPU state survives scene-graph invalidation; GPU resources do not.
-struct SessionState
-{
-    Handle<nekomote_program, nekomote_program_destroy> program{nullptr, nekomote_program_destroy};
-    Handle<nekomote_session, nekomote_session_destroy> session{nullptr, nekomote_session_destroy};
-    std::vector<Texture> textures;
-    Texture background_texture;
-    bool background_dirty{false};
-    bool has_background{false};
+    Handle<nekomote_wallpaper, nekomote_wallpaper_destroy> wallpaper{nullptr,
+                                                                     nekomote_wallpaper_destroy};
+    // Buffered config applied when the wallpaper handle is created.
+    std::filesystem::path assets_dir;
+    std::filesystem::path model_path;
+    std::filesystem::path session_path;
+    std::uint32_t seed{0};
+    bool muted{false};
+    bool no_save{false};
+    bool assets_mode{true};
+    bool config_dirty{true};
+    bool loaded{false};
+    // Diagnostics.
     int fixed_steps{0};
     int trace_frames{0};
     bool deterministic{false};
@@ -47,13 +47,8 @@ struct SessionState
     std::atomic<unsigned> renderer_created{0};
     std::atomic<unsigned> renderer_destroyed{0};
     std::atomic<unsigned> rendered_frames{0};
-    std::atomic<unsigned> fixed_steps_executed{0}; // fixed diagnostics only
+    std::atomic<unsigned> fixed_steps_executed{0};
 };
-
-std::shared_ptr<SessionState> load_session(const std::filesystem::path& model,
-                                           const std::filesystem::path& session, std::uint32_t seed,
-                                           float origin_x, float origin_y, float scale, int steps,
-                                           bool deterministic);
 
 enum class InputKind
 {
@@ -79,37 +74,35 @@ struct ItemState
     bool notify_frames{false};
 };
 
-// Abstract base for FBO items sharing the session renderer. Concrete items
+// Abstract base for FBO items sharing the wallpaper renderer. Concrete items
 // provide synchronize state and clear consumed inputs after sync.
-class SessionItemBase : public QQuickFramebufferObject
+class WallpaperItemBase : public QQuickFramebufferObject
 {
     Q_OBJECT
   public:
-    explicit SessionItemBase(QQuickItem* parent = nullptr) : QQuickFramebufferObject(parent)
+    explicit WallpaperItemBase(QQuickItem* parent = nullptr) : QQuickFramebufferObject(parent)
     {
     }
-    ~SessionItemBase() override = default;
+    ~WallpaperItemBase() override = default;
     virtual ItemState get_item_state() const = 0;
     virtual void clear_inputs() = 0;
-    virtual std::shared_ptr<SessionState> session_state() const = 0;
+    virtual std::shared_ptr<WallpaperState> wallpaper_state() const = 0;
   signals:
     void frame_ready(QSize framebuffer_size, unsigned generation, double clock_delta,
                      QString reaction);
     void failed(QString diagnostic);
 };
 
-// Factory used by SessionItemBase subclasses' createRenderer(). Empty state
-// produces a transparent item; Qt requires a non-null renderer even on failure.
-QQuickFramebufferObject::Renderer* create_session_renderer(std::shared_ptr<SessionState> state);
+// Factory used by WallpaperItemBase subclasses' createRenderer().
+QQuickFramebufferObject::Renderer* create_wallpaper_renderer(std::shared_ptr<WallpaperState> state);
 
-class SessionItem final : public SessionItemBase
+class WallpaperItem final : public WallpaperItemBase
 {
     Q_OBJECT
   public:
-    explicit SessionItem(std::shared_ptr<SessionState> state, QQuickItem* parent = nullptr);
+    explicit WallpaperItem(std::shared_ptr<WallpaperState> state, QQuickItem* parent = nullptr);
     Renderer* createRenderer() const override;
     void set_paused(bool paused);
-    // Diagnostic GUI callback; goes through the same bounded queue as mouse input.
     void replay_touch(QPointF logical_position);
 
   protected:
@@ -121,9 +114,9 @@ class SessionItem final : public SessionItemBase
   private:
     ItemState get_item_state() const override;
     void clear_inputs() override;
-    std::shared_ptr<SessionState> session_state() const override;
+    std::shared_ptr<WallpaperState> wallpaper_state() const override;
     void enqueue(InputKind kind, QPointF position = {});
-    std::shared_ptr<SessionState> state_;
+    std::shared_ptr<WallpaperState> state_;
     bool paused_{false};
     std::uint64_t playback_revision_{0};
     std::array<Input, 32> inputs_{};

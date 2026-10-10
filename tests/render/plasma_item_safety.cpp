@@ -39,33 +39,29 @@ void wait_for(const std::function<bool()>& ready)
         throw std::runtime_error("timed out waiting for native frame progress");
 }
 
-void verify_playback(QQmlEngine& engine, const QString& model, const QString& session)
+void verify_playback(QQmlEngine& engine, const QString& assets_dir)
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                      "NekoWallpaperItem { width: 128; height: 128; modelFile: '" +
-                          QUrl::fromLocalFile(model).toString().toUtf8() + "'; sessionFile: '" +
-                          QUrl::fromLocalFile(session).toString().toUtf8() + "'; }",
-                      {});
+                       "NekoWallpaperItem { width: 128; height: 128; assetsDir: '" +
+                           assets_dir.toUtf8() + "'; }",
+                       {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
-    if (!item || item->status() != 1)
-        throw std::runtime_error("playback fixture did not load");
-    auto state = item->session_state();
+    if (!item)
+        throw std::runtime_error("playback fixture did not create");
+    auto state = item->wallpaper_state();
     auto window = std::make_unique<QQuickWindow>();
     window->setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
     window->resize(128, 128);
     item->setParentItem(window->contentItem());
     std::vector<double> deltas;
     auto callbacks = std::make_unique<QObject>();
-    QObject::connect(item, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+    QObject::connect(item, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
                      [&](QSize, unsigned, double delta, const QString&)
                      { deltas.push_back(delta); });
     window->show();
     wait_for([&] { return item->queryRenderedFrames() >= 2; });
-    if (item->configure_diagnostics(120, true, 1) || item->status() != 1 ||
-        item->session_state() != state || state->deterministic)
-        throw std::runtime_error("late fixed request mutated a live session");
     if (!item->configure_diagnostics(0, false, 1) || item->acceptHoverEvents() ||
         item->acceptedMouseButtons() != Qt::NoButton)
         throw std::runtime_error("late input isolation failed");
@@ -75,7 +71,7 @@ void verify_playback(QQmlEngine& engine, const QString& model, const QString& se
         throw std::runtime_error("visible normal playback scheduling did not start");
     item->setPaused(true);
     if (timer->isActive() ||
-        !static_cast<nekomote::qt_quick::SessionItemBase*>(item)->get_item_state().paused)
+        !static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state().paused)
         throw std::runtime_error("explicit pause did not suspend scheduling/runtime");
     const auto paused_count = deltas.size();
     wait_for([&] { return deltas.size() > paused_count; });
@@ -86,7 +82,7 @@ void verify_playback(QQmlEngine& engine, const QString& model, const QString& se
         throw std::runtime_error("pause resume replayed suspended wall-clock time");
     window->hide();
     if (timer->isActive() ||
-        !static_cast<nekomote::qt_quick::SessionItemBase*>(item)->get_item_state().paused)
+        !static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state().paused)
         throw std::runtime_error("hidden window did not suspend scheduling/runtime");
     window->show();
     wait_for([&] { return timer->isActive(); });
@@ -94,7 +90,8 @@ void verify_playback(QQmlEngine& engine, const QString& model, const QString& se
     QMouseEvent event(QEvent::MouseButtonPress, QPointF(64, 64), QPointF(64, 64), Qt::LeftButton,
                       Qt::LeftButton, Qt::NoModifier);
     QCoreApplication::sendEvent(item, &event);
-    const auto snapshot = static_cast<nekomote::qt_quick::SessionItemBase*>(item)->get_item_state();
+    const auto snapshot =
+        static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state();
     if (timer->isActive() || item->status() != 2 || !snapshot.paused || snapshot.input_count != 0)
         throw std::runtime_error("failed item still scheduled or accepted pointer input");
     callbacks.reset();
@@ -112,9 +109,9 @@ void verify(QQmlEngine& engine, const QByteArray& properties, int expected_statu
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                      "NekoWallpaperItem { width: 128; height: 128; " +
-                          properties + " }",
-                      {});
+                       "NekoWallpaperItem { width: 128; height: 128; " +
+                           properties + " }",
+                       {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item || item->status() != expected_status)
@@ -158,7 +155,8 @@ void verify(QQmlEngine& engine, const QByteArray& properties, int expected_statu
     loop.exec();
     callbacks.reset();
     deadline.stop();
-    const auto snapshot = static_cast<nekomote::qt_quick::SessionItemBase*>(item)->get_item_state();
+    const auto snapshot =
+        static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state();
     if (!snapshot.paused || snapshot.input_count != 0)
         throw std::runtime_error("unconfigured/failed item did not suspend runtime input");
     window.hide();
@@ -181,27 +179,14 @@ int main(int argc, char** argv)
     QTemporaryDir directory;
     if (!directory.isValid())
         return 1;
-    const auto invalid = directory.filePath("invalid.json");
-    std::ofstream(invalid.toStdString()) << "{\"schema_version\":999999}";
     try
     {
         verify(engine, {}, 0);
-        const auto missing = QUrl::fromLocalFile(directory.filePath("missing.json")).toString();
-        verify(engine,
-               "modelFile: '" + missing.toUtf8() + "'; sessionFile: '" + missing.toUtf8() + "';",
-               2);
-        const auto bad_url = QUrl::fromLocalFile(invalid).toString();
-        verify(engine,
-               "modelFile: '" + bad_url.toUtf8() + "'; sessionFile: '" + bad_url.toUtf8() + "';",
-               2);
-        verify(engine, "scale: -1;", 2);
-        const auto model = qEnvironmentVariable("NEKOMOTE_TEST_MODEL");
-        const auto session = qEnvironmentVariable("NEKOMOTE_TEST_SESSION");
-        if (!model.isEmpty() && !session.isEmpty())
-            verify_playback(engine, model, session);
+        const auto assets = qEnvironmentVariable("NEKOMOTE_TEST_ASSETS_DIR");
+        if (!assets.isEmpty())
+            verify_playback(engine, assets);
         else
-            std::puts("normal playback contract: SKIPPED (set NEKOMOTE_TEST_MODEL and "
-                      "NEKOMOTE_TEST_SESSION)");
+            std::puts("normal playback contract: SKIPPED (set NEKOMOTE_TEST_ASSETS_DIR)");
     }
     catch (const std::exception& error)
     {

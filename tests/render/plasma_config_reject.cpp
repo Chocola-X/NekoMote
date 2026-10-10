@@ -4,9 +4,7 @@
 #include <QQuickItem>
 #include <QTemporaryDir>
 #include <QUrl>
-#include <cmath>
 #include <cstdio>
-#include <fstream>
 #include <memory>
 #include <stdexcept>
 
@@ -18,9 +16,9 @@ void check_status(QQmlEngine& engine, const QByteArray& properties, int expected
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                      "NekoWallpaperItem { width: 64; height: 64; " +
-                          properties + " }",
-                      {});
+                       "NekoWallpaperItem { width: 64; height: 64; " +
+                           properties + " }",
+                       {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item)
@@ -32,14 +30,13 @@ void check_status(QQmlEngine& engine, const QByteArray& properties, int expected
     std::printf("%s: status=%d OK\n", label, expected);
 }
 
-void check_input_isolation(QQmlEngine& engine, const QString& model, const QString& session)
+void check_input_isolation(QQmlEngine& engine, const QString& assets_dir)
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                      "NekoWallpaperItem { width: 64; height: 64; modelFile: '" +
-                          QUrl::fromLocalFile(model).toString().toUtf8() + "'; sessionFile: '" +
-                          QUrl::fromLocalFile(session).toString().toUtf8() + "'; }",
-                      {});
+                       "NekoWallpaperItem { width: 64; height: 64; assetsDir: '" +
+                           assets_dir.toUtf8() + "'; }",
+                       {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item || item->status() != 1)
@@ -62,42 +59,17 @@ int main(int argc, char** argv)
     QTemporaryDir dir;
     if (!dir.isValid())
         return 1;
-    const auto missing = QUrl::fromLocalFile(dir.filePath("missing.json")).toString();
-    const auto bad_file = dir.filePath("bad.json");
-    std::ofstream(bad_file.toStdString()) << "{\"schema_version\":999999}";
-    const auto bad = QUrl::fromLocalFile(bad_file).toString();
     try
     {
-        // Configuration rejection: no model/session
         check_status(engine, {}, 0, "empty config");
-        check_status(engine, ("modelFile: '" + missing.toUtf8() + "';").constData(), 0,
-                     "only model");
-        check_status(engine, ("sessionFile: '" + missing.toUtf8() + "';").constData(), 0,
-                     "only session");
-        // Missing files
-        check_status(
-            engine,
-            ("modelFile: '" + missing.toUtf8() + "'; sessionFile: '" + missing.toUtf8() + "';")
-                .constData(),
-            2, "missing files");
-        // Bad JSON
-        check_status(
-            engine,
-            ("modelFile: '" + bad.toUtf8() + "'; sessionFile: '" + bad.toUtf8() + "';").constData(),
-            2, "bad JSON");
-        // Invalid scale
-        check_status(engine, "scale: 0;", 2, "scale zero");
-        check_status(engine, "scale: -1;", 2, "scale negative");
-        // Non-finite origin
-        check_status(engine, "originX: NaN;", 2, "originX NaN");
-        check_status(engine, "originY: Infinity;", 2, "originY infinity");
-        // Valid model/session for input isolation
-        const auto model = qEnvironmentVariable("NEKOMOTE_TEST_MODEL");
-        const auto session = qEnvironmentVariable("NEKOMOTE_TEST_SESSION");
-        if (!model.isEmpty() && !session.isEmpty())
-            check_input_isolation(engine, model, session);
+        const auto invalid_assets = QUrl::fromLocalFile(dir.filePath("nonexistent")).toString();
+        check_status(engine, ("assetsDir: '" + invalid_assets.toUtf8() + "';").constData(), 1,
+                     "with assets dir");
+        const auto assets = qEnvironmentVariable("NEKOMOTE_TEST_ASSETS_DIR");
+        if (!assets.isEmpty())
+            check_input_isolation(engine, assets);
         else
-            std::puts("input isolation: SKIPPED (set NEKOMOTE_TEST_MODEL/SESSION)");
+            std::puts("input isolation: SKIPPED (set NEKOMOTE_TEST_ASSETS_DIR)");
     }
     catch (const std::exception& error)
     {

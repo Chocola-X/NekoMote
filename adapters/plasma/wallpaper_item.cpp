@@ -1,40 +1,21 @@
 #include "wallpaper_item.hpp"
 
-#include <QDir>
-#include <QDirIterator>
 #include <QEvent>
-#include <QFileInfo>
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
-#include <QUrl>
-#include <QVariantList>
-#include <QVariantMap>
 #include <algorithm>
-#include <cmath>
-#include <filesystem>
-#include <stdexcept>
 
 namespace nekomote::plasma
 {
-namespace
+NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(parent)
 {
-std::filesystem::path to_local_path(const QUrl& url)
-{
-    if (!url.isLocalFile())
-        throw std::runtime_error("model/session URL must be a local file: " +
-                                 url.toString().toStdString());
-    return std::filesystem::path(url.toLocalFile().toStdString());
-}
-} // namespace
-
-NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : SessionItemBase(parent)
-{
+    state_ = std::make_shared<nekomote::qt_quick::WallpaperState>();
     setMirrorVertically(true);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
-    connect(this, &SessionItemBase::failed, this, &NekoWallpaperItem::set_error);
+    connect(this, &WallpaperItemBase::failed, this, &NekoWallpaperItem::set_error);
     timer_ = new QTimer(this);
     timer_->setInterval(33);
     connect(timer_, &QTimer::timeout, this, [this] { update(); });
@@ -52,31 +33,9 @@ NekoWallpaperItem::~NekoWallpaperItem()
 
 QQuickFramebufferObject::Renderer* NekoWallpaperItem::createRenderer() const
 {
-    // Qt dereferences createRenderer() without a null check, including when
-    // configuration/loading failed. The shared renderer clears an empty item.
-    return nekomote::qt_quick::create_session_renderer(state_);
+    return nekomote::qt_quick::create_wallpaper_renderer(state_);
 }
 
-QUrl NekoWallpaperItem::modelFile() const
-{
-    return model_file_;
-}
-QUrl NekoWallpaperItem::sessionFile() const
-{
-    return session_file_;
-}
-float NekoWallpaperItem::originX() const
-{
-    return origin_x_;
-}
-float NekoWallpaperItem::originY() const
-{
-    return origin_y_;
-}
-float NekoWallpaperItem::scale() const
-{
-    return scale_;
-}
 bool NekoWallpaperItem::paused() const
 {
     return paused_;
@@ -89,7 +48,6 @@ QString NekoWallpaperItem::errorString() const
 {
     return error_string_;
 }
-
 QString NekoWallpaperItem::assetsDir() const
 {
     return assets_dir_;
@@ -100,83 +58,26 @@ void NekoWallpaperItem::setAssetsDir(const QString& value)
     if (assets_dir_ == value)
         return;
     assets_dir_ = value;
+    if (state_)
+    {
+        state_->assets_dir = value.toStdString();
+        state_->config_dirty = true;
+        state_->loaded = false;
+    }
+    if (!value.isEmpty())
+        set_status(1);
+    else
+        set_status(0);
     emit assetsDirChanged();
 }
 
-QVariantList NekoWallpaperItem::scanCharacters() const
+void NekoWallpaperItem::setPaused(bool value)
 {
-    QVariantList result;
-    if (assets_dir_.isEmpty())
-        return result;
-    const QDir chars_dir(QDir(assets_dir_).filePath("characters"));
-    if (!chars_dir.exists())
-        return result;
-    const auto dirs = chars_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    for (const auto& name : dirs)
-    {
-        const QDir char_dir(chars_dir.filePath(name));
-        const QString model_path = char_dir.filePath("model.nkm.json");
-        const QString session_path = char_dir.filePath("session.nks.json");
-        if (!QFileInfo::exists(model_path) || !QFileInfo::exists(session_path))
-            continue;
-        QVariantMap entry;
-        entry["name"] = name;
-        entry["modelUrl"] = QUrl::fromLocalFile(model_path).toString();
-        entry["sessionUrl"] = QUrl::fromLocalFile(session_path).toString();
-        const auto dash = name.indexOf('-');
-        entry["group"] = dash > 0 ? name.left(dash) : name;
-        result.append(entry);
-    }
-    return result;
-}
-
-QVariantList NekoWallpaperItem::scanBackgrounds() const
-{
-    QVariantList result;
-    if (assets_dir_.isEmpty())
-        return result;
-    const QDir bg_dir(QDir(assets_dir_).filePath("backgrounds"));
-    if (!bg_dir.exists())
-        return result;
-    const auto files = bg_dir.entryList({"*.png"}, QDir::Files, QDir::Name);
-    for (const auto& name : files)
-    {
-        QVariantMap entry;
-        entry["name"] = QFileInfo(name).completeBaseName();
-        entry["url"] = QUrl::fromLocalFile(bg_dir.filePath(name)).toString();
-        result.append(entry);
-    }
-    return result;
-}
-
-bool NekoWallpaperItem::setBackground(const QUrl& url)
-{
-    if (!state_ || status_ != 1)
-        return false;
-    try
-    {
-        const auto path = to_local_path(url);
-        const auto image = nekomote_image_load_png(path.c_str());
-        if (!image)
-            return false;
-        state_->background_texture.id = 0xB0000001u;
-        state_->background_texture.image.reset(image);
-        state_->background_dirty = true;
-        update();
-        return true;
-    }
-    catch (const std::exception&)
-    {
-        return false;
-    }
-}
-
-void NekoWallpaperItem::clearBackground()
-{
-    if (!state_)
+    if (paused_ == value)
         return;
-    state_->background_texture.image.reset();
-    state_->background_dirty = true;
+    paused_ = value;
+    refresh_playback();
+    emit pausedChanged();
     update();
 }
 
@@ -193,74 +94,6 @@ unsigned NekoWallpaperItem::queryRendererDestroyed() const
 unsigned NekoWallpaperItem::queryRenderedFrames() const
 {
     return state_ ? state_->rendered_frames.load() : 0;
-}
-
-void NekoWallpaperItem::setModelFile(const QUrl& value)
-{
-    if (model_file_ == value)
-        return;
-    // When a session is already loaded, the QML Loader rebuilds the item to
-    // switch models. The in-place binding update reaches this setter on the
-    // old item before it is destroyed; accept the value without reloading.
-    model_file_ = value;
-    emit modelFileChanged();
-}
-
-void NekoWallpaperItem::setSessionFile(const QUrl& value)
-{
-    if (session_file_ == value)
-        return;
-    session_file_ = value;
-    emit sessionFileChanged();
-}
-
-void NekoWallpaperItem::setOriginX(float value)
-{
-    if (origin_x_ == value)
-        return;
-    if (!std::isfinite(value))
-    {
-        set_error(QStringLiteral("originX must be finite"));
-        return;
-    }
-    origin_x_ = value;
-    emit originXChanged();
-}
-
-void NekoWallpaperItem::setOriginY(float value)
-{
-    if (origin_y_ == value)
-        return;
-    if (!std::isfinite(value))
-    {
-        set_error(QStringLiteral("originY must be finite"));
-        return;
-    }
-    origin_y_ = value;
-    emit originYChanged();
-}
-
-void NekoWallpaperItem::setScale(float value)
-{
-    if (scale_ == value)
-        return;
-    if (!std::isfinite(value) || value <= 0)
-    {
-        set_error(QStringLiteral("scale must be positive and finite"));
-        return;
-    }
-    scale_ = value;
-    emit scaleChanged();
-}
-
-void NekoWallpaperItem::setPaused(bool value)
-{
-    if (paused_ == value)
-        return;
-    paused_ = value;
-    refresh_playback();
-    emit pausedChanged();
-    update();
 }
 
 void NekoWallpaperItem::set_status(int value)
@@ -280,38 +113,10 @@ void NekoWallpaperItem::set_error(const QString& value)
     input_count_ = 0;
 }
 
-void NekoWallpaperItem::try_load()
-{
-    if (model_file_.isEmpty() || session_file_.isEmpty())
-        return;
-    if (!error_string_.isEmpty())
-        return;
-    if (!std::isfinite(origin_x_) || !std::isfinite(origin_y_) || !std::isfinite(scale_) ||
-        scale_ <= 0)
-    {
-        set_error(QStringLiteral("scale must be positive"));
-        return;
-    }
-    try
-    {
-        const auto model_path = to_local_path(model_file_);
-        const auto session_path = to_local_path(session_file_);
-        state_ = nekomote::qt_quick::load_session(model_path, session_path, 1, origin_x_, origin_y_,
-                                                  scale_, 0, false);
-        set_status(1);
-        update();
-    }
-    catch (const std::exception& error)
-    {
-        state_.reset();
-        set_error(QString::fromUtf8(error.what()));
-    }
-}
-
 nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
 {
     return {effective_paused_, playback_revision_, inputs_, input_count_,
-            diagnostic_notifications_};
+            diagnostic_notification_};
 }
 
 void NekoWallpaperItem::clear_inputs()
@@ -319,7 +124,7 @@ void NekoWallpaperItem::clear_inputs()
     input_count_ = 0;
 }
 
-std::shared_ptr<nekomote::qt_quick::SessionState> NekoWallpaperItem::session_state() const
+std::shared_ptr<nekomote::qt_quick::WallpaperState> NekoWallpaperItem::wallpaper_state() const
 {
     return state_;
 }
@@ -358,13 +163,14 @@ void NekoWallpaperItem::mousePressEvent(QMouseEvent* event)
 
 void NekoWallpaperItem::componentComplete()
 {
-    SessionItemBase::componentComplete();
-    try_load();
+    WallpaperItemBase::componentComplete();
+    if (!assets_dir_.isEmpty() && status_ == 0)
+        set_status(1);
 }
 
 void NekoWallpaperItem::itemChange(ItemChange change, const ItemChangeData& data)
 {
-    SessionItemBase::itemChange(change, data);
+    WallpaperItemBase::itemChange(change, data);
     if (change == ItemSceneChange)
         attach_window(data.window);
 }
@@ -388,7 +194,7 @@ void NekoWallpaperItem::check_backend()
     {
         error_string_.clear();
         emit errorStringChanged();
-        set_status(state_ ? 1 : 0);
+        set_status(!assets_dir_.isEmpty() ? 1 : 0);
     }
     refresh_playback();
 }
@@ -432,7 +238,7 @@ bool NekoWallpaperItem::eventFilter(QObject* watched, QEvent* event)
         (event->type() == QEvent::Expose || event->type() == QEvent::Show ||
          event->type() == QEvent::Hide || event->type() == QEvent::WindowStateChange))
         QTimer::singleShot(0, this, [this] { refresh_playback(); });
-    return SessionItemBase::eventFilter(watched, event);
+    return WallpaperItemBase::eventFilter(watched, event);
 }
 
 void NekoWallpaperItem::refresh_playback()
@@ -460,24 +266,16 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32
         return false;
     if (fixed)
     {
-        // Renderer creation is synchronized by Qt with the GUI thread. Once it
-        // has acquired the state, diagnostic timing/initial state are immutable.
         if (state_->renderer_created.load() != 0)
             return false;
-        try
-        {
-            state_ = nekomote::qt_quick::load_session(to_local_path(model_file_),
-                                                      to_local_path(session_file_), seed, origin_x_,
-                                                      origin_y_, scale_, steps, true);
-        }
-        catch (const std::exception& error)
-        {
-            set_error(QString::fromUtf8(error.what()));
-            return false;
-        }
+        state_->seed = seed;
+        state_->fixed_steps = steps;
+        state_->deterministic = true;
+        state_->config_dirty = true;
+        state_->loaded = false;
     }
     diagnostic_inputs_ = true;
-    diagnostic_notifications_ = true;
+    diagnostic_notification_ = true;
     setAcceptHoverEvents(false);
     setAcceptedMouseButtons(Qt::NoButton);
     input_count_ = 0;

@@ -27,14 +27,6 @@ void check(nekomote_error result, const char* operation)
                                  (message ? message : "unknown ABI error"));
     }
 }
-template <typename T>
-T* require(T* pointer, const char* operation)
-{
-    if (!pointer)
-        check(nekomote_last_error() == NEKOMOTE_OK ? NEKOMOTE_ERROR_FAULTED : nekomote_last_error(),
-              operation);
-    return pointer;
-}
 nekomote_gl_proc load_gl(const char* name)
 {
     auto* context = QOpenGLContext::currentContext();
@@ -42,81 +34,49 @@ nekomote_gl_proc load_gl(const char* name)
 }
 } // namespace
 
-std::shared_ptr<SessionState> load_session(const std::filesystem::path& model_path,
-                                           const std::filesystem::path& session_path,
-                                           std::uint32_t seed, float origin_x, float origin_y,
-                                           float scale, int steps, bool deterministic)
-{
-    Handle<nekomote_model, nekomote_model_destroy> model{
-        require(nekomote_model_load(model_path.c_str()), "load model"), nekomote_model_destroy};
-    Handle<nekomote_session_asset, nekomote_session_asset_destroy> definition{
-        require(nekomote_session_asset_load(session_path.c_str()), "load session"),
-        nekomote_session_asset_destroy};
-    auto state = std::make_shared<SessionState>();
-    state->program.reset(
-        require(nekomote_program_compile(model.get(), definition.get()), "compile program"));
-    state->session.reset(
-        require(nekomote_session_create(state->program.get(), {seed, NEKOMOTE_POINTER_LOCAL_SURFACE,
-                                                               NEKOMOTE_AUDIO_DISABLED}),
-                "create session"));
-    check(nekomote_session_set_origin(state->session.get(), origin_x, origin_y), "set origin");
-    check(nekomote_session_set_scale(state->session.get(), scale), "set scale");
-    check(nekomote_session_start(state->session.get()), "start session");
-    check(nekomote_session_prepare_frame(state->session.get()), "validate initial geometry");
-    const auto count = nekomote_program_texture_count(state->program.get());
-    state->textures.reserve(count);
-    for (std::size_t i = 0; i < count; ++i)
-    {
-        const auto info = nekomote_program_texture(state->program.get(), i);
-        if (!info.path || !info.id)
-            throw std::runtime_error("program texture has no path/id");
-        const auto path = model_path.parent_path() / info.path;
-        Texture texture{info.id};
-        texture.image.reset(require(nekomote_image_load_png(path.c_str()), "decode texture"));
-        state->textures.push_back(std::move(texture));
-    }
-    state->fixed_steps = steps;
-    state->deterministic = deterministic;
-    return state;
-}
-
-class SessionRenderer final : public QObject, public QQuickFramebufferObject::Renderer
+class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::Renderer
 {
     Q_OBJECT
   public:
-    explicit SessionRenderer(std::shared_ptr<SessionState> state) : state_(std::move(state))
+    explicit WallpaperRenderer(std::shared_ptr<WallpaperState> state) : state_(std::move(state))
     {
         if (state_)
             generation_ = state_->renderer_created.fetch_add(1) + 1;
     }
-    ~SessionRenderer() override
+    ~WallpaperRenderer() override
     {
-        // Qt deletes FBO renderers on the render thread while cleaning scene
-        // graph resources. GPU destruction precedes release of borrowed CPU state.
-        renderer_.reset();
         if (state_)
+        {
+            if (state_->wallpaper)
+                nekomote_wallpaper_reset_gl(state_->wallpaper.get());
+            state_->loaded = false;
+            state_->initialized_time = false;
             state_->renderer_destroyed.fetch_add(1);
+        }
     }
     void synchronize(QQuickFramebufferObject* base) override
     {
-        auto* item = static_cast<SessionItemBase*>(base);
-        // An unconfigured QML item still needs a non-null Qt renderer. Loading
-        // happens on the GUI thread; only acquire its completed state while
-        // Qt has blocked that thread for synchronization.
+        auto* item = static_cast<WallpaperItemBase*>(base);
         if (!state_)
         {
-            state_ = item->session_state();
+            state_ = item->wallpaper_state();
             if (!state_)
                 return;
             generation_ = state_->renderer_created.fetch_add(1) + 1;
         }
         if (!connected_)
         {
-            connect(this, &SessionRenderer::frame_ready, item, &SessionItemBase::frame_ready,
+            connect(this, &WallpaperRenderer::frame_ready, item, &WallpaperItemBase::frame_ready,
                     Qt::QueuedConnection);
-            connect(this, &SessionRenderer::failed, item, &SessionItemBase::failed,
+            connect(this, &WallpaperRenderer::failed, item, &WallpaperItemBase::failed,
                     Qt::QueuedConnection);
             connected_ = true;
+        }
+        if (state_->config_dirty)
+        {
+            config_applied_ = false;
+            faulted_ = false;
+            state_->config_dirty = false;
         }
         const auto item_state = item->get_item_state();
         notify_frames_ = state_->deterministic || item_state.notify_frames;
@@ -172,7 +132,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             if (graphics_api_ != QSGRendererInterface::OpenGL || !QOpenGLContext::currentContext())
                 throw std::runtime_error("Qt Quick host requires an OpenGL scene graph/context");
             const auto size = framebufferObject()->size();
-            if (!renderer_)
+            if (!state_->wallpaper)
             {
                 if (state_->trace_frames)
                 {
@@ -181,63 +141,55 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
                                  gl->glGetString(GL_VENDOR), gl->glGetString(GL_RENDERER),
                                  gl->glGetString(GL_VERSION));
                 }
-                renderer_.reset(require(nekomote_renderer_create(load_gl), "create renderer"));
-                check(nekomote_renderer_reserve(renderer_.get(), nekomote_program_renderer_capacity(
-                                                                     state_->program.get())),
-                      "reserve renderer");
-                for (const auto& texture : state_->textures)
-                {
-                    const auto* image = texture.image.get();
-                    check(nekomote_renderer_upload_texture(
-                              renderer_.get(), texture.id, nekomote_image_width(image),
-                              nekomote_image_height(image), nekomote_image_pixels(image),
-                              nekomote_image_byte_count(image)),
-                          "upload texture");
-                }
+                state_->wallpaper.reset(
+                    nekomote_wallpaper_create(load_gl));
+                if (!state_->wallpaper)
+                    throw std::runtime_error("create wallpaper");
+                config_applied_ = false;
+            }
+            if (!config_applied_)
+            {
+                if (!state_->assets_dir.empty())
+                    check(nekomote_wallpaper_set_assets_dir(state_->wallpaper.get(),
+                                                             state_->assets_dir.c_str()),
+                          "set assets dir");
+                check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), state_->seed),
+                      "set seed");
+                check(nekomote_wallpaper_set_muted(state_->wallpaper.get(), state_->muted ? 1 : 0),
+                      "set muted");
+                if (state_->no_save)
+                    check(nekomote_wallpaper_set_no_save(state_->wallpaper.get(), 1),
+                          "set no save");
+                config_applied_ = true;
+            }
+            if (!state_->loaded)
+            {
+                if (state_->assets_mode && !state_->assets_dir.empty())
+                    check(nekomote_wallpaper_load_initial(state_->wallpaper.get()),
+                          "load initial");
+                else if (!state_->assets_mode && !state_->model_path.empty())
+                    check(nekomote_wallpaper_load_model(state_->wallpaper.get(),
+                                                         state_->model_path.c_str(),
+                                                         state_->session_path.c_str()),
+                          "load model");
+                state_->loaded = true;
             }
             const bool resize_output = size != output_size_;
             if (resize_output)
             {
-                check(nekomote_session_set_output_size(state_->session.get(), size.width(),
-                                                        size.height()),
+                check(nekomote_wallpaper_set_output_size(state_->wallpaper.get(), size.width(),
+                                                         size.height()),
                       "set output size");
                 output_size_ = size;
             }
-            if (state_->background_dirty)
-            {
-                if (state_->background_texture.image)
-                {
-                    if (!background_renderer_)
-                    {
-                        background_renderer_.reset(
-                            require(nekomote_renderer_create(load_gl), "create background renderer"));
-                    }
-                    const auto* bg_img = state_->background_texture.image.get();
-                    check(nekomote_renderer_upload_texture(
-                              background_renderer_.get(), state_->background_texture.id,
-                              nekomote_image_width(bg_img), nekomote_image_height(bg_img),
-                              nekomote_image_pixels(bg_img), nekomote_image_byte_count(bg_img)),
-                          "upload background texture");
-                    check(nekomote_session_set_background(
-                              state_->session.get(), state_->background_texture.id,
-                              nekomote_image_width(bg_img), nekomote_image_height(bg_img)),
-                          "set background");
-                    state_->has_background = true;
-                }
-                else
-                {
-                    nekomote_session_clear_background(state_->session.get());
-                    state_->has_background = false;
-                }
-                state_->background_dirty = false;
-            }
+            nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
+                                                 framebufferObject()->handle());
             const auto now = std::chrono::steady_clock::now();
             const bool first = !state_->initialized_time;
             if (first || !clock_attached_ || state_->paused != paused_)
             {
-                check(nekomote_session_set_playback_state(state_->session.get(),
-                                                          paused_ ? NEKOMOTE_PLAYBACK_PAUSED
-                                                                  : NEKOMOTE_PLAYBACK_RUNNING),
+                check(nekomote_wallpaper_set_paused(state_->wallpaper.get(),
+                                                     paused_ ? 1 : 0),
                       "set playback state");
                 state_->paused = paused_;
                 state_->previous_time = now;
@@ -249,88 +201,43 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             if (first && state_->deterministic && !paused_)
             {
                 for (int step = 0; step < state_->fixed_steps; ++step)
-                    check(nekomote_session_advance(state_->session.get(), 1.0 / 60),
+                    check(nekomote_wallpaper_advance(state_->wallpaper.get(), 1.0 / 60),
                           "fixed advance");
                 state_->fixed_steps_executed.store(static_cast<unsigned>(state_->fixed_steps));
             }
             if (!state_->deterministic && !first)
-                check(nekomote_session_advance(state_->session.get(), elapsed), "advance session");
+                check(nekomote_wallpaper_advance(state_->wallpaper.get(), elapsed),
+                      "advance wallpaper");
             state_->initialized_time = state_->initialized_time || !paused_;
             state_->previous_time = now;
-            check(nekomote_session_prepare_frame(state_->session.get()), "prepare session");
-            const auto trace_cpu = state_->trace_frames > 0
-                                       ? std::chrono::steady_clock::now()
-                                       : std::chrono::steady_clock::time_point{};
-            check(nekomote_renderer_prepare(renderer_.get(),
-                                            nekomote_session_frame(state_->session.get())),
-                  "prepare renderer");
-            // prepare selects protected composition; its intermediate output is
-            // allocated at the explicit resize boundary after that selection.
-            if (resize_output)
             {
-                check(nekomote_renderer_resize_output(renderer_.get(), size.width(), size.height()),
-                      "resize renderer");
-                if (background_renderer_)
-                    check(nekomote_renderer_resize_output(background_renderer_.get(), size.width(),
-                                                          size.height()),
-                          "resize background renderer");
+                auto* gl = QOpenGLContext::currentContext()->functions();
+                gl->glDisable(GL_SCISSOR_TEST);
+                gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                gl->glClearColor(0, 0, 0, 0);
+                gl->glClear(GL_COLOR_BUFFER_BIT);
             }
-            nekomote_render_view view{};
-            view.origin_x = static_cast<float>(size.width()) * .5f;
-            view.origin_y = static_cast<float>(size.height()) * .5f;
-            view.scale = view.alpha = 1;
-            view.flip_x = nekomote_program_mirror(state_->program.get());
-            const auto target =
-                nekomote_render_target{framebufferObject()->handle(), size.width(), size.height()};
-            if (state_->has_background && background_renderer_)
-            {
-                const auto bg_frame = nekomote_session_background_frame(state_->session.get());
-                if (bg_frame.command_count > 0)
-                {
-                    check(nekomote_renderer_prepare(background_renderer_.get(), bg_frame),
-                          "prepare background");
-                    nekomote_render_view bg_view{};
-                    bg_view.origin_x = 0;
-                    bg_view.origin_y = 0;
-                    bg_view.scale = bg_view.alpha = 1;
-                    check(nekomote_renderer_render(background_renderer_.get(), target, bg_view,
-                                                    NEKOMOTE_TARGET_CLEAR),
-                          "render background");
-                }
-                else
-                {
-                    check(nekomote_renderer_render(renderer_.get(), target, view,
-                                                    NEKOMOTE_TARGET_CLEAR),
-                          "clear for background");
-                }
-                check(nekomote_renderer_render(renderer_.get(), target, view,
-                                                NEKOMOTE_TARGET_PRESERVE),
-                      "render frame over background");
-            }
+            check(nekomote_wallpaper_render_frame(state_->wallpaper.get()), "render frame");
+            if (!paused_)
+                nekomote_wallpaper_render_ui(state_->wallpaper.get(),
+                                             static_cast<float>(elapsed));
             else
-            {
-                check(nekomote_renderer_render(renderer_.get(), target, view, NEKOMOTE_TARGET_CLEAR),
-                      "render frame");
-            }
+                nekomote_wallpaper_render_ui(state_->wallpaper.get(), 0.0f);
             if (state_->trace_frames > 0)
             {
                 --state_->trace_frames;
                 const auto trace_end = std::chrono::steady_clock::now();
                 std::fprintf(
-                    stderr, "Native frame CPU_us=%.3f prepare_render_us=%.3f elapsed_s=%.6f\n",
-                    std::chrono::duration<double, std::micro>(trace_cpu - trace_start).count(),
-                    std::chrono::duration<double, std::micro>(trace_end - trace_cpu).count(),
+                    stderr, "Native frame CPU_us=%.3f render_us=%.3f elapsed_s=%.6f\n",
+                    std::chrono::duration<double, std::micro>(trace_start - trace_start).count(),
+                    std::chrono::duration<double, std::micro>(trace_end - trace_start).count(),
                     elapsed);
             }
             state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
-            // Notifications are diagnostic only and not the playback frame path.
             if (notify_frames_ && state_->initialized_time)
             {
-                const auto reaction = nekomote_session_active_reaction(state_->session.get());
-                const auto* label =
-                    nekomote_program_reaction_label(state_->program.get(), reaction);
                 diagnostic_delta_ = elapsed;
-                diagnostic_reaction_ = label ? QString::fromUtf8(label) : QString{};
+                diagnostic_reaction_ = QString{};
                 diagnostic_pending_ = true;
             }
         }
@@ -354,27 +261,24 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
         for (std::size_t i = 0; i < input_count_; ++i)
         {
             const auto& input = inputs_[i];
-            // Logical item pixels -> actual FBO pixels -> centered output. No X flip.
             const float x = input.x * static_cast<float>(output_size_.width()) /
-                                static_cast<float>(logical_size_.width()) -
-                            static_cast<float>(output_size_.width()) * .5f;
+                                static_cast<float>(logical_size_.width());
             const float y = input.y * static_cast<float>(output_size_.height()) /
-                                static_cast<float>(logical_size_.height()) -
-                            static_cast<float>(output_size_.height()) * .5f;
+                                static_cast<float>(logical_size_.height());
             nekomote_error result = NEKOMOTE_OK;
             switch (input.kind)
             {
                 case InputKind::Enter:
-                    result = nekomote_session_pointer_enter(state_->session.get(), x, y);
+                    result = nekomote_wallpaper_pointer_enter(state_->wallpaper.get(), x, y);
                     break;
                 case InputKind::Move:
-                    result = nekomote_session_pointer_move(state_->session.get(), x, y);
+                    result = nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y);
                     break;
                 case InputKind::Leave:
-                    result = nekomote_session_pointer_leave(state_->session.get());
+                    result = nekomote_wallpaper_pointer_leave(state_->wallpaper.get());
                     break;
                 case InputKind::Touch:
-                    result = nekomote_session_touch(state_->session.get(), x, y);
+                    result = nekomote_wallpaper_touch(state_->wallpaper.get(), x, y);
                     break;
             }
             if (result != NEKOMOTE_ERROR_BUSY && result != NEKOMOTE_ERROR_INPUT_UNAVAILABLE)
@@ -382,11 +286,7 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
         }
         input_count_ = 0;
     }
-    std::shared_ptr<SessionState> state_;
-    Handle<nekomote_renderer, nekomote_renderer_destroy> renderer_{nullptr,
-                                                                    nekomote_renderer_destroy};
-    Handle<nekomote_renderer, nekomote_renderer_destroy> background_renderer_{nullptr,
-                                                                               nekomote_renderer_destroy};
+    std::shared_ptr<WallpaperState> state_;
     QSizeF logical_size_;
     QSize output_size_;
     QSGRendererInterface::GraphicsApi graphics_api_{QSGRendererInterface::Unknown};
@@ -396,30 +296,29 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     unsigned generation_{0};
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
+    bool config_applied_{false};
     bool notify_frames_{false}, notifications_connected_{false};
     std::array<Input, 32> inputs_{};
     std::size_t input_count_{0};
 };
 
-QQuickFramebufferObject::Renderer* create_session_renderer(std::shared_ptr<SessionState> state)
+QQuickFramebufferObject::Renderer* create_wallpaper_renderer(std::shared_ptr<WallpaperState> state)
 {
-    return new SessionRenderer(std::move(state));
+    return new WallpaperRenderer(std::move(state));
 }
 
-SessionItem::SessionItem(std::shared_ptr<SessionState> state, QQuickItem* parent)
-    : SessionItemBase(parent), state_(std::move(state))
+WallpaperItem::WallpaperItem(std::shared_ptr<WallpaperState> state, QQuickItem* parent)
+    : WallpaperItemBase(parent), state_(std::move(state))
 {
     setMirrorVertically(true);
-    // Real pointer motion must not contaminate deterministic captures. Diagnostic
-    // replay still uses the very same queue and framebuffer conversion.
     setAcceptHoverEvents(!state_->deterministic);
     setAcceptedMouseButtons(state_->deterministic ? Qt::NoButton : Qt::LeftButton);
 }
-QQuickFramebufferObject::Renderer* SessionItem::createRenderer() const
+QQuickFramebufferObject::Renderer* WallpaperItem::createRenderer() const
 {
-    return create_session_renderer(state_);
+    return create_wallpaper_renderer(state_);
 }
-void SessionItem::set_paused(bool paused)
+void WallpaperItem::set_paused(bool paused)
 {
     if (paused_ == paused)
         return;
@@ -427,19 +326,19 @@ void SessionItem::set_paused(bool paused)
     ++playback_revision_;
     update();
 }
-ItemState SessionItem::get_item_state() const
+ItemState WallpaperItem::get_item_state() const
 {
     return {paused_, playback_revision_, inputs_, input_count_};
 }
-std::shared_ptr<SessionState> SessionItem::session_state() const
+std::shared_ptr<WallpaperState> WallpaperItem::wallpaper_state() const
 {
     return state_;
 }
-void SessionItem::clear_inputs()
+void WallpaperItem::clear_inputs()
 {
     input_count_ = 0;
 }
-void SessionItem::enqueue(InputKind kind, QPointF position)
+void WallpaperItem::enqueue(InputKind kind, QPointF position)
 {
     if (input_count_ == inputs_.size())
     {
@@ -450,23 +349,23 @@ void SessionItem::enqueue(InputKind kind, QPointF position)
                                static_cast<float>(position.y())};
     update();
 }
-void SessionItem::replay_touch(QPointF logical_position)
+void WallpaperItem::replay_touch(QPointF logical_position)
 {
     enqueue(InputKind::Touch, logical_position);
 }
-void SessionItem::hoverEnterEvent(QHoverEvent* event)
+void WallpaperItem::hoverEnterEvent(QHoverEvent* event)
 {
     enqueue(InputKind::Enter, event->position());
 }
-void SessionItem::hoverMoveEvent(QHoverEvent* event)
+void WallpaperItem::hoverMoveEvent(QHoverEvent* event)
 {
     enqueue(InputKind::Move, event->position());
 }
-void SessionItem::hoverLeaveEvent(QHoverEvent*)
+void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 {
     enqueue(InputKind::Leave);
 }
-void SessionItem::mousePressEvent(QMouseEvent* event)
+void WallpaperItem::mousePressEvent(QMouseEvent* event)
 {
     enqueue(InputKind::Touch, event->position());
     event->accept();

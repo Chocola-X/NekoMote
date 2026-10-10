@@ -220,6 +220,11 @@ void FontAtlas::upload_glyph(const nekomote::ui::Glyph& glyph, const unsigned ch
 
 UiRenderer::~UiRenderer()
 {
+    reset();
+}
+
+void UiRenderer::reset()
+{
     if (rect_shader_)
         glDeleteProgram(rect_shader_);
     if (text_shader_)
@@ -234,6 +239,17 @@ UiRenderer::~UiRenderer()
         glDeleteBuffers(1, &vbo_);
     if (uv_vbo_)
         glDeleteBuffers(1, &uv_vbo_);
+    rect_shader_ = text_shader_ = icon_shader_ = tri_shader_ = 0;
+    vao_ = vbo_ = uv_vbo_ = 0;
+    initialized_ = false;
+    font_ready_ = false;
+    icon_textures_.clear();
+    rect_vertices_.clear();
+    rect_uvs_.clear();
+    text_vertices_.clear();
+    text_uvs_.clear();
+    icon_vertices_.clear();
+    icon_uvs_.clear();
 }
 
 bool UiRenderer::init(int viewport_width, int viewport_height)

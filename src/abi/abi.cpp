@@ -1474,6 +1474,18 @@ extern "C"
         return wp->instance->set_paused(paused != 0);
     }
 
+    void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo)
+    {
+        if (wp && wp->instance)
+            wp->instance->set_render_target_fbo(fbo);
+    }
+
+    void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp)
+    {
+        if (wp && wp->instance)
+            wp->instance->reset_gl_resources();
+    }
+
     nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp)
     {
         if (!wp || !wp->instance)

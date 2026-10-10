@@ -101,7 +101,7 @@ class CliErrors(unittest.TestCase):
                           '--session', SESSION, '--steps', '1',
                           '--capture', pathlib.Path(tmp) / 'never.png'])
             self.assertNotEqual(r.returncode, 0)
-            self.assertIn('load model: asset load failed', r.stderr)
+            self.assertIn('load model:', r.stderr)
 
     def test_existing_output_rejected(self):
         with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:

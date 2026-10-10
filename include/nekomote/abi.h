@@ -428,8 +428,10 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted);
     nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed);
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
-                                                      int height);
+                                                       int height);
     nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
+    void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo);
+    void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_load_model(nekomote_wallpaper* wp, const char* model_path,
                                                  const char* session_path);

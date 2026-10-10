@@ -137,8 +137,6 @@ int run(int argc, char** argv)
 #ifdef NEKOMOTE_QML_IMPORT_PATH
     engine.addImportPath(QStringLiteral(NEKOMOTE_QML_IMPORT_PATH));
 #endif
-    const auto model_url = QUrl::fromLocalFile(QString::fromStdString(config.model.string()));
-    const auto session_url = QUrl::fromLocalFile(QString::fromStdString(config.session.string()));
     const auto qml_path =
         QString::fromStdString(std::filesystem::path(NEKOMOTE_WALLPAPER_QML).string());
     QQmlComponent component(&engine, QUrl::fromLocalFile(qml_path));
@@ -152,11 +150,7 @@ int run(int argc, char** argv)
     auto* root = qobject_cast<QQuickItem*>(root_object.get());
     if (!root)
         throw std::runtime_error("QML root is not a QQuickItem");
-    root->setProperty("modelFile", model_url.toString());
-    root->setProperty("sessionFile", session_url.toString());
-    root->setProperty("originX", static_cast<double>(config.x));
-    root->setProperty("originY", static_cast<double>(config.y));
-    root->setProperty("scale", static_cast<double>(config.scale));
+    root->setProperty("assetsDir", QString::fromStdString(config.model.parent_path().string()));
     component.completeCreate();
     auto* wallpaper =
         qobject_cast<nekomote::plasma::NekoWallpaperItem*>(root->findChild<QObject*>("wallpaper"));
@@ -165,11 +159,19 @@ int run(int argc, char** argv)
         std::fprintf(stderr, "NekoWallpaperItem child not found\n");
         return 1;
     }
+    {
+        auto state = wallpaper->wallpaper_state();
+        state->model_path = config.model;
+        state->session_path = config.session;
+        state->seed = 1;
+        state->assets_mode = false;
+        state->config_dirty = true;
+    }
     const bool fixed = !config.capture.empty() || !config.lifecycle.empty();
     if (config.graphics_api != "software" &&
         !wallpaper->configure_diagnostics(config.steps, fixed, 1))
         throw std::runtime_error(wallpaper->errorString().toStdString());
-    auto state = wallpaper->session_state();
+    auto state = wallpaper->wallpaper_state();
     auto host_window = std::make_unique<QQuickWindow>();
     auto& window = *host_window;
     window.setTitle(QStringLiteral("NekoMote Plasma probe"));

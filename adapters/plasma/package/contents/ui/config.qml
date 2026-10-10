@@ -4,11 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 
 ColumnLayout {
-    property string cfg_modelFile: ""
-    property string cfg_sessionFile: ""
-    property real cfg_originX: 0
-    property real cfg_originY: 400
-    property real cfg_scale: 1
     property string cfg_assetsDir: ""
 
     spacing: 8
@@ -34,7 +29,7 @@ ColumnLayout {
         }
     }
     Label {
-        text: "设置后壁纸会自动加载第一个角色。\n右下角 ☰ 按钮可切换角色、背景和调整缩放。"
+        text: "设置后壁纸会自动加载角色。\n运行时点击右上角图标可切换角色、背景和调整设置。"
         color: "#666666"
         font.pixelSize: 11
         wrapMode: Text.Wrap

@@ -59,9 +59,6 @@ struct Options
     bool bad_asset{false};
     bool invalid_config{false};
     bool recovery{false};
-    float origin_x{0};
-    float origin_y{400};
-    float scale{1};
     int steps{0};
     unsigned seed{1};
 };
@@ -106,16 +103,6 @@ Options parse_options(int argc, char** argv)
             result.width = std::stoi(value());
         else if (key == "--height")
             result.height = std::stoi(value());
-        else if (key == "--origin-x")
-            result.origin_x = std::stof(value());
-        else if (key == "--origin-y")
-            result.origin_y = std::stof(value());
-        else if (key == "--scale")
-        {
-            result.scale = std::stof(value());
-            if (result.scale <= 0 || !std::isfinite(result.scale))
-                throw std::runtime_error("--scale must be positive and finite");
-        }
         else if (key == "--steps")
             result.steps = std::stoi(value());
         else if (key == "--seed")
@@ -126,7 +113,7 @@ Options parse_options(int argc, char** argv)
                 "nekomote_plasma_package_probe --output DIR [--model M --session S]\n"
                 "  [--lifecycle] [--bad-asset] [--invalid-config] [--recovery]\n"
                 "  [--rounds 20] [--config-rounds 20] [--dpi 1] [--width 800 --height 1080]\n"
-                "  [--origin-x 0 --origin-y 400 --scale 1] [--steps 0] [--seed 1]\n"
+                "  [--steps 0] [--seed 1]\n"
                 "Default: capture one screenshot. --lifecycle: full lifecycle test.\n"
                 "--bad-asset/--invalid-config: error recovery test. --recovery: bad->good cycles.\n"
                 "No desktop settings changed.");
@@ -287,11 +274,15 @@ int run(int argc, char** argv)
         throw std::runtime_error("wallpaper configuration page/schema missing");
     QQmlEngine config_engine;
     QQmlComponent config_component(&config_engine, QUrl::fromLocalFile(config_path));
+    auto assets_root = abs_model.parent_path();
+    while (!assets_root.empty() && assets_root != assets_root.parent_path() &&
+           !std::filesystem::exists(assets_root / "characters"))
+        assets_root = assets_root.parent_path();
+    if (assets_root.empty() || assets_root == assets_root.parent_path())
+        assets_root = abs_model.parent_path();
     std::unique_ptr<QObject> config_object(config_component.createWithInitialProperties(
-        {{"cfg_modelFile",
-          QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString()},
-         {"cfg_sessionFile",
-          QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString()}}));
+        {{"cfg_assetsDir",
+          QUrl::fromLocalFile(QString::fromStdString(assets_root.string())).toString()}}));
     if (!config_object)
         throw std::runtime_error("configuration QML failed: " +
                                  config_component.errorString().toStdString());
@@ -305,34 +296,19 @@ int run(int argc, char** argv)
         containment->config().group("Wallpaper").group("org.nekomote.wallpaper").group("General");
     if (opts.bad_asset)
     {
-        config.writeEntry(
-            "modelFile", QUrl::fromLocalFile(QStringLiteral("/nonexistent/model.json")).toString());
-        config.writeEntry(
-            "sessionFile",
-            QUrl::fromLocalFile(QStringLiteral("/nonexistent/session.json")).toString());
+        config.writeEntry("assetsDir", QStringLiteral("/nonexistent/assets"));
     }
     else if (opts.invalid_config)
     {
-        const auto bad_path = abs_output / "bad_model.json";
-        std::ofstream(bad_path) << "{\"schema_version\":999999}";
-        config.writeEntry(
-            "modelFile", QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
-        config.writeEntry(
-            "sessionFile",
-            QUrl::fromLocalFile(QString::fromStdString(bad_path.string())).toString());
+        const auto bad_path = abs_output / "bad_assets";
+        std::filesystem::create_directories(bad_path);
+        config.writeEntry("assetsDir", QString::fromStdString(bad_path.string()));
     }
     else
     {
-        config.writeEntry(
-            "modelFile",
-            QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString());
-        config.writeEntry(
-            "sessionFile",
-            QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString());
+        config.writeEntry("assetsDir",
+                          QString::fromStdString(assets_root.string()));
     }
-    config.writeEntry("originX", static_cast<double>(opts.origin_x));
-    config.writeEntry("originY", static_cast<double>(opts.origin_y));
-    config.writeEntry("scale", static_cast<double>(opts.scale));
     containment->setWallpaperPlugin(QStringLiteral("org.nekomote.wallpaper"));
     auto* item = PlasmaQuick::AppletQuickItem::itemForApplet(containment);
     if (!item)
@@ -441,7 +417,7 @@ int run(int argc, char** argv)
         bool resumed = false;
         double resume_delta = -1;
         const auto resume_connection = QObject::connect(
-            native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+            native, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
             [&](QSize, unsigned, double delta, const QString&)
             {
                 if (!resumed)
@@ -462,7 +438,7 @@ int run(int argc, char** argv)
         native = get_native();
         window.hide();
         const auto* timer = native->findChild<QTimer*>();
-        if (!static_cast<nekomote::qt_quick::SessionItemBase*>(native)->get_item_state().paused ||
+        if (!static_cast<nekomote::qt_quick::WallpaperItemBase*>(native)->get_item_state().paused ||
             !timer || timer->isActive())
             throw std::runtime_error("hidden window did not suspend scheduling/runtime");
         // A frame submitted before hide may still complete. Drain it before
@@ -507,7 +483,7 @@ int run(int argc, char** argv)
         QSize resize_fbo;
         bool resize_fbo_captured = false;
         const auto resize_fbo_connection = QObject::connect(
-            native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+            native, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
             [&](QSize fbo_size, unsigned, double, const QString&)
             {
                 if (fbo_size.isValid())
@@ -541,27 +517,30 @@ int run(int argc, char** argv)
             });
         std::printf("lifecycle: resize back confirmed\n");
 
-        // 4. Create/destroy rounds (change originX to trigger Loader rebuild)
+        // 4. Config reload rounds (assetsDir toggle: bad→good triggers fault recovery)
         std::printf("lifecycle: create/destroy %d rounds\n", opts.rounds);
         unsigned total_created = 0;
+        const auto good_assets = QString::fromStdString(assets_root.string());
+        const auto bad_assets = QStringLiteral("/nonexistent/assets");
         for (int i = 0; i < opts.rounds; ++i)
         {
             auto* cfg = configuration_of(containment);
             if (!cfg)
                 throw std::runtime_error("cannot access configuration for round " +
                                          std::to_string(i));
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            const double new_origin = (i % 2 == 0) ? 1.0 : 0.0;
-            cfg->setProperty("originX", new_origin);
+            cfg->setProperty("assetsDir", bad_assets);
+            wait_for(
+                [&]
+                {
+                    auto* n = find_native(containment);
+                    return n && n->property("status").toInt() == 2;
+                });
+            cfg->setProperty("assetsDir", good_assets);
             wait_for(
                 [&]
                 {
                     auto* n = get_native();
-                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
+                    return n && n->property("status").toInt() == 1;
                 });
             auto* n = get_native();
             if (!n->configure_diagnostics(0, false, 1))
@@ -570,16 +549,14 @@ int run(int argc, char** argv)
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
                 throw std::runtime_error("round " + std::to_string(i) +
                                          " did not isolate real pointer input");
-            const auto created = n->queryRendererCreated();
-            total_created += created;
-            std::printf("lifecycle: round %d originX=%.0f renderer_created=%u old=%u/%u\n", i,
-                        new_origin, created, old_state->renderer_created.load(),
-                        old_state->renderer_destroyed.load());
+            total_created += n->queryRendererCreated();
+            std::printf("lifecycle: round %d renderer_created=%u\n", i,
+                        n->queryRendererCreated());
         }
         std::printf("lifecycle: create/destroy %d rounds complete, total_created=%u\n", opts.rounds,
                     total_created);
 
-        // 5. Config switch rounds (change scale to trigger Loader rebuild)
+        // 5. Config switch rounds (assetsDir toggle)
         std::printf("lifecycle: config switch %d rounds\n", opts.config_rounds);
         unsigned total_config_created = 0;
         for (int i = 0; i < opts.config_rounds; ++i)
@@ -588,18 +565,19 @@ int run(int argc, char** argv)
             if (!cfg)
                 throw std::runtime_error("cannot access configuration for config round " +
                                          std::to_string(i));
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            const double new_scale = (i % 2 == 0) ? 0.9 : 1.0;
-            cfg->setProperty("scale", new_scale);
+            cfg->setProperty("assetsDir", bad_assets);
+            wait_for(
+                [&]
+                {
+                    auto* n = find_native(containment);
+                    return n && n->property("status").toInt() == 2;
+                });
+            cfg->setProperty("assetsDir", good_assets);
             wait_for(
                 [&]
                 {
                     auto* n = get_native();
-                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
+                    return n && n->property("status").toInt() == 1;
                 });
             auto* n = get_native();
             if (!n->configure_diagnostics(0, false, 1))
@@ -608,11 +586,9 @@ int run(int argc, char** argv)
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
                 throw std::runtime_error("config round " + std::to_string(i) +
                                          " did not isolate real pointer input");
-            const auto created = n->queryRendererCreated();
-            total_config_created += created;
-            std::printf("lifecycle: config round %d scale=%.1f renderer_created=%u old=%u/%u\n", i,
-                        new_scale, created, old_state->renderer_created.load(),
-                        old_state->renderer_destroyed.load());
+            total_config_created += n->queryRendererCreated();
+            std::printf("lifecycle: config round %d renderer_created=%u\n", i,
+                        n->queryRendererCreated());
         }
         std::printf("lifecycle: config switch %d rounds complete, total_created=%u\n",
                     opts.config_rounds, total_config_created);
@@ -651,15 +627,6 @@ int run(int argc, char** argv)
                     return n && n->property("status").toInt() == 1 && n->queryRendererCreated() > 0;
                 });
         };
-        auto wait_failed = [&]()
-        {
-            wait_for(
-                [&]
-                {
-                    auto* n = find_native(containment);
-                    return n && n->property("status").toInt() == 2;
-                });
-        };
         auto isolate_inputs = [&](int step)
         {
             auto* n = get_native();
@@ -680,20 +647,11 @@ int run(int argc, char** argv)
                     return n && n->queryRenderedFrames() > baseline + 1;
                 });
         };
-        const auto good_model_url =
-            QUrl::fromLocalFile(QString::fromStdString(abs_model.string())).toString();
-        const auto good_session_url =
-            QUrl::fromLocalFile(QString::fromStdString(abs_session.string())).toString();
-        const auto bad_model_url =
-            QUrl::fromLocalFile(QStringLiteral("/nonexistent/model.json")).toString();
-        const auto bad_session_url =
-            QUrl::fromLocalFile(QStringLiteral("/nonexistent/session.json")).toString();
+        const auto good_assets_dir =
+            QString::fromStdString(assets_root.string());
+        const auto bad_assets_dir = QStringLiteral("/nonexistent/assets");
 
-        set_config("modelFile", good_model_url);
-        set_config("sessionFile", good_session_url);
-        set_config("originX", 0.0);
-        set_config("originY", 400.0);
-        set_config("scale", 1.0);
+        set_config("assetsDir", good_assets_dir);
         window.show();
         wait_loaded();
         isolate_inputs(1);
@@ -703,157 +661,31 @@ int run(int argc, char** argv)
 
         for (int cycle = 0; cycle < 2; ++cycle)
         {
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            set_config("modelFile", bad_model_url);
+            set_config("assetsDir", bad_assets_dir);
             wait_for(
                 [&]
                 {
                     auto* n = find_native(containment);
-                    return old_native.isNull() && n && n->property("status").toInt() == 2 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
+                    return n && n->property("status").toInt() == 2;
                 });
             {
                 auto* n = find_native(containment);
                 if (n->property("errorString").toString().isEmpty())
-                    throw std::runtime_error("bad model: errorString empty");
-                std::printf("recovery: cycle %d bad model status=2 error=%s\n", cycle,
+                    throw std::runtime_error("bad assets: errorString empty");
+                std::printf("recovery: cycle %d bad assets status=2 error=%s\n", cycle,
                             n->property("errorString").toString().toUtf8().constData());
             }
-            const QPointer bad_native(get_native());
-            const auto bad_state = bad_native ? bad_native->session_state() : nullptr;
-            set_config("modelFile", good_model_url);
+            set_config("assetsDir", good_assets_dir);
             wait_for(
                 [&]
                 {
                     auto* n = get_native();
-                    return bad_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           (!bad_state || bad_state->renderer_created.load() ==
-                                              bad_state->renderer_destroyed.load());
+                    return n && n->property("status").toInt() == 1;
                 });
             isolate_inputs(2 + cycle);
             wait_frame_advance();
-            std::printf("recovery: cycle %d good model restored status=1 frames=%u\n", cycle,
+            std::printf("recovery: cycle %d good assets restored status=1 frames=%u\n", cycle,
                         get_native()->queryRenderedFrames());
-        }
-
-        {
-            set_config("sessionFile", bad_session_url);
-            wait_failed();
-            std::printf("recovery: bad session status=2\n");
-            const QPointer bad_native(get_native());
-            const auto bad_state = bad_native ? bad_native->session_state() : nullptr;
-            set_config("sessionFile", good_session_url);
-            wait_for(
-                [&]
-                {
-                    auto* n = get_native();
-                    return bad_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           (!bad_state || bad_state->renderer_created.load() ==
-                                              bad_state->renderer_destroyed.load());
-                });
-            isolate_inputs(5);
-            wait_frame_advance();
-            std::printf("recovery: good session restored status=1\n");
-        }
-
-        {
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            set_config("originY", 300.0);
-            wait_for(
-                [&]
-                {
-                    auto* n = get_native();
-                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
-                });
-            isolate_inputs(6);
-            wait_frame_advance();
-            std::printf("recovery: originY switch status=1\n");
-        }
-
-        {
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            set_config("scale", 0.9);
-            wait_for(
-                [&]
-                {
-                    auto* n = get_native();
-                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
-                });
-            isolate_inputs(7);
-            wait_frame_advance();
-            std::printf("recovery: scale switch status=1\n");
-        }
-
-        {
-            set_config("modelFile", QStringLiteral("http://example.com/model.json"));
-            wait_failed();
-            {
-                auto* n = find_native(containment);
-                std::printf("recovery: non-local URL status=2 error=%s\n",
-                            n->property("errorString").toString().toUtf8().constData());
-            }
-            set_config("modelFile", good_model_url);
-            wait_loaded();
-            isolate_inputs(8);
-            wait_frame_advance();
-            std::printf("recovery: non-local URL recovered\n");
-        }
-
-        {
-            set_config("scale", 0.0);
-            wait_failed();
-            std::printf("recovery: scale=0 status=2\n");
-            set_config("scale", 1.0);
-            wait_loaded();
-            isolate_inputs(9);
-            wait_frame_advance();
-            std::printf("recovery: scale=0 recovered\n");
-        }
-
-        {
-            set_config("originY", std::numeric_limits<float>::quiet_NaN());
-            wait_failed();
-            std::printf("recovery: originY=NaN status=2\n");
-            set_config("originY", 400.0);
-            wait_loaded();
-            isolate_inputs(10);
-            wait_frame_advance();
-            std::printf("recovery: originY=NaN recovered\n");
-        }
-
-        {
-            const QPointer old_native(get_native());
-            const auto old_state = old_native->session_state();
-            set_config("originY", 250.0);
-            set_config("scale", 1.1);
-            wait_for(
-                [&]
-                {
-                    auto* n = get_native();
-                    return old_native.isNull() && n && n->property("status").toInt() == 1 &&
-                           n->queryRendererCreated() > 0 &&
-                           old_state->renderer_created.load() ==
-                               old_state->renderer_destroyed.load();
-                });
-            isolate_inputs(11);
-            const auto rebuilds = get_native()->queryRendererCreated();
-            if (rebuilds != 1)
-                throw std::runtime_error("batch update rebuilt " + std::to_string(rebuilds) +
-                                         " times, expected 1");
-            wait_frame_advance();
-            std::printf("recovery: batch originY+scale single rebuild=%u\n", rebuilds);
         }
 
         if (!save_grab(window, abs_output / "recovery_final.png"))
@@ -876,7 +708,7 @@ int run(int argc, char** argv)
         bool frame_complete = false;
         QSize frame_size;
         double frame_delta = -1;
-        QObject::connect(native, &nekomote::qt_quick::SessionItemBase::frame_ready, callbacks.get(),
+        QObject::connect(native, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
                          [&](QSize size, unsigned, double delta, const QString&)
                          {
                              if (frame_complete)
@@ -890,7 +722,7 @@ int run(int argc, char** argv)
         const QSize expected_size(
             qRound(static_cast<qreal>(opts.width) * static_cast<qreal>(opts.dpi)),
             qRound(static_cast<qreal>(opts.height) * static_cast<qreal>(opts.dpi)));
-        const auto executed = native->session_state()->fixed_steps_executed.load();
+        const auto executed = native->wallpaper_state()->fixed_steps_executed.load();
         if (frame_size != expected_size || frame_delta != 0 ||
             executed != static_cast<unsigned>(opts.steps))
             throw std::runtime_error("fixed frame has unexpected size, clock delta or step count");
@@ -906,7 +738,7 @@ int run(int argc, char** argv)
     }
 
     const auto* final_native = native_item(containment);
-    const auto final_state = final_native ? final_native->session_state() : nullptr;
+    const auto final_state = final_native ? final_native->wallpaper_state() : nullptr;
     callbacks.reset();
     window.hide();
     window.releaseResources();

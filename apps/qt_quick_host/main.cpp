@@ -160,9 +160,13 @@ class MarkerItem final : public QQuickItem
 int run(int argc, char** argv)
 {
     const auto config = options(argc, argv);
-    auto state =
-        nekomote::qt_quick::load_session(config.model, config.session, config.seed, config.x,
-                                         config.y, config.scale, config.steps, config.fixed);
+    auto state = std::make_shared<nekomote::qt_quick::WallpaperState>();
+    state->model_path = config.model;
+    state->session_path = config.session;
+    state->seed = config.seed;
+    state->assets_mode = false;
+    state->fixed_steps = config.steps;
+    state->deterministic = config.fixed;
     // This choice is confined to our own diagnostic process. A future Plasma
     // item must query the host backend and reject unsupported RHI implementations.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -187,7 +191,7 @@ int run(int argc, char** argv)
         window.setPersistentSceneGraph(false);
         window.setPersistentGraphics(false);
         window.resize(config.width, config.height);
-        auto* item = new nekomote::qt_quick::SessionItem(state, window.contentItem());
+        auto* item = new nekomote::qt_quick::WallpaperItem(state, window.contentItem());
         item->setSize({static_cast<qreal>(config.width), static_cast<qreal>(config.height)});
         if (config.touch)
             item->replay_touch(*config.touch);
@@ -205,7 +209,7 @@ int run(int argc, char** argv)
             exit_code = 1;
             application.quit();
         };
-        QObject::connect(item, &nekomote::qt_quick::SessionItem::failed, callbacks.get(), fail);
+        QObject::connect(item, &nekomote::qt_quick::WallpaperItem::failed, callbacks.get(), fail);
         int traced_gui_ticks = 0;
         int traced_presentations = 0;
         if (config.trace_frames)
@@ -348,7 +352,7 @@ int run(int argc, char** argv)
             }
         };
         if (config.fixed)
-            QObject::connect(item, &nekomote::qt_quick::SessionItem::frame_ready, callbacks.get(),
+            QObject::connect(item, &nekomote::qt_quick::WallpaperItem::frame_ready, callbacks.get(),
                              consume_frame);
         QTimer timeout;
         if (config.fixed)

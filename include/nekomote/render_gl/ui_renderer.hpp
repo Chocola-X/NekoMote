@@ -54,6 +54,7 @@ class UiRenderer : public nekomote::ui::Painter
     ~UiRenderer();
     UiRenderer(const UiRenderer&) = delete;
     UiRenderer& operator=(const UiRenderer&) = delete;
+    void reset();
 
     bool init(int viewport_width, int viewport_height);
     void resize(int viewport_width, int viewport_height);

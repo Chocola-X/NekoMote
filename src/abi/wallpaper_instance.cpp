@@ -105,6 +105,23 @@ nekomote_error WallpaperInstance::set_paused(bool paused)
     return NEKOMOTE_OK;
 }
 
+void WallpaperInstance::set_render_target_fbo(std::uint32_t fbo)
+{
+    render_target_fbo_ = fbo;
+}
+
+void WallpaperInstance::reset_gl_resources()
+{
+    renderer_.reset();
+    previous_renderer_.reset();
+    background_renderer_.reset();
+    ui_renderer_.reset();
+    panel_.ui_ready = false;
+    panel_.icon_texture = 0;
+    last_render_width_ = 0;
+    last_render_height_ = 0;
+}
+
 nekomote_error WallpaperInstance::load_initial()
 {
     if (!assets_scanned_)
@@ -192,6 +209,8 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
         renderer_->upload_texture(id, image);
     background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
     background_renderer_->reserve({8, 12, 2, 2});
+    last_render_width_ = 0;
+    last_render_height_ = 0;
 }
 
 void WallpaperInstance::apply_background(const std::filesystem::path& path, double fade_duration,
@@ -354,7 +373,7 @@ nekomote_error WallpaperInstance::render_frame()
         last_render_height_ = h;
     }
     const std::array<float, 4> clear = {0.06f, 0.07f, 0.10f, 1.0f};
-    const render_gl::Target target{0, w, h};
+    const render_gl::Target target{render_target_fbo_, w, h};
     RenderFrame bg_frame{};
     if (controller_.has_background())
         bg_frame = controller_.current_instance()->background_frame();
@@ -575,16 +594,18 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y)
     const float px = static_cast<float>(x);
     const float py = static_cast<float>(y);
     ui_context_.mouse_move(x, y);
+    const float cx = px - static_cast<float>(output_width_) * .5f;
+    const float cy = py - static_cast<float>(output_height_) * .5f;
     if (dragging_ && !panel_.locked)
     {
         auto origin = controller_.origin();
-        origin.x += px - prev_mouse_x_;
-        origin.y += py - prev_mouse_y_;
+        origin.x += cx - prev_mouse_x_;
+        origin.y += cy - prev_mouse_y_;
         controller_.set_origin(origin);
     }
-    prev_mouse_x_ = px;
-    prev_mouse_y_ = py;
-    controller_.pointer_move({px, py});
+    prev_mouse_x_ = cx;
+    prev_mouse_y_ = cy;
+    controller_.pointer_move({cx, cy});
     return NEKOMOTE_OK;
 }
 
@@ -592,7 +613,9 @@ nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
-    controller_.pointer_enter({static_cast<float>(x), static_cast<float>(y)});
+    const float cx = static_cast<float>(x) - static_cast<float>(output_width_) * .5f;
+    const float cy = static_cast<float>(y) - static_cast<float>(output_height_) * .5f;
+    controller_.pointer_enter({cx, cy});
     return NEKOMOTE_OK;
 }
 
@@ -611,7 +634,9 @@ nekomote_error WallpaperInstance::touch(float x, float y)
         return NEKOMOTE_OK;
     if (panel_.ui_ready && ui_context_.captures_mouse())
         return NEKOMOTE_OK;
-    controller_.touch({x, y});
+    const float cx = x - static_cast<float>(output_width_) * .5f;
+    const float cy = y - static_cast<float>(output_height_) * .5f;
+    controller_.touch({cx, cy});
     return NEKOMOTE_OK;
 }
 
