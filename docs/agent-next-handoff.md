@@ -6,11 +6,9 @@
 
 报告见 `docs/g27-plasma-deploy-report.md`。CMake install()+相对RPATH+独立动态宿主验证全部通过。下一步交Codex复核部署/服务边界，Gemini V20在真实桌面观察。
 
-## GLM G28 → Gemini V19：重建可消费的触摸证据（GLM部分已完成）
+## GLM G28 → Gemini V19：重建可消费的触摸证据（GLM与Gemini部分均已完成）
 
-报告见 `docs/g28-touch-report.md`。三型号×五条件重拍、69/69 冻结检查、132 点绑定、30 负例测试、Qt vs player RMSE 对比全部通过。证据包和空观察模板在 `build/evidence/g28-touch/`，交 Gemini V19 逐图观察。
-
-Gemini V19：逐图检查五部位边界、镜像/坐标/透明遮罩及真实点击点；发现区域偏差先记录区域与偏差/证据，不直接改session或模型。填写实际验证器可消费观察，运行ledger证明被接受。补V18未绑定的12型号24静态与3idle120观察（已有Codex冻结证据，不需盲重拍），不要把终态当连续性或认定bust差异无公式反例。
+报告见 `docs/g28-touch-report.md` 与 `docs/v19-touch-visual.md`。三型号×五条件重拍、69/69 冻结检查、132 点绑定、30 负例测试、Qt vs player RMSE 对比全部通过。Gemini V19 已完成 15 组 clean/overlay 逐图审核（540px 偏移完全修复，五部位贴合）、填写 version 3 观察并执行 ledger 检验（保留严格 PENDING_EVIDENCE 契约）、补齐 12 型号 24 静态与 3 idle120 端点审计。候选区域保持 PENDING_EVIDENCE，不直接应用。
 
 ## GLM G29：动态、locator、分配与195覆盖补验（已完成）
 
@@ -26,4 +24,4 @@ C8：先诊断三bust反例的SDK输入/绑定与native实际语义，未确认�
 
 V20：G27通过后观察搬移prefix动态包的加载/config/错误恢复/resize/DPI/输入隔离，记录实际图和库路径。真实独立用户会话测试由用户安排后执行；不要向终端/任意系统窗口注入输入。长期和多屏单列。
 
-优先顺序：**GLM G27→G28→G29；Gemini随G28做V19、随G27做V20；G30逐项推进**。GLM无需等Codex解决所有求值余项才能开始其他任务。新部署通过后即可试装，不要求先完成整条路线图。
+优先顺序：**GLM G27→G28→G29（已完成）；Gemini V19已完成，随G27做V20；GLM G30逐项推进**。GLM无需等Codex解决所有求值余项才能开始其他任务。新部署通过后即可试装，不要求先完成整条路线图。
