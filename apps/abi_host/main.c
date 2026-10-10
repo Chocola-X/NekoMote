@@ -166,18 +166,6 @@ typedef struct
 
 static Host g_host;
 
-static void to_centered(double x, double y, float* cx, float* cy)
-{
-    if (g_host.win_width <= 0 || g_host.win_height <= 0)
-    {
-        *cx = 0;
-        *cy = 0;
-        return;
-    }
-    *cx = (float)(x * g_host.fb_width / g_host.win_width - g_host.fb_width * 0.5);
-    *cy = (float)(y * g_host.fb_height / g_host.win_height - g_host.fb_height * 0.5);
-}
-
 /* ------------------------------------------------------------------ */
 /* GLFW callbacks                                                     */
 /* ------------------------------------------------------------------ */
@@ -210,9 +198,7 @@ static void on_mouse_button(GLFWwindow* w, int button, int action, int)
     {
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
-        float cx, cy;
-        to_centered(x, y, &cx, &cy);
-        nekomote_wallpaper_touch(g_host.wp, cx, cy);
+        nekomote_wallpaper_touch(g_host.wp, (float)x, (float)y);
     }
 }
 

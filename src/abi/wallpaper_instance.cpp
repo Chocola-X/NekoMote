@@ -144,6 +144,8 @@ nekomote_error WallpaperInstance::load_initial()
     }
     finish_candidate_gpu(candidate);
     controller_.install_initial(std::move(candidate));
+    if (output_width_ > 0 && output_height_ > 0)
+        controller_.set_output_size(output_width_, output_height_);
     if (!controller_.config().background.empty())
     {
         const auto* bg = catalog.find_background(controller_.config().background);
@@ -193,7 +195,10 @@ nekomote_error WallpaperInstance::load_model(const std::filesystem::path& model_
     finish_candidate_gpu(candidate);
     controller_.install_initial(std::move(candidate));
     if (output_width_ > 0 && output_height_ > 0)
+    {
+        controller_.set_output_size(output_width_, output_height_);
         controller_.prepare_frame();
+    }
     initialized_ = true;
     return NEKOMOTE_OK;
 }
