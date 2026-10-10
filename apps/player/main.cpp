@@ -6,9 +6,10 @@
 #include <nekomote/asset_io/session_asset.hpp>
 #include <nekomote/audio/device.hpp>
 #include <nekomote/render_gl/renderer.hpp>
+#include <nekomote/render_gl/ui_renderer.hpp>
+#include <nekomote/ui/layout.hpp>
 
 #include "touch_overlay.hpp"
-#include "ui.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -320,7 +321,7 @@ struct Surface
     Vec2 previous{};
     bool dragging{false}, locked{false};
     bool paused{false}, minimized{false}, output_unavailable{false};
-    player::ui::Context* ui_context{nullptr};
+    ui::Context* ui_context{nullptr};
     void set_paused(bool value) noexcept
     {
         paused = value;
@@ -623,11 +624,10 @@ int run(int argc, char** argv)
         }
     }
     Surface surface{&controller, window.get(), {}, false, false, false, false, false, nullptr};
-    player::ui::FontAtlas ui_font;
-    player::ui::Renderer ui_renderer;
-    player::ui::Context ui_context;
-    player::ui::IconState ui_icon{};
-    player::ui::SidebarState ui_sidebar{};
+    render_gl::UiRenderer ui_renderer;
+    ui::Context ui_context;
+    ui::IconState ui_icon{};
+    ui::SidebarState ui_sidebar{};
     if (o.ui_open)
     {
         ui_sidebar.open = true;
@@ -636,13 +636,12 @@ int run(int argc, char** argv)
     }
     std::uint32_t ui_icon_texture = 0;
     bool ui_ready = false;
-    if (assets_mode && ui_font.init("", 36))
+    if (assets_mode)
     {
         int fw = 0, fh = 0;
         glfwGetFramebufferSize(window.get(), &fw, &fh);
-        if (ui_renderer.init(fw, fh))
+        if (ui_renderer.init(fw, fh) && ui_renderer.init_font("", 36))
         {
-            ui_renderer.set_font(&ui_font);
             ui_context.init(&ui_renderer);
             const auto icon_path = o.assets / "icons" / "neko.png";
             if (std::filesystem::exists(icon_path))
@@ -650,15 +649,7 @@ int run(int argc, char** argv)
                 auto image = asset_io::load_png(icon_path);
                 if (image.ok)
                 {
-                    glGenTextures(1, &ui_icon_texture);
-                    glBindTexture(GL_TEXTURE_2D, ui_icon_texture);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.image.width, image.image.height,
-                                 0, GL_RGBA, GL_UNSIGNED_BYTE, image.image.pixels.data());
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                    ui_icon_texture = ui_renderer.upload_icon(image.image);
                 }
             }
             ui_icon.x = static_cast<float>(fw) - 60;
@@ -961,7 +952,7 @@ int run(int argc, char** argv)
         if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
-            const player::ui::Style style;
+            const ui::Style style;
 
             if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
                 ui_sidebar.open = !ui_sidebar.open;

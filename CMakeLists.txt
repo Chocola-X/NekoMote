@@ -60,6 +60,7 @@ add_subdirectory(src/model)
 add_subdirectory(src/runtime)
 add_subdirectory(src/asset_io)
 add_subdirectory(src/application)
+add_subdirectory(src/ui)
 
 if(NEKOMOTE_BUILD_TOOLS)
     add_subdirectory(tools/import_emote)

@@ -1,0 +1,16 @@
+add_library(nekomote_ui STATIC easing.cpp font.cpp layout.cpp)
+add_library(nekomote::ui ALIAS nekomote_ui)
+target_include_directories(nekomote_ui PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(nekomote_ui PRIVATE nekomote_warnings)
+target_compile_features(nekomote_ui PUBLIC cxx_std_20)
+
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(FONTCONFIG_UI IMPORTED_TARGET fontconfig)
+    if(FONTCONFIG_UI_FOUND)
+        target_link_libraries(nekomote_ui PRIVATE PkgConfig::FONTCONFIG_UI)
+        target_compile_definitions(nekomote_ui PRIVATE NEKOMOTE_HAVE_FONTCONFIG)
+    endif()
+endif()
+
+target_include_directories(nekomote_ui PRIVATE ${stb_SOURCE_DIR})

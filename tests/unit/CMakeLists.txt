@@ -23,13 +23,15 @@ add_executable(nekomote_unit_tests
     test_spring.cpp
     test_bend.cpp
     test_chain.cpp
-    test_controller.cpp)
+    test_controller.cpp
+    test_ui_layout.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
         nekomote::asset_io
         nekomote::runtime
         nekomote::application
+        nekomote::ui
         Catch2::Catch2WithMain
         nlohmann_json::nlohmann_json)
 
