@@ -33,10 +33,10 @@ env -u DISPLAY -u WAYLAND_DISPLAY ctest --preset asan
 
 asan preset 关闭 preview/player，启用 ABI。`abi_negative_test` 是纯 C 的 NULL/无效 loader/重复初始化失败测试；`abi_synthetic_boundary` 使用仓库的小型合成 fixture、有效程序和会话，检查非法模式999、NaN、尺寸、帧失效、背景和 OOM 诊断。它们不依赖真实模型或显示服务。`abi_test` 为真实资产集成入口；缺少文件时返回77、CTest 明确 Skipped；文件存在但损坏仍失败。
 
-早期边界验证记录在 `build/evidence/integration-2026-10-07/`：独立副本不含 assets/refer，headless + ABI + 无离线工具构建通过，134 PASS、1 个真实资产集成项 Skipped。使用明确的本地已固定依赖缓存，未测试网络重新下载。当前整体数量以 C6 交接为准，不用历史数量说明当前执行范围。
+早期边界验证记录在 `build/evidence/integration-2026-10-07/`：独立副本不含 assets/refer，headless + ABI + 无离线工具构建通过，134 PASS、1 个真实资产集成项 Skipped。使用明确的本地已固定依赖缓存，未测试网络重新下载。本段数量只属于当期边界检查，不用于当前完整测试计数。
 
 GPU 负例使用真正的 renderer：纹理长度/尺寸、非法 blend/protection/composition、NULL 非空帧、复制 OOM，失败后白色宿主目标保持白色，重新 prepare 后可绘制。预热后100次 ABI prepare/render 普通 C++ new 为0；合成 CPU session 的120次 advance/prepare/frame/background 查询为0。这些不包含驱动 malloc、初始化、截图或整个 UI 的分配。
 
 ## 尚未认证
 
-C/GLFW 宿主已经收敛为显式静音诊断工具，G8 确定步 PNG 与 C++ 像素一致；它不代表实际桌面插件，也不承担正式音频服务。更完整源诊断/失败注入、上下文丢失/宿主卸载、多线程生命周期、实际 Qt Quick/Plasma 宿主及最终共享库安装仍待验收。
+C/GLFW 宿主已经收敛为显式静音诊断工具，G8 确定步 PNG 与 C++ 像素一致；它不代表实际桌面插件，也不承担正式音频服务。Qt Quick和隔离Plasma包已有后续证据，G27部署也已交付；不将它们列为未实现。实际桌面/驱动上下文丢失/多屏/长期及新版完整壁纸ABI仍未最终验收，当前范围见[摘要](review-agents-current.md)。

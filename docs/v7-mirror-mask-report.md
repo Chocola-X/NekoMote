@@ -133,11 +133,11 @@
 本任务生成的所有高清对比图、裁切图及诊断数据已完整落盘于 `build/evidence/v7/`：
 
 ### 5.1 Side-by-Side 对比图（三联画：WebGL 参考 | 原生输出 | x4 放大差分）
-- [sbs_fraise-france-maid-b_eye10_neutral.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_neutral.png)：初态基准（差分全黑，PASS）
-- [sbs_fraise-france-maid-b_eye10_head_lr30_direct.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_direct.png)：未反转直选对比（清晰展现头部形变反向发散，差分高亮）
-- [sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png)：输入反转确证（差分全黑，证明 100% 对齐）
-- [sbs_fraise-france-maid-b_eye10_body_lr30_direct.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_direct.png)：身体未反转直选对比（胸围围裙反向位移）
-- [sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png](../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png)：身体反转确证（差分全黑，证明 100% 对齐）
+- 历史截图不可用：`../build/evidence/v7/sbs_fraise-france-maid-b_eye10_neutral.png`（原标注：sbs_fraise-france-maid-b_eye10_neutral.png，不作本轮目视证据）：初态基准（差分全黑，PASS）
+- 历史截图不可用：`../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_direct.png`（原标注：sbs_fraise-france-maid-b_eye10_head_lr30_direct.png，不作本轮目视证据）：未反转直选对比（清晰展现头部形变反向发散，差分高亮）
+- 历史截图不可用：`../build/evidence/v7/sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png`（原标注：sbs_fraise-france-maid-b_eye10_head_lr30_inverted.png，不作本轮目视证据）：输入反转确证（差分全黑，证明 100% 对齐）
+- 历史截图不可用：`../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_direct.png`（原标注：sbs_fraise-france-maid-b_eye10_body_lr30_direct.png，不作本轮目视证据）：身体未反转直选对比（胸围围裙反向位移）
+- 历史截图不可用：`../build/evidence/v7/sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png`（原标注：sbs_fraise-france-maid-b_eye10_body_lr30_inverted.png，不作本轮目视证据）：身体反转确证（差分全黑，证明 100% 对齐）
 
 ### 5.2 局部高倍裁切
 - **头部轮廓裁切**：`nat_eye10_head_lr30_crop_head.png` vs `ref_eye10_head_lr30_crop_head.png`

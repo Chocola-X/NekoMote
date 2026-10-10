@@ -6,4 +6,4 @@
 
 `version3_observations.json` 只有表面字段，没有满足现有ledger的probe/input/hash/冻结条件契约。实际消费仍3 PENDING/177 UNREVIEWED/15历史BLOCKED，不能声称已消费为MISMATCH；历史BLOCKED不代表当前CPU加载失败。候选不应用。
 
-后续GLM G28建立新Qt证据和有效观察契约，Gemini V19用新图重做逐部位/边缘观察，并运行ledger证明被接受。见[交接](agent-next-handoff.md)。
+新证据和逐部位观察已有[G28](g28-touch-report.md)、[V19](v19-touch-visual.md)交付报告，完整范围及ledger接受状态仍需独立复核。当前任务见[交接](agent-next-handoff.md)。

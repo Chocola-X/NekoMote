@@ -1,13 +1,13 @@
 # G13 / G14 / G15 / V10 独立复核
 
-基线 `fed812e`，复核 Codex / GPT-6（精确变体未暴露）。当前状态以本记录和协作清单为准。
+基线 `fed812e`，复核 Codex / GPT-6（精确变体未暴露）。本记录仅描述该基线，当前状态见[摘要](review-agents-current.md)。
 
 | 交付 | 独立结论 |
 | --- | --- |
 | G13 | 接受为全目录诊断证据：195条，180 OK/15已知求值FAIL；720条件、7200区域点、1440截图。复核40094个路径/hash记录、8700个原始result，缺失/错hash为0。不认证全目录视觉或可见触摸 |
 | G14 | 接受自动入口，修复默认discover误启动现存Qt二进制、GPU锁及CLI负例。显式Qt入口12项通过；默认Python180项中170通过、10跳过。尺寸断言仍不能替代像素对照 |
 | G15-A | 共享Qt桥可保留，本轮三个QML初态与冻结真实WebGL对照通过 |
-| G15-B | 未验收为Plasma壁纸：静态插件未提供宿主动态导入；包缺WallpaperItem/config绑定与schema；组件无独立播放调度、真实非GL状态未实现。交G16补齐 |
+| G15-B | 未验收为Plasma壁纸：静态插件未提供宿主动态导入；包缺WallpaperItem/config绑定与schema；组件无独立播放调度、真实非GL状态未实现。后续补齐见[G16](g16-plasma-report.md) |
 | V10 | 撤回18 MATCH/2 MISMATCH及候选READY实测结论。逐姿态证据未绑定、候选边缘/近空白没有请求响应、下身可见性描述错误。重分类20 PENDING_EVIDENCE、160 UNREVIEWED、15 BLOCKED_INPUT；两个候选不应用 |
 
 ## 已完成修复与实测
@@ -23,8 +23,8 @@
 先前Fraise采样误用originX=80对比参考originX=0，作废产物保存在 `qml-pixels/`；最终逐条读取参考JSON参数，不扩大门槛。
 截图属于诊断GPU→CPU读回，不进入正式播放和性能测量。没有测全应用零分配、功耗或长时稳定性。
 
-## 当前不可选型号
+## 当期不可选型号（后续已解除）
 
-`coconut-hawaii-a`属于已知15项CPU拒绝。`UnsupportedTransform`是几何语义拒绝，不是声音失败；首个节点不等于全部缺口。
+当期`coconut-hawaii-a`属于15项CPU拒绝；后续正式单边界继承已解除该拒绝，见[正式语义](inheritance-semantics.md)。`UnsupportedTransform`是几何语义拒绝，不是声音失败；首个节点不等于全部缺口。
 历史 `030512d/a814cbd`曾近似接受部分继承，`a858f01`恢复拒绝：当时Coconut对照仍有8.876px几何误差、13111个超差像素，见 `review-2026-10-07.md`。
-不能用旧版“能加载”认证画面正确，也不能按日文图层名字跳过变形。GLM G17整理当前支持缺口及历史变化，Codex负责准确语义和最终验收。
+不能用旧版“能加载”认证画面正确，也不能按日文图层名字跳过变形。历史字段扫描见[G17](g17-support-gaps.md)；当前未闭合范围见[缺口清单](known-defects.md)。

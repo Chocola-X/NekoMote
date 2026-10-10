@@ -26,6 +26,6 @@ Debug/Release 39 个 CTest 入口（GPU 入口含 3 用例）、ASan/UBSan 38 �
 
 本次发布构建基线：GCC 15.1.1、Release/LTO、AMD Ryzen 7 5800H、KDE/X11、RTX 3060 Laptop / 575.64.03；chocola-date-a 固定 head_LR=15/head_UD=-20/head_slant=10/body_LR=-15/body_UD=20，431 节点、33 图元、4224 顶点。预热 120，连续 2000 次 **evaluate+build_frame** CPU 毫秒 P50=0.628749、P95=0.655709、P99=0.719409。不含 GPU/呈现、窗口、截图、功耗或帧率调度，不能与完整壁纸方案比较。源码基点 4195cd0 加本次场景改动；完整日志保留 build/evidence/p3-scene-benchmark.log。
 
-下一步：用原驱动 GL 状态确认 stencil 作用域/嵌套与颜色保护运算，建立后端无源字段的遮罩协议，再做复杂模型固定姿态、完整身体、缩放和背景图像对照。未支持字段保持显式诊断，不能进入正式加载作为近似。
+遮罩/颜色保护与后续静态对照已在[P4记录](p4-static-composition.md)及正式回归中推进；本页历史失败不作为当前修复任务。未支持语义继续明确拒绝，当前范围见[摘要](review-agents-current.md)。
 
 最新 Fraise 子步骤确认了 meshSyncChildMask=0/1/8 的不同传播方式、细小/细长图像的最小两轴细分，以及透明辅助遮罩不参与颜色绘制但仍贡献 alpha。四个固定姿态的全部实际顶点/UV/三角形通过，三张图像通过、纵向转头剩一个耳尖像素 FAIL。静态诊断与完整播放均在 CPU 放置和缩放后求曲面，最终 View 只做画布中心投影；pose probe 使用冻结参照的显式位置/比例作为输入。详细边界、字段与完整动画 FAIL 见 [子同步证据](validation/p6-child-synchronization.json)。

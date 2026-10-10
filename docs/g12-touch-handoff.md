@@ -32,5 +32,5 @@ python3 tools/touch_audit/run_touch_audit.py --reference-root ../NekoWebShow \
 全目录去掉 `--model`。报告必须在新输出内；不复用原证据路径，不再使用旧机器绝对路径。
 工具内部持 GPU 锁，调用者不要再次套同一锁。输入为呈现方向中心输出像素、Y向下，不翻转X。
 缺资产/错误/CPU拒绝/无区域/未测分别保留；无区域仍核对外点。
-下一批 GLM G13 用修补后的冻结工具执行全目录来源及命中/图像覆盖，见 [协作清单](agent-workboard.md)。
+G13已运行，后续来源/Qt证据有G28/V19交付；当前任务见[协作清单](agent-workboard.md)，不重复领用旧任务。
 不改核心、反应、资产或外部素材来使账本通过。

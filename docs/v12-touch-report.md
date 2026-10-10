@@ -8,4 +8,4 @@
 
 严格撤回无效reference后：**3 PENDING_EVIDENCE、177 UNREVIEWED、15 BLOCKED_INPUT**，两个候选PENDING且不应用。Fraise胸部中心输出Y应为357.5，PNG Y=897.5，不能将作者Y反转成442.5。
 
-下一批Gemini V14实际观察，GLM G21准备独立来源与真实点；按[交接](agent-next-handoff.md)执行，不再实现自动观察生成器或固定PASS计数测试。
+后续来源与观察记录见[G28](g28-touch-report.md)、[V19](v19-touch-visual.md)，交付与独立验收分开统计。当前任务见[交接](agent-next-handoff.md)；不得自动生成观察结论或固定PASS计数。

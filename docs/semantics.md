@@ -13,7 +13,7 @@
 | mesh.cc | 未验证 | 保留任意数量有限分量，不能假定和 bp 一样为 32 |
 | meshCombine / meshSyncChildMask | 代表 0/1/8 已验证 | 空白变形层与图像层嵌套；需单变量与组合输入实验 |
 | content.mask | 未验证 | 很多非零值对应内容属性存在位，不应直接当成 alpha 遮罩 ID |
-| inheritMask / transformOrder | 代表继承已验证；0x7fc 等拒绝 | 保留原值并记录参考实验；不能直接全部继承父矩阵 |
+| inheritMask / transformOrder | 代表继承及单边界0x7fc已验证；嵌套/其他未验证位拒绝 | 正式公式与范围见[继承语义](inheritance-semantics.md)，不能直接全部继承父矩阵 |
 | stencilCompositeMaskLayerList | type=5 单层 union 已验证 | motion 实例内引用、每次清空及裁切见 P4；嵌套/反向仍拒绝；blank-only 已验证为空覆盖 |
 | metadata.customPartsOrder | 未验证 | 主模型值为字符串数字，不是解析后的 motion 名称；禁止当作当前部件绘制顺序 |
 | variableList.frameList | 结构已验证 | 是标记帧列表；不能据此声称获得运行时默认值 |

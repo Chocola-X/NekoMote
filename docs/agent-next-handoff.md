@@ -1,6 +1,6 @@
 # 当前独立任务交接
 
-当前HEAD `39762b6`，已有用户架构草稿，本轮只完善文档。用户最新优先级：先让GLM下沉player的UI与控制切换，为后续Vulkan保持解耦。详细范围/所有权/负例/视觉和性能门槛见[专项交接](wallpaper-application-handoff.md)。接手声明实际base与文件，保护未提交工作；GPU用`build/gpu-validation.lock`，不注入系统输入，原素材只读。每阶段验证后commit，标真实Agent/Model/Context。
+实现基线 `39762b6`，已有用户架构草稿，本轮只完善文档。用户最新优先级：先让GLM下沉player的UI与控制切换，为后续Vulkan保持解耦。详细范围/所有权/负例/视觉和性能门槛见[专项交接](wallpaper-application-handoff.md)。接手声明实际base与文件，保护未提交工作；GPU用`build/gpu-validation.lock`，不注入系统输入，原素材只读。每阶段验证后commit，标真实Agent/Model/Context。
 
 | 顺序 | 负责人 | 任务与退出条件 |
 | --- | --- | --- |

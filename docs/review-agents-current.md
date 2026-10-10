@@ -1,6 +1,6 @@
 # 当前整合与接手摘要
 
-2026-10-10，HEAD `39762b6`。本轮为用户架构草稿完善与协作计划调整，没有实现代码或重跑引擎验收。以[规范](../AGENTS.md)、[专项交接](wallpaper-application-handoff.md)、[清单](agent-workboard.md)和[任务交接](agent-next-handoff.md)为准。
+2026-10-10，实现基线 `39762b6`。本轮为用户架构草稿完善与协作计划调整，没有实现代码或重跑引擎验收。以[规范](../AGENTS.md)、[专项交接](wallpaper-application-handoff.md)、[清单](agent-workboard.md)和[任务交接](agent-next-handoff.md)为准。
 
 当前偏离：application主要是单模型Session；资产目录/配置、异步角色切换/渐变和GL UI仍在player，Plasma又新增目录扫描、切换和QML控制面板。下阶段先GLM G31A共享Controller并迁移player，随后G31B共享UI与GL执行拆分并迁移player；G32再扩ABI、升级薄C宿主并收拢Plasma。没有要求重写现有求值核心。
 

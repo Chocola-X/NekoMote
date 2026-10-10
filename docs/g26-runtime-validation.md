@@ -9,4 +9,4 @@
 | 暂停/locator | 同seed60步与120步前缀一致；native locator确实移动 | 没有实际暂停恢复调用；没有locator参照/触摸投影阈值 |
 | 性能 | runtime CLI的局部CPU时间采样 | 无分配计数、无ASan执行证据；renderer/application为整进程加载截图耗时，RSS累计算法无效，不认证稳态/无泄漏 |
 
-静态入口 `tools/g26_validation/run_45_combos.py` 已删除按变量名豁免失败；旧manifest仍记原分类，复核结论以本页及新review-manifest为准。`run_allocation_count.py` 现明确仅旧计时采样入口，未实现的分配/ASan不再声称执行。GLM [G29](agent-next-handoff.md)补实际暂停、locator参照、分配/ASan与195动态；C8仅接管语义诊断。正式声音背景、UI/渐变/reset、长期/真实桌面仍在路线图，不全部转交Codex实现。
+静态入口 `tools/g26_validation/run_45_combos.py` 已删除按变量名豁免失败；旧manifest仍记原分类，复核结论以本页及新review-manifest为准。`run_allocation_count.py` 现明确仅旧计时采样入口，未实现的分配/ASan不再声称执行。G29已提交后续验证报告，实际覆盖仍待独立复核（参见[g29](g29-validation-report.md)）；本页只纠正G26当期声明，当前任务见[交接](agent-next-handoff.md)。正式声音背景、UI/渐变/reset、长期/真实桌面仍在路线图，不全部转交Codex实现。

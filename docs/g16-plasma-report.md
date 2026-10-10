@@ -9,6 +9,6 @@
 - 常态与固定诊断分离、禁止真实指针污染固定图；异步截图/save检查、专属回调context及窗口销毁后检查GPU计数。
 - 新SDK宿主nekomote_plasma_package_probe：真正KPackage+Containment+WallpaperItem加载，临时XDG配置仅在workspace。Chocola/Fraise显示、配置页实例/schema、实际坏资产错误通过。
 
-普通Qt组件三个一致初态对WebGL差0；实际Plasma包常态截图另作目视证据，不混称像素认证。正常时间推进、暂停恢复、隐藏/失败、software窗口与单次图形重建通过；完整交互/多次配置变更/多屏/卸载长跑交GLM G19。
+普通Qt组件三个一致初态对WebGL差0；实际Plasma包常态截图另作目视证据，不混称像素认证。正常时间推进、暂停恢复、隐藏/失败、software窗口与单次图形重建通过；后续G19配置重建及生命周期复核见[记录](agent-review-g19-g21.md)；真实桌面多屏/长期验收仍未完成，不重新分派已完成的G19。
 
 SDK可用，未安装正式用户包或改正在运行桌面。声音/背景服务、桌面图标及正式安装仍未验收；不声明性能收益。

@@ -24,4 +24,4 @@
 
 证据 `build/evidence/codex-inheritance-review-2026-10-09/`：`cached-matrix/manifest.json`、`gpu/manifest.json`、`unit-all.log`、`benchmark.json/stdout`；source/binary/asset/reference/result hash及argv已保存。参照沿用GLM冻结图/trace，未重采WebGL。工具`certified:false`保持。v7/v8失败假设与一次明确标记的旧二进制误跑保存，不计通过。
 
-**以下为当时未合入的历史状态，已被正式整合记录替代。** 正式195初态180OK/15FAIL沿用；新候选仅通过三个代表的部分静态条件，其余型号、组合/动态/物理/locator与稳态性能交G25。主分支继续拒绝0x7fc，重新编译主分支不会解除这些错误。GLM不再反复改公式；新反例交Codex处理，证据通过后Codex再整合。任务见[交接](agent-next-handoff.md)。
+候选阶段已结束，`920245e`正式整合单边界0x7fc并解除旧15加载FAIL，见[正式整合](review-g25-integration.md)。本页不再分派G25或要求主分支保持旧拒绝；剩余语义及应用验收按[当前任务](agent-next-handoff.md)执行。

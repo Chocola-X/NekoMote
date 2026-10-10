@@ -66,7 +66,7 @@ GPU 实际执行时间、呈现 FPS 或功耗，也不据此宣称相对旧实�
 两例几何/像素通过，但精度未达标，后续由 Codex 推导，不能放宽阈值。
 非零 X 物理快照的源对照尚未完成（实测镜像素材的快照 X 为零）；合成测试覆盖
 非单位缩放、origin、移动锚点、正负外力及 reset，不代替该源对照。
-余下 CPU 失败、0x7fc、嵌套遮罩、UI/渐变/reset 和实际 Qt Quick/Plasma 验收继续执行。
+单边界0x7fc和旧15 CPU加载失败已在[正式整合](review-g25-integration.md)闭合；本页历史计数不代表当前。两标量/嵌套及应用退出条件按[当前缺口](known-defects.md)继续记录。
 
 本轮早期临时脚本误用相同 PNG 输出路径，使 `source-variable.png`、`source-substring.png`
 及其旧像素报告无效；随后另路径重新捕获 `*-official.*`，最终验收只引用新文件。
@@ -98,4 +98,4 @@ env -u DISPLAY -u WAYLAND_DISPLAY ctest --preset asan --output-on-failure
 ```
 
 schema 重建输入必须先完成来源核对；不要用当前有问题的 Coconut 外部 PNG 覆盖已验证素材。
-批量来源审计交 GLM G11，独立画面复核交 Gemini V8；新任务使用新输出目录并冻结工具。
+G11来源审计和V8复核已执行；现有证据保留，不重复领用。当前分工见[任务交接](agent-next-handoff.md)。

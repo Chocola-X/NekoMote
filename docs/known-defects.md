@@ -1,27 +1,16 @@
-# 当前缺口
+# 当前缺口与待验收范围
 
-更新：2026-10-08。已闭合的默认 Milk 启动、Fraise B 缺失可选遮罩、镜像姿态及独立高光裁剪不再列为待办。验证边界见 [当前摘要](review-agents-current.md) 和 [C6 输入交接](c6-input-review-handoff.md)。
+更新：2026-10-10，实现基线 `39762b6`。只列未闭合或尚未最终验收的范围，不把历史失败当当前故障。单边界0x7fc、旧15型号加载失败、Fraise镜像/可选遮罩和覆盖图540px偏移已修，不再列为待实现。G27/G28/G29/V19有后续交付报告，本轮文档清理未复核全部证据。
 
-| 范围 | 缺口 | 所有者 |
+| 范围 | 当前缺口 | 负责人/任务 |
 | --- | --- | --- |
-| 求值 | 15 项 CPU FAIL：4 个 Azuki B、Cinnamon maid 和 10 个 Coconut；精确 0x7fc、嵌套遮罩等仍拒绝，不恢复旧近似 | Codex C5 |
-| 数值精度 | 新增镜像角色缩放/外力组合有两个标量略超 1e-5 的反例；几何/拓扑通过不代替标量门槛。非零 X 物理快照的镜像源实验待补 | Codex C5 |
-| 启动/恢复 | 不支持角色仍退出，缺可恢复界面、目录能力标记及明确未知角色选择行为 | Codex C6 |
-| UI | 确定性动态回放、标题/淡出画面对照与注视/触摸隔离未闭合；字体/图元稳态分配未测 | Codex C6，Gemini 后续视觉任务 |
-| 会话/资源 | 角色渐变共同时间、线性合成、背景 reset/重入、声音失败及连续切换回收待验收 | Codex C6 |
-| 触摸数据 | 镜像放置的坐标回归已修；静态区域与立绘/动作的细微偏差待逐型号核对，不用数据补偿映射错误 | GLM G13、Gemini V10、Codex整合 |
-| 素材来源 | 195项实际图集重审已完成：194匹配，Coconut dress外部PNG仍不符；项目使用已核实正确图集 | 已记录，新增素材修复另行授权 |
-| 覆盖/性能 | 180 CPU OK 不认证画面；195 项视觉/交互、整机同条件资源/功耗与 8–24 小时运行未认证 | P7/P9 |
-| 图形窗口 | 超高GLFW窗口截图底部裁切；同条件Qt与WebGL一致，根因未闭合。Qt曾短时约1FPS，默认复测3秒91/12秒684次提交，原因未确定，未测实际呈现FPS | Codex C7 |
-| 桌面/发布 | 独立Qt Quick GPU合成/resize/DPI/释放重建已验证；真实Plasma、多屏、驱动故障、Qt回调极端分配失败及安装/卸载仍未验收 | Codex C7，P9/P10 |
+| 壁纸应用层 | player仍拥有目录/配置、异步切换/渐变与UI，Plasma存在重复业务 | GLM G31A/G31B优先抽取并迁移player，G32再收拢ABI/Plasma |
+| 渲染解耦 | player UI混合布局/命中与GL上传/shader；公共数据/资源边界需满足后端替换 | G31B后端无关UI与GL执行分离；未来Vulkan，本轮不实现新后端 |
+| 求值/精度 | 3个bust_LR20仍FAIL待诊断；未验证嵌套/其他继承语义继续拒绝；两镜像外力标量反例和非零X快照对照未闭合 | Codex C8；[正式继承](inheritance-semantics.md)、[标量原始记录](c5-mirror-mask-handoff.md) |
+| 资源/线程 | Plasma背景接口在GUI侧直接修改render线程使用的数据；异步候选/GPU就绪/失败事务/卸载需统一所有权 | G31明确契约、G32整改壳；未做本轮TSan或驱动故障注入 |
+| 服务与时间 | 正式共享声音背景、角色/背景共同暂停时间预算、reset/重入、连续切换资源回收未最终验收 | G31保留现有能力并统一控制；G30共享服务、Codex复核 |
+| 触摸/UI | 触摸候选不应用；逐型号区域贴合、UI事件隔离、动态姿态仍需严格证据 | Gemini按新共享UI与有效证据观察；G28/V19后续结果待范围复核 |
+| 覆盖/性能 | 195初态通过不等于全动态；G29交付矩阵/分配/暂停报告待范围复核，locator/ASan/整应用与设备线程覆盖不自动PASS | G31受影响性能验证；Codex抽核G29；后续全动态/长期 |
+| 图形宿主/桌面 | 早期GLFW超高截图裁切/Qt低FPS观察未完成归因；隔离包/安装提交不证明真实桌面、多屏、休眠、context失效或8–24h稳定 | G32/V20及P9；安装/桌面配置按实际授权 |
 
-15 个 CPU FAIL：
-
-```text
-azuki-maid-b, azuki-maid-b-custard, azuki-santa-b, azuki-wintermaid-b,
-cinnamon-maid, coconut-dress, coconut-dress-a, coconut-hawaii-a,
-coconut-maid, coconut-maid-a, coconut-maid-a-4yo, coconut-santa,
-coconut-swimsuit-a, coconut-wintermaid, coconut-yukata
-```
-
-Coconut dress 与 Vanilla santa 的图集归因见 C5 交接：前者保留项目内正确纹理，后者已更新项目内错误纹理。两项均以解码 RGBA 字节对比官方上传，不能用旧背景混用的“93%差异”判断模型。缺失/失败型号保留在 195 分母中，不把结构成功、正式拒绝或近似画面视为完成。
+真实素材缺失/损坏按来源记录，不以结构导入或目录通过推定画面。Coconut dress来源差异和Vanilla santa项目图集修复记录留在[C5证据](c5-mirror-mask-handoff.md)、C6与冻结账本，不再分派已完成图集重审。当前执行与验收顺序见[专项交接](wallpaper-application-handoff.md)。

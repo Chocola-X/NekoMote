@@ -1,5 +1,7 @@
 # P5 原生动画子步骤（进行中）
 
+本页为已实现动画语义及阶段采样记录，历史FAIL/测试数量按当时版本保留；当前缺口以[清单](known-defects.md)为准，不据此重新领取已完成实现。
+
 2026-10-04。已接入原生主时间线、已验证的表情/Eye 路径及自动眨眼、并行与待机差分、60 Hz 作者时钟及普通窗口。仍是显式诊断；完整动画/物理播放器未认证。P3/P4 既有精度和嵌套验收也未闭合。
 
 ## 数据和运行时契约
@@ -44,7 +46,7 @@ build/dev/bin/nekomote_pose --animation-diagnostic --asset /path/to/model.nkm.js
   --plays '[{"label":"待機ループ00","flags":3}]' --benchmark 2000 --output benchmark.json
 ```
 
-参考复现见 tools/reference_capture/README.md。截图入口在指定作者步骤冻结，实时入口按单调时间推进；Renderer 仍只处理源无关顶点/命令协议。GeometryScene 提供最大容量，预览在加载时 reserve，变形/资源切换时不扩容 GPU 缓冲。联合 PlaybackInstance 已集成物理与自动眨眼；时间线权重淡入淡出、反应和音频仍待实现。
+参考复现见 tools/reference_capture/README.md。截图入口在指定作者步骤冻结，实时入口按单调时间推进；Renderer 仍只处理源无关顶点/命令协议。GeometryScene 提供最大容量，预览在加载时 reserve，变形/资源切换时不扩容 GPU 缓冲。联合 PlaybackInstance 已集成物理与自动眨眼；时间线权重淡入淡出后续已实现（见本页后文），反应/声音已有会话与player实现；正式服务与新迁移验收见[当前任务](agent-next-handoff.md)。
 
 发布态 CPU 作者步进+参数绑定+几何求值+构帧基线见下方独立记录；不包含 GPU、swap、音频/物理或桌面，不声称完整方案 FPS/功耗收益。
 

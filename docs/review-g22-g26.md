@@ -20,4 +20,4 @@ Release/WERROR/LTO plasma 构建通过；141核心用例37694断言，真实导�
 
 Fraise B 重拍五条件 clean/overlay；初态与 WebGL、idle120 与正式 player/WebGL 都容差2零超差，alpha差0；120步日志确认executed=120，首delta0，最终GPU计数平衡。已查看初态参照与校正覆盖图；未据此认证另外两型号/所有区域。没有测量新性能收益，未跑ASan、195动态或真实桌面。
 
-新证据 `build/evidence/codex-review-g22-g26/`（manifest冻结代码、二进制、素材、命令/日志/图及比较）；旧证据不覆盖。安装未执行，桌面/用户配置未修改。下一批按[交接](agent-next-handoff.md)：GLM G27部署优先，G28触摸重拍、G29验收补齐；Gemini V19/V20消费新证据；Codex保留C8实际语义反例及最终复核。
+新证据 `build/evidence/codex-review-g22-g26/`（manifest冻结代码、二进制、素材、命令/日志/图及比较）；旧证据不覆盖。安装未执行，桌面/用户配置未修改。G27/G28/G29/V19后续已有提交，本页不再分派这些旧任务。当前执行G31应用层迁移，见[交接](agent-next-handoff.md)；后续交付报告与独立验收分开。

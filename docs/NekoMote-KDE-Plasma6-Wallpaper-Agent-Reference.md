@@ -1,6 +1,6 @@
 # NekoMote × KDE Plasma 6 动态壁纸插件：Agent 开发参考
 
-> 目标：回答 `kde-plasma-wallpaper-questions.md` 中 C.1–C.14 的 64 个问题，并给出可直接指导 P8 接入实现的架构建议。  
+> 范围：2026-10-05的KDE/Qt API调查材料，保留来源与宿主技术参考；旧提问册和最小原型任务已清理。项目架构/优先级以[规范](../AGENTS.md)和[G31专项交接](wallpaper-application-handoff.md)为准，不执行本文中的旧阶段安排。
 > 基准环境：Plasma 6.3.6、Qt 6.9.1、KF6、X11；未来兼容 Wayland。  
 > 更新时间：2026-10-05。  
 > 结论优先级：**[阻塞] / [重要] / [后续] / [参考]**。  

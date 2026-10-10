@@ -12,4 +12,4 @@ CodeArts / GLM-5.2，候选base `d297827`，提交 `f054c8a`；Codex于2026-10-0
 
 源码/二进制/资产/27参照及现存结果hash已复核一致。raw在 `build/evidence/g25-acceptance/`；`frozen-manifest.json` 与五子manifest真实。初态195、扩组合45缺逐argv/stdout/stderr，旧“逐条全部保留”撤回；旧machine.cpu是运行模式文本，不能当硬件型号。同源码不保证二进制hash相同。
 
-未完成：其余12型号WebGL、扩组合参照、动态/物理恢复、locator/触摸、实际模型分配。浏览器和动态工具实际存在，没有启动失败证据；“无浏览器/动态工具”的阻塞解释撤回。Codex本轮补了12型号24静态及三代表idle120，其余工作见GLM G26。G22/G24尚未实现，不能因G25交付报告就从清单消失。
+G25当时未补齐的12型号静态与三代表idle120后续已由Codex补验并正式整合，见[整合记录](review-g25-integration.md)。G26有42静态PASS/3 FAIL及9动态终态证据；G27/G28/G29/V19也已提交。各后续报告独立验收范围见[摘要](review-agents-current.md)，不再分派旧任务或声称G22/G24尚未开发。

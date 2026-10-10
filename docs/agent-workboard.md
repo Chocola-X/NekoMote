@@ -1,6 +1,6 @@
 # Agent 协作任务
 
-当前HEAD `39762b6`；用户要求先收拢壁纸应用层，详见[专项交接](wallpaper-application-handoff.md)、[任务交接](agent-next-handoff.md)、[路线图](../ROADMAP.md)。以下区分待实现、已提交报告与独立验收。
+实现基线 `39762b6`；用户要求先收拢壁纸应用层，详见[专项交接](wallpaper-application-handoff.md)、[任务交接](agent-next-handoff.md)、[路线图](../ROADMAP.md)。以下区分待实现、已提交报告与独立验收。
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |

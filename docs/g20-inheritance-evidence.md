@@ -1,13 +1,7 @@
-# G20：部分继承候选与证据
+# G20：被否决继承候选的证据记录
 
-执行CodeArts / GLM-5.2，base1b02ce8；Codex复核基线82ab3b6。正式0x7fc拒绝保持，15型号仍不支持。
+执行CodeArts / GLM-5.2，base`c241af8`；Codex复核基线`82ab3b6`。本页保留失败试验，不是当前实现或待办。单边界0x7fc后来已[正式整合](review-g25-integration.md)，旧15型号加载拒绝已解除。
 
-已有三代表（coconut-santa、azuki-santa-b、cinnamon-maid）6腕链、8组原PSB/WebGL PNG/JSON/trace和6候选CPU结果。隔离worktree `../NekoMote-g20-candidate` 的geometry_scene.cpp仍未提交；保留该工作，不作为正式实现。
+旧候选v3阻断curve_parent，先deform父世界原点再加子相对偏移。三default误差<.001px，但body_LR30误差8.945889/1.143875/.101425px均失败；Codex独立重算Coconut为8.945888519px，37 primitives、missing0。旧“纯X残差”解释撤回：Coconut/Azuki的Y残差约1.506/.420px。
 
-实际当前候选为v3：阻断curve_parent，先deform父世界原点，再加子相对偏移；原报告主体v1直接deform子世界原点与当前源码不一致。三default几何误差<.001px；body_LR=30分别8.945889/1.143875/.101425px，均不通过。Codex独立CPU重算Coconut得8.945888519、37 primitives、missing0，命令/二进制/源码/trace hash已保存于本轮review目录。
-
-撤回“纯X/Y完全匹配”：Coconut tex0078有约1.506px Y残差，Azuki约.420px。不能据纯X假设推导公式。native_trace.trace.json与WebGL trace相同，不是独立原生证据；现有正确数值比较由nekomote_pose实际原生求值对WebGL trace完成，并不使用该文件。158.91、body5/15候选数值及其他变体没有完整原始结果，暂不采信。
-
-G20是部分研究交付，未完成195静态来源、多变量/固定步矩阵、完整根链/资源域/control-point原值、候选截图差分及全部冻结。当前证据在 `build/evidence/g20-inheritance/`；准确公式和支持恢复仍未完成。
-
-下一步GLM G23优先补可重复CPU链/XY残差与独立参照、冻结候选；Codex审公式和代表抽检，过几何/拓扑/图像门槛后才进入正式路径。不能按型号、标签或近似fallback放行。
+`native_trace.trace.json`与WebGL trace相同，不能作独立native证据；实际比较来自nekomote_pose原生求值。158.91/body5/body15等不完整原始值不作验收。raw在`build/evidence/g20-inheritance/`及当期review目录，失败候选仅用于溯源，不按标签或常数补偿恢复近似放行。正式公式见[继承语义](inheritance-semantics.md)，现阶段不再分派G23或执行旧候选工作树。

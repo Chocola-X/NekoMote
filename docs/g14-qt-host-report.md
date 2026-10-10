@@ -13,4 +13,4 @@ Context: docs/agent-workboard.md G14
 
 原最小Qt ABI构建矩阵记录仍保留历史证据。dev145/ASan143本轮未重新全量执行，不用其数量宣布本轮新增覆盖。
 
-结果与下一步见[独立复核](agent-review-2026-10-08.md)、[协作清单](agent-workboard.md)；旧长日志见Git历史及build。
+当期结果见[独立复核](agent-review-2026-10-08.md)，当前任务见[协作清单](agent-workboard.md)；旧长日志见Git历史及build。

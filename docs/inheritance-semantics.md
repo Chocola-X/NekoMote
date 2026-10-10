@@ -21,4 +21,4 @@ vertex = S(W(v)) + P(q) - q
 - 三代表idle120/body_LR30，固定clock1000/seed1、单步1、物理全1；120步物理通道标量和最终完整帧/图通过。最大标量约5.96e-8，最终几何≤0.001px。源码/二进制/素材/参照/命令与结果冻结在 `build/evidence/codex-g25-integration/`；不是完整动态/暂停恢复认证。
 - 合成回归验证解析曲面、非零平移、rotation90、sync1/8、自身combine、参数/输出缓存更新、稳态零分配及嵌套拒绝。实际GPU图已抽看Coconut Hawaii和idle120腕部。
 
-G25/V17原静态证据可保留；静态参数条带并非动画，且旧条带排序错误，不能证明动态连续性。剩余45组合参照、动作/过渡/暂停恢复、locator/触摸、真实模型及application/renderer/UI分配与长期运行见[交接](agent-next-handoff.md)。正式支持该继承语义不等于195全动态/视觉认证。
+G25/V17原静态证据可保留；静态参数条带并非动画，且旧条带排序错误，不能证明动态连续性。后续G26已独立复核42组合及9动态终态，3bust条件仍FAIL；G27/G28/G29/V19有交付报告，其验收范围按[当前摘要](review-agents-current.md)区分。未闭合的全动态/locator/分配与长期范围按[交接](agent-next-handoff.md)执行，不重复分派已有实现。正式支持该继承语义不等于195全动态/视觉认证。

@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-10壁纸应用层边界纠正。当前HEAD `39762b6`；G27/G28/G29/V19已有交付报告，未由本轮文档工作重新验收。优先GLM G31A/G31B：从player抽共享Controller与后端无关UI，并逐阶段迁移player；之后G32 ABI/Plasma收拢。application/ui不依赖图形API，为后续Vulkan保留后端无关绘制和设备资源契约，当前只实现OpenGL。见[摘要](docs/review-agents-current.md)。
+版本：执行中，2026-10-10壁纸应用层边界纠正。实现基线 `39762b6`；G27/G28/G29/V19已有交付报告，未由本轮文档工作重新验收。优先GLM G31A/G31B：从player抽共享Controller与后端无关UI，并逐阶段迁移player；之后G32 ABI/Plasma收拢。application/ui不依赖图形API，为后续Vulkan保留后端无关绘制和设备资源契约，当前只实现OpenGL。见[摘要](docs/review-agents-current.md)。
 
 ## 1. 产品与开发策略
 

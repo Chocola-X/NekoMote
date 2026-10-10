@@ -6,4 +6,4 @@
 
 旧15 clean/overlay存在两项缺陷：default/idle120图相同，固定步在首帧后配置而未执行120步；两个生成工具的Y换算少了窗口半高540px。lower_body条件也不证明全部下身/区域入画。这是证据工具问题，不是模型数据MISMATCH。
 
-Codex已修工具/线程边界并重拍Fraise五条件，初态/idle120对WebGL和player通过，executed120确认；新raw `build/evidence/codex-review-g22-g26/`。完整三型号新证据、步数freeze及可消费ledger由GLM [G28](agent-next-handoff.md)补齐，Gemini V19重新逐图观察。触摸候选不应用。
+Codex已修工具/线程边界并重拍Fraise五条件，初态/idle120对WebGL和player通过，executed120确认；新raw `build/evidence/codex-review-g22-g26/`。后续新证据和观察已有[G28](g28-touch-report.md)、[V19](v19-touch-visual.md)交付报告，完整三型号范围、步数freeze及ledger接受状态待独立复核。触摸候选不应用。

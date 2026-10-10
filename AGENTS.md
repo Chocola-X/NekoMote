@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至2026-10-10，正式HEAD `39762b6`：单边界0x7fc与195初态沿用，3 bust_LR20 FAIL待诊断，嵌套/2标量与全动态未认证。G27/G28/G29/V19后续提交已在仓库，报告与独立验收须区分，本轮文档整理未复核其全部证据。player仍拥有资产扫描、异步角色切换、渐变与UI；Plasma新增了重复扫描/QML控制面板。用户现要求GLM优先G31A/G31B抽取共享壁纸应用层并迁移player，之后再扩ABI和收拢Plasma。application/ui不得依赖OpenGL或Vulkan，首个GPU实现仍用render_gl，为后续Vulkan保留清晰数据与资源边界，不创建空后端。候选触摸数据不应用；正式桌面/声音背景/长期/多屏仍未最终验收。按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
+截至2026-10-10，实现基线 `39762b6`：单边界0x7fc与195初态沿用，3 bust_LR20 FAIL待诊断，嵌套/2标量与全动态未认证。G27/G28/G29/V19后续提交已在仓库，报告与独立验收须区分，本轮文档整理未复核其全部证据。player仍拥有资产扫描、异步角色切换、渐变与UI；Plasma新增了重复扫描/QML控制面板。用户现要求GLM优先G31A/G31B抽取共享壁纸应用层并迁移player，之后再扩ABI和收拢Plasma。application/ui不得依赖OpenGL或Vulkan，首个GPU实现仍用render_gl，为后续Vulkan保留清晰数据与资源边界，不创建空后端。候选触摸数据不应用；正式桌面/声音背景/长期/多屏仍未最终验收。按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
