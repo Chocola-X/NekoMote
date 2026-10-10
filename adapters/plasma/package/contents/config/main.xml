@@ -7,5 +7,6 @@
     <entry name="originX" type="Double"><default>0</default></entry>
     <entry name="originY" type="Double"><default>400</default></entry>
     <entry name="scale" type="Double"><default>1</default></entry>
+    <entry name="assetsDir" type="String"><default></default></entry>
   </group>
 </kcfg>

@@ -1,11 +1,17 @@
 #include "wallpaper_item.hpp"
 
+#include <QDir>
+#include <QDirIterator>
 #include <QEvent>
+#include <QFileInfo>
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QUrl>
+#include <QVariantList>
+#include <QVariantMap>
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <stdexcept>
@@ -82,6 +88,96 @@ int NekoWallpaperItem::status() const
 QString NekoWallpaperItem::errorString() const
 {
     return error_string_;
+}
+
+QString NekoWallpaperItem::assetsDir() const
+{
+    return assets_dir_;
+}
+
+void NekoWallpaperItem::setAssetsDir(const QString& value)
+{
+    if (assets_dir_ == value)
+        return;
+    assets_dir_ = value;
+    emit assetsDirChanged();
+}
+
+QVariantList NekoWallpaperItem::scanCharacters() const
+{
+    QVariantList result;
+    if (assets_dir_.isEmpty())
+        return result;
+    const QDir chars_dir(QDir(assets_dir_).filePath("characters"));
+    if (!chars_dir.exists())
+        return result;
+    const auto dirs = chars_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    for (const auto& name : dirs)
+    {
+        const QDir char_dir(chars_dir.filePath(name));
+        const QString model_path = char_dir.filePath("model.nkm.json");
+        const QString session_path = char_dir.filePath("session.nks.json");
+        if (!QFileInfo::exists(model_path) || !QFileInfo::exists(session_path))
+            continue;
+        QVariantMap entry;
+        entry["name"] = name;
+        entry["modelUrl"] = QUrl::fromLocalFile(model_path).toString();
+        entry["sessionUrl"] = QUrl::fromLocalFile(session_path).toString();
+        const auto dash = name.indexOf('-');
+        entry["group"] = dash > 0 ? name.left(dash) : name;
+        result.append(entry);
+    }
+    return result;
+}
+
+QVariantList NekoWallpaperItem::scanBackgrounds() const
+{
+    QVariantList result;
+    if (assets_dir_.isEmpty())
+        return result;
+    const QDir bg_dir(QDir(assets_dir_).filePath("backgrounds"));
+    if (!bg_dir.exists())
+        return result;
+    const auto files = bg_dir.entryList({"*.png"}, QDir::Files, QDir::Name);
+    for (const auto& name : files)
+    {
+        QVariantMap entry;
+        entry["name"] = QFileInfo(name).completeBaseName();
+        entry["url"] = QUrl::fromLocalFile(bg_dir.filePath(name)).toString();
+        result.append(entry);
+    }
+    return result;
+}
+
+bool NekoWallpaperItem::setBackground(const QUrl& url)
+{
+    if (!state_ || status_ != 1)
+        return false;
+    try
+    {
+        const auto path = to_local_path(url);
+        const auto image = nekomote_image_load_png(path.c_str());
+        if (!image)
+            return false;
+        state_->background_texture.id = 0xB0000001u;
+        state_->background_texture.image.reset(image);
+        state_->background_dirty = true;
+        update();
+        return true;
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+}
+
+void NekoWallpaperItem::clearBackground()
+{
+    if (!state_)
+        return;
+    state_->background_texture.image.reset();
+    state_->background_dirty = true;
+    update();
 }
 
 unsigned NekoWallpaperItem::queryRendererCreated() const

@@ -9,87 +9,35 @@ ColumnLayout {
     property real cfg_originX: 0
     property real cfg_originY: 400
     property real cfg_scale: 1
+    property string cfg_assetsDir: ""
 
     spacing: 8
 
-    FileDialog {
-        id: modelDialog
-        title: "选择模型文件"
-        nameFilters: ["NekoMote 模型 (*.nkm.json)", "所有文件 (*)"]
-        onAccepted: cfg_modelFile = selectedFile.toString()
-    }
-    FileDialog {
-        id: sessionDialog
-        title: "选择会话文件"
-        nameFilters: ["NekoMote 会话 (*.nks.json)", "所有文件 (*)"]
-        onAccepted: cfg_sessionFile = selectedFile.toString()
+    FolderDialog {
+        id: assetsDialog
+        title: "选择 assets 目录"
+        onAccepted: cfg_assetsDir = selectedFolder.toString()
     }
 
-    Label { text: "模型文件"; font.bold: true }
+    Label { text: "Assets 目录"; font.bold: true }
     RowLayout {
         Layout.fillWidth: true
         TextField {
             Layout.fillWidth: true
-            text: cfg_modelFile
-            onTextEdited: cfg_modelFile = text
-            placeholderText: "file:///…/model.nkm.json"
-            readOnly: false
+            text: cfg_assetsDir
+            onTextEdited: cfg_assetsDir = text
+            placeholderText: "file:///…/assets"
         }
         Button {
             text: "浏览…"
-            onClicked: modelDialog.open()
+            onClicked: assetsDialog.open()
         }
     }
     Label {
-        text: cfg_modelFile.length > 0 && !cfg_modelFile.startsWith("file:///")
-              ? "⚠ URL 应以 file:/// 开头" : ""
-        color: "#aa6600"
-        visible: text.length > 0
-    }
-
-    Label { text: "会话文件"; font.bold: true }
-    RowLayout {
+        text: "设置后壁纸会自动加载第一个角色。\n右下角 ☰ 按钮可切换角色、背景和调整缩放。"
+        color: "#666666"
+        font.pixelSize: 11
+        wrapMode: Text.Wrap
         Layout.fillWidth: true
-        TextField {
-            Layout.fillWidth: true
-            text: cfg_sessionFile
-            onTextEdited: cfg_sessionFile = text
-            placeholderText: "file:///…/session.nks.json"
-        }
-        Button {
-            text: "浏览…"
-            onClicked: sessionDialog.open()
-        }
-    }
-    Label {
-        text: cfg_sessionFile.length > 0 && !cfg_sessionFile.startsWith("file:///")
-              ? "⚠ URL 应以 file:/// 开头" : ""
-        color: "#aa6600"
-        visible: text.length > 0
-    }
-
-    Label { text: "位置与缩放"; font.bold: true }
-    RowLayout {
-        Label { text: "X:" }
-        SpinBox {
-            from: -8192; to: 8192
-            value: Math.round(cfg_originX)
-            onValueModified: cfg_originX = value
-        }
-        Label { text: "Y:" }
-        SpinBox {
-            from: -8192; to: 8192
-            value: Math.round(cfg_originY)
-            onValueModified: cfg_originY = value
-        }
-    }
-    RowLayout {
-        Label { text: "缩放:" }
-        SpinBox {
-            from: 10; to: 300
-            value: Math.round(cfg_scale * 100)
-            onValueModified: cfg_scale = value / 100.0
-        }
-        Label { text: "%" }
     }
 }

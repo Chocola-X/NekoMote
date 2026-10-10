@@ -5,6 +5,7 @@
 #include <QString>
 #include <QTimer>
 #include <QUrl>
+#include <QVariantList>
 #include <memory>
 
 #include "session_item.hpp"
@@ -27,6 +28,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
+    Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
     QML_ELEMENT
     QML_NAMED_ELEMENT(NekoWallpaperItem)
   public:
@@ -46,6 +48,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     bool paused() const;
     int status() const;
     QString errorString() const;
+    QString assetsDir() const;
 
     void setModelFile(const QUrl& value);
     void setSessionFile(const QUrl& value);
@@ -53,6 +56,12 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void setOriginY(float value);
     void setScale(float value);
     void setPaused(bool value);
+    void setAssetsDir(const QString& value);
+
+    Q_INVOKABLE QVariantList scanCharacters() const;
+    Q_INVOKABLE QVariantList scanBackgrounds() const;
+    Q_INVOKABLE bool setBackground(const QUrl& url);
+    Q_INVOKABLE void clearBackground();
     // Input isolation/notifications may be enabled at any time via synchronize.
     // Fixed playback replaces the CPU initial state before renderer creation only;
     // late requests fail without mutating the live session or its status.
@@ -69,6 +78,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     void pausedChanged();
     void statusChanged();
     void errorStringChanged();
+    void assetsDirChanged();
 
   protected:
     void hoverEnterEvent(QHoverEvent* event) override;
@@ -103,6 +113,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::SessionItemBase
     bool diagnostic_inputs_{false}, diagnostic_notifications_{false};
     int status_{0};
     QString error_string_;
+    QString assets_dir_;
     std::uint64_t playback_revision_{0};
     std::array<nekomote::qt_quick::Input, 32> inputs_{};
     std::size_t input_count_{0};

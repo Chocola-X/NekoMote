@@ -35,6 +35,9 @@ struct SessionState
     Handle<nekomote_program, nekomote_program_destroy> program{nullptr, nekomote_program_destroy};
     Handle<nekomote_session, nekomote_session_destroy> session{nullptr, nekomote_session_destroy};
     std::vector<Texture> textures;
+    Texture background_texture;
+    bool background_dirty{false};
+    bool has_background{false};
     int fixed_steps{0};
     int trace_frames{0};
     bool deterministic{false};

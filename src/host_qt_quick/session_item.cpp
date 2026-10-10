@@ -199,9 +199,37 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             if (resize_output)
             {
                 check(nekomote_session_set_output_size(state_->session.get(), size.width(),
-                                                       size.height()),
+                                                        size.height()),
                       "set output size");
                 output_size_ = size;
+            }
+            if (state_->background_dirty)
+            {
+                if (state_->background_texture.image)
+                {
+                    if (!background_renderer_)
+                    {
+                        background_renderer_.reset(
+                            require(nekomote_renderer_create(load_gl), "create background renderer"));
+                    }
+                    const auto* bg_img = state_->background_texture.image.get();
+                    check(nekomote_renderer_upload_texture(
+                              background_renderer_.get(), state_->background_texture.id,
+                              nekomote_image_width(bg_img), nekomote_image_height(bg_img),
+                              nekomote_image_pixels(bg_img), nekomote_image_byte_count(bg_img)),
+                          "upload background texture");
+                    check(nekomote_session_set_background(
+                              state_->session.get(), state_->background_texture.id,
+                              nekomote_image_width(bg_img), nekomote_image_height(bg_img)),
+                          "set background");
+                    state_->has_background = true;
+                }
+                else
+                {
+                    nekomote_session_clear_background(state_->session.get());
+                    state_->has_background = false;
+                }
+                state_->background_dirty = false;
             }
             const auto now = std::chrono::steady_clock::now();
             const bool first = !state_->initialized_time;
@@ -239,17 +267,51 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
             // prepare selects protected composition; its intermediate output is
             // allocated at the explicit resize boundary after that selection.
             if (resize_output)
+            {
                 check(nekomote_renderer_resize_output(renderer_.get(), size.width(), size.height()),
                       "resize renderer");
+                if (background_renderer_)
+                    check(nekomote_renderer_resize_output(background_renderer_.get(), size.width(),
+                                                          size.height()),
+                          "resize background renderer");
+            }
             nekomote_render_view view{};
             view.origin_x = static_cast<float>(size.width()) * .5f;
             view.origin_y = static_cast<float>(size.height()) * .5f;
             view.scale = view.alpha = 1;
             view.flip_x = nekomote_program_mirror(state_->program.get());
-            check(nekomote_renderer_render(
-                      renderer_.get(), {framebufferObject()->handle(), size.width(), size.height()},
-                      view, NEKOMOTE_TARGET_CLEAR),
-                  "render frame");
+            const auto target =
+                nekomote_render_target{framebufferObject()->handle(), size.width(), size.height()};
+            if (state_->has_background && background_renderer_)
+            {
+                const auto bg_frame = nekomote_session_background_frame(state_->session.get());
+                if (bg_frame.command_count > 0)
+                {
+                    check(nekomote_renderer_prepare(background_renderer_.get(), bg_frame),
+                          "prepare background");
+                    nekomote_render_view bg_view{};
+                    bg_view.origin_x = 0;
+                    bg_view.origin_y = 0;
+                    bg_view.scale = bg_view.alpha = 1;
+                    check(nekomote_renderer_render(background_renderer_.get(), target, bg_view,
+                                                    NEKOMOTE_TARGET_CLEAR),
+                          "render background");
+                }
+                else
+                {
+                    check(nekomote_renderer_render(renderer_.get(), target, view,
+                                                    NEKOMOTE_TARGET_CLEAR),
+                          "clear for background");
+                }
+                check(nekomote_renderer_render(renderer_.get(), target, view,
+                                                NEKOMOTE_TARGET_PRESERVE),
+                      "render frame over background");
+            }
+            else
+            {
+                check(nekomote_renderer_render(renderer_.get(), target, view, NEKOMOTE_TARGET_CLEAR),
+                      "render frame");
+            }
             if (state_->trace_frames > 0)
             {
                 --state_->trace_frames;
@@ -322,7 +384,9 @@ class SessionRenderer final : public QObject, public QQuickFramebufferObject::Re
     }
     std::shared_ptr<SessionState> state_;
     Handle<nekomote_renderer, nekomote_renderer_destroy> renderer_{nullptr,
-                                                                   nekomote_renderer_destroy};
+                                                                    nekomote_renderer_destroy};
+    Handle<nekomote_renderer, nekomote_renderer_destroy> background_renderer_{nullptr,
+                                                                               nekomote_renderer_destroy};
     QSizeF logical_size_;
     QSize output_size_;
     QSGRendererInterface::GraphicsApi graphics_api_{QSGRendererInterface::Unknown};
