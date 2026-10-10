@@ -75,9 +75,9 @@ def main():
     p.add_argument("--browser", type=pathlib.Path,
                    default=pathlib.Path("/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome"))
     p.add_argument("--pose", type=pathlib.Path,
-                   default=ROOT / "build/release/bin/nekomote_pose")
+                   default=ROOT / "build/plasma/bin/nekomote_pose")
     p.add_argument("--preview", type=pathlib.Path,
-                   default=ROOT / "build/release/bin/nekomote_preview")
+                   default=ROOT / "build/plasma/bin/nekomote_preview")
     p.add_argument("--gpu-lock", type=pathlib.Path,
                    default=ROOT / "build/gpu-validation.lock")
     args = p.parse_args()

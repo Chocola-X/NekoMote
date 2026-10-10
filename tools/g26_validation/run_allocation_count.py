@@ -106,11 +106,11 @@ def main():
     p.add_argument("--output", type=pathlib.Path,
                    default=ROOT / "build/evidence/g26-validation/allocation")
     p.add_argument("--pose", type=pathlib.Path,
-                   default=ROOT / "build/release/bin/nekomote_pose")
+                   default=ROOT / "build/plasma/bin/nekomote_pose")
     p.add_argument("--preview", type=pathlib.Path,
-                   default=ROOT / "build/release/bin/nekomote_preview")
+                   default=ROOT / "build/plasma/bin/nekomote_preview")
     p.add_argument("--player", type=pathlib.Path,
-                   default=ROOT / "build/release/bin/nekomote_player")
+                   default=ROOT / "build/plasma/bin/nekomote_player")
     p.add_argument("--gpu-lock", type=pathlib.Path,
                    default=ROOT / "build/gpu-validation.lock")
     args = p.parse_args()
