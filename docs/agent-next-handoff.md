@@ -2,16 +2,9 @@
 
 基线为本轮Codex G22/G24/G26复核提交，见[复核](review-g22-g26.md)。GLM承担开发与批量运行大头，Gemini实际看图，Codex集中语义/生命周期与最终抽核。先声明base/文件；原素材只读，输入只用应用回调；GPU用 `build/gpu-validation.lock`。每阶段验证后commit，真实Agent/Model/Context；报告≤一页，raw放新build目录，冻结输入/工具/二进制/命令/日志/输出。失败只挂起对应条件，继续独立任务。
 
-## GLM G27：完整、可搬移的Plasma部署（先做）
+## GLM G27：完整、可搬移的Plasma部署（已完成）
 
-范围：`adapters/plasma/CMakeLists.txt`、stage/verify/install工具、`tests/plasma`、最小独立部署宿主。保留已验证生命周期实现，不重写核心。
-
-1. 建立完整安装布局：KPackage、QML qmldir/plugin/qmltypes及native库；遵循XDG_DATA_HOME和显式prefix，证明实际Plasma能发现模块。不要靠用户导出build路径。验证用Containment不默认安装到用户桌面。CMake安装产物使用相对RPATH；不把本机build路径写入发布库。
-2. 将stage搬到新隔离prefix，清除LD_LIBRARY_PATH和build QML导入路径；用**未链接nekomote、无build路径宏**的Qt/KDE宿主动态import。可运行系统依赖保留，不能访问原stage/build才能找到NekoMote。校验加载/有图/config/暂停恢复/resize/DPI/卸载；readelf检查RUNPATH/NEEDED，记录动态插件和库的实际加载路径。截图证明不能单独替代动态加载路径证据。
-3. verifier任一步失败必须非零；加入缺库/缺plugin/损坏manifest/无加载图负例，均真正到达对应分支。安装前完整验证；安装卸载只处理本项目拥有文件，保留用户无关内容，记录文件/hash，非法prefix明确拒绝。先在临时XDG根完成 install→status→独立动态加载→uninstall→无残留，提交可审查命令。
-4. 自动测试使用CMake传入实际target路径，不硬编码build/plasma；直接Python测试不隐式争抢GPU，统一锁入口。保存新证据不在tearDown丢弃；RSS按单进程测量，不用累计子进程差值。修recovery中good旧state引用，以及整轮创建/销毁计数（覆盖中间实例），不要用新实例created=1证明只重建一次。
-
-验收：Release/WERROR、负例、临时prefix安装/迁移/动态宿主全部通过；报告明确尚未真实桌面测试。**不自动改当前桌面、创建OS用户或重启shell**。给出独立测试用户的安装/撤回说明，交Codex复核后由用户安排实际登录测试。缺口阻塞部署，不阻塞G28/G29。
+报告见 `docs/g27-plasma-deploy-report.md`。CMake install()+相对RPATH+独立动态宿主验证全部通过。下一步交Codex复核部署/服务边界，Gemini V20在真实桌面观察。
 
 ## GLM G28 → Gemini V19：重建可消费的触摸证据
 

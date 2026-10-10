@@ -92,6 +92,12 @@
             "configurePreset": "asan",
             "output": { "outputOnFailure": true },
             "execution": { "noTestsAction": "error", "stopOnFailure": false }
+        },
+        {
+            "name": "plasma",
+            "configurePreset": "plasma",
+            "output": { "outputOnFailure": true },
+            "execution": { "noTestsAction": "error", "stopOnFailure": false }
         }
     ]
 }

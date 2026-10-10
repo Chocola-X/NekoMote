@@ -268,7 +268,8 @@ int run(int argc, char** argv)
     qputenv("XDG_DATA_HOME", QByteArray::fromStdString((abs_output / "data").string()));
     qputenv("XDG_CONFIG_HOME", QByteArray::fromStdString((abs_output / "config").string()));
     qputenv("XDG_CACHE_HOME", QByteArray::fromStdString((abs_output / "cache").string()));
-    qputenv("QML_IMPORT_PATH", QByteArray(NEKOMOTE_QML_IMPORT_PATH));
+    if (qgetenv("QML_IMPORT_PATH").isEmpty())
+        qputenv("QML_IMPORT_PATH", QByteArray(NEKOMOTE_QML_IMPORT_PATH));
     if (opts.dpi != 1)
         qputenv("QT_SCALE_FACTOR", QByteArray::number(opts.dpi));
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -705,7 +706,14 @@ int run(int argc, char** argv)
             const QPointer old_native(get_native());
             const auto old_state = old_native->session_state();
             set_config("modelFile", bad_model_url);
-            wait_failed();
+            wait_for(
+                [&]
+                {
+                    auto* n = find_native(containment);
+                    return old_native.isNull() && n && n->property("status").toInt() == 2 &&
+                           old_state->renderer_created.load() ==
+                               old_state->renderer_destroyed.load();
+                });
             {
                 auto* n = find_native(containment);
                 if (n->property("errorString").toString().isEmpty())

@@ -1,5 +1,6 @@
 # Plasma wallpaper QML module and isolated probe. Default OFF; requires Qt and ABI.
 find_package(Qt6 6.9.1 EXACT REQUIRED COMPONENTS Qml Quick OpenGL)
+find_package(Python3 COMPONENTS Interpreter QUIET)
 
 find_package(KF6Config CONFIG REQUIRED)
 find_package(KF6Package CONFIG REQUIRED)
@@ -16,7 +17,8 @@ add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp)
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES
     AUTOMOC ON
-    POSITION_INDEPENDENT_CODE ON)
+    POSITION_INDEPENDENT_CODE ON
+    INSTALL_RPATH "")
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nekomote_plasma_qml PUBLIC
     nekomote::host_qt_quick Qt6::Quick Qt6::OpenGL)
@@ -28,6 +30,12 @@ qt_add_qml_module(nekomote_plasma_qml
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper
 )
+
+# QML plugin needs to find libnekomote_plasma_qml.so at runtime via relative RPATH.
+# Install layout: <prefix>/qml/NekoMote/Wallpaper/plugin.so, <prefix>/lib/libnekomote_plasma_qml.so
+# $ORIGIN/../../../lib resolves from qml/NekoMote/Wallpaper/ to <prefix>/lib/
+set_target_properties(nekomote_plasma_qmlplugin PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../../../lib")
 
 # Limit the generated free-function exception to Qt registration output.
 set_source_files_properties(
@@ -82,35 +90,44 @@ target_link_libraries(nekomote_plasma_package_probe PRIVATE
     Qt6::Widgets Qt6::Quick nekomote_warnings)
 add_dependencies(nekomote_plasma_package_probe nekomote_plasma_qmlplugin nekomote_plasma_package)
 
-# Deployable stage: self-contained directory with native library, QML plugin,
-# qmldir, qmltypes and KPackage. Independent hosts load via QML import + LD path,
-# not build-tree RPATH.
+# Install layout:
+#   <prefix>/lib/libnekomote_plasma_qml.so
+#   <prefix>/qml/NekoMote/Wallpaper/{qmldir,qmltypes,plugin.so}
+#   <prefix>/share/plasma/wallpapers/org.nekomote.wallpaper/
+#   <prefix>/share/plasma/plasmoids/org.nekomote.validation/
+install(TARGETS nekomote_plasma_qml
+    LIBRARY DESTINATION lib
+    COMPONENT plasma)
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir
+    ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes
+    DESTINATION qml/NekoMote/Wallpaper
+    COMPONENT plasma)
+install(TARGETS nekomote_plasma_qmlplugin
+    LIBRARY DESTINATION qml/NekoMote/Wallpaper
+    COMPONENT plasma)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper
+    DESTINATION share/plasma/wallpapers
+    COMPONENT plasma)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/probe/containment/
+    DESTINATION share/plasma/plasmoids/org.nekomote.validation
+    COMPONENT plasma)
+
+# Deployable stage: self-contained directory with correct RPATH via cmake --install.
+# Independent hosts load via QML import + relative RPATH, not build-tree paths.
 set(NEKOMOTE_STAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/stage)
 add_custom_target(nekomote_plasma_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/lib
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${NEKOMOTE_STAGE_DIR}/package
+    COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR}
+        --prefix ${NEKOMOTE_STAGE_DIR} --component plasma
     COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:nekomote_plasma_qml>
-        ${NEKOMOTE_STAGE_DIR}/lib/
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir
-        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes
-        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
-    COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:nekomote_plasma_qmlplugin>
-        ${NEKOMOTE_STAGE_DIR}/qml/NekoMote/Wallpaper/
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper
-        ${NEKOMOTE_STAGE_DIR}/package/org.nekomote.wallpaper
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/probe/containment
-        ${NEKOMOTE_STAGE_DIR}/package/org.nekomote.validation
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../tools/plasma_stage_manifest.py
+        ${NEKOMOTE_STAGE_DIR}/_gen_manifest.py
+    COMMAND ${Python3_EXECUTABLE} ${NEKOMOTE_STAGE_DIR}/_gen_manifest.py
+        ${NEKOMOTE_STAGE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E rm -f ${NEKOMOTE_STAGE_DIR}/_gen_manifest.py
     DEPENDS nekomote_plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_package
-    COMMENT "Staging deployable Plasma wallpaper package")
+    COMMENT "Staging deployable Plasma wallpaper package via cmake --install")
 
 add_custom_target(nekomote_plasma_stage_clean
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}

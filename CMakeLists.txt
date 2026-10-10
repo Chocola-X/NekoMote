@@ -127,7 +127,7 @@ if(NEKOMOTE_BUILD_TESTS)
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
         set_tests_properties(plasma_package_probe PROPERTIES
             LABELS "qt;gpu" TIMEOUT 180
-            ENVIRONMENT "NEKOMOTE_TEST_MODEL=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/model.nkm.json;NEKOMOTE_TEST_SESSION=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/session.nks.json")
+            ENVIRONMENT "NEKOMOTE_TEST_MODEL=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/model.nkm.json;NEKOMOTE_TEST_SESSION=${CMAKE_SOURCE_DIR}/assets/characters/coconut-casual/session.nks.json;NEKOMOTE_PLASMA_PROBE=$<TARGET_FILE:nekomote_plasma_package_probe>;NEKOMOTE_PLASMA_STAGE=${CMAKE_BINARY_DIR}/adapters/plasma/stage;NEKOMOTE_EVIDENCE_DIR=${CMAKE_BINARY_DIR}/evidence/plasma-tests")
     endif()
     if(Python3_Interpreter_FOUND)
         add_test(NAME python_tools

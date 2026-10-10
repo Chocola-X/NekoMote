@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
-"""G22 Plasma package probe integration tests.
+"""G27 Plasma package probe integration tests.
 
 Runs the actual KPackage probe in capture, lifecycle, recovery, bad-asset and
-invalid-config modes. Tests requiring real assets are SKIPPED when
-NEKOMOTE_TEST_MODEL/SESSION are unset. DPI 1 and 1.5 are both exercised.
-CPU resource and peak RSS are reported separately from renderer counts.
+invalid-config modes. Probe path and evidence dir come from CMake environment
+variables (NEKOMOTE_PLASMA_PROBE, NEKOMOTE_EVIDENCE_DIR) — no hardcoded
+build paths. Peak RSS is measured per-process via /proc, not cumulative
+children deltas. Evidence is preserved in NEKOMOTE_EVIDENCE_DIR, not discarded.
 """
 import hashlib
 import json
 import os
-import resource
-import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
-PROBE = REPO / "build/plasma/bin/nekomote_plasma_package_probe"
+PROBE = Path(os.environ.get("NEKOMOTE_PLASMA_PROBE", ""))
 MODEL = os.environ.get("NEKOMOTE_TEST_MODEL", "")
 SESSION = os.environ.get("NEKOMOTE_TEST_SESSION", "")
-LOCK = REPO / "build/gpu-validation.lock"
+EVIDENCE = Path(os.environ.get("NEKOMOTE_EVIDENCE_DIR", REPO / "build/evidence/plasma-tests"))
 
 
 def sha256_file(path: Path) -> str:
@@ -33,33 +31,52 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def peak_rss_kb(pid: int) -> int:
+    try:
+        status = Path(f"/proc/{pid}/status").read_text()
+        for line in status.splitlines():
+            if line.startswith("VmHWM:"):
+                return int(line.split()[1])
+    except (OSError, ValueError, IndexError):
+        pass
+    return 0
+
+
 def run_probe(args, timeout=120):
     if not PROBE.is_file():
-        raise unittest.SkipTest("plasma package probe not built")
+        raise unittest.SkipTest(f"plasma probe not found: {PROBE}")
     env = dict(os.environ)
-    env["LD_LIBRARY_PATH"] = str(REPO / "build/plasma/lib") + ":" + env.get("LD_LIBRARY_PATH", "")
-    start_rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    env.pop("LD_LIBRARY_PATH", None)
     start = time.monotonic()
-    result = subprocess.run(
-        [str(PROBE)] + args, capture_output=True, text=True, env=env, timeout=timeout
+    proc = subprocess.Popen(
+        [str(PROBE)] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, env=env
     )
+    rss = 0
+    while proc.poll() is None:
+        rss = max(rss, peak_rss_kb(proc.pid))
+        time.sleep(0.05)
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise
     elapsed = time.monotonic() - start
-    peak_rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss - start_rss
-    return result, elapsed, peak_rss
+    rss = max(rss, peak_rss_kb(proc.pid))
+    result = subprocess.CompletedProcess(args=[str(PROBE)] + args, returncode=proc.returncode,
+                                         stdout=stdout, stderr=stderr)
+    return result, elapsed, rss
 
 
 def new_output():
-    base = REPO / "experiments"
-    base.mkdir(exist_ok=True)
-    d = base / f"g22-test-{os.getpid()}-{int(time.monotonic()*1e6)}"
+    EVIDENCE.mkdir(parents=True, exist_ok=True)
+    d = EVIDENCE / f"test-{os.getpid()}-{int(time.monotonic()*1e6)}"
     return d
 
 
 class PackageProbeTests(unittest.TestCase):
     def tearDown(self):
-        out = getattr(self, "_output", None)
-        if out and out.exists():
-            shutil.rmtree(out)
+        pass
 
     def _require_assets(self):
         if not MODEL or not SESSION or not Path(MODEL).is_file() or not Path(SESSION).is_file():
