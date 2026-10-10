@@ -6,13 +6,9 @@
 
 报告见 `docs/g27-plasma-deploy-report.md`。CMake install()+相对RPATH+独立动态宿主验证全部通过。下一步交Codex复核部署/服务边界，Gemini V20在真实桌面观察。
 
-## GLM G28 → Gemini V19：重建可消费的触摸证据
+## GLM G28 → Gemini V19：重建可消费的触摸证据（GLM部分已完成）
 
-范围：`tools/touch_audit`、对应Python测试；固定步/seed及overlay坐标已由Codex修，勿重新放宽晚到固定步请求。参考新 `build/evidence/codex-review-g22-g26/` Fraise包；旧G24 raw不覆盖。
-
-1. 三型号×五条件重拍。显式等待帧完成并校验executed步数/FBO/首delta/seed；freeze脚本拒绝旧步数日志或失败，即使PNG存在。源/session字段与42点请求响应hash冻结；保留clean/overlay。校验下身及相关椭圆都入画，必要时新增明确缩放条件，不能沿用“完整入画”假设。
-2. 为新Qt条件建立显式证据manifest和观察输入契约，迁移`generate_v9_ledger.py`调用者，接受新冻结条件但**不删除input/tool/binary/asset/png/hash/点绑定验证**。合成负例覆盖错hash/错条件/缺probe/缺source/步数错/不一致PNG。验证器必须拒绝旧V15未绑定观察；用合成有效观察证明成功路径，不代替真人观察。
-3. 实际Qt图至少默认和idle120对同输入player/WebGL；不能用native自身图冒充参照。将证据包和空观察模板交Gemini，重拍/视觉/候选状态分别报告。
+报告见 `docs/g28-touch-report.md`。三型号×五条件重拍、69/69 冻结检查、132 点绑定、30 负例测试、Qt vs player RMSE 对比全部通过。证据包和空观察模板在 `build/evidence/g28-touch/`，交 Gemini V19 逐图观察。
 
 Gemini V19：逐图检查五部位边界、镜像/坐标/透明遮罩及真实点击点；发现区域偏差先记录区域与偏差/证据，不直接改session或模型。填写实际验证器可消费观察，运行ledger证明被接受。补V18未绑定的12型号24静态与3idle120观察（已有Codex冻结证据，不需盲重拍），不要把终态当连续性或认定bust差异无公式反例。
 

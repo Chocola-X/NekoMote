@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""G24-2: 用 Plasma probe (Qt/FBO) 生成触摸条件 clean 图。
+"""G28/G24-2: 用 Plasma probe (Qt/FBO) 生成触摸条件 clean 图。
 
 为 Fraise B/Cinnamon maid-b/Coconut santa-b 生成 default/idle120/moved/scaled_half
 及下身进入画幅条件图。每条件保存 probe stdout/stderr、PNG、FBO 尺寸、
 alpha bbox、来源 hash。GPU 串行（flock）。
+
+每条件显式校验 probe stdout 中的 executed 步数、seed、rendered_frames，
+拒绝步数不匹配或帧未完成的捕获。RPATH 由 CMake install 设置，不需要
+LD_LIBRARY_PATH。
 """
 from __future__ import annotations
 
@@ -13,6 +17,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import time
@@ -30,6 +35,10 @@ CONDITIONS = [
 WIDTH = 800
 HEIGHT = 1080
 SEED = 1
+
+CAPTURE_RE = re.compile(
+    r"capture:\s+fixed\s+steps=(\d+)\s+executed=(\d+)\s+seed=(\d+)\s+rendered_frames=(\d+)"
+)
 
 
 def sha256_file(path):
@@ -61,6 +70,39 @@ def alpha_bbox(png_path):
             return {"size": list(img.size), "alpha_bbox": list(bbox) if bbox else None}
     except Exception as e:
         return {"error": str(e)}
+
+
+def parse_capture_diagnostics(stdout):
+    """Extract executed steps, seed, rendered_frames from probe stdout.
+
+    Returns (parsed_dict, errors). The probe emits a line like:
+      capture: fixed steps=120 executed=120 seed=1 rendered_frames=3
+    """
+    errors = []
+    match = CAPTURE_RE.search(stdout or "")
+    if not match:
+        return None, ["capture diagnostics line not found in stdout"]
+    steps, executed, seed, rendered = (int(v) for v in match.groups())
+    parsed = {"steps": steps, "executed": executed, "seed": seed,
+              "rendered_frames": rendered}
+    return parsed, errors
+
+
+def validate_capture(parsed, expected_steps, expected_seed):
+    """Verify probe executed the requested steps and seed."""
+    errors = []
+    if parsed is None:
+        errors.append("no capture diagnostics; cannot verify execution")
+        return errors
+    if parsed["steps"] != expected_steps:
+        errors.append(f"steps mismatch: probe={parsed['steps']} expected={expected_steps}")
+    if parsed["executed"] != expected_steps:
+        errors.append(f"executed mismatch: probe={parsed['executed']} expected={expected_steps}")
+    if parsed["seed"] != expected_seed:
+        errors.append(f"seed mismatch: probe={parsed['seed']} expected={expected_seed}")
+    if parsed["rendered_frames"] < 1:
+        errors.append("rendered_frames < 1; no frame was produced")
+    return errors
 
 
 def main():
@@ -127,11 +169,8 @@ def main():
                     "--steps", str(cond["steps"]),
                     "--seed", str(SEED),
                 ]
-                env = dict(os.environ)
-                lib_path = str(ROOT / "build/plasma/lib")
-                env["LD_LIBRARY_PATH"] = lib_path + ":" + env.get("LD_LIBRARY_PATH", "")
                 t0 = time.monotonic()
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
                 elapsed = time.monotonic() - t0
 
                 png_path = cond_dir / "package.png"
@@ -144,17 +183,33 @@ def main():
                     "ok": result.returncode == 0 and png_path.is_file(),
                     "stdout": result.stdout,
                     "stderr": result.stderr,
+                    "diagnostics": None,
+                    "validation_errors": [],
                 }
+
+                parsed, parse_errors = parse_capture_diagnostics(result.stdout)
+                cond_result["diagnostics"] = parsed
+                cond_result["validation_errors"].extend(parse_errors)
+                if parsed is not None:
+                    cond_result["validation_errors"].extend(
+                        validate_capture(parsed, cond["steps"], SEED))
+                if cond_result["validation_errors"]:
+                    cond_result["ok"] = False
+
                 if png_path.is_file():
                     cond_result["png"] = file_record(png_path, "clean_png")
                     cond_result["image_info"] = alpha_bbox(png_path)
                 else:
                     cond_result["ok"] = False
+                if not cond_result["ok"]:
                     manifest["all_ok"] = False
 
                 manifest["models"][model]["conditions"][cond_name] = cond_result
                 status = "OK" if cond_result["ok"] else "FAIL"
                 print(f"  {model}/{cond_name}: {status} ({elapsed:.1f}s)", file=sys.stderr)
+                if cond_result["validation_errors"]:
+                    for ve in cond_result["validation_errors"]:
+                        print(f"    VALIDATION ERROR: {ve}", file=sys.stderr)
 
     manifest_path = output / "capture-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False, allow_nan=False) + "\n")

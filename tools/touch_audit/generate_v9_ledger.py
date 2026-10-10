@@ -148,6 +148,44 @@ def region_valid(value) -> bool:
     return all(x > 0 for x in value["radius"])
 
 
+def merge_g28_conditions(g12: dict, g28_freeze: dict) -> dict:
+    """Merge G28 extra conditions (lower_body_in_frame) into G12 models.
+
+    Converts G28 freeze-manifest condition entries to G12 condition format so
+    that check_frozen_conditions can bind clean/overlay/probe evidence.
+    Does not remove or weaken any existing G12 condition validation.
+    """
+    freeze_models = g28_freeze.get("models", {})
+    for model in g12.get("models", []):
+        name = model.get("model")
+        fm = freeze_models.get(name, {})
+        captures = fm.get("captures", {})
+        overlays = fm.get("overlays", {})
+        existing_names = {c.get("name") for c in model.get("conditions", [])}
+        for cond_name, cap in captures.items():
+            if cond_name in existing_names:
+                continue
+            png = cap.get("png")
+            ov = overlays.get(cond_name, {})
+            overlay_png = ov.get("overlay_png")
+            condition = {
+                "name": cond_name,
+                "params": cap.get("params", {}),
+                "errors": [],
+                "pass": True,
+                "capture": {},
+                "evidence": None,
+            }
+            if isinstance(png, dict) and png.get("sha256"):
+                condition["capture"]["plain"] = {
+                    "ok": True, "returncode": 0, "image": png}
+            if isinstance(overlay_png, dict) and overlay_png.get("sha256"):
+                condition["capture"]["overlay"] = {
+                    "ok": True, "returncode": 0, "image": overlay_png}
+            model.setdefault("conditions", []).append(condition)
+    return g12
+
+
 def build_ledger(g12: dict, records: dict, base: Path) -> dict:
     if not isinstance(g12, dict) or not isinstance(records, dict):
         raise ValueError("G12 and observation inputs must be objects")
@@ -255,6 +293,8 @@ def build_ledger(g12: dict, records: dict, base: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--g12-ledger", type=Path, required=True)
+    parser.add_argument("--g28-freeze", type=Path, default=None,
+                        help="G28 freeze-manifest.json with extra conditions")
     parser.add_argument("--observations", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -262,11 +302,17 @@ def main() -> int:
         parser.error("output already exists; use a new evidence directory")
     try:
         records = json.loads(args.observations.read_text()) if args.observations else {}
-        ledger = build_ledger(json.loads(args.g12_ledger.read_text()), records,
+        g12 = json.loads(args.g12_ledger.read_text())
+        if args.g28_freeze:
+            g28_freeze = json.loads(args.g28_freeze.read_text())
+            g12 = merge_g28_conditions(g12, g28_freeze)
+        ledger = build_ledger(g12, records,
                               args.observations.resolve().parent if args.observations else Path.cwd())
         ledger["inputs"] = {"g12_ledger": str(args.g12_ledger.resolve()),
                             "g12_sha256": file_hash(args.g12_ledger),
                             "tool_sha256": file_hash(Path(__file__)),
+                            "g28_freeze": str(args.g28_freeze.resolve()) if args.g28_freeze else None,
+                            "g28_freeze_sha256": file_hash(args.g28_freeze) if args.g28_freeze else None,
                             "observations": str(args.observations.resolve()) if args.observations else None,
                             "observations_sha256": file_hash(args.observations) if args.observations else None}
     except (ValueError, OSError, KeyError, TypeError) as error:

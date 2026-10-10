@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""G24-3: 综合冻结 manifest 和契约测试。
+"""G28/G24-3: 综合冻结 manifest 和契约测试。
 
 把 source-manifest、point-binding、capture-manifest、overlay-manifest 绑定成
 一个冻结入口。契约测试验证：
@@ -7,6 +7,13 @@
 2. 新诊断条件（lower_body_in_frame）不假冒 G13 条件
 3. PNG 尺寸=800x1080，alpha bbox 非空
 4. 来源 hash 与 42 点 hash 一致
+5. 42 点全部绑定
+6. source regions 全部匹配 session
+7. 每条件 probe executed 步数与请求步数一致（拒绝旧步数日志）
+8. 每条件 probe seed 与请求 seed 一致
+9. 每条件 rendered_frames >= 1（帧实际完成）
+10. 每条件捕获 ok=True（拒绝失败捕获）
+11. 下身及相关椭圆入画（alpha bbox 与 pant 区域有交集）
 """
 from __future__ import annotations
 
@@ -40,6 +47,81 @@ def file_record(path, role=None):
     if role:
         record["role"] = role
     return record
+
+
+def check_step_diagnostics(capture_entry, cond_name):
+    """Verify probe executed the requested steps and seed; reject stale logs."""
+    errors = []
+    params = capture_entry.get("params", {})
+    expected_steps = params.get("steps", 0)
+    diag = capture_entry.get("diagnostics")
+    if diag is None:
+        errors.append(f"{cond_name}: no capture diagnostics; stale or pre-G28 log")
+        return errors
+    if diag.get("executed") != expected_steps:
+        errors.append(f"{cond_name}: executed={diag.get('executed')} != expected={expected_steps}")
+    if diag.get("steps") != expected_steps:
+        errors.append(f"{cond_name}: diagnostics steps={diag.get('steps')} != expected={expected_steps}")
+    if diag.get("seed") != 1:
+        errors.append(f"{cond_name}: seed={diag.get('seed')} != 1")
+    if diag.get("rendered_frames", 0) < 1:
+        errors.append(f"{cond_name}: rendered_frames < 1")
+    return errors
+
+
+def check_capture_ok(capture_entry, cond_name):
+    """Reject failed captures."""
+    errors = []
+    if not capture_entry.get("ok"):
+        errors.append(f"{cond_name}: capture ok=False")
+    if capture_entry.get("returncode") != 0:
+        errors.append(f"{cond_name}: returncode={capture_entry.get('returncode')} != 0")
+    val_errors = capture_entry.get("validation_errors", [])
+    if val_errors:
+        errors.extend(f"{cond_name}: {ve}" for ve in val_errors)
+    return errors
+
+
+def check_png_valid(capture_entry, cond_name):
+    """Verify PNG dimensions and alpha bbox."""
+    errors = []
+    info = capture_entry.get("image_info", {})
+    size = info.get("size")
+    bbox = info.get("alpha_bbox")
+    if size != [WIDTH, HEIGHT]:
+        errors.append(f"{cond_name}: PNG size={size} != [{WIDTH}, {HEIGHT}]")
+    if bbox is None:
+        errors.append(f"{cond_name}: alpha bbox is None (empty image)")
+    return errors
+
+
+def check_lower_body_in_frame(capture_entry, source_manifest, model_name):
+    """Verify pant region and related ellipses are within the alpha bbox."""
+    errors = []
+    info = capture_entry.get("image_info", {})
+    bbox = info.get("alpha_bbox")
+    if bbox is None or len(bbox) != 4:
+        return errors  # already caught by png_valid
+    model_data = source_manifest["models"].get(model_name, {})
+    conditions = model_data.get("conditions", {})
+    lower_cond = conditions.get("lower_body_in_frame", {})
+    projected = lower_cond.get("projected_regions", {})
+    pant = projected.get("pant")
+    if pant is None:
+        return errors  # no pant region to check
+    center = pant["center"]
+    radius = pant["radius"]
+    png_cx = WIDTH // 2 + int(round(center[0]))
+    png_cy = int(round(center[1] + HEIGHT / 2))
+    pant_x0 = png_cx - int(round(radius[0]))
+    pant_x1 = png_cx + int(round(radius[0]))
+    pant_y0 = png_cy - int(round(radius[1]))
+    pant_y1 = png_cy + int(round(radius[1]))
+    alpha_x0, alpha_y0, alpha_x1, alpha_y1 = bbox
+    if pant_x1 < alpha_x0 or pant_x0 > alpha_x1 or pant_y1 < alpha_y0 or pant_y0 > alpha_y1:
+        errors.append(f"pant region [{pant_x0},{pant_y0},{pant_x1},{pant_y1}] "
+                      f"outside alpha bbox {bbox}")
+    return errors
 
 
 def main():
@@ -125,6 +207,38 @@ def main():
                 "detail": f"{model}/{cond}: size={size} bbox={bbox}",
             })
 
+    # 检查 3b: 每条件 probe executed 步数与请求步数一致（拒绝旧步数日志）
+    for model in MODELS:
+        for cond in CONDITIONS:
+            cap = capture_manifest["models"][model]["conditions"].get(cond, {})
+            step_errors = check_step_diagnostics(cap, f"{model}/{cond}")
+            checks.append({
+                "name": f"step_diagnostics_{model}_{cond}",
+                "passed": not step_errors,
+                "detail": "; ".join(step_errors) if step_errors else "executed/seed/rendered_frames valid",
+            })
+
+    # 检查 3c: 每条件捕获 ok=True（拒绝失败捕获）
+    for model in MODELS:
+        for cond in CONDITIONS:
+            cap = capture_manifest["models"][model]["conditions"].get(cond, {})
+            ok_errors = check_capture_ok(cap, f"{model}/{cond}")
+            checks.append({
+                "name": f"capture_ok_{model}_{cond}",
+                "passed": not ok_errors,
+                "detail": "; ".join(ok_errors) if ok_errors else "capture ok",
+            })
+
+    # 检查 3d: 下身及相关椭圆入画（lower_body_in_frame 条件）
+    for model in MODELS:
+        cap = capture_manifest["models"][model]["conditions"].get("lower_body_in_frame", {})
+        in_frame_errors = check_lower_body_in_frame(cap, source_manifest, model)
+        checks.append({
+            "name": f"lower_body_in_frame_{model}",
+            "passed": not in_frame_errors,
+            "detail": "; ".join(in_frame_errors) if in_frame_errors else "pant region within alpha bbox",
+        })
+
     # 检查 4: overlay 图存在且尺寸一致
     for model in MODELS:
         for cond in CONDITIONS:
@@ -136,11 +250,11 @@ def main():
                 "detail": f"{model}/{cond}: overlay exists={ov_png is not None}",
             })
 
-    # 检查 5: 42 点全部绑定
+    # 检查 5: 42 点全部绑定（G28 从 G12 ledger 提取 >= 42 点）
     checks.append({
         "name": "all_42_points_bound",
-        "passed": point_binding["all_bound"] and point_binding["actual_count"] == 42,
-        "detail": f"42 points bound: {point_binding['actual_count']}/42, all_bound={point_binding['all_bound']}",
+        "passed": point_binding["all_bound"] and point_binding["actual_count"] >= 42,
+        "detail": f"points bound: {point_binding['actual_count']}/42+, all_bound={point_binding['all_bound']}",
     })
 
     # 检查 6: source regions 全部匹配

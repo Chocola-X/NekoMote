@@ -338,7 +338,7 @@ def main():
     parser.add_argument("--probe", required=True)
     parser.add_argument("--player")
     parser.add_argument("--output", required=True)
-    parser.add_argument("--model")
+    parser.add_argument("--model", action="append")
     parser.add_argument("--capture", action="store_true")
     parser.add_argument("--report")
     args = parser.parse_args()
@@ -350,7 +350,7 @@ def main():
         catalog, catalog_hash = catalog_index.load_catalog(reference)
         if not catalog:
             raise ValueError("catalog is empty")
-        names = [args.model] if args.model else sorted(catalog)
+        names = args.model if args.model else sorted(catalog)
         if any(name not in catalog for name in names):
             raise ValueError("requested model is not in catalog")
         if output.exists() or report.exists():

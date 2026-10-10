@@ -24,10 +24,10 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-PLAYER = REPO / "build" / "release" / "bin" / "nekomote_player"
-PROBE = REPO / "build" / "release" / "bin" / "nekomote_session_probe"
+PLAYER = REPO / "build" / "plasma" / "bin" / "nekomote_player"
+PROBE = REPO / "build" / "plasma" / "bin" / "nekomote_playback_probe"
 ASSETS = REPO / "assets" / "characters"
-EVIDENCE = REPO / "build" / "evidence" / "g18-touch-evidence-2026-10-08"
+EVIDENCE = REPO / "build" / "evidence" / "g28-touch-evidence"
 GPU_LOCK = REPO / "build" / "gpu-validation.lock"
 
 MODELS = ["fraise-france-maid-b", "cinnamon-maid-b", "coconut-santa-b"]
