@@ -27,6 +27,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <future>
 #include <vector>
 
 namespace
@@ -330,6 +331,96 @@ CharacterHolder load_character(const player::CharacterEntry& entry, const Option
     return holder;
 }
 
+struct CandidateLoad
+{
+    CharacterHolder holder;
+    std::vector<std::pair<TextureId, ImageRgba8>> textures;
+    std::string error;
+    bool ok{false};
+};
+
+CandidateLoad load_candidate_cpu(const player::CharacterEntry& entry, const Options& o)
+{
+    CandidateLoad result;
+    try
+    {
+        result.holder.name = entry.name;
+        result.holder.model_dir = entry.directory;
+        auto model = asset_io::load_asset(entry.model_path);
+        if (!model.ok)
+            throw std::runtime_error(model.errors.front());
+        auto definition = asset_io::load_session_asset(entry.session_path);
+        if (!definition.ok)
+            throw std::runtime_error(definition.errors.front());
+        auto compiled = application::compile_session(model.asset, definition.asset);
+        if (!compiled.program)
+            throw std::runtime_error(compiled.errors.front());
+        result.holder.program = std::move(compiled.program);
+        const auto& program = *result.holder.program;
+        result.holder.instance = std::make_unique<application::SessionInstance>(
+            program, application::SessionConfig{{o.seed},
+                                                o.seed,
+                                                application::PointerScope::LocalSurface,
+                                                o.mute ? application::AudioMode::Disabled
+                                                       : application::AudioMode::Device});
+        check(result.holder.instance->set_origin(o.origin), &program, result.holder.name);
+        check(result.holder.instance->set_scale(o.scale), &program, result.holder.name);
+        check(result.holder.instance->start(), &program, result.holder.name);
+        check(result.holder.instance->prepare_frame(), &program, result.holder.name);
+        if (!o.mute)
+        {
+            std::vector<model::AudioClip> clips;
+            for (const auto& path : program.audio_paths())
+            {
+                auto clip = asset_io::load_wave(entry.session_path.parent_path() / path);
+                if (!clip.ok)
+                    throw std::runtime_error(clip.error);
+                clips.push_back(std::move(clip.clip));
+            }
+            result.holder.device = std::make_unique<audio::Device>(std::move(clips));
+            const auto deadline = Clock::now() + std::chrono::seconds(6);
+            while (result.holder.device->snapshot().state == audio::DeviceState::Connecting &&
+                   Clock::now() < deadline)
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            const auto snapshot = result.holder.device->snapshot();
+            if (snapshot.state != audio::DeviceState::Ready)
+                throw std::runtime_error("audio device unavailable (error " +
+                                         std::to_string(snapshot.error) +
+                                         "); use --mute for silent playback");
+        }
+        const auto& scene = program.playback().scene();
+        for (const auto& texture : scene.textures())
+        {
+            auto image = asset_io::load_png(entry.model_path.parent_path() / texture.path);
+            if (!image.ok)
+                throw std::runtime_error(image.error);
+            result.textures.emplace_back(texture.id, std::move(image.image));
+        }
+        result.ok = true;
+    }
+    catch (const std::exception& error)
+    {
+        result.error = error.what();
+    }
+    return result;
+}
+
+void finish_candidate_gpu(CandidateLoad& load)
+{
+    auto& holder = load.holder;
+    const auto& program = *holder.program;
+    holder.renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    std::printf("%s\n", holder.renderer->diagnostics().c_str());
+    const auto& scene = program.playback().scene();
+    const auto capacity = scene.frame_capacity();
+    holder.renderer->reserve({capacity.vertices, capacity.indices, capacity.commands,
+                              scene.textures().size(), capacity.mask_commands, capacity.masks});
+    for (const auto& [id, image] : load.textures)
+        holder.renderer->upload_texture(id, image);
+    holder.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    holder.background_renderer->reserve({8, 12, 2, 2});
+}
+
 void apply_background(CharacterHolder& holder, const fs::path& bg_path, double fade_duration)
 {
     auto new_image = asset_io::load_png(bg_path);
@@ -555,17 +646,23 @@ enum class FitPolicy
     FitToWindow
 };
 
-// All fallible loading/preparation belongs to the candidate. Current session,
-// surface callbacks and device ownership remain intact until it is ready.
-bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, Surface& surface,
-                          const player::CharacterEntry& entry, const Options& options,
-                          const fs::path& background, FitPolicy fit_policy)
+// GPU upload, background, fit and ownership transfer. Runs on the main thread
+// after load_candidate_cpu has prepared the candidate on a background thread.
+bool install_candidate(CharacterHolder& current, CharacterHolder& previous, Surface& surface,
+                       CandidateLoad& load, const player::CharacterEntry& entry,
+                       const Options& options, const fs::path& background, FitPolicy fit_policy)
 {
-    CharacterHolder candidate;
-    auto candidate_surface = surface;
+    if (!load.ok)
+    {
+        std::fprintf(stderr, "Cannot switch to %s: %s; current session retained\n",
+                     entry.name.c_str(), load.error.c_str());
+        return false;
+    }
     try
     {
-        candidate = load_character(entry, options);
+        finish_candidate_gpu(load);
+        auto& candidate = load.holder;
+        auto candidate_surface = surface;
         candidate_surface.session = candidate.instance.get();
         candidate_surface.origin = options.origin;
         candidate_surface.scale = options.scale;
@@ -595,6 +692,11 @@ bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, S
         }
         candidate_surface.synchronize_pause();
         check(candidate_surface.error);
+        previous = std::move(current);
+        current = std::move(candidate);
+        surface = candidate_surface;
+        previous.device.reset();
+        return true;
     }
     catch (const std::exception& error)
     {
@@ -602,11 +704,15 @@ bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, S
                      entry.name.c_str(), error.what());
         return false;
     }
-    previous = std::move(current);
-    current = std::move(candidate);
-    surface = candidate_surface;
-    previous.device.reset();
-    return true;
+}
+
+// Synchronous wrapper for diagnostics/check-window mode.
+bool try_switch_character(CharacterHolder& current, CharacterHolder& previous, Surface& surface,
+                          const player::CharacterEntry& entry, const Options& options,
+                          const fs::path& background, FitPolicy fit_policy)
+{
+    auto load = load_candidate_cpu(entry, options);
+    return install_candidate(current, previous, surface, load, entry, options, background, fit_policy);
 }
 
 int run(int argc, char** argv)
@@ -807,6 +913,7 @@ int run(int argc, char** argv)
     float fade_alpha = 1;
     Clock::time_point fade_start;
     int fade_target_character = -1;
+    std::future<CandidateLoad> candidate_future;
     auto switch_character = [&](int index)
     {
         if (index < 0 || index >= static_cast<int>(catalog.characters.size()))
@@ -815,6 +922,9 @@ int run(int argc, char** argv)
             return;
         fade_target_character = index;
         fade_state = CharacterFadeState::CrossFadePending;
+        const auto& entry = catalog.characters[index];
+        candidate_future = std::async(std::launch::async,
+            [entry, o]() { return load_candidate_cpu(entry, o); });
     };
     auto switch_background = [&](int index)
     {
@@ -934,34 +1044,41 @@ int run(int argc, char** argv)
         check(surface.error);
         if (fade_state == CharacterFadeState::CrossFadePending)
         {
-            const auto& entry = catalog.characters[fade_target_character];
-            fs::path background;
-            if (current_background_index >= 0 &&
-                current_background_index < static_cast<int>(catalog.backgrounds.size()))
-                background = catalog.backgrounds[current_background_index].path;
-            if (!try_switch_character(holder, old_holder, surface, entry, o, background,
-                                      config.fit ? FitPolicy::FitToWindow
-                                                 : FitPolicy::KeepConfigured))
+            if (candidate_future.valid() &&
+                candidate_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
             {
-                fade_state = CharacterFadeState::None;
-                fade_target_character = current_character_index;
-                fade_alpha = 1.0f;
+                auto load = candidate_future.get();
+                const auto& entry = catalog.characters[fade_target_character];
+                fs::path background;
+                if (current_background_index >= 0 &&
+                    current_background_index < static_cast<int>(catalog.backgrounds.size()))
+                    background = catalog.backgrounds[current_background_index].path;
+                if (!install_candidate(holder, old_holder, surface, load, entry, o, background,
+                                       config.fit ? FitPolicy::FitToWindow
+                                                  : FitPolicy::KeepConfigured))
+                {
+                    fade_state = CharacterFadeState::None;
+                    fade_target_character = current_character_index;
+                    fade_alpha = 1.0f;
+                }
+                else
+                {
+                    current_character_index = fade_target_character;
+                    config.character = entry.name;
+                    if (!o.no_save)
+                        config.save(config_path);
+                    std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
+                                holder.has_background ? config.background.c_str() : "none");
+                    last_width = 0;
+                    last_height = 0;
+                    fade_state = CharacterFadeState::CrossFade;
+                    fade_alpha = 0.0f;
+                    fade_start = Clock::now();
+                    previous = fade_start; // Loading time is not playback time for the candidate.
+                }
             }
-            else
-            {
-                current_character_index = fade_target_character;
-                config.character = entry.name;
-                if (!o.no_save)
-                    config.save(config_path);
-                std::printf("Character: %s | Background: %s\n", holder.name.c_str(),
-                            holder.has_background ? config.background.c_str() : "none");
-                last_width = 0;
-                last_height = 0;
-                fade_state = CharacterFadeState::CrossFade;
-                fade_alpha = 0.0f;
-                fade_start = Clock::now();
-                previous = fade_start; // Loading time is not playback time for the candidate.
-            }
+            // Candidate still loading on background thread: continue rendering
+            // the current character without blocking the main loop.
         }
         else if (fade_state == CharacterFadeState::CrossFade)
         {
