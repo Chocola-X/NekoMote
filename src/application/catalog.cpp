@@ -1,12 +1,13 @@
-#include "asset_catalog.hpp"
+#include <nekomote/application/catalog.hpp>
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
+#include <unordered_map>
 
-namespace nekomote::player
+namespace nekomote::application
 {
 namespace
 {
@@ -286,4 +287,4 @@ void WallpaperConfig::save(const fs::path& path) const
         throw std::runtime_error("cannot write config " + path.string());
     file << json.dump(2);
 }
-} // namespace nekomote::player
+} // namespace nekomote::application

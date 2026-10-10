@@ -22,7 +22,8 @@ add_executable(nekomote_unit_tests
     test_session_asset.cpp
     test_spring.cpp
     test_bend.cpp
-    test_chain.cpp)
+    test_chain.cpp
+    test_controller.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE

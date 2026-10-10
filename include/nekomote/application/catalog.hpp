@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace nekomote::player
+namespace nekomote::application
 {
 struct CharacterEntry
 {
@@ -83,4 +83,4 @@ struct WallpaperConfig
     static WallpaperConfig load(const std::filesystem::path& path);
     void save(const std::filesystem::path& path) const;
 };
-} // namespace nekomote::player
+} // namespace nekomote::application
