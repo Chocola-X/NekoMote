@@ -5,9 +5,11 @@
 #include <nekomote/abi.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <exception>
+#include <thread>
 
 namespace nekomote::abi
 {
@@ -81,6 +83,10 @@ nekomote_error WallpaperInstance::set_muted(bool value)
     controller_cfg_.mute = value;
     controller_cfg_.audio =
         value ? application::AudioMode::Disabled : application::AudioMode::Device;
+    if (value)
+        audio_device_.reset();
+    else
+        audio_failed_ = false;
     return NEKOMOTE_OK;
 }
 
@@ -143,6 +149,7 @@ nekomote_error WallpaperInstance::load_initial()
         return NEKOMOTE_ERROR_FAULTED;
     }
     finish_candidate_gpu(candidate);
+    create_audio_device(candidate);
     controller_.install_initial(std::move(candidate));
     if (output_width_ > 0 && output_height_ > 0)
         controller_.set_output_size(output_width_, output_height_);
@@ -193,6 +200,7 @@ nekomote_error WallpaperInstance::load_model(const std::filesystem::path& model_
         return NEKOMOTE_ERROR_FAULTED;
     }
     finish_candidate_gpu(candidate);
+    create_audio_device(candidate);
     controller_.install_initial(std::move(candidate));
     if (output_width_ > 0 && output_height_ > 0)
     {
@@ -216,6 +224,40 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
     background_renderer_->reserve({8, 12, 2, 2});
     last_render_width_ = 0;
     last_render_height_ = 0;
+}
+
+void WallpaperInstance::create_audio_device(const application::CandidateCpu& candidate)
+{
+    if (controller_cfg_.audio != application::AudioMode::Device)
+        return;
+    if (candidate.audio_clips.empty())
+        return;
+    if (audio_failed_)
+        return;
+    try
+    {
+        auto device = std::make_unique<audio::Device>(
+            std::vector<model::AudioClip>(candidate.audio_clips));
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
+        while (device->snapshot().state == audio::DeviceState::Connecting &&
+               std::chrono::steady_clock::now() < deadline)
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        const auto snapshot = device->snapshot();
+        if (snapshot.state == audio::DeviceState::Failed)
+        {
+            audio_failed_ = true;
+            error_string_ = "audio device unavailable (error " + std::to_string(snapshot.error) +
+                            "); continuing muted";
+            return;
+        }
+        audio_device_ = std::move(device);
+    }
+    catch (const std::exception& error)
+    {
+        audio_failed_ = true;
+        error_string_ = std::string("audio device creation failed: ") + error.what() +
+                        "; continuing muted";
+    }
 }
 
 void WallpaperInstance::apply_background(const std::filesystem::path& path, double fade_duration,
@@ -277,6 +319,7 @@ void WallpaperInstance::handle_switch_poll()
             bg_path = controller_.catalog().backgrounds[bg_index].path;
         previous_renderer_ = std::move(renderer_);
         finish_candidate_gpu(*candidate_opt);
+        create_audio_device(*candidate_opt);
         controller_.confirm_candidate(std::move(*candidate_opt));
         if (!bg_path.empty())
             apply_background(bg_path, 0, bg_index);
@@ -330,6 +373,26 @@ nekomote_error WallpaperInstance::advance(double dt)
     handle_background_poll();
     if (output_width_ <= 0 || output_height_ <= 0 || minimized_)
         return NEKOMOTE_OK;
+    if (audio_device_)
+    {
+        while (const auto audio_command = controller_.pop_audio_command())
+        {
+            if (!audio_device_->submit(*audio_command))
+            {
+                error_string_ = "audio command queue full or device failed";
+                set_error(NEKOMOTE_ERROR_PLAYBACK, error_string_.c_str());
+                return NEKOMOTE_ERROR_PLAYBACK;
+            }
+        }
+        const auto snapshot = audio_device_->snapshot();
+        if (snapshot.state == audio::DeviceState::Failed)
+        {
+            error_string_ = "audio device failed " + std::to_string(snapshot.error);
+            set_error(NEKOMOTE_ERROR_PLAYBACK, error_string_.c_str());
+            return NEKOMOTE_ERROR_PLAYBACK;
+        }
+        controller_.set_audio_level(snapshot.rms);
+    }
     controller_.advance(dt);
     return check_session();
 }
@@ -830,6 +893,40 @@ bool WallpaperInstance::paused() const
 float WallpaperInstance::fade_alpha() const
 {
     return controller_.fade_alpha();
+}
+
+int WallpaperInstance::audio_state() const
+{
+    if (!audio_device_)
+        return 0;
+    switch (audio_device_->snapshot().state)
+    {
+        case audio::DeviceState::Connecting:
+            return 1;
+        case audio::DeviceState::Ready:
+            return 2;
+        case audio::DeviceState::Playing:
+            return 3;
+        case audio::DeviceState::Paused:
+            return 4;
+        case audio::DeviceState::Failed:
+            return 5;
+    }
+    return 0;
+}
+
+float WallpaperInstance::audio_rms() const
+{
+    if (!audio_device_)
+        return 0.0f;
+    return audio_device_->snapshot().rms;
+}
+
+int WallpaperInstance::audio_error() const
+{
+    if (!audio_device_)
+        return 0;
+    return audio_device_->snapshot().error;
 }
 
 std::string WallpaperInstance::last_error() const

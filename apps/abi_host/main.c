@@ -1,15 +1,15 @@
 /*
- * nekomote_abi_host — C ABI wallpaper verification tool (muted).
+ * nekomote_abi_host — C ABI wallpaper verification tool.
  *
  * Uses the high-level nekomote_wallpaper ABI to achieve player-equivalent
  * wallpaper functionality: asset scanning, character switching, background,
- * control panel UI, and crossfade — all through the C ABI.
+ * control panel UI, crossfade, and audio — all through the C ABI.
  *
- * Audio is always disabled; use nekomote_player for full playback.
+ * Audio is enabled by default; use --mute to disable.
  *
  * Two run modes:
  *   Fixed-step (--steps N, N>0): dt=1/60s, N steps then exit. Screenshot
- *     is read back before swap for stable pixels.
+ *     is read back before swap for stable pixels. Fixed-step forces --mute.
  *   Interactive (--steps 0, default): wall-clock dt, runs until Esc/close.
  *
  * Usage:
@@ -21,6 +21,7 @@
  *   --height <N>      Window height (default 600, 1..8192)
  *   --steps <N>       Fixed-step mode: N steps at dt=1/60s, then exit
  *   --seed <N>        Random seed (default 42)
+ *   --mute            Disable audio playback
  *   --no-save         Do not save config
  *   --capture <path>  Save final frame as PNG (requires --steps)
  *   --ui-open         Start with UI panel open
@@ -356,10 +357,11 @@ static void print_usage(const char* prog)
     fprintf(stderr, "  --height <N>      Window height (default 600, 1..8192)\n");
     fprintf(stderr, "  --steps <N>       Fixed-step: N steps at dt=1/60s, then exit\n");
     fprintf(stderr, "  --seed <N>        Random seed (default 42)\n");
+    fprintf(stderr, "  --mute            Disable audio playback\n");
     fprintf(stderr, "  --no-save         Do not save config\n");
     fprintf(stderr, "  --capture <path>  Save final frame as PNG (requires --steps)\n");
     fprintf(stderr, "  --ui-open         Start with UI panel open\n");
-    fprintf(stderr, "\nThis is a C ABI wallpaper verification tool (always muted).\n");
+    fprintf(stderr, "\nThis is a C ABI wallpaper verification tool.\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -368,6 +370,9 @@ static void print_usage(const char* prog)
 
 int main(int argc, char** argv)
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+
     const char* assets_dir = NULL;
     const char* model_path = NULL;
     const char* session_path = NULL;
@@ -378,6 +383,7 @@ int main(int argc, char** argv)
     uint32_t seed = 42;
     int no_save = 0;
     int ui_open = 0;
+    int mute = 0;
 
     for (int i = 1; i < argc; i++)
     {
@@ -409,14 +415,14 @@ int main(int argc, char** argv)
             if (!parse_uint32(argv[++i], &seed))
                 return 2;
         }
+        else if (strcmp(argv[i], "--mute") == 0)
+            mute = 1;
         else if (strcmp(argv[i], "--no-save") == 0)
             no_save = 1;
         else if (strcmp(argv[i], "--capture") == 0 && i + 1 < argc)
             capture_path = argv[++i];
         else if (strcmp(argv[i], "--ui-open") == 0)
             ui_open = 1;
-        else if (strcmp(argv[i], "--mute") == 0)
-            ; /* always muted */
         else
         {
             fprintf(stderr, "Unknown argument: %s\n", argv[i]);
@@ -437,11 +443,13 @@ int main(int argc, char** argv)
         fprintf(stderr, "[abi_host] --capture requires --steps > 0\n");
         return 2;
     }
+    if (capture_path)
+        mute = 1;
 
-    printf("nekomote_abi_host — C ABI wallpaper tool (muted)\n");
+    printf("nekomote_abi_host — C ABI wallpaper tool\n");
     printf("  version: %s\n", nekomote_version());
     printf("  mode: %s\n", fixed_mode ? "fixed-step (dt=1/60s)" : "interactive");
-    printf("  audio: disabled\n\n");
+    printf("  audio: %s\n\n", mute ? "disabled" : "enabled");
 
     /* ---- Init GLFW ---- */
     if (!glfwInit())
@@ -492,7 +500,7 @@ int main(int argc, char** argv)
 
     if (!check("set_seed", nekomote_wallpaper_set_seed(wp, seed)))
         goto fail;
-    if (!check("set_muted", nekomote_wallpaper_set_muted(wp, 1)))
+    if (!check("set_muted", nekomote_wallpaper_set_muted(wp, mute)))
         goto fail;
     if (no_save)
         nekomote_wallpaper_set_no_save(wp, 1);
@@ -577,7 +585,15 @@ int main(int argc, char** argv)
         frame_count++;
 
         if (frame_count % 300 == 0)
-            printf("  frame %ld  dt=%.2fms\n", frame_count, dt * 1000.0);
+        {
+            int astate = nekomote_wallpaper_audio_state(wp);
+            const char* state_names[] = {"disabled", "connecting", "ready",
+                                         "playing", "paused", "failed"};
+            const char* sname = (astate >= 0 && astate <= 5) ? state_names[astate] : "?";
+            printf("  frame %ld  dt=%.2fms  audio=%s rms=%.6f\n", frame_count, dt * 1000.0,
+                   sname, (double)nekomote_wallpaper_audio_rms(wp));
+            fflush(stdout);
+        }
 
         if (fixed_mode && frame_count >= steps)
         {

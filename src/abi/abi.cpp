@@ -1706,4 +1706,20 @@ extern "C"
         return (wp && wp->instance) ? (wp->instance->paused() ? 1 : 0) : 0;
     }
 
+    nekomote_audio_state nekomote_wallpaper_audio_state(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? static_cast<nekomote_audio_state>(wp->instance->audio_state())
+                                    : NEKOMOTE_AUDIO_STATE_DISABLED;
+    }
+
+    float nekomote_wallpaper_audio_rms(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->audio_rms() : 0.0f;
+    }
+
+    int nekomote_wallpaper_audio_error(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->audio_error() : 0;
+    }
+
 } // extern "C"

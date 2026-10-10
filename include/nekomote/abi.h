@@ -475,6 +475,23 @@ extern "C"
     int nekomote_wallpaper_has_background(const nekomote_wallpaper* wp);
     int nekomote_wallpaper_paused(const nekomote_wallpaper* wp);
 
+    /* Audio state. Returns one of NEKOMOTE_AUDIO_STATE_* below.
+     * audio_rms returns 0..1 (0 when disabled). audio_error returns the
+     * PulseAudio error code (0 = no error). */
+    typedef int32_t nekomote_audio_state;
+    enum
+    {
+        NEKOMOTE_AUDIO_STATE_DISABLED = 0,
+        NEKOMOTE_AUDIO_STATE_CONNECTING,
+        NEKOMOTE_AUDIO_STATE_READY,
+        NEKOMOTE_AUDIO_STATE_PLAYING,
+        NEKOMOTE_AUDIO_STATE_PAUSED,
+        NEKOMOTE_AUDIO_STATE_FAILED,
+    };
+    nekomote_audio_state nekomote_wallpaper_audio_state(const nekomote_wallpaper* wp);
+    float nekomote_wallpaper_audio_rms(const nekomote_wallpaper* wp);
+    int nekomote_wallpaper_audio_error(const nekomote_wallpaper* wp);
+
 #ifdef __cplusplus
 }
 #endif

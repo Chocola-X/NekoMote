@@ -6,6 +6,7 @@ target_link_libraries(nekomote_abi
         nekomote::application
         nekomote::asset_io
     PRIVATE
+        nekomote::audio
         nekomote::render_gl
         nekomote::ui
         nekomote_warnings)

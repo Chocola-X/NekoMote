@@ -2,6 +2,7 @@
 
 #include <nekomote/abi.h>
 #include <nekomote/application/controller.hpp>
+#include <nekomote/audio/device.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/ui/layout.hpp>
@@ -73,10 +74,15 @@ class WallpaperInstance
     bool paused() const;
     float fade_alpha() const;
 
+    int audio_state() const;
+    float audio_rms() const;
+    int audio_error() const;
+
     std::string last_error() const;
 
   private:
     void finish_candidate_gpu(const application::CandidateCpu& candidate);
+    void create_audio_device(const application::CandidateCpu& candidate);
     void apply_background(const std::filesystem::path& path, double fade_duration,
                           int bg_index);
     void draw_ui(float dt);
@@ -91,6 +97,7 @@ class WallpaperInstance
     std::unique_ptr<render_gl::Renderer> renderer_;
     std::unique_ptr<render_gl::Renderer> previous_renderer_;
     std::unique_ptr<render_gl::Renderer> background_renderer_;
+    std::unique_ptr<audio::Device> audio_device_;
     render_gl::UiRenderer ui_renderer_;
     ui::Context ui_context_;
     WallpaperPanelState panel_;
@@ -111,6 +118,7 @@ class WallpaperInstance
     bool assets_scanned_{false};
     bool initialized_{false};
     bool dragging_{false};
+    bool audio_failed_{false};
     float prev_mouse_x_{0};
     float prev_mouse_y_{0};
     std::string error_string_;
