@@ -1,27 +1,21 @@
-# 下一批独立任务
+# 当前独立任务交接
 
-基线为本轮Codex G22/G24/G26复核提交，见[复核](review-g22-g26.md)。GLM承担开发与批量运行大头，Gemini实际看图，Codex集中语义/生命周期与最终抽核。先声明base/文件；原素材只读，输入只用应用回调；GPU用 `build/gpu-validation.lock`。每阶段验证后commit，真实Agent/Model/Context；报告≤一页，raw放新build目录，冻结输入/工具/二进制/命令/日志/输出。失败只挂起对应条件，继续独立任务。
+当前HEAD `39762b6`，已有用户架构草稿，本轮只完善文档。用户最新优先级：先让GLM下沉player的UI与控制切换，为后续Vulkan保持解耦。详细范围/所有权/负例/视觉和性能门槛见[专项交接](wallpaper-application-handoff.md)。接手声明实际base与文件，保护未提交工作；GPU用`build/gpu-validation.lock`，不注入系统输入，原素材只读。每阶段验证后commit，标真实Agent/Model/Context。
 
-## GLM G27：完整、可搬移的Plasma部署（已完成）
+| 顺序 | 负责人 | 任务与退出条件 |
+| --- | --- | --- |
+| G31A 先做 | GLM | Controller/资产目录/配置/CPU加载及角色背景切换状态下沉，**同步迁移player并删除旧业务实现**；应用不依赖UI、图形API或窗口，GPU/音频服务边界明确 |
+| G31B 随后 | GLM | UI布局/命中/事件/绘制数据下沉到ui，GL执行留render_gl，**同步迁移player并删除旧UI实现**；CPU UI可无窗口测试，受控图像/输入/DPI/释放验证通过 |
+| 阶段抽核 | Codex / Gemini | Codex审模块、异步/线程/资源与性能证据；Gemini看阶段前后固定UI/模型/切换图。未看图/未跑不能计PASS |
+| G32 G31后 | GLM | 扩当前ABI和薄C宿主，迁移Plasma并删重复扫描/QML控制面板/配置切换业务；宿主只经ABI，声音/设备不复制 |
+| G30 后续 | GLM | 在共享应用与服务中完善正式声音/背景、UI/渐变/reset余项，不继续在桌面壳补业务 |
 
-报告见 `docs/g27-plasma-deploy-report.md`。CMake install()+相对RPATH+独立动态宿主验证全部通过。下一步交Codex复核部署/服务边界，Gemini V20在真实桌面观察。
+application与ui都保持后端无关；OpenGL/Vulkan对象、shader、GPU字体/图标上传属于对应后端。当前只实现GL，未来Vulkan复用数据/资源契约；不建立空render_vk或万能后端工厂。player在G31使用共享C++接口验证，桌面适配器在G32只经C ABI。
 
-## GLM G28 → Gemini V19：重建可消费的触摸证据（GLM与Gemini部分均已完成）
+## 既有提交与仍待验收
 
-报告见 `docs/g28-touch-report.md` 与 `docs/v19-touch-visual.md`。三型号×五条件重拍、69/69 冻结检查、132 点绑定、30 负例测试、Qt vs player RMSE 对比全部通过。Gemini V19 已完成 15 组 clean/overlay 逐图审核（540px 偏移完全修复，五部位贴合）、填写 version 3 观察并执行 ledger 检验（保留严格 PENDING_EVIDENCE 契约）、补齐 12 型号 24 静态与 3 idle120 端点审计。候选区域保持 PENDING_EVIDENCE，不直接应用。
+G27部署、G28触摸、G29动态/分配/195矩阵和V19视觉已有后续提交与报告；本轮文档工作没有复核这些报告全部证据，不能重标为独立验收PASS，也不能按旧“尚未提交”状态要求盲重跑。入口：[G27](g27-plasma-deploy-report.md)、[G28](g28-touch-report.md)、[G29](g29-validation-report.md)、[V19](v19-touch-visual.md)。仅覆盖的条件有效，locator/ASan/全动态等缺口按实际证据逐项复核。
 
-## GLM G29：动态、locator、分配与195覆盖补验（已完成）
+C8由Codex继续诊断3个bust_LR20及真实嵌套/2标量反例，未确认原因不改正式公式。候选触摸数据保持不应用。V20实际桌面/部署视觉在对应构建和部署复核后安排；安装、用户配置和shell操作按用户实际授权，不由本交接自动授权。
 
-报告见 `docs/g29-validation-report.md`。pause/resume 真实调用验证（三型号 OK）、allocation 单元测试（553 assertions/7 cases）、195 覆盖矩阵（195/195 OK）和 bust_LR20 FAIL 证据保留全部通过。locator 完整对照和 ASan 构建交 V19/C8。
-
-## GLM G30：正式壁纸应用服务（G27后可开始）
-
-先阅读`docs/abi-contract.md`和application现有声音/背景服务，提出最小契约及改动文件交Codex复核，然后实现。正式Plasma不得复制PCM/线程/反应策略；建立共享服务与宿主资源销毁/暂停/失败契约。按声音/背景→UI/角色与背景渐变/reset分别提交，验证音频设备失败、静音/卸载、暂停250ms共同预算、失败事务与恢复，不为旧ABI留兼容层。视觉交Gemini；实际桌面、长期与195覆盖不是这些单项的自动PASS。
-
-## Codex C8 / Gemini V20
-
-C8：先诊断三bust反例的SDK输入/绑定与native实际语义，未确认原因不改正式公式；剩余真实嵌套/2标量反例保持隔离拒绝并建立最小复现。审G27部署/服务边界、G28证据契约、G29抽核与最终整合。
-
-V20：G27通过后观察搬移prefix动态包的加载/config/错误恢复/resize/DPI/输入隔离，记录实际图和库路径。真实独立用户会话测试由用户安排后执行；不要向终端/任意系统窗口注入输入。长期和多屏单列。
-
-优先顺序：**GLM G27→G28→G29（已完成）；Gemini V19已完成，随G27做V20；GLM G30逐项推进**。GLM无需等Codex解决所有求值余项才能开始其他任务。新部署通过后即可试装，不要求先完成整条路线图。
+共享层迁移前不继续扩Plasma业务面板；真正桌面、长期8–24h、多屏与发布仍是独立退出条件，G31完成不代表最终引擎或Vulkan交付。

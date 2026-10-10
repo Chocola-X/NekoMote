@@ -2,6 +2,13 @@
 
 当前仅支持 **0.3.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
+
+## 壁纸应用层迁移计划
+
+G31先抽共享Controller与后端无关UI并迁移player，当前0.3.0仍为单会话/renderer契约，不声称已有完整壁纸实例/UI接口。G32随后扩当前ABI并迁移调用者，不保留旧签名；宿主只经ABI调用共享目录/配置/切换/输入/UI与绘制服务，不复制业务或PCM服务，见[专项交接](wallpaper-application-handoff.md)。
+
+后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。未来设备/输出/native同步在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。图形入口可按实际后端新增，不提前制造通用handle联合体或空Vulkan接口。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
+
 ## 所有权与失败
 
 输入 gaze/touch 均为呈现方向的中心 framebuffer 像素，Y 向下。宿主转换逻辑窗口/DPI 并减去半个画幅，不再翻转 X；session 负责作者触摸区的缩放、放置与镜像逆变换。诊断及本轮验证见 [C6 输入交接](c6-input-review-handoff.md)。

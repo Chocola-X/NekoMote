@@ -1,17 +1,17 @@
 # Agent 协作任务
 
-基线：G22/G24/G26/V15/V18后的Codex复核提交。执行[摘要](review-agents-current.md)、[复核](review-g22-g26.md)、[交接](agent-next-handoff.md)。历史raw保留；任务报告的“完成”不替代验收。
+当前HEAD `39762b6`；用户要求先收拢壁纸应用层，详见[专项交接](wallpaper-application-handoff.md)、[任务交接](agent-next-handoff.md)、[路线图](../ROADMAP.md)。以下区分待实现、已提交报告与独立验收。
 
-| 范围 | 当前状态 | 后续负责人/任务 |
+| 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
-| 单边界0x7fc | 正式支持；195初态可求值，51静态及3代表idle120有参照 | Codex C8处理真实语义反例；嵌套/2标量不扩大放行 |
-| G22 | 隔离包恢复/生命周期部分有效；模块安装和干净部署未通过 | GLM G27已完成（可搬移部署+独立动态宿主验证）；Gemini V20随后真实桌面 |
-| G24 | 来源/42点绑定有效；旧覆盖图和idle120已在G28修复；V19目视核验通过 | G28/V19已完成（三型号×五条件重拍、15覆盖图审核、132点绑定）；候选保持PENDING |
-| G26 | 42静态通过/3 bust_LR20 FAIL；9动态终态几何及逐步物理有效 | GLM G29已完成（pause/resume+allocation+195矩阵+bust_LR20证据）；Codex C8诊断3 FAIL |
-| V15 | 覆盖图错误发现有效，观察文件未被ledger接受；候选未认证 | Gemini V19已完成（15图五部位真眼核验、version3观察绑定、ledger诊断保留）；候选不应用 |
-| V18 | 实际绑定21组终态/组合；18数值通过/3失败；所称12新型号等未绑定 | Gemini V19已补12型号24静态及3idle120端点观察，连续性另验；3 bust_LR20保留FAIL |
-| 应用退出条件 | 正式声音/背景、UI/渐变/reset、195动态、长期/多屏未验收 | GLM G30在G27后推进应用功能，Codex审查服务/生命周期 |
+| G31A Controller/player | 待实现；目录/配置/异步切换/渐变仍在player | GLM优先抽取并同阶段迁移player；Codex边界复核 |
+| G31B UI/player | 待实现；UI业务与GL调用混在apps/player/ui.cpp | GLM随后拆后端无关UI和render_gl的GPU执行，同阶段迁移player；Gemini固定图/隔离观察 |
+| G32 ABI/Plasma | G31后实施；Plasma有重复扫描/QML面板与背景资源跨线程问题 | GLM扩共享ABI/薄C宿主再迁移Plasma，删除重复业务 |
+| G30正式服务 | 声音背景/UI/渐变/reset余项未最终验收 | 在共享层完善；禁止继续在壳补业务 |
+| G27/G28/G29/V19 | 后续提交及报告已在仓库，本轮未复核全量证据 | Codex按实际范围复核；不把交付声明当最终PASS，不盲重跑有效证据 |
+| 单边界0x7fc / C8 | 单边界正式支持、195初态及既有静态/代表idle120沿用；3 bust_LR20 FAIL待诊断，嵌套/2标量不扩大放行 | Codex语义反例；不阻塞独立G31 |
+| V20/长期/全动态 | 真实桌面、多屏、8–24h及195完整动态未最终验收 | 共享迁移与实际部署就绪后逐项执行；各自报告 |
 
-GLM承担实现、补测与批量整理大头；遇到语义问题只挂起对应条件，继续独立任务。Gemini负责实际视觉，不用看图代替数值门槛。Codex只接管新语义、架构/生命周期与最终抽核。每阶段验证后commit并标实际Agent/Model/Context。
+GLM承担实现大头；每阶段边迁移player边验证并commit，避免只建空模块。application/ui不能依赖OpenGL/Vulkan，UI绘制数据与GPU执行分离；当前只实现GL，不新增空Vulkan后端。资源ID按设备解析，CPU求值/UI和GPU/音频所有权明确。
 
-声明base和改动文件，保护未提交工作；GPU使用 `build/gpu-validation.lock` 串行，不向系统窗口注入输入。原仓库只读；报告≤一页，raw在新build目录，冻结argv/stdout/stderr/input/tool/binary/output。缺失/未执行不得计PASS。旧15 BLOCKED是历史视觉状态，不是当前CPU加载失败。真实用户安装须先通过G27；当前安装脚本不能作为完整部署入口。
+声明base/改动文件，保留他人工作；GPU使用`build/gpu-validation.lock`，输入只经应用回调，外部素材只读。报告≤一页，raw新目录冻结工具/输入/二进制/hash/argv/日志/截图。完成/失败/未跑/候选分开。触摸候选不应用；旧历史15 BLOCKED不代表当前CPU加载失败。真实用户安装和桌面配置按实际授权及对应部署验收执行。

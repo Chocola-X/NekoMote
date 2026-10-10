@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-10 G22/G24/G26/V15/V18独立复核。单边界0x7fc与195初态沿用，G26另42静态通过/3 bust_LR20 FAIL待诊断；触摸证据工具已修，完整视觉ledger待补。隔离Plasma包恢复有证据，但模块安装/可搬移部署/真实桌面未验收。GLM接续G27→G28→G29及G30，Codex语义/边界抽核。见[摘要](docs/review-agents-current.md)。
+版本：执行中，2026-10-10壁纸应用层边界纠正。当前HEAD `39762b6`；G27/G28/G29/V19已有交付报告，未由本轮文档工作重新验收。优先GLM G31A/G31B：从player抽共享Controller与后端无关UI，并逐阶段迁移player；之后G32 ABI/Plasma收拢。application/ui不依赖图形API，为后续Vulkan保留后端无关绘制和设备资源契约，当前只实现OpenGL。见[摘要](docs/review-agents-current.md)。
 
 ## 1. 产品与开发策略
 
@@ -68,14 +68,21 @@ NekoMote 独立实现原生二维模型运行时，使用已有 E-mote 解包素
 以下是目标目录，随阶段需要逐项建立：
 
 ```text
-include/nekomote/            真正需要跨模块/宿主的公共契约
+include/nekomote/            跨模块/宿主的公共契约（C ABI + C++ 公共头）
 src/model/                  不可变资产、实例数据、强类型 ID
 src/runtime/                参数、场景图、变形、动画、物理
 src/asset_io/               当前项目资产加载、校验和解码
-src/render_gl/              绘制协议的 OpenGL 实现
-src/application/            壁纸会话、反应、背景层管理与渐变、音频协调
-src/adapters/plasma/        Plasma 生命周期、输入、GPU 接入
-apps/preview/               独立窗口播放器与诊断入口
+src/render_gl/              模型/背景/UI绘制协议的OpenGL执行与GPU资源管理
+src/application/            壁纸会话、多模型编排与切换、资产扫描、配置 schema、反应、背景层管理与渐变、输入处理、音频协调
+src/ui/                     后端无关控制 UI、布局/hit-test/事件路由、绘制数据
+src/abi/                    C ABI，暴露 application + ui 给宿主
+src/audio/                  PCM 设备服务
+src/host_qt_quick/          Qt Quick 宿主封装（SessionItemBase）
+apps/player/                GLFW 壳（参考实现）与诊断入口
+apps/abi_host/              C ABI 完整壁纸功能验证
+apps/preview/               独立预览与诊断
+apps/qt_quick_host/         Qt Quick 独立宿主
+adapters/plasma/            Plasma 壳：QQuickFramebufferObject + 生命周期 + assetsDir
 tools/import_emote/         离线导入与资源编译
 tools/reference_capture/    原网页的受控采样与对照工具
 tests/unit/                 无显示服务器的语义测试
@@ -89,22 +96,28 @@ docs/                       格式、语义证据、架构决策和性能报告
 
 ### 3.3 依赖方向
 
+下图箭头表示模块依赖；服务实现经边界注入，不要求所有能力位于一个目标。
+
 ```mermaid
 flowchart TD
-    Source[解包素材与项目规则] --> Import[离线导入工具]
-    Import --> Asset[规范化模型资产]
-    Loader[asset_io] --> Asset
-    Asset --> Runtime[runtime / model]
-    Runtime --> Packet[绘制协议与帧数据]
-    Packet --> GL[render_gl]
-    App[application] --> Runtime
-    Preview[preview] --> App
-    Preview --> GL
-    Adapter[桌面适配器] --> App
-    Adapter --> GL
+    App[application / Controller和Session] --> Runtime[runtime / model]
+    App --> Loader[asset_io]
+    App --> Contract[公共绘制数据 / 资源ID / 服务契约]
+    Ui[ui / 布局和交互] --> App
+    Ui --> Contract
+    GL[render_gl / 模型背景UI的GPU执行] --> Contract
+    Abi[C ABI / 共享宿主组合入口] --> App
+    Abi --> Ui
+    Abi --> GL
+    Player[player参考壳] --> App
+    Player --> Ui
+    Player --> GL
+    Adapter[桌面适配器壳] --> Abi
 ```
 
-`model/runtime` 不反向依赖导入器、加载器、图形后端或宿主。渲染协议可以先是简单结构，禁止为了隔离而多次深拷贝帧数据。
+application不依赖ui，render_gl不依赖application/UI业务状态。application/ui的输入输出不含OpenGL/Vulkan对象或shader；新后端实现同一绘制/资源契约，不改壁纸业务与UI。当前使用具体GL实现，后续Vulkan按实际需求建立，不提前加空模块或复杂后端工厂。布局/命中及显示尺寸与设备像素的转换有明确契约，不能依赖GL viewport状态推定逻辑布局。
+
+player在G31阶段直接用共享C++接口验证；桌面适配器只经C ABI调用共享功能，不直接调用ui/application C++。图形上下文/输出目标由壳提供，GPU资源由后端拥有，CPU业务状态由Controller拥有；异步加载和GUI事件经有界交接进入同一求值线程，详细契约见[专项交接](docs/wallpaper-application-handoff.md)。
 
 ## 4. 阶段地图与完成状态
 
@@ -118,9 +131,9 @@ flowchart TD
 | P3 | 参数、场景图与网格变形 | P1、P2 | 参数求值和经验证的变形 | 进行中：代表静态30/30与播放矩阵通过；单边界0x7fc挂接已正式验证，嵌套/cc等新范围仍待验证 |
 | P4 | 遮罩与完整静态合成 | P3 | 一个复杂模型的正确静态画面 | 代表范围通过：真实add_mask修复，Fraise400零超差；bm19/attr2映射已实现并新增9/9；Fraise-b受控镜像/可选遮罩范围已闭合；嵌套仍未验证 |
 | P5 | 时间线、差分与动态播放 | P4 | 可控动态播放器 | 已实现独立动态播放；当前冻结代表动画/眼睛/差分/缩放/物理矩阵全通过，新增型号需逐项验收 |
-| P6 | 物理、反应、背景和音频 | P5 | 完整原生预览体验 | 代表会话/声音、薄C宿主已实现；触摸坐标/区域诊断、背景暂停/250ms预算和C++候选事务已验证；195初态可求值，触摸证据工具已修，视觉/区域候选、正式Plasma声音背景、UI隔离、角色渐变及背景reset待闭合 |
+| P6 | 物理、反应、背景、音频与壁纸应用层 | P5 | 完整原生预览体验 + 可复用壁纸应用层 | 代表会话/声音、薄C宿主已实现；触摸坐标/区域诊断、背景暂停/250ms预算和C++候选事务已验证；195初态可求值，触摸证据工具已修，视觉/区域候选、正式Plasma声音背景、UI隔离、角色渐变及背景reset待闭合；壁纸应用编排层（WallpaperController + ui 库）待从 player 抽出，消除 player-Plasma 重复 |
 | P7 | 资产与稳态性能优化 | P6 | 当前资产打包与性能基线 | 进行中：核心零分配基线存在；新WebGL收益结论方法未闭合，资产/依赖/UI稳态与打包待验收 |
-| P8 | 首个 Plasma 适配器 | P7 | 原生桌面壁纸 | ABI0.3.0主边界已验证，C/GLFW确定性诊断已通过同输入像素核对；独立Qt GPU合成/resize/DPI/释放重建及输入小矩阵已通过，动态QML/实际隔离KPackage与WallpaperItem初步显示；配置/软件后端/调度安全通过，40轮旧renderer/最终销毁通过；错误恢复已有部分证据；安装缺native/QML、stage依赖build，完整部署待G27，真实桌面未验 |
+| P8 | 首个 Plasma 适配器（壳） | P6,P7 | 原生桌面壁纸 | ABI0.3.0主边界已验证，C/GLFW确定性诊断已通过同输入像素核对；独立Qt GPU合成/resize/DPI/释放重建及输入小矩阵已通过，动态QML/实际隔离KPackage与WallpaperItem初步显示；配置/软件后端/调度安全通过，40轮旧renderer/最终销毁通过；错误恢复已有部分证据；安装缺native/QML、stage依赖build，G27完整部署交付待独立复核，真实桌面未验；适配器须退化为壳（只调ABI+生命周期），消除自实现的scanCharacters/scanBackgrounds/QML控制面板 |
 | P9 | 全素材覆盖与长期运行 | P8 | 型号矩阵、稳定性和生命周期报告 | 部分CPU审计已开展：当前195结构与初态CPU OK、15旧加载缺口解除，视觉/交互认证待补；8–24小时与桌面生命周期未进行 |
 | P10 | 发布与其他桌面扩展 | P9 | 可安装产物、按目标新增适配器 | 未开始：可安装包、来源/许可和卸载待确定；其他桌面延后 |
 
@@ -128,12 +141,12 @@ P1 的素材调查和 P2 的通用 GPU 基础可交错推进；P3/P4 的语义�
 
 ### 当前执行顺序
 
-1. GLM G27优先补完整安装/可搬移stage/未预链接动态宿主/回收负例；隔离包已有恢复和生命周期证据，不重复重写。通过部署复核后即可安排独立用户的真实Plasma测试，无须等待195全动态。
-2. GLM G28重拍三型号触摸条件及建立可消费ledger；旧覆盖图540px偏移和idle120配置错误已由Codex修，Fraise新图抽核通过。Gemini V19逐图并补遗漏观察，V20随部署核查。
-3. GLM G29补真实暂停、locator参照、实际分配/ASan和195动态。G26有效42静态与9动态终态沿用，3 bust_LR20 FAIL由Codex C8诊断，未确认原因不改公式；不能把旧确定性/进程耗时当暂停/稳态证据。
-4. GLM G30按共享服务契约推进正式声音背景、UI/渐变/reset；Codex集中新语义/架构/生命周期与最终抽核。嵌套/2标量、195完整动态、8–24h/多屏仍是退出条件，不全部移交Codex实现。
+1. GLM G31A优先抽Controller、资产目录/配置、异步切换/渐变与模型交互，同时迁移player调用并删除被替代业务实现。GPU/音频边界不得整块搬入Controller；接口满足后续后端替换。
+2. GLM G31B抽共享UI布局/命中/事件与绘制数据，GL字体/图标上传与shader留在render_gl，同步迁移player。每阶段构建、CPU契约、受控输入/GPU截图与相关稳态采样通过后commit，不等待全部抽取结束才接调用者。
+3. G31验收后G32扩当前C ABI、升级薄C验证宿主并迁移Plasma，删除重复目录扫描、配置语义与QML控制面板。G30正式声音背景服务补全随后按共享边界推进，不继续在桌面壳补业务。
+4. Codex审查线程/资源/ABI与语义反例；Gemini检查共享UI/切换固定画面。G27/G28/G29/V19交付报告保留，待独立复核，不无理由重跑。嵌套/2标量、全动态、真实桌面、8–24h/多屏仍是退出条件。
 
-详细输入、文件边界与验收见[交接](docs/agent-next-handoff.md)，本轮结论见[复核](docs/review-g22-g26.md)。
+执行范围、迁移阶段与验收见[专项交接](docs/wallpaper-application-handoff.md)和[任务交接](docs/agent-next-handoff.md)。
 
 ## 5. P0：工程骨架与验证环境
 
@@ -279,7 +292,7 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 
 **里程碑 M2：独立普通窗口中的原生动态播放器。** 此时才能比较完整动画的初步性能。
 
-## 11. P6：物理、反应、背景和音频
+## 11. P6：物理、反应、背景、音频与壁纸应用层
 
 ### 工作项
 
@@ -289,6 +302,9 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 4. 集成原生声音、口型幅度/时间输入；音频回调不直接修改模型。
 5. 集成静态背景、时段切换、展示缩放和裁切。
 6. 处理模型切换、重复加载和规则缺失；维护独立实例状态。
+7. G31A将多模型编排、资产扫描、配置 schema、CPU异步加载及切换crossfade状态机从player下沉到application::WallpaperController，同阶段迁移player；保留GPU/设备服务边界。
+8. G31B将控制面板布局、hit-test、事件消费与后端无关绘制数据抽到src/ui；GL shader/纹理上传/绘制抽到render_gl，同阶段迁移player。UI从Controller读状态、发语义请求，不包含角色切换状态机。
+9. G31后G32扩当前C ABI暴露目录/选择/配置、输入、UI绘制与设备生命周期，迁移调用者，不保留旧ABI；C验证宿主调用共享服务，不复制音频/切换业务。
 
 ### 交付与退出条件
 
@@ -296,6 +312,9 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 - 代表模型的触摸、视线、反应和口型正确，声音关闭不阻止模型播放。
 - 反应配置与 E-mote 字段解析不进入 GPU 后端。
 - 多实例独立控制，并共享允许共享的不可变资产。
+- `application::WallpaperController` 提供可复用的多模型切换、资产扫描和配置；player 和适配器共享同一控制逻辑，不在适配器重实现。
+- src/ui提供可复用的后端无关控制面板/绘制数据，render_gl执行GPU绘制；player与适配器共享UI，不在适配器重绘。application/ui公共头不含OpenGL/Vulkan依赖。
+- C ABI 暴露完整壁纸应用接口；`apps/abi_host` 验证完整壁纸功能（不只单会话管线）。
 - 预览端的完整会话可作为桌面适配参照。
 
 **里程碑 M3：完整原生预览体验。** 默认性能策略可以为 30 FPS，60 FPS 为可选；以实际目标和测量确认。
@@ -332,10 +351,10 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
    - headless/ASan已覆盖合成ABI；长度/模式、异常、借用帧失效和RAII已有证据，不重复列为待实现。真实素材集成缺资产时显式Skipped。
    - 独立Qt宿主线程/图形资源释放重建已有小矩阵证据；实际Plasma/context失效、多屏和卸载仍待验证。
    - `apps/abi_host/main.c` 已收敛为静音C/GLFW诊断程序；G8确定步/截图/负例及同输入像素已复核，它不是Plasma实现，也不承载正式声音或壁纸策略。
-3. 实现 WallpaperItem/QML 接入层和原生绘制模块；配置界面保持简单。
+3. 实现 WallpaperItem/QML 接入层：Qt Quick宿主提供有效GL上下文/FBO，共享绘制入口（经C ABI）在允许的渲染线程绘制角色+背景+控制UI；QML 退化为最薄壳（配置入口+错误提示），不画控制面板。
 4. 图形后端匹配后直接接入宿主 GPU 目标/纹理。若非 OpenGL，先评估必要的后端实现，不用 CPU 读回通用桥接，也不擅自改整个桌面后端。
 5. 处理多屏、device scale、桌面图标、输入区域、锁屏/休眠和插件卸载。
-6. 使用已有 application 会话，不在适配器重写动作、物理和反应规则。
+6. 适配器只做壳：输出目标创建、输入采集转发、尺寸通知、生命周期和 assetsDir 配置。经 C ABI 调 WallpaperController 和 ui 库；不在适配器重实现模型切换、资产扫描、控制 UI 或配置逻辑。
 
 ### 交付与退出条件
 
@@ -345,7 +364,7 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 - 不修改宿主全局图形状态、不让异常越过宿主边界。
 - 确认可用的可见/节能状态；能力缺失明确记录，不能虚构全遮挡自动暂停。
 
-**里程碑 M4：一个真实桌面上的原生动态壁纸。** Plasma 原生接入成功并不自动等于 GNOME 或任意 Wayland 合成器支持。
+**里程碑 M4：一个真实桌面上的原生动态壁纸。** Plasma 原生接入成功并不自动等于 GNOME 或任意 Wayland 合成器支持。非 Plasma 桌面优先走独立进程模式，壳与 player 同构，壁纸应用层完全复用。
 
 ## 14. P9：全素材覆盖与长期运行
 
@@ -373,7 +392,7 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 2. 构建可安装产物、资源定位和卸载方式；包管理/安装只依赖已明确的组件。
 3. 原项目另设 Linux 集成分支，管理素材导出和固定引擎版本；按任务授权在原仓库操作，不由本路线图自动授权修改外部仓库。
 4. 正式版本不提交全部模型重复副本，按素材分发约定获取资产。
-5. 按实际需求依次开发 layer-shell、GNOME 或 X11 适配器；每个适配器完成自己的输入、生命周期和显示验证。
+5. 按实际需求依次开发 layer-shell、GNOME 或 X11 适配器。各适配器只做壳（输出目标创建+输入采集+生命周期），经 C ABI 调壁纸应用层；非 Plasma 桌面走独立进程模式，壳与 player 同构。每个适配器完成自己的显示验证。
 6. 发布后才根据产品需要冻结接口策略。当前阶段仍不维护旧 ABI/schema。
 
 GNOME 的 GPU 输出接入和 Shell API 需单独技术验证；layer-shell 必须检测实际协议支持；X11 desktop window 需验证桌面管理器/图标共存。不能把其他桌面作为一个通用窗口属性开关处理。

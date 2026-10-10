@@ -2,6 +2,8 @@
 
 `nekomote_player` 使用独立runtime与OpenGL后端，提供模型播放、视线/触摸、声音/口型及PNG背景。当前是开发中的普通窗口壁纸应用；代表范围已通过对照，全部型号、桌面插件和长期运行尚未验收。当前结论见 [整合摘要](review-agents-current.md)，限制见 [known-defects](known-defects.md)。
 
+职责迁移计划见[专项交接](wallpaper-application-handoff.md)：G31逐阶段抽共享Controller与后端无关UI，同时迁移player；GL绘制留render_gl，player成为参考壳。本页运行说明描述当前实现，不表示上述抽取已完成；迁移时同步更新有效命令和验证工具。
+
 ## 构建与运行
 
 需要显示服务器、OpenGL 3.3、GLFW，以及播放器声音服务的libpulse开发包。UI需要可用字体，优先通过Fontconfig寻找。构建入口见 [building](building.md)。
