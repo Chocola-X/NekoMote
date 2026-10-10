@@ -380,6 +380,99 @@ extern "C"
 
     const char* nekomote_version(void);
 
+    /* ------------------------------------------------------------------ */
+    /* Wallpaper instance (high-level: Controller + UI + GL renderers)     */
+    /* ------------------------------------------------------------------ */
+
+    typedef struct nekomote_wallpaper nekomote_wallpaper;
+
+    typedef int32_t nekomote_key;
+    enum
+    {
+        NEKOMOTE_KEY_ESCAPE = 1,
+        NEKOMOTE_KEY_SPACE,
+        NEKOMOTE_KEY_TAB,
+        NEKOMOTE_KEY_F,
+        NEKOMOTE_KEY_R,
+        NEKOMOTE_KEY_B,
+        NEKOMOTE_KEY_N,
+        NEKOMOTE_KEY_C,
+        NEKOMOTE_KEY_DIGIT_1,
+        NEKOMOTE_KEY_DIGIT_2,
+        NEKOMOTE_KEY_DIGIT_3,
+        NEKOMOTE_KEY_DIGIT_4,
+        NEKOMOTE_KEY_DIGIT_5,
+        NEKOMOTE_KEY_DIGIT_6,
+        NEKOMOTE_KEY_DIGIT_7,
+        NEKOMOTE_KEY_DIGIT_8,
+        NEKOMOTE_KEY_DIGIT_9,
+    };
+
+    typedef int32_t nekomote_mouse_action;
+    enum
+    {
+        NEKOMOTE_MOUSE_RELEASE = 0,
+        NEKOMOTE_MOUSE_PRESS,
+    };
+
+    /* Create/destroy. loader is the GL function pointer loader (e.g.
+     * glfwGetProcAddress). The instance owns GPU renderers; all methods
+     * and destruction require a current GL context on the graphics thread. */
+    nekomote_wallpaper* nekomote_wallpaper_create(nekomote_gl_loader loader);
+    void nekomote_wallpaper_destroy(nekomote_wallpaper* wp);
+
+    /* Setup */
+    nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp,
+                                                     const char* dir);
+    nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
+    nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted);
+    nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed);
+    nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
+                                                      int height);
+    nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
+    nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp);
+    nekomote_error nekomote_wallpaper_load_model(nekomote_wallpaper* wp, const char* model_path,
+                                                 const char* session_path);
+
+    /* Per-frame: advance handles candidate/background polling and fade.
+     * render_frame draws background + character (with crossfade) to the
+     * current GL framebuffer. render_ui draws the control panel.
+     * Host swaps buffers after render_frame + render_ui. */
+    nekomote_error nekomote_wallpaper_advance(nekomote_wallpaper* wp, double dt);
+    nekomote_error nekomote_wallpaper_render_frame(nekomote_wallpaper* wp);
+    nekomote_error nekomote_wallpaper_render_ui(nekomote_wallpaper* wp, float dt);
+
+    /* Input. Coordinates are logical window pixels; the instance converts
+     * to centered framebuffer pixels using output_size. */
+    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y);
+    nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
+    nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp);
+    nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y);
+    nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
+                                                    nekomote_mouse_action action);
+    nekomote_error nekomote_wallpaper_mouse_scroll(nekomote_wallpaper* wp, double amount);
+    nekomote_error nekomote_wallpaper_key(nekomote_wallpaper* wp, nekomote_key key,
+                                          nekomote_mouse_action action);
+
+    /* Actions */
+    nekomote_error nekomote_wallpaper_switch_character(nekomote_wallpaper* wp, int index);
+    nekomote_error nekomote_wallpaper_switch_background(nekomote_wallpaper* wp, int index);
+    nekomote_error nekomote_wallpaper_clear_background(nekomote_wallpaper* wp);
+    nekomote_error nekomote_wallpaper_fit(nekomote_wallpaper* wp);
+    nekomote_error nekomote_wallpaper_reset(nekomote_wallpaper* wp);
+
+    /* Catalog queries. Strings are valid until the next call on the same
+     * wallpaper instance. */
+    int nekomote_wallpaper_character_count(const nekomote_wallpaper* wp);
+    const char* nekomote_wallpaper_character_name(const nekomote_wallpaper* wp, int index);
+    int nekomote_wallpaper_background_count(const nekomote_wallpaper* wp);
+    const char* nekomote_wallpaper_background_name(const nekomote_wallpaper* wp, int index);
+    int nekomote_wallpaper_current_character(const nekomote_wallpaper* wp);
+    int nekomote_wallpaper_current_background(const nekomote_wallpaper* wp);
+    const char* nekomote_wallpaper_current_character_name(const nekomote_wallpaper* wp);
+    int nekomote_wallpaper_has_background(const nekomote_wallpaper* wp);
+    int nekomote_wallpaper_paused(const nekomote_wallpaper* wp);
+
 #ifdef __cplusplus
 }
 #endif

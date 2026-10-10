@@ -1,3 +1,6 @@
+#include "abi_internal.hpp"
+#include "wallpaper_instance.hpp"
+
 #include <nekomote/application/session.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/image.hpp>
@@ -18,26 +21,14 @@
 #include <string>
 #include <vector>
 
+thread_local nekomote::abi::ErrorState nekomote::abi::g_error;
+using nekomote::abi::set_error;
+using nekomote::abi::g_error;
+
 namespace
 {
 
-/* ---- Per-thread error diagnostic ---- */
-
-struct ErrorState
-{
-    nekomote_error code{NEKOMOTE_OK};
-    std::array<char, 1024> message{};
-};
-
-thread_local ErrorState g_error;
-
-// Reporting allocation failures must itself be allocation-free. Long source
-// paths are truncated only in this diagnostic; the error code stays intact.
-void set_error(nekomote_error code, const char* msg) noexcept
-{
-    g_error.code = code;
-    std::snprintf(g_error.message.data(), g_error.message.size(), "%s", msg ? msg : "");
-}
+/* ---- Per-thread error diagnostic is in abi_internal.hpp ---- */
 
 nekomote_error session_error_code(nekomote::application::SessionError e)
 {
@@ -1377,6 +1368,330 @@ extern "C"
     const uint8_t* nekomote_image_pixels(const nekomote_image* image)
     {
         return image ? image->pixels.data() : nullptr;
+    }
+
+    /* ---- Wallpaper instance ---- */
+
+    struct nekomote_wallpaper
+    {
+        std::unique_ptr<nekomote::abi::WallpaperInstance> instance;
+    };
+
+    nekomote_wallpaper* nekomote_wallpaper_create(nekomote_gl_loader loader)
+    {
+        if (!loader)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null GL loader");
+            return nullptr;
+        }
+        try
+        {
+            auto w = std::make_unique<nekomote_wallpaper>();
+            w->instance = std::make_unique<nekomote::abi::WallpaperInstance>(
+                reinterpret_cast<nekomote::render_gl::GlProc (*)(const char*)>(loader));
+            return w.release();
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "wallpaper allocation failed");
+            return nullptr;
+        }
+        catch (const std::exception& e)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, e.what());
+            return nullptr;
+        }
+        catch (...)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, "unknown exception");
+            return nullptr;
+        }
+    }
+
+    void nekomote_wallpaper_destroy(nekomote_wallpaper* wp)
+    {
+        delete wp;
+    }
+
+    nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir)
+    {
+        if (!wp || !wp->instance || !dir)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper or dir");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_assets_dir(std::filesystem::path(dir));
+    }
+
+    nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_no_save(no_save != 0);
+    }
+
+    nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_muted(muted != 0);
+    }
+
+    nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_seed(seed);
+    }
+
+    nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
+                                                      int height)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_output_size(width, height);
+    }
+
+    nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->set_paused(paused != 0);
+    }
+
+    nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->load_initial();
+    }
+
+    nekomote_error nekomote_wallpaper_load_model(nekomote_wallpaper* wp, const char* model_path,
+                                                 const char* session_path)
+    {
+        if (!wp || !wp->instance || !model_path || !session_path)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper or paths");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->load_model(std::filesystem::path(model_path),
+                                        std::filesystem::path(session_path));
+    }
+
+    nekomote_error nekomote_wallpaper_advance(nekomote_wallpaper* wp, double dt)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->advance(dt);
+    }
+
+    nekomote_error nekomote_wallpaper_render_frame(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->render_frame();
+    }
+
+    nekomote_error nekomote_wallpaper_render_ui(nekomote_wallpaper* wp, float dt)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        wp->instance->render_ui(dt);
+        return NEKOMOTE_OK;
+    }
+
+    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->pointer_move(x, y);
+    }
+
+    nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->pointer_enter(x, y);
+    }
+
+    nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->pointer_leave();
+    }
+
+    nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->touch(x, y);
+    }
+
+    nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
+                                                    nekomote_mouse_action action)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->mouse_button(button, static_cast<int>(action));
+    }
+
+    nekomote_error nekomote_wallpaper_mouse_scroll(nekomote_wallpaper* wp, double amount)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->mouse_scroll(amount);
+    }
+
+    nekomote_error nekomote_wallpaper_key(nekomote_wallpaper* wp, nekomote_key key,
+                                          nekomote_mouse_action action)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->key(static_cast<int>(key), static_cast<int>(action));
+    }
+
+    nekomote_error nekomote_wallpaper_switch_character(nekomote_wallpaper* wp, int index)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->switch_character(index);
+    }
+
+    nekomote_error nekomote_wallpaper_switch_background(nekomote_wallpaper* wp, int index)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->switch_background(index);
+    }
+
+    nekomote_error nekomote_wallpaper_clear_background(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->clear_background();
+    }
+
+    nekomote_error nekomote_wallpaper_fit(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->fit();
+    }
+
+    nekomote_error nekomote_wallpaper_reset(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->reset();
+    }
+
+    int nekomote_wallpaper_character_count(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->character_count() : 0;
+    }
+
+    const char* nekomote_wallpaper_character_name(const nekomote_wallpaper* wp, int index)
+    {
+        return (wp && wp->instance) ? wp->instance->character_name(index) : nullptr;
+    }
+
+    int nekomote_wallpaper_background_count(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->background_count() : 0;
+    }
+
+    const char* nekomote_wallpaper_background_name(const nekomote_wallpaper* wp, int index)
+    {
+        return (wp && wp->instance) ? wp->instance->background_name(index) : nullptr;
+    }
+
+    int nekomote_wallpaper_current_character(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->current_character() : -1;
+    }
+
+    int nekomote_wallpaper_current_background(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->current_background() : -1;
+    }
+
+    const char* nekomote_wallpaper_current_character_name(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->current_character_name() : nullptr;
+    }
+
+    int nekomote_wallpaper_has_background(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? (wp->instance->has_background() ? 1 : 0) : 0;
+    }
+
+    int nekomote_wallpaper_paused(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? (wp->instance->paused() ? 1 : 0) : 0;
     }
 
 } // extern "C"
