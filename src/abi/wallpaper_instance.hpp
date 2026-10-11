@@ -12,8 +12,19 @@
 #include <memory>
 #include <string>
 
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include <nekomote/render_vk/renderer.hpp>
+#include <nekomote/render_vk/ui_renderer.hpp>
+#endif
+
 namespace nekomote::abi
 {
+
+enum class WallpaperBackend
+{
+    OpenGL,
+    Vulkan
+};
 
 struct WallpaperPanelState
 {
@@ -30,6 +41,10 @@ class WallpaperInstance
 {
   public:
     explicit WallpaperInstance(render_gl::GlLoader loader);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    explicit WallpaperInstance(const render_vk::DeviceContext& ctx);
+    void set_vk_target(render_vk::Target target);
+#endif
     ~WallpaperInstance();
     WallpaperInstance(const WallpaperInstance&) = delete;
     WallpaperInstance& operator=(const WallpaperInstance&) = delete;
@@ -88,6 +103,7 @@ class WallpaperInstance
     void create_audio_device(const application::CandidateCpu& candidate);
     void apply_background(const std::filesystem::path& path, double fade_duration, int bg_index);
     void draw_ui(float dt);
+    ui::Painter* painter();
     bool ui_captures_mouse();
     void handle_switch_poll();
     void handle_background_poll();
@@ -97,11 +113,21 @@ class WallpaperInstance
     application::WallpaperController controller_;
     application::ControllerConfig controller_cfg_;
 
+    WallpaperBackend backend_{WallpaperBackend::OpenGL};
     std::unique_ptr<render_gl::Renderer> renderer_;
     std::unique_ptr<render_gl::Renderer> previous_renderer_;
     std::unique_ptr<render_gl::Renderer> background_renderer_;
     std::unique_ptr<audio::Device> audio_device_;
     render_gl::UiRenderer ui_renderer_;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    render_vk::DeviceContext vk_ctx_{};
+    render_vk::Target vk_target_{};
+    bool vk_target_set_{false};
+    std::unique_ptr<render_vk::Renderer> vk_renderer_;
+    std::unique_ptr<render_vk::Renderer> vk_previous_renderer_;
+    std::unique_ptr<render_vk::Renderer> vk_background_renderer_;
+    render_vk::UiRenderer vk_ui_renderer_;
+#endif
     ui::Context ui_context_;
     WallpaperPanelState panel_;
 

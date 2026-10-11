@@ -1426,6 +1426,69 @@ extern "C"
         delete wp;
     }
 
+    nekomote_wallpaper* nekomote_wallpaper_create_vk(nekomote_vk_device_context ctx)
+    {
+        if (!ctx.instance || !ctx.physical_device || !ctx.device || !ctx.graphics_queue)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null Vulkan device context member");
+            return nullptr;
+        }
+        try
+        {
+#if defined(NEKOMOTE_HAS_VULKAN)
+            auto w = std::make_unique<nekomote_wallpaper>();
+            nekomote::render_vk::DeviceContext vk_ctx{};
+            vk_ctx.instance = static_cast<VkInstance>(ctx.instance);
+            vk_ctx.physical_device = static_cast<VkPhysicalDevice>(ctx.physical_device);
+            vk_ctx.device = static_cast<VkDevice>(ctx.device);
+            vk_ctx.graphics_queue = static_cast<VkQueue>(ctx.graphics_queue);
+            vk_ctx.graphics_queue_family = ctx.graphics_queue_family;
+            vk_ctx.color_format = static_cast<VkFormat>(ctx.color_format);
+            w->instance = std::make_unique<nekomote::abi::WallpaperInstance>(vk_ctx);
+            return w.release();
+#else
+            (void)ctx;
+            set_error(NEKOMOTE_ERROR_UNSUPPORTED, "Vulkan backend not built");
+            return nullptr;
+#endif
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "wallpaper allocation failed");
+            return nullptr;
+        }
+        catch (const std::exception& e)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, e.what());
+            return nullptr;
+        }
+        catch (...)
+        {
+            set_error(NEKOMOTE_ERROR_FAULTED, "unknown exception");
+            return nullptr;
+        }
+    }
+
+    void nekomote_wallpaper_set_vk_target(nekomote_wallpaper* wp, nekomote_vk_target target)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return;
+        }
+#if defined(NEKOMOTE_HAS_VULKAN)
+        nekomote::render_vk::Target vk_target{};
+        vk_target.commands = static_cast<VkCommandBuffer>(target.commands);
+        vk_target.framebuffer = static_cast<VkFramebuffer>(target.framebuffer);
+        vk_target.width = target.width;
+        vk_target.height = target.height;
+        wp->instance->set_vk_target(vk_target);
+#else
+        (void)target;
+        set_error(NEKOMOTE_ERROR_UNSUPPORTED, "Vulkan backend not built");
+#endif
+    }
+
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir)
     {
         if (!wp || !wp->instance || !dir)

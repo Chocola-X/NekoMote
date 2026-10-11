@@ -54,6 +54,21 @@ WallpaperInstance::WallpaperInstance(render_gl::GlLoader loader) : loader_(loade
     controller_cfg_.audio = application::AudioMode::Disabled;
 }
 
+#if defined(NEKOMOTE_HAS_VULKAN)
+WallpaperInstance::WallpaperInstance(const render_vk::DeviceContext& ctx)
+    : backend_(WallpaperBackend::Vulkan), vk_ctx_(ctx)
+{
+    controller_cfg_.pointer = application::PointerScope::LocalSurface;
+    controller_cfg_.audio = application::AudioMode::Disabled;
+}
+
+void WallpaperInstance::set_vk_target(render_vk::Target target)
+{
+    vk_target_ = target;
+    vk_target_set_ = true;
+}
+#endif
+
 WallpaperInstance::~WallpaperInstance()
 {
     reset_gl_resources();
@@ -139,11 +154,24 @@ void WallpaperInstance::set_render_target_fbo(std::uint32_t fbo)
 
 void WallpaperInstance::reset_gl_resources()
 {
-    renderer_.reset();
-    previous_renderer_.reset();
-    background_renderer_.reset();
-    ui_renderer_.destroy_icon(panel_.icon_texture);
-    ui_renderer_.reset();
+    if (backend_ == WallpaperBackend::OpenGL)
+    {
+        renderer_.reset();
+        previous_renderer_.reset();
+        background_renderer_.reset();
+        ui_renderer_.destroy_icon(panel_.icon_texture);
+        ui_renderer_.reset();
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else
+    {
+        vk_renderer_.reset();
+        vk_previous_renderer_.reset();
+        vk_background_renderer_.reset();
+        vk_ui_renderer_.destroy_icon(panel_.icon_texture);
+        vk_ui_renderer_.reset();
+    }
+#endif
     panel_.ui_ready = false;
     panel_.icon_texture = 0;
     last_render_width_ = 0;
@@ -220,15 +248,34 @@ nekomote_error WallpaperInstance::load_model(const std::filesystem::path& model_
 
 void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& candidate)
 {
-    renderer_ = std::make_unique<render_gl::Renderer>(loader_);
     const auto& scene = candidate.program->playback().scene();
     const auto capacity = scene.frame_capacity();
-    renderer_->reserve({capacity.vertices, capacity.indices, capacity.commands,
-                        scene.textures().size(), capacity.mask_commands, capacity.masks});
-    for (const auto& [id, image] : candidate.textures)
-        renderer_->upload_texture(id, image);
-    background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
-    background_renderer_->reserve({8, 12, 2, 2});
+    const auto cap = render_gl::Capacity{capacity.vertices, capacity.indices,
+                                         capacity.commands, scene.textures().size(),
+                                         capacity.mask_commands, capacity.masks};
+    if (backend_ == WallpaperBackend::OpenGL)
+    {
+        renderer_ = std::make_unique<render_gl::Renderer>(loader_);
+        renderer_->reserve(cap);
+        for (const auto& [id, image] : candidate.textures)
+            renderer_->upload_texture(id, image);
+        background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
+        background_renderer_->reserve({8, 12, 2, 2});
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else
+    {
+        const auto vk_cap = render_vk::Capacity{capacity.vertices, capacity.indices,
+                                                 capacity.commands, scene.textures().size(),
+                                                 capacity.mask_commands, capacity.masks};
+        vk_renderer_ = std::make_unique<render_vk::Renderer>(vk_ctx_);
+        vk_renderer_->reserve(vk_cap);
+        for (const auto& [id, image] : candidate.textures)
+            vk_renderer_->upload_texture(id, image);
+        vk_background_renderer_ = std::make_unique<render_vk::Renderer>(vk_ctx_);
+        vk_background_renderer_->reserve({8, 12, 2, 2});
+    }
+#endif
     last_render_width_ = 0;
     last_render_height_ = 0;
 }
@@ -278,10 +325,21 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
     }
     if (!controller_.has_background() || fade_duration <= 0)
     {
-        background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
-        background_renderer_->reserve({8, 12, 2, 2});
         const TextureId id{1};
-        background_renderer_->upload_texture(id, new_image.image);
+        if (backend_ == WallpaperBackend::OpenGL)
+        {
+            background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
+            background_renderer_->reserve({8, 12, 2, 2});
+            background_renderer_->upload_texture(id, new_image.image);
+        }
+#if defined(NEKOMOTE_HAS_VULKAN)
+        else
+        {
+            vk_background_renderer_ = std::make_unique<render_vk::Renderer>(vk_ctx_);
+            vk_background_renderer_->reserve({8, 12, 2, 2});
+            vk_background_renderer_->upload_texture(id, new_image.image);
+        }
+#endif
         controller_.confirm_background(bg_index, id, id, new_image.image.width,
                                        new_image.image.height, 0);
         current_background_id_ = id;
@@ -294,11 +352,23 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
         error_string_ = old_image.error;
         return;
     }
-    background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
-    background_renderer_->reserve({8, 12, 2, 2});
     const TextureId old_id{1}, new_id{2};
-    background_renderer_->upload_texture(old_id, old_image.image);
-    background_renderer_->upload_texture(new_id, new_image.image);
+    if (backend_ == WallpaperBackend::OpenGL)
+    {
+        background_renderer_ = std::make_unique<render_gl::Renderer>(loader_);
+        background_renderer_->reserve({8, 12, 2, 2});
+        background_renderer_->upload_texture(old_id, old_image.image);
+        background_renderer_->upload_texture(new_id, new_image.image);
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else
+    {
+        vk_background_renderer_ = std::make_unique<render_vk::Renderer>(vk_ctx_);
+        vk_background_renderer_->reserve({8, 12, 2, 2});
+        vk_background_renderer_->upload_texture(old_id, old_image.image);
+        vk_background_renderer_->upload_texture(new_id, new_image.image);
+    }
+#endif
     controller_.confirm_background(bg_index, old_id, new_id, new_image.image.width,
                                    new_image.image.height, fade_duration);
     current_background_id_ = new_id;
@@ -323,7 +393,12 @@ void WallpaperInstance::handle_switch_poll()
         int bg_index = controller_.current_background_index();
         if (bg_index >= 0 && bg_index < static_cast<int>(controller_.catalog().backgrounds.size()))
             bg_path = controller_.background_path(bg_index);
-        previous_renderer_ = std::move(renderer_);
+        if (backend_ == WallpaperBackend::OpenGL)
+            previous_renderer_ = std::move(renderer_);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        else
+            vk_previous_renderer_ = std::move(vk_renderer_);
+#endif
         finish_candidate_gpu(*candidate_opt);
         create_audio_device(*candidate_opt);
         controller_.confirm_candidate(std::move(*candidate_opt));
@@ -338,13 +413,30 @@ void WallpaperInstance::handle_switch_poll()
         {
             controller_.set_output_size(output_width_, output_height_);
             controller_.prepare_frame();
-            renderer_->prepare(controller_.current_instance()->frame());
-            renderer_->resize_output(output_width_, output_height_);
-            if (controller_.has_background())
+            if (backend_ == WallpaperBackend::OpenGL)
             {
-                background_renderer_->prepare(controller_.current_instance()->background_frame());
-                background_renderer_->resize_output(output_width_, output_height_);
+                renderer_->prepare(controller_.current_instance()->frame());
+                renderer_->resize_output(output_width_, output_height_);
+                if (controller_.has_background())
+                {
+                    background_renderer_->prepare(
+                        controller_.current_instance()->background_frame());
+                    background_renderer_->resize_output(output_width_, output_height_);
+                }
             }
+#if defined(NEKOMOTE_HAS_VULKAN)
+            else
+            {
+                vk_renderer_->prepare(controller_.current_instance()->frame());
+                vk_renderer_->resize_output(output_width_, output_height_);
+                if (controller_.has_background())
+                {
+                    vk_background_renderer_->prepare(
+                        controller_.current_instance()->background_frame());
+                    vk_background_renderer_->resize_output(output_width_, output_height_);
+                }
+            }
+#endif
         }
         controller_.set_paused(paused_);
         controller_.set_minimized(minimized_);
@@ -375,6 +467,10 @@ nekomote_error WallpaperInstance::advance(double dt)
     controller_.update_fade();
     if (controller_.switch_state() == application::SwitchState::Idle && previous_renderer_)
         previous_renderer_.reset();
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (controller_.switch_state() == application::SwitchState::Idle && vk_previous_renderer_)
+        vk_previous_renderer_.reset();
+#endif
     handle_background_poll();
     if (output_width_ <= 0 || output_height_ <= 0 || minimized_)
         return NEKOMOTE_OK;
@@ -424,60 +520,112 @@ nekomote_error WallpaperInstance::render_frame()
         error_string_ = "prepare_frame failed";
         return ok_or_set(status);
     }
-    renderer_->prepare(controller_.current_instance()->frame());
     const bool in_crossfade = controller_.switch_state() == application::SwitchState::CrossFade &&
                               controller_.previous_instance();
-    if (in_crossfade)
-    {
-        controller_.previous_instance()->prepare_frame();
-        previous_renderer_->prepare(controller_.previous_instance()->frame());
-    }
     const int w = output_width_;
     const int h = output_height_;
-    if (w != last_render_width_ || h != last_render_height_)
-    {
-        renderer_->resize_output(w, h);
-        if (in_crossfade && previous_renderer_)
-            previous_renderer_->resize_output(w, h);
-        if (background_renderer_)
-            background_renderer_->resize_output(w, h);
-        last_render_width_ = w;
-        last_render_height_ = h;
-    }
     const std::array<float, 4> clear = {0.06f, 0.07f, 0.10f, 1.0f};
-    const render_gl::Target target{render_target_fbo_, w, h};
     RenderFrame bg_frame{};
     if (controller_.has_background())
         bg_frame = controller_.current_instance()->background_frame();
-    if (!bg_frame.commands.empty())
-    {
-        background_renderer_->prepare(bg_frame);
-        background_renderer_->render(target, {0, 0, 1, clear});
-    }
-    const auto target_contents = !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
-                                                            : render_gl::TargetContents::Clear;
     const float fade_alpha = controller_.fade_alpha();
-    if (in_crossfade)
+    const float cx = static_cast<float>(w) * .5f;
+    const float cy = static_cast<float>(h) * .5f;
+
+    if (backend_ == WallpaperBackend::OpenGL)
     {
-        previous_renderer_->render(target,
-                                   {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
-                                    clear, 1.0f - fade_alpha,
-                                    controller_.previous_program()->mirror()},
-                                   target_contents);
-        renderer_->render(target,
-                          {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                           fade_alpha, controller_.mirror()},
-                          render_gl::TargetContents::Preserve);
+        renderer_->prepare(controller_.current_instance()->frame());
+        if (in_crossfade)
+        {
+            controller_.previous_instance()->prepare_frame();
+            previous_renderer_->prepare(controller_.previous_instance()->frame());
+        }
+        if (w != last_render_width_ || h != last_render_height_)
+        {
+            renderer_->resize_output(w, h);
+            if (in_crossfade && previous_renderer_)
+                previous_renderer_->resize_output(w, h);
+            if (background_renderer_)
+                background_renderer_->resize_output(w, h);
+            last_render_width_ = w;
+            last_render_height_ = h;
+        }
+        const render_gl::Target target{render_target_fbo_, w, h};
+        if (!bg_frame.commands.empty())
+        {
+            background_renderer_->prepare(bg_frame);
+            background_renderer_->render(target, {0, 0, 1, clear});
+        }
+        const auto tc = !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
+                                                    : render_gl::TargetContents::Clear;
+        if (in_crossfade)
+        {
+            previous_renderer_->render(target, {cx, cy, 1, clear, 1.0f - fade_alpha,
+                                                controller_.previous_program()->mirror()}, tc);
+            renderer_->render(target, {cx, cy, 1, clear, fade_alpha, controller_.mirror()},
+                              render_gl::TargetContents::Preserve);
+        }
+        else
+        {
+            renderer_->render(target,
+                              {cx, cy, 1, clear,
+                               controller_.switch_state() == application::SwitchState::Idle ? 1.0f
+                                                                                           : fade_alpha,
+                               controller_.mirror()},
+                              tc);
+        }
     }
+#if defined(NEKOMOTE_HAS_VULKAN)
     else
     {
-        renderer_->render(
-            target,
-            {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-             controller_.switch_state() == application::SwitchState::Idle ? 1.0f : fade_alpha,
-             controller_.mirror()},
-            target_contents);
+        if (!vk_target_set_)
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER, "Vulkan target not set before render_frame");
+            return NEKOMOTE_ERROR_RENDERER;
+        }
+        vk_renderer_->prepare(controller_.current_instance()->frame());
+        if (in_crossfade)
+        {
+            controller_.previous_instance()->prepare_frame();
+            vk_previous_renderer_->prepare(controller_.previous_instance()->frame());
+        }
+        if (w != last_render_width_ || h != last_render_height_)
+        {
+            vk_renderer_->resize_output(w, h);
+            if (in_crossfade && vk_previous_renderer_)
+                vk_previous_renderer_->resize_output(w, h);
+            if (vk_background_renderer_)
+                vk_background_renderer_->resize_output(w, h);
+            last_render_width_ = w;
+            last_render_height_ = h;
+        }
+        const render_vk::Target target = vk_target_;
+        if (!bg_frame.commands.empty())
+        {
+            vk_background_renderer_->prepare(bg_frame);
+            vk_background_renderer_->render(target, {0, 0, 1, clear});
+        }
+        const auto tc = !bg_frame.commands.empty() ? render_vk::TargetContents::Preserve
+                                                    : render_vk::TargetContents::Clear;
+        if (in_crossfade)
+        {
+            vk_previous_renderer_->render(target, {cx, cy, 1, clear, 1.0f - fade_alpha,
+                                                   controller_.previous_program()->mirror()}, tc);
+            vk_renderer_->render(target, {cx, cy, 1, clear, fade_alpha, controller_.mirror()},
+                                 render_vk::TargetContents::Preserve);
+        }
+        else
+        {
+            vk_renderer_->render(target,
+                                 {cx, cy, 1, clear,
+                                  controller_.switch_state() == application::SwitchState::Idle
+                                      ? 1.0f
+                                      : fade_alpha,
+                                  controller_.mirror()},
+                                 tc);
+        }
     }
+#endif
     return NEKOMOTE_OK;
 }
 
@@ -496,37 +644,92 @@ nekomote_error WallpaperInstance::render_ui(float dt)
     // first drawable frame, including after explicit graphics-resource reset.
     if (!panel_.ui_ready)
     {
-        // Discard partial shader/font initialization from a failed attempt.
-        ui_renderer_.reset();
-        if (!ui_renderer_.init(output_width_, output_height_) || !ui_renderer_.init_font("", 36))
+        const auto icon_path = assets_dir_ / "icons" / "neko.png";
+        auto icon_image = std::filesystem::exists(icon_path)
+                              ? asset_io::load_png(icon_path)
+                              : asset_io::ImageResult{};
+        if (icon_image.ok)
+        {
+            // hold until upload below
+        }
+        if (backend_ == WallpaperBackend::OpenGL)
         {
             ui_renderer_.reset();
-            set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI shader or font initialization failed");
-            return NEKOMOTE_ERROR_RENDERER;
+            if (!ui_renderer_.init(output_width_, output_height_) || !ui_renderer_.init_font("", 36))
+            {
+                ui_renderer_.reset();
+                set_error(NEKOMOTE_ERROR_RENDERER,
+                          "wallpaper UI shader or font initialization failed");
+                return NEKOMOTE_ERROR_RENDERER;
+            }
+            ui_context_.init(&ui_renderer_);
+            if (icon_image.ok)
+            {
+                panel_.icon_texture = ui_renderer_.upload_icon(icon_image.image);
+                if (!panel_.icon_texture)
+                {
+                    set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI icon upload failed");
+                    return NEKOMOTE_ERROR_RENDERER;
+                }
+            }
         }
-        ui_context_.init(&ui_renderer_);
-        const auto icon_path = assets_dir_ / "icons" / "neko.png";
-        if (std::filesystem::exists(icon_path))
+#if defined(NEKOMOTE_HAS_VULKAN)
+        else
         {
-            auto image = asset_io::load_png(icon_path);
-            if (!image.ok)
+            vk_ui_renderer_.reset();
+            if (!vk_ui_renderer_.init(vk_ctx_, output_width_, output_height_) ||
+                !vk_ui_renderer_.init_font("", 36))
             {
-                set_error(NEKOMOTE_ERROR_RENDERER, image.error.c_str());
+                vk_ui_renderer_.reset();
+                set_error(NEKOMOTE_ERROR_RENDERER,
+                          "wallpaper UI shader or font initialization failed");
                 return NEKOMOTE_ERROR_RENDERER;
             }
-            panel_.icon_texture = ui_renderer_.upload_icon(image.image);
-            if (!panel_.icon_texture)
+            ui_context_.init(&vk_ui_renderer_);
+            if (icon_image.ok)
             {
-                set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI icon upload failed");
-                return NEKOMOTE_ERROR_RENDERER;
+                panel_.icon_texture = vk_ui_renderer_.upload_icon(icon_image.image);
+                if (!panel_.icon_texture)
+                {
+                    set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI icon upload failed");
+                    return NEKOMOTE_ERROR_RENDERER;
+                }
             }
+        }
+#endif
+        if (!icon_image.ok && std::filesystem::exists(icon_path))
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER, icon_image.error.c_str());
+            return NEKOMOTE_ERROR_RENDERER;
         }
         panel_.ui_ready = true;
     }
-    ui_renderer_.resize(output_width_, output_height_);
-    ui_renderer_.set_render_target(render_target_fbo_);
+    if (backend_ == WallpaperBackend::OpenGL)
+    {
+        ui_renderer_.resize(output_width_, output_height_);
+        ui_renderer_.set_render_target(render_target_fbo_);
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else
+    {
+        vk_ui_renderer_.resize(output_width_, output_height_);
+        if (vk_target_set_)
+            vk_ui_renderer_.set_render_target(vk_target_);
+    }
+#endif
     draw_ui(paused_ ? 0.0f : std::min(dt, .25f));
     return NEKOMOTE_OK;
+}
+
+ui::Painter* WallpaperInstance::painter()
+{
+    if (backend_ == WallpaperBackend::OpenGL)
+        return &ui_renderer_;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (backend_ == WallpaperBackend::Vulkan)
+        return &vk_ui_renderer_;
+#endif
+    return nullptr;
 }
 
 bool WallpaperInstance::ui_captures_mouse()
@@ -565,7 +768,7 @@ void WallpaperInstance::draw_ui(float dt)
     if (panel_.sidebar.animation > 0.001f)
     {
         const float sidebar_alpha = std::clamp(panel_.sidebar.animation, 0.0f, 1.0f);
-        ui_renderer_.set_global_alpha(sidebar_alpha);
+        painter()->set_global_alpha(sidebar_alpha);
         const float sidebar_x = panel_.sidebar.x;
         const float sidebar_y = panel_.sidebar.y;
         const auto& catalog = controller_.catalog();
@@ -596,13 +799,13 @@ void WallpaperInstance::draw_ui(float dt)
         const float max_scroll =
             std::max(0.0f, content_scrollable_h - (panel_.sidebar.height - 44.0f));
         panel_.sidebar.scroll_y = std::clamp(panel_.sidebar.scroll_y, 0.0f, max_scroll);
-        ui_renderer_.draw_rounded_rect(sidebar_x, sidebar_y, panel_.sidebar.width,
+        painter()->draw_rounded_rect(sidebar_x, sidebar_y, panel_.sidebar.width,
                                        panel_.sidebar.height, style.corner_radius, style.panel_bg,
                                        style.accent, 2.0f);
         ui_context_.sidebar_header(panel_.sidebar, "猫娘乐园角色E-mote图鉴", style);
         const float clip_y = sidebar_y + 44.0f;
         const float clip_h = panel_.sidebar.height - 44.0f;
-        ui_renderer_.push_clip_rect(sidebar_x, clip_y, panel_.sidebar.width, clip_h);
+        painter()->push_clip_rect(sidebar_x, clip_y, panel_.sidebar.width, clip_h);
         float curr_y = clip_y - panel_.sidebar.scroll_y;
         for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
         {
@@ -730,7 +933,7 @@ void WallpaperInstance::draw_ui(float dt)
         curr_y += 10.0f;
         const char* author_txt = "作者：GTX690战术核显卡导弹";
         const float atw =
-            ui_renderer_.font() ? ui_renderer_.font()->text_width(author_txt, 12.0f) : 160.0f;
+            painter()->font() ? painter()->font()->text_width(author_txt, 12.0f) : 160.0f;
         ui_context_.label(author_txt, sidebar_x + (panel_.sidebar.width - atw) * 0.5f, curr_y,
                           12.0f, style.text);
         curr_y += 24.0f;
@@ -738,17 +941,17 @@ void WallpaperInstance::draw_ui(float dt)
         curr_y += 10.0f;
         const char* gh_txt = "Github项目：NekoWebShow";
         const float gtw =
-            ui_renderer_.font() ? ui_renderer_.font()->text_width(gh_txt, 12.0f) : 170.0f;
+            painter()->font() ? painter()->font()->text_width(gh_txt, 12.0f) : 170.0f;
         ui_context_.label(gh_txt, sidebar_x + (panel_.sidebar.width - gtw) * 0.5f, curr_y, 12.0f,
                           style.text);
         curr_y += 24.0f;
-        ui_renderer_.pop_clip_rect();
+        painter()->pop_clip_rect();
         ui_context_.draw_scrollbar(sidebar_x, clip_y, panel_.sidebar.width, clip_h,
                                    content_scrollable_h, panel_.sidebar.scroll_y, style);
-        ui_renderer_.set_global_alpha(1.0f);
+        painter()->set_global_alpha(1.0f);
     }
     ui_context_.end_frame();
-    ui_renderer_.end_frame();
+    painter()->end_frame();
 }
 
 nekomote_error WallpaperInstance::pointer_move(double x, double y,

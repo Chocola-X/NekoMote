@@ -17,15 +17,21 @@
  *   nekomote_abi_host --model <m.nkm.json> --session <s.nks.json> [options]
  *
  * Options:
- *   --width <N>       Window width (default 800, 1..8192)
- *   --height <N>      Window height (default 600, 1..8192)
- *   --steps <N>       Fixed-step mode: N steps at dt=1/60s, then exit
- *   --seed <N>        Random seed (default 42)
- *   --mute            Disable audio playback
- *   --no-save         Do not save config
- *   --capture <path>  Save final frame as PNG (requires --steps)
- *   --ui-open         Start with UI panel open
+ *   --backend <name>   Backend: opengl or vulkan (default opengl)
+ *   --width <N>        Window width (default 800, 1..8192)
+ *   --height <N>       Window height (default 600, 1..8192)
+ *   --steps <N>        Fixed-step mode: N steps at dt=1/60s, then exit
+ *   --seed <N>         Random seed (default 42)
+ *   --mute             Disable audio playback
+ *   --no-save          Do not save config
+ *   --capture <path>   Save final frame as PNG (requires --steps)
+ *   --ui-open          Start with UI panel open
  */
+
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include <vulkan/vulkan.h>
+#include "vk_host_c.h"
+#endif
 
 // clang-format off: glad must precede GLFW
 #include <glad/gl.h>
@@ -377,20 +383,99 @@ static int save_screenshot_png(const char* path, int width, int height)
 /* Usage                                                              */
 /* ------------------------------------------------------------------ */
 
+#if defined(NEKOMOTE_HAS_VULKAN)
+static int save_screenshot_png_from_pixels(const char* path, int width, int height,
+                                           const uint8_t* pixels)
+{
+    size_t row_bytes = (size_t)width * 4;
+    uint8_t* row = malloc(row_bytes);
+    if (!row)
+        return 0;
+    size_t pixel_count = (size_t)width * (size_t)height * 4;
+    uint8_t* flipped = malloc(pixel_count);
+    if (!flipped)
+    {
+        free(row);
+        return 0;
+    }
+    for (int y = 0; y < height; y++)
+        memcpy(flipped + (size_t)y * row_bytes,
+               pixels + (size_t)(height - 1 - y) * row_bytes, row_bytes);
+    free(row);
+    size_t raw_len = (size_t)height * (row_bytes + 1);
+    uint8_t* raw = malloc(raw_len);
+    if (!raw)
+    {
+        free(flipped);
+        return 0;
+    }
+    for (int y = 0; y < height; y++)
+    {
+        raw[(size_t)y * (row_bytes + 1)] = 0;
+        memcpy(raw + (size_t)y * (row_bytes + 1) + 1, flipped + (size_t)y * row_bytes, row_bytes);
+    }
+    free(flipped);
+    uLongf compressed_len = compressBound(raw_len);
+    uint8_t* compressed = malloc(compressed_len);
+    if (!compressed)
+    {
+        free(raw);
+        return 0;
+    }
+    if (compress(compressed, &compressed_len, raw, raw_len) != Z_OK)
+    {
+        free(raw);
+        free(compressed);
+        return 0;
+    }
+    free(raw);
+    FILE* f = fopen(path, "wb");
+    if (!f)
+    {
+        free(compressed);
+        return 0;
+    }
+    static const uint8_t signature[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    fwrite(signature, 1, 8, f);
+    uint8_t ihdr[13];
+    ihdr[0] = (uint8_t)(width >> 24);
+    ihdr[1] = (uint8_t)(width >> 16);
+    ihdr[2] = (uint8_t)(width >> 8);
+    ihdr[3] = (uint8_t)width;
+    ihdr[4] = (uint8_t)(height >> 24);
+    ihdr[5] = (uint8_t)(height >> 16);
+    ihdr[6] = (uint8_t)(height >> 8);
+    ihdr[7] = (uint8_t)height;
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    ihdr[10] = 0;
+    ihdr[11] = 0;
+    ihdr[12] = 0;
+    png_write_chunk(f, "IHDR", ihdr, 13);
+    png_write_chunk(f, "IDAT", compressed, (uint32_t)compressed_len);
+    png_write_chunk(f, "IEND", NULL, 0);
+    free(compressed);
+    fclose(f);
+    printf("[abi_host] captured %dx%d PNG to %s\n", width, height, path);
+    return 1;
+}
+#endif
+
 static void print_usage(const char* prog)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "  %s --assets <dir> [options]\n", prog);
     fprintf(stderr, "  %s --model <m.nkm.json> --session <s.nks.json> [options]\n", prog);
     fprintf(stderr, "\nOptions:\n");
-    fprintf(stderr, "  --width <N>       Window width (default 800, 1..8192)\n");
-    fprintf(stderr, "  --height <N>      Window height (default 600, 1..8192)\n");
-    fprintf(stderr, "  --steps <N>       Fixed-step: N steps at dt=1/60s, then exit\n");
-    fprintf(stderr, "  --seed <N>        Random seed (default 42)\n");
-    fprintf(stderr, "  --mute            Disable audio playback\n");
-    fprintf(stderr, "  --no-save         Do not save config\n");
-    fprintf(stderr, "  --capture <path>  Save final frame as PNG (requires --steps)\n");
-    fprintf(stderr, "  --ui-open         Start with UI panel open\n");
+    fprintf(stderr, "  --backend <name>   Backend: opengl or vulkan (default opengl)\n");
+    fprintf(stderr, "  --width <N>        Window width (default 800, 1..8192)\n");
+    fprintf(stderr, "  --height <N>       Window height (default 600, 1..8192)\n");
+    fprintf(stderr, "  --steps <N>        Fixed-step: N steps at dt=1/60s, then exit\n");
+    fprintf(stderr, "  --seed <N>         Random seed (default 42)\n");
+    fprintf(stderr, "  --mute             Disable audio playback\n");
+    fprintf(stderr, "  --no-save          Do not save config\n");
+    fprintf(stderr, "  --capture <path>   Save final frame as PNG (requires --steps)\n");
+    fprintf(stderr, "  --ui-open          Start with UI panel open\n");
     fprintf(stderr, "\nThis is a C ABI wallpaper verification tool.\n");
 }
 
@@ -414,6 +499,7 @@ int main(int argc, char** argv)
     int no_save = 0;
     int ui_open = 0;
     int mute = 0;
+    int use_vulkan = 0;
 
     for (int i = 1; i < argc; i++)
     {
@@ -423,6 +509,19 @@ int main(int argc, char** argv)
             model_path = argv[++i];
         else if (strcmp(argv[i], "--session") == 0 && i + 1 < argc)
             session_path = argv[++i];
+        else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc)
+        {
+            const char* name = argv[++i];
+            if (strcmp(name, "opengl") == 0)
+                use_vulkan = 0;
+            else if (strcmp(name, "vulkan") == 0)
+                use_vulkan = 1;
+            else
+            {
+                fprintf(stderr, "[abi_host] backend must be opengl or vulkan\n");
+                return 2;
+            }
+        }
         else if (strcmp(argv[i], "--width") == 0 && i + 1 < argc)
         {
             if (!parse_window_size(argv[++i], &width))
@@ -479,7 +578,17 @@ int main(int argc, char** argv)
     printf("nekomote_abi_host — C ABI wallpaper tool\n");
     printf("  version: %s\n", nekomote_version());
     printf("  mode: %s\n", fixed_mode ? "fixed-step (dt=1/60s)" : "interactive");
+    printf("  backend: %s\n", use_vulkan ? "vulkan" : "opengl");
     printf("  audio: %s\n\n", mute ? "disabled" : "enabled");
+
+#if !defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+    {
+        fprintf(stderr, "[abi_host] Vulkan backend not built; reconfigure with "
+                        "NEKOMOTE_BUILD_VULKAN=ON\n");
+        return 2;
+    }
+#endif
 
     /* ---- Init GLFW ---- */
     if (!glfwInit())
@@ -487,11 +596,26 @@ int main(int argc, char** argv)
         fprintf(stderr, "Error: glfwInit failed\n");
         return 1;
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, capture_path ? GLFW_FALSE : GLFW_TRUE);
-    glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+
+#if defined(NEKOMOTE_HAS_VULKAN)
+    VkHostC vk_host;
+    VkSurfaceKHR vk_surface = VK_NULL_HANDLE;
+    memset(&vk_host, 0, sizeof(vk_host));
+    if (use_vulkan)
+    {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_VISIBLE, capture_path ? GLFW_FALSE : GLFW_TRUE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+    }
+    else
+#endif
+    {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_VISIBLE, capture_path ? GLFW_FALSE : GLFW_TRUE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+    }
 
     GLFWwindow* window = glfwCreateWindow(width, height, "NekoMote ABI Host", NULL, NULL);
     if (!window)
@@ -500,23 +624,68 @@ int main(int argc, char** argv)
         glfwTerminate();
         return 1;
     }
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(fixed_mode ? 0 : 1);
 
-    if (!gladLoadGL(glfwGetProcAddress))
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
     {
-        fprintf(stderr, "Error: gladLoadGL failed\n");
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return 1;
+        uint32_t glfw_ext_count = 0;
+        const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
+        if (!glfw_exts || glfw_ext_count == 0)
+        {
+            fprintf(stderr, "Error: no Vulkan instance extensions from GLFW\n");
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            return 1;
+        }
+        if (vk_host_c_create_instance(&vk_host, glfw_exts, glfw_ext_count) != 0 ||
+            glfwCreateWindowSurface(vk_host.instance, window, NULL, &vk_surface) != VK_SUCCESS ||
+            vk_host_c_select_device(&vk_host, vk_surface) != 0 ||
+            vk_host_c_create_device(&vk_host) != 0)
+        {
+            fprintf(stderr, "Error: Vulkan initialization failed\n");
+            vk_host_c_destroy(&vk_host);
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            return 1;
+        }
+        printf("  Vulkan device ready\n");
     }
-    printf("  GL: %s\n", glGetString(GL_VERSION));
+    else
+#endif
+    {
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(fixed_mode ? 0 : 1);
+        if (!gladLoadGL(glfwGetProcAddress))
+        {
+            fprintf(stderr, "Error: gladLoadGL failed\n");
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            return 1;
+        }
+        printf("  GL: %s\n", glGetString(GL_VERSION));
+    }
 
     glfwGetFramebufferSize(window, &g_host.fb_width, &g_host.fb_height);
     glfwGetWindowSize(window, &g_host.win_width, &g_host.win_height);
 
     /* ---- Create wallpaper instance ---- */
-    nekomote_wallpaper* wp = nekomote_wallpaper_create(glfwGetProcAddress);
+    nekomote_wallpaper* wp = NULL;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+    {
+        nekomote_vk_device_context ctx = {0};
+        ctx.instance = vk_host.instance;
+        ctx.physical_device = vk_host.physical_device;
+        ctx.device = vk_host.device;
+        ctx.graphics_queue = vk_host.graphics_queue;
+        ctx.graphics_queue_family = vk_host.graphics_family;
+        ctx.color_format = 37; /* VK_FORMAT_R8G8B8A8_UNORM */
+        wp = nekomote_wallpaper_create_vk(ctx);
+    }
+    else
+#endif
+        wp = nekomote_wallpaper_create(glfwGetProcAddress);
+
     if (!wp)
     {
         fprintf(stderr, "Error: wallpaper create failed: %s\n",
@@ -575,6 +744,10 @@ int main(int argc, char** argv)
 
     while (!glfwWindowShouldClose(window))
     {
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (use_vulkan)
+            vk_host_c_wait_ready(&vk_host);
+#endif
         glfwPollEvents();
 
         double dt;
@@ -594,6 +767,22 @@ int main(int argc, char** argv)
             exit_code = 1;
             break;
         }
+
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (use_vulkan)
+        {
+            nekomote_vk_target target;
+            if (vk_host_c_begin_frame(&vk_host, g_host.fb_width, g_host.fb_height,
+                                      !capture_path, &target) != 0)
+            {
+                fprintf(stderr, "[abi_host] vk_begin_frame failed\n");
+                exit_code = 1;
+                break;
+            }
+            nekomote_wallpaper_set_vk_target(wp, target);
+        }
+#endif
+
         if (!check("render_frame", nekomote_wallpaper_render_frame(wp)))
         {
             exit_code = 1;
@@ -604,12 +793,43 @@ int main(int argc, char** argv)
 
         if (capture_path && fixed_mode && frame_count + 1 >= steps && !captured)
         {
-            if (!save_screenshot_png(capture_path, g_host.fb_width, g_host.fb_height))
-                exit_code = 1;
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (use_vulkan)
+            {
+                size_t px_count = (size_t)g_host.fb_width * (size_t)g_host.fb_height * 4;
+                uint8_t* px = malloc(px_count);
+                if (px && vk_host_c_capture(&vk_host, g_host.fb_width, g_host.fb_height, px) == 0)
+                {
+                    if (!save_screenshot_png_from_pixels(capture_path, g_host.fb_width,
+                                                          g_host.fb_height, px))
+                        exit_code = 1;
+                }
+                else
+                    exit_code = 1;
+                free(px);
+            }
+            else
+#endif
+            {
+                if (!save_screenshot_png(capture_path, g_host.fb_width, g_host.fb_height))
+                    exit_code = 1;
+            }
             captured = 1;
         }
 
-        glfwSwapBuffers(window);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (use_vulkan)
+        {
+            if (vk_host_c_present(&vk_host) != 0)
+            {
+                fprintf(stderr, "[abi_host] vk_present failed\n");
+                exit_code = 1;
+                break;
+            }
+        }
+        else
+#endif
+            glfwSwapBuffers(window);
         frame_count++;
 
         if (frame_count % 300 == 0)
@@ -640,13 +860,35 @@ int main(int argc, char** argv)
 
     printf("\nRendered %ld frames. Shutting down.\n", frame_count);
 
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+    {
+        vk_host_c_wait_ready(&vk_host);
+        vkDeviceWaitIdle(vk_host.device);
+    }
+#endif
     nekomote_wallpaper_destroy(wp);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+        vk_host_c_destroy(&vk_host);
+#endif
     glfwDestroyWindow(window);
     glfwTerminate();
     return exit_code;
 
 fail:
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+    {
+        vk_host_c_wait_ready(&vk_host);
+        vkDeviceWaitIdle(vk_host.device);
+    }
+#endif
     nekomote_wallpaper_destroy(wp);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (use_vulkan)
+        vk_host_c_destroy(&vk_host);
+#endif
     glfwDestroyWindow(window);
     glfwTerminate();
     return 1;

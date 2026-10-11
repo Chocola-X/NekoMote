@@ -10,4 +10,8 @@ target_link_libraries(nekomote_abi
         nekomote::render_gl
         nekomote::ui
         nekomote_warnings)
+if(NEKOMOTE_BUILD_VULKAN)
+    target_compile_definitions(nekomote_abi PRIVATE NEKOMOTE_HAS_VULKAN)
+    target_link_libraries(nekomote_abi PRIVATE nekomote::render_vk)
+endif()
 target_compile_features(nekomote_abi PUBLIC cxx_std_20)

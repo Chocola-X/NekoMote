@@ -421,6 +421,33 @@ extern "C"
     nekomote_wallpaper* nekomote_wallpaper_create(nekomote_gl_loader loader);
     void nekomote_wallpaper_destroy(nekomote_wallpaper* wp);
 
+    /* Vulkan backend (C wrapper). The host creates and owns the Vulkan
+     * instance/device/swapchain; the wallpaper instance only borrows the
+     * device for GPU resource management and command recording. Pass a
+     * nekomote_vk_target before each render_frame/render_ui call. All
+     * renderer resources must be destroyed (via wallpaper_destroy) before
+     * the host destroys the Vulkan device. */
+    typedef struct
+    {
+        void* instance;          /* VkInstance */
+        void* physical_device;   /* VkPhysicalDevice */
+        void* device;            /* VkDevice */
+        void* graphics_queue;    /* VkQueue */
+        uint32_t graphics_queue_family;
+        int32_t color_format;    /* VkFormat (e.g. 37 = VK_FORMAT_R8G8B8A8_UNORM) */
+    } nekomote_vk_device_context;
+
+    typedef struct
+    {
+        void* commands;          /* VkCommandBuffer (recording, in COLOR_ATTACHMENT_OPTIMAL) */
+        void* framebuffer;       /* VkFramebuffer (single RGBA8 color attachment) */
+        int width;
+        int height;
+    } nekomote_vk_target;
+
+    nekomote_wallpaper* nekomote_wallpaper_create_vk(nekomote_vk_device_context ctx);
+    void nekomote_wallpaper_set_vk_target(nekomote_wallpaper* wp, nekomote_vk_target target);
+
     /* Setup */
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
     nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
