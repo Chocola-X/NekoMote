@@ -95,7 +95,8 @@ class BackendRenderer
 #endif
     }
 
-    void render(const BackendView& view, BackendContents contents)
+    void render(const BackendView& view, BackendContents contents,
+                int target_width, int target_height)
     {
         const auto gl_view = nekomote::render_gl::View{
             view.origin_x, view.origin_y, view.scale, view.clear, view.alpha, view.flip_x};
@@ -103,7 +104,7 @@ class BackendRenderer
                                      ? nekomote::render_gl::TargetContents::Clear
                                      : nekomote::render_gl::TargetContents::Preserve;
         if (gl_)
-            gl_->render({0, 0, 0}, gl_view, gl_contents);
+            gl_->render({0, target_width, target_height}, gl_view, gl_contents);
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_ && vk_host_)
         {
@@ -113,25 +114,21 @@ class BackendRenderer
             const auto vk_contents = contents == BackendContents::Clear
                                          ? nekomote::render_vk::TargetContents::Clear
                                          : nekomote::render_vk::TargetContents::Preserve;
-            vk_->render({frame.framebuffer,
-                         static_cast<int>(vk_host_->extent.width),
-                         static_cast<int>(vk_host_->extent.height)},
+            vk_->render({frame.framebuffer, target_width, target_height},
                         vk_view, vk_contents);
         }
 #endif
     }
 
-    nekomote::ImageRgba8 capture()
+    nekomote::ImageRgba8 capture(int target_width, int target_height)
     {
         if (gl_)
-            return gl_->capture({0, 0, 0});
+            return gl_->capture({0, target_width, target_height});
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_ && vk_host_)
         {
             const auto& frame = vk_host_->frames[vk_image_index_];
-            return vk_->capture({frame.framebuffer,
-                                 static_cast<int>(vk_host_->extent.width),
-                                 static_cast<int>(vk_host_->extent.height)});
+            return vk_->capture({frame.framebuffer, target_width, target_height});
         }
 #endif
         return {};

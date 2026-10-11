@@ -1057,7 +1057,8 @@ int run(int argc, char** argv)
         if (!bg_frame.commands.empty())
         {
             gpu.background_renderer->prepare(bg_frame);
-            gpu.background_renderer->render({0, 0, 1, clear}, player::BackendContents::Clear);
+            gpu.background_renderer->render({0, 0, 1, clear}, player::BackendContents::Clear,
+                                            w, h);
         }
         const auto target_contents = !bg_frame.commands.empty()
                                          ? player::BackendContents::Preserve
@@ -1068,11 +1069,11 @@ int run(int argc, char** argv)
             gpu.previous_renderer->render(
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
                  1.0f - fade_alpha, controller.previous_program()->mirror()},
-                target_contents);
+                target_contents, w, h);
             gpu.renderer->render(
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear, fade_alpha,
                  controller.mirror()},
-                player::BackendContents::Preserve);
+                player::BackendContents::Preserve, w, h);
         }
         else
         {
@@ -1080,7 +1081,7 @@ int run(int argc, char** argv)
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
                  controller.switch_state() == application::SwitchState::Idle ? 1.0f : fade_alpha,
                  controller.mirror()},
-                target_contents);
+                target_contents, w, h);
         }
         if (touch_overlay && !o.vulkan)
             touch_overlay->render(*controller.current_instance(), {0, w, h});
@@ -1292,7 +1293,7 @@ int run(int argc, char** argv)
         }
         if (!o.capture.empty())
         {
-            const auto error = asset_io::write_png(o.capture, gpu.renderer->capture());
+            const auto error = asset_io::write_png(o.capture, gpu.renderer->capture(w, h));
             if (!error.empty())
                 throw std::runtime_error(error);
             captured = true;
@@ -1303,7 +1304,7 @@ int run(int argc, char** argv)
             ++check_frame;
             const auto save = [&](const char* name)
             {
-                const auto image = gpu.renderer->capture();
+                const auto image = gpu.renderer->capture(w, h);
                 const auto error = asset_io::write_png(o.check_window / name, image);
                 if (!error.empty())
                     throw std::runtime_error(error);
