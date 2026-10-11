@@ -62,6 +62,12 @@ target_link_libraries(nekomote_plasma_probe PRIVATE
 add_dependencies(nekomote_plasma_probe nekomote_plasma_qmlplugin nekomote_plasma_package)
 
 if(NEKOMOTE_BUILD_TESTS)
+    add_executable(nekomote_plasma_wallpaper_layers ../../tests/render/plasma_wallpaper_layers.cpp)
+    target_link_libraries(nekomote_plasma_wallpaper_layers PRIVATE
+        nekomote::plasma_qml Qt6::Qml Qt6::Quick nekomote_warnings)
+    target_compile_definitions(nekomote_plasma_wallpaper_layers PRIVATE
+        NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
+    add_dependencies(nekomote_plasma_wallpaper_layers nekomote_plasma_qmlplugin)
     add_executable(nekomote_plasma_item_safety ../../tests/render/plasma_item_safety.cpp)
     target_link_libraries(nekomote_plasma_item_safety PRIVATE
         nekomote::plasma_qml

@@ -1,6 +1,6 @@
 # Qt Quick 图形宿主试验
 
-更新：2026-10-08。C7的独立诊断宿主，实际Plasma插件仍待实现。
+本页保存 C7 独立诊断宿主的运行与历史验证范围。实际 Plasma 插件及高层 ABI 已实现；2026-10-11 显示补修/当前安装入口见 [说明](plasma-display-fix.md)。
 测试摘要见 [机器记录](validation/c7-qt-quick-results.json)。
 
 ## 构建与运行

@@ -306,8 +306,7 @@ int run(int argc, char** argv)
     }
     else
     {
-        config.writeEntry("assetsDir",
-                          QString::fromStdString(assets_root.string()));
+        config.writeEntry("assetsDir", QString::fromStdString(assets_root.string()));
     }
     containment->setWallpaperPlugin(QStringLiteral("org.nekomote.wallpaper"));
     auto* item = PlasmaQuick::AppletQuickItem::itemForApplet(containment);
@@ -322,9 +321,11 @@ int run(int argc, char** argv)
     window.resize(opts.width, opts.height);
     item->setParentItem(window.contentItem());
     item->setSize({static_cast<qreal>(opts.width), static_cast<qreal>(opts.height)});
-    const auto resize_item = [&] { item->setSize(window.size()); };
-    QObject::connect(&window, &QQuickWindow::widthChanged, item, resize_item);
-    QObject::connect(&window, &QQuickWindow::heightChanged, item, resize_item);
+    // QWindow's native resize notification can precede its final geometry.
+    // Bind the containment to the actual scene root, as a shell does.
+    const auto resize_item = [&] { item->setSize(window.contentItem()->size()); };
+    QObject::connect(window.contentItem(), &QQuickItem::widthChanged, item, resize_item);
+    QObject::connect(window.contentItem(), &QQuickItem::heightChanged, item, resize_item);
     int exit_code = 0;
     auto callbacks = std::make_unique<QObject>();
 
@@ -478,7 +479,8 @@ int run(int argc, char** argv)
             [&]
             {
                 auto* n = get_native();
-                return n && n->queryRenderedFrames() > pre_resize_frames;
+                return item->size() == QSizeF(640, 480) && n &&
+                       n->queryRenderedFrames() > pre_resize_frames;
             });
         QSize resize_fbo;
         bool resize_fbo_captured = false;
@@ -486,7 +488,7 @@ int run(int argc, char** argv)
             native, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
             [&](QSize fbo_size, unsigned, double, const QString&)
             {
-                if (fbo_size.isValid())
+                if (fbo_size == QSize(640, 480) * window.devicePixelRatio())
                 {
                     resize_fbo = fbo_size;
                     resize_fbo_captured = true;
@@ -495,7 +497,12 @@ int run(int argc, char** argv)
         wait_for([&] { return resize_fbo_captured; });
         QObject::disconnect(resize_fbo_connection);
         if (item->size() != QSizeF(640, 480))
-            throw std::runtime_error("containment did not resize with window");
+            throw std::runtime_error(
+                "containment did not resize with window: item=" + std::to_string(item->width()) +
+                "x" + std::to_string(item->height()) + "; window=" +
+                std::to_string(window.width()) + "x" + std::to_string(window.height()) +
+                "; scene=" + std::to_string(window.contentItem()->width()) + "x" +
+                std::to_string(window.contentItem()->height()));
         {
             const auto expected_fbo = QSize(640, 480) * window.devicePixelRatio();
             if (resize_fbo != expected_fbo)
@@ -550,8 +557,7 @@ int run(int argc, char** argv)
                 throw std::runtime_error("round " + std::to_string(i) +
                                          " did not isolate real pointer input");
             total_created += n->queryRendererCreated();
-            std::printf("lifecycle: round %d renderer_created=%u\n", i,
-                        n->queryRendererCreated());
+            std::printf("lifecycle: round %d renderer_created=%u\n", i, n->queryRendererCreated());
         }
         std::printf("lifecycle: create/destroy %d rounds complete, total_created=%u\n", opts.rounds,
                     total_created);
@@ -647,8 +653,7 @@ int run(int argc, char** argv)
                     return n && n->queryRenderedFrames() > baseline + 1;
                 });
         };
-        const auto good_assets_dir =
-            QString::fromStdString(assets_root.string());
+        const auto good_assets_dir = QString::fromStdString(assets_root.string());
         const auto bad_assets_dir = QStringLiteral("/nonexistent/assets");
 
         set_config("assetsDir", good_assets_dir);
@@ -708,7 +713,8 @@ int run(int argc, char** argv)
         bool frame_complete = false;
         QSize frame_size;
         double frame_delta = -1;
-        QObject::connect(native, &nekomote::qt_quick::WallpaperItemBase::frame_ready, callbacks.get(),
+        QObject::connect(native, &nekomote::qt_quick::WallpaperItemBase::frame_ready,
+                         callbacks.get(),
                          [&](QSize size, unsigned, double delta, const QString&)
                          {
                              if (frame_complete)

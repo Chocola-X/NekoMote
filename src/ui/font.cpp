@@ -119,6 +119,10 @@ unsigned int decode_utf8(const char*& p)
 
 bool FontMetrics::init(const std::string& font_path, float pixel_height)
 {
+    initialized_ = false;
+    glyphs_.clear();
+    pack_x_ = pack_y_ = pack_row_height_ = 0;
+    texture_width_ = texture_height_ = 1024;
     std::string path = font_path;
     int font_index = 0;
     if (path.empty())
@@ -263,7 +267,7 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
         const float ty1 =
             static_cast<float>(g.atlas_y + g.atlas_h) / static_cast<float>(texture_height_);
         vertices.insert(vertices.end(),
-                         {gx0, gy0, gx1, gy0, gx1, gy1, gx0, gy0, gx1, gy1, gx0, gy1});
+                        {gx0, gy0, gx1, gy0, gx1, gy1, gx0, gy0, gx1, gy1, gx0, gy1});
         uvs.insert(uvs.end(), {tx0, ty0, tx1, ty0, tx1, ty1, tx0, ty0, tx1, ty1, tx0, ty1});
         pen_x += g.advance * size_ratio;
     }

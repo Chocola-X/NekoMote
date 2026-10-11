@@ -5,7 +5,9 @@
 
 ## 壁纸应用层迁移计划
 
-G31先抽共享Controller与后端无关UI并迁移player，当前0.3.0仍为单会话/renderer契约，不声称已有完整壁纸实例/UI接口。G32随后扩当前ABI并迁移调用者，不保留旧签名；宿主只经ABI调用共享目录/配置/切换/输入/UI与绘制服务，不复制业务或PCM服务，见[专项交接](wallpaper-application-handoff.md)。
+共享 Controller/UI 与高层 `nekomote_wallpaper_*` 已实现，GLM 已迁移 Plasma 调用者。本轮显示补修见 [说明](plasma-display-fix.md)。宿主只经 ABI 连接共享业务；以下既有单会话/renderer 契约仍适用于相应接口，不能据此推定高层实例已完成全部异常/生命周期验收。
+
+高层壁纸输入使用输出物理像素、左上原点、Y 向下；Qt 壳按逻辑/输出尺寸转换一次。`set_render_target` 指定 FBO，角色/背景和 UI 都绘制到此目标；UI 可在输出尺寸晚于加载时延迟初始化。显式 model/session 诊断模式不绘控制面板。创建/加载/绘制/重置/销毁中的 GPU 操作须在其有效 GL 上下文与允许线程执行；CPU 查询不能作为跨线程读写许可。当前其他高层接口的异常/借用寿命边界仍需独立复核，不沿用测试数量宣称全部满足。
 
 后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。未来设备/输出/native同步在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。图形入口可按实际后端新增，不提前制造通用handle联合体或空Vulkan接口。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
 

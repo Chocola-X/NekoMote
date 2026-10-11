@@ -1,11 +1,12 @@
 #pragma once
 
-#include <nekomote/abi.h>
 #include <nekomote/application/controller.hpp>
 #include <nekomote/audio/device.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/ui/layout.hpp>
+
+#include <nekomote/abi.h>
 
 #include <filesystem>
 #include <memory>
@@ -47,7 +48,7 @@ class WallpaperInstance
 
     nekomote_error advance(double dt);
     nekomote_error render_frame();
-    void render_ui(float dt);
+    nekomote_error render_ui(float dt);
 
     nekomote_error pointer_move(double x, double y);
     nekomote_error pointer_enter(double x, double y);
@@ -83,9 +84,9 @@ class WallpaperInstance
   private:
     void finish_candidate_gpu(const application::CandidateCpu& candidate);
     void create_audio_device(const application::CandidateCpu& candidate);
-    void apply_background(const std::filesystem::path& path, double fade_duration,
-                          int bg_index);
+    void apply_background(const std::filesystem::path& path, double fade_duration, int bg_index);
     void draw_ui(float dt);
+    bool ui_captures_mouse();
     void handle_switch_poll();
     void handle_background_poll();
     nekomote_error check_session();

@@ -1,5 +1,7 @@
 # G31：共享壁纸应用层与player迁移
 
+状态：G31/G32 已有源码交付。本页保留原设计/验收要求，不作为当前待实施顺序；当前用户优先 Plasma 效果，见 [任务交接](agent-next-handoff.md)与 [显示补修](plasma-display-fix.md)。
+
 来源：用户要求先将player的UI/控制切换下沉，并保留后续Vulkan适配能力。调查基线 `39762b6`，接手时记录实际base；本文件是实施契约，不是已实现状态。GLM负责G31A→G31B，Codex复核边界/线程，Gemini检查受控截图。G32 ABI/Plasma迁移在G31之后，本轮不实现Vulkan。
 
 ## 1. 模块边界

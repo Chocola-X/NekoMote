@@ -4,6 +4,7 @@
 #endif
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
+#include <nekomote/render_gl/ui_renderer.hpp>
 
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
@@ -12,8 +13,10 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -643,5 +646,118 @@ TEST_CASE("C renderer validates real handles and cannot reuse failed frames", "[
     REQUIRE(allocation_count == 0);
     REQUIRE(nekomote_renderer_prepare(renderer, {}) == NEKOMOTE_OK);
     REQUIRE(glGetError() == GL_NO_ERROR);
+}
+#endif
+
+TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[gpu][ui]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output, sentinel;
+    output.resize(64, 64);
+    sentinel.resize(64, 64);
+    glClearColor(0, 1, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    render_gl::UiRenderer ui;
+    const auto paint = [&]
+    {
+        ui.begin_frame();
+        ui.draw_solid_rect(0, 0, 64, 64, {1, 0, 0, 1});
+        ui.draw_text(4, 4, "菜单 UI", 16, {1, 1, 1, 1});
+        ui.end_frame();
+    };
+    for (int generation = 0; generation < 2; ++generation)
+    {
+        REQUIRE(ui.init(64, 64));
+        REQUIRE(ui.init_font("", 36));
+        ui.set_render_target(output.framebuffer);
+        // A host or resource upload may leave another FBO bound.
+        glBindFramebuffer(GL_FRAMEBUFFER, sentinel.framebuffer);
+        paint();
+        const auto image = reader.capture({output.framebuffer, 64, 64});
+        REQUIRE(pixel(image, 32, 50) == std::array<std::uint8_t, 4>{255, 0, 0, 255});
+        std::size_t glyph_pixels = 0;
+        for (std::size_t i = 0; i < image.pixels.size(); i += 4)
+            glyph_pixels += image.pixels[i + 1] > 0;
+        REQUIRE(glyph_pixels > 50);
+        REQUIRE(pixel(reader.capture({sentinel.framebuffer, 64, 64}), 32, 50) ==
+                std::array<std::uint8_t, 4>{0, 255, 0, 255});
+        for (int frame = 0; frame < 10; ++frame)
+            paint();
+        allocation_count = 0;
+        track_allocations = true;
+        for (int frame = 0; frame < 120; ++frame)
+            paint();
+        track_allocations = false;
+        REQUIRE(allocation_count == 0);
+        ui.reset();
+    }
+}
+
+#ifdef NEKOMOTE_HAS_ABI
+TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][integration]")
+{
+    const auto source = std::filesystem::absolute("assets/characters/chocola-date-a");
+    if (!std::filesystem::exists(source / "model.nkm.json"))
+        SKIP("real asset integration unavailable: chocola-date-a");
+    struct Assets
+    {
+        std::filesystem::path path =
+            std::filesystem::temp_directory_path() /
+            ("nekomote-ui-late-size-" +
+             std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        ~Assets()
+        {
+            std::error_code error;
+            std::filesystem::remove_all(path, error);
+        }
+    } assets;
+    std::filesystem::create_directories(assets.path / "characters");
+    std::filesystem::create_directories(assets.path / "backgrounds");
+    std::filesystem::create_directories(assets.path / "icons");
+    std::filesystem::create_directory_symlink(source, assets.path / "characters/chocola-date-a");
+    REQUIRE(
+        asset_io::write_png(assets.path / "backgrounds/bg.png", {1, 1, {0, 180, 0, 255}}).empty());
+    REQUIRE(
+        asset_io::write_png(assets.path / "icons/neko.png", {1, 1, {255, 0, 255, 255}}).empty());
+    {
+        std::ofstream config(assets.path / "config.json");
+        config << R"({"character":"chocola-date-a","background":"bg","fit":true})";
+    }
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
+        nekomote_wallpaper_create(glfwGetProcAddress), nekomote_wallpaper_destroy};
+    REQUIRE(wallpaper);
+    REQUIRE(nekomote_wallpaper_set_no_save(wallpaper.get(), 1) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_muted(wallpaper.get(), 1) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.path.c_str()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_load_initial(wallpaper.get()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_output_size(wallpaper.get(), 64, 64) == NEKOMOTE_OK);
+    nekomote_wallpaper_set_render_target(wallpaper.get(), output.framebuffer);
+    for (int generation = 0; generation < 2; ++generation)
+    {
+        REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
+        const auto icon = pixel(reader.capture({output.framebuffer, 64, 64}), 34, 30);
+        REQUIRE(icon[0] > 200);
+        REQUIRE(icon[2] > 200);
+        REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), -1) == NEKOMOTE_ERROR_INVALID_INPUT);
+        nekomote_wallpaper_reset_gl(wallpaper.get());
+        if (generation == 0)
+            REQUIRE(nekomote_wallpaper_load_initial(wallpaper.get()) == NEKOMOTE_OK);
+    }
+    // An optional file that exists but is damaged must report failure, and a
+    // corrected file must permit retry without retaining partial UI resources.
+    {
+        std::ofstream broken(assets.path / "icons/neko.png", std::ios::trunc);
+        broken << "damaged PNG";
+    }
+    REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_ERROR_RENDERER);
+    REQUIRE(
+        asset_io::write_png(assets.path / "icons/neko.png", {1, 1, {255, 0, 255, 255}}).empty());
+    REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
 }
 #endif

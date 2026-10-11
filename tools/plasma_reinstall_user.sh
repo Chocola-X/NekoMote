@@ -55,82 +55,27 @@ echo "  prefix: $PREFIX_DIR"
 echo "  assets: ${ASSETS_DIR:-未指定}"
 echo ""
 
-# ============================================================
-# 第一步：清除旧安装
-# ============================================================
-echo "--- 1/3 清除旧安装 ---"
+# Validate the new package before touching the existing installation.
+python3 - "$STAGE_DIR" "$SCRIPT_DIR" <<'PYVERIFY'
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[2])
+from plasma_stage_verify import check_files, check_manifest, check_rpath
+stage = Path(sys.argv[1])
+for check in (check_files, check_manifest, check_rpath):
+    if check(stage):
+        raise SystemExit(1)
+PYVERIFY
 
-# 1a. 用 plasma_deploy.py 卸载（基于安装记录逐文件删除）
-if python3 "$SCRIPT_DIR/plasma_deploy.py" --uninstall --prefix "$PREFIX_DIR" 2>/dev/null; then
-    echo "  安装记录卸载完成"
-else
-    echo "  无安装记录或卸载失败，继续手动清除"
-fi
-
-# 1b. 手动清除残留目录（以防记录丢失或旧脚本安装路径不同）
-RESIDUAL_DIRS=(
-    "$PREFIX_DIR/nekomote"
-    "$PREFIX_DIR/plasma/wallpapers/org.nekomote.wallpaper"
-    "$PREFIX_DIR/plasma/plasmoids/org.nekomote.validation"
-)
-for dir in "${RESIDUAL_DIRS[@]}"; do
-    if [[ -d "$dir" ]]; then
-        echo "  清除残留: $dir"
-        rm -rf "$dir"
-    fi
-done
-
-# 1c. 清除旧环境配置
-ENV_DIR="$HOME/.config/environment.d"
-ENV_FILE="$ENV_DIR/nekomote.conf"
-if [[ -f "$ENV_FILE" ]]; then
-    echo "  清除环境配置: $ENV_FILE"
-    rm -f "$ENV_FILE"
-fi
-
-# 1d. 清除 QML 编译缓存（.qmlc 文件会让 plasmashell 继续用旧 QML 字节码）
-QML_CACHE_DIRS=(
-    "$HOME/.cache/plasmashell/qmlcache"
-    "$HOME/.cache/kwin/qmlcache"
-    "$HOME/.cache/ksplash/qmlcache"
-)
-for cache_dir in "${QML_CACHE_DIRS[@]}"; do
-    if [[ -d "$cache_dir" ]]; then
-        echo "  清除 QML 缓存: $cache_dir"
-        rm -f "$cache_dir"/*.qmlc
-    fi
-done
-
-# 1e. 刷新 KDE 包缓存（让 Plasma 忘掉旧 KPackage）
-if command -v kbuildsycoca6 &>/dev/null; then
-    echo "  刷新 KDE 包缓存 (kbuildsycoca6)..."
-    kbuildsycoca6 --noincremental 2>/dev/null || true
-fi
-
-echo "  清除完成。"
-echo ""
-
-# ============================================================
-# 第二步：安装新文件
-# ============================================================
-echo "--- 2/3 安装新文件 ---"
-
-if [[ ! -d "$STAGE_DIR" ]]; then
-    echo "错误: stage 目录不存在: $STAGE_DIR"
-    echo "请先执行:"
-    echo "  cmake --preset dev -DNEKOMOTE_BUILD_PLASMA=ON -DNEKOMOTE_BUILD_QT_QUICK=ON"
-    echo "  cmake --build build/dev --target nekomote_plasma_qmlplugin nekomote_plasma_qml nekomote_plasma_stage"
-    exit 1
-fi
-
-if [[ ! -f "$STAGE_DIR/manifest.json" ]]; then
-    echo "错误: stage manifest 不存在: $STAGE_DIR/manifest.json"
-    echo "请重新构建 stage 目标:"
-    echo "  cmake --build build/dev --target nekomote_plasma_stage"
-    exit 1
-fi
-
+# Remove recorded plugin files only. nekomote/config.json belongs to the
+# wallpaper user and must survive reinstall (especially with read-only assets).
+python3 "$SCRIPT_DIR/plasma_deploy.py" --uninstall --prefix "$PREFIX_DIR"
+# This old package file predates install records and is no longer used.
+rm -f "$PREFIX_DIR/plasma/wallpapers/org.nekomote.wallpaper/contents/config/main.qml"
 python3 "$SCRIPT_DIR/plasma_deploy.py" --install --stage "$STAGE_DIR" --prefix "$PREFIX_DIR"
+
+ENV_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/environment.d"
+ENV_FILE="$ENV_DIR/nekomote.conf"
 
 # 2b. 写 KDE 环境配置（QML_IMPORT_PATH）
 QML_PATH="$PREFIX_DIR/nekomote/qml"
@@ -161,13 +106,13 @@ echo ""
 echo "=== 重装完成 ==="
 echo ""
 echo "下一步:"
-echo "  1. 重新登录 Plasma 会话（或运行 systemctl --user import-environment QML_IMPORT_PATH）"
-echo "  2. 重启 plasmashell 以加载新 QML: kquitapp6 plasmashell && kstart6 plasmashell"
+echo "  1. 重新登录测试用户的 Plasma 会话，让 QML_IMPORT_PATH 和新 native 库生效"
+echo "  2. 在该测试用户的壁纸配置中选择 NekoMote（重新登录已加载新插件库）"
 echo "  3. KDE 系统设置 → 外观 → 壁纸 → 选择 \"NekoMote 壁纸\""
 if [[ -n "$ASSETS_DIR" ]]; then
     echo "  4. 壁纸配置中设置 Assets 目录: file://$ASSETS_DIR"
 fi
-echo "  5. 壁纸配置中可勾选\"静音\"复选框控制声音"
+echo "  5. 点击右上角图标，在共享菜单的设置中选择背景（未选择时为纯色底）"
 echo ""
 echo "卸载: python3 $SCRIPT_DIR/plasma_deploy.py --uninstall --prefix \"$PREFIX_DIR\""
 echo "      rm -f \"$ENV_FILE\""

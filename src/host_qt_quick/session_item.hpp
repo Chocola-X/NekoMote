@@ -55,12 +55,17 @@ enum class InputKind
     Enter,
     Move,
     Leave,
-    Touch
+    Touch,
+    Press,
+    Release,
+    Scroll
 };
 struct Input
 {
     InputKind kind;
     float x, y;
+    float scroll{0};
+    int button{0}; // ABI/GLFW convention: left=0, right=1.
 };
 
 // Snapshot of GUI-side state copied into the renderer during synchronize.
@@ -110,12 +115,15 @@ class WallpaperItem final : public WallpaperItemBase
     void hoverMoveEvent(QHoverEvent* event) override;
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
   private:
     ItemState get_item_state() const override;
     void clear_inputs() override;
     std::shared_ptr<WallpaperState> wallpaper_state() const override;
-    void enqueue(InputKind kind, QPointF position = {});
+    void enqueue(InputKind kind, QPointF position = {}, float scroll = 0, int button = 0);
     std::shared_ptr<WallpaperState> state_;
     bool paused_{false};
     std::uint64_t playback_revision_{0};

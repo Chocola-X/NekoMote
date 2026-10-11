@@ -101,8 +101,18 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
     icon.press_scale = lerp(icon.press_scale, target_scale, 0.25f);
     const float draw_size = icon.size * icon.press_scale;
     const float offset = (draw_size - icon.size) * 0.5f;
-    painter_->draw_icon(icon.x - offset, icon.y - offset, draw_size, draw_size, texture_id,
-                        {1, 1, 1, icon.hover ? 1.0f : 0.88f});
+    if (texture_id)
+        painter_->draw_icon(icon.x - offset, icon.y - offset, draw_size, draw_size, texture_id,
+                            {1, 1, 1, icon.hover ? 1.0f : 0.88f});
+    else
+    {
+        // The optional bitmap must not make the control entry invisible.
+        painter_->draw_rounded_rect(icon.x, icon.y, icon.size, icon.size, 8, style_.panel_bg,
+                                    style_.accent, 2);
+        for (int line = 0; line < 3; ++line)
+            painter_->draw_solid_rect(icon.x + 11, icon.y + 12 + static_cast<float>(line) * 8,
+                                      icon.size - 22, 3, style_.text);
+    }
     return clicked;
 }
 

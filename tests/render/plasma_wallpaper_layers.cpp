@@ -1,0 +1,259 @@
+#include <QEventLoop>
+#include <QGuiApplication>
+#include <QImage>
+#include <QMouseEvent>
+#include <QQuickItemGrabResult>
+#include <QQuickWindow>
+#include <QSGRendererInterface>
+#include <QTemporaryDir>
+#include <QTimer>
+#include <QWheelEvent>
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+
+#include "wallpaper_item.hpp"
+
+namespace
+{
+class InputItem final : public nekomote::plasma::NekoWallpaperItem
+{
+  public:
+    using NekoWallpaperItem::componentComplete;
+    using NekoWallpaperItem::mouseMoveEvent;
+    using NekoWallpaperItem::mousePressEvent;
+    using NekoWallpaperItem::mouseReleaseEvent;
+    using NekoWallpaperItem::wheelEvent;
+};
+void require(bool ok, const char* message)
+{
+    if (!ok)
+        throw std::runtime_error(message);
+}
+
+void wait_for(const std::function<bool()>& ready)
+{
+    QEventLoop loop;
+    QTimer poll;
+    poll.setInterval(10);
+    QObject::connect(&poll, &QTimer::timeout, &loop,
+                     [&]
+                     {
+                         if (ready())
+                             loop.quit();
+                     });
+    QTimer::singleShot(10000, &loop, &QEventLoop::quit);
+    poll.start();
+    loop.exec();
+    require(ready(), "timed out waiting for wallpaper");
+}
+
+QImage capture(QQuickItem* item, const QString& path)
+{
+    auto grab = item->grabToImage();
+    require(bool(grab), "grabToImage failed");
+    bool ready = false;
+    QObject callbacks;
+    QObject::connect(grab.get(), &QQuickItemGrabResult::ready, &callbacks, [&] { ready = true; });
+    wait_for([&] { return ready; });
+    auto image = grab->image().convertToFormat(QImage::Format_RGBA8888);
+    require(!image.isNull() && image.save(path), "capture save failed");
+    return image;
+}
+
+int changed_pixels(const QImage& before, const QImage& after, const QRect& area)
+{
+    int count = 0;
+    for (int y = area.top(); y <= area.bottom(); ++y)
+        for (int x = area.left(); x <= area.right(); ++x)
+            count += before.pixelColor(x, y) != after.pixelColor(x, y);
+    return count;
+}
+} // namespace
+
+int main(int argc, char** argv)
+{
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    QGuiApplication app(argc, argv);
+    const auto source = qEnvironmentVariable("NEKOMOTE_TEST_ASSETS_DIR");
+    if (!std::filesystem::exists(source.toStdString() +
+                                 "/characters/chocola-date-a/model.nkm.json"))
+    {
+        std::puts("SKIPPED: set NEKOMOTE_TEST_ASSETS_DIR with chocola-date-a");
+        return 77;
+    }
+    QTemporaryDir directory;
+    require(directory.isValid(), "temporary directory failed");
+    const auto output = qEnvironmentVariable("NEKOMOTE_LAYER_EVIDENCE", directory.path());
+    std::filesystem::create_directories(output.toStdString());
+    try
+    {
+        namespace fs = std::filesystem;
+        const fs::path assets(directory.path().toStdString());
+        fs::create_directories(assets / "characters");
+        fs::create_directories(assets / "backgrounds");
+        fs::create_directories(assets / "icons");
+        fs::create_directory_symlink(fs::absolute(source.toStdString()) /
+                                         "characters/chocola-date-a",
+                                     assets / "characters/chocola-date-a");
+        QImage icon(44, 44, QImage::Format_RGBA8888);
+        icon.fill(QColor(255, 0, 255));
+        const bool no_icon = qEnvironmentVariableIsSet("NEKOMOTE_TEST_NO_ICON");
+        if (!no_icon)
+            require(icon.save(directory.filePath("icons/neko.png")), "icon fixture failed");
+        QImage background(800, 900, QImage::Format_RGBA8888);
+        background.fill(QColor(20, 90, 220));
+        for (int y = 0; y < 450; ++y)
+            for (int x = 0; x < 800; ++x)
+                background.setPixelColor(x, y, QColor(220, 60, 20));
+        require(background.save(directory.filePath("backgrounds/test.png")),
+                "background fixture failed");
+        background.fill(QColor(20, 180, 70));
+        require(background.save(directory.filePath("backgrounds/second.png")),
+                "second fixture failed");
+        {
+            std::ofstream config(assets / "config.json");
+            config
+                << R"({"character":"chocola-date-a","background":"test","mute":true,"fit":true})";
+        }
+        auto object = std::make_unique<InputItem>();
+        auto* item = object.get();
+        item->setWidth(800);
+        item->setHeight(900);
+        item->setMuted(true);
+        // Controlled replay uses only these callbacks; ignore the actual desktop pointer.
+        item->setAcceptHoverEvents(false);
+        item->setAcceptedMouseButtons(Qt::NoButton);
+        item->componentComplete();
+        item->setAssetsDir(directory.path());
+        if (qEnvironmentVariableIsSet("NEKOMOTE_LAYER_TRACE"))
+            item->wallpaper_state()->trace_frames = 256;
+        QQuickWindow window;
+        window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
+        window.resize(800, 900);
+        item->setParentItem(window.contentItem());
+        window.show();
+        unsigned timer_ticks = 0;
+        QObject::connect(item->findChild<QTimer*>(), &QTimer::timeout, &window,
+                         [&] { ++timer_ticks; });
+        const auto frames = [&](unsigned n)
+        {
+            const auto target = item->queryRenderedFrames() + n;
+            try
+            {
+                wait_for([&]
+                         { return item->queryRenderedFrames() >= target || item->status() == 2; });
+            }
+            catch (...)
+            {
+                std::fprintf(stderr,
+                             "frames=%u target=%u ticks=%u status=%d visible=%d exposed=%d "
+                             "paused=%d timer=%d: %s\n",
+                             item->queryRenderedFrames(), target, timer_ticks, item->status(),
+                             window.isVisible(), window.isExposed(),
+                             static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)
+                                 ->get_item_state()
+                                 .paused,
+                             item->findChild<QTimer*>()->isActive(),
+                             qPrintable(item->errorString()));
+                throw;
+            }
+            require(item->status() == 1, qPrintable(item->errorString()));
+        };
+        frames(3);
+        const auto initial = capture(item, output + "/initial.png");
+        require(initial.pixelColor(2, 2) == QColor(220, 60, 20),
+                "top background missing or inverted");
+        require(initial.pixelColor(2, initial.height() / 2 + 20) == QColor(20, 90, 220),
+                "bottom background missing or inverted");
+        const auto icon_pixel = initial.pixelColor(initial.width() - 30, 30);
+        require(no_icon ? icon_pixel != QColor(220, 60, 20)
+                        : icon_pixel.red() > 240 && icon_pixel.blue() > 220,
+                "UI icon missing from host FBO");
+        // The window manager may resize the top-level window independently;
+        // pointer conversion must use the wallpaper item's logical extent.
+        const double dpi = static_cast<double>(initial.width()) / item->width();
+        const auto click = [&](QPointF position)
+        {
+            QMouseEvent press(QEvent::MouseButtonPress, position / dpi, position / dpi,
+                              Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            item->mousePressEvent(&press);
+            require(static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)
+                            ->get_item_state()
+                            .input_count > 0,
+                    "press callback did not enqueue");
+            frames(2);
+            QMouseEvent release(QEvent::MouseButtonRelease, position / dpi, position / dpi,
+                                Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+            item->mouseReleaseEvent(&release);
+            frames(12);
+        };
+        click({static_cast<double>(initial.width()) - 30, 30});
+        const auto open = capture(item, output + "/open.png");
+        require(open.pixelColor(20, 70) != initial.pixelColor(20, 70),
+                "UI panel did not open via Qt events");
+        click({140, 409});
+        const auto settings = capture(item, output + "/settings.png");
+        require(changed_pixels(open, settings, {20, 440, 220, 350}) > 5000,
+                "settings did not expand");
+        click({140, 796});
+        frames(35);
+        const auto switched = capture(item, output + "/background-switched.png");
+        require(switched.pixelColor(2, 2) == QColor(20, 180, 70) &&
+                    switched.pixelColor(2, initial.height() / 2 + 20) == QColor(20, 180, 70),
+                "UI background selection failed");
+        QWheelEvent wheel(QPointF(140, 500) / dpi, QPointF(140, 500) / dpi, {}, QPoint(0, -240),
+                          Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+        item->wheelEvent(&wheel);
+        frames(3);
+        const auto scrolled = capture(item, output + "/scrolled.png");
+        require(changed_pixels(switched, scrolled, {20, 60, 220, 700}) > 1000,
+                "UI wheel not forwarded");
+        item->setWidth(640);
+        item->setHeight(720);
+        window.resize(640, 720);
+        frames(4);
+        const auto resized = capture(item, output + "/resized.png");
+        require(resized.size() == QSize(static_cast<int>(640 * dpi), static_cast<int>(720 * dpi)),
+                "FBO resize failed");
+        const auto resized_icon = resized.pixelColor(resized.width() - 30, 30);
+        require(no_icon ? resized_icon != QColor(20, 180, 70)
+                        : resized_icon.red() > 200 && resized_icon.blue() > 200,
+                "UI icon did not follow output resize");
+        const QPointF from(resized.width() - 30, 30);
+        const QPointF to(resized.width() - 130, 100);
+        QMouseEvent press(QEvent::MouseButtonPress, from / dpi, from / dpi, Qt::LeftButton,
+                          Qt::LeftButton, Qt::NoModifier);
+        item->mousePressEvent(&press);
+        frames(2);
+        QMouseEvent move(QEvent::MouseMove, to / dpi, to / dpi, Qt::NoButton, Qt::LeftButton,
+                         Qt::NoModifier);
+        item->mouseMoveEvent(&move);
+        frames(2);
+        QMouseEvent release(QEvent::MouseButtonRelease, to / dpi, to / dpi, Qt::LeftButton,
+                            Qt::NoButton, Qt::NoModifier);
+        item->mouseReleaseEvent(&release);
+        frames(3);
+        const auto dragged = capture(item, output + "/dragged.png");
+        require(dragged.pixelColor(from.toPoint()) == QColor(20, 180, 70),
+                "icon drag did not clear its original position");
+        const auto dragged_icon = dragged.pixelColor(to.toPoint());
+        require(no_icon ? dragged_icon != resized.pixelColor(to.toPoint())
+                        : dragged_icon.red() > 200 && dragged_icon.blue() > 200,
+                "pressed mouse move did not drag the UI icon");
+        window.hide();
+        item->setParentItem(nullptr);
+        object.reset();
+        std::puts("PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag "
+                  "through Qt host");
+    }
+    catch (const std::exception& error)
+    {
+        std::fprintf(stderr, "%s\n", error.what());
+        return 1;
+    }
+    return 0;
+}

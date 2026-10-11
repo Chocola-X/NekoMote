@@ -1,6 +1,3 @@
-#include "abi_internal.hpp"
-#include "wallpaper_instance.hpp"
-
 #include <nekomote/application/session.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/image.hpp>
@@ -21,9 +18,12 @@
 #include <string>
 #include <vector>
 
+#include "abi_internal.hpp"
+#include "wallpaper_instance.hpp"
+
 thread_local nekomote::abi::ErrorState nekomote::abi::g_error;
-using nekomote::abi::set_error;
 using nekomote::abi::g_error;
+using nekomote::abi::set_error;
 
 namespace
 {
@@ -1453,8 +1453,7 @@ extern "C"
         return wp->instance->set_seed(seed);
     }
 
-    nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
-                                                      int height)
+    nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width, int height)
     {
         if (!wp || !wp->instance)
         {
@@ -1535,8 +1534,25 @@ extern "C"
             set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
-        wp->instance->render_ui(dt);
-        return NEKOMOTE_OK;
+        try
+        {
+            return wp->instance->render_ui(dt);
+        }
+        catch (const std::bad_alloc&)
+        {
+            set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "wallpaper UI allocation failed");
+            return NEKOMOTE_ERROR_OUT_OF_MEMORY;
+        }
+        catch (const std::exception& e)
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER, e.what());
+            return NEKOMOTE_ERROR_RENDERER;
+        }
+        catch (...)
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER, "unknown wallpaper UI error");
+            return NEKOMOTE_ERROR_RENDERER;
+        }
     }
 
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y)
@@ -1580,7 +1596,7 @@ extern "C"
     }
 
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
-                                                    nekomote_mouse_action action)
+                                                   nekomote_mouse_action action)
     {
         if (!wp || !wp->instance)
         {

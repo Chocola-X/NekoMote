@@ -3,6 +3,7 @@
 #include <glad/gl.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -169,12 +170,19 @@ std::uint32_t link_program(std::uint32_t vertex, std::uint32_t fragment)
 
 FontAtlas::~FontAtlas()
 {
+    reset();
+}
+
+void FontAtlas::reset()
+{
     if (texture_)
         glDeleteTextures(1, &texture_);
+    texture_ = 0;
 }
 
 bool FontAtlas::init(int texture_width, int texture_height)
 {
+    reset();
     texture_width_ = texture_width;
     texture_height_ = texture_height;
     glGenTextures(1, &texture_);
@@ -225,6 +233,7 @@ UiRenderer::~UiRenderer()
 
 void UiRenderer::reset()
 {
+    font_atlas_.reset();
     if (rect_shader_)
         glDeleteProgram(rect_shader_);
     if (text_shader_)
@@ -277,12 +286,9 @@ bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
         return false;
     if (!font_atlas_.init(font_metrics_.texture_width(), font_metrics_.texture_height()))
         return false;
-    font_metrics_.on_glyph_added = [this](const nekomote::ui::Glyph& g, const unsigned char* bitmap) {
-        font_atlas_.upload_glyph(g, bitmap);
-    };
-    font_metrics_.on_atlas_resized = [this](int w, int h) {
-        font_atlas_.resize_atlas(w, h);
-    };
+    font_metrics_.on_glyph_added = [this](const nekomote::ui::Glyph& g, const unsigned char* bitmap)
+    { font_atlas_.upload_glyph(g, bitmap); };
+    font_metrics_.on_atlas_resized = [this](int w, int h) { font_atlas_.resize_atlas(w, h); };
     font_ready_ = true;
     return true;
 }
@@ -294,8 +300,8 @@ std::uint32_t UiRenderer::upload_icon(const ImageRgba8& image)
     if (!id)
         return 0;
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, image.pixels.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 image.pixels.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -356,11 +362,18 @@ void UiRenderer::resize(int viewport_width, int viewport_height)
     viewport_height_ = viewport_height;
 }
 
+void UiRenderer::set_render_target(std::uint32_t framebuffer)
+{
+    framebuffer_ = framebuffer;
+}
+
 void UiRenderer::begin_frame()
 {
     global_alpha_ = 1.0f;
     if (!initialized_)
         return;
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
+    glViewport(0, 0, viewport_width_, viewport_height_);
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -546,8 +559,8 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
     color.a *= global_alpha_;
     if (!initialized_)
         return;
-    const std::vector<float> tri_verts = {x, y, x + w, y,     x + w, y + h,
-                                          x, y, x + w, y + h, x,     y + h};
+    const std::array<float, 12> tri_verts = {x, y, x + w, y,     x + w, y + h,
+                                             x, y, x + w, y + h, x,     y + h};
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_verts.size() * sizeof(float)),
@@ -568,7 +581,7 @@ void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
     fill.a *= global_alpha_;
     if (!initialized_)
         return;
-    std::vector<float> tri_verts;
+    std::array<float, 6> tri_verts{};
     if (points_up)
     {
         tri_verts = {cx - size, cy + size * 0.5f, cx + size, cy + size * 0.5f,

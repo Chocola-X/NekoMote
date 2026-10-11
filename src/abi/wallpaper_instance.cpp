@@ -1,7 +1,7 @@
 #include "wallpaper_instance.hpp"
-#include "abi_internal.hpp"
 
 #include <nekomote/asset_io/image.hpp>
+
 #include <nekomote/abi.h>
 
 #include <algorithm>
@@ -12,6 +12,8 @@
 #include <exception>
 #include <fstream>
 #include <thread>
+
+#include "abi_internal.hpp"
 
 namespace nekomote::abi
 {
@@ -52,7 +54,10 @@ WallpaperInstance::WallpaperInstance(render_gl::GlLoader loader) : loader_(loade
     controller_cfg_.audio = application::AudioMode::Disabled;
 }
 
-WallpaperInstance::~WallpaperInstance() = default;
+WallpaperInstance::~WallpaperInstance()
+{
+    reset_gl_resources();
+}
 
 nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& dir)
 {
@@ -70,9 +75,10 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
         if (!probe)
         {
             const char* xdg = std::getenv("XDG_DATA_HOME");
-            std::filesystem::path user_dir = xdg && *xdg
-                ? std::filesystem::path(xdg) / "nekomote"
-                : std::filesystem::path(std::getenv("HOME")) / ".local" / "share" / "nekomote";
+            std::filesystem::path user_dir =
+                xdg && *xdg
+                    ? std::filesystem::path(xdg) / "nekomote"
+                    : std::filesystem::path(std::getenv("HOME")) / ".local" / "share" / "nekomote";
             std::filesystem::create_directories(user_dir);
             config_path = user_dir / "config.json";
         }
@@ -136,6 +142,7 @@ void WallpaperInstance::reset_gl_resources()
     renderer_.reset();
     previous_renderer_.reset();
     background_renderer_.reset();
+    ui_renderer_.destroy_icon(panel_.icon_texture);
     ui_renderer_.reset();
     panel_.ui_ready = false;
     panel_.icon_texture = 0;
@@ -182,21 +189,6 @@ nekomote_error WallpaperInstance::load_initial()
         controller_.prepare_frame();
         if (controller_.config().fit)
             controller_.fit_to_output(output_width_, output_height_);
-    }
-    if (output_width_ > 0 && output_height_ > 0 && ui_renderer_.init(output_width_, output_height_) &&
-        ui_renderer_.init_font("", 36))
-    {
-        ui_context_.init(&ui_renderer_);
-        const auto icon_path = assets_dir_ / "icons" / "neko.png";
-        if (std::filesystem::exists(icon_path))
-        {
-            auto image = asset_io::load_png(icon_path);
-            if (image.ok)
-                panel_.icon_texture = ui_renderer_.upload_icon(image.image);
-        }
-        panel_.icon.x = static_cast<float>(output_width_) - 60;
-        panel_.icon.y = 16;
-        panel_.ui_ready = true;
     }
     initialized_ = true;
     return NEKOMOTE_OK;
@@ -251,8 +243,8 @@ void WallpaperInstance::create_audio_device(const application::CandidateCpu& can
         return;
     try
     {
-        auto device = std::make_unique<audio::Device>(
-            std::vector<model::AudioClip>(candidate.audio_clips));
+        auto device =
+            std::make_unique<audio::Device>(std::vector<model::AudioClip>(candidate.audio_clips));
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
         while (device->snapshot().state == audio::DeviceState::Connecting &&
                std::chrono::steady_clock::now() < deadline)
@@ -270,8 +262,8 @@ void WallpaperInstance::create_audio_device(const application::CandidateCpu& can
     catch (const std::exception& error)
     {
         audio_failed_ = true;
-        error_string_ = std::string("audio device creation failed: ") + error.what() +
-                        "; continuing muted";
+        error_string_ =
+            std::string("audio device creation failed: ") + error.what() + "; continuing muted";
     }
 }
 
@@ -291,7 +283,7 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
         const TextureId id{1};
         background_renderer_->upload_texture(id, new_image.image);
         controller_.confirm_background(bg_index, id, id, new_image.image.width,
-                                        new_image.image.height, 0);
+                                       new_image.image.height, 0);
         current_background_id_ = id;
         current_background_path_ = path;
         return;
@@ -329,8 +321,7 @@ void WallpaperInstance::handle_switch_poll()
     {
         std::filesystem::path bg_path;
         int bg_index = controller_.current_background_index();
-        if (bg_index >= 0 &&
-            bg_index < static_cast<int>(controller_.catalog().backgrounds.size()))
+        if (bg_index >= 0 && bg_index < static_cast<int>(controller_.catalog().backgrounds.size()))
             bg_path = controller_.catalog().backgrounds[bg_index].path;
         previous_renderer_ = std::move(renderer_);
         finish_candidate_gpu(*candidate_opt);
@@ -351,8 +342,7 @@ void WallpaperInstance::handle_switch_poll()
             renderer_->resize_output(output_width_, output_height_);
             if (controller_.has_background())
             {
-                background_renderer_->prepare(
-                    controller_.current_instance()->background_frame());
+                background_renderer_->prepare(controller_.current_instance()->background_frame());
                 background_renderer_->resize_output(output_width_, output_height_);
             }
         }
@@ -435,8 +425,7 @@ nekomote_error WallpaperInstance::render_frame()
         return ok_or_set(status);
     }
     renderer_->prepare(controller_.current_instance()->frame());
-    const bool in_crossfade = controller_.switch_state() ==
-                                  application::SwitchState::CrossFade &&
+    const bool in_crossfade = controller_.switch_state() == application::SwitchState::CrossFade &&
                               controller_.previous_instance();
     if (in_crossfade)
     {
@@ -465,17 +454,16 @@ nekomote_error WallpaperInstance::render_frame()
         background_renderer_->prepare(bg_frame);
         background_renderer_->render(target, {0, 0, 1, clear});
     }
-    const auto target_contents = !bg_frame.commands.empty()
-                                     ? render_gl::TargetContents::Preserve
-                                     : render_gl::TargetContents::Clear;
+    const auto target_contents = !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
+                                                            : render_gl::TargetContents::Clear;
     const float fade_alpha = controller_.fade_alpha();
     if (in_crossfade)
     {
-        previous_renderer_->render(
-            target,
-            {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-             1.0f - fade_alpha, controller_.previous_program()->mirror()},
-            target_contents);
+        previous_renderer_->render(target,
+                                   {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
+                                    clear, 1.0f - fade_alpha,
+                                    controller_.previous_program()->mirror()},
+                                   target_contents);
         renderer_->render(target,
                           {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
                            fade_alpha, controller_.mirror()},
@@ -493,9 +481,66 @@ nekomote_error WallpaperInstance::render_frame()
     return NEKOMOTE_OK;
 }
 
-void WallpaperInstance::render_ui(float dt)
+nekomote_error WallpaperInstance::render_ui(float dt)
 {
-    draw_ui(dt);
+    if (!std::isfinite(dt) || dt < 0)
+    {
+        set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid UI delta");
+        return NEKOMOTE_ERROR_INVALID_INPUT;
+    }
+    // Explicit model/session mode is a model-only diagnostic host, without an
+    // asset catalog or wallpaper controls.
+    if (!initialized_ || !assets_scanned_ || output_width_ <= 0 || output_height_ <= 0)
+        return NEKOMOTE_OK;
+    // Hosts may load before their first output size is known. Initialize at the
+    // first drawable frame, including after explicit graphics-resource reset.
+    if (!panel_.ui_ready)
+    {
+        // Discard partial shader/font initialization from a failed attempt.
+        ui_renderer_.reset();
+        if (!ui_renderer_.init(output_width_, output_height_) || !ui_renderer_.init_font("", 36))
+        {
+            ui_renderer_.reset();
+            set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI shader or font initialization failed");
+            return NEKOMOTE_ERROR_RENDERER;
+        }
+        ui_context_.init(&ui_renderer_);
+        const auto icon_path = assets_dir_ / "icons" / "neko.png";
+        if (std::filesystem::exists(icon_path))
+        {
+            auto image = asset_io::load_png(icon_path);
+            if (!image.ok)
+            {
+                set_error(NEKOMOTE_ERROR_RENDERER, image.error.c_str());
+                return NEKOMOTE_ERROR_RENDERER;
+            }
+            panel_.icon_texture = ui_renderer_.upload_icon(image.image);
+            if (!panel_.icon_texture)
+            {
+                set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI icon upload failed");
+                return NEKOMOTE_ERROR_RENDERER;
+            }
+        }
+        panel_.ui_ready = true;
+    }
+    ui_renderer_.resize(output_width_, output_height_);
+    ui_renderer_.set_render_target(render_target_fbo_);
+    draw_ui(paused_ ? 0.0f : std::min(dt, .25f));
+    return NEKOMOTE_OK;
+}
+
+bool WallpaperInstance::ui_captures_mouse()
+{
+    const bool captured =
+        panel_.ui_ready &&
+        (ui_context_.mouse_in_rect(panel_.icon.x, panel_.icon.y, panel_.icon.size,
+                                   panel_.icon.size) ||
+         (panel_.sidebar.animation > .05f &&
+          ui_context_.mouse_in_rect(panel_.sidebar.x, panel_.sidebar.y, panel_.sidebar.width,
+                                    panel_.sidebar.height)) ||
+         panel_.icon.dragging || panel_.sidebar.dragging);
+    ui_context_.set_captures_mouse(captured);
+    return captured;
 }
 
 void WallpaperInstance::draw_ui(float dt)
@@ -513,8 +558,8 @@ void WallpaperInstance::draw_ui(float dt)
         panel_.sidebar.animation > 0.05f &&
         ui_context_.mouse_in_rect(panel_.sidebar.x, panel_.sidebar.y, panel_.sidebar.width,
                                   panel_.sidebar.height);
-    ui_context_.set_captures_mouse(mouse_over_icon || mouse_over_sidebar ||
-                                   panel_.icon.dragging || panel_.sidebar.dragging);
+    ui_context_.set_captures_mouse(mouse_over_icon || mouse_over_sidebar || panel_.icon.dragging ||
+                                   panel_.sidebar.dragging);
     if (mouse_over_sidebar && ui_context_.scroll_delta() != 0.0f)
         panel_.sidebar.scroll_y -= ui_context_.scroll_delta() * 32.0f;
     if (panel_.sidebar.animation > 0.001f)
@@ -537,7 +582,8 @@ void WallpaperInstance::draw_ui(float dt)
         {
             content_scrollable_h += 30.0f + 4.0f * 32.0f;
             content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
-            content_scrollable_h += 30.0f + 30.0f + static_cast<float>(catalog.backgrounds.size()) * 32.0f;
+            content_scrollable_h +=
+                30.0f + 30.0f + static_cast<float>(catalog.backgrounds.size()) * 32.0f;
         }
         content_scrollable_h += 68.0f;
         const float max_sidebar_h = std::max(64.0f, static_cast<float>(output_height_) - 16.0f);
@@ -577,7 +623,7 @@ void WallpaperInstance::draw_ui(float dt)
         }
         const bool is_settings_open = (panel_.sidebar.expanded_drawer == 8);
         if (ui_context_.drawer_header("设置", is_settings_open, sidebar_x, curr_y,
-                                     panel_.sidebar.width, 42.0f, style))
+                                      panel_.sidebar.width, 42.0f, style))
             panel_.sidebar.expanded_drawer = is_settings_open ? -1 : 8;
         curr_y += 42.0f;
         if (is_settings_open)
@@ -590,13 +636,15 @@ void WallpaperInstance::draw_ui(float dt)
                 int fps;
                 const char* label;
                 const char* badge;
-            } fps_opts[] = {{0, "无上限", "∞"}, {30, "30 FPS", ""}, {60, "60 FPS", "推荐"},
+            } fps_opts[] = {{0, "无上限", "∞"},
+                            {30, "30 FPS", ""},
+                            {60, "60 FPS", "推荐"},
                             {120, "120 FPS", ""}};
             for (const auto& opt : fps_opts)
             {
                 const bool selected = (panel_.fps_limit == opt.fps);
                 if (ui_context_.radio_row(opt.label, opt.badge, selected, sidebar_x, curr_y,
-                                         panel_.sidebar.width, 32.0f, style))
+                                          panel_.sidebar.width, 32.0f, style))
                 {
                     panel_.fps_limit = opt.fps;
                     controller_.config().fps = opt.fps;
@@ -612,8 +660,8 @@ void WallpaperInstance::draw_ui(float dt)
                                    panel_.sidebar.width, 34.0f, style);
             curr_y += 34.0f;
             bool is_muted = panel_.muted;
-            if (ui_context_.switch_row("关闭声音", is_muted, sidebar_x, curr_y, panel_.sidebar.width,
-                                       34.0f, style))
+            if (ui_context_.switch_row("关闭声音", is_muted, sidebar_x, curr_y,
+                                       panel_.sidebar.width, 34.0f, style))
             {
                 panel_.muted = is_muted;
                 controller_.config().mute = is_muted;
@@ -640,7 +688,7 @@ void WallpaperInstance::draw_ui(float dt)
                 const bool selected =
                     (static_cast<int>(b) == controller_.current_background_index());
                 if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x, curr_y,
-                                         panel_.sidebar.width, 32.0f, style))
+                                          panel_.sidebar.width, 32.0f, style))
                     controller_.request_switch_background(static_cast<int>(b));
                 curr_y += 32.0f;
             }
@@ -650,8 +698,8 @@ void WallpaperInstance::draw_ui(float dt)
         const char* author_txt = "作者：GTX690战术核显卡导弹";
         const float atw =
             ui_renderer_.font() ? ui_renderer_.font()->text_width(author_txt, 12.0f) : 160.0f;
-        ui_context_.label(author_txt, sidebar_x + (panel_.sidebar.width - atw) * 0.5f, curr_y, 12.0f,
-                          style.text);
+        ui_context_.label(author_txt, sidebar_x + (panel_.sidebar.width - atw) * 0.5f, curr_y,
+                          12.0f, style.text);
         curr_y += 24.0f;
         ui_context_.divider_line(sidebar_x, curr_y, panel_.sidebar.width, style);
         curr_y += 10.0f;
@@ -677,6 +725,11 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y)
     const float px = static_cast<float>(x);
     const float py = static_cast<float>(y);
     ui_context_.mouse_move(x, y);
+    if (ui_captures_mouse())
+    {
+        controller_.pointer_leave();
+        return NEKOMOTE_OK;
+    }
     const float cx = px - static_cast<float>(output_width_) * .5f;
     const float cy = py - static_cast<float>(output_height_) * .5f;
     if (dragging_ && !panel_.locked)
@@ -695,6 +748,9 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y)
 nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 {
     if (!initialized_)
+        return NEKOMOTE_OK;
+    ui_context_.mouse_move(x, y);
+    if (ui_captures_mouse())
         return NEKOMOTE_OK;
     const float cx = static_cast<float>(x) - static_cast<float>(output_width_) * .5f;
     const float cy = static_cast<float>(y) - static_cast<float>(output_height_) * .5f;
@@ -715,7 +771,8 @@ nekomote_error WallpaperInstance::touch(float x, float y)
 {
     if (!initialized_ || paused_ || minimized_ || panel_.locked)
         return NEKOMOTE_OK;
-    if (panel_.ui_ready && ui_context_.captures_mouse())
+    ui_context_.mouse_move(x, y);
+    if (ui_captures_mouse())
         return NEKOMOTE_OK;
     const float cx = x - static_cast<float>(output_width_) * .5f;
     const float cy = y - static_cast<float>(output_height_) * .5f;
@@ -728,7 +785,7 @@ nekomote_error WallpaperInstance::mouse_button(int button, int action)
     if (!initialized_)
         return NEKOMOTE_OK;
     ui_context_.mouse_button(button, action);
-    if (panel_.ui_ready && ui_context_.captures_mouse())
+    if (ui_captures_mouse())
         return NEKOMOTE_OK;
     if (button == 1 && !panel_.locked)
     {
@@ -744,7 +801,7 @@ nekomote_error WallpaperInstance::mouse_scroll(double amount)
     if (!initialized_)
         return NEKOMOTE_OK;
     ui_context_.mouse_scroll(amount);
-    if (panel_.ui_ready && ui_context_.captures_mouse())
+    if (ui_captures_mouse())
         return NEKOMOTE_OK;
     if (panel_.locked)
         return NEKOMOTE_OK;
@@ -782,8 +839,8 @@ nekomote_error WallpaperInstance::key(int key, int action)
         {
             const int count = static_cast<int>(controller_.catalog().characters.size());
             if (count > 0)
-                controller_.request_switch_character(
-                    (controller_.current_character_index() + 1) % count);
+                controller_.request_switch_character((controller_.current_character_index() + 1) %
+                                                     count);
             break;
         }
         case NEKOMOTE_KEY_B:

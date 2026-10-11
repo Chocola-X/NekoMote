@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-11",
+  "base": "7029eda",
+  "scope": "C9 Plasma UI/background wiring; real miku desktop not tested",
+  "build": "dev Debug WERROR",
+  "gpu": "NVIDIA RTX 3060 Laptop / 575.64.03 / KDE X11",
+  "cpu_ui_abi": {
+    "passed": 11,
+    "log": "delivery-cpu.log"
+  },
+  "gpu_renderer": {
+    "passed_cases": 12,
+    "assertions": 218,
+    "raw": "delivery-validation/renderer.json"
+  },
+  "ui_layers": {
+    "dpi1": "delivery-validation/layers.json",
+    "dpi1.5": "dpi15-item-coordinates.log",
+    "no_icon": "display-stage-accepted/no-icon.json",
+    "screenshot_environment": "QSG_NO_VSYNC=1; screenshots are not FPS benchmarks"
+  },
+  "package": "display-stage-accepted/package.json",
+  "stage": "display-stage-accepted/stage.json",
+  "dynamic_package": "display-stage-accepted/dynamic.json",
+  "reinstall": "deploy-delivery/reinstall-0.json, deploy-delivery/reinstall-1.json",
+  "webgl": {
+    "reference_sha256": "0f681f4d4f88a5ab2857c0d4dcdffdd97d170d674798eb454529c29f9122d1e6",
+    "native_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+    "size": [
+      800,
+      1080
+    ],
+    "raw_max_rgba": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "alpha_max_error": 0,
+    "composed_max_rgb_black_white": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "tolerance": 2,
+    "pixels_over_tolerance": 0,
+    "reference_bbox": [
+      0,
+      196,
+      800,
+      1080
+    ],
+    "native_bbox": [
+      0,
+      196,
+      800,
+      1080
+    ],
+    "passed": true
+  },
+  "ui_backend_allocations": {
+    "operator_new": 0,
+    "warm_frames": 10,
+    "sample_frames": 120,
+    "generations": 2,
+    "excludes": "full application, driver, audio, first glyph loading"
+  },
+  "remaining": "real desktop, audio/FPS controls, shared panel business, fade pause, resource IDs, ABI review, all-model dynamics/long-term",
+  "evidence_root": "build/evidence/plasma-ui-background-20261011/",
+  "raw_summary_sha256": "c633103ab0f94cef8293f76deee4ca08b32eb2b4e396b2035fda7b6434f39b61"
+}

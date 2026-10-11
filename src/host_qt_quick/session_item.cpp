@@ -9,6 +9,7 @@
 #include <QQuickOpenGLUtils>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QWheelEvent>
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -141,8 +142,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                                  gl->glGetString(GL_VENDOR), gl->glGetString(GL_RENDERER),
                                  gl->glGetString(GL_VERSION));
                 }
-                state_->wallpaper.reset(
-                    nekomote_wallpaper_create(load_gl));
+                state_->wallpaper.reset(nekomote_wallpaper_create(load_gl));
                 if (!state_->wallpaper)
                     throw std::runtime_error("create wallpaper");
                 config_applied_ = false;
@@ -151,7 +151,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             {
                 if (!state_->assets_dir.empty())
                     check(nekomote_wallpaper_set_assets_dir(state_->wallpaper.get(),
-                                                             state_->assets_dir.c_str()),
+                                                            state_->assets_dir.c_str()),
                           "set assets dir");
                 check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), state_->seed),
                       "set seed");
@@ -162,25 +162,25 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                           "set no save");
                 config_applied_ = true;
             }
-            if (!state_->loaded)
-            {
-                if (state_->assets_mode && !state_->assets_dir.empty())
-                    check(nekomote_wallpaper_load_initial(state_->wallpaper.get()),
-                          "load initial");
-                else if (!state_->assets_mode && !state_->model_path.empty())
-                    check(nekomote_wallpaper_load_model(state_->wallpaper.get(),
-                                                         state_->model_path.c_str(),
-                                                         state_->session_path.c_str()),
-                          "load model");
-                state_->loaded = true;
-            }
-            const bool resize_output = size != output_size_;
-            if (resize_output)
+            // Loading may fit the character and initialize output-dependent
+            // services. Supply the actual FBO size before that first load.
+            if (size != output_size_ || !state_->loaded)
             {
                 check(nekomote_wallpaper_set_output_size(state_->wallpaper.get(), size.width(),
                                                          size.height()),
                       "set output size");
                 output_size_ = size;
+            }
+            if (!state_->loaded)
+            {
+                if (state_->assets_mode && !state_->assets_dir.empty())
+                    check(nekomote_wallpaper_load_initial(state_->wallpaper.get()), "load initial");
+                else if (!state_->assets_mode && !state_->model_path.empty())
+                    check(nekomote_wallpaper_load_model(state_->wallpaper.get(),
+                                                        state_->model_path.c_str(),
+                                                        state_->session_path.c_str()),
+                          "load model");
+                state_->loaded = true;
             }
             nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
                                                  framebufferObject()->handle());
@@ -188,8 +188,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             const bool first = !state_->initialized_time;
             if (first || !clock_attached_ || state_->paused != paused_)
             {
-                check(nekomote_wallpaper_set_paused(state_->wallpaper.get(),
-                                                     paused_ ? 1 : 0),
+                check(nekomote_wallpaper_set_paused(state_->wallpaper.get(), paused_ ? 1 : 0),
                       "set playback state");
                 state_->paused = paused_;
                 state_->previous_time = now;
@@ -218,11 +217,9 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                 gl->glClear(GL_COLOR_BUFFER_BIT);
             }
             check(nekomote_wallpaper_render_frame(state_->wallpaper.get()), "render frame");
-            if (!paused_)
-                nekomote_wallpaper_render_ui(state_->wallpaper.get(),
-                                             static_cast<float>(elapsed));
-            else
-                nekomote_wallpaper_render_ui(state_->wallpaper.get(), 0.0f);
+            check(nekomote_wallpaper_render_ui(state_->wallpaper.get(),
+                                               paused_ ? 0.0f : static_cast<float>(elapsed)),
+                  "render UI");
             if (state_->trace_frames > 0)
             {
                 --state_->trace_frames;
@@ -262,9 +259,9 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
         {
             const auto& input = inputs_[i];
             const float x = input.x * static_cast<float>(output_size_.width()) /
-                                static_cast<float>(logical_size_.width());
+                            static_cast<float>(logical_size_.width());
             const float y = input.y * static_cast<float>(output_size_.height()) /
-                                static_cast<float>(logical_size_.height());
+                            static_cast<float>(logical_size_.height());
             nekomote_error result = NEKOMOTE_OK;
             switch (input.kind)
             {
@@ -279,6 +276,22 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     break;
                 case InputKind::Touch:
                     result = nekomote_wallpaper_touch(state_->wallpaper.get(), x, y);
+                    break;
+                case InputKind::Press:
+                case InputKind::Release:
+                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y),
+                          "button position");
+                    result =
+                        nekomote_wallpaper_mouse_button(state_->wallpaper.get(), input.button,
+                                                        input.kind == InputKind::Press ? 1 : 0);
+                    if (result == NEKOMOTE_OK && input.kind == InputKind::Press &&
+                        input.button == 0)
+                        result = nekomote_wallpaper_touch(state_->wallpaper.get(), x, y);
+                    break;
+                case InputKind::Scroll:
+                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y),
+                          "scroll position");
+                    result = nekomote_wallpaper_mouse_scroll(state_->wallpaper.get(), input.scroll);
                     break;
             }
             if (result != NEKOMOTE_ERROR_BUSY && result != NEKOMOTE_ERROR_INPUT_UNAVAILABLE)
@@ -312,7 +325,8 @@ WallpaperItem::WallpaperItem(std::shared_ptr<WallpaperState> state, QQuickItem* 
 {
     setMirrorVertically(true);
     setAcceptHoverEvents(!state_->deterministic);
-    setAcceptedMouseButtons(state_->deterministic ? Qt::NoButton : Qt::LeftButton);
+    setAcceptedMouseButtons(state_->deterministic ? Qt::NoButton
+                                                  : Qt::LeftButton | Qt::RightButton);
 }
 QQuickFramebufferObject::Renderer* WallpaperItem::createRenderer() const
 {
@@ -338,7 +352,7 @@ void WallpaperItem::clear_inputs()
 {
     input_count_ = 0;
 }
-void WallpaperItem::enqueue(InputKind kind, QPointF position)
+void WallpaperItem::enqueue(InputKind kind, QPointF position, float scroll, int button)
 {
     if (input_count_ == inputs_.size())
     {
@@ -346,7 +360,7 @@ void WallpaperItem::enqueue(InputKind kind, QPointF position)
         return;
     }
     inputs_[input_count_++] = {kind, static_cast<float>(position.x()),
-                               static_cast<float>(position.y())};
+                               static_cast<float>(position.y()), scroll, button};
     update();
 }
 void WallpaperItem::replay_touch(QPointF logical_position)
@@ -367,7 +381,23 @@ void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 }
 void WallpaperItem::mousePressEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Touch, event->position());
+    enqueue(InputKind::Press, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0);
+    event->accept();
+}
+void WallpaperItem::mouseReleaseEvent(QMouseEvent* event)
+{
+    enqueue(InputKind::Release, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0);
+    event->accept();
+}
+void WallpaperItem::mouseMoveEvent(QMouseEvent* event)
+{
+    enqueue(InputKind::Move, event->position());
+    event->accept();
+}
+void WallpaperItem::wheelEvent(QWheelEvent* event)
+{
+    enqueue(InputKind::Scroll, event->position(),
+            static_cast<float>(event->angleDelta().y()) / 120);
     event->accept();
 }
 } // namespace nekomote::qt_quick

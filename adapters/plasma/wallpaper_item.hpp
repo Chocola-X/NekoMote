@@ -60,6 +60,9 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void hoverMoveEvent(QHoverEvent* event) override;
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData& data) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -67,7 +70,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
   private:
     nekomote::qt_quick::ItemState get_item_state() const override;
     void clear_inputs() override;
-    void enqueue(nekomote::qt_quick::InputKind kind, QPointF position = {});
+    void enqueue(nekomote::qt_quick::InputKind kind, QPointF position = {}, float scroll = 0,
+                 int button = 0);
     void set_status(int value);
     void set_error(const QString& value);
     void check_backend();

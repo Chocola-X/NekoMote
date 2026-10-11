@@ -422,13 +422,12 @@ extern "C"
     void nekomote_wallpaper_destroy(nekomote_wallpaper* wp);
 
     /* Setup */
-    nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp,
-                                                     const char* dir);
+    nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
     nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
     nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted);
     nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed);
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
-                                                       int height);
+                                                      int height);
     nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
     void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo);
     void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp);
@@ -438,20 +437,24 @@ extern "C"
 
     /* Per-frame: advance handles candidate/background polling and fade.
      * render_frame draws background + character (with crossfade) to the
-     * current GL framebuffer. render_ui draws the control panel.
+     * target set by set_render_target (default 0). render_ui lazily initializes
+     * asset-catalog controls once output_size is positive, and draws to the
+     * same target. Explicit model/session diagnostic mode omits controls.
      * Host swaps buffers after render_frame + render_ui. */
     nekomote_error nekomote_wallpaper_advance(nekomote_wallpaper* wp, double dt);
     nekomote_error nekomote_wallpaper_render_frame(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_render_ui(nekomote_wallpaper* wp, float dt);
 
-    /* Input. Coordinates are logical window pixels; the instance converts
-     * to centered framebuffer pixels using output_size. */
+    /* Input. Coordinates are physical output pixels from its top-left, Y down.
+     * Hosts convert logical pointer positions using their logical/output sizes.
+     * UI consumes hits first; remaining model input is centered by the instance.
+     * Button convention: 0=left, 1=right. Forward both press and release. */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
     nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y);
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
-                                                    nekomote_mouse_action action);
+                                                   nekomote_mouse_action action);
     nekomote_error nekomote_wallpaper_mouse_scroll(nekomote_wallpaper* wp, double amount);
     nekomote_error nekomote_wallpaper_key(nekomote_wallpaper* wp, nekomote_key key,
                                           nekomote_mouse_action action);

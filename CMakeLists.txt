@@ -110,6 +110,16 @@ if(NEKOMOTE_BUILD_TESTS)
         add_subdirectory(tests/render)
     endif()
     find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(TARGET nekomote_plasma_wallpaper_layers)
+        find_program(NEKOMOTE_FLOCK_LAYERS flock REQUIRED)
+        add_test(NAME plasma_wallpaper_layers
+            COMMAND ${NEKOMOTE_FLOCK_LAYERS} ${CMAKE_SOURCE_DIR}/build/gpu-validation.lock
+                $<TARGET_FILE:nekomote_plasma_wallpaper_layers>)
+        set_tests_properties(plasma_wallpaper_layers PROPERTIES LABELS "qt;gpu;integration"
+            SKIP_RETURN_CODE 77 TIMEOUT 60
+            # This screenshot replay measures pixels/input, not presentation FPS.
+            ENVIRONMENT "NEKOMOTE_TEST_ASSETS_DIR=${PROJECT_SOURCE_DIR}/assets;QT_SCALE_FACTOR=1;QSG_NO_VSYNC=1")
+    endif()
     if(TARGET nekomote_plasma_item_safety)
         find_program(NEKOMOTE_FLOCK flock REQUIRED)
         add_test(NAME plasma_item_safety

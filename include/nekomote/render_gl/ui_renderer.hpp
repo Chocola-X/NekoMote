@@ -23,6 +23,7 @@ class FontAtlas
     FontAtlas& operator=(const FontAtlas&) = delete;
 
     bool init(int texture_width, int texture_height);
+    void reset();
     void resize_atlas(int new_width, int new_height);
     void upload_glyph(const nekomote::ui::Glyph& glyph, const unsigned char* bitmap);
     std::uint32_t texture_id() const
@@ -58,6 +59,8 @@ class UiRenderer : public nekomote::ui::Painter
 
     bool init(int viewport_width, int viewport_height);
     void resize(int viewport_width, int viewport_height);
+    // Backend-local host target; never exposed to application/ui contracts.
+    void set_render_target(std::uint32_t framebuffer);
     bool init_font(const std::string& font_path, float pixel_height);
 
     // Icon texture management. Returns an opaque ID for use with draw_icon.
@@ -76,8 +79,7 @@ class UiRenderer : public nekomote::ui::Painter
                    nekomote::ui::Color tint) override;
     void draw_circle(float cx, float cy, float radius, nekomote::ui::Color fill,
                      nekomote::ui::Color border, float border_width) override;
-    void draw_solid_rect(float x, float y, float w, float h,
-                         nekomote::ui::Color color) override;
+    void draw_solid_rect(float x, float y, float w, float h, nekomote::ui::Color color) override;
     void draw_arrow(float cx, float cy, float size, bool points_up,
                     nekomote::ui::Color fill) override;
     void push_clip_rect(float x, float y, float w, float h) override;
@@ -91,6 +93,7 @@ class UiRenderer : public nekomote::ui::Painter
 
   private:
     bool initialized_{false};
+    std::uint32_t framebuffer_{0};
     float global_alpha_{1.0f};
     int viewport_width_{0};
     int viewport_height_{0};

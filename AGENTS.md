@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至2026-10-10，实现基线 `39762b6`：单边界0x7fc与195初态沿用，3 bust_LR20 FAIL待诊断，嵌套/2标量与全动态未认证。G27/G28/G29/V19后续提交已在仓库，报告与独立验收须区分，本轮文档整理未复核其全部证据。player仍拥有资产扫描、异步角色切换、渐变与UI；Plasma新增了重复扫描/QML控制面板。用户现要求GLM优先G31A/G31B抽取共享壁纸应用层并迁移player，之后再扩ABI和收拢Plasma。application/ui不得依赖OpenGL或Vulkan，首个GPU实现仍用render_gl，为后续Vulkan保留清晰数据与资源边界，不创建空后端。候选触摸数据不应用；正式桌面/声音背景/长期/多屏仍未最终验收。按[摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
+截至2026-10-11，GLM 已交付共享 Controller/UI/GL 执行、高层 ABI、Plasma 和声音接入；本轮显示补修起点 `7029eda`。Codex 修复 UI 初始化/输出目标/输入/重建与重装配置丢失，隔离包验证见 [说明](docs/plasma-display-fix.md)，真实 miku 桌面尚待安装验收。不要继续执行旧“G31 待实现”清单；已有源码与完整独立验收区分，面板业务重复、FPS/静音联动、渐变时间与资源边界仍待收拢。单边界0x7fc/195初态沿用；3 bust_LR20、嵌套/2标量、195全动态、正式声音/长期/多屏未最终验收。按 [摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. GLM先执行G31A共享Controller/目录/配置/切换并迁移player，再执行G31B后端无关UI与独立GL绘制实现并迁移player；每阶段验证后提交。G32 ABI/Plasma迁移及G30服务完善随后进行。Gemini检查固定条件下的UI/切换画面，Codex集中边界/线程/语义复核；详见[专项交接](docs/wallpaper-application-handoff.md)。
+3. 当前先完成用户要求的 Plasma 隔离账户效果验收；G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 
