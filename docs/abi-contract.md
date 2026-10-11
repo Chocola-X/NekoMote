@@ -39,6 +39,37 @@ asan preset 关闭 preview/player，启用 ABI。`abi_negative_test` 是纯 C �
 
 GPU 负例使用真正的 renderer：纹理长度/尺寸、非法 blend/protection/composition、NULL 非空帧、复制 OOM，失败后白色宿主目标保持白色，重新 prepare 后可绘制。预热后100次 ABI prepare/render 普通 C++ new 为0；合成 CPU session 的120次 advance/prepare/frame/background 查询为0。这些不包含驱动 malloc、初始化、截图或整个 UI 的分配。
 
+## Vulkan 后端契约
+
+### 句柄所有权与寿命
+
+- `nekomote_vk_device_context` 中的 `instance`/`physical_device`/`device`/`graphics_queue` 由宿主创建并拥有。`nekomote_wallpaper_create_vk` 借用这些句柄，不创建或销毁设备。
+- `nekomote_wallpaper` 实例及其内部 GPU 资源（纹理、缓冲、管线）必须在宿主销毁 Vulkan 设备之前通过 `nekomote_wallpaper_destroy` 销毁。
+- 销毁顺序：`nekomote_wallpaper_destroy(wp)` → `vkDeviceWaitIdle` → 宿主释放 Vulkan 设备/实例。
+
+### 帧借用契约
+
+- `nekomote_vk_target` 是每帧借用的录制目标。宿主必须在每次 `render_frame` / `render_ui` 调用前通过 `nekomote_wallpaper_set_vk_target` 设置当帧 target。
+- target 的 `commands` 必须处于 `VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT` 录制状态，且 `framebuffer` 的 color attachment 已转换为 `VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`。
+- 壁纸实例只向 `commands` 录制绘制命令，不提交（`vkQueueSubmit`）、不呈现（`vkQueuePresentKHR`）、不等待 fence。提交和呈现由宿主负责。
+
+### 线程约束
+
+- 同一 `nekomote_wallpaper` 实例的 `render_frame` / `render_ui` / `set_vk_target` 必须在同一线程调用（串行求值线程）。
+- 宿主的 `vkQueueSubmit` / `vkQueuePresentKHR` 可在另一线程，但必须通过 fence/semaphore 保证与壁纸实例的命令录制有明确的 happens-before 关系。
+
+### 错误处理
+
+- `nekomote_wallpaper_create_vk` 在 Vulkan 未编译时返回 NULL + `NEKOMOTE_ERROR_UNSUPPORTED`。
+- device context 任一成员为 NULL 时返回 NULL + `NEKOMOTE_ERROR_INVALID_INPUT`。
+- `render_frame` / `render_ui` 在未设置 target 时返回 `NEKOMOTE_ERROR_RENDERER`。
+
+### 格式约定
+
+- `color_format` 当前固定为 `VK_FORMAT_R8G8B8A8_UNORM`。
+- 宿主 render pass 的 attachment loadOp/storeOp 为 LOAD/STORE，initialLayout/finalLayout 为 COLOR_ATTACHMENT_OPTIMAL。
+- 壁纸实例假定 target 内容在 render_frame 首次写入前已被宿主清零或由背景写入覆盖。
+
 ## 尚未认证
 
 C/GLFW 宿主已经收敛为显式静音诊断工具，G8 确定步 PNG 与 C++ 像素一致；它不代表实际桌面插件，也不承担正式音频服务。Qt Quick和隔离Plasma包已有后续证据，G27部署也已交付；不将它们列为未实现。实际桌面/驱动上下文丢失/多屏/长期及新版完整壁纸ABI仍未最终验收，当前范围见[摘要](review-agents-current.md)。

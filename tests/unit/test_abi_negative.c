@@ -180,6 +180,57 @@ static void test_no_leak_on_failed_init(void)
     PASS();
 }
 
+/* ---- Vulkan ABI negative tests ---- */
+
+static void test_vk_null_safety(void)
+{
+    TEST("vk: create_vk with null instance");
+    nekomote_clear_error();
+    nekomote_vk_device_context ctx = {0};
+    nekomote_wallpaper* wp = nekomote_wallpaper_create_vk(ctx);
+    CHECK(wp == NULL, "should reject all-null context");
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
+          "should set INVALID_INPUT");
+    PASS();
+
+    TEST("vk: create_vk with partial null (missing device)");
+    nekomote_clear_error();
+    ctx.instance = (void*)0x1;
+    ctx.physical_device = (void*)0x2;
+    ctx.device = NULL;
+    ctx.graphics_queue = (void*)0x4;
+    wp = nekomote_wallpaper_create_vk(ctx);
+    CHECK(wp == NULL, "should reject partial null");
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
+          "should set INVALID_INPUT");
+    PASS();
+
+    TEST("vk: set_vk_target on NULL wallpaper");
+    nekomote_clear_error();
+    nekomote_vk_target target = {0};
+    nekomote_wallpaper_set_vk_target(NULL, target);
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
+          "should reject NULL wallpaper");
+    PASS();
+
+    TEST("vk: create_vk with fake handles does not crash");
+    nekomote_clear_error();
+    nekomote_vk_device_context ctx2 = {0};
+    ctx2.instance = (void*)0x1;
+    ctx2.physical_device = (void*)0x2;
+    ctx2.device = (void*)0x3;
+    ctx2.graphics_queue = (void*)0x4;
+    ctx2.graphics_queue_family = 0;
+    ctx2.color_format = 37;
+    wp = nekomote_wallpaper_create_vk(ctx2);
+    /* create_vk only validates NULL members, not handle validity.
+     * Fake handles may produce a wallpaper that fails on first GPU
+     * operation. The key invariant: no crash here. Clean up if live. */
+    if (wp)
+        nekomote_wallpaper_destroy(wp);
+    PASS();
+}
+
 /* ---- Version ---- */
 
 static void test_version(void)
@@ -199,6 +250,7 @@ int main(void)
     test_error_diagnostic();
     test_null_safety();
     test_no_leak_on_failed_init();
+    test_vk_null_safety();
 
     printf("\n%d tests run, %d failed\n", g_run, g_fail);
     return g_fail == 0 ? 0 : 1;
