@@ -33,13 +33,6 @@
     "warnings_as_errors": true,
     "release_lto": true
   },
-  "final_binaries": {
-    "build/release/bin/nekomote_player": "11950cddd82582e2cceaadecc40305466b61b274728533964e95c9bd40e7e42a",
-    "build/release/bin/nekomote_vk_tests": "024673e217513c68cd4cc8a59658b882ef33cfa469fa6e3d28156a0a6af4f285",
-    "build/release/bin/nekomote_unit_tests": "be57aa17a42d7bee6be43e3118415a5638f7ef68d86857d1389895ca8a25452a",
-    "build/vulkan/bin/nekomote_player": "dc8a943a14cea4638511a23fa6993f15695bf75c9f8a0f5e44bfda0dc6cc0e8b",
-    "build/dev/bin/nekomote_player": "23db1b560b4cd8d64a63e666aaa1baf2e951e37928b2b73d900496f639f2721d"
-  },
   "tests": {
     "unit": {
       "cases": 172,
@@ -740,5 +733,62 @@
     "tests/render/test_vk.cpp": "e01f89d0df8b6bbd4045baf6f8ec917f9d6e23bfbfbb38b917032101480e5cfa",
     "tests/unit/test_session.cpp": "ed10699fcc19b6e6ef63e26700fd2e5f00cb69959dbce114425803ce05236f9c",
     "tests/unit/test_ui_layout.cpp": "5be83646df9f1f479b6f4835d73b6b8a21f13e8770b024a6ff54e3f468a4f767"
+  },
+  "source_snapshot_commit": "bd87ddceba162930f6f3daa8b7a268575617adb2",
+  "validated_binaries": {
+    "build/release/bin/nekomote_player": "11950cddd82582e2cceaadecc40305466b61b274728533964e95c9bd40e7e42a",
+    "build/release/bin/nekomote_vk_tests": "024673e217513c68cd4cc8a59658b882ef33cfa469fa6e3d28156a0a6af4f285",
+    "build/release/bin/nekomote_unit_tests": "be57aa17a42d7bee6be43e3118415a5638f7ef68d86857d1389895ca8a25452a",
+    "build/vulkan/bin/nekomote_player": "dc8a943a14cea4638511a23fa6993f15695bf75c9f8a0f5e44bfda0dc6cc0e8b",
+    "build/dev/bin/nekomote_player": "23db1b560b4cd8d64a63e666aaa1baf2e951e37928b2b73d900496f639f2721d"
+  },
+  "cli_followup": {
+    "scope": "Only help/argument handling changed after frozen GPU evidence; rendering, shaders and lifecycle unchanged.",
+    "source_sha256": {
+      "apps/player/main.cpp": "32804c31dd6541f861c29b8ca04b772d5be9ee9c3613e1891e7f1e71ba57f612"
+    },
+    "checks": [
+      {
+        "argv": [
+          "build/release/bin/nekomote_player",
+          "--help"
+        ],
+        "returncode": 0,
+        "no_display_server_environment": true,
+        "log": "build/evidence/vulkan-repair-20261011/release-help.log",
+        "binary_sha256": "0cf33c1fff9af9202dca3a449e3e67ef8ccff3f84b9e1061d9b86753aacec1f8"
+      },
+      {
+        "argv": [
+          "build/dev/bin/nekomote_player",
+          "--help"
+        ],
+        "returncode": 0,
+        "no_display_server_environment": true,
+        "log": "build/evidence/vulkan-repair-20261011/dev-help.log",
+        "binary_sha256": "70c56d67c6a0893d5cecd0af4c3271dd800169f5e6dc1f6acaf65a702300a2a9"
+      },
+      {
+        "argv": [
+          "build/release/bin/nekomote_player",
+          "--backend",
+          "invalid"
+        ],
+        "returncode": 1,
+        "diagnostic": "NekoMote: backend must be opengl or vulkan"
+      },
+      {
+        "argv": [
+          "build/release/bin/nekomote_player",
+          "--backend"
+        ],
+        "returncode": 1,
+        "diagnostic": "NekoMote: missing value for --backend"
+      }
+    ],
+    "build_logs": [
+      "build/evidence/vulkan-repair-20261011/build-release-cli.log",
+      "build/evidence/vulkan-repair-20261011/build-gl-cli.log"
+    ]
   }
 }

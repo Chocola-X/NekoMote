@@ -55,7 +55,7 @@ struct Options
     float scale{1};
     Vec2 origin{0, 400};
 };
-Options options(int argc, char** argv)
+std::optional<Options> options(int argc, char** argv)
 {
     Options o;
     for (int i = 1; i < argc; ++i)
@@ -148,6 +148,7 @@ Options options(int argc, char** argv)
                 "nekomote_player --assets <dir> [--character name] [--background-name name]\n"
                 "  [--no-save] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y 400]\n"
                 "  [--width 800 --height 1080] [--fps 30] [--seed 1]\n"
+                "  [--backend opengl|vulkan] (default opengl; Vulkan requires enabled build)\n"
                 "Or: nekomote_player --model model.nkm.json --session session.nks.json\n"
                 "  [--background image.png] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y "
                 "400]\n"
@@ -159,10 +160,10 @@ Options options(int argc, char** argv)
                 "head cyan, pant purple); also included in captures.\n"
                 "Assets mode keys: Tab/1-9 switch character, B/N switch background, C clear "
                 "background.\n"
-                "Mouse: gaze; left click: touch; right drag: move; wheel: zoom.\n"
+                "Mouse: gaze; left short release: touch; left hold 300ms: drag; wheel: zoom.\n"
                 "Space: pause/resume; F: fit whole model; R: reset; Escape: close. Pointer is "
                 "local to this window.");
-            return {};
+            return std::nullopt;
         }
         else
             throw std::runtime_error("unknown option " + key);
@@ -608,7 +609,10 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
 
 int run(int argc, char** argv)
 {
-    auto o = options(argc, argv);
+    auto parsed = options(argc, argv);
+    if (!parsed)
+        return 0;
+    auto o = std::move(*parsed);
     const bool assets_mode = !o.assets.empty();
     application::WallpaperController controller;
     application::ControllerConfig controller_cfg;
