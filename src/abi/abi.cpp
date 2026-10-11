@@ -1558,7 +1558,7 @@ extern "C"
     void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp)
     {
         if (wp && wp->instance)
-            wp->instance->reset_gl_resources();
+            wp->instance->reset_gpu_resources();
     }
 
     nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp)

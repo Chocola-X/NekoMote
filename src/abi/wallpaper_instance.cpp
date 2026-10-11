@@ -71,7 +71,7 @@ void WallpaperInstance::set_vk_target(render_vk::Target target)
 
 WallpaperInstance::~WallpaperInstance()
 {
-    reset_gl_resources();
+    reset_gpu_resources();
 }
 
 nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& dir)
@@ -152,7 +152,7 @@ void WallpaperInstance::set_render_target_fbo(std::uint32_t fbo)
     render_target_fbo_ = fbo;
 }
 
-void WallpaperInstance::reset_gl_resources()
+void WallpaperInstance::reset_gpu_resources()
 {
     if (backend_ == WallpaperBackend::OpenGL)
     {
@@ -712,9 +712,13 @@ nekomote_error WallpaperInstance::render_ui(float dt)
 #if defined(NEKOMOTE_HAS_VULKAN)
     else
     {
+        if (!vk_target_set_)
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER, "Vulkan target not set before render_ui");
+            return NEKOMOTE_ERROR_RENDERER;
+        }
         vk_ui_renderer_.resize(output_width_, output_height_);
-        if (vk_target_set_)
-            vk_ui_renderer_.set_render_target(vk_target_);
+        vk_ui_renderer_.set_render_target(vk_target_);
     }
 #endif
     draw_ui(paused_ ? 0.0f : std::min(dt, .25f));

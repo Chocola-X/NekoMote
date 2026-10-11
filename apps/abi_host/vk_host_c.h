@@ -35,6 +35,7 @@ typedef struct
     int output_w, output_h;
     VkImageLayout output_layout;
     VkSemaphore* swap_finished; /* per swapchain image */
+    VkImage* swap_images;       /* cached swapchain images */
     uint32_t swap_image_count;
     uint32_t image_index;
     int pending;

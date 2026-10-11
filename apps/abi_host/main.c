@@ -679,7 +679,7 @@ int main(int argc, char** argv)
         ctx.device = vk_host.device;
         ctx.graphics_queue = vk_host.graphics_queue;
         ctx.graphics_queue_family = vk_host.graphics_family;
-        ctx.color_format = 37; /* VK_FORMAT_R8G8B8A8_UNORM */
+        ctx.color_format = (int32_t)VK_FORMAT_R8G8B8A8_UNORM;
         wp = nekomote_wallpaper_create_vk(ctx);
     }
     else

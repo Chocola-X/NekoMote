@@ -168,6 +168,8 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
             vkDestroySemaphore(h->device, h->swap_finished[i], NULL);
     free(h->swap_finished);
     h->swap_finished = NULL;
+    free(h->swap_images);
+    h->swap_images = NULL;
     h->swap_image_count = 0;
     if (h->swapchain)
         vkDestroySwapchainKHR(h->device, h->swapchain, NULL);
@@ -182,12 +184,18 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
         return -1;
     }
     h->extent = caps.currentExtent;
-    if (h->extent.width == 0xFFFFFFFF)
+    if (h->extent.width == 0xFFFFFFFF || h->extent.height == 0xFFFFFFFF)
     {
         uint32_t cw = (uint32_t)w;
         uint32_t ch = (uint32_t)hgt;
-        h->extent.width = cw < caps.minImageExtent.width ? caps.minImageExtent.width : cw;
-        h->extent.height = ch < caps.minImageExtent.height ? caps.minImageExtent.height : ch;
+        if (h->extent.width == 0xFFFFFFFF)
+            h->extent.width = cw < caps.minImageExtent.width ? caps.minImageExtent.width
+                                                             : cw > caps.maxImageExtent.width ? caps.maxImageExtent.width
+                                                                                              : cw;
+        if (h->extent.height == 0xFFFFFFFF)
+            h->extent.height = ch < caps.minImageExtent.height ? caps.minImageExtent.height
+                                                               : ch > caps.maxImageExtent.height ? caps.maxImageExtent.height
+                                                                                                 : ch;
     }
     if (!h->extent.width || !h->extent.height)
     {
@@ -199,6 +207,11 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(h->physical_device, h->surface, &n, NULL),
              "query surface formats");
     VkSurfaceFormatKHR* formats = malloc(sizeof(VkSurfaceFormatKHR) * n);
+    if (!formats)
+    {
+        fprintf(stderr, "[vk_host_c] alloc failed: surface formats\n");
+        return -1;
+    }
     VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(h->physical_device, h->surface, &n, formats),
              "read surface formats");
     VkSurfaceFormatKHR selected = formats[0];
@@ -237,9 +250,22 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     VK_CHECK(vkCreateSwapchainKHR(h->device, &info, NULL, &h->swapchain), "create swapchain");
 
     VK_CHECK(vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, NULL), "query swap images");
-    VkImage* images = malloc(sizeof(VkImage) * n);
-    VK_CHECK(vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, images), "read swap images");
+    h->swap_images = malloc(sizeof(VkImage) * n);
+    if (!h->swap_images)
+    {
+        fprintf(stderr, "[vk_host_c] alloc failed: swapchain images\n");
+        return -1;
+    }
+    VK_CHECK(vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, h->swap_images),
+             "read swap images");
     h->swap_finished = malloc(sizeof(VkSemaphore) * n);
+    if (!h->swap_finished)
+    {
+        fprintf(stderr, "[vk_host_c] alloc failed: swap semaphores\n");
+        free(h->swap_images);
+        h->swap_images = NULL;
+        return -1;
+    }
     h->swap_image_count = n;
     for (uint32_t i = 0; i < n; ++i)
     {
@@ -248,7 +274,6 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
         VK_CHECK(vkCreateSemaphore(h->device, &sem, NULL, &h->swap_finished[i]),
                  "create swap semaphore");
     }
-    free(images);
     h->requested_w = w;
     h->requested_h = hgt;
     h->recreate = 0;
@@ -278,6 +303,11 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
     uint32_t count = 0;
     VK_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, NULL), "enum devices");
     VkPhysicalDevice* devices = malloc(sizeof(VkPhysicalDevice) * count);
+    if (!devices)
+    {
+        fprintf(stderr, "[vk_host_c] alloc failed: physical devices\n");
+        return -1;
+    }
     VK_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, devices), "read devices");
     int best = -1;
     for (uint32_t d = 0; d < count; ++d)
@@ -286,6 +316,12 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
         VK_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, NULL),
                  "enum device exts");
         VkExtensionProperties* exts = malloc(sizeof(VkExtensionProperties) * n);
+        if (!exts)
+        {
+            fprintf(stderr, "[vk_host_c] alloc failed: device extensions\n");
+            free(devices);
+            return -1;
+        }
         VK_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, exts),
                  "read device exts");
         int has_swapchain = 0;
@@ -301,6 +337,12 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
 
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, NULL);
         VkQueueFamilyProperties* queues = malloc(sizeof(VkQueueFamilyProperties) * n);
+        if (!queues)
+        {
+            fprintf(stderr, "[vk_host_c] alloc failed: queue families\n");
+            free(devices);
+            return -1;
+        }
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, queues);
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(devices[d], &props);
@@ -488,13 +530,7 @@ static int submit(VkHostC* h)
         finished = h->swap_finished[h->image_index];
         record_barrier(h->commands, h->output_image, h->output_layout,
                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-        /* Get the swapchain image */
-        uint32_t n = 0;
-        vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, NULL);
-        VkImage* images = malloc(sizeof(VkImage) * n);
-        vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, images);
-        VkImage swap_image = images[h->image_index];
-        free(images);
+        VkImage swap_image = h->swap_images[h->image_index];
         record_barrier(h->commands, swap_image, VK_IMAGE_LAYOUT_UNDEFINED,
                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         VkImageBlit blit = {0};
@@ -678,6 +714,7 @@ void vk_host_c_destroy(VkHostC* h)
         if (h->swap_finished[i])
             vkDestroySemaphore(h->device, h->swap_finished[i], NULL);
     free(h->swap_finished);
+    free(h->swap_images);
     if (h->swapchain)
         vkDestroySwapchainKHR(h->device, h->swapchain, NULL);
     if (h->render_pass)
