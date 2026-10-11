@@ -42,3 +42,27 @@ python3 tools/rebuild_asset_schema.py --assets assets/characters \
 ```
 
 这是显式离线迁移工具：全量比较作者数据和解码图集像素，通过后备份旧模型，再逐项发布；失败回滚本次写入。只允许 schema 与新镜像参数字段变化，以及旧格式 documented mirror=false 缺省的显式规范化。纹理差异须先独立核实，不能静默覆盖。冻结历史资产不迁移，输入矩阵只在内容等价证据成立时更新 asset SHA；源 PSB、驱动、输入与参照图片 hash 保持原记录。
+
+## 背景资产
+
+```
+assets/backgrounds/
+├── background-names.json     # 可选，键为文件名，值含 zh-CN 名称
+├── BG_07A.png                # 静态背景（根目录）
+├── BG_13A.png
+└── dynamic/                  # 动态背景（分时段 A/B/C 三相）
+    ├── BG_22A.png            # 06:00–16:00 白天
+    ├── BG_22B.png            # 16:00–18:00 黄昏
+    ├── BG_22C.png            # 18:00–次日06:00 夜晚
+    └── ...
+```
+
+静态背景的 `name` 为文件 stem（如 `BG_07A`）。动态背景的 `name` 为组名（如 `BG_22`，不含相后缀），要求 A/B/C 三相齐全才收录。`config.json` 的 `background` 字段存 `name`：静态为 `BG_07A`，动态为 `BG_22`。
+
+`background-names.json` 键为完整文件名（如 `"BG_07A.png"`、`"BG_22A.png"`），动态组用 A 相的名称作为组显示名。文件不存在时回退到 stem。
+
+导入工具：
+
+```bash
+python3 tools/import_backgrounds.py --reference-root ../NekoWebShow --dest assets
+```

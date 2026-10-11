@@ -595,7 +595,7 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
     int background_index = -1;
     if (!background.empty())
         for (std::size_t i = 0; i < controller.catalog().backgrounds.size(); ++i)
-            if (controller.catalog().backgrounds[i].path == background)
+            if (controller.catalog().backgrounds[i].path() == background)
                 background_index = static_cast<int>(i);
     controller.install_candidate_sync(std::move(candidate));
     commit_candidate_gpu(gpu, std::move(ready->gpu));
@@ -780,7 +780,8 @@ int run(int argc, char** argv)
         if (bg)
         {
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
-            apply_background_gpu(gpu, bg->path, 0, bg_index, controller, o.backend
+            apply_background_gpu(gpu, controller.background_path(bg_index), 0, bg_index,
+                                 controller, o.backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                                  ,
                                  vk_ctx_ptr
@@ -968,7 +969,7 @@ int run(int argc, char** argv)
                     const int bg_index = controller.current_background_index();
                     if (bg_index >= 0 &&
                         bg_index < static_cast<int>(controller.catalog().backgrounds.size()))
-                        bg_path = controller.catalog().backgrounds[bg_index].path;
+                        bg_path = controller.background_path(bg_index);
                     int width = 0, height = 0;
                     glfwGetFramebufferSize(window.get(), &width, &height);
                     std::optional<GpuCandidate> ready;
@@ -1203,8 +1204,19 @@ int run(int argc, char** argv)
                 {
                     content_scrollable_h += 30.0f + 4.0f * 32.0f;
                     content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
-                    content_scrollable_h +=
-                        30.0f + 30.0f + static_cast<float>(catalog.backgrounds.size()) * 32.0f;
+                    std::size_t p_static_bg = 0, p_dynamic_bg = 0;
+                    for (const auto& bg : catalog.backgrounds)
+                        if (bg.type == application::BackgroundType::Dynamic)
+                            ++p_dynamic_bg;
+                        else
+                            ++p_static_bg;
+                    content_scrollable_h += 30.0f;
+                    if (p_static_bg > 0)
+                        content_scrollable_h +=
+                            30.0f + static_cast<float>(p_static_bg) * 32.0f;
+                    if (p_dynamic_bg > 0)
+                        content_scrollable_h +=
+                            30.0f + static_cast<float>(p_dynamic_bg) * 32.0f;
                 }
                 content_scrollable_h += 68.0f;
 
@@ -1316,20 +1328,53 @@ int run(int argc, char** argv)
                     ui_context.section_header("壁纸选择", sidebar_x, curr_y, ui_sidebar.width,
                                               30.0f, style);
                     curr_y += 30.0f;
-                    ui_context.section_header("固定背景", sidebar_x, curr_y, ui_sidebar.width,
-                                              30.0f, style);
-                    curr_y += 30.0f;
-                    for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+                    bool has_static = false, has_dynamic = false;
+                    for (const auto& bg : catalog.backgrounds)
+                        if (bg.type == application::BackgroundType::Dynamic)
+                            has_dynamic = true;
+                        else
+                            has_static = true;
+                    if (has_static)
                     {
-                        const auto& bg = catalog.backgrounds[b];
-                        const bool selected =
-                            (static_cast<int>(b) == controller.current_background_index());
-                        if (ui_context.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
-                                                 curr_y, ui_sidebar.width, 32.0f, style))
+                        ui_context.section_header("固定背景", sidebar_x, curr_y, ui_sidebar.width,
+                                                  30.0f, style);
+                        curr_y += 30.0f;
+                        for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
                         {
-                            controller.request_switch_background(static_cast<int>(b));
+                            if (catalog.backgrounds[b].type != application::BackgroundType::Static)
+                                continue;
+                            const auto& bg = catalog.backgrounds[b];
+                            const bool selected =
+                                (static_cast<int>(b) == controller.current_background_index());
+                            if (ui_context.radio_row(bg.display_name.c_str(), "", selected,
+                                                     sidebar_x, curr_y, ui_sidebar.width, 32.0f,
+                                                     style))
+                            {
+                                controller.request_switch_background(static_cast<int>(b));
+                            }
+                            curr_y += 32.0f;
                         }
-                        curr_y += 32.0f;
+                    }
+                    if (has_dynamic)
+                    {
+                        ui_context.section_header("动态背景", sidebar_x, curr_y, ui_sidebar.width,
+                                                  30.0f, style);
+                        curr_y += 30.0f;
+                        for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+                        {
+                            if (catalog.backgrounds[b].type != application::BackgroundType::Dynamic)
+                                continue;
+                            const auto& bg = catalog.backgrounds[b];
+                            const bool selected =
+                                (static_cast<int>(b) == controller.current_background_index());
+                            if (ui_context.radio_row(bg.display_name.c_str(), "", selected,
+                                                     sidebar_x, curr_y, ui_sidebar.width, 32.0f,
+                                                     style))
+                            {
+                                controller.request_switch_background(static_cast<int>(b));
+                            }
+                            curr_y += 32.0f;
+                        }
                     }
                 }
 

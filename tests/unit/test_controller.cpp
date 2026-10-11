@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <fstream>
 #include <thread>
 
 namespace
@@ -396,4 +397,91 @@ TEST_CASE("Controller config save load", "[controller]")
     REQUIRE(c2.config().scale == 1.5f);
     REQUIRE(c2.config().fps == 60);
     fs::remove(path);
+}
+
+TEST_CASE("Catalog scans static and dynamic backgrounds", "[catalog]")
+{
+    const auto root = fs::temp_directory_path() / "nekomote_bg_scan_test";
+    fs::remove_all(root);
+    fs::create_directories(root / "backgrounds" / "dynamic");
+    std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
+    std::ofstream(root / "backgrounds" / "BG_13A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_29A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_29B.png").put('x');
+
+    const auto catalog = AssetCatalog::scan(root);
+    REQUIRE(catalog.backgrounds.size() == 3);
+
+    const auto* bg07 = catalog.find_background("BG_07A");
+    REQUIRE(bg07 != nullptr);
+    REQUIRE(bg07->type == BackgroundType::Static);
+    REQUIRE(bg07->path() == root / "backgrounds" / "BG_07A.png");
+
+    const auto* bg22 = catalog.find_background("BG_22");
+    REQUIRE(bg22 != nullptr);
+    REQUIRE(bg22->type == BackgroundType::Dynamic);
+    REQUIRE(bg22->path_a == root / "backgrounds" / "dynamic" / "BG_22A.png");
+    REQUIRE(bg22->path_b == root / "backgrounds" / "dynamic" / "BG_22B.png");
+    REQUIRE(bg22->path_c == root / "backgrounds" / "dynamic" / "BG_22C.png");
+    REQUIRE(bg22->path_for_phase('A') == bg22->path_a);
+    REQUIRE(bg22->path_for_phase('B') == bg22->path_b);
+    REQUIRE(bg22->path_for_phase('C') == bg22->path_c);
+
+    REQUIRE(catalog.find_background("BG_29") == nullptr);
+
+    fs::remove_all(root);
+}
+
+TEST_CASE("Catalog reads background names from JSON", "[catalog]")
+{
+    const auto root = fs::temp_directory_path() / "nekomote_bg_names_test";
+    fs::remove_all(root);
+    fs::create_directories(root / "backgrounds" / "dynamic");
+    std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
+    {
+        std::ofstream f(root / "backgrounds" / "background-names.json");
+        f << R"({"BG_07A.png":{"zh-CN":"海滨餐厅露台","en":"Seaside"},)"
+          << R"("BG_22":{"zh-CN":"游乐园入口广场","en":"Amusement"}})";
+        f << "}";
+    }
+
+    const auto catalog = AssetCatalog::scan(root);
+    const auto* bg07 = catalog.find_background("BG_07A");
+    REQUIRE(bg07 != nullptr);
+    REQUIRE(bg07->display_name == "海滨餐厅露台");
+    const auto* bg22 = catalog.find_background("BG_22");
+    REQUIRE(bg22 != nullptr);
+    REQUIRE(bg22->display_name == "游乐园入口广场");
+
+    fs::remove_all(root);
+}
+
+TEST_CASE("Controller background_path returns current phase for dynamic", "[controller]")
+{
+    const auto root = fs::temp_directory_path() / "nekomote_bg_phase_test";
+    fs::remove_all(root);
+    fs::create_directories(root / "backgrounds" / "dynamic");
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
+
+    WallpaperController c;
+    c.scan_assets(root);
+    REQUIRE(c.catalog().backgrounds.size() == 1);
+    const auto bg_index = 0;
+    const auto path = c.background_path(bg_index);
+    const auto now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    const auto* tmp = std::localtime(&t);
+    const int hour = tmp ? tmp->tm_hour : 0;
+    const char expected_phase = hour >= 6 && hour < 16 ? 'A' : hour >= 16 && hour < 18 ? 'B' : 'C';
+    REQUIRE(path == c.catalog().backgrounds[0].path_for_phase(expected_phase));
+
+    fs::remove_all(root);
 }

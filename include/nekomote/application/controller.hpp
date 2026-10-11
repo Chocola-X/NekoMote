@@ -19,7 +19,7 @@ namespace nekomote::application
 {
 namespace fs = std::filesystem;
 
-constexpr double kBackgroundFadeSeconds = 0.8;
+constexpr double kBackgroundFadeSeconds = 1.8;
 constexpr double kCharacterFadeSeconds = 0.4;
 inline constexpr auto kPointerDragHold = std::chrono::milliseconds(300);
 
@@ -138,6 +138,8 @@ class WallpaperController
                             int height, double fade_duration);
     void confirm_background_clear();
     bool has_background() const noexcept;
+    char background_phase() const noexcept;
+    std::filesystem::path background_path(int index) const noexcept;
 
     // === Fade update ===
     void update_fade();
@@ -198,6 +200,7 @@ class WallpaperController
     void apply_controller_config(const ControllerConfig& cfg);
     void synchronize_pause();
     void accept(SessionStatus status);
+    void update_background_phase();
 
     AssetCatalog catalog_{};
     WallpaperConfig config_{};
@@ -227,6 +230,7 @@ class WallpaperController
     bool need_bg_switch_{false};
     int target_background_index_{-1};
     bool need_bg_clear_{false};
+    char current_bg_phase_{'A'};
 
     ControllerConfig controller_config_{};
     Vec2 initial_origin_{0, 400};

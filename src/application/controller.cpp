@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <stdexcept>
 
 namespace nekomote::application
@@ -14,6 +15,20 @@ namespace nekomote::application
 namespace
 {
 using Clock = std::chrono::steady_clock;
+
+char phase_at(std::chrono::system_clock::time_point now)
+{
+    const std::time_t t = std::chrono::system_clock::to_time_t(now);
+    const auto* tmp = std::localtime(&t);
+    if (!tmp)
+        return 'C';
+    const int hour = tmp->tm_hour;
+    if (hour >= 6 && hour < 16)
+        return 'A';
+    if (hour >= 16 && hour < 18)
+        return 'B';
+    return 'C';
+}
 } // namespace
 
 WallpaperController::WallpaperController() = default;
@@ -337,6 +352,8 @@ void WallpaperController::request_switch_background(int index)
     if (index < 0 || index >= static_cast<int>(catalog_.backgrounds.size()))
         return;
     target_background_index_ = index;
+    if (catalog_.backgrounds[index].type == BackgroundType::Dynamic)
+        current_bg_phase_ = phase_at(std::chrono::system_clock::now());
     need_bg_switch_ = true;
 }
 
@@ -353,9 +370,12 @@ std::optional<BackgroundRequest> WallpaperController::poll_background()
         if (target_background_index_ >= 0 &&
             target_background_index_ < static_cast<int>(catalog_.backgrounds.size()))
         {
+            const auto& bg = catalog_.backgrounds[target_background_index_];
+            const auto path = bg.type == BackgroundType::Dynamic
+                                  ? bg.path_for_phase(current_bg_phase_)
+                                  : bg.path_a;
             return BackgroundRequest{BackgroundAction::Switch, target_background_index_,
-                                     catalog_.backgrounds[target_background_index_].path,
-                                     kBackgroundFadeSeconds};
+                                     path, kBackgroundFadeSeconds};
         }
     }
     if (need_bg_clear_)
@@ -384,7 +404,11 @@ void WallpaperController::confirm_background(int background_index, TextureId old
     current_has_background_ = true;
     current_background_index_ = background_index;
     if (background_index >= 0 && background_index < static_cast<int>(catalog_.backgrounds.size()))
+    {
         config_.background = catalog_.backgrounds[background_index].name;
+        if (catalog_.backgrounds[background_index].type == BackgroundType::Dynamic)
+            current_bg_phase_ = phase_at(std::chrono::system_clock::now());
+    }
     if (!no_save_ && !config_path_.empty())
         config_.save(config_path_);
 }
@@ -405,6 +429,38 @@ bool WallpaperController::has_background() const noexcept
     return current_has_background_;
 }
 
+char WallpaperController::background_phase() const noexcept
+{
+    return current_bg_phase_;
+}
+
+std::filesystem::path WallpaperController::background_path(int index) const noexcept
+{
+    if (index < 0 || index >= static_cast<int>(catalog_.backgrounds.size()))
+        return {};
+    const auto& bg = catalog_.backgrounds[index];
+    if (bg.type == BackgroundType::Dynamic)
+        return bg.path_for_phase(phase_at(std::chrono::system_clock::now()));
+    return bg.path_a;
+}
+
+void WallpaperController::update_background_phase()
+{
+    if (!current_has_background_ || current_background_index_ < 0)
+        return;
+    if (current_background_index_ >= static_cast<int>(catalog_.backgrounds.size()))
+        return;
+    const auto& bg = catalog_.backgrounds[current_background_index_];
+    if (bg.type != BackgroundType::Dynamic)
+        return;
+    const auto new_phase = phase_at(std::chrono::system_clock::now());
+    if (new_phase == current_bg_phase_)
+        return;
+    current_bg_phase_ = new_phase;
+    target_background_index_ = current_background_index_;
+    need_bg_switch_ = true;
+}
+
 void WallpaperController::update_fade()
 {
     if (switch_state_ != SwitchState::CrossFade)
@@ -422,6 +478,7 @@ void WallpaperController::update_fade()
 
 void WallpaperController::advance(double elapsed_seconds)
 {
+    update_background_phase();
     if (current_instance_)
         accept(current_instance_->advance(elapsed_seconds));
     if (switch_state_ == SwitchState::CrossFade && previous_instance_)

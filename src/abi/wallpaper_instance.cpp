@@ -181,7 +181,7 @@ nekomote_error WallpaperInstance::load_initial()
         if (bg)
         {
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
-            apply_background(bg->path, 0, bg_index);
+            apply_background(controller_.background_path(bg_index), 0, bg_index);
         }
     }
     if (output_width_ > 0 && output_height_ > 0)
@@ -322,7 +322,7 @@ void WallpaperInstance::handle_switch_poll()
         std::filesystem::path bg_path;
         int bg_index = controller_.current_background_index();
         if (bg_index >= 0 && bg_index < static_cast<int>(controller_.catalog().backgrounds.size()))
-            bg_path = controller_.catalog().backgrounds[bg_index].path;
+            bg_path = controller_.background_path(bg_index);
         previous_renderer_ = std::move(renderer_);
         finish_candidate_gpu(*candidate_opt);
         create_audio_device(*candidate_opt);
@@ -574,16 +574,20 @@ void WallpaperInstance::draw_ui(float dt)
         {
             content_scrollable_h += 42.0f;
             if (panel_.sidebar.expanded_drawer == static_cast<int>(g))
-                content_scrollable_h +=
-                    static_cast<float>(catalog.character_groups[g].items.size()) * 34.0f;
-        }
-        content_scrollable_h += 42.0f;
-        if (panel_.sidebar.expanded_drawer == 8)
-        {
-            content_scrollable_h += 30.0f + 4.0f * 32.0f;
-            content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
             content_scrollable_h +=
-                30.0f + 30.0f + static_cast<float>(catalog.backgrounds.size()) * 32.0f;
+                30.0f + 4.0f * 32.0f;
+            content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
+            std::size_t static_bg_count = 0, dynamic_bg_count = 0;
+            for (const auto& bg : catalog.backgrounds)
+                if (bg.type == application::BackgroundType::Dynamic)
+                    ++dynamic_bg_count;
+                else
+                    ++static_bg_count;
+            content_scrollable_h += 30.0f;
+            if (static_bg_count > 0)
+                content_scrollable_h += 30.0f + static_cast<float>(static_bg_count) * 32.0f;
+            if (dynamic_bg_count > 0)
+                content_scrollable_h += 30.0f + static_cast<float>(dynamic_bg_count) * 32.0f;
         }
         content_scrollable_h += 68.0f;
         const float max_sidebar_h = std::max(64.0f, static_cast<float>(output_height_) - 16.0f);
@@ -677,20 +681,49 @@ void WallpaperInstance::draw_ui(float dt)
             }
             curr_y += 34.0f;
             ui_context_.section_header("壁纸选择", sidebar_x, curr_y, panel_.sidebar.width, 30.0f,
-                                       style);
+                                        style);
             curr_y += 30.0f;
-            ui_context_.section_header("固定背景", sidebar_x, curr_y, panel_.sidebar.width, 30.0f,
-                                       style);
-            curr_y += 30.0f;
-            for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+            bool has_static = false, has_dynamic = false;
+            for (const auto& bg : catalog.backgrounds)
+                if (bg.type == application::BackgroundType::Dynamic)
+                    has_dynamic = true;
+                else
+                    has_static = true;
+            if (has_static)
             {
-                const auto& bg = catalog.backgrounds[b];
-                const bool selected =
-                    (static_cast<int>(b) == controller_.current_background_index());
-                if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x, curr_y,
-                                          panel_.sidebar.width, 32.0f, style))
-                    controller_.request_switch_background(static_cast<int>(b));
-                curr_y += 32.0f;
+                ui_context_.section_header("固定背景", sidebar_x, curr_y, panel_.sidebar.width,
+                                           30.0f, style);
+                curr_y += 30.0f;
+                for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+                {
+                    if (catalog.backgrounds[b].type != application::BackgroundType::Static)
+                        continue;
+                    const auto& bg = catalog.backgrounds[b];
+                    const bool selected =
+                        (static_cast<int>(b) == controller_.current_background_index());
+                    if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
+                                              curr_y, panel_.sidebar.width, 32.0f, style))
+                        controller_.request_switch_background(static_cast<int>(b));
+                    curr_y += 32.0f;
+                }
+            }
+            if (has_dynamic)
+            {
+                ui_context_.section_header("动态背景", sidebar_x, curr_y, panel_.sidebar.width,
+                                           30.0f, style);
+                curr_y += 30.0f;
+                for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
+                {
+                    if (catalog.backgrounds[b].type != application::BackgroundType::Dynamic)
+                        continue;
+                    const auto& bg = catalog.backgrounds[b];
+                    const bool selected =
+                        (static_cast<int>(b) == controller_.current_background_index());
+                    if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
+                                              curr_y, panel_.sidebar.width, 32.0f, style))
+                        controller_.request_switch_background(static_cast<int>(b));
+                    curr_y += 32.0f;
+                }
             }
         }
         ui_context_.divider_line(sidebar_x, curr_y, panel_.sidebar.width, style);

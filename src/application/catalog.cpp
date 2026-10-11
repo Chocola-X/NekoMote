@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -184,16 +185,58 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
         catalog.character_groups.push_back(std::move(group));
     }
 
-    const std::unordered_map<std::string, std::string> known_bg_names = {
-        {"BG_07A", "海滨餐厅露台"},
-        {"BG_13A", "粉色浴室"},
-        {"BG_22A", "暖色灯光的卧室"},
-        {"BG_29A", "游乐园入口广场"},
-        {"BG_30A", "粉色装饰的卧室"}};
-
     const fs::path backgrounds_dir = assets_dir / "backgrounds";
-    if (fs::exists(backgrounds_dir))
-        for (const auto& entry : fs::directory_iterator(backgrounds_dir))
+    if (!fs::exists(backgrounds_dir))
+        return catalog;
+
+    std::unordered_map<std::string, std::string> bg_names;
+    const auto names_path = backgrounds_dir / "background-names.json";
+    if (fs::exists(names_path))
+    {
+        std::ifstream nf(names_path);
+        if (nf)
+        {
+            try
+            {
+                Json names_json;
+                nf >> names_json;
+                for (auto it = names_json.begin(); it != names_json.end(); ++it)
+                {
+                    if (it.value().is_object() && it.value().contains("zh-CN"))
+                        bg_names.emplace(it.key(), it.value()["zh-CN"].get<std::string>());
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+    const auto lookup_name = [&](const std::string& filename,
+                                 const std::string& fallback) -> std::string
+    {
+        if (auto it = bg_names.find(filename); it != bg_names.end())
+            return it->second;
+        return fallback;
+    };
+
+    for (const auto& entry : fs::directory_iterator(backgrounds_dir))
+    {
+        if (!entry.is_regular_file())
+            continue;
+        const auto path = entry.path();
+        const auto ext = path.extension().string();
+        if (ext != ".png" && ext != ".PNG")
+            continue;
+        const auto stem = path.stem().string();
+        const auto disp = lookup_name(stem + ".png", stem);
+        catalog.backgrounds.push_back({stem, disp, path});
+    }
+
+    const auto dynamic_dir = backgrounds_dir / "dynamic";
+    if (fs::exists(dynamic_dir))
+    {
+        std::unordered_map<std::string, std::array<fs::path, 3>> groups;
+        for (const auto& entry : fs::directory_iterator(dynamic_dir))
         {
             if (!entry.is_regular_file())
                 continue;
@@ -202,11 +245,30 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
             if (ext != ".png" && ext != ".PNG")
                 continue;
             const auto stem = path.stem().string();
-            std::string disp = stem;
-            if (auto it = known_bg_names.find(stem); it != known_bg_names.end())
-                disp = it->second;
-            catalog.backgrounds.push_back({stem, disp, path});
+            if (stem.empty())
+                continue;
+            const auto phase = stem.back();
+            if (phase < 'A' || phase > 'C')
+                continue;
+            const auto group = stem.substr(0, stem.size() - 1);
+            groups[group][static_cast<std::size_t>(phase - 'A')] = path;
         }
+        for (const auto& [group, paths] : groups)
+        {
+            if (paths[0].empty() || paths[1].empty() || paths[2].empty())
+                continue;
+            const auto disp = lookup_name(group, group);
+            BackgroundEntry bg;
+            bg.name = group;
+            bg.display_name = disp;
+            bg.type = BackgroundType::Dynamic;
+            bg.path_a = paths[0];
+            bg.path_b = paths[1];
+            bg.path_c = paths[2];
+            catalog.backgrounds.push_back(std::move(bg));
+        }
+    }
+
     std::sort(catalog.backgrounds.begin(), catalog.backgrounds.end(),
               [](const auto& a, const auto& b) { return a.name < b.name; });
     return catalog;

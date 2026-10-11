@@ -40,20 +40,40 @@ struct CharacterGroup
     std::vector<CharacterSubEntry> items{};
 };
 
+enum class BackgroundType
+{
+    Static,
+    Dynamic,
+};
+
 struct BackgroundEntry
 {
     std::string name{};
     std::string display_name{};
-    std::filesystem::path path{};
+    BackgroundType type{BackgroundType::Static};
+    std::filesystem::path path_a{};
+    std::filesystem::path path_b{};
+    std::filesystem::path path_c{};
 
     BackgroundEntry() = default;
     BackgroundEntry(std::string n, std::string dn, std::filesystem::path p)
-        : name(std::move(n)), display_name(std::move(dn)), path(std::move(p))
+        : name(std::move(n)), display_name(std::move(dn)), type(BackgroundType::Static),
+          path_a(std::move(p))
     {
     }
     BackgroundEntry(std::string n, std::filesystem::path p)
-        : name(n), display_name(std::move(n)), path(std::move(p))
+        : name(n), display_name(std::move(n)), type(BackgroundType::Static), path_a(std::move(p))
     {
+    }
+    const std::filesystem::path& path() const noexcept { return path_a; }
+    const std::filesystem::path& path_for_phase(char phase) const noexcept
+    {
+        switch (phase)
+        {
+            case 'B': return path_b;
+            case 'C': return path_c;
+            default: return path_a;
+        }
     }
 };
 
