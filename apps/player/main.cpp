@@ -622,7 +622,12 @@ int run(int argc, char** argv)
         if (!window)
             throw std::runtime_error("Vulkan window creation failed");
         vk_host = std::make_unique<player::VkHost>();
-        vk_host->create_instance();
+        std::uint32_t glfw_ext_count = 0;
+        const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
+        if (!glfw_exts || glfw_ext_count == 0)
+            throw std::runtime_error("GLFW returned no Vulkan instance extensions");
+        std::vector<const char*> required_exts(glfw_exts, glfw_exts + glfw_ext_count);
+        vk_host->create_instance(required_exts);
         VkSurfaceKHR surface;
         if (glfwCreateWindowSurface(vk_host->instance, window.get(), nullptr, &surface) !=
             VK_SUCCESS)

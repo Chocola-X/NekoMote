@@ -79,7 +79,7 @@ struct VkHost
         device = VK_NULL_HANDLE;
     }
 
-    void create_instance()
+    void create_instance(const std::vector<const char*>& required_extensions)
     {
         VkApplicationInfo app{};
         app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -89,13 +89,6 @@ struct VkHost
         app.engineVersion = VK_MAKE_VERSION(0, 1, 0);
         app.apiVersion = VK_API_VERSION_1_0;
 
-        std::vector<const char*> extensions;
-        extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-#if defined(VK_USE_PLATFORM_XCB_KHR)
-        extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
-        extensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-#endif
         std::vector<const char*> layers;
 #ifndef NDEBUG
         if (check_layer("VK_LAYER_KHRONOS_validation"))
@@ -105,8 +98,8 @@ struct VkHost
         VkInstanceCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         info.pApplicationInfo = &app;
-        info.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
-        info.ppEnabledExtensionNames = extensions.data();
+        info.enabledExtensionCount = static_cast<std::uint32_t>(required_extensions.size());
+        info.ppEnabledExtensionNames = required_extensions.data();
         info.enabledLayerCount = static_cast<std::uint32_t>(layers.size());
         info.ppEnabledLayerNames = layers.data();
         if (vkCreateInstance(&info, nullptr, &instance) != VK_SUCCESS)
