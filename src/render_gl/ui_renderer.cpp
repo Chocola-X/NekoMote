@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <stdexcept>
+#include <vector>
 
 namespace nekomote::render_gl
 {
@@ -183,14 +185,20 @@ void FontAtlas::reset()
 bool FontAtlas::init(int texture_width, int texture_height)
 {
     reset();
+    if (texture_width <= 0 || texture_height <= 0)
+        return false;
     texture_width_ = texture_width;
     texture_height_ = texture_height;
     glGenTextures(1, &texture_);
     if (!texture_)
         return false;
+    // Linear filtering reads the padding outside each uploaded glyph. Leaving
+    // it undefined makes text edges depend on recycled GPU memory.
+    const std::vector<unsigned char> zeros(
+        static_cast<std::size_t>(texture_width_) * static_cast<std::size_t>(texture_height_), 0);
     glBindTexture(GL_TEXTURE_2D, texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, texture_width_, texture_height_, 0, GL_RED,
-                 GL_UNSIGNED_BYTE, nullptr);
+                 GL_UNSIGNED_BYTE, zeros.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -201,19 +209,8 @@ bool FontAtlas::init(int texture_width, int texture_height)
 
 void FontAtlas::resize_atlas(int new_width, int new_height)
 {
-    texture_width_ = new_width;
-    texture_height_ = new_height;
-    if (texture_)
-        glDeleteTextures(1, &texture_);
-    glGenTextures(1, &texture_);
-    glBindTexture(GL_TEXTURE_2D, texture_);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, texture_width_, texture_height_, 0, GL_RED,
-                 GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (!init(new_width, new_height))
+        throw std::runtime_error("failed to initialize resized font atlas");
 }
 
 void FontAtlas::upload_glyph(const nekomote::ui::Glyph& glyph, const unsigned char* bitmap)

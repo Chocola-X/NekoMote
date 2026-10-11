@@ -1,12 +1,12 @@
 # 原生窗口播放器
 
-`nekomote_player` 使用独立runtime与OpenGL后端，提供模型播放、视线/触摸、声音/口型及PNG背景。当前是开发中的普通窗口壁纸应用；代表范围已通过对照，全部型号、桌面插件和长期运行尚未验收。当前结论见 [整合摘要](review-agents-current.md)，限制见 [known-defects](known-defects.md)。
+`nekomote_player` 使用独立 runtime 与 OpenGL / Vulkan 1.0 后端，提供模型播放、视线/触摸、声音/口型及PNG背景。当前是开发中的普通窗口壁纸应用；代表范围已通过对照，全部型号、桌面插件和长期运行尚未验收。当前结论见 [整合摘要](review-agents-current.md)，限制见 [known-defects](known-defects.md)。
 
 Controller、CPU UI 和 GL 执行已拆分，player 已使用这些模块；面板业务仍与 ABI 组合层重复，完整边界验收尚未闭合。设计要求见 [专项交接](wallpaper-application-handoff.md)，当前缺口见 [known-defects](known-defects.md)。
 
 ## 构建与运行
 
-需要显示服务器、OpenGL 3.3、GLFW，以及播放器声音服务的libpulse开发包。UI需要可用字体，优先通过Fontconfig寻找。构建入口见 [building](building.md)。
+需要显示服务器、OpenGL 3.3、GLFW，以及播放器声音服务的libpulse开发包。Vulkan 为可选双栈构建，使用 `--backend opengl|vulkan` 选择，见 [构建、同步和验收说明](vulkan-backend.md)。UI需要可用字体，优先通过Fontconfig寻找。构建入口见 [building](building.md)。
 
 ```sh
 cmake --preset release
@@ -33,7 +33,7 @@ build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model
 
 ## 操作与配置
 
-- 窗口内鼠标视线、左键短按释放触摸、左键长按 300ms 后拖角色、滚轮围绕指针缩放；空格暂停/继续，F适配，R重置，Esc关闭。
+- 窗口内鼠标视线、左键短按释放触摸、左键长按 300ms 后拖角色、滚轮围绕指针缩放；空格暂停/继续，F适配，R重置角色（保留背景及渐变），Esc关闭。
 - 目录模式有角色/背景/UI选择；Tab/1–9切角色，B/N切背景，C清背景。切换失败保留原会话。
 - 默认30FPS，`--fps 60` 可选择60；作者时钟60Hz，显示FPS与作者步分开。
 - `--fit`适配模型；`--scale`、`--origin-x/--origin-y`使用中心原点、Y向下坐标；`--width/--height`设置窗口尺寸。

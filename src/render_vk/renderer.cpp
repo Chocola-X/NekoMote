@@ -1,14 +1,18 @@
 #include <nekomote/render_vk/renderer.hpp>
 
-#include "vk_util.hpp"
-#include "spirv_shaders.hpp"
-
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 #include <vector>
+
+#include "spirv_shaders.hpp"
+#include "vk_util.hpp"
 
 namespace nekomote::render_vk
 {
@@ -77,36 +81,6 @@ VkPipelineLayout create_blit_pipeline_layout(VkDevice device, VkDescriptorSetLay
     return layout;
 }
 
-VkRenderPass create_render_pass(VkDevice device, VkFormat format)
-{
-    VkAttachmentDescription attachment{};
-    attachment.format = format;
-    attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    VkAttachmentReference ref{};
-    ref.attachment = 0;
-    ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &ref;
-    VkRenderPassCreateInfo info{};
-    info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    info.attachmentCount = 1;
-    info.pAttachments = &attachment;
-    info.subpassCount = 1;
-    info.pSubpasses = &subpass;
-    VkRenderPass pass;
-    if (vkCreateRenderPass(device, &info, nullptr, &pass) != VK_SUCCESS)
-        throw std::runtime_error("failed to create render pass");
-    return pass;
-}
-
 VkDescriptorSetLayout create_descriptor_set_layout(VkDevice device)
 {
     std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
@@ -128,10 +102,10 @@ VkDescriptorSetLayout create_descriptor_set_layout(VkDevice device)
     return layout;
 }
 
-VkPipeline create_pipeline(VkDevice device, VkRenderPass render_pass,
-                           VkPipelineLayout layout, VkShaderModule vert, VkShaderModule frag,
-                           VkBlendFactor src_factor, VkBlendFactor dst_factor,
-                           VkBlendFactor src_alpha, VkBlendFactor dst_alpha, bool no_vertex_input)
+VkPipeline create_pipeline(VkDevice device, VkRenderPass render_pass, VkPipelineLayout layout,
+                           VkShaderModule vert, VkShaderModule frag, VkBlendFactor src_factor,
+                           VkBlendFactor dst_factor, VkBlendFactor src_alpha,
+                           VkBlendFactor dst_alpha, bool no_vertex_input)
 {
     VkPipelineShaderStageCreateInfo stages[2]{};
     stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -173,8 +147,8 @@ VkPipeline create_pipeline(VkDevice device, VkRenderPass render_pass,
 
     VkPipelineInputAssemblyStateCreateInfo assembly{};
     assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    assembly.topology = no_vertex_input ? VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-                                        : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    assembly.topology =
+        no_vertex_input ? VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
     VkViewport viewport{};
     viewport.x = 0;
@@ -223,7 +197,7 @@ VkPipeline create_pipeline(VkDevice device, VkRenderPass render_pass,
     blend.pAttachments = &attachment;
 
     std::array<VkDynamicState, 2> dynamic_states{VK_DYNAMIC_STATE_VIEWPORT,
-                                                   VK_DYNAMIC_STATE_SCISSOR};
+                                                 VK_DYNAMIC_STATE_SCISSOR};
     VkPipelineDynamicStateCreateInfo dynamic{};
     dynamic.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamic.dynamicStateCount = static_cast<std::uint32_t>(dynamic_states.size());
@@ -285,22 +259,19 @@ Clip clip(const Bounds& bounds, const Target& target, const View& view) noexcept
     const int x = integer_bound(
         std::floor(bounds.left * view.scale + view.origin_x) - kMaskBorderPixels, target.width);
     const int y = integer_bound(
-        static_cast<float>(target.height) - std::ceil(bounds.bottom * view.scale + view.origin_y) -
-            kMaskBorderPixels,
-        target.height);
+        std::floor(bounds.top * view.scale + view.origin_y) - kMaskBorderPixels, target.height);
     const int right = integer_bound(
         std::ceil(bounds.right * view.scale + view.origin_x) + kMaskBorderPixels, target.width);
-    const int top = integer_bound(
-        static_cast<float>(target.height) - std::floor(bounds.top * view.scale + view.origin_y) +
-            kMaskBorderPixels,
-        target.height);
+    const int bottom = integer_bound(
+        std::ceil(bounds.bottom * view.scale + view.origin_y) + kMaskBorderPixels, target.height);
     int clip_x = x, clip_right = right;
     if (view.flip_x)
     {
         clip_x = target.width - right;
         clip_right = target.width - x;
     }
-    return {clip_x, y, std::max(0, clip_right - clip_x), std::max(0, top - y)};
+    return {clip_x, target.height - bottom, std::max(0, clip_right - clip_x),
+            std::max(0, bottom - y)};
 }
 
 Clip intersect(Clip a, Clip b) noexcept
@@ -323,65 +294,51 @@ int floor_power_two(int value) noexcept
 struct Renderer::Impl
 {
     DeviceContext ctx;
-    VkCommandPool command_pool{VK_NULL_HANDLE};
-    VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    VkFence fence{VK_NULL_HANDLE};
-    VkRenderPass render_pass{VK_NULL_HANDLE};
+    VkCommandPool upload_pool{VK_NULL_HANDLE};
+    VkRenderPass target_pass{VK_NULL_HANDLE}, color_pass{VK_NULL_HANDLE}, mask_pass{VK_NULL_HANDLE};
+    VkFormat mask_format{VK_FORMAT_UNDEFINED};
     VkDescriptorSetLayout set_layout{VK_NULL_HANDLE};
     VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
-    VkPipelineLayout pipeline_layout{VK_NULL_HANDLE};
-    VkPipelineLayout blit_pipeline_layout{VK_NULL_HANDLE};
+    VkPipelineLayout pipeline_layout{VK_NULL_HANDLE}, blit_pipeline_layout{VK_NULL_HANDLE};
     VkPipeline pipelines[kPipelineCount]{};
     VkShaderModule model_vert{VK_NULL_HANDLE}, model_frag{VK_NULL_HANDLE};
     VkShaderModule blit_vert{VK_NULL_HANDLE}, blit_frag{VK_NULL_HANDLE};
     VkSampler sampler{VK_NULL_HANDLE};
-
     Buffer vbo, ebo;
-    std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
-    std::size_t mask_command_capacity{0}, mask_capacity{0};
-
+    Image dummy;
     struct Texture
     {
         TextureId id;
         Image image;
-        VkDescriptorSet descriptor_set{VK_NULL_HANDLE};
+        VkDescriptorSet unmasked{VK_NULL_HANDLE}, masked{VK_NULL_HANDLE};
     };
     std::vector<Texture> textures;
-
     std::vector<DrawCommand> commands, mask_commands;
     std::vector<MaskDefinition> masks;
     std::vector<MaskBounds> mask_bounds;
+    std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
+    std::size_t mask_command_capacity{0}, mask_capacity{0}, descriptor_texture_capacity{0};
     ColorComposition composition{ColorComposition::PremultipliedOver};
-
-    Image color_target;
-    VkFramebuffer color_framebuffer{VK_NULL_HANDLE};
-    Image mask_target;
-    VkFramebuffer mask_framebuffer{VK_NULL_HANDLE};
-    VkDescriptorSet mask_descriptor_set{VK_NULL_HANDLE};
+    Image color_target, mask_target;
+    VkFramebuffer color_framebuffer{VK_NULL_HANDLE}, mask_framebuffer{VK_NULL_HANDLE};
+    VkDescriptorSet blit_set{VK_NULL_HANDLE};
+    VkImageLayout color_layout{VK_IMAGE_LAYOUT_UNDEFINED}, mask_layout{VK_IMAGE_LAYOUT_UNDEFINED};
     int output_width{0}, output_height{0};
-
+    std::uint32_t max_texture_size{0};
     std::string device_name;
 
+    // The host has completed the preceding submission before destruction or
+    // resource mutation. The backend neither owns nor waits on host fences.
     ~Impl()
     {
         const auto dev = ctx.device;
-        if (fence)
-            vkDestroyFence(dev, fence, nullptr);
         if (color_framebuffer)
             vkDestroyFramebuffer(dev, color_framebuffer, nullptr);
         if (mask_framebuffer)
             vkDestroyFramebuffer(dev, mask_framebuffer, nullptr);
-        destroy_image(dev, color_target);
-        destroy_image(dev, mask_target);
-        for (auto& t : textures)
-        {
-            destroy_image(dev, t.image);
-        }
-        destroy_buffer(dev, vbo);
-        destroy_buffer(dev, ebo);
-        for (int i = 0; i < kPipelineCount; ++i)
-            if (pipelines[i])
-                vkDestroyPipeline(dev, pipelines[i], nullptr);
+        for (auto pipeline : pipelines)
+            if (pipeline)
+                vkDestroyPipeline(dev, pipeline, nullptr);
         if (blit_pipeline_layout)
             vkDestroyPipelineLayout(dev, blit_pipeline_layout, nullptr);
         if (pipeline_layout)
@@ -400,10 +357,14 @@ struct Renderer::Impl
             vkDestroyShaderModule(dev, blit_vert, nullptr);
         if (blit_frag)
             vkDestroyShaderModule(dev, blit_frag, nullptr);
-        if (render_pass)
-            vkDestroyRenderPass(dev, render_pass, nullptr);
-        if (command_pool)
-            vkDestroyCommandPool(dev, command_pool, nullptr);
+        if (target_pass)
+            vkDestroyRenderPass(dev, target_pass, nullptr);
+        if (color_pass)
+            vkDestroyRenderPass(dev, color_pass, nullptr);
+        if (mask_pass)
+            vkDestroyRenderPass(dev, mask_pass, nullptr);
+        if (upload_pool)
+            vkDestroyCommandPool(dev, upload_pool, nullptr);
     }
 
     VkDescriptorSet allocate_descriptor_set()
@@ -413,44 +374,67 @@ struct Renderer::Impl
         info.descriptorPool = descriptor_pool;
         info.descriptorSetCount = 1;
         info.pSetLayouts = &set_layout;
-        VkDescriptorSet set;
-        if (vkAllocateDescriptorSets(ctx.device, &info, &set) != VK_SUCCESS)
-            throw std::runtime_error("failed to allocate descriptor set");
-        return set;
+        VkDescriptorSet result{VK_NULL_HANDLE};
+        check_vk(vkAllocateDescriptorSets(ctx.device, &info, &result), "allocate model descriptor");
+        return result;
     }
 
-    void write_descriptor_set(VkDescriptorSet set, VkImageView view0, VkImageView view1)
+    void write_descriptor_set(VkDescriptorSet set, VkImageView atlas, VkImageView mask)
     {
         std::array<VkWriteDescriptorSet, 2> writes{};
-        std::array<VkDescriptorImageInfo, 2> image_infos{};
-        image_infos[0].sampler = sampler;
-        image_infos[0].imageView = view0;
-        image_infos[0].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        image_infos[1].sampler = sampler;
-        image_infos[1].imageView = view1;
-        image_infos[1].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[0].dstSet = set;
-        writes[0].dstBinding = 0;
-        writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        writes[0].descriptorCount = 1;
-        writes[0].pImageInfo = &image_infos[0];
-        writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        writes[1].dstSet = set;
-        writes[1].dstBinding = 1;
-        writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        writes[1].descriptorCount = 1;
-        writes[1].pImageInfo = &image_infos[1];
+        std::array<VkDescriptorImageInfo, 2> images{};
+        for (std::size_t i = 0; i < images.size(); ++i)
+        {
+            images[i].sampler = sampler;
+            images[i].imageView = i == 0 ? atlas : mask;
+            images[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[i].dstSet = set;
+            writes[i].dstBinding = static_cast<std::uint32_t>(i);
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            writes[i].descriptorCount = 1;
+            writes[i].pImageInfo = &images[i];
+        }
         vkUpdateDescriptorSets(ctx.device, static_cast<std::uint32_t>(writes.size()), writes.data(),
                                0, nullptr);
     }
 
     const Texture* find_texture(TextureId id) const
     {
-        for (const auto& t : textures)
-            if (t.id == id)
-                return &t;
-        return nullptr;
+        const auto it = std::find_if(textures.begin(), textures.end(),
+                                     [id](const Texture& t) { return t.id == id; });
+        return it == textures.end() ? nullptr : &*it;
+    }
+
+    Image upload_image(const ImageRgba8& image)
+    {
+        if (image.width <= 0 || image.height <= 0 ||
+            static_cast<std::uint32_t>(image.width) > max_texture_size ||
+            static_cast<std::uint32_t>(image.height) > max_texture_size ||
+            static_cast<std::size_t>(image.width) > std::numeric_limits<std::size_t>::max() / 4 /
+                                                        static_cast<std::size_t>(image.height) ||
+            image.pixels.size() !=
+                static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4)
+            throw std::runtime_error("invalid or unsupported texture dimensions");
+        auto staging = create_buffer(
+            ctx.device, ctx.physical_device, image.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        void* mapped = nullptr;
+        check_vk(vkMapMemory(ctx.device, staging.memory, 0, image.pixels.size(), 0, &mapped),
+                 "map texture upload");
+        std::memcpy(mapped, image.pixels.data(), image.pixels.size());
+        vkUnmapMemory(ctx.device, staging.memory);
+        auto result = create_image(ctx.device, ctx.physical_device, image.width, image.height,
+                                   VK_FORMAT_R8G8B8A8_UNORM,
+                                   VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        transition_image_layout(ctx.device, ctx.graphics_queue, upload_pool, result.handle,
+                                VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copy_buffer_to_image(ctx.device, ctx.graphics_queue, upload_pool, staging.handle,
+                             result.handle, image.width, image.height);
+        transition_image_layout(ctx.device, ctx.graphics_queue, upload_pool, result.handle,
+                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        return result;
     }
 };
 
@@ -458,81 +442,74 @@ Renderer::Renderer(const DeviceContext& ctx) : impl_(std::make_unique<Impl>())
 {
     auto& p = *impl_;
     p.ctx = ctx;
-    if (!p.ctx.device || !p.ctx.physical_device || !p.ctx.graphics_queue)
+    if (!ctx.device || !ctx.physical_device || !ctx.graphics_queue)
         throw std::runtime_error("invalid Vulkan device context");
-
-    VkPhysicalDeviceProperties props;
-    vkGetPhysicalDeviceProperties(p.ctx.physical_device, &props);
-    p.device_name = std::string(props.deviceName);
-
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(ctx.physical_device, &props);
+    p.device_name = props.deviceName;
+    p.max_texture_size = props.limits.maxImageDimension2D;
+    const VkFormatFeatureFlags mask_features =
+        VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT |
+        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
+    // The reference stores coverage in a five-bit green channel. An eight-bit
+    // attachment is a semantic change, not an acceptable unsupported-format fallback.
+    for (auto format : {VK_FORMAT_R5G5B5A1_UNORM_PACK16, VK_FORMAT_B5G5R5A1_UNORM_PACK16,
+                        VK_FORMAT_A1R5G5B5_UNORM_PACK16})
+    {
+        VkFormatProperties support{};
+        vkGetPhysicalDeviceFormatProperties(ctx.physical_device, format, &support);
+        if ((support.optimalTilingFeatures & mask_features) == mask_features)
+        {
+            p.mask_format = format;
+            break;
+        }
+    }
+    if (p.mask_format == VK_FORMAT_UNDEFINED)
+        throw std::runtime_error("five-bit linearly filtered mask coverage unsupported");
     VkCommandPoolCreateInfo pool_info{};
     pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    pool_info.queueFamilyIndex = p.ctx.graphics_queue_family;
-    if (vkCreateCommandPool(p.ctx.device, &pool_info, nullptr, &p.command_pool) != VK_SUCCESS)
-        throw std::runtime_error("failed to create command pool");
-
-    VkCommandBufferAllocateInfo cmd_info{};
-    cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    cmd_info.commandPool = p.command_pool;
-    cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cmd_info.commandBufferCount = 1;
-    vkAllocateCommandBuffers(p.ctx.device, &cmd_info, &p.command_buffer);
-
-    VkFenceCreateInfo fence_info{};
-    fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    if (vkCreateFence(p.ctx.device, &fence_info, nullptr, &p.fence) != VK_SUCCESS)
-        throw std::runtime_error("failed to create fence");
-
-    p.render_pass = create_render_pass(p.ctx.device, p.ctx.color_format);
-    p.set_layout = create_descriptor_set_layout(p.ctx.device);
-
-    VkDescriptorPoolSize pool_size{};
-    pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    pool_size.descriptorCount = 256;
-    VkDescriptorPoolCreateInfo pool_create{};
-    pool_create.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_create.maxSets = 256;
-    pool_create.poolSizeCount = 1;
-    pool_create.pPoolSizes = &pool_size;
-    if (vkCreateDescriptorPool(p.ctx.device, &pool_create, nullptr, &p.descriptor_pool) !=
-        VK_SUCCESS)
-        throw std::runtime_error("failed to create descriptor pool");
-
-    p.sampler = create_sampler(p.ctx.device);
-    p.model_vert = create_shader_module(p.ctx.device, model_vert_spv, model_vert_size);
-    p.model_frag = create_shader_module(p.ctx.device, model_frag_spv, model_frag_size);
-    p.blit_vert = create_shader_module(p.ctx.device, blit_vert_spv, blit_vert_size);
-    p.blit_frag = create_shader_module(p.ctx.device, blit_frag_spv, blit_frag_size);
-
-    p.pipeline_layout = create_pipeline_layout(p.ctx.device, p.set_layout);
-    p.blit_pipeline_layout = create_blit_pipeline_layout(p.ctx.device, p.set_layout);
-
-    p.pipelines[kPremultipliedOver] = create_pipeline(
-        p.ctx.device, p.render_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
-    p.pipelines[kStraightOver] = create_pipeline(
-        p.ctx.device, p.render_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-        VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
-    p.pipelines[kProtectionPass] = create_pipeline(
-        p.ctx.device, p.render_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-        VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA, VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_FACTOR_ONE, false);
-    p.pipelines[kMultiply] = create_pipeline(
-        p.ctx.device, p.render_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-        VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_FACTOR_ONE, false);
+    pool_info.queueFamilyIndex = ctx.graphics_queue_family;
+    pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    check_vk(vkCreateCommandPool(ctx.device, &pool_info, nullptr, &p.upload_pool),
+             "create upload pool");
+    p.target_pass = create_color_render_pass(ctx.device, ctx.color_format);
+    p.color_pass = create_color_render_pass(ctx.device, VK_FORMAT_R8G8B8A8_UNORM);
+    p.mask_pass = create_color_render_pass(ctx.device, p.mask_format);
+    p.set_layout = create_descriptor_set_layout(ctx.device);
+    p.sampler = create_sampler(ctx.device);
+    p.model_vert = create_shader_module(ctx.device, model_vert_spv, model_vert_size);
+    p.model_frag = create_shader_module(ctx.device, model_frag_spv, model_frag_size);
+    p.blit_vert = create_shader_module(ctx.device, blit_vert_spv, blit_vert_size);
+    p.blit_frag = create_shader_module(ctx.device, blit_frag_spv, blit_frag_size);
+    p.pipeline_layout = create_pipeline_layout(ctx.device, p.set_layout);
+    p.blit_pipeline_layout = create_blit_pipeline_layout(ctx.device, p.set_layout);
+    p.pipelines[kPremultipliedOver] =
+        create_pipeline(ctx.device, p.target_pass, p.pipeline_layout, p.model_vert, p.model_frag,
+                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
+    p.pipelines[kStraightOver] =
+        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
+                        VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
+    p.pipelines[kProtectionPass] =
+        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
+                        VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA,
+                        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
+    p.pipelines[kMultiply] =
+        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
+                        VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
     p.pipelines[kMaskWrite] = create_pipeline(
-        p.ctx.device, p.render_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ZERO,
-        VK_BLEND_FACTOR_ONE, false);
-    p.pipelines[kBlit] = create_pipeline(
-        p.ctx.device, p.render_pass, p.blit_pipeline_layout, p.blit_vert, p.blit_frag,
-        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_ONE,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, true);
+        ctx.device, p.mask_pass, p.pipeline_layout, p.model_vert, p.model_frag, VK_BLEND_FACTOR_ONE,
+        VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
+    p.pipelines[kBlit] =
+        create_pipeline(ctx.device, p.target_pass, p.blit_pipeline_layout, p.blit_vert, p.blit_frag,
+                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, true);
+    ImageRgba8 white;
+    white.width = white.height = 1;
+    white.pixels = {255, 255, 255, 255};
+    p.dummy = p.upload_image(white);
 }
 
 Renderer::~Renderer() = default;
@@ -540,25 +517,44 @@ Renderer::~Renderer() = default;
 void Renderer::reserve(Capacity capacity)
 {
     auto& p = *impl_;
+    if (capacity.vertices > std::numeric_limits<std::size_t>::max() / sizeof(RenderVertex) ||
+        capacity.indices > std::numeric_limits<std::size_t>::max() / sizeof(std::uint32_t) ||
+        capacity.textures > (std::numeric_limits<std::uint32_t>::max() - 2U) / 4U)
+        throw std::runtime_error("GPU capacity exceeds representable range");
+    if (!p.descriptor_pool)
+    {
+        const auto set_count = static_cast<std::uint32_t>(capacity.textures * 2 + 1);
+        VkDescriptorPoolSize size{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, set_count * 2};
+        VkDescriptorPoolCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        info.maxSets = set_count;
+        info.poolSizeCount = 1;
+        info.pPoolSizes = &size;
+        check_vk(vkCreateDescriptorPool(p.ctx.device, &info, nullptr, &p.descriptor_pool),
+                 "create model descriptor pool");
+        p.descriptor_texture_capacity = capacity.textures;
+        p.blit_set = p.allocate_descriptor_set();
+        p.write_descriptor_set(p.blit_set, p.dummy.view, p.dummy.view);
+    }
+    else if (capacity.textures > p.descriptor_texture_capacity)
+        throw std::runtime_error("texture reserve exceeds established descriptor capacity");
+    p.vbo = capacity.vertices
+                ? create_buffer(
+                      p.ctx.device, p.ctx.physical_device, capacity.vertices * sizeof(RenderVertex),
+                      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                : Buffer{};
+    p.ebo = capacity.indices
+                ? create_buffer(
+                      p.ctx.device, p.ctx.physical_device, capacity.indices * sizeof(std::uint32_t),
+                      VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                : Buffer{};
     p.mask_bounds.reserve(capacity.masks);
     p.mask_commands.reserve(capacity.mask_commands);
     p.masks.reserve(capacity.masks);
     p.commands.reserve(capacity.commands);
     p.textures.reserve(capacity.textures);
-    const auto vbo_size = capacity.vertices * sizeof(RenderVertex);
-    const auto ebo_size = capacity.indices * sizeof(std::uint32_t);
-    if (p.vbo.handle)
-        destroy_buffer(p.ctx.device, p.vbo);
-    if (p.ebo.handle)
-        destroy_buffer(p.ctx.device, p.ebo);
-    if (vbo_size > 0)
-        p.vbo = create_buffer(p.ctx.device, p.ctx.physical_device, vbo_size,
-                              VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (ebo_size > 0)
-        p.ebo = create_buffer(p.ctx.device, p.ctx.physical_device, ebo_size,
-                              VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     p.vertex_capacity = capacity.vertices;
     p.index_capacity = capacity.indices;
     p.command_capacity = capacity.commands;
@@ -572,33 +568,15 @@ void Renderer::upload_texture(TextureId id, const ImageRgba8& image)
     auto& p = *impl_;
     if (!id.valid() || p.find_texture(id) || p.textures.size() >= p.texture_capacity)
         throw std::runtime_error("invalid, duplicate or excessive texture ID");
-    if (image.width <= 0 || image.height <= 0 ||
-        image.pixels.size() !=
-            static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4)
-        throw std::runtime_error("invalid texture dimensions");
-    const auto data_size = image.pixels.size();
-    auto staging = create_buffer(
-        p.ctx.device, p.ctx.physical_device, data_size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    void* mapped = nullptr;
-    vkMapMemory(p.ctx.device, staging.memory, 0, data_size, 0, &mapped);
-    std::memcpy(mapped, image.pixels.data(), data_size);
-    vkUnmapMemory(p.ctx.device, staging.memory);
-    auto img = create_image(p.ctx.device, p.ctx.physical_device, image.width, image.height,
-                            VK_FORMAT_R8G8B8A8_UNORM,
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-    transition_image_layout(p.ctx.device, p.ctx.graphics_queue, p.command_pool, img.handle,
-                            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copy_buffer_to_image(p.ctx.device, p.ctx.graphics_queue, p.command_pool, staging.handle,
-                         img.handle, image.width, image.height);
-    transition_image_layout(p.ctx.device, p.ctx.graphics_queue, p.command_pool, img.handle,
-                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    destroy_buffer(p.ctx.device, staging);
-    auto set = p.allocate_descriptor_set();
-    p.write_descriptor_set(set, img.view, VK_NULL_HANDLE);
-    p.textures.push_back({id, img, set});
+    Impl::Texture texture;
+    texture.id = id;
+    texture.image = p.upload_image(image);
+    texture.unmasked = p.allocate_descriptor_set();
+    texture.masked = p.allocate_descriptor_set();
+    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view);
+    p.write_descriptor_set(texture.masked, texture.image.view,
+                           p.mask_target.view ? p.mask_target.view : p.dummy.view);
+    p.textures.push_back(std::move(texture));
 }
 
 void Renderer::prepare(RenderFrame frame)
@@ -690,36 +668,17 @@ void Renderer::prepare(RenderFrame frame)
             }
         }
 
-    if (!frame.vertices.empty() && p.vbo.handle)
+    const auto upload = [&p](Buffer& buffer, const void* bytes, std::size_t size)
     {
-        auto staging = create_buffer(
-            p.ctx.device, p.ctx.physical_device,
-            frame.vertices.size() * sizeof(RenderVertex),
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        if (!size)
+            return;
         void* mapped = nullptr;
-        vkMapMemory(p.ctx.device, staging.memory, 0, staging.size, 0, &mapped);
-        std::memcpy(mapped, frame.vertices.data(), frame.vertices.size() * sizeof(RenderVertex));
-        vkUnmapMemory(p.ctx.device, staging.memory);
-        copy_buffer(p.ctx.device, p.ctx.graphics_queue, p.command_pool, staging.handle, p.vbo.handle,
-                    frame.vertices.size() * sizeof(RenderVertex));
-        destroy_buffer(p.ctx.device, staging);
-    }
-    if (!frame.indices.empty() && p.ebo.handle)
-    {
-        auto staging = create_buffer(
-            p.ctx.device, p.ctx.physical_device,
-            frame.indices.size() * sizeof(std::uint32_t),
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        void* mapped = nullptr;
-        vkMapMemory(p.ctx.device, staging.memory, 0, staging.size, 0, &mapped);
-        std::memcpy(mapped, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));
-        vkUnmapMemory(p.ctx.device, staging.memory);
-        copy_buffer(p.ctx.device, p.ctx.graphics_queue, p.command_pool, staging.handle, p.ebo.handle,
-                    frame.indices.size() * sizeof(std::uint32_t));
-        destroy_buffer(p.ctx.device, staging);
-    }
+        check_vk(vkMapMemory(p.ctx.device, buffer.memory, 0, size, 0, &mapped), "map frame buffer");
+        std::memcpy(mapped, bytes, size);
+        vkUnmapMemory(p.ctx.device, buffer.memory);
+    };
+    upload(p.vbo, frame.vertices.data(), frame.vertices.size() * sizeof(RenderVertex));
+    upload(p.ebo, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));
     p.commands.assign(frame.commands.begin(), frame.commands.end());
     p.mask_commands.assign(frame.mask_commands.begin(), frame.mask_commands.end());
     p.masks.assign(frame.masks.begin(), frame.masks.end());
@@ -731,46 +690,57 @@ void Renderer::resize_output(int width, int height)
     auto& p = *impl_;
     if (p.composition == ColorComposition::PremultipliedOver || width <= 0 || height <= 0)
         return;
-    if (p.output_width == width && p.output_height == height && p.color_target.handle)
+    if (width == p.output_width && height == p.output_height && p.color_target.handle)
         return;
-    const auto dev = p.ctx.device;
+    if (!p.blit_set)
+        throw std::runtime_error("reserve resources before protected output resize");
+    if (static_cast<std::uint32_t>(width) > p.max_texture_size ||
+        static_cast<std::uint32_t>(height) > p.max_texture_size)
+        throw std::runtime_error("output exceeds GPU texture dimensions");
+    auto color =
+        create_image(p.ctx.device, p.ctx.physical_device, width, height, VK_FORMAT_R8G8B8A8_UNORM,
+                     VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+    auto mask = create_image(p.ctx.device, p.ctx.physical_device, floor_power_two(width),
+                             floor_power_two(height), p.mask_format,
+                             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+    const auto make_fb = [&p](const Image& image, VkRenderPass pass, VkFramebuffer* result)
+    {
+        VkFramebufferCreateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        info.renderPass = pass;
+        info.attachmentCount = 1;
+        info.pAttachments = &image.view;
+        info.width = static_cast<std::uint32_t>(image.width);
+        info.height = static_cast<std::uint32_t>(image.height);
+        info.layers = 1;
+        check_vk(vkCreateFramebuffer(p.ctx.device, &info, nullptr, result),
+                 "create intermediate framebuffer");
+    };
+    VkFramebuffer new_color{VK_NULL_HANDLE}, new_mask{VK_NULL_HANDLE};
+    make_fb(color, p.color_pass, &new_color);
+    try
+    {
+        make_fb(mask, p.mask_pass, &new_mask);
+    }
+    catch (...)
+    {
+        vkDestroyFramebuffer(p.ctx.device, new_color, nullptr);
+        throw;
+    }
     if (p.color_framebuffer)
-        vkDestroyFramebuffer(dev, p.color_framebuffer, nullptr);
+        vkDestroyFramebuffer(p.ctx.device, p.color_framebuffer, nullptr);
     if (p.mask_framebuffer)
-        vkDestroyFramebuffer(dev, p.mask_framebuffer, nullptr);
-    destroy_image(dev, p.color_target);
-    destroy_image(dev, p.mask_target);
-    p.color_target = create_image(dev, p.ctx.physical_device, width, height, p.ctx.color_format,
-                                   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                       VK_IMAGE_USAGE_SAMPLED_BIT);
-    transition_image_layout(dev, p.ctx.graphics_queue, p.command_pool, p.color_target.handle,
-                            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    p.mask_target = create_image(dev, p.ctx.physical_device, floor_power_two(width),
-                                  floor_power_two(height), p.ctx.color_format,
-                                  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-                                      VK_IMAGE_USAGE_SAMPLED_BIT);
-    transition_image_layout(dev, p.ctx.graphics_queue, p.command_pool, p.mask_target.handle,
-                            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    std::array<VkImageView, 1> fb_attachments{p.color_target.view};
-    VkFramebufferCreateInfo fb_info{};
-    fb_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    fb_info.renderPass = p.render_pass;
-    fb_info.attachmentCount = 1;
-    fb_info.pAttachments = fb_attachments.data();
-    fb_info.width = static_cast<std::uint32_t>(width);
-    fb_info.height = static_cast<std::uint32_t>(height);
-    fb_info.layers = 1;
-    if (vkCreateFramebuffer(dev, &fb_info, nullptr, &p.color_framebuffer) != VK_SUCCESS)
-        throw std::runtime_error("failed to create color framebuffer");
-    fb_attachments[0] = p.mask_target.view;
-    fb_info.width = static_cast<std::uint32_t>(p.mask_target.width);
-    fb_info.height = static_cast<std::uint32_t>(p.mask_target.height);
-    if (vkCreateFramebuffer(dev, &fb_info, nullptr, &p.mask_framebuffer) != VK_SUCCESS)
-        throw std::runtime_error("failed to create mask framebuffer");
-    p.mask_descriptor_set = p.allocate_descriptor_set();
-    p.write_descriptor_set(p.mask_descriptor_set, p.mask_target.view, VK_NULL_HANDLE);
+        vkDestroyFramebuffer(p.ctx.device, p.mask_framebuffer, nullptr);
+    p.color_framebuffer = new_color;
+    p.mask_framebuffer = new_mask;
+    p.color_target = std::move(color);
+    p.mask_target = std::move(mask);
+    p.color_layout = p.mask_layout = VK_IMAGE_LAYOUT_UNDEFINED;
     p.output_width = width;
     p.output_height = height;
+    p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view);
+    for (const auto& texture : p.textures)
+        p.write_descriptor_set(texture.masked, texture.image.view, p.mask_target.view);
 }
 
 void Renderer::render(Target target, const View& view, TargetContents contents)
@@ -779,75 +749,74 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         throw std::runtime_error("invalid target contents policy");
     if (target.width <= 0 || target.height <= 0)
         return;
+    if (!target.commands || !target.framebuffer)
+        throw std::runtime_error("invalid Vulkan output target");
     if (!std::isfinite(view.origin_x) || !std::isfinite(view.origin_y) ||
-        !std::isfinite(view.scale) || view.scale <= 0 ||
+        !std::isfinite(view.scale) || view.scale <= 0 || !std::isfinite(view.alpha) ||
+        view.alpha < 0 || view.alpha > 1 ||
         std::any_of(view.clear.begin(), view.clear.end(),
                     [](float v) { return !std::isfinite(v); }))
         throw std::runtime_error("invalid output view");
     auto& p = *impl_;
-    const auto dev = p.ctx.device;
     const bool straight = p.composition == ColorComposition::ProtectedStraight;
     if (straight && (!p.color_target.handle || p.output_width != target.width ||
                      p.output_height != target.height))
         throw std::runtime_error("protected composition requires explicit output resize");
-
-    vkWaitForFences(dev, 1, &p.fence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
-    vkResetFences(dev, 1, &p.fence);
-    vkResetCommandBuffer(p.command_buffer, 0);
-    VkCommandBufferBeginInfo begin_info{};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    vkBeginCommandBuffer(p.command_buffer, &begin_info);
-
-    const VkFramebuffer fb = straight ? p.color_framebuffer : target.framebuffer;
-    const int fb_w = target.width;
-    const int fb_h = target.height;
-    VkRenderPassBeginInfo rp_begin{};
-    rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rp_begin.renderPass = p.render_pass;
-    rp_begin.framebuffer = fb;
-    rp_begin.renderArea.offset.x = 0;
-    rp_begin.renderArea.offset.y = 0;
-    rp_begin.renderArea.extent.width = static_cast<std::uint32_t>(fb_w);
-    rp_begin.renderArea.extent.height = static_cast<std::uint32_t>(fb_h);
-    std::array<VkClearValue, 1> clear_values{};
+    const auto cmd = target.commands;
+    const Clip full{0, 0, target.width, target.height};
+    const auto set_scissor = [cmd](Clip clip)
+    {
+        VkRect2D rect{
+            {clip.x, clip.y},
+            {static_cast<std::uint32_t>(clip.width), static_cast<std::uint32_t>(clip.height)}};
+        vkCmdSetScissor(cmd, 0, 1, &rect);
+    };
+    const auto begin = [&](VkRenderPass pass, VkFramebuffer fb, int width, int height, bool clear,
+                           std::array<float, 4> rgba)
+    {
+        VkRenderPassBeginInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        info.renderPass = pass;
+        info.framebuffer = fb;
+        info.renderArea.extent = {static_cast<std::uint32_t>(width),
+                                  static_cast<std::uint32_t>(height)};
+        vkCmdBeginRenderPass(cmd, &info, VK_SUBPASS_CONTENTS_INLINE);
+        VkViewport viewport{};
+        viewport.width = static_cast<float>(width);
+        viewport.height = static_cast<float>(height);
+        viewport.maxDepth = 1;
+        vkCmdSetViewport(cmd, 0, 1, &viewport);
+        set_scissor({0, 0, width, height});
+        // Clear/Preserve is an explicit operation; changing clearValueCount does
+        // not alter the attachment's LOAD operation.
+        if (clear)
+        {
+            VkClearAttachment attachment{};
+            attachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            std::copy(rgba.begin(), rgba.end(), attachment.clearValue.color.float32);
+            VkClearRect rect{};
+            rect.rect.extent = info.renderArea.extent;
+            rect.layerCount = 1;
+            vkCmdClearAttachments(cmd, 1, &attachment, 1, &rect);
+        }
+    };
     if (straight)
     {
-        clear_values[0].color.float32[0] = 0;
-        clear_values[0].color.float32[1] = 0;
-        clear_values[0].color.float32[2] = 0;
-        clear_values[0].color.float32[3] = 0;
+        record_image_barrier(cmd, p.color_target.handle, p.color_layout,
+                             VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        p.color_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        begin(p.color_pass, p.color_framebuffer, target.width, target.height, true, {});
     }
     else
+        begin(p.target_pass, target.framebuffer, target.width, target.height,
+              contents == TargetContents::Clear, view.clear);
+
+    if (p.vbo.handle && p.ebo.handle)
     {
-        for (int i = 0; i < 4; ++i)
-            clear_values[0].color.float32[i] = view.clear[i];
+        const VkDeviceSize offset = 0;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &p.vbo.handle, &offset);
+        vkCmdBindIndexBuffer(cmd, p.ebo.handle, 0, VK_INDEX_TYPE_UINT32);
     }
-    rp_begin.pClearValues = clear_values.data();
-    rp_begin.clearValueCount = 1;
-    if (straight || contents == TargetContents::Clear)
-        rp_begin.clearValueCount = 1;
-    else
-        rp_begin.clearValueCount = 0;
-    vkCmdBeginRenderPass(p.command_buffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
-
-    VkViewport viewport{};
-    viewport.width = static_cast<float>(fb_w);
-    viewport.height = static_cast<float>(fb_h);
-    viewport.minDepth = 0;
-    viewport.maxDepth = 1;
-    vkCmdSetViewport(p.command_buffer, 0, 1, &viewport);
-    VkRect2D scissor{};
-    scissor.extent.width = static_cast<std::uint32_t>(fb_w);
-    scissor.extent.height = static_cast<std::uint32_t>(fb_h);
-    vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
-
-    vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      straight ? p.pipelines[kStraightOver] : p.pipelines[kPremultipliedOver]);
-    VkBuffer vbo_buffers[] = {p.vbo.handle};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(p.command_buffer, 0, 1, vbo_buffers, offsets);
-    vkCmdBindIndexBuffer(p.command_buffer, p.ebo.handle, 0, VK_INDEX_TYPE_UINT32);
-
     PushConstants pc{};
     pc.output_size[0] = static_cast<float>(target.width);
     pc.output_size[1] = static_cast<float>(target.height);
@@ -855,196 +824,113 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     pc.origin_y = view.origin_y;
     pc.scale = view.scale;
     pc.flip_x = view.flip_x ? 1 : 0;
-    pc.projection[0] = 2.0f / static_cast<float>(target.width);
-    pc.projection[1] = -2.0f / static_cast<float>(target.height);
+    pc.projection[0] = 2 / static_cast<float>(target.width);
+    pc.projection[1] = -2 / static_cast<float>(target.height);
     pc.mask_output_size[0] = static_cast<float>(target.width);
     pc.mask_output_size[1] = static_cast<float>(target.height);
-    pc.global_alpha = straight ? 1.0f : view.alpha;
-    pc.premultiply = straight ? 0 : 1;
-    vkCmdPushConstants(p.command_buffer, p.pipeline_layout,
-                       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                       sizeof(PushConstants), &pc);
-
+    pc.global_alpha = straight ? 1 : view.alpha;
+    const auto push = [&]()
+    {
+        vkCmdPushConstants(cmd, p.pipeline_layout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc),
+                           &pc);
+    };
     for (const auto& command : p.commands)
     {
+        if (!command.index_count)
+            continue;
         if (command.mask.valid())
         {
-            vkCmdEndRenderPass(p.command_buffer);
-            rp_begin.framebuffer = p.mask_framebuffer;
-            rp_begin.renderArea.extent.width = static_cast<std::uint32_t>(p.mask_target.width);
-            rp_begin.renderArea.extent.height = static_cast<std::uint32_t>(p.mask_target.height);
-            rp_begin.clearValueCount = 1;
-            clear_values[0].color.float32[0] = 0;
-            clear_values[0].color.float32[1] = 0;
-            clear_values[0].color.float32[2] = 0;
-            clear_values[0].color.float32[3] = 0;
-            vkCmdBeginRenderPass(p.command_buffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
-            viewport.width = static_cast<float>(p.mask_target.width);
-            viewport.height = static_cast<float>(p.mask_target.height);
-            vkCmdSetViewport(p.command_buffer, 0, 1, &viewport);
-            scissor.extent.width = static_cast<std::uint32_t>(p.mask_target.width);
-            scissor.extent.height = static_cast<std::uint32_t>(p.mask_target.height);
-            vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
-            vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              p.pipelines[kMaskWrite]);
+            vkCmdEndRenderPass(cmd);
+            record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
+                                 VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+            p.mask_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            begin(p.mask_pass, p.mask_framebuffer, p.mask_target.width, p.mask_target.height, true,
+                  {});
+            const auto& bounds = p.mask_bounds[command.mask.value - 1];
+            const auto output_clip = intersect(
+                intersect(clip(bounds.source, target, view), clip(bounds.content, target, view)),
+                full);
+            // Internal framebuffer rows follow GL's lower-left arithmetic.
+            const auto scaled = [](int value, int size, int original)
+            { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
+            set_scissor({scaled(output_clip.x, p.mask_target.width, target.width),
+                         scaled(output_clip.y, p.mask_target.height, target.height),
+                         scaled(output_clip.width, p.mask_target.width, target.width),
+                         scaled(output_clip.height, p.mask_target.height, target.height)});
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kMaskWrite]);
             pc.mask_write = 1;
             pc.use_mask = 0;
-            vkCmdPushConstants(p.command_buffer, p.pipeline_layout,
-                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                               sizeof(PushConstants), &pc);
-            const auto& def = p.masks[command.mask.value - 1];
-            for (std::uint32_t i = 0; i < def.command_count; ++i)
+            push();
+            const auto& definition = p.masks[command.mask.value - 1];
+            for (std::uint32_t i = 0; i < definition.command_count; ++i)
             {
-                const auto& draw = p.mask_commands[def.first_command + i];
-                const auto* tex = p.find_texture(draw.texture);
-                if (!tex)
+                const auto& draw = p.mask_commands[definition.first_command + i];
+                if (!draw.index_count)
                     continue;
-                vkCmdBindDescriptorSets(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        p.pipeline_layout, 0, 1, &tex->descriptor_set, 0, nullptr);
-                vkCmdDrawIndexed(p.command_buffer, draw.index_count, 1, draw.first_index, 0, 0);
+                const auto* texture = p.find_texture(draw.texture);
+                // Dummy mask prevents sampling an attachment currently being written.
+                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0,
+                                        1, &texture->unmasked, 0, nullptr);
+                vkCmdDrawIndexed(cmd, draw.index_count, 1, draw.first_index, 0, 0);
             }
-            vkCmdEndRenderPass(p.command_buffer);
-            rp_begin.framebuffer = p.color_framebuffer;
-            rp_begin.renderArea.extent.width = static_cast<std::uint32_t>(target.width);
-            rp_begin.renderArea.extent.height = static_cast<std::uint32_t>(target.height);
-            rp_begin.clearValueCount = 0;
-            vkCmdBeginRenderPass(p.command_buffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
-            viewport.width = static_cast<float>(target.width);
-            viewport.height = static_cast<float>(target.height);
-            vkCmdSetViewport(p.command_buffer, 0, 1, &viewport);
-            const auto& mb = p.mask_bounds[command.mask.value - 1];
-            const auto output_clip = intersect(
-                intersect(clip(mb.source, target, view), clip(mb.content, target, view)),
-                {0, 0, target.width, target.height});
-            scissor.offset.x = static_cast<std::int32_t>(output_clip.x);
-            scissor.offset.y = static_cast<std::int32_t>(output_clip.y);
-            scissor.extent.width = static_cast<std::uint32_t>(output_clip.width);
-            scissor.extent.height = static_cast<std::uint32_t>(output_clip.height);
-            vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
-            vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              p.pipelines[kStraightOver]);
+            vkCmdEndRenderPass(cmd);
+            record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
+                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            p.mask_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            begin(p.color_pass, p.color_framebuffer, target.width, target.height, false, {});
+            set_scissor(output_clip);
             pc.mask_write = 0;
             pc.use_mask = 1;
-            pc.mask_output_size[0] = static_cast<float>(p.mask_target.width);
-            pc.mask_output_size[1] = static_cast<float>(p.mask_target.height);
-            vkCmdPushConstants(p.command_buffer, p.pipeline_layout,
-                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                               sizeof(PushConstants), &pc);
         }
         else
         {
-            scissor.offset.x = 0;
-            scissor.offset.y = 0;
-            scissor.extent.width = static_cast<std::uint32_t>(target.width);
-            scissor.extent.height = static_cast<std::uint32_t>(target.height);
-            vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
+            set_scissor(full);
             pc.use_mask = 0;
         }
-
-        const auto* tex = p.find_texture(command.texture);
-        if (!tex)
-            continue;
-        VkDescriptorSet sets[] = {tex->descriptor_set, p.mask_descriptor_set};
-        vkCmdBindDescriptorSets(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout,
-                                0, 1, &tex->descriptor_set, 0, nullptr);
-        if (command.mask.valid())
-        {
-            vkCmdBindDescriptorSets(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    p.pipeline_layout, 0, 1, sets, 0, nullptr);
-        }
-
+        const auto* texture = p.find_texture(command.texture);
+        const auto set = command.mask.valid() ? texture->masked : texture->unmasked;
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0, 1, &set,
+                                0, nullptr);
         if (straight && command.protection == ColorProtection::PreserveTranslucent)
         {
-            vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              p.pipelines[kProtectionPass]);
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kProtectionPass]);
             pc.protection_pass = 1;
-            vkCmdPushConstants(p.command_buffer, p.pipeline_layout,
-                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                               sizeof(PushConstants), &pc);
-            vkCmdDrawIndexed(p.command_buffer, command.index_count, 1, command.first_index, 0, 0);
+            pc.premultiply = 0;
+            push();
+            vkCmdDrawIndexed(cmd, command.index_count, 1, command.first_index, 0, 0);
             pc.protection_pass = 0;
         }
-
-        PipelineIndex pipe = straight ? kStraightOver : kPremultipliedOver;
-        if (command.blend == BlendMode::Multiply)
-            pipe = kMultiply;
-        vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[pipe]);
-        pc.premultiply = (command.blend == BlendMode::Multiply || !straight) ? 1 : 0;
-        vkCmdPushConstants(p.command_buffer, p.pipeline_layout,
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(PushConstants), &pc);
-        vkCmdDrawIndexed(p.command_buffer, command.index_count, 1, command.first_index, 0, 0);
+        const auto pipe = command.blend == BlendMode::Multiply
+                              ? kMultiply
+                              : (straight ? kStraightOver : kPremultipliedOver);
+        pc.premultiply = command.blend == BlendMode::Multiply || !straight ? 1 : 0;
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[pipe]);
+        push();
+        vkCmdDrawIndexed(cmd, command.index_count, 1, command.first_index, 0, 0);
     }
-
+    vkCmdEndRenderPass(cmd);
     if (straight)
     {
-        vkCmdEndRenderPass(p.command_buffer);
-        rp_begin.framebuffer = target.framebuffer;
-        rp_begin.renderArea.extent.width = static_cast<std::uint32_t>(target.width);
-        rp_begin.renderArea.extent.height = static_cast<std::uint32_t>(target.height);
-        rp_begin.clearValueCount = (contents == TargetContents::Clear) ? 1 : 0;
-        if (contents == TargetContents::Clear)
-            for (int i = 0; i < 4; ++i)
-                clear_values[0].color.float32[i] = view.clear[i];
-        vkCmdBeginRenderPass(p.command_buffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
-        viewport.width = static_cast<float>(target.width);
-        viewport.height = static_cast<float>(target.height);
-        vkCmdSetViewport(p.command_buffer, 0, 1, &viewport);
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-        scissor.extent.width = static_cast<std::uint32_t>(target.width);
-        scissor.extent.height = static_cast<std::uint32_t>(target.height);
-        vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
-        vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kBlit]);
-        VkDescriptorSet blit_set = p.allocate_descriptor_set();
-        p.write_descriptor_set(blit_set, p.color_target.view, VK_NULL_HANDLE);
-        vkCmdBindDescriptorSets(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                p.blit_pipeline_layout, 0, 1, &blit_set, 0, nullptr);
-        float blit_alpha = view.alpha;
-        vkCmdPushConstants(p.command_buffer, p.blit_pipeline_layout,
+        record_image_barrier(cmd, p.color_target.handle, p.color_layout,
+                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        p.color_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        begin(p.target_pass, target.framebuffer, target.width, target.height,
+              contents == TargetContents::Clear, view.clear);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kBlit]);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.blit_pipeline_layout, 0, 1,
+                                &p.blit_set, 0, nullptr);
+        vkCmdPushConstants(cmd, p.blit_pipeline_layout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(float), &blit_alpha);
-        vkCmdDraw(p.command_buffer, 3, 1, 0, 0);
+                           sizeof(float), &view.alpha);
+        vkCmdDraw(cmd, 3, 1, 0, 0);
+        vkCmdEndRenderPass(cmd);
     }
-
-    vkCmdEndRenderPass(p.command_buffer);
-    vkEndCommandBuffer(p.command_buffer);
-    VkSubmitInfo submit{};
-    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit.commandBufferCount = 1;
-    submit.pCommandBuffers = &p.command_buffer;
-    vkQueueSubmit(p.ctx.graphics_queue, 1, &submit, p.fence);
-}
-
-ImageRgba8 Renderer::capture(Target target)
-{
-    auto& p = *impl_;
-    if (target.width <= 0 || target.height <= 0)
-        throw std::runtime_error("cannot capture empty target");
-    vkWaitForFences(p.ctx.device, 1, &p.fence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
-    ImageRgba8 image;
-    image.width = target.width;
-    image.height = target.height;
-    image.pixels.resize(static_cast<std::size_t>(target.width) *
-                        static_cast<std::size_t>(target.height) * 4);
-    const auto data_size = image.pixels.size();
-    auto staging = create_buffer(
-        p.ctx.device, p.ctx.physical_device, data_size,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    auto img = create_image(p.ctx.device, p.ctx.physical_device, target.width, target.height,
-                            p.ctx.color_format,
-                            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
-    (void)img;
-    (void)staging;
-    destroy_buffer(p.ctx.device, staging);
-    destroy_image(p.ctx.device, img);
-    return image;
 }
 
 std::string Renderer::diagnostics() const
 {
-    return "Vulkan | " + impl_->device_name;
+    return "Vulkan 1.0 | " + impl_->device_name;
 }
 
 } // namespace nekomote::render_vk

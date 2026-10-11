@@ -10,6 +10,6 @@
 | 触摸/UI | player 与 WallpaperInstance 仍分别构建面板业务；本轮 Qt 输入/绘图通过不代表所有控件有效。触摸候选不应用，逐型号区域与动态姿态待验收 | Gemini按共享UI与有效证据观察；G28/V19后续结果待范围复核 |
 | 覆盖/性能 | 195初态通过不等于全动态；G29交付矩阵/分配/暂停报告待范围复核，locator/ASan/整应用与设备线程覆盖不自动PASS | Codex抽核G29；后续全动态/长期 |
 | 图形宿主/桌面 | Plasma 已使用高层 ABI 与 assetsDir 配置页；用户已确认实际桌面初步接入正常；多屏、休眠、context失效及8–24h仍未验收 | 补齐生命周期与长期证据；安装/桌面配置按实际授权 |
-| Vulkan后端 | application/ui 无图形 API 依赖；UI 图标 ID 当前仍由 GL 纹理值传入，语义资源/设备映射需收拢。render_vk 未建立，不创建空后端 | 未来P10，按需实现 |
+| Vulkan 后端 | player 双栈已重写，GL/VK 共享模型与 UI 协议；Plasma / C ABI 的 Vulkan 输出、其他 GPU/真正旧版 1.0 驱动、长期与设备故障未验收 | [C11 后端契约与证据](vulkan-backend.md)；不把窗口通过推定桌面通过 |
 
 真实素材缺失/损坏按来源记录，不以结构导入或目录通过推定画面。Coconut dress来源差异和Vanilla santa项目图集修复记录留在[C5证据](c5-mirror-mask-handoff.md)、C6与冻结账本，不再分派已完成图集重审。当前执行见 [任务交接](agent-next-handoff.md)，原专项交接保留为设计门槛。

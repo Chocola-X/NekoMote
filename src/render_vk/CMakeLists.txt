@@ -53,6 +53,6 @@ target_include_directories(nekomote_render_vk
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(nekomote_render_vk
-    PUBLIC nekomote::model
-    PRIVATE nekomote::ui Vulkan::Vulkan nekomote_warnings)
+    PUBLIC nekomote::model Vulkan::Vulkan
+    PRIVATE nekomote::ui nekomote_warnings)
 target_sources(nekomote_render_vk PRIVATE ${SPIRV_HEADER})

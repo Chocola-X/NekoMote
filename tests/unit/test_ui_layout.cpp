@@ -1,9 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-
 #include <nekomote/ui/layout.hpp>
 
 #include <cstdint>
+#include <iterator>
+#include <map>
+#include <string>
 #include <vector>
 
 using namespace nekomote::ui;
@@ -383,4 +385,59 @@ TEST_CASE("UI mouse_in_rect hit testing", "[ui_layout]")
     REQUIRE(ctx.mouse_in_rect(50, 150, 49, 49) == false);
     REQUIRE(ctx.mouse_in_rect(101, 201, 100, 100) == false);
     REQUIRE(ctx.mouse_in_rect(0, 0, 200, 300) == true);
+}
+
+TEST_CASE("font atlas growth preserves glyph locations and final UVs", "[ui][font][integration]")
+{
+    FontMetrics metrics;
+    if (!metrics.init("", 256.0f))
+        SKIP("No system font available for CPU atlas growth integration");
+    std::map<unsigned int, Glyph> glyphs;
+    int growth_count = 0;
+    metrics.on_atlas_resized = [&](int, int) { ++growth_count; };
+    metrics.on_glyph_added = [&](const Glyph& glyph, const unsigned char*)
+    {
+        const auto existing = glyphs.find(glyph.codepoint);
+        if (existing != glyphs.end())
+        {
+            REQUIRE(glyph.atlas_x == existing->second.atlas_x);
+            REQUIRE(glyph.atlas_y == existing->second.atlas_y);
+        }
+        glyphs[glyph.codepoint] = glyph;
+    };
+    // Force growth during one draw after its first already-known glyph. A late
+    // ensure_char must not invalidate the first quad's texture coordinates.
+    metrics.ensure_char('A');
+    std::string text = "A";
+    for (unsigned int c = 33; c < 127; ++c)
+        text.push_back(static_cast<char>(c));
+    std::vector<float> vertices, uvs;
+    metrics.draw_text(vertices, uvs, 0, 0, text.c_str(), 16.0f);
+    REQUIRE(growth_count > 0);
+    REQUIRE(uvs.size() == text.size() * 12);
+    for (std::size_t i = 0; i < text.size(); ++i)
+    {
+        const auto& glyph = glyphs.at(static_cast<unsigned char>(text[i]));
+        REQUIRE_THAT(uvs[i * 12],
+                     Catch::Matchers::WithinAbs(static_cast<float>(glyph.atlas_x) /
+                                                    static_cast<float>(metrics.texture_width()),
+                                                0.000001));
+        REQUIRE_THAT(uvs[i * 12 + 1],
+                     Catch::Matchers::WithinAbs(static_cast<float>(glyph.atlas_y) /
+                                                    static_cast<float>(metrics.texture_height()),
+                                                0.000001));
+    }
+    // All rectangles must remain disjoint after growth and insertion. Restarting
+    // atlas packing at zero silently aliases old and newly added glyphs.
+    for (auto a = glyphs.begin(); a != glyphs.end(); ++a)
+        for (auto b = std::next(a); b != glyphs.end(); ++b)
+        {
+            const auto& first = a->second;
+            const auto& second = b->second;
+            const bool separated = first.atlas_x + first.atlas_w <= second.atlas_x ||
+                                   second.atlas_x + second.atlas_w <= first.atlas_x ||
+                                   first.atlas_y + first.atlas_h <= second.atlas_y ||
+                                   second.atlas_y + second.atlas_h <= first.atlas_y;
+            REQUIRE(separated);
+        }
 }

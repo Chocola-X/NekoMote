@@ -1,6 +1,6 @@
 # NekoMote
 
-接手文档入口：[docs/README.md](docs/README.md)。当前优先收拢共享壁纸应用层并迁移player，保留未来Vulkan后端解耦；实现与验收状态以当前任务清单为准。
+接手文档入口：[docs/README.md](docs/README.md)。共享壁纸应用层与 Plasma 初步接入已可用；player 支持 OpenGL / Vulkan 1.0 双后端，入口见 [双后端说明](docs/vulkan-backend.md)。实现与验收范围以当前任务清单为准。
 
 面向 Linux 原生动态壁纸的独立二维模型运行时项目。目标是复用已有模型素材，将动画求值、GPU 渲染与桌面环境接入解耦。
 

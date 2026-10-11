@@ -3,12 +3,13 @@
 #include <nekomote/image.hpp>
 #include <nekomote/render_frame.hpp>
 
+#include <vulkan/vulkan.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vulkan/vulkan.h>
 
 namespace nekomote::render_vk
 {
@@ -27,11 +28,16 @@ struct DeviceContext
     VkFormat color_format{VK_FORMAT_R8G8B8A8_UNORM};
 };
 
-// Native Vulkan framebuffer restricted to this host/backend boundary. The
-// render pass is created internally by the renderer for the configured color
-// format; the host provides a framebuffer compatible with that pass.
+// Host owns a single in-flight submission. Before prepare/resource mutation it
+// waits for the preceding submission. render only records into commands; it
+// never submits or owns presentation synchronization. The target is already in
+// COLOR_ATTACHMENT_OPTIMAL; a compatible single-color LOAD/STORE pass is used.
+// Storage follows GL-compatible lower-left logical row order to preserve
+// raster rounding. The host flips rows once at presentation/diagnostic capture.
+// All renderer resources must be destroyed before the host device.
 struct Target
 {
+    VkCommandBuffer commands{VK_NULL_HANDLE};
     VkFramebuffer framebuffer{VK_NULL_HANDLE};
     int width{0}, height{0};
 };
@@ -69,7 +75,6 @@ class Renderer
     void prepare(RenderFrame frame);
     void resize_output(int width, int height);
     void render(Target target, const View& view, TargetContents contents = TargetContents::Clear);
-    ImageRgba8 capture(Target target);
     std::string diagnostics() const;
 
   private:

@@ -1,26 +1,40 @@
 #pragma once
 
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include <vulkan/vulkan.h>
+#endif
+
+#ifndef GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_NONE
+#endif
 #include <nekomote/image.hpp>
 #include <nekomote/render_frame.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 
+#include <GLFW/glfw3.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include <nekomote/render_vk/renderer.hpp>
 #include <nekomote/render_vk/ui_renderer.hpp>
+
 #include "vk_host.hpp"
-#include <vulkan/vulkan.h>
 #endif
 
 namespace nekomote::player
 {
-
+enum class BackendKind
+{
+    OpenGL,
+    Vulkan
+};
 struct BackendView
 {
     float origin_x{0}, origin_y{0}, scale{1};
@@ -28,54 +42,61 @@ struct BackendView
     float alpha{1};
     bool flip_x{false};
 };
-
 enum class BackendContents
 {
     Clear,
     Preserve
 };
-
 struct BackendCapacity
 {
     std::size_t vertices{0}, indices{0}, commands{0}, textures{0};
     std::size_t mask_commands{0}, masks{0};
 };
 
+// Player GPU boundary. Application sessions only produce RenderFrame; this
+// execution object never decides model switching, input or wallpaper settings.
 class BackendRenderer
 {
   public:
-    bool vulkan_{false};
-    std::unique_ptr<nekomote::render_gl::Renderer> gl_;
+    explicit BackendRenderer(BackendKind kind
 #if defined(NEKOMOTE_HAS_VULKAN)
-    std::unique_ptr<nekomote::render_vk::Renderer> vk_;
-    nekomote::render_vk::DeviceContext vk_ctx_;
-    VkHost* vk_host_{nullptr};
-    std::uint32_t vk_image_index_{0};
+                             ,
+                             const render_vk::DeviceContext* context = nullptr
 #endif
-
+    )
+    {
+        if (kind == BackendKind::OpenGL)
+            gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+        else
+        {
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (!context)
+                throw std::runtime_error("Vulkan renderer needs a device");
+            vk_ = std::make_unique<render_vk::Renderer>(*context);
+#else
+            throw std::runtime_error("Vulkan backend not built");
+#endif
+        }
+    }
     void reserve(BackendCapacity c)
     {
         if (gl_)
-            gl_->reserve({c.vertices, c.indices, c.commands, c.textures, c.mask_commands,
-                          c.masks});
+            gl_->reserve({c.vertices, c.indices, c.commands, c.textures, c.mask_commands, c.masks});
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_)
-            vk_->reserve({c.vertices, c.indices, c.commands, c.textures, c.mask_commands,
-                          c.masks});
+            vk_->reserve({c.vertices, c.indices, c.commands, c.textures, c.mask_commands, c.masks});
 #endif
     }
-
-    void upload_texture(nekomote::TextureId id, const nekomote::ImageRgba8& img)
+    void upload_texture(TextureId id, const ImageRgba8& image)
     {
         if (gl_)
-            gl_->upload_texture(id, img);
+            gl_->upload_texture(id, image);
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_)
-            vk_->upload_texture(id, img);
+            vk_->upload_texture(id, image);
 #endif
     }
-
-    void prepare(nekomote::RenderFrame frame)
+    void prepare(RenderFrame frame)
     {
         if (gl_)
             gl_->prepare(frame);
@@ -84,56 +105,50 @@ class BackendRenderer
             vk_->prepare(frame);
 #endif
     }
-
-    void resize_output(int w, int h)
+    void resize_output(int width, int height)
     {
         if (gl_)
-            gl_->resize_output(w, h);
+            gl_->resize_output(width, height);
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_)
-            vk_->resize_output(w, h);
+            vk_->resize_output(width, height);
 #endif
     }
-
-    void render(const BackendView& view, BackendContents contents,
-                int target_width, int target_height)
-    {
-        const auto gl_view = nekomote::render_gl::View{
-            view.origin_x, view.origin_y, view.scale, view.clear, view.alpha, view.flip_x};
-        const auto gl_contents = contents == BackendContents::Clear
-                                     ? nekomote::render_gl::TargetContents::Clear
-                                     : nekomote::render_gl::TargetContents::Preserve;
-        if (gl_)
-            gl_->render({0, target_width, target_height}, gl_view, gl_contents);
 #if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_ && vk_host_)
+    void set_target(render_vk::Target target, VkHost& host)
+    {
+        target_ = target;
+        host_ = &host;
+    }
+#endif
+    void render(const BackendView& v, BackendContents contents, int width, int height)
+    {
+        if (gl_)
+            gl_->render({0, width, height},
+                        {v.origin_x, v.origin_y, v.scale, v.clear, v.alpha, v.flip_x},
+                        contents == BackendContents::Clear ? render_gl::TargetContents::Clear
+                                                           : render_gl::TargetContents::Preserve);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
         {
-            const auto& frame = vk_host_->frames[vk_image_index_];
-            const auto vk_view = nekomote::render_vk::View{
-                view.origin_x, view.origin_y, view.scale, view.clear, view.alpha, view.flip_x};
-            const auto vk_contents = contents == BackendContents::Clear
-                                         ? nekomote::render_vk::TargetContents::Clear
-                                         : nekomote::render_vk::TargetContents::Preserve;
-            vk_->render({frame.framebuffer, target_width, target_height},
-                        vk_view, vk_contents);
+            if (!host_ || target_.width != width || target_.height != height)
+                throw std::runtime_error("Vulkan renderer target not bound");
+            vk_->render(target_, {v.origin_x, v.origin_y, v.scale, v.clear, v.alpha, v.flip_x},
+                        contents == BackendContents::Clear ? render_vk::TargetContents::Clear
+                                                           : render_vk::TargetContents::Preserve);
         }
 #endif
     }
-
-    nekomote::ImageRgba8 capture(int target_width, int target_height)
+    ImageRgba8 capture(int width, int height)
     {
         if (gl_)
-            return gl_->capture({0, target_width, target_height});
+            return gl_->capture({0, width, height});
 #if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_ && vk_host_)
-        {
-            const auto& frame = vk_host_->frames[vk_image_index_];
-            return vk_->capture({frame.framebuffer, target_width, target_height});
-        }
+        if (host_)
+            return host_->capture(width, height);
 #endif
-        return {};
+        throw std::runtime_error("renderer capture has no target");
     }
-
     std::string diagnostics() const
     {
         if (gl_)
@@ -142,117 +157,43 @@ class BackendRenderer
         if (vk_)
             return vk_->diagnostics();
 #endif
-        return {};
+        throw std::runtime_error("renderer is unavailable");
     }
 
-    void reset()
-    {
-        gl_.reset();
+  private:
+    std::unique_ptr<render_gl::Renderer> gl_;
 #if defined(NEKOMOTE_HAS_VULKAN)
-        vk_.reset();
+    std::unique_ptr<render_vk::Renderer> vk_;
+    render_vk::Target target_{};
+    VkHost* host_{nullptr};
 #endif
-    }
 };
 
 class BackendUiRenderer
 {
   public:
-    bool vulkan_{false};
-    std::unique_ptr<nekomote::render_gl::UiRenderer> gl_;
-#if defined(NEKOMOTE_HAS_VULKAN)
-    std::unique_ptr<nekomote::render_vk::UiRenderer> vk_;
-#endif
-
-    bool init(bool vulkan, int w, int h
+    bool init(BackendKind kind, int width, int height
 #if defined(NEKOMOTE_HAS_VULKAN)
               ,
-              const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
+              const render_vk::DeviceContext* context = nullptr
 #endif
     )
     {
-        vulkan_ = vulkan;
-        if (!vulkan)
+        if (kind == BackendKind::OpenGL)
         {
-            gl_ = std::make_unique<nekomote::render_gl::UiRenderer>();
-            return gl_->init(w, h);
+            gl_ = std::make_unique<render_gl::UiRenderer>();
+            return gl_->init(width, height);
         }
 #if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_ctx)
+        if (context)
         {
-            vk_ = std::make_unique<nekomote::render_vk::UiRenderer>();
-            return vk_->init(*vk_ctx, w, h);
+            vk_ = std::make_unique<render_vk::UiRenderer>();
+            return vk_->init(*context, width, height);
         }
 #endif
-        return false;
+        throw std::runtime_error("Vulkan UI requires a built backend and device");
     }
-
-    void reset()
-    {
-        if (gl_)
-            gl_->reset();
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->reset();
-#endif
-    }
-
-    void resize(int w, int h)
-    {
-        if (gl_)
-            gl_->resize(w, h);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->resize(w, h);
-#endif
-    }
-
-    bool init_font(const std::string& path, float px)
-    {
-        if (gl_)
-            return gl_->init_font(path, px);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            return vk_->init_font(path, px);
-#endif
-        return false;
-    }
-
-    std::uint32_t upload_icon(const nekomote::ImageRgba8& img)
-    {
-        if (gl_)
-            return gl_->upload_icon(img);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            return vk_->upload_icon(img);
-#endif
-        return 0;
-    }
-
-    void destroy_icon(std::uint32_t id)
-    {
-        if (gl_)
-            gl_->destroy_icon(id);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->destroy_icon(id);
-#endif
-    }
-
-    void set_render_target_gl(std::uint32_t fb)
-    {
-        if (gl_)
-            gl_->set_render_target(fb);
-    }
-
-#if defined(NEKOMOTE_HAS_VULKAN)
-    void set_render_target_vk(VkFramebuffer fb)
-    {
-        if (vk_)
-            vk_->set_render_target(fb);
-    }
-#endif
-
-    nekomote::ui::Painter* painter()
+    ui::Painter* painter()
     {
         if (gl_)
             return gl_.get();
@@ -262,57 +203,76 @@ class BackendUiRenderer
 #endif
         return nullptr;
     }
-
+    void resize(int width, int height)
+    {
+        if (gl_)
+            gl_->resize(width, height);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            vk_->resize(width, height);
+#endif
+    }
+    bool init_font(const std::string& path, float size)
+    {
+        if (gl_)
+            return gl_->init_font(path, size);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            return vk_->init_font(path, size);
+#endif
+        return false;
+    }
+    std::uint32_t upload_icon(const ImageRgba8& image)
+    {
+        if (gl_)
+            return gl_->upload_icon(image);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            return vk_->upload_icon(image);
+#endif
+        throw std::runtime_error("UI is unavailable");
+    }
+    void destroy_icon(std::uint32_t id)
+    {
+        if (gl_)
+            gl_->destroy_icon(id);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            vk_->destroy_icon(id);
+#endif
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    void set_target(render_vk::Target target)
+    {
+        if (vk_)
+            vk_->set_render_target(target);
+    }
+#endif
     void end_frame()
     {
-        if (gl_)
-            gl_->end_frame();
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->end_frame();
-#endif
+        painter()->end_frame();
     }
-
-    void set_global_alpha(float a)
+    void set_global_alpha(float alpha)
     {
-        if (gl_)
-            gl_->set_global_alpha(a);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->set_global_alpha(a);
-#endif
+        painter()->set_global_alpha(alpha);
     }
-
     void push_clip_rect(float x, float y, float w, float h)
     {
-        if (gl_)
-            gl_->push_clip_rect(x, y, w, h);
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->push_clip_rect(x, y, w, h);
-#endif
+        painter()->push_clip_rect(x, y, w, h);
     }
-
     void pop_clip_rect()
     {
-        if (gl_)
-            gl_->pop_clip_rect();
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            vk_->pop_clip_rect();
-#endif
+        painter()->pop_clip_rect();
     }
-
-    nekomote::ui::FontMetrics* font()
+    ui::FontMetrics* font()
     {
-        if (gl_)
-            return gl_->font();
-#if defined(NEKOMOTE_HAS_VULKAN)
-        if (vk_)
-            return vk_->font();
-#endif
-        return nullptr;
+        return painter() ? painter()->font() : nullptr;
     }
-};
 
+  private:
+    std::unique_ptr<render_gl::UiRenderer> gl_;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    std::unique_ptr<render_vk::UiRenderer> vk_;
+#endif
+};
 } // namespace nekomote::player

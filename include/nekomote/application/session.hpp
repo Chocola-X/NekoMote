@@ -134,6 +134,7 @@ class SessionInstance
     // call; paused or failed advances leave the background fade unchanged.
     SessionStatus advance(double elapsed_seconds, runtime::PhysicsInputs inputs = {}) noexcept;
     SessionStatus prepare_frame() noexcept;
+    // Restart model playback/reactions; preserve background selection and fade.
     SessionStatus reset() noexcept;
     std::optional<AudioCommand> pop_audio_command() noexcept;
     ReactionPhase reaction_phase() const noexcept;

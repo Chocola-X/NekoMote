@@ -704,10 +704,8 @@ SessionStatus SessionInstance::reset() noexcept
     data.phase = ReactionPhase::Idle;
     data.random = data.config.reaction_seed;
     data.command_head = data.command_count = 0;
-    data.bg_current = {};
-    data.bg_target = {};
-    data.bg_fade_progress = 1.0;
-    data.bg_fade_duration = 0;
+    // Reset model playback independently of the configured wallpaper background.
+    // Hosts retain the selected textures; keep the session's fade progress intact.
     data.enqueue(AudioCommandKind::Stop);
     return start();
 }

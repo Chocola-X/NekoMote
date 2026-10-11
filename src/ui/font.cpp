@@ -184,9 +184,8 @@ void FontMetrics::ensure_char(unsigned int codepoint)
         texture_height_ *= 2;
         if (on_atlas_resized)
             on_atlas_resized(texture_width_, texture_height_);
-        pack_x_ = 0;
-        pack_y_ = 0;
-        pack_row_height_ = 0;
+        // Preserve packing position: existing glyphs retain their atlas coordinates.
+        // Restarting at zero would overwrite them with the next glyph.
         for (auto& [cp, g] : glyphs_)
         {
             std::vector<unsigned char> bitmap;
@@ -242,6 +241,14 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
 {
     if (!initialized_)
         return;
+    // Prepare every glyph before generating UVs. An atlas growth midway through
+    // a string must not leave its first quads normalized to the old dimensions.
+    for (const auto* p = text; *p;)
+    {
+        const auto codepoint = decode_utf8(p);
+        if (codepoint)
+            ensure_char(codepoint);
+    }
     const float eff_size = size * 1.30f;
     const float size_ratio = eff_size / pixel_height_;
     auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
@@ -254,7 +261,6 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
         const unsigned int cp = decode_utf8(p);
         if (cp == 0)
             continue;
-        ensure_char(cp);
         const auto& g = glyphs_[cp];
         const float gx0 = pen_x + static_cast<float>(g.x0) * size_ratio;
         const float gy0 = baseline + static_cast<float>(g.y0) * size_ratio;

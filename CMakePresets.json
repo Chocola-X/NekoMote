@@ -73,6 +73,14 @@
             "cacheVariables": {
                 "NEKOMOTE_BUILD_VULKAN": "ON"
             }
+        },
+        {
+            "name": "vulkan-release",
+            "inherits": "release",
+            "displayName": "Release with OpenGL and Vulkan 1.0 backends",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_VULKAN": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -81,7 +89,8 @@
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "qt-quick", "configurePreset": "qt-quick" },
         { "name": "plasma",   "configurePreset": "plasma" },
-        { "name": "vulkan",   "configurePreset": "vulkan" }
+        { "name": "vulkan",   "configurePreset": "vulkan" },
+        { "name": "vulkan-release", "configurePreset": "vulkan-release" }
     ],
     "testPresets": [
         {
@@ -107,6 +116,18 @@
             "configurePreset": "plasma",
             "output": { "outputOnFailure": true },
             "execution": { "noTestsAction": "error", "stopOnFailure": false }
+        },
+        {
+            "name": "vulkan",
+            "configurePreset": "vulkan",
+            "output": { "outputOnFailure": true },
+            "execution": { "noTestsAction": "error", "stopOnFailure": false, "jobs": 1 }
+        },
+        {
+            "name": "vulkan-release",
+            "configurePreset": "vulkan-release",
+            "output": { "outputOnFailure": true },
+            "execution": { "noTestsAction": "error", "stopOnFailure": false, "jobs": 1 }
         }
     ]
 }

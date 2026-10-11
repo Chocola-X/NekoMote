@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-11。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；本轮修复起点 `7029eda`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，当前只实现 OpenGL，Vulkan 仍为后续工作。
+版本：执行中，2026-10-11。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；本轮修复起点 `7029eda`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，player 的 Vulkan 1.0 双栈实现已由 C11 重写，见 [后端契约与验收](docs/vulkan-backend.md)；当前 Plasma / C ABI 仍为 OpenGL。
 
 ## 1. 产品与开发策略
 
@@ -115,7 +115,7 @@ flowchart TD
     Adapter[桌面适配器壳] --> Abi
 ```
 
-application不依赖ui，render_gl不依赖application/UI业务状态。application/ui的输入输出不含OpenGL/Vulkan对象或shader；新后端实现同一绘制/资源契约，不改壁纸业务与UI。当前使用具体GL实现，后续Vulkan按实际需求建立，不提前加空模块或复杂后端工厂。布局/命中及显示尺寸与设备像素的转换有明确契约，不能依赖GL viewport状态推定逻辑布局。
+application不依赖ui，render_gl不依赖application/UI业务状态。application/ui的输入输出不含OpenGL/Vulkan对象或shader；新后端实现同一绘制/资源契约，不改壁纸业务与UI。GL / Vulkan 复用同一绘制数据与 UI Painter，宿主负责设备和呈现；不建立复杂后端工厂。布局/命中及显示尺寸与设备像素的转换有明确契约，不能依赖GL viewport状态推定逻辑布局。
 
 player在G31阶段直接用共享C++接口验证；桌面适配器只经C ABI调用共享功能，不直接调用ui/application C++。图形上下文/输出目标由壳提供，GPU资源由后端拥有，CPU业务状态由Controller拥有；异步加载和GUI事件经有界交接进入同一求值线程，详细契约见[专项交接](docs/wallpaper-application-handoff.md)。
 

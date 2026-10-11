@@ -377,7 +377,60 @@ TEST_CASE("Background fade pauses during playback pause", "[application]")
     REQUIRE(frame.commands.size() == 1);
 }
 
-TEST_CASE("Background reset clears fade state", "[application]")
+TEST_CASE("Model reset preserves the configured background", "[application]")
+{
+    Reference reference;
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.start());
+    REQUIRE(session.set_output_size(800, 600));
+    REQUIRE(session.set_background(TextureId{1}, 1600, 600));
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.playback().tick_count() > 0);
+    REQUIRE(session.reset());
+    REQUIRE(session.playback().tick_count() == 0);
+    const auto frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 1);
+    REQUIRE(frame.commands[0].texture == TextureId{1});
+    REQUIRE(frame.vertices.size() == 4);
+    REQUIRE(frame.vertices[0].color[3] == 1.0f);
+    // Output size and source aspect ratio still produce the original cover quad.
+    REQUIRE(frame.vertices[0].x == 0.0f);
+    REQUIRE(frame.vertices[0].y == 0.0f);
+    REQUIRE(frame.vertices[2].x == 800.0f);
+    REQUIRE(frame.vertices[2].y == 600.0f);
+    REQUIRE(frame.vertices[0].u == 0.25f);
+    REQUIRE(frame.vertices[2].u == 0.75f);
+}
+
+TEST_CASE("Model reset preserves and continues an in-progress background fade", "[application]")
+{
+    Reference reference;
+    SessionInstance session(*reference.program,
+                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
+    REQUIRE(session.start());
+    REQUIRE(session.set_output_size(800, 600));
+    REQUIRE(session.set_background(TextureId{1}, 800, 600));
+    REQUIRE(session.fade_background(TextureId{2}, 800, 600, 1.0));
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.reset());
+    auto frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE(frame.commands[0].texture == TextureId{1});
+    REQUIRE(frame.commands[1].texture == TextureId{2});
+    REQUIRE_THAT(frame.vertices[4].color[3], Catch::Matchers::WithinAbs(0.25, 1e-6));
+    REQUIRE(session.advance(0.25));
+    frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 2);
+    REQUIRE_THAT(frame.vertices[4].color[3], Catch::Matchers::WithinAbs(0.5, 1e-6));
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.advance(0.25));
+    frame = session.background_frame();
+    REQUIRE(frame.commands.size() == 1);
+    REQUIRE(frame.commands[0].texture == TextureId{2});
+}
+
+TEST_CASE("Explicit background clear remains empty after model reset", "[application]")
 {
     Reference reference;
     SessionInstance session(*reference.program,

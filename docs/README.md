@@ -1,6 +1,6 @@
 # 文档阅读入口
 
-接手先读 [AGENTS](../AGENTS.md)、[当前摘要](review-agents-current.md)和 [任务清单](agent-workboard.md)。共享 Controller/UI/高层 ABI/Plasma 已有实现，当前优先 [Plasma 显示补修与隔离账户验收](plasma-display-fix.md)。G31 专项交接保留为设计门槛，不继续执行旧待实现顺序。总体阶段见 [ROADMAP](../ROADMAP.md)。
+接手先读 [AGENTS](../AGENTS.md)、[当前摘要](review-agents-current.md)和 [任务清单](agent-workboard.md)。共享 Controller/UI/高层 ABI/Plasma 已有实现，Plasma 初步接入已获用户确认，当前优先 [Vulkan player 双栈](vulkan-backend.md)。G31 专项交接保留为设计门槛，不继续执行旧待实现顺序。总体阶段见 [ROADMAP](../ROADMAP.md)。
 
 | 需要的信息 | 当前入口 |
 | --- | --- |

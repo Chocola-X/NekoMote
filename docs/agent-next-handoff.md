@@ -1,6 +1,6 @@
 # 当前独立任务交接
 
-2026-10-11。旧 G31A→G31B→G32 的实施顺序已有 GLM 源码交付，不再次执行旧待实现清单。设计和验收要求保留在 [专项交接](wallpaper-application-handoff.md)。用户暂时优先桌面效果，本轮 Codex 的显示补修与安装入口见 [说明](plasma-display-fix.md)。
+2026-10-11。旧 G31A→G31B→G32 的实施顺序已有 GLM 源码交付，不再次执行旧待实现清单。设计和验收要求保留在 [专项交接](wallpaper-application-handoff.md)。Plasma 初步接入已获用户确认；当前用户优先 Vulkan player 双栈，接手先读 [C11 后端契约与验收](vulkan-backend.md)。此前显示补修与安装入口见 [说明](plasma-display-fix.md)。
 
 用户已确认实际桌面初步接入正常，显示补修和左键手势提交为 `cd911cd`、`8f9f4dd`；不再把首次安装效果确认列为待办。具体逐项覆盖未提供；Codex 未修改该用户配置或亲自运行实际 plasmashell 验收。
 

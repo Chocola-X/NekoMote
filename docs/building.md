@@ -19,6 +19,8 @@
 | `release` | Release | LTO、警告即错误 | ✓ | ✓ |
 | `asan` | Debug | ASan + UBSan、警告即错误 | ✗ | ✓ |
 | `qt-quick` | Release | LTO、可选Qt Quick OpenGL宿主 | ✓ | ✓ |
+| `vulkan` | Debug | OpenGL + Vulkan 1.0、可用验证层 | ✓ | ✓ |
+| `vulkan-release` | Release | LTO、OpenGL + Vulkan 1.0 | ✓ | ✓ |
 
 `asan` 不构建预览：GLFW + 图形驱动与 ASan 混用会产生大量非项目噪声，核心与测试路径已覆盖语义。
 
@@ -40,6 +42,8 @@ ctest --preset dev
 # 格式检查（按 .clang-format）
 clang-format --dry-run --Werror $(git ls-files '*.h' '*.hpp' '*.c' '*.cpp')
 ```
+
+双栈需要 Vulkan 开发头与 `glslangValidator`，选择及同步契约见 [Vulkan 后端](vulkan-backend.md)。GPU 检查串行执行：`flock build/gpu-validation.lock ctest --preset vulkan -L gpu`。
 
 ## 产物布局
 

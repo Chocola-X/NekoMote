@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. 用户已确认 Plasma 初步接入正常；后续按清单补齐服务与完整验收；G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。
+3. 用户已确认 Plasma 初步接入正常；当前优先 Vulkan player 双栈，先读 [后端契约与验收](docs/vulkan-backend.md)。G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 
@@ -94,6 +94,7 @@ NekoMote 是独立的原生二维模型运行时与动态壁纸项目。核心�
 | `asset_io` | 当前资产格式加载、结构验证、图片解码 | `model`、具体编解码库 | 播放调度、桌面环境 |
 | `importer` | E-mote 解包数据导入、字段规范化、资产编译 | `model`、必要资产/JSON 工具 | 桌面、运行时隐藏兼容分支 |
 | `render_gl` | 模型/背景/UI绘制协议的OpenGL执行、GPU上传、遮罩、混合和资源释放 | 后端无关绘制协议、图形 API | E-mote 原始字段、反应规则、application/UI业务状态、桌面策略 |
+| `render_vk` | 同一模型/背景/UI协议的 Vulkan 1.0 执行与设备资源；向宿主 command buffer 录制 | 后端无关绘制协议、Vulkan | 原始 E-mote 字段、application/UI 业务、桌面策略、独立呈现状态机 |
 | `application` | 会话与Controller、资产扫描、配置语义、多模型切换/渐变、模型输入处理及音频策略 | `runtime`、`asset_io`、后端无关数据/服务契约、`std::filesystem` | 桌面私有对象、窗口库、OpenGL/Vulkan、`ui`、反向依赖已有`audio`设备目标 |
 | `ui` | 共享控制面板、布局、hit-test、事件路由、字体度量及后端无关绘制数据 | `application`、公共绘制/资源值类型、必要CPU字体工具 | 窗口/桌面 API、QML/GTK、`render_gl`、OpenGL/Vulkan调用或句柄 |
 | `preview` | 普通窗口壳与诊断操作 | 核心模块、`ui`、窗口库 | 桌面适配器内部实现 |

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <nekomote/application/session.hpp>
-#include <nekomote/render_gl/renderer.hpp>
 
 #include <algorithm>
 #include <array>
@@ -11,6 +10,8 @@
 #include <numbers>
 #include <span>
 
+#include "backend.hpp"
+
 namespace nekomote::player
 {
 // Explicit diagnostic only. Fill/rings follow the session's actual eligible regions;
@@ -18,7 +19,18 @@ namespace nekomote::player
 class TouchOverlay
 {
   public:
-    explicit TouchOverlay(render_gl::GlLoader loader) : renderer_(loader)
+    explicit TouchOverlay(BackendKind kind
+#if defined(NEKOMOTE_HAS_VULKAN)
+                          ,
+                          const render_vk::DeviceContext* context = nullptr
+#endif
+                          )
+        : renderer_(kind
+#if defined(NEKOMOTE_HAS_VULKAN)
+                    ,
+                    context
+#endif
+          )
     {
         renderer_.reserve({vertices_.size(), indices_.size(), commands_.size(), 1});
         renderer_.upload_texture(TextureId{1}, {1, 1, {255, 255, 255, 255}});
@@ -29,7 +41,13 @@ class TouchOverlay
             circle_[i] = {std::cos(angle), std::sin(angle)};
         }
     }
-    void render(const application::SessionInstance& session, render_gl::Target target)
+#if defined(NEKOMOTE_HAS_VULKAN)
+    void set_target(render_vk::Target target, VkHost& host)
+    {
+        renderer_.set_target(target, host);
+    }
+#endif
+    void render(const application::SessionInstance& session, int width, int height)
     {
         const auto regions = session.touch_regions();
         std::size_t vertex_count = 0, index_count = 0, command_count = 0;
@@ -79,10 +97,8 @@ class TouchOverlay
         renderer_.prepare({std::span(vertices_).first(vertex_count),
                            std::span(indices_).first(index_count),
                            std::span(commands_).first(command_count)});
-        renderer_.render(
-            target,
-            {static_cast<float>(target.width) * .5f, static_cast<float>(target.height) * .5f, 1},
-            render_gl::TargetContents::Preserve);
+        renderer_.render({static_cast<float>(width) * .5f, static_cast<float>(height) * .5f, 1},
+                         BackendContents::Preserve, width, height);
     }
 
   private:
@@ -94,7 +110,7 @@ class TouchOverlay
          {.2f, 1, .3f, .9f},
          {.1f, .8f, 1, .9f},
          {.8f, .3f, 1, .9f}}};
-    render_gl::Renderer renderer_;
+    BackendRenderer renderer_;
     std::array<Vec2, kSegments> circle_;
     std::array<RenderVertex, model::kTouchZoneCount*(kSegments * 3 + 1)> vertices_;
     std::array<std::uint32_t, model::kTouchZoneCount * kSegments * 9> indices_;

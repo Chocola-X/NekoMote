@@ -23,8 +23,11 @@ layout(location = 0) out vec2 texture_uv;
 layout(location = 1) out vec4 vertex_color;
 
 void main() {
-    vec2 centered = position * pc.scale + vec2(pc.origin_x, pc.origin_y) - pc.output_size * 0.5;
+    // Keep the GL/WebGL operation order: rounding affects edge coverage.
+    vec2 centered = position * pc.scale + (vec2(pc.origin_x, pc.origin_y) - pc.output_size * 0.5);
     if (pc.flip_x != 0) centered.x = -centered.x;
+    // Positive-height Vulkan 1.0 viewport; internal row order follows GL.
+    // Host GPU presentation/capture converts these rows to top-left output.
     gl_Position = vec4(centered * pc.projection, 0.0, 1.0);
     texture_uv = uv;
     vertex_color = color;

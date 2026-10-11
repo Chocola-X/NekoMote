@@ -1,8 +1,5 @@
-#include <nekomote/render_vk/ui_renderer.hpp>
 #include <nekomote/render_vk/renderer.hpp>
-
-#include "vk_util.hpp"
-#include "spirv_shaders.hpp"
+#include <nekomote/render_vk/ui_renderer.hpp>
 
 #include <algorithm>
 #include <array>
@@ -10,7 +7,11 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 #include <vector>
+
+#include "spirv_shaders.hpp"
+#include "vk_util.hpp"
 
 namespace nekomote::render_vk
 {
@@ -24,42 +25,6 @@ struct RectPC
     float params2[4]{};
     float params3[4]{};
 };
-
-struct SimplePC
-{
-    float params0[4]{};
-    float params1[4]{};
-};
-
-VkRenderPass create_ui_render_pass(VkDevice device, VkFormat format)
-{
-    VkAttachmentDescription attachment{};
-    attachment.format = format;
-    attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-    attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    attachment.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    VkAttachmentReference ref{};
-    ref.attachment = 0;
-    ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &ref;
-    VkRenderPassCreateInfo info{};
-    info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    info.attachmentCount = 1;
-    info.pAttachments = &attachment;
-    info.subpassCount = 1;
-    info.pSubpasses = &subpass;
-    VkRenderPass pass;
-    if (vkCreateRenderPass(device, &info, nullptr, &pass) != VK_SUCCESS)
-        throw std::runtime_error("failed to create UI render pass");
-    return pass;
-}
 
 VkDescriptorSetLayout create_ui_set_layout(VkDevice device)
 {
@@ -79,7 +44,7 @@ VkDescriptorSetLayout create_ui_set_layout(VkDevice device)
 }
 
 VkPipelineLayout create_ui_pipeline_layout(VkDevice device, VkDescriptorSetLayout set_layout,
-                                            std::uint32_t pc_size)
+                                           std::uint32_t pc_size)
 {
     VkPushConstantRange pc_range{};
     pc_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -114,7 +79,7 @@ VkPipeline create_ui_pipeline(VkDevice device, VkRenderPass render_pass, VkPipel
 
     VkVertexInputBindingDescription binding{};
     binding.binding = 0;
-    binding.stride = has_uv ? 16u : 8u;
+    binding.stride = 16u;
     binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     std::array<VkVertexInputAttributeDescription, 2> attrs{};
     attrs[0].location = 0;
@@ -130,7 +95,8 @@ VkPipeline create_ui_pipeline(VkDevice device, VkRenderPass render_pass, VkPipel
     vertex_input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertex_input.vertexBindingDescriptionCount = 1;
     vertex_input.pVertexBindingDescriptions = &binding;
-    vertex_input.vertexAttributeDescriptionCount = has_uv ? 2u : 1u;
+    vertex_input.vertexAttributeDescriptionCount = 2u;
+    (void)has_uv;
     vertex_input.pVertexAttributeDescriptions = attrs.data();
 
     VkPipelineInputAssemblyStateCreateInfo assembly{};
@@ -207,367 +173,397 @@ VkPipeline create_ui_pipeline(VkDevice device, VkRenderPass render_pass, VkPipel
 
 } // namespace
 
-FontAtlas::~FontAtlas()
-{
-    reset();
-}
-
-void FontAtlas::reset()
-{
-    if (view_)
-        vkDestroyImageView(device_, view_, nullptr);
-    if (image_)
-        vkDestroyImage(device_, image_, nullptr);
-    if (memory_)
-        vkFreeMemory(device_, memory_, nullptr);
-    image_ = VK_NULL_HANDLE;
-    view_ = VK_NULL_HANDLE;
-    memory_ = VK_NULL_HANDLE;
-}
-
-bool FontAtlas::init(VkDevice device, VkPhysicalDevice physical_device, VkQueue queue,
-                     std::uint32_t queue_family, VkCommandPool pool, int texture_width,
-                     int texture_height)
-{
-    reset();
-    device_ = device;
-    queue_ = queue;
-    queue_family_ = queue_family;
-    pool_ = pool;
-    texture_width_ = texture_width;
-    texture_height_ = texture_height;
-    auto img = create_image(device, physical_device, texture_width, texture_height,
-                            VK_FORMAT_R8_UNORM,
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-    image_ = img.handle;
-    memory_ = img.memory;
-    view_ = img.view;
-    transition_image_layout(device, queue, pool, image_, VK_IMAGE_LAYOUT_UNDEFINED,
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    return true;
-}
-
-void FontAtlas::resize_atlas(int new_width, int new_height)
-{
-    texture_width_ = new_width;
-    texture_height_ = new_height;
-    reset();
-    auto img = create_image(device_, VK_NULL_HANDLE, texture_width_, texture_height_,
-                            VK_FORMAT_R8_UNORM,
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-    (void)img;
-}
-
-void FontAtlas::upload_glyph(const nekomote::ui::Glyph& glyph, const unsigned char* bitmap)
-{
-    (void)glyph;
-    (void)bitmap;
-}
-
 struct UiRenderer::Impl
 {
-    DeviceContext ctx;
-    VkCommandPool command_pool{VK_NULL_HANDLE};
-    VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-    VkFence fence{VK_NULL_HANDLE};
+    struct Vertex
+    {
+        float x, y, u, v;
+    };
+    enum class Kind
+    {
+        Rect,
+        Text,
+        Icon,
+        Solid
+    };
+    struct Draw
+    {
+        Kind kind;
+        std::uint32_t first, count;
+        RectPC constants;
+        VkRect2D clip;
+        VkDescriptorSet descriptor{VK_NULL_HANDLE};
+    };
+    struct Icon
+    {
+        Image image;
+        VkDescriptorSet descriptor{VK_NULL_HANDLE};
+    };
+
+    DeviceContext ctx{};
+    Target target{};
+    VkCommandPool upload_pool{VK_NULL_HANDLE};
     VkRenderPass render_pass{VK_NULL_HANDLE};
     VkDescriptorSetLayout set_layout{VK_NULL_HANDLE};
     VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
     VkSampler sampler{VK_NULL_HANDLE};
-
-    VkPipelineLayout rect_layout{VK_NULL_HANDLE};
-    VkPipelineLayout simple_layout{VK_NULL_HANDLE};
-    VkPipeline rect_pipeline{VK_NULL_HANDLE};
-    VkPipeline text_pipeline{VK_NULL_HANDLE};
-    VkPipeline icon_pipeline{VK_NULL_HANDLE};
-    VkPipeline tri_pipeline{VK_NULL_HANDLE};
-    VkShaderModule ui_vert{VK_NULL_HANDLE};
-    VkShaderModule rect_frag{VK_NULL_HANDLE};
-    VkShaderModule text_frag{VK_NULL_HANDLE};
-    VkShaderModule icon_frag{VK_NULL_HANDLE};
-    VkShaderModule tri_frag{VK_NULL_HANDLE};
-
+    VkPipelineLayout layout{VK_NULL_HANDLE};
+    std::array<VkPipeline, 4> pipelines{};
+    std::array<VkShaderModule, 5> shaders{};
     Buffer vbo;
-    Buffer uvbo;
-
-    FontAtlas font_atlas;
+    void* mapped_vertices{nullptr};
+    std::vector<Vertex> vertices;
+    std::vector<Draw> draws;
+    std::vector<VkRect2D> clips;
+    std::vector<float> text_vertices, text_uvs;
     nekomote::ui::FontMetrics font_metrics;
-    bool font_ready{false};
+    Image font_image;
     VkDescriptorSet font_set{VK_NULL_HANDLE};
-
-    struct Icon
-    {
-        Image image;
-        VkDescriptorSet set;
-    };
+    std::vector<unsigned char> atlas_pixels;
+    int atlas_width{0}, atlas_height{0};
+    bool atlas_dirty{false}, font_ready{false}, initialized{false};
     std::vector<Icon> icons;
-
-    bool initialized{false};
-    int viewport_w{0}, viewport_h{0};
-    float global_alpha{1.0f};
-    VkFramebuffer framebuffer{VK_NULL_HANDLE};
-
-    std::vector<float> rect_verts, rect_uvs;
-    std::vector<float> text_verts, text_uvs;
-    std::vector<float> icon_verts, icon_uvs;
-    std::vector<std::uint32_t> icon_ids;
-    std::vector<float> tri_verts;
+    int width{0}, height{0};
+    float alpha{1};
 
     ~Impl()
     {
-        const auto dev = ctx.device;
+        const auto device = ctx.device;
+        if (!device)
+            return;
+        if (mapped_vertices)
+            vkUnmapMemory(device, vbo.memory);
+        destroy_buffer(device, vbo);
+        destroy_image(device, font_image);
         for (auto& icon : icons)
-            destroy_image(dev, icon.image);
-        if (vbo.handle)
-            destroy_buffer(dev, vbo);
-        if (uvbo.handle)
-            destroy_buffer(dev, uvbo);
-        if (rect_pipeline)
-            vkDestroyPipeline(dev, rect_pipeline, nullptr);
-        if (text_pipeline)
-            vkDestroyPipeline(dev, text_pipeline, nullptr);
-        if (icon_pipeline)
-            vkDestroyPipeline(dev, icon_pipeline, nullptr);
-        if (tri_pipeline)
-            vkDestroyPipeline(dev, tri_pipeline, nullptr);
-        if (rect_layout)
-            vkDestroyPipelineLayout(dev, rect_layout, nullptr);
-        if (simple_layout)
-            vkDestroyPipelineLayout(dev, simple_layout, nullptr);
+            destroy_image(device, icon.image);
+        for (auto pipeline : pipelines)
+            if (pipeline)
+                vkDestroyPipeline(device, pipeline, nullptr);
+        for (auto shader : shaders)
+            if (shader)
+                vkDestroyShaderModule(device, shader, nullptr);
+        if (layout)
+            vkDestroyPipelineLayout(device, layout, nullptr);
         if (sampler)
-            vkDestroySampler(dev, sampler, nullptr);
+            vkDestroySampler(device, sampler, nullptr);
         if (descriptor_pool)
-            vkDestroyDescriptorPool(dev, descriptor_pool, nullptr);
+            vkDestroyDescriptorPool(device, descriptor_pool, nullptr);
         if (set_layout)
-            vkDestroyDescriptorSetLayout(dev, set_layout, nullptr);
+            vkDestroyDescriptorSetLayout(device, set_layout, nullptr);
         if (render_pass)
-            vkDestroyRenderPass(dev, render_pass, nullptr);
-        if (ui_vert)
-            vkDestroyShaderModule(dev, ui_vert, nullptr);
-        if (rect_frag)
-            vkDestroyShaderModule(dev, rect_frag, nullptr);
-        if (text_frag)
-            vkDestroyShaderModule(dev, text_frag, nullptr);
-        if (icon_frag)
-            vkDestroyShaderModule(dev, icon_frag, nullptr);
-        if (tri_frag)
-            vkDestroyShaderModule(dev, tri_frag, nullptr);
-        if (fence)
-            vkDestroyFence(dev, fence, nullptr);
-        if (command_pool)
-            vkDestroyCommandPool(dev, command_pool, nullptr);
+            vkDestroyRenderPass(device, render_pass, nullptr);
+        if (upload_pool)
+            vkDestroyCommandPool(device, upload_pool, nullptr);
     }
 
-    VkDescriptorSet alloc_set()
+    VkDescriptorSet allocate_set()
     {
         VkDescriptorSetAllocateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         info.descriptorPool = descriptor_pool;
         info.descriptorSetCount = 1;
         info.pSetLayouts = &set_layout;
-        VkDescriptorSet set;
-        if (vkAllocateDescriptorSets(ctx.device, &info, &set) != VK_SUCCESS)
-            throw std::runtime_error("failed to allocate UI descriptor set");
-        return set;
+        VkDescriptorSet result{};
+        check_vk(vkAllocateDescriptorSets(ctx.device, &info, &result), "allocate UI descriptor");
+        return result;
     }
 
-    void write_set(VkDescriptorSet set, VkImageView view)
+    void write_set(VkDescriptorSet descriptor, VkImageView view)
     {
-        VkDescriptorImageInfo image_info{};
-        image_info.sampler = sampler;
-        image_info.imageView = view;
-        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        const VkDescriptorImageInfo image_info{sampler, view,
+                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = set;
+        write.dstSet = descriptor;
         write.dstBinding = 0;
         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         write.descriptorCount = 1;
         write.pImageInfo = &image_info;
         vkUpdateDescriptorSets(ctx.device, 1, &write, 0, nullptr);
     }
+
+    Image upload_pixels(int image_width, int image_height, VkFormat format,
+                        const unsigned char* pixels, std::size_t bytes)
+    {
+        auto image =
+            create_image(ctx.device, ctx.physical_device, image_width, image_height, format,
+                         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        Buffer staging;
+        try
+        {
+            staging = create_buffer(
+                ctx.device, ctx.physical_device, bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            void* mapped{};
+            check_vk(vkMapMemory(ctx.device, staging.memory, 0, bytes, 0, &mapped),
+                     "map UI image upload");
+            std::memcpy(mapped, pixels, bytes);
+            vkUnmapMemory(ctx.device, staging.memory);
+            const auto commands = begin_one_time_commands(ctx.device, upload_pool);
+            record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_UNDEFINED,
+                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            VkBufferImageCopy copy{};
+            copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageExtent = {static_cast<std::uint32_t>(image_width),
+                                static_cast<std::uint32_t>(image_height), 1};
+            vkCmdCopyBufferToImage(commands, staging.handle, image.handle,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+            record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            end_one_time_commands(ctx.device, ctx.graphics_queue, upload_pool, commands);
+            destroy_buffer(ctx.device, staging);
+            return image;
+        }
+        catch (...)
+        {
+            destroy_buffer(ctx.device, staging);
+            destroy_image(ctx.device, image);
+            throw;
+        }
+    }
+
+    void resize_atlas(int new_width, int new_height)
+    {
+        // All prior text draws retain their locations when the atlas grows.
+        // Normalize their UVs to the new texture size without reordering draws.
+        for (const auto& draw : draws)
+        {
+            if (draw.kind != Kind::Text)
+                continue;
+            for (std::uint32_t i = draw.first; i < draw.first + draw.count; ++i)
+            {
+                vertices[i].u *= static_cast<float>(atlas_width) / static_cast<float>(new_width);
+                vertices[i].v *= static_cast<float>(atlas_height) / static_cast<float>(new_height);
+            }
+        }
+        atlas_width = new_width;
+        atlas_height = new_height;
+        atlas_pixels.assign(
+            static_cast<std::size_t>(new_width) * static_cast<std::size_t>(new_height), 0);
+        atlas_dirty = true;
+    }
+
+    void upload_glyph(const nekomote::ui::Glyph& glyph, const unsigned char* bitmap)
+    {
+        if (!bitmap || glyph.atlas_x < 0 || glyph.atlas_y < 0 || glyph.atlas_w < 0 ||
+            glyph.atlas_h < 0 || glyph.atlas_x + glyph.atlas_w > atlas_width ||
+            glyph.atlas_y + glyph.atlas_h > atlas_height)
+            throw std::runtime_error("UI glyph outside atlas");
+        for (int row = 0; row < glyph.atlas_h; ++row)
+        {
+            const auto offset = static_cast<std::size_t>(glyph.atlas_y + row) *
+                                    static_cast<std::size_t>(atlas_width) +
+                                static_cast<std::size_t>(glyph.atlas_x);
+            std::memcpy(atlas_pixels.data() + offset,
+                        bitmap +
+                            static_cast<std::size_t>(row) * static_cast<std::size_t>(glyph.atlas_w),
+                        static_cast<std::size_t>(glyph.atlas_w));
+        }
+        atlas_dirty = true;
+    }
+
+    VkRect2D current_clip() const
+    {
+        if (!clips.empty())
+            return clips.back();
+        return {{0, 0}, {static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height)}};
+    }
+
+    RectPC constants(nekomote::ui::Color fill) const
+    {
+        RectPC pc{};
+        pc.params0[0] = static_cast<float>(width);
+        pc.params0[1] = static_cast<float>(height);
+        pc.params1[0] = fill.r;
+        pc.params1[1] = fill.g;
+        pc.params1[2] = fill.b;
+        pc.params1[3] = fill.a * alpha;
+        return pc;
+    }
+
+    void add_quad(float x, float y, float w, float h)
+    {
+        vertices.insert(vertices.end(), {{x, y, 0, 0},
+                                         {x + w, y, 1, 0},
+                                         {x + w, y + h, 1, 1},
+                                         {x, y, 0, 0},
+                                         {x + w, y + h, 1, 1},
+                                         {x, y + h, 0, 1}});
+    }
+
+    void record(Kind kind, std::uint32_t first, RectPC pc,
+                VkDescriptorSet descriptor = VK_NULL_HANDLE)
+    {
+        const auto count = static_cast<std::uint32_t>(vertices.size()) - first;
+        if (count)
+            draws.push_back({kind, first, count, pc, current_clip(), descriptor});
+    }
+
+    void ensure_vertex_buffer(std::size_t required)
+    {
+        if (required <= vbo.size)
+            return;
+        if (mapped_vertices)
+            vkUnmapMemory(ctx.device, vbo.memory);
+        mapped_vertices = nullptr;
+        destroy_buffer(ctx.device, vbo);
+        vbo = create_buffer(
+            ctx.device, ctx.physical_device, std::max(required, std::size_t{1 << 20}),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        check_vk(vkMapMemory(ctx.device, vbo.memory, 0, VK_WHOLE_SIZE, 0, &mapped_vertices),
+                 "map UI vertices");
+    }
 };
 
 UiRenderer::UiRenderer() = default;
-
-UiRenderer::~UiRenderer()
-{
-    reset();
-}
+UiRenderer::~UiRenderer() = default;
 
 void UiRenderer::reset()
 {
-    if (impl_)
-        impl_.reset();
-    impl_ = std::make_unique<Impl>();
+    impl_.reset();
 }
 
 bool UiRenderer::init(const DeviceContext& ctx, int viewport_width, int viewport_height)
 {
     reset();
-    auto& p = *impl_;
-    p.ctx = ctx;
-    p.viewport_w = viewport_width;
-    p.viewport_h = viewport_height;
-
-    VkCommandPoolCreateInfo pool_info{};
-    pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    pool_info.queueFamilyIndex = p.ctx.graphics_queue_family;
-    if (vkCreateCommandPool(p.ctx.device, &pool_info, nullptr, &p.command_pool) != VK_SUCCESS)
+    if (!ctx.device || !ctx.physical_device || !ctx.graphics_queue || viewport_width <= 0 ||
+        viewport_height <= 0)
         return false;
-
-    VkCommandBufferAllocateInfo cmd_info{};
-    cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    cmd_info.commandPool = p.command_pool;
-    cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    cmd_info.commandBufferCount = 1;
-    vkAllocateCommandBuffers(p.ctx.device, &cmd_info, &p.command_buffer);
-
-    VkFenceCreateInfo fence_info{};
-    fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    vkCreateFence(p.ctx.device, &fence_info, nullptr, &p.fence);
-
-    p.render_pass = create_ui_render_pass(p.ctx.device, p.ctx.color_format);
-    p.set_layout = create_ui_set_layout(p.ctx.device);
-
-    VkDescriptorPoolSize pool_size{};
-    pool_size.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    pool_size.descriptorCount = 256;
-    VkDescriptorPoolCreateInfo pool_create{};
-    pool_create.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_create.maxSets = 256;
-    pool_create.poolSizeCount = 1;
-    pool_create.pPoolSizes = &pool_size;
-    vkCreateDescriptorPool(p.ctx.device, &pool_create, nullptr, &p.descriptor_pool);
-
-    p.sampler = create_sampler(p.ctx.device);
-    p.ui_vert = create_shader_module(p.ctx.device, ui_vert_spv, ui_vert_size);
-    p.rect_frag = create_shader_module(p.ctx.device, rect_frag_spv, rect_frag_size);
-    p.text_frag = create_shader_module(p.ctx.device, text_frag_spv, text_frag_size);
-    p.icon_frag = create_shader_module(p.ctx.device, icon_frag_spv, icon_frag_size);
-    p.tri_frag = create_shader_module(p.ctx.device, tri_frag_spv, tri_frag_size);
-
-    p.rect_layout = create_ui_pipeline_layout(p.ctx.device, p.set_layout, sizeof(RectPC));
-    p.simple_layout = create_ui_pipeline_layout(p.ctx.device, p.set_layout, sizeof(SimplePC));
-
-    p.rect_pipeline = create_ui_pipeline(
-        p.ctx.device, p.render_pass, p.rect_layout, p.ui_vert, p.rect_frag, true,
-        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-    p.text_pipeline = create_ui_pipeline(
-        p.ctx.device, p.render_pass, p.simple_layout, p.ui_vert, p.text_frag, true,
-        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-    p.icon_pipeline = create_ui_pipeline(
-        p.ctx.device, p.render_pass, p.simple_layout, p.ui_vert, p.icon_frag, true,
-        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-    p.tri_pipeline = create_ui_pipeline(
-        p.ctx.device, p.render_pass, p.simple_layout, p.ui_vert, p.tri_frag, false,
-        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_BLEND_FACTOR_SRC_ALPHA,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-
-    const auto vb_size = static_cast<VkDeviceSize>(65536 * sizeof(float));
-    p.vbo = create_buffer(p.ctx.device, p.ctx.physical_device, vb_size,
-                          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    p.uvbo = create_buffer(p.ctx.device, p.ctx.physical_device, vb_size,
-                           VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
+    auto candidate = std::make_unique<Impl>();
+    auto& p = *candidate;
+    p.ctx = ctx;
+    p.width = viewport_width;
+    p.height = viewport_height;
+    VkCommandPoolCreateInfo pool{};
+    pool.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    pool.queueFamilyIndex = ctx.graphics_queue_family;
+    check_vk(vkCreateCommandPool(ctx.device, &pool, nullptr, &p.upload_pool),
+             "create UI upload pool");
+    p.render_pass = create_color_render_pass(ctx.device, ctx.color_format);
+    p.set_layout = create_ui_set_layout(ctx.device);
+    VkDescriptorPoolSize pool_size{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256};
+    VkDescriptorPoolCreateInfo descriptor_pool{};
+    descriptor_pool.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptor_pool.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    descriptor_pool.maxSets = 256;
+    descriptor_pool.poolSizeCount = 1;
+    descriptor_pool.pPoolSizes = &pool_size;
+    check_vk(vkCreateDescriptorPool(ctx.device, &descriptor_pool, nullptr, &p.descriptor_pool),
+             "create UI descriptor pool");
+    p.sampler = create_sampler(ctx.device);
+    p.layout = create_ui_pipeline_layout(ctx.device, p.set_layout, sizeof(RectPC));
+    p.shaders[0] = create_shader_module(ctx.device, ui_vert_spv, ui_vert_size);
+    p.shaders[1] = create_shader_module(ctx.device, rect_frag_spv, rect_frag_size);
+    p.shaders[2] = create_shader_module(ctx.device, text_frag_spv, text_frag_size);
+    p.shaders[3] = create_shader_module(ctx.device, icon_frag_spv, icon_frag_size);
+    p.shaders[4] = create_shader_module(ctx.device, tri_frag_spv, tri_frag_size);
+    for (std::size_t i = 0; i < p.pipelines.size(); ++i)
+        p.pipelines[i] =
+            create_ui_pipeline(ctx.device, p.render_pass, p.layout, p.shaders[0], p.shaders[i + 1],
+                               true, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_BLEND_FACTOR_SRC_ALPHA,
+                               VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    p.vertices.reserve(65536);
+    p.draws.reserve(8192);
+    p.clips.reserve(16);
+    p.text_vertices.reserve(8192);
+    p.text_uvs.reserve(8192);
+    p.ensure_vertex_buffer(65536 * sizeof(Impl::Vertex));
     p.initialized = true;
+    impl_ = std::move(candidate);
     return true;
 }
 
 void UiRenderer::resize(int viewport_width, int viewport_height)
 {
-    if (impl_)
+    if (impl_ && viewport_width > 0 && viewport_height > 0)
     {
-        impl_->viewport_w = viewport_width;
-        impl_->viewport_h = viewport_height;
+        impl_->width = viewport_width;
+        impl_->height = viewport_height;
     }
 }
 
-void UiRenderer::set_render_target(VkFramebuffer framebuffer)
+void UiRenderer::set_render_target(Target target)
 {
-    if (impl_)
-        impl_->framebuffer = framebuffer;
+    if (!impl_)
+        return;
+    if (!target.commands || !target.framebuffer || target.width <= 0 || target.height <= 0)
+        throw std::runtime_error("invalid Vulkan UI target");
+    impl_->target = target;
+    resize(target.width, target.height);
 }
 
 bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || !std::isfinite(pixel_height) || pixel_height <= 0)
         return false;
     auto& p = *impl_;
+    p.font_ready = false;
     if (!p.font_metrics.init(font_path, pixel_height))
         return false;
-    if (!p.font_atlas.init(p.ctx.device, p.ctx.physical_device, p.ctx.graphics_queue,
-                           p.ctx.graphics_queue_family, p.command_pool,
-                           p.font_metrics.texture_width(), p.font_metrics.texture_height()))
-        return false;
-    p.font_metrics.on_glyph_added = [this](const nekomote::ui::Glyph& g, const unsigned char* bitmap)
-    { impl_->font_atlas.upload_glyph(g, bitmap); };
-    p.font_metrics.on_atlas_resized = [this](int w, int h)
-    { impl_->font_atlas.resize_atlas(w, h); };
-    p.font_set = p.alloc_set();
-    p.write_set(p.font_set, p.font_atlas.view());
+    p.resize_atlas(p.font_metrics.texture_width(), p.font_metrics.texture_height());
+    p.font_metrics.on_atlas_resized = [&p](int w, int h) { p.resize_atlas(w, h); };
+    p.font_metrics.on_glyph_added =
+        [&p](const nekomote::ui::Glyph& glyph, const unsigned char* bitmap)
+    { p.upload_glyph(glyph, bitmap); };
+    if (!p.font_set)
+        p.font_set = p.allocate_set();
     p.font_ready = true;
     return true;
 }
 
 std::uint32_t UiRenderer::upload_icon(const ImageRgba8& image)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || image.width <= 0 || image.height <= 0)
         return 0;
+    const auto expected =
+        static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4;
+    if (image.pixels.size() != expected)
+        throw std::runtime_error("invalid UI icon pixels");
     auto& p = *impl_;
-    auto img = create_image(p.ctx.device, p.ctx.physical_device, image.width, image.height,
-                            VK_FORMAT_R8G8B8A8_UNORM,
-                            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-    auto staging = create_buffer(
-        p.ctx.device, p.ctx.physical_device, image.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    void* mapped = nullptr;
-    vkMapMemory(p.ctx.device, staging.memory, 0, image.pixels.size(), 0, &mapped);
-    std::memcpy(mapped, image.pixels.data(), image.pixels.size());
-    vkUnmapMemory(p.ctx.device, staging.memory);
-    transition_image_layout(p.ctx.device, p.ctx.graphics_queue, p.command_pool, img.handle,
-                            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    copy_buffer_to_image(p.ctx.device, p.ctx.graphics_queue, p.command_pool, staging.handle,
-                         img.handle, image.width, image.height);
-    transition_image_layout(p.ctx.device, p.ctx.graphics_queue, p.command_pool, img.handle,
-                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    destroy_buffer(p.ctx.device, staging);
-    auto set = p.alloc_set();
-    p.write_set(set, img.view);
-    p.icons.push_back({img, set});
+    Impl::Icon icon{};
+    icon.image = p.upload_pixels(image.width, image.height, VK_FORMAT_R8G8B8A8_UNORM,
+                                 image.pixels.data(), expected);
+    try
+    {
+        icon.descriptor = p.allocate_set();
+        p.write_set(icon.descriptor, icon.image.view);
+        p.icons.push_back(std::move(icon));
+    }
+    catch (...)
+    {
+        if (icon.descriptor)
+            vkFreeDescriptorSets(p.ctx.device, p.descriptor_pool, 1, &icon.descriptor);
+        destroy_image(p.ctx.device, icon.image);
+        throw;
+    }
     return static_cast<std::uint32_t>(p.icons.size());
 }
 
 void UiRenderer::destroy_icon(std::uint32_t id)
 {
-    if (!impl_ || id == 0 || id > impl_->icons.size())
+    if (!impl_ || !id || id > impl_->icons.size())
         return;
-    auto& icon = impl_->icons[id - 1];
-    destroy_image(impl_->ctx.device, icon.image);
-    icon = {};
+    auto& p = *impl_;
+    auto& icon = p.icons[id - 1];
+    if (icon.descriptor)
+        check_vk(vkFreeDescriptorSets(p.ctx.device, p.descriptor_pool, 1, &icon.descriptor),
+                 "free UI icon descriptor");
+    icon.descriptor = VK_NULL_HANDLE;
+    destroy_image(p.ctx.device, icon.image);
 }
 
 void UiRenderer::begin_frame()
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_)
         return;
-    impl_->global_alpha = 1.0f;
-    impl_->rect_verts.clear();
-    impl_->rect_uvs.clear();
-    impl_->text_verts.clear();
-    impl_->text_uvs.clear();
-    impl_->icon_verts.clear();
-    impl_->icon_uvs.clear();
-    impl_->icon_ids.clear();
-    impl_->tri_verts.clear();
+    impl_->alpha = 1;
+    impl_->vertices.clear();
+    impl_->draws.clear();
+    impl_->clips.clear();
 }
 
 void UiRenderer::end_frame()
@@ -575,110 +571,112 @@ void UiRenderer::end_frame()
     if (!impl_ || !impl_->initialized)
         return;
     auto& p = *impl_;
-    if (!p.framebuffer)
+    if (p.draws.empty())
+    {
+        p.alpha = 1;
         return;
-
-    vkWaitForFences(p.ctx.device, 1, &p.fence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
-    vkResetFences(p.ctx.device, 1, &p.fence);
-    vkResetCommandBuffer(p.command_buffer, 0);
-    VkCommandBufferBeginInfo begin_info{};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    vkBeginCommandBuffer(p.command_buffer, &begin_info);
-
-    VkRenderPassBeginInfo rp_begin{};
-    rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rp_begin.renderPass = p.render_pass;
-    rp_begin.framebuffer = p.framebuffer;
-    rp_begin.renderArea.extent.width = static_cast<std::uint32_t>(p.viewport_w);
-    rp_begin.renderArea.extent.height = static_cast<std::uint32_t>(p.viewport_h);
-    rp_begin.clearValueCount = 0;
-    vkCmdBeginRenderPass(p.command_buffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
-
-    VkViewport viewport{};
-    viewport.width = static_cast<float>(p.viewport_w);
-    viewport.height = static_cast<float>(p.viewport_h);
-    viewport.maxDepth = 1;
-    vkCmdSetViewport(p.command_buffer, 0, 1, &viewport);
-    VkRect2D scissor{};
-    scissor.extent.width = static_cast<std::uint32_t>(p.viewport_w);
-    scissor.extent.height = static_cast<std::uint32_t>(p.viewport_h);
-    vkCmdSetScissor(p.command_buffer, 0, 1, &scissor);
-
-    if (!p.rect_verts.empty())
-    {
-        vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.rect_pipeline);
-        RectPC pc{};
-        pc.params0[0] = static_cast<float>(p.viewport_w);
-        pc.params0[1] = static_cast<float>(p.viewport_h);
-        vkCmdPushConstants(p.command_buffer, p.rect_layout,
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(RectPC), &pc);
-        vkCmdDraw(p.command_buffer, static_cast<std::uint32_t>(p.rect_verts.size() / 2), 1, 0, 0);
     }
-
-    if (!p.tri_verts.empty())
+    if (!p.target.commands || !p.target.framebuffer)
+        throw std::runtime_error("Vulkan UI target not set");
+    // Glyph preparation is an explicit content-change boundary. No uploads,
+    // descriptor allocation or heap growth occur for a warmed unchanged frame.
+    if (p.atlas_dirty && p.font_ready)
     {
-        vkCmdBindPipeline(p.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, p.tri_pipeline);
-        SimplePC pc{};
-        pc.params0[0] = static_cast<float>(p.viewport_w);
-        pc.params0[1] = static_cast<float>(p.viewport_h);
-        vkCmdPushConstants(p.command_buffer, p.simple_layout,
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-                           sizeof(SimplePC), &pc);
-        vkCmdDraw(p.command_buffer, static_cast<std::uint32_t>(p.tri_verts.size() / 2), 1, 0, 0);
+        auto image = p.upload_pixels(p.atlas_width, p.atlas_height, VK_FORMAT_R8_UNORM,
+                                     p.atlas_pixels.data(), p.atlas_pixels.size());
+        destroy_image(p.ctx.device, p.font_image);
+        p.font_image = std::move(image);
+        p.write_set(p.font_set, p.font_image.view);
+        p.atlas_dirty = false;
     }
-
-    vkCmdEndRenderPass(p.command_buffer);
-    vkEndCommandBuffer(p.command_buffer);
-    VkSubmitInfo submit{};
-    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit.commandBufferCount = 1;
-    submit.pCommandBuffers = &p.command_buffer;
-    vkQueueSubmit(p.ctx.graphics_queue, 1, &submit, p.fence);
-
-    p.global_alpha = 1.0f;
+    p.ensure_vertex_buffer(p.vertices.size() * sizeof(Impl::Vertex));
+    std::memcpy(p.mapped_vertices, p.vertices.data(), p.vertices.size() * sizeof(Impl::Vertex));
+    VkRenderPassBeginInfo begin{};
+    begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    begin.renderPass = p.render_pass;
+    begin.framebuffer = p.target.framebuffer;
+    begin.renderArea.extent = {static_cast<std::uint32_t>(p.width),
+                               static_cast<std::uint32_t>(p.height)};
+    const auto commands = p.target.commands;
+    vkCmdBeginRenderPass(commands, &begin, VK_SUBPASS_CONTENTS_INLINE);
+    const VkViewport viewport{0, 0, static_cast<float>(p.width), static_cast<float>(p.height),
+                              0, 1};
+    vkCmdSetViewport(commands, 0, 1, &viewport);
+    const VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(commands, 0, 1, &p.vbo.handle, &offset);
+    // Transparency requires exact painter order. Never group by primitive type.
+    for (const auto& draw : p.draws)
+    {
+        if (!draw.clip.extent.width || !draw.clip.extent.height)
+            continue;
+        auto clip = draw.clip;
+        clip.offset.y = p.height - clip.offset.y - static_cast<std::int32_t>(clip.extent.height);
+        vkCmdSetScissor(commands, 0, 1, &clip);
+        vkCmdBindPipeline(commands, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          p.pipelines[static_cast<std::size_t>(draw.kind)]);
+        vkCmdPushConstants(commands, p.layout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                           sizeof(RectPC), &draw.constants);
+        if (draw.descriptor)
+            vkCmdBindDescriptorSets(commands, VK_PIPELINE_BIND_POINT_GRAPHICS, p.layout, 0, 1,
+                                    &draw.descriptor, 0, nullptr);
+        vkCmdDraw(commands, draw.count, 1, draw.first, 0);
+    }
+    vkCmdEndRenderPass(commands);
+    p.alpha = 1;
 }
 
 void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float radius,
                                    nekomote::ui::Color fill, nekomote::ui::Color border,
                                    float border_width)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
-    fill.a *= impl_->global_alpha;
-    border.a *= impl_->global_alpha;
-    const float r = std::min(radius, std::min(w, h) * 0.5f);
-    impl_->rect_verts.insert(impl_->rect_verts.end(),
-                             {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
-    impl_->rect_uvs.insert(impl_->rect_uvs.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
-    (void)r;
-    (void)border;
-    (void)border_width;
+    auto& p = *impl_;
+    const auto first = static_cast<std::uint32_t>(p.vertices.size());
+    auto pc = p.constants(fill);
+    pc.params0[2] = w;
+    pc.params0[3] = h;
+    pc.params2[0] = border.r;
+    pc.params2[1] = border.g;
+    pc.params2[2] = border.b;
+    pc.params2[3] = border.a * p.alpha;
+    pc.params3[0] = std::max(0.0f, border_width);
+    pc.params3[1] = std::clamp(radius, 0.0f, std::min(w, h) * 0.5f);
+    pc.params3[2] = 1;
+    p.add_quad(x, y, w, h);
+    p.record(Impl::Kind::Rect, first, pc);
 }
 
 void UiRenderer::draw_text(float x, float y, const char* text, float size,
                            nekomote::ui::Color color)
 {
-    if (!impl_ || !impl_->initialized || !impl_->font_ready)
+    if (!impl_ || !impl_->initialized || !impl_->font_ready || !text || size <= 0)
         return;
-    (void)x;
-    (void)y;
-    (void)text;
-    (void)size;
-    (void)color;
+    auto& p = *impl_;
+    p.text_vertices.clear();
+    p.text_uvs.clear();
+    p.font_metrics.draw_text(p.text_vertices, p.text_uvs, x, y, text, size);
+    const auto first = static_cast<std::uint32_t>(p.vertices.size());
+    for (std::size_t i = 0; i < p.text_vertices.size(); i += 2)
+        p.vertices.push_back(
+            {p.text_vertices[i], p.text_vertices[i + 1], p.text_uvs[i], p.text_uvs[i + 1]});
+    p.record(Impl::Kind::Text, first, p.constants(color), p.font_set);
 }
 
 void UiRenderer::draw_icon(float x, float y, float w, float h, std::uint32_t texture_id,
                            nekomote::ui::Color tint)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || !texture_id || texture_id > impl_->icons.size() ||
+        w <= 0 || h <= 0)
         return;
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
-    (void)texture_id;
-    (void)tint;
+    auto& p = *impl_;
+    const auto& icon = p.icons[texture_id - 1];
+    if (!icon.descriptor)
+        return;
+    const auto first = static_cast<std::uint32_t>(p.vertices.size());
+    p.add_quad(x, y, w, h);
+    p.record(Impl::Kind::Icon, first, p.constants(tint), icon.descriptor);
 }
 
 void UiRenderer::draw_circle(float cx, float cy, float radius, nekomote::ui::Color fill,
@@ -690,59 +688,78 @@ void UiRenderer::draw_circle(float cx, float cy, float radius, nekomote::ui::Col
 
 void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::ui::Color color)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
-    color.a *= impl_->global_alpha;
-    impl_->tri_verts.insert(impl_->tri_verts.end(),
-                            {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
+    auto& p = *impl_;
+    const auto first = static_cast<std::uint32_t>(p.vertices.size());
+    p.add_quad(x, y, w, h);
+    p.record(Impl::Kind::Solid, first, p.constants(color));
 }
 
 void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
                             nekomote::ui::Color fill)
 {
-    if (!impl_ || !impl_->initialized)
+    if (!impl_ || !impl_->initialized || size <= 0)
         return;
-    const float h = size * 0.5f;
-    if (points_up)
-        impl_->tri_verts.insert(impl_->tri_verts.end(),
-                                {cx, cy - h, cx - h, cy + h, cx + h, cy + h});
-    else
-        impl_->tri_verts.insert(impl_->tri_verts.end(),
-                                {cx, cy + h, cx - h, cy - h, cx + h, cy - h});
-    (void)fill;
+    auto& p = *impl_;
+    const auto first = static_cast<std::uint32_t>(p.vertices.size());
+    const float edge = points_up ? size * 0.5f : -size * 0.5f;
+    p.vertices.insert(
+        p.vertices.end(),
+        {{cx - size, cy + edge, 0, 0}, {cx + size, cy + edge, 0, 0}, {cx, cy - edge, 0, 0}});
+    p.record(Impl::Kind::Solid, first, p.constants(fill));
 }
 
 void UiRenderer::push_clip_rect(float x, float y, float w, float h)
 {
-    (void)x;
-    (void)y;
-    (void)w;
-    (void)h;
+    if (!impl_ || !impl_->initialized)
+        return;
+    auto& p = *impl_;
+    const auto previous = p.current_clip();
+    const float left = std::clamp(x, static_cast<float>(previous.offset.x),
+                                  static_cast<float>(previous.offset.x) +
+                                      static_cast<float>(previous.extent.width));
+    const float top = std::clamp(y, static_cast<float>(previous.offset.y),
+                                 static_cast<float>(previous.offset.y) +
+                                     static_cast<float>(previous.extent.height));
+    const float right = std::clamp(x + std::max(0.0f, w), left,
+                                   static_cast<float>(previous.offset.x) +
+                                       static_cast<float>(previous.extent.width));
+    const float bottom = std::clamp(y + std::max(0.0f, h), top,
+                                    static_cast<float>(previous.offset.y) +
+                                        static_cast<float>(previous.extent.height));
+    const auto ix = static_cast<std::int32_t>(left);
+    const auto iy = static_cast<std::int32_t>(top);
+    p.clips.push_back({{ix, iy},
+                       {static_cast<std::uint32_t>(right) - static_cast<std::uint32_t>(ix),
+                        static_cast<std::uint32_t>(bottom) - static_cast<std::uint32_t>(iy)}});
 }
 
 void UiRenderer::pop_clip_rect()
 {
+    if (impl_ && !impl_->clips.empty())
+        impl_->clips.pop_back();
 }
 
 void UiRenderer::set_global_alpha(float alpha)
 {
     if (impl_)
-        impl_->global_alpha = alpha;
+        impl_->alpha = std::isfinite(alpha) ? std::clamp(alpha, 0.0f, 1.0f) : 0;
 }
 
 float UiRenderer::global_alpha() const
 {
-    return impl_ ? impl_->global_alpha : 1.0f;
+    return impl_ ? impl_->alpha : 1;
 }
 
 int UiRenderer::viewport_width() const
 {
-    return impl_ ? impl_->viewport_w : 0;
+    return impl_ ? impl_->width : 0;
 }
 
 int UiRenderer::viewport_height() const
 {
-    return impl_ ? impl_->viewport_h : 0;
+    return impl_ ? impl_->height : 0;
 }
 
 nekomote::ui::FontMetrics* UiRenderer::font()
