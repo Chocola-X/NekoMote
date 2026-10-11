@@ -8,6 +8,7 @@
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QWheelEvent>
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -244,11 +245,70 @@ int main(int argc, char** argv)
         require(no_icon ? dragged_icon != resized.pixelColor(to.toPoint())
                         : dragged_icon.red() > 200 && dragged_icon.blue() > 200,
                 "pressed mouse move did not drag the UI icon");
+        // Hold on the model, then move in output pixels. The UI is left of x=272.
+        const QPointF model_from(420, 360), model_to(460, 390);
+        // Settle gaze before the reference image: dragging keeps the pointer's
+        // position relative to the model, rather than initiating a new gaze pose.
+        QMouseEvent model_hover(QEvent::MouseMove, model_from / dpi, model_from / dpi, Qt::NoButton,
+                                Qt::NoButton, Qt::NoModifier);
+        item->mouseMoveEvent(&model_hover);
+        frames(12);
+        const auto before_model_drag = capture(item, output + "/before-model-drag.png");
+        const auto event_time =
+            static_cast<ulong>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   std::chrono::steady_clock::now().time_since_epoch())
+                                   .count());
+        QMouseEvent model_press(QEvent::MouseButtonPress, model_from / dpi, model_from / dpi,
+                                Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        model_press.setTimestamp(event_time);
+        item->mousePressEvent(&model_press);
+        // Replay delayed press/move/release together; their collection times,
+        // rather than the render callback's clock, must determine a long hold.
+        QMouseEvent model_move(QEvent::MouseMove, model_to / dpi, model_to / dpi, Qt::NoButton,
+                               Qt::LeftButton, Qt::NoModifier);
+        model_move.setTimestamp(event_time + 350);
+        item->mouseMoveEvent(&model_move);
+        QMouseEvent model_release(QEvent::MouseButtonRelease, model_to / dpi, model_to / dpi,
+                                  Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        model_release.setTimestamp(event_time + 360);
+        item->mouseReleaseEvent(&model_release);
+        require(static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)
+                        ->get_item_state()
+                        .input_count >= 3,
+                "long hold replay was not batched");
+        frames(2);
+        const auto model_dragged = capture(item, output + "/model-dragged.png");
+        long long shifted_error = 0, unmoved_error = 0;
+        for (int y = 200; y < 500; ++y)
+            for (int x = 280; x < 590; ++x)
+            {
+                const auto before = before_model_drag.pixelColor(x, y);
+                const auto shifted = model_dragged.pixelColor(x + 40, y + 30);
+                const auto unmoved = model_dragged.pixelColor(x, y);
+                shifted_error += std::abs(before.red() - shifted.red()) +
+                                 std::abs(before.green() - shifted.green()) +
+                                 std::abs(before.blue() - shifted.blue());
+                unmoved_error += std::abs(before.red() - unmoved.red()) +
+                                 std::abs(before.green() - unmoved.green()) +
+                                 std::abs(before.blue() - unmoved.blue());
+            }
+        require(shifted_error * 2 < unmoved_error,
+                "left hold did not translate model by the pointer displacement");
+        QWheelEvent model_wheel(model_to / dpi, model_to / dpi, {}, QPoint(0, 120), Qt::NoButton,
+                                Qt::NoModifier, Qt::NoScrollPhase, false);
+        model_wheel.setTimestamp(event_time + 370);
+        item->wheelEvent(&model_wheel);
+        frames(2);
+        const auto model_scaled = capture(item, output + "/model-scaled.png");
+        require(changed_pixels(model_dragged, model_scaled, {280, 200, 310, 300}) > 10000,
+                "wheel outside UI did not scale model");
         window.hide();
         item->setParentItem(nullptr);
         object.reset();
-        std::puts("PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag "
-                  "through Qt host");
+        std::puts(
+            "PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag, "
+            "left hold model drag and wheel zoom "
+            "through Qt host");
     }
     catch (const std::exception& error)
     {

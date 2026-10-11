@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/application/controller.hpp>
 
@@ -15,6 +16,135 @@ bool assets_available()
     return fs::exists("assets/characters/coconut-casual/model.nkm.json");
 }
 } // namespace
+
+TEST_CASE("Controller left hold drags after threshold without an activation jump",
+          "[controller][pointer]")
+{
+    WallpaperController c;
+    using namespace std::chrono_literals;
+    const WallpaperController::PointerTime start{1s};
+    c.set_origin({20, 30});
+    c.pointer_press({100, 100}, start);
+    c.pointer_move({110, 100}, start + 299ms);
+    REQUIRE(c.origin().x == 20.0f);
+    c.pointer_move({120, 115}, start + 300ms);
+    REQUIRE(c.origin().x == 30.0f);
+    REQUIRE(c.origin().y == 45.0f);
+    c.pointer_release({125, 120}, start + 400ms);
+    REQUIRE(c.origin().x == 35.0f);
+    REQUIRE(c.origin().y == 50.0f);
+    c.pointer_move({900, 900}, start + 500ms);
+    REQUIRE(c.origin().x == 35.0f);
+    REQUIRE(c.origin().y == 50.0f);
+}
+
+TEST_CASE("Controller short click cannot leave a drag active", "[controller][pointer]")
+{
+    WallpaperController c;
+    using namespace std::chrono_literals;
+    const WallpaperController::PointerTime start{1s};
+    c.pointer_press({100, 100}, start);
+    c.pointer_release({101, 101}, start + 50ms);
+    c.pointer_move({200, 200}, start + 1s);
+    REQUIRE(c.origin().x == 0.0f);
+    REQUIRE(c.origin().y == 400.0f);
+}
+
+TEST_CASE("Controller short click reacts on release but long hold does not react",
+          "[controller][pointer][integration]")
+{
+    const fs::path directory = "assets/characters/chocola-date-a";
+    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+        SKIP("chocola-date-a assets are unavailable");
+    WallpaperController c;
+    ControllerConfig config;
+    config.mute = true;
+    config.audio = AudioMode::Disabled;
+    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm.json",
+                                                   directory / "session.nks.json", directory},
+                                    config);
+    INFO(candidate.error);
+    REQUIRE(candidate.ok);
+    c.install_initial(std::move(candidate));
+    auto* session = c.current_instance();
+    const auto regions = session->touch_regions();
+    REQUIRE(regions.front().has_value());
+    const auto point = regions.front()->center;
+    using namespace std::chrono_literals;
+    const WallpaperController::PointerTime start{1s};
+    c.pointer_press(point, start);
+    REQUIRE(session->reaction_phase() == ReactionPhase::Idle);
+    SECTION("short release selects a reaction")
+    {
+        c.pointer_release(point, start + 50ms);
+        REQUIRE(session->reaction_phase() == ReactionPhase::Playing);
+    }
+    SECTION("long hold translates without triggering a reaction")
+    {
+        c.pointer_move({point.x + 20, point.y + 30}, start + 350ms);
+        c.pointer_release({point.x + 20, point.y + 30}, start + 360ms);
+        REQUIRE(session->reaction_phase() == ReactionPhase::Idle);
+        REQUIRE(c.origin().x == 20.0f);
+        REQUIRE(c.origin().y == 430.0f);
+    }
+}
+
+TEST_CASE("Controller pointer gesture cancels at lifecycle boundaries", "[controller][pointer]")
+{
+    WallpaperController c;
+    using namespace std::chrono_literals;
+    const WallpaperController::PointerTime start{1s};
+    c.pointer_press({10, 10}, start);
+    SECTION("leave")
+    {
+        c.pointer_leave();
+    }
+    SECTION("UI consumes input")
+    {
+        c.cancel_pointer_gesture();
+    }
+    SECTION("pause")
+    {
+        c.set_paused(true);
+        c.set_paused(false);
+    }
+    SECTION("minimize")
+    {
+        c.set_minimized(true);
+        c.set_minimized(false);
+    }
+    SECTION("output unavailable")
+    {
+        c.set_output_unavailable(true);
+        c.set_output_unavailable(false);
+    }
+    SECTION("reset")
+    {
+        c.reset();
+    }
+    c.pointer_move({300, 300}, start + 1s);
+    REQUIRE(c.origin().x == 0.0f);
+    REQUIRE(c.origin().y == 400.0f);
+}
+
+TEST_CASE("Controller wheel zoom keeps the model point under the pointer", "[controller][pointer]")
+{
+    WallpaperController c;
+    c.set_origin({20, 30});
+    c.set_scale(1);
+    const nekomote::Vec2 pointer{100, 200};
+    const nekomote::Vec2 model_point{80, 170};
+    for (const double wheel : {1.0, -2.0, 100.0, -100.0})
+    {
+        c.zoom_at(pointer, wheel);
+        REQUIRE((pointer.x - c.origin().x) / c.scale() ==
+                Catch::Approx(model_point.x).margin(.001));
+        REQUIRE((pointer.y - c.origin().y) / c.scale() ==
+                Catch::Approx(model_point.y).margin(.001));
+        REQUIRE(c.scale() >= .05f);
+        REQUIRE(c.scale() <= 5.0f);
+    }
+}
 
 TEST_CASE("Controller default state", "[controller]")
 {

@@ -37,7 +37,7 @@ build/release/bin/nekomote_player --model /path/model.nkm.json \
   --session /path/session.nks.json --fit --background /path/background.png
 ```
 
-鼠标视线/左键触摸、右键拖动、滚轮缩放；空格暂停，F 适配完整模型，R 重置，Esc 关闭。没有声音服务时可显式 `--mute`。
+鼠标视线、左键短按触摸、左键长按 300ms 后拖动、滚轮围绕指针缩放；空格暂停，F 适配完整模型，R 重置，Esc 关闭。没有声音服务时可显式 `--mute`。
 
 已导入assets时可使用 `build/release/bin/nekomote_player --assets assets --character chocola-date-a --no-save`。部分型号仍因未验证语义拒绝加载；保存角色milk-summer的6/3错误说明及当前可用范围见播放器文档，导入成功不代表完整支持。
 

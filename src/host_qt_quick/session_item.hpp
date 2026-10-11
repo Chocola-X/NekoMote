@@ -66,6 +66,7 @@ struct Input
     float x, y;
     float scroll{0};
     int button{0}; // ABI/GLFW convention: left=0, right=1.
+    std::uint64_t timestamp_ms{0};
 };
 
 // Snapshot of GUI-side state copied into the renderer during synchronize.
@@ -123,7 +124,8 @@ class WallpaperItem final : public WallpaperItemBase
     ItemState get_item_state() const override;
     void clear_inputs() override;
     std::shared_ptr<WallpaperState> wallpaper_state() const override;
-    void enqueue(InputKind kind, QPointF position = {}, float scroll = 0, int button = 0);
+    void enqueue(InputKind kind, QPointF position = {}, float scroll = 0, int button = 0,
+                 std::uint64_t timestamp_ms = 0);
     std::shared_ptr<WallpaperState> state_;
     bool paused_{false};
     std::uint64_t playback_revision_{0};

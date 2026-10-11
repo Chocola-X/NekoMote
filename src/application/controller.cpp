@@ -1,5 +1,4 @@
 #include <nekomote/application/controller.hpp>
-
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/audio.hpp>
 #include <nekomote/asset_io/image.hpp>
@@ -108,10 +107,12 @@ void WallpaperController::accept(SessionStatus status)
 
 void WallpaperController::synchronize_pause()
 {
+    if (paused_ || minimized_ || output_unavailable_)
+        cancel_pointer_gesture();
     if (current_instance_)
-        accept(current_instance_->set_playback_state(
-            paused_ || minimized_ || output_unavailable_ ? runtime::PlaybackState::Paused
-                                                        : runtime::PlaybackState::Running));
+        accept(current_instance_->set_playback_state(paused_ || minimized_ || output_unavailable_
+                                                         ? runtime::PlaybackState::Paused
+                                                         : runtime::PlaybackState::Running));
 }
 
 CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry,
@@ -169,7 +170,7 @@ CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry
 }
 
 CandidateCpu WallpaperController::load_candidate(const CharacterEntry& entry,
-                                                  const ControllerConfig& cfg)
+                                                 const ControllerConfig& cfg)
 {
     return load_candidate_cpu(entry, cfg);
 }
@@ -178,9 +179,11 @@ void WallpaperController::install_candidate_sync(CandidateCpu candidate)
 {
     if (!candidate.ok)
     {
-        std::fprintf(stderr, "Cannot switch: %s; current session retained\n", candidate.error.c_str());
+        std::fprintf(stderr, "Cannot switch: %s; current session retained\n",
+                     candidate.error.c_str());
         return;
     }
+    cancel_pointer_gesture();
     previous_program_ = std::move(current_program_);
     previous_instance_ = std::move(current_instance_);
     current_program_ = std::move(candidate.program);
@@ -217,7 +220,8 @@ CandidateCpu WallpaperController::load_initial(int character_index, const Contro
     return load_candidate_cpu(catalog_.characters[character_index], cfg);
 }
 
-CandidateCpu WallpaperController::load_initial(const CharacterEntry& entry, const ControllerConfig& cfg)
+CandidateCpu WallpaperController::load_initial(const CharacterEntry& entry,
+                                               const ControllerConfig& cfg)
 {
     apply_controller_config(cfg);
     return load_candidate_cpu(entry, cfg);
@@ -227,6 +231,7 @@ void WallpaperController::install_initial(CandidateCpu candidate)
 {
     if (!candidate.ok)
         throw std::runtime_error(candidate.error);
+    cancel_pointer_gesture();
     current_program_ = std::move(candidate.program);
     current_instance_ = std::move(candidate.instance);
     current_name_ = std::move(candidate.name);
@@ -251,7 +256,7 @@ void WallpaperController::request_switch_character(int index)
     controller_config_.scale = initial_scale_;
     const auto cfg = controller_config_;
     candidate_future_ = std::async(std::launch::async,
-        [this, entry, cfg]() { return load_candidate_cpu(entry, cfg); });
+                                   [this, entry, cfg]() { return load_candidate_cpu(entry, cfg); });
 }
 
 std::optional<CandidateCpu> WallpaperController::poll_candidate()
@@ -272,6 +277,7 @@ void WallpaperController::confirm_candidate(CandidateCpu candidate)
         reject_candidate(candidate.error);
         return;
     }
+    cancel_pointer_gesture();
     previous_program_ = std::move(current_program_);
     previous_instance_ = std::move(current_instance_);
     current_program_ = std::move(candidate.program);
@@ -528,10 +534,67 @@ float WallpaperController::scale() const noexcept
     return controller_config_.scale;
 }
 
-void WallpaperController::pointer_move(Vec2 position)
+void WallpaperController::pointer_press(Vec2 position, PointerTime now)
 {
+    cancel_pointer_gesture();
+    if (paused_ || minimized_ || output_unavailable_)
+        return;
+    pointer_pressed_ = true;
+    press_position_ = drag_previous_ = position;
+    press_time_ = now;
+}
+
+void WallpaperController::pointer_move(Vec2 position, PointerTime now)
+{
+    if (pointer_pressed_)
+    {
+        constexpr float kClickMotionTolerance = 4.0f;
+        const float dx = position.x - press_position_.x;
+        const float dy = position.y - press_position_.y;
+        pointer_moved_ =
+            pointer_moved_ || dx * dx + dy * dy > kClickMotionTolerance * kClickMotionTolerance;
+        if (now - press_time_ >= kPointerDragHold)
+        {
+            const auto old_origin = origin();
+            set_origin({old_origin.x + position.x - drag_previous_.x,
+                        old_origin.y + position.y - drag_previous_.y});
+        }
+        drag_previous_ = position;
+    }
     if (current_instance_)
         accept(current_instance_->pointer_move(position));
+}
+
+void WallpaperController::pointer_release(Vec2 position, PointerTime now)
+{
+    if (!pointer_pressed_)
+        return;
+    pointer_move(position, now);
+    const bool click = now - press_time_ < kPointerDragHold && !pointer_moved_;
+    cancel_pointer_gesture();
+    if (click && !paused_ && !minimized_ && !output_unavailable_)
+        touch(position);
+}
+
+void WallpaperController::cancel_pointer_gesture() noexcept
+{
+    pointer_pressed_ = pointer_moved_ = false;
+}
+
+void WallpaperController::zoom_at(Vec2 position, double wheel_steps)
+{
+    constexpr float kMinimumModelScale = .05f;
+    constexpr float kMaximumModelScale = 5.0f;
+    constexpr double kWheelScaleFactor = 1.1;
+    const float old_scale = scale();
+    const float new_scale =
+        std::clamp(old_scale * static_cast<float>(std::pow(kWheelScaleFactor, wheel_steps)),
+                   kMinimumModelScale, kMaximumModelScale);
+    const float ratio = new_scale / old_scale;
+    const auto old_origin = origin();
+    set_scale(new_scale);
+    set_origin({position.x + (old_origin.x - position.x) * ratio,
+                position.y + (old_origin.y - position.y) * ratio});
 }
 
 void WallpaperController::pointer_enter(Vec2 position)
@@ -542,6 +605,7 @@ void WallpaperController::pointer_enter(Vec2 position)
 
 void WallpaperController::pointer_leave()
 {
+    cancel_pointer_gesture();
     if (current_instance_)
         accept(current_instance_->pointer_leave());
 }
@@ -554,6 +618,7 @@ void WallpaperController::touch(Vec2 position)
 
 void WallpaperController::reset()
 {
+    cancel_pointer_gesture();
     if (current_instance_)
         accept(current_instance_->reset());
     synchronize_pause();

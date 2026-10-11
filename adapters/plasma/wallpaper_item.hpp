@@ -71,7 +71,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     nekomote::qt_quick::ItemState get_item_state() const override;
     void clear_inputs() override;
     void enqueue(nekomote::qt_quick::InputKind kind, QPointF position = {}, float scroll = 0,
-                 int button = 0);
+                 int button = 0, std::uint64_t timestamp_ms = 0);
     void set_status(int value);
     void set_error(const QString& value);
     void check_backend();

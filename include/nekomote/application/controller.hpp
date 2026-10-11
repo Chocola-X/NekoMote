@@ -21,6 +21,7 @@ namespace fs = std::filesystem;
 
 constexpr double kBackgroundFadeSeconds = 0.8;
 constexpr double kCharacterFadeSeconds = 0.4;
+inline constexpr auto kPointerDragHold = std::chrono::milliseconds(300);
 
 enum class SwitchState
 {
@@ -133,8 +134,8 @@ class WallpaperController
     void request_switch_background(int index);
     void request_clear_background();
     std::optional<BackgroundRequest> poll_background();
-    void confirm_background(int background_index, TextureId old_id, TextureId new_id,
-                            int width, int height, double fade_duration);
+    void confirm_background(int background_index, TextureId old_id, TextureId new_id, int width,
+                            int height, double fade_duration);
     void confirm_background_clear();
     bool has_background() const noexcept;
 
@@ -159,7 +160,14 @@ class WallpaperController
     void set_scale(float scale);
     Vec2 origin() const noexcept;
     float scale() const noexcept;
-    void pointer_move(Vec2 position);
+    using PointerTime = std::chrono::steady_clock::time_point;
+    // Positions use centered output pixels, Y down. Hosts forward only events
+    // not consumed by UI. A short left click touches; holding 300ms enables drag.
+    void pointer_press(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
+    void pointer_move(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
+    void pointer_release(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
+    void cancel_pointer_gesture() noexcept;
+    void zoom_at(Vec2 position, double wheel_steps);
     void pointer_enter(Vec2 position);
     void pointer_leave();
     void touch(Vec2 position);
@@ -226,6 +234,11 @@ class WallpaperController
     bool paused_{false};
     bool minimized_{false};
     bool output_unavailable_{false};
+    bool pointer_pressed_{false};
+    bool pointer_moved_{false};
+    Vec2 press_position_{};
+    Vec2 drag_previous_{};
+    PointerTime press_time_{};
 
     SessionStatus last_error_{};
 };

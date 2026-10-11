@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.3.0
+ * @version 0.4.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -448,13 +448,22 @@ extern "C"
     /* Input. Coordinates are physical output pixels from its top-left, Y down.
      * Hosts convert logical pointer positions using their logical/output sizes.
      * UI consumes hits first; remaining model input is centered by the instance.
-     * Button convention: 0=left, 1=right. Forward both press and release. */
-    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y);
+     * Button convention: 0=left, 1=right. Forward both press and release.
+     * Unconsumed left click touches on release; holding at least 300ms then
+     * moving drags the model. Wheel zooms around the pointer outside UI.
+     * Hosts must not also call touch for the same mouse press. Right button
+     * is reserved for the desktop and is not required for model control.
+     * timestamp_ms is captured when the event is collected, from one monotonic
+     * millisecond clock per instance. It preserves holds in delayed batches.
+     * All callers must rebuild for this current ABI (0.4.0). */
+    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
+                                                   uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
     nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y);
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
-                                                   nekomote_mouse_action action);
+                                                   nekomote_mouse_action action,
+                                                   uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_mouse_scroll(nekomote_wallpaper* wp, double amount);
     nekomote_error nekomote_wallpaper_key(nekomote_wallpaper* wp, nekomote_key key,
                                           nekomote_mouse_action action);

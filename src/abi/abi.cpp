@@ -8,6 +8,8 @@
 #include <nekomote/abi.h>
 
 #include <array>
+#include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <exception>
@@ -27,6 +29,17 @@ using nekomote::abi::set_error;
 
 namespace
 {
+using PointerClock = nekomote::application::WallpaperController;
+constexpr auto kMaximumPointerTimeMs =
+    static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                   PointerClock::PointerTime::duration::max())
+                                   .count());
+PointerClock::PointerTime pointer_time(std::uint64_t timestamp_ms)
+{
+    return PointerClock::PointerTime(
+        std::chrono::duration_cast<PointerClock::PointerTime::duration>(
+            std::chrono::milliseconds(static_cast<std::int64_t>(timestamp_ms))));
+}
 
 /* ---- Per-thread error diagnostic is in abi_internal.hpp ---- */
 
@@ -453,7 +466,7 @@ extern "C"
 
     const char* nekomote_version(void)
     {
-        return "0.3.0";
+        return "0.4.0";
     }
 
     /* ---- Asset loading ---- */
@@ -1555,14 +1568,22 @@ extern "C"
         }
     }
 
-    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y)
+    nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
+                                                   uint64_t timestamp_ms)
     {
         if (!wp || !wp->instance)
         {
             set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
-        return wp->instance->pointer_move(x, y);
+        if (timestamp_ms > kMaximumPointerTimeMs || !std::isfinite(x) || !std::isfinite(y) ||
+            std::abs(x) > static_cast<double>(std::numeric_limits<float>::max()) ||
+            std::abs(y) > static_cast<double>(std::numeric_limits<float>::max()))
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid pointer position or timestamp");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->pointer_move(x, y, pointer_time(timestamp_ms));
     }
 
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y)
@@ -1596,14 +1617,22 @@ extern "C"
     }
 
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
-                                                   nekomote_mouse_action action)
+                                                   nekomote_mouse_action action,
+                                                   uint64_t timestamp_ms)
     {
         if (!wp || !wp->instance)
         {
             set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
-        return wp->instance->mouse_button(button, static_cast<int>(action));
+        if (timestamp_ms > kMaximumPointerTimeMs || button < 0 || button > 1 ||
+            (action != NEKOMOTE_MOUSE_PRESS && action != NEKOMOTE_MOUSE_RELEASE))
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid mouse button, action or timestamp");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wp->instance->mouse_button(button, static_cast<int>(action),
+                                          pointer_time(timestamp_ms));
     }
 
     nekomote_error nekomote_wallpaper_mouse_scroll(nekomote_wallpaper* wp, double amount)

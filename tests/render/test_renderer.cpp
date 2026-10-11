@@ -735,6 +735,12 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     REQUIRE(nekomote_wallpaper_set_muted(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.path.c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_load_initial(wallpaper.get()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_pointer_move(wallpaper.get(), 0, 0, UINT64_MAX) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_mouse_button(wallpaper.get(), 0, 99, 1000) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_mouse_button(wallpaper.get(), 0, NEKOMOTE_MOUSE_PRESS, UINT64_MAX) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_set_output_size(wallpaper.get(), 64, 64) == NEKOMOTE_OK);
     nekomote_wallpaper_set_render_target(wallpaper.get(), output.framebuffer);
     for (int generation = 0; generation < 2; ++generation)

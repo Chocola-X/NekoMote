@@ -22,13 +22,13 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <future>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
-#include <future>
 #include <vector>
 
 namespace
@@ -295,7 +295,7 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
         const TextureId id{1};
         gpu.background_renderer->upload_texture(id, new_image.image);
         controller.confirm_background(bg_index, id, id, new_image.image.width,
-                                       new_image.image.height, 0);
+                                      new_image.image.height, 0);
         gpu.current_background_id = id;
         gpu.current_background_path = bg_path;
         return;
@@ -309,7 +309,7 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
     gpu.background_renderer->upload_texture(old_id, old_image.image);
     gpu.background_renderer->upload_texture(new_id, new_image.image);
     controller.confirm_background(bg_index, old_id, new_id, new_image.image.width,
-                                   new_image.image.height, fade_duration);
+                                  new_image.image.height, fade_duration);
     gpu.current_background_id = new_id;
     gpu.current_background_path = bg_path;
 }
@@ -318,10 +318,16 @@ struct Surface
 {
     application::WallpaperController* controller;
     GLFWwindow* window;
-    Vec2 previous{};
-    bool dragging{false}, locked{false};
+    bool locked{false};
     bool paused{false}, minimized{false}, output_unavailable{false};
     ui::Context* ui_context{nullptr};
+    const ui::IconState* ui_icon{nullptr};
+    const ui::SidebarState* ui_sidebar{nullptr};
+    bool captures_mouse() const noexcept
+    {
+        return ui_context && ui_icon && ui_sidebar &&
+               ui_context->eval_captures_mouse(*ui_icon, *ui_sidebar);
+    }
     void set_paused(bool value) noexcept
     {
         paused = value;
@@ -355,14 +361,13 @@ struct Surface
         const auto p = s.point(x, y);
         if (s.ui_context)
             s.ui_context->mouse_move(x, y);
-        if (s.dragging && !s.locked)
+        if (s.captures_mouse())
         {
-            auto origin = s.controller->origin();
-            origin.x += p.x - s.previous.x;
-            origin.y += p.y - s.previous.y;
-            s.controller->set_origin(origin);
+            s.controller->pointer_leave();
+            return;
         }
-        s.previous = p;
+        if (s.locked)
+            s.controller->cancel_pointer_gesture();
         s.controller->pointer_move(p);
     }
     static void enter(GLFWwindow* w, int entered) noexcept
@@ -377,7 +382,6 @@ struct Surface
         }
         else
         {
-            s.dragging = false;
             s.controller->pointer_leave();
         }
     }
@@ -387,18 +391,21 @@ struct Surface
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         if (s.ui_context)
+        {
+            s.ui_context->mouse_move(x, y);
             s.ui_context->mouse_button(button, action);
-        if (s.ui_context && s.ui_context->captures_mouse())
-            return;
-        if (button == GLFW_MOUSE_BUTTON_RIGHT && !s.locked)
-        {
-            s.dragging = action == GLFW_PRESS;
-            s.previous = s.point(x, y);
         }
-        else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !s.paused &&
-                 !s.minimized && !s.locked)
+        if (s.captures_mouse() || s.paused || s.minimized || s.locked)
         {
-            s.controller->touch(s.point(x, y));
+            s.controller->cancel_pointer_gesture();
+            return;
+        }
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            if (action == GLFW_PRESS)
+                s.controller->pointer_press(s.point(x, y));
+            else if (action == GLFW_RELEASE)
+                s.controller->pointer_release(s.point(x, y));
         }
     }
     static void scroll(GLFWwindow* w, double, double amount) noexcept
@@ -407,7 +414,7 @@ struct Surface
         if (s.ui_context)
         {
             s.ui_context->mouse_scroll(amount);
-            if (s.ui_context->captures_mouse())
+            if (s.captures_mouse())
                 return;
         }
         if (s.locked)
@@ -415,14 +422,7 @@ struct Surface
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         const auto p = s.point(x, y);
-        auto scale = s.controller->scale();
-        auto origin = s.controller->origin();
-        const auto new_scale =
-            std::clamp(scale * static_cast<float>(std::pow(1.1, amount)), .05f, 5.0f);
-        const auto ratio = new_scale / scale;
-        origin = {p.x + (origin.x - p.x) * ratio, p.y + (origin.y - p.y) * ratio};
-        s.controller->set_scale(new_scale);
-        s.controller->set_origin(origin);
+        s.controller->zoom_at(p, amount);
     }
     static void iconify(GLFWwindow* w, int minimized) noexcept
     {
@@ -485,7 +485,8 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
         {
             const TextureId id{1};
             gpu.background_renderer->upload_texture(id, *bg_image);
-            check(controller.current_instance()->set_background(id, bg_image->width, bg_image->height));
+            check(controller.current_instance()->set_background(id, bg_image->width,
+                                                                bg_image->height));
             gpu.current_background_id = id;
             gpu.current_background_path = background;
         }
@@ -585,7 +586,7 @@ int run(int argc, char** argv)
     else
     {
         application::CharacterEntry temp_entry{o.model.stem().string(), o.model, o.session,
-                                                o.model.parent_path()};
+                                               o.model.parent_path()};
         candidate = controller.load_initial(temp_entry, controller_cfg);
     }
     if (!candidate.ok)
@@ -623,7 +624,7 @@ int run(int argc, char** argv)
             apply_background_gpu(gpu, bg->path, 0, bg_index, controller);
         }
     }
-    Surface surface{&controller, window.get(), {}, false, false, false, false, false, nullptr};
+    Surface surface{&controller, window.get()};
     render_gl::UiRenderer ui_renderer;
     ui::Context ui_context;
     ui::IconState ui_icon{};
@@ -656,6 +657,8 @@ int run(int argc, char** argv)
             ui_icon.y = 16;
             ui_ready = true;
             surface.ui_context = &ui_context;
+            surface.ui_icon = &ui_icon;
+            surface.ui_sidebar = &ui_sidebar;
         }
     }
     if (o.fit || (assets_mode && controller.config().fit))
@@ -692,7 +695,8 @@ int run(int argc, char** argv)
     if (!o.capture.empty())
         for (int i = 0; i < o.steps; ++i)
             check(controller.current_instance()->advance(1.0 / 60));
-    int current_fps_limit = o.fps > 0 ? o.fps : (controller.config().fps > 0 ? controller.config().fps : 60);
+    int current_fps_limit =
+        o.fps > 0 ? o.fps : (controller.config().fps > 0 ? controller.config().fps : 60);
     if (o.capture.empty())
     {
         glfwSetWindowUserPointer(window.get(), &surface);
@@ -704,52 +708,50 @@ int run(int argc, char** argv)
     }
     if (assets_mode && o.capture.empty())
     {
-        glfwSetKeyCallback(window.get(),
-                           [](GLFWwindow* w, int key, int, int action, int)
-                           {
-                               if (action != GLFW_PRESS)
-                                   return;
-                               auto& s = Surface::get(w);
-                               if (key == GLFW_KEY_ESCAPE)
-                                   glfwSetWindowShouldClose(w, GLFW_TRUE);
-                               else if (key == GLFW_KEY_SPACE)
-                                   s.set_paused(!s.paused);
-                               else if (key == GLFW_KEY_F)
-                                   s.fit();
-                               else if (key == GLFW_KEY_R)
-                                   s.controller->reset();
-                               else if (key == GLFW_KEY_TAB)
-                               {
-                                   const int count = static_cast<int>(
-                                       s.controller->catalog().characters.size());
-                                   if (count > 0)
-                                   {
-                                       int next = (s.controller->current_character_index() + 1) % count;
-                                       s.controller->request_switch_character(next);
-                                   }
-                               }
-                               else if (key == GLFW_KEY_B || key == GLFW_KEY_N)
-                               {
-                                   const int count = static_cast<int>(
-                                       s.controller->catalog().backgrounds.size());
-                                   if (count > 0)
-                                   {
-                                       int cur = s.controller->current_background_index();
-                                       int next = (cur < 0 ? 0 : (cur + 1) % count);
-                                       s.controller->request_switch_background(next);
-                                   }
-                               }
-                               else if (key == GLFW_KEY_C)
-                                   s.controller->request_clear_background();
-                               else if (key >= GLFW_KEY_1 && key <= GLFW_KEY_9)
-                               {
-                                   const int index = key - GLFW_KEY_1;
-                                   const int count = static_cast<int>(
-                                       s.controller->catalog().characters.size());
-                                   if (index < count)
-                                       s.controller->request_switch_character(index);
-                               }
-                           });
+        glfwSetKeyCallback(
+            window.get(),
+            [](GLFWwindow* w, int key, int, int action, int)
+            {
+                if (action != GLFW_PRESS)
+                    return;
+                auto& s = Surface::get(w);
+                if (key == GLFW_KEY_ESCAPE)
+                    glfwSetWindowShouldClose(w, GLFW_TRUE);
+                else if (key == GLFW_KEY_SPACE)
+                    s.set_paused(!s.paused);
+                else if (key == GLFW_KEY_F)
+                    s.fit();
+                else if (key == GLFW_KEY_R)
+                    s.controller->reset();
+                else if (key == GLFW_KEY_TAB)
+                {
+                    const int count = static_cast<int>(s.controller->catalog().characters.size());
+                    if (count > 0)
+                    {
+                        int next = (s.controller->current_character_index() + 1) % count;
+                        s.controller->request_switch_character(next);
+                    }
+                }
+                else if (key == GLFW_KEY_B || key == GLFW_KEY_N)
+                {
+                    const int count = static_cast<int>(s.controller->catalog().backgrounds.size());
+                    if (count > 0)
+                    {
+                        int cur = s.controller->current_background_index();
+                        int next = (cur < 0 ? 0 : (cur + 1) % count);
+                        s.controller->request_switch_background(next);
+                    }
+                }
+                else if (key == GLFW_KEY_C)
+                    s.controller->request_clear_background();
+                else if (key >= GLFW_KEY_1 && key <= GLFW_KEY_9)
+                {
+                    const int index = key - GLFW_KEY_1;
+                    const int count = static_cast<int>(s.controller->catalog().characters.size());
+                    if (index < count)
+                        s.controller->request_switch_character(index);
+                }
+            });
     }
     else if (o.capture.empty())
     {
@@ -836,8 +838,9 @@ int run(int argc, char** argv)
         {
             if (bg_req->action == application::BackgroundAction::Switch)
             {
-                std::printf("Switching to background: %s\n",
-                            controller.catalog().backgrounds[bg_req->background_index].name.c_str());
+                std::printf(
+                    "Switching to background: %s\n",
+                    controller.catalog().backgrounds[bg_req->background_index].name.c_str());
                 apply_background_gpu(gpu, bg_req->path, bg_req->fade_duration,
                                      bg_req->background_index, controller);
                 std::printf("Character: %s | Background: %s\n",
@@ -888,9 +891,9 @@ int run(int argc, char** argv)
         check(controller.last_error(), controller.current_program(),
               controller.current_character_name());
         gpu.renderer->prepare(controller.current_instance()->frame());
-        const bool in_crossfade = controller.switch_state() ==
-                                      application::SwitchState::CrossFade &&
-                                  controller.previous_instance();
+        const bool in_crossfade =
+            controller.switch_state() == application::SwitchState::CrossFade &&
+            controller.previous_instance();
         if (in_crossfade)
         {
             check(controller.previous_instance()->prepare_frame(), controller.previous_program());
@@ -928,14 +931,14 @@ int run(int argc, char** argv)
         const float fade_alpha = controller.fade_alpha();
         if (in_crossfade)
         {
-            gpu.previous_renderer->render(
-                target,
-                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                 1.0f - fade_alpha, controller.previous_program()->mirror()},
-                target_contents);
+            gpu.previous_renderer->render(target,
+                                          {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f,
+                                           1, clear, 1.0f - fade_alpha,
+                                           controller.previous_program()->mirror()},
+                                          target_contents);
             gpu.renderer->render(target,
-                                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
-                                  fade_alpha, controller.mirror()},
+                                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
+                                  clear, fade_alpha, controller.mirror()},
                                  render_gl::TargetContents::Preserve);
         }
         else
@@ -1059,7 +1062,7 @@ int run(int argc, char** argv)
                 if (is_settings_open)
                 {
                     ui_context.section_header("帧率限制", sidebar_x, curr_y, ui_sidebar.width,
-                                               30.0f, style);
+                                              30.0f, style);
                     curr_y += 30.0f;
                     const struct
                     {
@@ -1085,14 +1088,14 @@ int run(int argc, char** argv)
                     }
 
                     ui_context.section_header("角色", sidebar_x, curr_y, ui_sidebar.width, 30.0f,
-                                               style);
+                                              style);
                     curr_y += 30.0f;
                     ui_context.switch_row("锁定人物位置与大小", surface.locked, sidebar_x, curr_y,
-                                           ui_sidebar.width, 34.0f, style);
+                                          ui_sidebar.width, 34.0f, style);
                     curr_y += 34.0f;
                     bool is_muted = o.mute;
                     if (ui_context.switch_row("关闭声音", is_muted, sidebar_x, curr_y,
-                                               ui_sidebar.width, 34.0f, style))
+                                              ui_sidebar.width, 34.0f, style))
                     {
                         o.mute = is_muted;
                         controller.config().mute = is_muted;
@@ -1101,17 +1104,17 @@ int run(int argc, char** argv)
                     }
                     curr_y += 34.0f;
                     if (ui_context.reset_button("重设角色位置", sidebar_x, curr_y, ui_sidebar.width,
-                                                 34.0f, style))
+                                                34.0f, style))
                     {
                         surface.fit();
                     }
                     curr_y += 34.0f;
 
                     ui_context.section_header("壁纸选择", sidebar_x, curr_y, ui_sidebar.width,
-                                               30.0f, style);
+                                              30.0f, style);
                     curr_y += 30.0f;
                     ui_context.section_header("固定背景", sidebar_x, curr_y, ui_sidebar.width,
-                                               30.0f, style);
+                                              30.0f, style);
                     curr_y += 30.0f;
                     for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
                     {
@@ -1156,8 +1159,7 @@ int run(int argc, char** argv)
         }
         if (!o.capture.empty())
         {
-            const auto error =
-                asset_io::write_png(o.capture, gpu.renderer->capture(target));
+            const auto error = asset_io::write_png(o.capture, gpu.renderer->capture(target));
             if (!error.empty())
                 throw std::runtime_error(error);
             captured = true;
@@ -1191,8 +1193,7 @@ int run(int argc, char** argv)
                     throw std::runtime_error("missing candidate unexpectedly succeeded");
                 if (try_switch_sync(controller, gpu,
                                     catalog.characters[controller.current_character_index()],
-                                    controller_cfg,
-                                    missing.model_path / "missing-background.png"))
+                                    controller_cfg, missing.model_path / "missing-background.png"))
                     throw std::runtime_error("missing candidate background unexpectedly succeeded");
                 if (controller.current_instance() != current_session ||
                     controller.current_program() != current_program ||
@@ -1211,8 +1212,8 @@ int run(int argc, char** argv)
                 const auto* previous_session = controller.current_instance();
                 const auto& catalog = controller.catalog();
                 if (!try_switch_sync(controller, gpu,
-                                      catalog.characters[controller.current_character_index()],
-                                      controller_cfg, {}) ||
+                                     catalog.characters[controller.current_character_index()],
+                                     controller_cfg, {}) ||
                     controller.current_instance() == previous_session ||
                     controller.previous_instance() != previous_session || !surface.paused)
                     throw std::runtime_error("successful switch broke ownership or pause");

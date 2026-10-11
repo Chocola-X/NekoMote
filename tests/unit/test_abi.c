@@ -41,7 +41,7 @@ static void test_version(void)
     TEST("version");
     const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.3.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.4.0") == 0, "version mismatch");
     PASS();
 }
 

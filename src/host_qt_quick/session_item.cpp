@@ -10,6 +10,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QWheelEvent>
+#include <chrono>
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -269,7 +270,8 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     result = nekomote_wallpaper_pointer_enter(state_->wallpaper.get(), x, y);
                     break;
                 case InputKind::Move:
-                    result = nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y);
+                    result = nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y,
+                                                             input.timestamp_ms);
                     break;
                 case InputKind::Leave:
                     result = nekomote_wallpaper_pointer_leave(state_->wallpaper.get());
@@ -279,17 +281,16 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     break;
                 case InputKind::Press:
                 case InputKind::Release:
-                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y),
+                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y,
+                                                          input.timestamp_ms),
                           "button position");
-                    result =
-                        nekomote_wallpaper_mouse_button(state_->wallpaper.get(), input.button,
-                                                        input.kind == InputKind::Press ? 1 : 0);
-                    if (result == NEKOMOTE_OK && input.kind == InputKind::Press &&
-                        input.button == 0)
-                        result = nekomote_wallpaper_touch(state_->wallpaper.get(), x, y);
+                    result = nekomote_wallpaper_mouse_button(state_->wallpaper.get(), input.button,
+                                                             input.kind == InputKind::Press ? 1 : 0,
+                                                             input.timestamp_ms);
                     break;
                 case InputKind::Scroll:
-                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y),
+                    check(nekomote_wallpaper_pointer_move(state_->wallpaper.get(), x, y,
+                                                          input.timestamp_ms),
                           "scroll position");
                     result = nekomote_wallpaper_mouse_scroll(state_->wallpaper.get(), input.scroll);
                     break;
@@ -325,8 +326,7 @@ WallpaperItem::WallpaperItem(std::shared_ptr<WallpaperState> state, QQuickItem* 
 {
     setMirrorVertically(true);
     setAcceptHoverEvents(!state_->deterministic);
-    setAcceptedMouseButtons(state_->deterministic ? Qt::NoButton
-                                                  : Qt::LeftButton | Qt::RightButton);
+    setAcceptedMouseButtons(state_->deterministic ? Qt::NoButton : Qt::LeftButton);
 }
 QQuickFramebufferObject::Renderer* WallpaperItem::createRenderer() const
 {
@@ -352,15 +352,25 @@ void WallpaperItem::clear_inputs()
 {
     input_count_ = 0;
 }
-void WallpaperItem::enqueue(InputKind kind, QPointF position, float scroll, int button)
+void WallpaperItem::enqueue(InputKind kind, QPointF position, float scroll, int button,
+                            std::uint64_t timestamp_ms)
 {
     if (input_count_ == inputs_.size())
     {
         emit failed(QStringLiteral("Qt Quick input queue capacity exceeded"));
         return;
     }
-    inputs_[input_count_++] = {kind, static_cast<float>(position.x()),
-                               static_cast<float>(position.y()), scroll, button};
+    inputs_[input_count_++] = {
+        kind,
+        static_cast<float>(position.x()),
+        static_cast<float>(position.y()),
+        scroll,
+        button,
+        timestamp_ms
+            ? timestamp_ms
+            : static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                             std::chrono::steady_clock::now().time_since_epoch())
+                                             .count())};
     update();
 }
 void WallpaperItem::replay_touch(QPointF logical_position)
@@ -369,11 +379,11 @@ void WallpaperItem::replay_touch(QPointF logical_position)
 }
 void WallpaperItem::hoverEnterEvent(QHoverEvent* event)
 {
-    enqueue(InputKind::Enter, event->position());
+    enqueue(InputKind::Enter, event->position(), 0, 0, event->timestamp());
 }
 void WallpaperItem::hoverMoveEvent(QHoverEvent* event)
 {
-    enqueue(InputKind::Move, event->position());
+    enqueue(InputKind::Move, event->position(), 0, 0, event->timestamp());
 }
 void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 {
@@ -381,23 +391,25 @@ void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 }
 void WallpaperItem::mousePressEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Press, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0);
+    enqueue(InputKind::Press, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0,
+            event->timestamp());
     event->accept();
 }
 void WallpaperItem::mouseReleaseEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Release, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0);
+    enqueue(InputKind::Release, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0,
+            event->timestamp());
     event->accept();
 }
 void WallpaperItem::mouseMoveEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Move, event->position());
+    enqueue(InputKind::Move, event->position(), 0, 0, event->timestamp());
     event->accept();
 }
 void WallpaperItem::wheelEvent(QWheelEvent* event)
 {
-    enqueue(InputKind::Scroll, event->position(),
-            static_cast<float>(event->angleDelta().y()) / 120);
+    enqueue(InputKind::Scroll, event->position(), static_cast<float>(event->angleDelta().y()) / 120,
+            0, event->timestamp());
     event->accept();
 }
 } // namespace nekomote::qt_quick

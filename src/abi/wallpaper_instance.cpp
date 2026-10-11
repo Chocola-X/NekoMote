@@ -718,7 +718,8 @@ void WallpaperInstance::draw_ui(float dt)
     ui_renderer_.end_frame();
 }
 
-nekomote_error WallpaperInstance::pointer_move(double x, double y)
+nekomote_error WallpaperInstance::pointer_move(double x, double y,
+                                               application::WallpaperController::PointerTime now)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
@@ -732,16 +733,9 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y)
     }
     const float cx = px - static_cast<float>(output_width_) * .5f;
     const float cy = py - static_cast<float>(output_height_) * .5f;
-    if (dragging_ && !panel_.locked)
-    {
-        auto origin = controller_.origin();
-        origin.x += cx - prev_mouse_x_;
-        origin.y += cy - prev_mouse_y_;
-        controller_.set_origin(origin);
-    }
-    prev_mouse_x_ = cx;
-    prev_mouse_y_ = cy;
-    controller_.pointer_move({cx, cy});
+    if (panel_.locked)
+        controller_.cancel_pointer_gesture();
+    controller_.pointer_move({cx, cy}, now);
     return NEKOMOTE_OK;
 }
 
@@ -762,7 +756,6 @@ nekomote_error WallpaperInstance::pointer_leave()
 {
     if (!initialized_)
         return NEKOMOTE_OK;
-    dragging_ = false;
     controller_.pointer_leave();
     return NEKOMOTE_OK;
 }
@@ -780,18 +773,25 @@ nekomote_error WallpaperInstance::touch(float x, float y)
     return NEKOMOTE_OK;
 }
 
-nekomote_error WallpaperInstance::mouse_button(int button, int action)
+nekomote_error WallpaperInstance::mouse_button(int button, int action,
+                                               application::WallpaperController::PointerTime now)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
     ui_context_.mouse_button(button, action);
-    if (ui_captures_mouse())
-        return NEKOMOTE_OK;
-    if (button == 1 && !panel_.locked)
+    if (ui_captures_mouse() || panel_.locked || paused_ || minimized_)
     {
-        dragging_ = (action == 1);
-        prev_mouse_x_ = ui_context_.mouse_x();
-        prev_mouse_y_ = ui_context_.mouse_y();
+        controller_.cancel_pointer_gesture();
+        return NEKOMOTE_OK;
+    }
+    if (button == 0)
+    {
+        const Vec2 position{ui_context_.mouse_x() - static_cast<float>(output_width_) * .5f,
+                            ui_context_.mouse_y() - static_cast<float>(output_height_) * .5f};
+        if (action == 1)
+            controller_.pointer_press(position, now);
+        else
+            controller_.pointer_release(position, now);
     }
     return NEKOMOTE_OK;
 }
@@ -805,16 +805,9 @@ nekomote_error WallpaperInstance::mouse_scroll(double amount)
         return NEKOMOTE_OK;
     if (panel_.locked)
         return NEKOMOTE_OK;
-    auto scale = controller_.scale();
-    auto origin = controller_.origin();
-    const auto new_scale =
-        std::clamp(scale * static_cast<float>(std::pow(1.1, amount)), .05f, 5.0f);
-    const auto ratio = new_scale / scale;
-    const float px = ui_context_.mouse_x();
-    const float py = ui_context_.mouse_y();
-    origin = {px + (origin.x - px) * ratio, py + (origin.y - py) * ratio};
-    controller_.set_scale(new_scale);
-    controller_.set_origin(origin);
+    controller_.zoom_at({ui_context_.mouse_x() - static_cast<float>(output_width_) * .5f,
+                         ui_context_.mouse_y() - static_cast<float>(output_height_) * .5f},
+                        amount);
     return NEKOMOTE_OK;
 }
 

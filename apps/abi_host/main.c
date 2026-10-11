@@ -130,23 +130,40 @@ static nekomote_key glfw_to_abi_key(int key)
 {
     switch (key)
     {
-        case GLFW_KEY_ESCAPE: return NEKOMOTE_KEY_ESCAPE;
-        case GLFW_KEY_SPACE: return NEKOMOTE_KEY_SPACE;
-        case GLFW_KEY_TAB: return NEKOMOTE_KEY_TAB;
-        case GLFW_KEY_F: return NEKOMOTE_KEY_F;
-        case GLFW_KEY_R: return NEKOMOTE_KEY_R;
-        case GLFW_KEY_B: return NEKOMOTE_KEY_B;
-        case GLFW_KEY_N: return NEKOMOTE_KEY_N;
-        case GLFW_KEY_C: return NEKOMOTE_KEY_C;
-        case GLFW_KEY_1: return NEKOMOTE_KEY_DIGIT_1;
-        case GLFW_KEY_2: return NEKOMOTE_KEY_DIGIT_2;
-        case GLFW_KEY_3: return NEKOMOTE_KEY_DIGIT_3;
-        case GLFW_KEY_4: return NEKOMOTE_KEY_DIGIT_4;
-        case GLFW_KEY_5: return NEKOMOTE_KEY_DIGIT_5;
-        case GLFW_KEY_6: return NEKOMOTE_KEY_DIGIT_6;
-        case GLFW_KEY_7: return NEKOMOTE_KEY_DIGIT_7;
-        case GLFW_KEY_8: return NEKOMOTE_KEY_DIGIT_8;
-        case GLFW_KEY_9: return NEKOMOTE_KEY_DIGIT_9;
+        case GLFW_KEY_ESCAPE:
+            return NEKOMOTE_KEY_ESCAPE;
+        case GLFW_KEY_SPACE:
+            return NEKOMOTE_KEY_SPACE;
+        case GLFW_KEY_TAB:
+            return NEKOMOTE_KEY_TAB;
+        case GLFW_KEY_F:
+            return NEKOMOTE_KEY_F;
+        case GLFW_KEY_R:
+            return NEKOMOTE_KEY_R;
+        case GLFW_KEY_B:
+            return NEKOMOTE_KEY_B;
+        case GLFW_KEY_N:
+            return NEKOMOTE_KEY_N;
+        case GLFW_KEY_C:
+            return NEKOMOTE_KEY_C;
+        case GLFW_KEY_1:
+            return NEKOMOTE_KEY_DIGIT_1;
+        case GLFW_KEY_2:
+            return NEKOMOTE_KEY_DIGIT_2;
+        case GLFW_KEY_3:
+            return NEKOMOTE_KEY_DIGIT_3;
+        case GLFW_KEY_4:
+            return NEKOMOTE_KEY_DIGIT_4;
+        case GLFW_KEY_5:
+            return NEKOMOTE_KEY_DIGIT_5;
+        case GLFW_KEY_6:
+            return NEKOMOTE_KEY_DIGIT_6;
+        case GLFW_KEY_7:
+            return NEKOMOTE_KEY_DIGIT_7;
+        case GLFW_KEY_8:
+            return NEKOMOTE_KEY_DIGIT_8;
+        case GLFW_KEY_9:
+            return NEKOMOTE_KEY_DIGIT_9;
     }
     return (nekomote_key)0;
 }
@@ -171,20 +188,33 @@ static Host g_host;
 /* GLFW callbacks                                                     */
 /* ------------------------------------------------------------------ */
 
+static int output_position(GLFWwindow* w, double* x, double* y)
+{
+    int width = 0, height = 0, output_width = 0, output_height = 0;
+    glfwGetWindowSize(w, &width, &height);
+    glfwGetFramebufferSize(w, &output_width, &output_height);
+    if (width <= 0 || height <= 0 || output_width <= 0 || output_height <= 0)
+        return 0;
+    *x *= (double)output_width / width;
+    *y *= (double)output_height / height;
+    return 1;
+}
+
 static void on_cursor_pos(GLFWwindow* w, double x, double y)
 {
-    (void)w;
-    nekomote_wallpaper_pointer_move(g_host.wp, x, y);
+    if (!output_position(w, &x, &y))
+        return;
+    nekomote_wallpaper_pointer_move(g_host.wp, x, y, (uint64_t)(glfwGetTime() * 1000.0));
 }
 
 static void on_cursor_enter(GLFWwindow* w, int entered)
 {
-    (void)w;
     if (entered)
     {
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
-        nekomote_wallpaper_pointer_enter(g_host.wp, x, y);
+        if (output_position(w, &x, &y))
+            nekomote_wallpaper_pointer_enter(g_host.wp, x, y);
     }
     else
         nekomote_wallpaper_pointer_leave(g_host.wp);
@@ -192,20 +222,19 @@ static void on_cursor_enter(GLFWwindow* w, int entered)
 
 static void on_mouse_button(GLFWwindow* w, int button, int action, int)
 {
-    (void)w;
-    nekomote_mouse_action ma = (action == GLFW_PRESS) ? NEKOMOTE_MOUSE_PRESS : NEKOMOTE_MOUSE_RELEASE;
-    nekomote_wallpaper_mouse_button(g_host.wp, button, ma);
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-        double x = 0, y = 0;
-        glfwGetCursorPos(w, &x, &y);
-        nekomote_wallpaper_touch(g_host.wp, (float)x, (float)y);
-    }
+    double x = 0, y = 0;
+    glfwGetCursorPos(w, &x, &y);
+    on_cursor_pos(w, x, y);
+    nekomote_mouse_action ma =
+        (action == GLFW_PRESS) ? NEKOMOTE_MOUSE_PRESS : NEKOMOTE_MOUSE_RELEASE;
+    nekomote_wallpaper_mouse_button(g_host.wp, button, ma, (uint64_t)(glfwGetTime() * 1000.0));
 }
 
 static void on_scroll(GLFWwindow* w, double, double amount)
 {
-    (void)w;
+    double x = 0, y = 0;
+    glfwGetCursorPos(w, &x, &y);
+    on_cursor_pos(w, x, y);
     nekomote_wallpaper_mouse_scroll(g_host.wp, amount);
 }
 
@@ -215,7 +244,8 @@ static void on_key(GLFWwindow* w, int key, int, int action, int)
     nekomote_key ak = glfw_to_abi_key(key);
     if (ak == 0)
         return;
-    nekomote_mouse_action ma = (action == GLFW_PRESS) ? NEKOMOTE_MOUSE_PRESS : NEKOMOTE_MOUSE_RELEASE;
+    nekomote_mouse_action ma =
+        (action == GLFW_PRESS) ? NEKOMOTE_MOUSE_PRESS : NEKOMOTE_MOUSE_RELEASE;
     nekomote_wallpaper_key(g_host.wp, ak, ma);
 }
 
@@ -514,15 +544,13 @@ int main(int argc, char** argv)
             goto fail;
         if (!check("load_initial", nekomote_wallpaper_load_initial(wp)))
             goto fail;
-        printf("  characters: %d  backgrounds: %d\n",
-               nekomote_wallpaper_character_count(wp),
+        printf("  characters: %d  backgrounds: %d\n", nekomote_wallpaper_character_count(wp),
                nekomote_wallpaper_background_count(wp));
         printf("  current: %s\n", nekomote_wallpaper_current_character_name(wp));
     }
     else
     {
-        if (!check("load_model",
-                   nekomote_wallpaper_load_model(wp, model_path, session_path)))
+        if (!check("load_model", nekomote_wallpaper_load_model(wp, model_path, session_path)))
             goto fail;
     }
 
@@ -588,10 +616,10 @@ int main(int argc, char** argv)
         {
             int astate = nekomote_wallpaper_audio_state(wp);
             const char* state_names[] = {"disabled", "connecting", "ready",
-                                         "playing", "paused", "failed"};
+                                         "playing",  "paused",     "failed"};
             const char* sname = (astate >= 0 && astate <= 5) ? state_names[astate] : "?";
-            printf("  frame %ld  dt=%.2fms  audio=%s rms=%.6f\n", frame_count, dt * 1000.0,
-                   sname, (double)nekomote_wallpaper_audio_rms(wp));
+            printf("  frame %ld  dt=%.2fms  audio=%s rms=%.6f\n", frame_count, dt * 1000.0, sname,
+                   (double)nekomote_wallpaper_audio_rms(wp));
             fflush(stdout);
         }
 

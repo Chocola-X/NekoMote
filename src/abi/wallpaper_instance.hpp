@@ -50,11 +50,13 @@ class WallpaperInstance
     nekomote_error render_frame();
     nekomote_error render_ui(float dt);
 
-    nekomote_error pointer_move(double x, double y);
+    nekomote_error pointer_move(double x, double y,
+                                application::WallpaperController::PointerTime now);
     nekomote_error pointer_enter(double x, double y);
     nekomote_error pointer_leave();
     nekomote_error touch(float x, float y);
-    nekomote_error mouse_button(int button, int action);
+    nekomote_error mouse_button(int button, int action,
+                                application::WallpaperController::PointerTime now);
     nekomote_error mouse_scroll(double amount);
     nekomote_error key(int key, int action);
 
@@ -118,10 +120,7 @@ class WallpaperInstance
     bool output_unavailable_{false};
     bool assets_scanned_{false};
     bool initialized_{false};
-    bool dragging_{false};
     bool audio_failed_{false};
-    float prev_mouse_x_{0};
-    float prev_mouse_y_{0};
     std::string error_string_;
 };
 
