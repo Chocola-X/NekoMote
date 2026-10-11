@@ -5,12 +5,14 @@ import NekoMote.Wallpaper
 WallpaperItem {
     id: root
     readonly property string assetsDir: configuration.assetsDir
+    readonly property bool muted: configuration.muted
 
     NekoWallpaperItem {
         id: wallpaper
         objectName: "nativeSession"
         anchors.fill: parent
         assetsDir: root.assetsDir
+        muted: root.muted
         paused: !root.visible
     }
 

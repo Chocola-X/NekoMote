@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QUrl>
 #include <algorithm>
 
 namespace nekomote::plasma
@@ -52,6 +53,10 @@ QString NekoWallpaperItem::assetsDir() const
 {
     return assets_dir_;
 }
+bool NekoWallpaperItem::muted() const
+{
+    return muted_;
+}
 
 void NekoWallpaperItem::setAssetsDir(const QString& value)
 {
@@ -60,7 +65,10 @@ void NekoWallpaperItem::setAssetsDir(const QString& value)
     assets_dir_ = value;
     if (state_)
     {
-        state_->assets_dir = value.toStdString();
+        QString local = value;
+        if (local.startsWith(QStringLiteral("file://")))
+            local = QUrl(value).toLocalFile();
+        state_->assets_dir = local.toStdString();
         state_->config_dirty = true;
         state_->loaded = false;
     }
@@ -79,6 +87,19 @@ void NekoWallpaperItem::setPaused(bool value)
     refresh_playback();
     emit pausedChanged();
     update();
+}
+
+void NekoWallpaperItem::setMuted(bool value)
+{
+    if (muted_ == value)
+        return;
+    muted_ = value;
+    if (state_)
+    {
+        state_->muted = value;
+        state_->config_dirty = true;
+    }
+    emit mutedChanged();
 }
 
 unsigned NekoWallpaperItem::queryRendererCreated() const

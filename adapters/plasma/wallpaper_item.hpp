@@ -23,6 +23,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
+    Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
     QML_ELEMENT
     QML_NAMED_ELEMENT(NekoWallpaperItem)
   public:
@@ -37,9 +38,11 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     int status() const;
     QString errorString() const;
     QString assetsDir() const;
+    bool muted() const;
 
     void setPaused(bool value);
     void setAssetsDir(const QString& value);
+    void setMuted(bool value);
 
     bool configure_diagnostics(int steps, bool fixed, std::uint32_t seed);
 
@@ -50,6 +53,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void statusChanged();
     void errorStringChanged();
     void assetsDirChanged();
+    void mutedChanged();
 
   protected:
     void hoverEnterEvent(QHoverEvent* event) override;
@@ -79,6 +83,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     int status_{0};
     QString error_string_;
     QString assets_dir_;
+    bool muted_{false};
     std::uint64_t playback_revision_{0};
     std::array<nekomote::qt_quick::Input, 32> inputs_{};
     std::size_t input_count_{0};

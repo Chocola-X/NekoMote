@@ -9,7 +9,8 @@ find_package(PlasmaQuick CONFIG REQUIRED)
 
 # Only this optional shared leaf needs PIC from the static core dependencies.
 foreach(target nekomote_model nekomote_runtime nekomote_asset_io nekomote_stb
-               nekomote_application nekomote_render_gl nekomote_abi)
+               nekomote_application nekomote_render_gl nekomote_abi
+               nekomote_audio nekomote_ui nekomote_gl_loader)
     set_target_properties(${target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endforeach()
 

@@ -3,5 +3,6 @@
   <kcfgfile name=""/>
   <group name="General">
     <entry name="assetsDir" type="String"><default></default></entry>
+    <entry name="muted" type="Bool"><default>false</default></entry>
   </group>
 </kcfg>

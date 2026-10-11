@@ -8,7 +8,9 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <thread>
 
 namespace nekomote::abi
@@ -62,8 +64,21 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
         return NEKOMOTE_ERROR_NOT_FOUND;
     }
     assets_scanned_ = true;
-    controller_.set_config_path(dir / "config.json");
-    controller_.load_config(dir / "config.json");
+    auto config_path = dir / "config.json";
+    {
+        std::ofstream probe(config_path, std::ios::app);
+        if (!probe)
+        {
+            const char* xdg = std::getenv("XDG_DATA_HOME");
+            std::filesystem::path user_dir = xdg && *xdg
+                ? std::filesystem::path(xdg) / "nekomote"
+                : std::filesystem::path(std::getenv("HOME")) / ".local" / "share" / "nekomote";
+            std::filesystem::create_directories(user_dir);
+            config_path = user_dir / "config.json";
+        }
+    }
+    controller_.set_config_path(config_path);
+    controller_.load_config(config_path);
     auto& config = controller_.config();
     if (config.character.empty())
         config.character = controller_.catalog().characters.front().name;

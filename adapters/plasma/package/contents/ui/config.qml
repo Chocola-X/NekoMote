@@ -5,6 +5,7 @@ import QtQuick.Dialogs
 
 ColumnLayout {
     property string cfg_assetsDir: ""
+    property bool cfg_muted: false
 
     spacing: 8
 
@@ -34,5 +35,10 @@ ColumnLayout {
         font.pixelSize: 11
         wrapMode: Text.Wrap
         Layout.fillWidth: true
+    }
+    CheckBox {
+        text: "静音"
+        checked: cfg_muted
+        onToggled: cfg_muted = checked
     }
 }
