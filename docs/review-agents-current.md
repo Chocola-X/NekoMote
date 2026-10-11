@@ -2,7 +2,7 @@
 
 2026-10-11。GLM 已提交 Controller、CPU UI/GL 执行拆分、高层壁纸 ABI、Plasma 迁移和声音接入；修复起点 `7029eda`。旧“G31 尚未实现”计划已失效，不按旧交接重新抽取模块。
 
-用户当前优先级是隔离 miku 用户的 Plasma 效果。Codex 本轮修复 UI 初始化、输出目标、事件转发、字体/图标重建与重装配置丢失；随后共享左键长按拖动/短按触摸与滚轮缩放，ABI 更新为 0.4.0。完成隔离 Qt/KPackage 截图及包验证，见 [显示补修](plasma-display-fix.md)。真实 miku/plasmashell 尚需用户安装测试；没有操作其桌面。
+用户当前优先级是隔离 miku 用户的 Plasma 效果。Codex 本轮修复 UI 初始化、输出目标、事件转发、字体/图标重建与重装配置丢失；随后共享左键长按拖动/短按触摸与滚轮缩放，ABI 更新为 0.4.0。完成隔离 Qt/KPackage 截图及包验证，见 [显示补修](plasma-display-fix.md)。用户随后反馈“我已经测试，确认目前初步接入工作正常”。据此记录实际桌面初步接入通过；具体模型、逐项操作和测试时长未提供，不扩大为完整桌面验收。Codex 没有操作其桌面。
 
 G31/G32 已有源码不等于完整架构验收：面板业务仍分别在 player 和 ABI 组合层构建，FPS/静音联动、渐变暂停时间、资源 ID 和异常边界还有缺口。application/ui 必须保持后端无关，当前只实现 GL，不能宣称 Vulkan 已就绪。见 [清单](agent-workboard.md)、[缺口](known-defects.md)。
 

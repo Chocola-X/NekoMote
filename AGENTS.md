@@ -44,7 +44,7 @@
 
 ### 0.4 当前状态和首要风险
 
-截至2026-10-11，GLM 已交付共享 Controller/UI/GL 执行、高层 ABI、Plasma 和声音接入；本轮显示补修起点 `7029eda`。Codex 修复 UI 初始化/输出目标/输入/重建与重装配置丢失，隔离包验证见 [说明](docs/plasma-display-fix.md)，真实 miku 桌面尚待安装验收。不要继续执行旧“G31 待实现”清单；已有源码与完整独立验收区分，面板业务重复、FPS/静音联动、渐变时间与资源边界仍待收拢。单边界0x7fc/195初态沿用；3 bust_LR20、嵌套/2标量、195全动态、正式声音/长期/多屏未最终验收。按 [摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
+截至2026-10-11，GLM 已交付共享 Controller/UI/GL 执行、高层 ABI、Plasma 和声音接入；本轮显示补修起点 `7029eda`。Codex 修复 UI 初始化/输出目标/输入/重建与重装配置丢失，隔离包验证见 [说明](docs/plasma-display-fix.md)，用户已确认真实桌面初步接入正常（具体逐项覆盖未提供）。不要继续执行旧“G31 待实现”清单；已有源码与完整独立验收区分，面板业务重复、FPS/静音联动、渐变时间与资源边界仍待收拢。单边界0x7fc/195初态沿用；3 bust_LR20、嵌套/2标量、195全动态、正式声音/长期/多屏未最终验收。按 [摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
@@ -54,7 +54,7 @@
 
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
-3. 当前先完成用户要求的 Plasma 隔离账户效果验收；G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。
+3. 用户已确认 Plasma 初步接入正常；后续按清单补齐服务与完整验收；G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 
