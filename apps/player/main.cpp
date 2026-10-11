@@ -9,6 +9,7 @@
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/ui/layout.hpp>
 
+#include "backend.hpp"
 #include "touch_overlay.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -44,6 +45,7 @@ struct Options
     int width{1920}, height{1080}, steps{0}, measure{0}, fps{30}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
     bool show_touch_regions{false};
+    bool vulkan{false};
     std::uint32_t seed{1};
     float scale{1};
     Vec2 origin{0, 400};
@@ -82,6 +84,8 @@ Options options(int argc, char** argv)
             o.transparent = true;
         else if (key == "--show-touch-regions")
             o.show_touch_regions = true;
+        else if (key == "--vulkan")
+            o.vulkan = true;
         else if (key == "--scale")
             o.scale = std::stof(value());
         else if (key == "--origin-x")
@@ -246,17 +250,29 @@ struct DestroyWindow
 
 struct GpuHolder
 {
-    std::unique_ptr<render_gl::Renderer> renderer;
-    std::unique_ptr<render_gl::Renderer> previous_renderer;
-    std::unique_ptr<render_gl::Renderer> background_renderer;
+    std::unique_ptr<player::BackendRenderer> renderer;
+    std::unique_ptr<player::BackendRenderer> previous_renderer;
+    std::unique_ptr<player::BackendRenderer> background_renderer;
     std::unique_ptr<audio::Device> device;
     TextureId current_background_id{0};
     fs::path current_background_path;
 };
 
-void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candidate)
+void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candidate, bool vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                          ,
+                          const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
+#endif
+)
 {
-    gpu.renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    gpu.renderer = std::make_unique<player::BackendRenderer>();
+    gpu.renderer->vulkan_ = vulkan;
+    if (!vulkan)
+        gpu.renderer->gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else if (vk_ctx)
+        gpu.renderer->vk_ = std::make_unique<nekomote::render_vk::Renderer>(*vk_ctx);
+#endif
     std::printf("%s\n", gpu.renderer->diagnostics().c_str());
     const auto& scene = candidate.program->playback().scene();
     const auto capacity = scene.frame_capacity();
@@ -264,7 +280,14 @@ void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candi
                            scene.textures().size(), capacity.mask_commands, capacity.masks});
     for (const auto& [id, image] : candidate.textures)
         gpu.renderer->upload_texture(id, image);
-    gpu.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    gpu.background_renderer = std::make_unique<player::BackendRenderer>();
+    gpu.background_renderer->vulkan_ = vulkan;
+    if (!vulkan)
+        gpu.background_renderer->gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else if (vk_ctx)
+        gpu.background_renderer->vk_ = std::make_unique<nekomote::render_vk::Renderer>(*vk_ctx);
+#endif
     gpu.background_renderer->reserve({8, 12, 2, 2});
 }
 
@@ -283,19 +306,31 @@ std::unique_ptr<audio::Device> create_audio_device(std::vector<model::AudioClip>
 }
 
 void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_duration,
-                          int bg_index, application::WallpaperController& controller)
+                           int bg_index, application::WallpaperController& controller, bool vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                           ,
+                           const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
+#endif
+)
 {
     auto new_image = asset_io::load_png(bg_path);
     if (!new_image.ok)
         throw std::runtime_error(new_image.error);
     if (!controller.has_background() || fade_duration <= 0)
     {
-        gpu.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
-        gpu.background_renderer->reserve({8, 12, 2, 2});
+        gpu.background_renderer = std::make_unique<player::BackendRenderer>();
+        gpu.background_renderer->vulkan_ = vulkan;
+        if (!vulkan)
+            gpu.background_renderer->gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        else if (vk_ctx)
+            gpu.background_renderer->vk_ = std::make_unique<nekomote::render_vk::Renderer>(*vk_ctx);
+#endif
         const TextureId id{1};
+        gpu.background_renderer->reserve({8, 12, 2, 2});
         gpu.background_renderer->upload_texture(id, new_image.image);
         controller.confirm_background(bg_index, id, id, new_image.image.width,
-                                      new_image.image.height, 0);
+                                       new_image.image.height, 0);
         gpu.current_background_id = id;
         gpu.current_background_path = bg_path;
         return;
@@ -303,13 +338,20 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
     auto old_image = asset_io::load_png(gpu.current_background_path);
     if (!old_image.ok)
         throw std::runtime_error(old_image.error);
-    gpu.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
-    gpu.background_renderer->reserve({8, 12, 2, 2});
+    gpu.background_renderer = std::make_unique<player::BackendRenderer>();
+    gpu.background_renderer->vulkan_ = vulkan;
+    if (!vulkan)
+        gpu.background_renderer->gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else if (vk_ctx)
+        gpu.background_renderer->vk_ = std::make_unique<nekomote::render_vk::Renderer>(*vk_ctx);
+#endif
     const TextureId old_id{1}, new_id{2};
+    gpu.background_renderer->reserve({8, 12, 2, 2});
     gpu.background_renderer->upload_texture(old_id, old_image.image);
     gpu.background_renderer->upload_texture(new_id, new_image.image);
     controller.confirm_background(bg_index, old_id, new_id, new_image.image.width,
-                                  new_image.image.height, fade_duration);
+                                   new_image.image.height, fade_duration);
     gpu.current_background_id = new_id;
     gpu.current_background_path = bg_path;
 }
@@ -457,7 +499,13 @@ struct Surface
 
 bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gpu,
                      const application::CharacterEntry& entry,
-                     const application::ControllerConfig& cfg, const fs::path& background)
+                     const application::ControllerConfig& cfg, const fs::path& background,
+                     bool vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                     ,
+                     const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
+#endif
+)
 {
     auto candidate = controller.load_candidate(entry, cfg);
     if (!candidate.ok)
@@ -477,7 +525,12 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
             bg_image = std::move(loaded.image);
         }
         gpu.previous_renderer = std::move(gpu.renderer);
-        finish_candidate_gpu(gpu, candidate);
+        finish_candidate_gpu(gpu, candidate, vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                             ,
+                             vk_ctx
+#endif
+        );
         if (!candidate.audio_clips.empty())
             gpu.device = create_audio_device(std::move(candidate.audio_clips));
         controller.install_candidate_sync(std::move(candidate));
@@ -554,23 +607,60 @@ int run(int argc, char** argv)
         }
     }
     Glfw glfw;
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-    glfwWindowHint(GLFW_VISIBLE, o.capture.empty() ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_ALPHA_BITS, 8);
-    if (!o.check_window.empty())
+    std::unique_ptr<GLFWwindow, DestroyWindow> window;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    std::unique_ptr<player::VkHost> vk_host;
+    nekomote::render_vk::DeviceContext vk_ctx;
+    const nekomote::render_vk::DeviceContext* vk_ctx_ptr = nullptr;
+#endif
+    if (o.vulkan)
     {
-        glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_VISIBLE, o.capture.empty() ? GLFW_TRUE : GLFW_FALSE);
+        window.reset(glfwCreateWindow(o.width, o.height, "NekoMote", nullptr, nullptr));
+        if (!window)
+            throw std::runtime_error("Vulkan window creation failed");
+        vk_host = std::make_unique<player::VkHost>();
+        vk_host->create_instance();
+        VkSurfaceKHR surface;
+        if (glfwCreateWindowSurface(vk_host->instance, window.get(), nullptr, &surface) !=
+            VK_SUCCESS)
+            throw std::runtime_error("failed to create Vulkan surface");
+        vk_host->select_physical_device(surface);
+        vk_host->create_device();
+        vk_host->create_swapchain(o.width, o.height);
+        vk_ctx.instance = vk_host->instance;
+        vk_ctx.physical_device = vk_host->physical_device;
+        vk_ctx.device = vk_host->device;
+        vk_ctx.graphics_queue = vk_host->graphics_queue;
+        vk_ctx.graphics_queue_family = vk_host->graphics_family;
+        vk_ctx.color_format = vk_host->surface_format;
+        vk_ctx_ptr = &vk_ctx;
+#else
+        throw std::runtime_error(
+            "Vulkan backend not built; reconfigure with NEKOMOTE_BUILD_VULKAN=ON");
+#endif
     }
-    std::unique_ptr<GLFWwindow, DestroyWindow> window(
-        glfwCreateWindow(o.width, o.height, "NekoMote", nullptr, nullptr));
-    if (!window)
-        throw std::runtime_error("OpenGL window creation failed");
-    glfwMakeContextCurrent(window.get());
-    glfwSwapInterval(o.capture.empty() && o.check_window.empty() ? 1 : 0);
+    else
+    {
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+        glfwWindowHint(GLFW_VISIBLE, o.capture.empty() ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_ALPHA_BITS, 8);
+        if (!o.check_window.empty())
+        {
+            glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
+            glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
+        }
+        window.reset(glfwCreateWindow(o.width, o.height, "NekoMote", nullptr, nullptr));
+        if (!window)
+            throw std::runtime_error("OpenGL window creation failed");
+        glfwMakeContextCurrent(window.get());
+        glfwSwapInterval(o.capture.empty() && o.check_window.empty() ? 1 : 0);
+    }
 
     GpuHolder gpu;
     application::CandidateCpu candidate;
@@ -591,7 +681,12 @@ int run(int argc, char** argv)
     }
     if (!candidate.ok)
         throw std::runtime_error(candidate.error);
-    finish_candidate_gpu(gpu, candidate);
+    finish_candidate_gpu(gpu, candidate, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                         ,
+                         vk_ctx_ptr
+#endif
+    );
     if (!candidate.audio_clips.empty())
         gpu.device = create_audio_device(std::move(candidate.audio_clips));
     controller.install_initial(std::move(candidate));
@@ -606,7 +701,14 @@ int run(int argc, char** argv)
         auto new_image = asset_io::load_png(o.background);
         if (!new_image.ok)
             throw std::runtime_error(new_image.error);
-        gpu.background_renderer = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+        gpu.background_renderer = std::make_unique<player::BackendRenderer>();
+        gpu.background_renderer->vulkan_ = o.vulkan;
+        if (!o.vulkan)
+            gpu.background_renderer->gl_ = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        else if (vk_ctx_ptr)
+            gpu.background_renderer->vk_ = std::make_unique<nekomote::render_vk::Renderer>(*vk_ctx_ptr);
+#endif
         gpu.background_renderer->reserve({8, 12, 2, 2});
         const TextureId id{1};
         gpu.background_renderer->upload_texture(id, new_image.image);
@@ -621,11 +723,16 @@ int run(int argc, char** argv)
         if (bg)
         {
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
-            apply_background_gpu(gpu, bg->path, 0, bg_index, controller);
+            apply_background_gpu(gpu, bg->path, 0, bg_index, controller, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                 ,
+                                 vk_ctx_ptr
+#endif
+            );
         }
     }
     Surface surface{&controller, window.get()};
-    render_gl::UiRenderer ui_renderer;
+    player::BackendUiRenderer ui_renderer;
     ui::Context ui_context;
     ui::IconState ui_icon{};
     ui::SidebarState ui_sidebar{};
@@ -641,9 +748,15 @@ int run(int argc, char** argv)
     {
         int fw = 0, fh = 0;
         glfwGetFramebufferSize(window.get(), &fw, &fh);
-        if (ui_renderer.init(fw, fh) && ui_renderer.init_font("", 36))
+        if (ui_renderer.init(o.vulkan, fw, fh
+#if defined(NEKOMOTE_HAS_VULKAN)
+                             ,
+                             vk_ctx_ptr
+#endif
+                             ) &&
+            ui_renderer.init_font("", 36))
         {
-            ui_context.init(&ui_renderer);
+            ui_context.init(ui_renderer.painter());
             const auto icon_path = o.assets / "icons" / "neko.png";
             if (std::filesystem::exists(icon_path))
             {
@@ -783,12 +896,22 @@ int run(int argc, char** argv)
                             bg_index < static_cast<int>(controller.catalog().backgrounds.size()))
                             bg_path = controller.catalog().backgrounds[bg_index].path;
                         gpu.previous_renderer = std::move(gpu.renderer);
-                        finish_candidate_gpu(gpu, *candidate_opt);
+                        finish_candidate_gpu(gpu, *candidate_opt, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                             ,
+                                             vk_ctx_ptr
+#endif
+                        );
                         if (!candidate_opt->audio_clips.empty())
                             gpu.device = create_audio_device(std::move(candidate_opt->audio_clips));
                         controller.confirm_candidate(std::move(*candidate_opt));
                         if (!bg_path.empty())
-                            apply_background_gpu(gpu, bg_path, 0, bg_index, controller);
+                            apply_background_gpu(gpu, bg_path, 0, bg_index, controller, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                                 ,
+                                                 vk_ctx_ptr
+#endif
+                            );
                         if (controller.config().fit)
                         {
                             controller.prepare_frame();
@@ -842,7 +965,12 @@ int run(int argc, char** argv)
                     "Switching to background: %s\n",
                     controller.catalog().backgrounds[bg_req->background_index].name.c_str());
                 apply_background_gpu(gpu, bg_req->path, bg_req->fade_duration,
-                                     bg_req->background_index, controller);
+                                     bg_req->background_index, controller, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                     ,
+                                     vk_ctx_ptr
+#endif
+                );
                 std::printf("Character: %s | Background: %s\n",
                             controller.current_character_name().c_str(),
                             controller.config().background.c_str());
@@ -916,42 +1044,46 @@ int run(int argc, char** argv)
         }
         const std::array<float, 4> clear = o.transparent ? std::array<float, 4>{0, 0, 0, 0}
                                                          : std::array<float, 4>{.06f, .07f, .1f, 1};
-        const render_gl::Target target{0, w, h};
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (o.vulkan && vk_host)
+        {
+            gpu.renderer->vk_host_ = vk_host.get();
+            gpu.renderer->vk_image_index_ = vk_host->acquire_next_image();
+        }
+#endif
         RenderFrame bg_frame{};
         if (controller.has_background())
             bg_frame = controller.current_instance()->background_frame();
         if (!bg_frame.commands.empty())
         {
             gpu.background_renderer->prepare(bg_frame);
-            gpu.background_renderer->render(target, {0, 0, 1, clear});
+            gpu.background_renderer->render({0, 0, 1, clear}, player::BackendContents::Clear);
         }
         const auto target_contents = !bg_frame.commands.empty()
-                                         ? render_gl::TargetContents::Preserve
-                                         : render_gl::TargetContents::Clear;
+                                         ? player::BackendContents::Preserve
+                                         : player::BackendContents::Clear;
         const float fade_alpha = controller.fade_alpha();
         if (in_crossfade)
         {
-            gpu.previous_renderer->render(target,
-                                          {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f,
-                                           1, clear, 1.0f - fade_alpha,
-                                           controller.previous_program()->mirror()},
-                                          target_contents);
-            gpu.renderer->render(target,
-                                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1,
-                                  clear, fade_alpha, controller.mirror()},
-                                 render_gl::TargetContents::Preserve);
+            gpu.previous_renderer->render(
+                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
+                 1.0f - fade_alpha, controller.previous_program()->mirror()},
+                target_contents);
+            gpu.renderer->render(
+                {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear, fade_alpha,
+                 controller.mirror()},
+                player::BackendContents::Preserve);
         }
         else
         {
             gpu.renderer->render(
-                target,
                 {static_cast<float>(w) * .5f, static_cast<float>(h) * .5f, 1, clear,
                  controller.switch_state() == application::SwitchState::Idle ? 1.0f : fade_alpha,
                  controller.mirror()},
                 target_contents);
         }
-        if (touch_overlay)
-            touch_overlay->render(*controller.current_instance(), target);
+        if (touch_overlay && !o.vulkan)
+            touch_overlay->render(*controller.current_instance(), {0, w, h});
         if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
@@ -1013,9 +1145,10 @@ int run(int argc, char** argv)
                     std::max(0.0f, content_scrollable_h - (ui_sidebar.height - 44.0f));
                 ui_sidebar.scroll_y = std::clamp(ui_sidebar.scroll_y, 0.0f, max_scroll);
 
-                ui_renderer.draw_rounded_rect(sidebar_x, sidebar_y, ui_sidebar.width,
-                                              ui_sidebar.height, style.corner_radius,
-                                              style.panel_bg, style.accent, 2.0f);
+                if (auto* p = ui_renderer.painter())
+                    p->draw_rounded_rect(sidebar_x, sidebar_y, ui_sidebar.width,
+                                          ui_sidebar.height, style.corner_radius,
+                                          style.panel_bg, style.accent, 2.0f);
 
                 ui_context.sidebar_header(ui_sidebar, "猫娘乐园角色E-mote图鉴", style);
 
@@ -1159,7 +1292,7 @@ int run(int argc, char** argv)
         }
         if (!o.capture.empty())
         {
-            const auto error = asset_io::write_png(o.capture, gpu.renderer->capture(target));
+            const auto error = asset_io::write_png(o.capture, gpu.renderer->capture());
             if (!error.empty())
                 throw std::runtime_error(error);
             captured = true;
@@ -1170,7 +1303,7 @@ int run(int argc, char** argv)
             ++check_frame;
             const auto save = [&](const char* name)
             {
-                const auto image = gpu.renderer->capture(target);
+                const auto image = gpu.renderer->capture();
                 const auto error = asset_io::write_png(o.check_window / name, image);
                 if (!error.empty())
                     throw std::runtime_error(error);
@@ -1189,11 +1322,20 @@ int run(int argc, char** argv)
                 const auto& catalog = controller.catalog();
                 auto missing = catalog.characters[controller.current_character_index()];
                 missing.model_path = missing.model_path / "missing-model.nkm.json";
-                if (try_switch_sync(controller, gpu, missing, controller_cfg, {}))
+                if (try_switch_sync(controller, gpu, missing, controller_cfg, {}, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                    , vk_ctx_ptr
+#endif
+                ))
                     throw std::runtime_error("missing candidate unexpectedly succeeded");
                 if (try_switch_sync(controller, gpu,
                                     catalog.characters[controller.current_character_index()],
-                                    controller_cfg, missing.model_path / "missing-background.png"))
+                                    controller_cfg, missing.model_path / "missing-background.png",
+                                    o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                    , vk_ctx_ptr
+#endif
+                ))
                     throw std::runtime_error("missing candidate background unexpectedly succeeded");
                 if (controller.current_instance() != current_session ||
                     controller.current_program() != current_program ||
@@ -1213,7 +1355,11 @@ int run(int argc, char** argv)
                 const auto& catalog = controller.catalog();
                 if (!try_switch_sync(controller, gpu,
                                      catalog.characters[controller.current_character_index()],
-                                     controller_cfg, {}) ||
+                                     controller_cfg, {}, o.vulkan
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                     , vk_ctx_ptr
+#endif
+                ) ||
                     controller.current_instance() == previous_session ||
                     controller.previous_instance() != previous_session || !surface.paused)
                     throw std::runtime_error("successful switch broke ownership or pause");
@@ -1270,7 +1416,15 @@ int run(int argc, char** argv)
             check(controller.last_error());
         }
         const auto cpu_ms = std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
-        glfwSwapBuffers(window.get());
+        if (o.vulkan)
+        {
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (vk_host)
+                vk_host->present(gpu.renderer->vk_image_index_);
+#endif
+        }
+        else
+            glfwSwapBuffers(window.get());
         if (current_fps_limit > 0)
         {
             const auto deadline = now + std::chrono::duration_cast<Clock::duration>(
@@ -1340,7 +1494,12 @@ int run(int argc, char** argv)
     }
     glfwSetCursorPosCallback(window.get(), nullptr);
     if (ui_icon_texture)
-        glDeleteTextures(1, &ui_icon_texture);
+    {
+        if (!o.vulkan)
+            glDeleteTextures(1, &ui_icon_texture);
+        else
+            ui_renderer.destroy_icon(ui_icon_texture);
+    }
     glfwSetCursorEnterCallback(window.get(), nullptr);
     glfwSetMouseButtonCallback(window.get(), nullptr);
     glfwSetScrollCallback(window.get(), nullptr);

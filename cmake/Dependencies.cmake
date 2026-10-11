@@ -70,3 +70,13 @@ if(NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_ABI)
     FetchContent_MakeAvailable(glad)
     glad_add_library(nekomote_gl_loader STATIC REPRODUCIBLE API gl:core=3.3)
 endif()
+
+# --- Vulkan (render_vk backend) ---------------------------------------------------
+# Uses the system Vulkan SDK (headers + loader). No version constraint: the
+# code targets Vulkan 1.0 core for maximum driver compatibility. The SDK
+# provides glslangValidator for build-time SPIR-V compilation; the runtime
+# only needs libvulkan (the ICD loader).
+if(NEKOMOTE_BUILD_VULKAN)
+    find_package(Vulkan REQUIRED)
+    find_program(NEKOMOTE_GLSLANG_VALIDATOR glslangValidator REQUIRED)
+endif()

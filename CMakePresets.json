@@ -65,6 +65,14 @@
                 "NEKOMOTE_BUILD_PLAYER": "OFF",
                 "NEKOMOTE_BUILD_TESTS": "ON"
             }
+        },
+        {
+            "name": "vulkan",
+            "inherits": "dev",
+            "displayName": "Debug with Vulkan backend",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_VULKAN": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -72,7 +80,8 @@
         { "name": "release", "configurePreset": "release" },
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "qt-quick", "configurePreset": "qt-quick" },
-        { "name": "plasma",   "configurePreset": "plasma" }
+        { "name": "plasma",   "configurePreset": "plasma" },
+        { "name": "vulkan",   "configurePreset": "vulkan" }
     ],
     "testPresets": [
         {

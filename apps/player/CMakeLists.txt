@@ -5,4 +5,9 @@ target_link_libraries(nekomote_player PRIVATE
     nekomote_gl_loader glfw OpenGL::GL nlohmann_json::nlohmann_json)
 target_include_directories(nekomote_player PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(NEKOMOTE_BUILD_VULKAN)
+    target_compile_definitions(nekomote_player PRIVATE NEKOMOTE_HAS_VULKAN)
+    target_link_libraries(nekomote_player PRIVATE nekomote::render_vk Vulkan::Vulkan)
+endif()
+
 install(TARGETS nekomote_player RUNTIME DESTINATION bin)
