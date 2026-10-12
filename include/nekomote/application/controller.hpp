@@ -21,7 +21,6 @@ namespace fs = std::filesystem;
 
 constexpr double kBackgroundFadeSeconds = 1.8;
 constexpr double kCharacterFadeSeconds = 0.4;
-inline constexpr auto kPointerDragHold = std::chrono::milliseconds(300);
 
 enum class SwitchState
 {
@@ -242,7 +241,6 @@ class WallpaperController
     bool pointer_moved_{false};
     Vec2 press_position_{};
     Vec2 drag_previous_{};
-    PointerTime press_time_{};
 
     SessionStatus last_error_{};
 };

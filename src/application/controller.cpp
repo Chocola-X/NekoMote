@@ -593,16 +593,17 @@ float WallpaperController::scale() const noexcept
 
 void WallpaperController::pointer_press(Vec2 position, PointerTime now)
 {
+    (void)now;
     cancel_pointer_gesture();
     if (paused_ || minimized_ || output_unavailable_)
         return;
     pointer_pressed_ = true;
     press_position_ = drag_previous_ = position;
-    press_time_ = now;
 }
 
 void WallpaperController::pointer_move(Vec2 position, PointerTime now)
 {
+    (void)now;
     if (pointer_pressed_)
     {
         constexpr float kClickMotionTolerance = 4.0f;
@@ -610,7 +611,7 @@ void WallpaperController::pointer_move(Vec2 position, PointerTime now)
         const float dy = position.y - press_position_.y;
         pointer_moved_ =
             pointer_moved_ || dx * dx + dy * dy > kClickMotionTolerance * kClickMotionTolerance;
-        if (now - press_time_ >= kPointerDragHold)
+        if (pointer_moved_)
         {
             const auto old_origin = origin();
             set_origin({old_origin.x + position.x - drag_previous_.x,
@@ -627,7 +628,7 @@ void WallpaperController::pointer_release(Vec2 position, PointerTime now)
     if (!pointer_pressed_)
         return;
     pointer_move(position, now);
-    const bool click = now - press_time_ < kPointerDragHold && !pointer_moved_;
+    const bool click = !pointer_moved_;
     cancel_pointer_gesture();
     if (click && !paused_ && !minimized_ && !output_unavailable_)
         touch(position);
