@@ -19,7 +19,6 @@ namespace nekomote::application
 {
 namespace fs = std::filesystem;
 
-constexpr double kBackgroundFadeSeconds = 1.8;
 constexpr double kCharacterFadeSeconds = 0.4;
 
 enum class SwitchState

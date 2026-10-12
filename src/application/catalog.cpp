@@ -359,6 +359,8 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
         config.mute = json["mute"].get<bool>();
     if (json.contains("fit"))
         config.fit = json["fit"].get<bool>();
+    if (json.contains("background_fade_seconds"))
+        config.background_fade_seconds = json["background_fade_seconds"].get<float>();
     return config;
 }
 
@@ -376,6 +378,7 @@ void WallpaperConfig::save(const fs::path& path) const
     json["fps"] = fps;
     json["mute"] = mute;
     json["fit"] = fit;
+    json["background_fade_seconds"] = background_fade_seconds;
     std::ofstream file(path);
     if (!file)
         throw std::runtime_error("cannot write config " + path.string());

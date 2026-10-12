@@ -375,7 +375,7 @@ std::optional<BackgroundRequest> WallpaperController::poll_background()
                                   ? bg.path_for_phase(static_cast<std::size_t>(current_bg_phase_))
                                   : bg.path();
             return BackgroundRequest{BackgroundAction::Switch, target_background_index_, path,
-                                     kBackgroundFadeSeconds};
+                                     static_cast<double>(config_.background_fade_seconds)};
         }
     }
     if (need_bg_clear_)

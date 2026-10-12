@@ -101,6 +101,7 @@ struct WallpaperConfig
     int fps{30};
     bool mute{false};
     bool fit{false};
+    float background_fade_seconds{1.0f};
     static WallpaperConfig load(const std::filesystem::path& path);
     void save(const std::filesystem::path& path) const;
 };
