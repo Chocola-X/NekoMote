@@ -880,7 +880,13 @@ void WallpaperInstance::draw_ui(float dt)
         {
             content_scrollable_h += 42.0f;
             if (panel_.sidebar.expanded_drawer == static_cast<int>(g))
-                content_scrollable_h += 30.0f + 4.0f * 32.0f;
+                content_scrollable_h +=
+                    static_cast<float>(catalog.character_groups[g].items.size()) * 34.0f;
+        }
+        content_scrollable_h += 42.0f;
+        if (panel_.sidebar.expanded_drawer == 8)
+        {
+            content_scrollable_h += 30.0f + 4.0f * 32.0f;
             content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
             std::size_t static_bg_count = 0, dynamic_bg_count = 0;
             for (const auto& bg : catalog.backgrounds)
