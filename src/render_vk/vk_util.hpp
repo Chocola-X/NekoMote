@@ -67,6 +67,9 @@ struct Buffer
     VkBuffer handle{VK_NULL_HANDLE};
     VkDeviceMemory memory{VK_NULL_HANDLE};
     VkDeviceSize size{0};
+    // Host-visible allocations stay mapped until reset. The host must complete
+    // preceding GPU use before writing, replacing or destroying this buffer.
+    void* mapped_data{nullptr};
     Buffer() = default;
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
@@ -89,6 +92,8 @@ struct Buffer
     }
     void reset() noexcept
     {
+        if (mapped_data)
+            vkUnmapMemory(device, memory);
         if (handle)
             vkDestroyBuffer(device, handle, nullptr);
         if (memory)
@@ -96,6 +101,7 @@ struct Buffer
         handle = VK_NULL_HANDLE;
         memory = VK_NULL_HANDLE;
         size = 0;
+        mapped_data = nullptr;
     }
     void swap(Buffer& other) noexcept
     {
@@ -103,6 +109,7 @@ struct Buffer
         std::swap(handle, other.handle);
         std::swap(memory, other.memory);
         std::swap(size, other.size);
+        std::swap(mapped_data, other.mapped_data);
     }
 };
 
@@ -130,9 +137,19 @@ inline Buffer create_buffer(VkDevice device, VkPhysicalDevice physical_device, V
     check_vk(vkBindBufferMemory(device, b.handle, b.memory, 0), "bind buffer");
     return b;
 }
-inline void destroy_buffer(VkDevice, Buffer& b) noexcept
+
+// Upload and frame buffers opt into one persistent, coherent host mapping.
+// Capture/device buffers keep create_buffer's allocation-only ownership.
+inline Buffer create_mapped_buffer(VkDevice device, VkPhysicalDevice physical_device,
+                                   VkDeviceSize size, VkBufferUsageFlags usage)
 {
-    b.reset();
+    auto buffer =
+        create_buffer(device, physical_device, size, usage,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    void* mapped = nullptr;
+    check_vk(vkMapMemory(device, buffer.memory, 0, VK_WHOLE_SIZE, 0, &mapped), "map buffer");
+    buffer.mapped_data = mapped;
+    return buffer;
 }
 
 struct Image
@@ -230,10 +247,6 @@ inline Image create_image(VkDevice device, VkPhysicalDevice physical_device, int
     check_vk(vkCreateImageView(device, &view, nullptr, &image.view), "create image view");
     return image;
 }
-inline void destroy_image(VkDevice, Image& image) noexcept
-{
-    image.reset();
-}
 
 struct LayoutAccess
 {
@@ -325,32 +338,6 @@ inline void end_one_time_commands(VkDevice device, VkQueue queue, VkCommandPool 
     }
     vkDestroyFence(device, fence, nullptr);
     vkFreeCommandBuffers(device, pool, 1, &cmd);
-}
-inline void transition_image_layout(VkDevice device, VkQueue queue, VkCommandPool pool,
-                                    VkImage image, VkImageLayout old_layout,
-                                    VkImageLayout new_layout)
-{
-    auto cmd = begin_one_time_commands(device, pool);
-    record_image_barrier(cmd, image, old_layout, new_layout);
-    end_one_time_commands(device, queue, pool, cmd);
-}
-inline void copy_buffer(VkDevice device, VkQueue queue, VkCommandPool pool, VkBuffer src,
-                        VkBuffer dst, VkDeviceSize size)
-{
-    auto cmd = begin_one_time_commands(device, pool);
-    VkBufferCopy region{0, 0, size};
-    vkCmdCopyBuffer(cmd, src, dst, 1, &region);
-    end_one_time_commands(device, queue, pool, cmd);
-}
-inline void copy_buffer_to_image(VkDevice device, VkQueue queue, VkCommandPool pool, VkBuffer src,
-                                 VkImage dst, int width, int height)
-{
-    auto cmd = begin_one_time_commands(device, pool);
-    VkBufferImageCopy region{};
-    region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
-    region.imageExtent = {static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height), 1};
-    vkCmdCopyBufferToImage(cmd, src, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-    end_one_time_commands(device, queue, pool, cmd);
 }
 inline VkRenderPass create_color_render_pass(VkDevice device, VkFormat format)
 {

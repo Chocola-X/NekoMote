@@ -63,7 +63,6 @@ class PlaybackProgram
     PlaybackProgram& operator=(const PlaybackProgram&) = delete;
     const GeometryScene& scene() const noexcept;
     const AnimationProgram& animation() const noexcept;
-    PhysicsMode physics_mode() const noexcept;
 
   private:
     struct Impl;

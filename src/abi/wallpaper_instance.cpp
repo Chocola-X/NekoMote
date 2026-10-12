@@ -3,7 +3,9 @@
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/ui/menu.hpp>
 
+#include <fcntl.h>
 #include <nekomote/abi.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <chrono>
@@ -11,7 +13,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-#include <fstream>
 #include <stdexcept>
 #include <thread>
 
@@ -101,14 +102,32 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     assets_scanned_ = true;
     auto config_path = dir / "config.json";
     {
-        std::ofstream probe(config_path, std::ios::app);
-        if (!probe)
+        // Effective credentials include group/ACL permissions. Do not create a
+        // config just to probe it; a read-only existing file also needs fallback.
+        std::error_code ec;
+        const bool exists = std::filesystem::exists(config_path, ec);
+        const auto& probe_path = exists ? config_path : dir;
+        const int permissions = exists ? W_OK : W_OK | X_OK;
+        const bool dir_writable =
+            !ec && (!exists || std::filesystem::is_regular_file(config_path, ec)) && !ec &&
+            ::faccessat(AT_FDCWD, probe_path.c_str(), permissions, AT_EACCESS) == 0;
+        if (!dir_writable)
         {
             const char* xdg = std::getenv("XDG_DATA_HOME");
-            std::filesystem::path user_dir =
-                xdg && *xdg
-                    ? std::filesystem::path(xdg) / "nekomote"
-                    : std::filesystem::path(std::getenv("HOME")) / ".local" / "share" / "nekomote";
+            std::filesystem::path user_dir;
+            if (xdg && *xdg)
+                user_dir = std::filesystem::path(xdg) / "nekomote";
+            else
+            {
+                const char* home = std::getenv("HOME");
+                if (!home || !*home)
+                {
+                    error_string_ = "cannot determine writable config directory: HOME not set";
+                    set_error(NEKOMOTE_ERROR_NOT_FOUND, error_string_.c_str());
+                    return NEKOMOTE_ERROR_NOT_FOUND;
+                }
+                user_dir = std::filesystem::path(home) / ".local" / "share" / "nekomote";
+            }
             std::filesystem::create_directories(user_dir);
             config_path = user_dir / "config.json";
         }
@@ -855,10 +874,9 @@ void WallpaperInstance::draw_ui(float dt)
     if (!panel_.ui_ready)
         return;
     ui_context_.begin_frame();
-    const ui::Style style;
     if (ui_context_.toggle_icon(panel_.icon, panel_.icon_texture))
         panel_.sidebar.open = !panel_.sidebar.open;
-    ui_context_.sidebar(panel_.sidebar, style, dt);
+    ui_context_.sidebar(panel_.sidebar, dt);
     const bool mouse_over_icon =
         ui_context_.mouse_in_rect(panel_.icon.x, panel_.icon.y, panel_.icon.size, panel_.icon.size);
     const bool mouse_over_sidebar =

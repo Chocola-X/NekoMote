@@ -446,11 +446,6 @@ TimelineId AnimationProgram::find_timeline(std::string_view label) const noexcep
             return TimelineId{static_cast<std::uint32_t>(i)};
     return {};
 }
-std::string_view AnimationProgram::timeline_label(TimelineId id) const noexcept
-{
-    return id.valid() && id.value < impl_->clips.size() ? impl_->clips[id.value].label
-                                                        : std::string_view{};
-}
 bool AnimationProgram::timeline_supported(TimelineId id) const noexcept
 {
     return id.valid() && id.value < impl_->clips.size() && impl_->clips[id.value].supported;

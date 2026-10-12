@@ -211,7 +211,6 @@ struct UiRenderer::Impl
     std::array<VkPipeline, 4> pipelines{};
     std::array<VkShaderModule, 5> shaders{};
     Buffer vbo;
-    void* mapped_vertices{nullptr};
     std::vector<Vertex> vertices;
     std::vector<Draw> draws;
     std::vector<VkRect2D> clips;
@@ -231,12 +230,10 @@ struct UiRenderer::Impl
         const auto device = ctx.device;
         if (!device)
             return;
-        if (mapped_vertices)
-            vkUnmapMemory(device, vbo.memory);
-        destroy_buffer(device, vbo);
-        destroy_image(device, font_image);
+        vbo.reset();
+        font_image.reset();
         for (auto& icon : icons)
-            destroy_image(device, icon.image);
+            icon.image.reset();
         for (auto pipeline : pipelines)
             if (pipeline)
                 vkDestroyPipeline(device, pipeline, nullptr);
@@ -289,39 +286,23 @@ struct UiRenderer::Impl
         auto image =
             create_image(ctx.device, ctx.physical_device, image_width, image_height, format,
                          VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-        Buffer staging;
-        try
-        {
-            staging = create_buffer(
-                ctx.device, ctx.physical_device, bytes, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            void* mapped{};
-            check_vk(vkMapMemory(ctx.device, staging.memory, 0, bytes, 0, &mapped),
-                     "map UI image upload");
-            std::memcpy(mapped, pixels, bytes);
-            vkUnmapMemory(ctx.device, staging.memory);
-            const auto commands = begin_one_time_commands(ctx.device, upload_pool);
-            record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_UNDEFINED,
-                                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-            VkBufferImageCopy copy{};
-            copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            copy.imageSubresource.layerCount = 1;
-            copy.imageExtent = {static_cast<std::uint32_t>(image_width),
-                                static_cast<std::uint32_t>(image_height), 1};
-            vkCmdCopyBufferToImage(commands, staging.handle, image.handle,
-                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
-            record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            end_one_time_commands(ctx.device, ctx.graphics_queue, upload_pool, commands);
-            destroy_buffer(ctx.device, staging);
-            return image;
-        }
-        catch (...)
-        {
-            destroy_buffer(ctx.device, staging);
-            destroy_image(ctx.device, image);
-            throw;
-        }
+        auto staging = create_mapped_buffer(ctx.device, ctx.physical_device, bytes,
+                                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        std::memcpy(staging.mapped_data, pixels, bytes);
+        const auto commands = begin_one_time_commands(ctx.device, upload_pool);
+        record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_UNDEFINED,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        VkBufferImageCopy copy{};
+        copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copy.imageSubresource.layerCount = 1;
+        copy.imageExtent = {static_cast<std::uint32_t>(image_width),
+                            static_cast<std::uint32_t>(image_height), 1};
+        vkCmdCopyBufferToImage(commands, staging.handle, image.handle,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+        record_image_barrier(commands, image.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        end_one_time_commands(ctx.device, ctx.graphics_queue, upload_pool, commands);
+        return image;
     }
 
     void resize_atlas(int new_width, int new_height)
@@ -405,16 +386,9 @@ struct UiRenderer::Impl
     {
         if (required <= vbo.size)
             return;
-        if (mapped_vertices)
-            vkUnmapMemory(ctx.device, vbo.memory);
-        mapped_vertices = nullptr;
-        destroy_buffer(ctx.device, vbo);
-        vbo = create_buffer(
-            ctx.device, ctx.physical_device, std::max(required, std::size_t{1 << 20}),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        check_vk(vkMapMemory(ctx.device, vbo.memory, 0, VK_WHOLE_SIZE, 0, &mapped_vertices),
-                 "map UI vertices");
+        vbo = create_mapped_buffer(ctx.device, ctx.physical_device,
+                                   std::max(required, std::size_t{1 << 20}),
+                                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
     }
 };
 
@@ -537,7 +511,6 @@ std::uint32_t UiRenderer::upload_icon(const ImageRgba8& image)
     {
         if (icon.descriptor)
             vkFreeDescriptorSets(p.ctx.device, p.descriptor_pool, 1, &icon.descriptor);
-        destroy_image(p.ctx.device, icon.image);
         throw;
     }
     return static_cast<std::uint32_t>(p.icons.size());
@@ -553,7 +526,7 @@ void UiRenderer::destroy_icon(std::uint32_t id)
         check_vk(vkFreeDescriptorSets(p.ctx.device, p.descriptor_pool, 1, &icon.descriptor),
                  "free UI icon descriptor");
     icon.descriptor = VK_NULL_HANDLE;
-    destroy_image(p.ctx.device, icon.image);
+    icon.image.reset();
 }
 
 void UiRenderer::begin_frame()
@@ -584,13 +557,12 @@ void UiRenderer::end_frame()
     {
         auto image = p.upload_pixels(p.atlas_width, p.atlas_height, VK_FORMAT_R8_UNORM,
                                      p.atlas_pixels.data(), p.atlas_pixels.size());
-        destroy_image(p.ctx.device, p.font_image);
         p.font_image = std::move(image);
         p.write_set(p.font_set, p.font_image.view);
         p.atlas_dirty = false;
     }
     p.ensure_vertex_buffer(p.vertices.size() * sizeof(Impl::Vertex));
-    std::memcpy(p.mapped_vertices, p.vertices.data(), p.vertices.size() * sizeof(Impl::Vertex));
+    std::memcpy(p.vbo.mapped_data, p.vertices.data(), p.vertices.size() * sizeof(Impl::Vertex));
     VkRenderPassBeginInfo begin{};
     begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     begin.renderPass = p.render_pass;

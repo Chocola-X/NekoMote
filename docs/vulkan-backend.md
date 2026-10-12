@@ -48,3 +48,7 @@ build/release/bin/nekomote_player --assets assets --backend vulkan
 Release 采样使用 Chocola、BG_07A、完整设置面板，800×1080、静音、30 FPS，预热 120 帧后取 180 帧。OpenGL CPU 阶段包含 draw 提交；Vulkan 阶段记录 command buffer，队列提交/上一帧等待在该阶段计时外，两者不能直接换算性能提升。GL 测量入口使用软件 FPS 预算（swap interval 0，避免此机 EGL 非焦点窗口的 vblank 等待停滞）；正常 GL 播放仍使用原有 vsync，Vulkan 使用 FIFO。实际提交/呈现完成与显示扫描输出没有单独 GPU 时间戳测量，loop cadence 只报告循环吞吐。功耗、显存与长时性能未测。
 
 同步检查不能只跑 offscreen：需同时运行窗口 `--check-window` 覆盖 acquire、呈现、resize、最小化恢复与交换链重建。安装 Khronos 验证层后可设置 `VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT`，再运行 GPU fixture 与窗口检查。本轮曾捕获并修复布局转换早于 acquire 等待的同步冲突，普通 core validation 未报告它；所有 GPU 门槛需检查进程返回码及销毁日志。
+
+## C13 测量补修
+
+`--measure-frames` 的 player 选择设备支持的 IMMEDIATE 呈现，与 GL 测量的 swap interval 0 对齐；应用仍按 `--fps` 预算运行。普通播放为 FIFO。显式测量要求 IMMEDIATE，不支持则报告错误，避免把不同等待策略混入性能比较。`NEKOMOTE_VK_VALIDATION=1` 在 Release player 中也要求 Khronos 验证层，缺失则失败；销毁日志核对 enabled 与 errors。性能样本关闭验证层，GPU/WSI 正确性另行启用 core+同步验证；结果见 [优化记录](validation/optimization-results.json)。

@@ -19,10 +19,10 @@ using Clock = std::chrono::steady_clock;
 int minutes_at(std::chrono::system_clock::time_point now)
 {
     const std::time_t t = std::chrono::system_clock::to_time_t(now);
-    const auto* tmp = std::localtime(&t);
-    if (!tmp)
+    std::tm local{};
+    if (!::localtime_r(&t, &local))
         return 0;
-    return tmp->tm_hour * 60 + tmp->tm_min;
+    return local.tm_hour * 60 + local.tm_min;
 }
 
 int phase_at(const BackgroundEntry& bg, std::chrono::system_clock::time_point now)
@@ -153,10 +153,23 @@ CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry
         const auto& program = *result.program;
         result.instance = std::make_unique<SessionInstance>(
             program, SessionConfig{{cfg.seed}, cfg.seed, cfg.pointer, cfg.audio});
-        accept(result.instance->set_origin(cfg.origin));
-        accept(result.instance->set_scale(cfg.scale));
-        accept(result.instance->start());
-        accept(result.instance->prepare_frame());
+        // Loading runs on a worker. It owns only this candidate and must not
+        // mutate Controller error state or publish a partially valid session.
+        const auto check = [&program](SessionStatus status)
+        {
+            if (status)
+                return;
+            const auto& geometry = status.playback.geometry;
+            throw std::runtime_error(
+                "candidate session failure " + std::to_string(static_cast<int>(status.error)) +
+                "/" + std::to_string(static_cast<int>(status.playback.error)) +
+                "; geometry=" + std::to_string(static_cast<int>(geometry.error)) +
+                "; node=" + std::string(program.playback().scene().node_label(geometry.node)));
+        };
+        check(result.instance->set_origin(cfg.origin));
+        check(result.instance->set_scale(cfg.scale));
+        check(result.instance->start());
+        check(result.instance->prepare_frame());
         if (cfg.audio == AudioMode::Device)
         {
             for (const auto& path : program.audio_paths())
@@ -223,8 +236,8 @@ void WallpaperController::install_candidate_sync(CandidateCpu candidate)
 
 void WallpaperController::clear_previous() noexcept
 {
-    previous_program_.reset();
     previous_instance_.reset();
+    previous_program_.reset();
 }
 
 CandidateCpu WallpaperController::load_initial(int character_index, const ControllerConfig& cfg)
@@ -270,8 +283,8 @@ void WallpaperController::request_switch_character(int index)
     controller_config_.origin = initial_origin_;
     controller_config_.scale = initial_scale_;
     const auto cfg = controller_config_;
-    candidate_future_ = std::async(std::launch::async,
-                                   [this, entry, cfg]() { return load_candidate_cpu(entry, cfg); });
+    candidate_future_ =
+        std::async(std::launch::async, [entry, cfg]() { return load_candidate_cpu(entry, cfg); });
 }
 
 std::optional<CandidateCpu> WallpaperController::poll_candidate()
@@ -428,11 +441,6 @@ void WallpaperController::confirm_background_clear()
 bool WallpaperController::has_background() const noexcept
 {
     return current_has_background_;
-}
-
-int WallpaperController::background_phase() const noexcept
-{
-    return current_bg_phase_;
 }
 
 std::filesystem::path WallpaperController::background_path(int index) const noexcept
@@ -710,11 +718,6 @@ int WallpaperController::current_character_index() const noexcept
 int WallpaperController::current_background_index() const noexcept
 {
     return current_background_index_;
-}
-
-void WallpaperController::set_current_character_index(int index) noexcept
-{
-    current_character_index_ = index;
 }
 
 std::string WallpaperController::current_character_name() const noexcept

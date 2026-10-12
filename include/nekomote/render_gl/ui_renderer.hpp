@@ -30,14 +30,6 @@ class FontAtlas
     {
         return texture_;
     }
-    int width() const
-    {
-        return texture_width_;
-    }
-    int height() const
-    {
-        return texture_height_;
-    }
 
   private:
     std::uint32_t texture_{0};
@@ -106,6 +98,19 @@ class UiRenderer : public nekomote::ui::Painter
     std::uint32_t text_shader_{0};
     std::uint32_t icon_shader_{0};
     std::uint32_t tri_shader_{0};
+    struct RectUniforms
+    {
+        int viewport{-1}, fill{-1}, border{-1}, border_width{-1}, rect_size{-1}, radius{-1},
+            pixel_scale{-1};
+    } rect_uniforms_;
+    struct TextureUniforms
+    {
+        int viewport{-1}, color{-1}, sampler{-1};
+    } text_uniforms_, icon_uniforms_;
+    struct TriangleUniforms
+    {
+        int viewport{-1}, color{-1};
+    } tri_uniforms_;
     std::uint32_t vao_{0};
     std::uint32_t vbo_{0};
     std::uint32_t uv_vbo_{0};
@@ -116,7 +121,7 @@ class UiRenderer : public nekomote::ui::Painter
     std::vector<float> text_uvs_;
     std::vector<float> icon_vertices_;
     std::vector<float> icon_uvs_;
-    std::vector<std::uint32_t> icon_textures_;
+    std::uint32_t icon_texture_{0};
 
     bool create_rect_shader();
     bool create_text_shader();

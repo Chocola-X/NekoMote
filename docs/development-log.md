@@ -870,3 +870,23 @@ Codex / GPT-6（精确变体未暴露），基线 `cfed43e`。独立复核 GLM V
 Actions 双架构 Debian 12 基线配方、严格 ELF 审计与可重复归档已准备；容器/远端/
 跨发行版未跑，见 [分发](plasma-distribution.md)。GLM 下一步 G33，Gemini V21；
 模型公式和完整服务收拢仍按当前缺口独立处理。
+
+## 2026-10-12 C13：优化报告复核与帧路径清理
+
+基线 `3a56ce0`，输入为 CodeArts / GLM-5.2 未提交的五个源码修改和两份优化报告；
+Codex / GPT-6（精确变体未暴露）复核与整合。原始输入保存在 ignored 证据目录，
+当前 [审查结论](optimization-audit-2026-10-12.md) 替代未验证的 135 项缺陷判断。
+撤销全面关闭 Release GL 检查，修正配置权限探测、线程 CPU 计时和候选加载失败/共享状态，
+落地 UI uniform/字体缓存、文本容量复用、Vulkan 显式持久映射与单提交纹理上传。
+删除全仓调用核查确认的死函数；保留真实窗口诊断使用的同步切换接口。
+
+Release/LTO/WERROR 构建通过；CPU CTest 181/181、GL 13 用例/233 断言、VK 7 用例/198 断言、
+Plasma 隔离四项通过。VK core+同步验证及 IMMEDIATE 窗口采样错误为零，强制层缺失明确失败。
+优化前后完整 UI 图各后端逐像素一致；真实 WebGL 同初态 RGB 最大差 1/255、alpha 差零，
+实际查看对照图。失败尝试保留；本轮未做 ASan、miku 安装或全型号动态认证。
+
+几何两模型交替三轮采样有噪声重叠，整应用 GL 单对采样没有证明提速。
+普通 VK FIFO 在本机未聚焦窗口的 present 超时仍是独立宿主/驱动缺口；
+测量改用 IMMEDIATE，不能用不同呈现策略证明加速。完整范围及 hash 见
+[机器记录](validation/optimization-results.json)。下一批 GLM G34 的重复几何编译契约见
+[建议](optimization-suggestions-2026-10-12.md)，G33 分发验收保持独立。

@@ -117,6 +117,14 @@ unsigned int decode_utf8(const char*& p)
 
 } // namespace
 
+struct FontMetrics::FontInfo
+{
+    stbtt_fontinfo value{};
+};
+
+FontMetrics::FontMetrics() = default;
+FontMetrics::~FontMetrics() = default;
+
 bool FontMetrics::init(const std::string& font_path, float pixel_height)
 {
     initialized_ = false;
@@ -143,12 +151,14 @@ bool FontMetrics::init(const std::string& font_path, float pixel_height)
     if (!file)
         return false;
 
-    font_info_storage_.resize(sizeof(stbtt_fontinfo));
-    auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
+    font_info_ = std::make_unique<FontInfo>();
+    auto* info = &font_info_->value;
     const int offset = stbtt_GetFontOffsetForIndex(font_data_.data(), font_index);
     if (offset < 0 || !stbtt_InitFont(info, font_data_.data(), offset))
         return false;
 
+    int descent, line_gap;
+    stbtt_GetFontVMetrics(info, &ascent_, &descent, &line_gap);
     pixel_height_ = pixel_height;
     scale_ = stbtt_ScaleForPixelHeight(info, pixel_height);
     initialized_ = true;
@@ -157,7 +167,7 @@ bool FontMetrics::init(const std::string& font_path, float pixel_height)
 
 void FontMetrics::render_glyph_bitmap(const Glyph& glyph, std::vector<unsigned char>& bitmap)
 {
-    auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
+    auto* info = &font_info_->value;
     bitmap.resize(static_cast<std::size_t>(glyph.atlas_w * glyph.atlas_h));
     stbtt_MakeCodepointBitmap(info, bitmap.data(), glyph.atlas_w, glyph.atlas_h, glyph.atlas_w,
                               scale_, scale_, glyph.codepoint);
@@ -167,7 +177,7 @@ void FontMetrics::ensure_char(unsigned int codepoint)
 {
     if (glyphs_.count(codepoint))
         return;
-    auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
+    auto* info = &font_info_->value;
     int x0, y0, x1, y1;
     stbtt_GetCodepointBitmapBox(info, codepoint, scale_, scale_, &x0, &y0, &x1, &y1);
     const int w = std::max(1, x1 - x0);
@@ -220,7 +230,7 @@ float FontMetrics::text_width(const char* text, float size)
 {
     if (!initialized_)
         return 0;
-    auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
+    auto* info = &font_info_->value;
     const float eff_size = size * 1.30f;
     const float scale = stbtt_ScaleForPixelHeight(info, eff_size);
     float width = 0;
@@ -243,25 +253,35 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
         return;
     // Prepare every glyph before generating UVs. An atlas growth midway through
     // a string must not leave its first quads normalized to the old dimensions.
+    std::size_t glyph_count = 0;
     for (const auto* p = text; *p;)
     {
         const auto codepoint = decode_utf8(p);
         if (codepoint)
+        {
             ensure_char(codepoint);
+            ++glyph_count;
+        }
     }
+    // Reserve once per string, retaining capacity across calls and frames.
+    const auto reserve_quads = [glyph_count](std::vector<float>& data)
+    {
+        const auto required = data.size() + glyph_count * 12;
+        if (required > data.capacity())
+            data.reserve(std::max(required, data.capacity() * 2));
+    };
+    reserve_quads(vertices);
+    reserve_quads(uvs);
     const float eff_size = size * 1.30f;
     const float size_ratio = eff_size / pixel_height_;
-    auto* info = reinterpret_cast<stbtt_fontinfo*>(font_info_storage_.data());
-    int ascent, descent, line_gap;
-    stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
-    const float baseline = y + static_cast<float>(ascent) * scale_ * size_ratio;
+    const float baseline = y + static_cast<float>(ascent_) * scale_ * size_ratio;
     float pen_x = x;
     for (const auto* p = text; *p;)
     {
         const unsigned int cp = decode_utf8(p);
         if (cp == 0)
             continue;
-        const auto& g = glyphs_[cp];
+        const auto& g = glyphs_.at(cp);
         const float gx0 = pen_x + static_cast<float>(g.x0) * size_ratio;
         const float gy0 = baseline + static_cast<float>(g.y0) * size_ratio;
         const float gx1 = gx0 + static_cast<float>(g.atlas_w) * size_ratio;

@@ -115,10 +115,16 @@ int main(int argc, char** argv)
         background.fill(QColor(20, 180, 70));
         require(background.save(directory.filePath("backgrounds/second.png")),
                 "second fixture failed");
+        // Keep settings scrollable even though this fixture has just one group.
+        background.fill(QColor(50, 50, 50));
+        for (int i = 0; i < 8; ++i)
+            require(
+                background.save(directory.filePath(QString("backgrounds/z-extra-%1.png").arg(i))),
+                "scroll background fixture failed");
         {
             std::ofstream config(assets / "config.json");
             config
-                << R"({"character":"chocola-date-a","background":"test","mute":true,"fit":true})";
+                << R"({"character":"chocola/date-a","background":"test","mute":true,"fit":true})";
         }
         auto object = std::make_unique<InputItem>();
         auto* item = object.get();
@@ -198,11 +204,13 @@ int main(int argc, char** argv)
         const auto open = capture(item, output + "/open.png");
         require(open.pixelColor(20, 70) != initial.pixelColor(20, 70),
                 "UI panel did not open via Qt events");
-        click({140, 409});
+        // The isolated catalog has one character group, followed by settings.
+        click({140, 115});
         const auto settings = capture(item, output + "/settings.png");
         require(changed_pixels(open, settings, {20, 440, 220, 350}) > 5000,
                 "settings did not expand");
-        click({140, 796});
+        // First static background row (second.png sorts before test.png).
+        click({140, 502});
         frames(35);
         // The shared background transition is 1.8 seconds. Frame count alone
         // does not establish elapsed time when Qt also schedules grab frames.
@@ -271,7 +279,7 @@ int main(int argc, char** argv)
         model_press.setTimestamp(event_time);
         item->mousePressEvent(&model_press);
         // Replay delayed press/move/release together; their collection times,
-        // rather than the render callback's clock, must determine a long hold.
+        // preserving event order; held movement must translate exactly once.
         QMouseEvent model_move(QEvent::MouseMove, model_to / dpi, model_to / dpi, Qt::NoButton,
                                Qt::LeftButton, Qt::NoModifier);
         model_move.setTimestamp(event_time + 350);

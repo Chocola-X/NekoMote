@@ -18,7 +18,6 @@ struct PlaybackProgram::Impl
     std::unique_ptr<const GeometryScene> scene;
     std::unique_ptr<const AnimationProgram> animation;
     std::unique_ptr<const PhysicsProgram> physics; // destroyed before its borrowed scene
-    PhysicsMode mode;
 };
 PlaybackProgram::PlaybackProgram(std::unique_ptr<Impl> impl) : impl_(std::move(impl))
 {
@@ -31,10 +30,6 @@ const GeometryScene& PlaybackProgram::scene() const noexcept
 const AnimationProgram& PlaybackProgram::animation() const noexcept
 {
     return *impl_->animation;
-}
-PhysicsMode PlaybackProgram::physics_mode() const noexcept
-{
-    return impl_->mode;
 }
 PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMode mode,
                                        std::span<const VariableSourceDefinition> sources)
@@ -57,7 +52,6 @@ PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMo
     }
     data->scene = std::move(geometry.scene);
     data->animation = std::move(animation.program);
-    data->mode = mode;
     return {std::unique_ptr<const PlaybackProgram>(new PlaybackProgram(std::move(data))), {}};
 }
 struct PlaybackInstance::Impl

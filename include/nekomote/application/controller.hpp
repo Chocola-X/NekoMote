@@ -112,7 +112,7 @@ class WallpaperController
     // Host confirms GPU upload done; controller takes ownership of CPU session.
     void install_initial(CandidateCpu candidate);
 
-    // === Synchronous switch (diagnostics only) ===
+    // Synchronous switching is used by owned-window failure diagnostics.
     CandidateCpu load_candidate(const CharacterEntry& entry, const ControllerConfig& cfg);
     void install_candidate_sync(CandidateCpu candidate);
     void clear_previous() noexcept;
@@ -136,7 +136,6 @@ class WallpaperController
                             int height, double fade_duration);
     void confirm_background_clear();
     bool has_background() const noexcept;
-    int background_phase() const noexcept;
     std::filesystem::path background_path(int index) const noexcept;
 
     // === Fade update ===
@@ -162,7 +161,8 @@ class WallpaperController
     float scale() const noexcept;
     using PointerTime = std::chrono::steady_clock::time_point;
     // Positions use centered output pixels, Y down. Hosts forward only events
-    // not consumed by UI. A short left click touches; holding 300ms enables drag.
+    // not consumed by UI. A left click touches on release; held-button movement past 4px drags
+    // immediately.
     void pointer_press(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
     void pointer_move(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
     void pointer_release(Vec2 position, PointerTime now = std::chrono::steady_clock::now());
@@ -181,7 +181,6 @@ class WallpaperController
     // === Indices ===
     int current_character_index() const noexcept;
     int current_background_index() const noexcept;
-    void set_current_character_index(int index) noexcept;
 
     // === Character info ===
     std::string current_character_name() const noexcept;
@@ -194,7 +193,8 @@ class WallpaperController
     void clear_error() noexcept;
 
   private:
-    CandidateCpu load_candidate_cpu(const CharacterEntry& entry, const ControllerConfig& cfg);
+    static CandidateCpu load_candidate_cpu(const CharacterEntry& entry,
+                                           const ControllerConfig& cfg);
     void apply_controller_config(const ControllerConfig& cfg);
     void synchronize_pause();
     void accept(SessionStatus status);

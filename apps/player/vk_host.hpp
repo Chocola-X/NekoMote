@@ -20,13 +20,19 @@ namespace nekomote::player
 enum class ValidationPolicy
 {
     Disabled,
-    IfAvailable
+    IfAvailable,
+    Required
 };
 #ifdef NDEBUG
 inline constexpr auto kDefaultValidationPolicy = ValidationPolicy::Disabled;
 #else
 inline constexpr auto kDefaultValidationPolicy = ValidationPolicy::IfAvailable;
 #endif
+enum class PresentationPolicy
+{
+    Synchronized,
+    ApplicationPacedMeasurement
+};
 // This host owns device/presentation and the sole frame submission. Backend
 // resources borrow the device and command buffer; destroy them after wait_ready
 // and before this host. A single in-flight frame keeps shared CPU/GPU ownership
@@ -44,7 +50,10 @@ class VkHost
     bool validation_enabled{false};
     std::atomic<std::uint32_t> validation_errors{0};
 
-    VkHost() = default;
+    explicit VkHost(PresentationPolicy policy = PresentationPolicy::Synchronized)
+        : presentation_policy_(policy)
+    {
+    }
     VkHost(const VkHost&) = delete;
     VkHost& operator=(const VkHost&) = delete;
     ~VkHost()
@@ -62,9 +71,11 @@ class VkHost
         render_vk::check_vk(vkEnumerateInstanceLayerProperties(&count, layers.data()),
                             "read layers");
         const char* validation = "VK_LAYER_KHRONOS_validation";
-        validation_enabled = policy == ValidationPolicy::IfAvailable &&
+        validation_enabled = policy != ValidationPolicy::Disabled &&
                              std::any_of(layers.begin(), layers.end(), [&](const auto& l)
                                          { return std::strcmp(l.layerName, validation) == 0; });
+        if (policy == ValidationPolicy::Required && !validation_enabled)
+            throw std::runtime_error("requested Vulkan validation layer is unavailable");
         if (validation_enabled)
             extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         VkApplicationInfo app{};
@@ -328,6 +339,7 @@ class VkHost
     }
 
   private:
+    PresentationPolicy presentation_policy_;
     struct SwapImage
     {
         VkImage image;
@@ -468,6 +480,23 @@ class VkHost
                 break;
             }
         info.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        if (presentation_policy_ == PresentationPolicy::ApplicationPacedMeasurement)
+        {
+            // Match GL measurement's swap interval zero. FIFO can block an
+            // unfocused X11 window in the presentation engine, outside our
+            // application FPS budget and command-recording measurement.
+            std::uint32_t mode_count = 0;
+            render_vk::check_vk(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface,
+                                                                          &mode_count, nullptr),
+                                "query measurement present modes");
+            std::vector<VkPresentModeKHR> modes(mode_count);
+            render_vk::check_vk(vkGetPhysicalDeviceSurfacePresentModesKHR(
+                                    physical_device, surface, &mode_count, modes.data()),
+                                "read measurement present modes");
+            if (std::find(modes.begin(), modes.end(), VK_PRESENT_MODE_IMMEDIATE_KHR) == modes.end())
+                throw std::runtime_error("Vulkan measurement requires IMMEDIATE presentation");
+            info.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+        }
         info.clipped = VK_TRUE;
         render_vk::check_vk(vkCreateSwapchainKHR(device, &info, nullptr, &swapchain_),
                             "create swapchain");

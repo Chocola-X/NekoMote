@@ -18,7 +18,7 @@ bool assets_available()
 }
 } // namespace
 
-TEST_CASE("Controller left hold drags after threshold without an activation jump",
+TEST_CASE("Controller held left button drags immediately after movement tolerance",
           "[controller][pointer]")
 {
     WallpaperController c;
@@ -26,16 +26,18 @@ TEST_CASE("Controller left hold drags after threshold without an activation jump
     const WallpaperController::PointerTime start{1s};
     c.set_origin({20, 30});
     c.pointer_press({100, 100}, start);
-    c.pointer_move({110, 100}, start + 299ms);
+    c.pointer_move({103, 100}, start + 1ms);
     REQUIRE(c.origin().x == 20.0f);
-    c.pointer_move({120, 115}, start + 300ms);
-    REQUIRE(c.origin().x == 30.0f);
+    c.pointer_move({110, 100}, start + 2ms);
+    REQUIRE(c.origin().x == 27.0f);
+    c.pointer_move({120, 115}, start + 3ms);
+    REQUIRE(c.origin().x == 37.0f);
     REQUIRE(c.origin().y == 45.0f);
     c.pointer_release({125, 120}, start + 400ms);
-    REQUIRE(c.origin().x == 35.0f);
+    REQUIRE(c.origin().x == 42.0f);
     REQUIRE(c.origin().y == 50.0f);
     c.pointer_move({900, 900}, start + 500ms);
-    REQUIRE(c.origin().x == 35.0f);
+    REQUIRE(c.origin().x == 42.0f);
     REQUIRE(c.origin().y == 50.0f);
 }
 
@@ -370,14 +372,45 @@ TEST_CASE("Controller clear_previous", "[controller]")
     REQUIRE(candidate.ok);
     c.install_initial(std::move(candidate));
     const auto* original = c.current_instance();
-    auto candidate2 = c.load_candidate(c.catalog().characters[1], cfg);
-    REQUIRE(candidate2.ok);
-    c.install_candidate_sync(std::move(candidate2));
+    c.request_switch_character(1);
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    while (true)
+    {
+        REQUIRE(std::chrono::steady_clock::now() < deadline);
+        if (auto candidate2 = c.poll_candidate())
+        {
+            INFO(candidate2->error);
+            REQUIRE(candidate2->ok);
+            c.confirm_candidate(std::move(*candidate2));
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
     REQUIRE(c.current_instance() != original);
     REQUIRE(c.previous_instance() == original);
     c.clear_previous();
     REQUIRE(c.previous_instance() == nullptr);
     REQUIRE(c.previous_program() == nullptr);
+}
+
+TEST_CASE("Controller rejects an invalid CPU candidate without changing live error state",
+          "[controller][integration]")
+{
+    const fs::path directory = "assets/characters/chocola/date-a";
+    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+        SKIP("chocola/date-a assets are unavailable");
+    WallpaperController controller;
+    ControllerConfig config;
+    config.audio = AudioMode::Disabled;
+    config.scale = 0;
+    auto candidate =
+        controller.load_initial(CharacterEntry{"chocola/date-a", directory / "model.nkm.json",
+                                               directory / "session.nks.json", directory},
+                                config);
+    REQUIRE_FALSE(candidate.ok);
+    REQUIRE(candidate.error.find("candidate session failure") != std::string::npos);
+    REQUIRE(controller.last_error());
+    REQUIRE(controller.current_instance() == nullptr);
 }
 
 TEST_CASE("Controller config save load", "[controller]")

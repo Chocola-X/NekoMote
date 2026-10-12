@@ -15,6 +15,7 @@
 #include <QWheelEvent>
 #include <chrono>
 #include <cstdio>
+#include <ctime>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -168,6 +169,9 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
         {
             const auto trace_start = trace_frames_ > 0 ? std::chrono::steady_clock::now()
                                                        : std::chrono::steady_clock::time_point{};
+            timespec cpu_start{};
+            const bool cpu_clock_valid =
+                trace_frames_ > 0 && ::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cpu_start) == 0;
             if (graphics_api_ != QSGRendererInterface::OpenGL || !QOpenGLContext::currentContext())
                 throw std::runtime_error("Qt Quick host requires an OpenGL scene graph/context");
             const auto size = framebufferObject()->size();
@@ -304,9 +308,16 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             {
                 --trace_frames_;
                 const auto trace_end = std::chrono::steady_clock::now();
+                timespec cpu_end{};
+                const double cpu_us =
+                    cpu_clock_valid && ::clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cpu_end) == 0
+                        ? static_cast<double>(cpu_end.tv_sec - cpu_start.tv_sec) * 1e6 +
+                              static_cast<double>(cpu_end.tv_nsec - cpu_start.tv_nsec) / 1e3
+                        : -1.0;
                 std::fprintf(
-                    stderr, "Native frame CPU_us=%.3f render_us=%.3f elapsed_s=%.6f\n",
-                    std::chrono::duration<double, std::micro>(trace_start - trace_start).count(),
+                    stderr,
+                    "Native frame thread_CPU_us=%.3f submission_wall_us=%.3f elapsed_s=%.6f\n",
+                    cpu_us,
                     std::chrono::duration<double, std::micro>(trace_end - trace_start).count(),
                     elapsed);
             }

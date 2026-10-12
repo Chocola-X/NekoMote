@@ -45,7 +45,6 @@ class Context
     }
 
     bool toggle_icon(IconState& icon, std::uint32_t texture_id);
-    void sidebar(SidebarState& sidebar, const Style& style, float delta_time = 0.016f);
     void sidebar(SidebarState& sidebar, float delta_time = 0.016f);
     void sidebar_header(const SidebarState& sidebar, const char* title, const Style& style);
 
@@ -73,22 +72,10 @@ class Context
     {
         return mouse_y_;
     }
-    bool mouse_down() const
-    {
-        return mouse_down_;
-    }
-    bool mouse_pressed() const
-    {
-        return mouse_pressed_;
-    }
 
     float scroll_delta() const
     {
         return scroll_delta_;
-    }
-    void consume_scroll()
-    {
-        scroll_delta_ = 0.0f;
     }
 
   private:

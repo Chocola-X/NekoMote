@@ -249,7 +249,7 @@ void UiRenderer::reset()
     vao_ = vbo_ = uv_vbo_ = 0;
     initialized_ = false;
     font_ready_ = false;
-    icon_textures_.clear();
+    icon_texture_ = 0;
     rect_vertices_.clear();
     rect_uvs_.clear();
     text_vertices_.clear();
@@ -273,6 +273,12 @@ bool UiRenderer::init(int viewport_width, int viewport_height)
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
     glGenBuffers(1, &uv_vbo_);
+    rect_vertices_.reserve(12);
+    rect_uvs_.reserve(12);
+    icon_vertices_.reserve(12);
+    icon_uvs_.reserve(12);
+    text_vertices_.reserve(1024);
+    text_uvs_.reserve(1024);
     initialized_ = true;
     return true;
 }
@@ -320,7 +326,16 @@ bool UiRenderer::create_rect_shader()
     if (!vs || !fs)
         return false;
     rect_shader_ = link_program(vs, fs);
-    return rect_shader_ != 0;
+    if (!rect_shader_)
+        return false;
+    rect_uniforms_.viewport = glGetUniformLocation(rect_shader_, "u_viewport");
+    rect_uniforms_.fill = glGetUniformLocation(rect_shader_, "u_fill");
+    rect_uniforms_.border = glGetUniformLocation(rect_shader_, "u_border");
+    rect_uniforms_.border_width = glGetUniformLocation(rect_shader_, "u_border_width");
+    rect_uniforms_.rect_size = glGetUniformLocation(rect_shader_, "u_rect_size");
+    rect_uniforms_.radius = glGetUniformLocation(rect_shader_, "u_radius");
+    rect_uniforms_.pixel_scale = glGetUniformLocation(rect_shader_, "u_pixel_scale");
+    return true;
 }
 
 bool UiRenderer::create_text_shader()
@@ -330,7 +345,12 @@ bool UiRenderer::create_text_shader()
     if (!vs || !fs)
         return false;
     text_shader_ = link_program(vs, fs);
-    return text_shader_ != 0;
+    if (!text_shader_)
+        return false;
+    text_uniforms_.viewport = glGetUniformLocation(text_shader_, "u_viewport");
+    text_uniforms_.color = glGetUniformLocation(text_shader_, "u_color");
+    text_uniforms_.sampler = glGetUniformLocation(text_shader_, "u_atlas");
+    return true;
 }
 
 bool UiRenderer::create_icon_shader()
@@ -340,7 +360,12 @@ bool UiRenderer::create_icon_shader()
     if (!vs || !fs)
         return false;
     icon_shader_ = link_program(vs, fs);
-    return icon_shader_ != 0;
+    if (!icon_shader_)
+        return false;
+    icon_uniforms_.viewport = glGetUniformLocation(icon_shader_, "u_viewport");
+    icon_uniforms_.color = glGetUniformLocation(icon_shader_, "u_tint");
+    icon_uniforms_.sampler = glGetUniformLocation(icon_shader_, "u_texture");
+    return true;
 }
 
 bool UiRenderer::create_tri_shader()
@@ -350,7 +375,11 @@ bool UiRenderer::create_tri_shader()
     if (!vs || !fs)
         return false;
     tri_shader_ = link_program(vs, fs);
-    return tri_shader_ != 0;
+    if (!tri_shader_)
+        return false;
+    tri_uniforms_.viewport = glGetUniformLocation(tri_shader_, "u_viewport");
+    tri_uniforms_.color = glGetUniformLocation(tri_shader_, "u_color");
+    return true;
 }
 
 void UiRenderer::resize(int viewport_width, int viewport_height)
@@ -383,7 +412,7 @@ void UiRenderer::begin_frame()
     text_uvs_.clear();
     icon_vertices_.clear();
     icon_uvs_.clear();
-    icon_textures_.clear();
+    icon_texture_ = 0;
 }
 
 void UiRenderer::end_frame()
@@ -429,13 +458,12 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     rect_uvs_.insert(rect_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
     glUseProgram(rect_shader_);
-    glUniform4f(glGetUniformLocation(rect_shader_, "u_fill"), fill.r, fill.g, fill.b, fill.a);
-    glUniform4f(glGetUniformLocation(rect_shader_, "u_border"), border.r, border.g, border.b,
-                border.a);
-    glUniform1f(glGetUniformLocation(rect_shader_, "u_border_width"), border_width);
-    glUniform2f(glGetUniformLocation(rect_shader_, "u_rect_size"), w, h);
-    glUniform1f(glGetUniformLocation(rect_shader_, "u_radius"), r);
-    glUniform1f(glGetUniformLocation(rect_shader_, "u_pixel_scale"), 1.0f);
+    glUniform4f(rect_uniforms_.fill, fill.r, fill.g, fill.b, fill.a);
+    glUniform4f(rect_uniforms_.border, border.r, border.g, border.b, border.a);
+    glUniform1f(rect_uniforms_.border_width, border_width);
+    glUniform2f(rect_uniforms_.rect_size, w, h);
+    glUniform1f(rect_uniforms_.radius, r);
+    glUniform1f(rect_uniforms_.pixel_scale, 1.0f);
     flush_rects();
 }
 
@@ -455,8 +483,8 @@ void UiRenderer::flush_rects()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(rect_shader_);
-    glUniform2f(glGetUniformLocation(rect_shader_, "u_viewport"),
-                static_cast<float>(viewport_width_), static_cast<float>(viewport_height_));
+    glUniform2f(rect_uniforms_.viewport, static_cast<float>(viewport_width_),
+                static_cast<float>(viewport_height_));
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(rect_vertices_.size() / 2));
     rect_vertices_.clear();
     rect_uvs_.clear();
@@ -472,7 +500,7 @@ void UiRenderer::draw_text(float x, float y, const char* text, float size,
     if (text_vertices_.empty())
         return;
     glUseProgram(text_shader_);
-    glUniform4f(glGetUniformLocation(text_shader_, "u_color"), color.r, color.g, color.b, color.a);
+    glUniform4f(text_uniforms_.color, color.r, color.g, color.b, color.a);
     flush_text();
 }
 
@@ -492,11 +520,11 @@ void UiRenderer::flush_text()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(text_shader_);
-    glUniform2f(glGetUniformLocation(text_shader_, "u_viewport"),
-                static_cast<float>(viewport_width_), static_cast<float>(viewport_height_));
+    glUniform2f(text_uniforms_.viewport, static_cast<float>(viewport_width_),
+                static_cast<float>(viewport_height_));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, font_atlas_.texture_id());
-    glUniform1i(glGetUniformLocation(text_shader_, "u_atlas"), 0);
+    glUniform1i(text_uniforms_.sampler, 0);
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(text_vertices_.size() / 2));
     text_vertices_.clear();
     text_uvs_.clear();
@@ -511,9 +539,9 @@ void UiRenderer::draw_icon(float x, float y, float w, float h, std::uint32_t tex
     icon_vertices_.insert(icon_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     icon_uvs_.insert(icon_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
-    icon_textures_.push_back(texture_id);
+    icon_texture_ = texture_id;
     glUseProgram(icon_shader_);
-    glUniform4f(glGetUniformLocation(icon_shader_, "u_tint"), tint.r, tint.g, tint.b, tint.a);
+    glUniform4f(icon_uniforms_.color, tint.r, tint.g, tint.b, tint.a);
     flush_icons();
 }
 
@@ -533,15 +561,15 @@ void UiRenderer::flush_icons()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(icon_shader_);
-    glUniform2f(glGetUniformLocation(icon_shader_, "u_viewport"),
-                static_cast<float>(viewport_width_), static_cast<float>(viewport_height_));
+    glUniform2f(icon_uniforms_.viewport, static_cast<float>(viewport_width_),
+                static_cast<float>(viewport_height_));
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, icon_textures_.front());
-    glUniform1i(glGetUniformLocation(icon_shader_, "u_texture"), 0);
+    glBindTexture(GL_TEXTURE_2D, icon_texture_);
+    glUniform1i(icon_uniforms_.sampler, 0);
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(icon_vertices_.size() / 2));
     icon_vertices_.clear();
     icon_uvs_.clear();
-    icon_textures_.clear();
+    icon_texture_ = 0;
 }
 
 void UiRenderer::draw_circle(float cx, float cy, float radius, nekomote::ui::Color fill,
@@ -566,9 +594,9 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glDisableVertexAttribArray(1);
     glUseProgram(tri_shader_);
-    glUniform2f(glGetUniformLocation(tri_shader_, "u_viewport"),
-                static_cast<float>(viewport_width_), static_cast<float>(viewport_height_));
-    glUniform4f(glGetUniformLocation(tri_shader_, "u_color"), color.r, color.g, color.b, color.a);
+    glUniform2f(tri_uniforms_.viewport, static_cast<float>(viewport_width_),
+                static_cast<float>(viewport_height_));
+    glUniform4f(tri_uniforms_.color, color.r, color.g, color.b, color.a);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -597,9 +625,9 @@ void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glDisableVertexAttribArray(1);
     glUseProgram(tri_shader_);
-    glUniform2f(glGetUniformLocation(tri_shader_, "u_viewport"),
-                static_cast<float>(viewport_width_), static_cast<float>(viewport_height_));
-    glUniform4f(glGetUniformLocation(tri_shader_, "u_color"), fill.r, fill.g, fill.b, fill.a);
+    glUniform2f(tri_uniforms_.viewport, static_cast<float>(viewport_width_),
+                static_cast<float>(viewport_height_));
+    glUniform4f(tri_uniforms_.color, fill.r, fill.g, fill.b, fill.a);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 

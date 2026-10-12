@@ -147,8 +147,7 @@ VkPipeline create_pipeline(VkDevice device, VkRenderPass render_pass, VkPipeline
 
     VkPipelineInputAssemblyStateCreateInfo assembly{};
     assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    assembly.topology =
-        no_vertex_input ? VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST : VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
     VkViewport viewport{};
     viewport.x = 0;
@@ -416,24 +415,24 @@ struct Renderer::Impl
             image.pixels.size() !=
                 static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4)
             throw std::runtime_error("invalid or unsupported texture dimensions");
-        auto staging = create_buffer(
-            ctx.device, ctx.physical_device, image.pixels.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        void* mapped = nullptr;
-        check_vk(vkMapMemory(ctx.device, staging.memory, 0, image.pixels.size(), 0, &mapped),
-                 "map texture upload");
-        std::memcpy(mapped, image.pixels.data(), image.pixels.size());
-        vkUnmapMemory(ctx.device, staging.memory);
+        auto staging = create_mapped_buffer(ctx.device, ctx.physical_device, image.pixels.size(),
+                                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+        std::memcpy(staging.mapped_data, image.pixels.data(), image.pixels.size());
         auto result = create_image(ctx.device, ctx.physical_device, image.width, image.height,
                                    VK_FORMAT_R8G8B8A8_UNORM,
                                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-        transition_image_layout(ctx.device, ctx.graphics_queue, upload_pool, result.handle,
-                                VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copy_buffer_to_image(ctx.device, ctx.graphics_queue, upload_pool, staging.handle,
-                             result.handle, image.width, image.height);
-        transition_image_layout(ctx.device, ctx.graphics_queue, upload_pool, result.handle,
-                                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        const auto upload_commands = begin_one_time_commands(ctx.device, upload_pool);
+        record_image_barrier(upload_commands, result.handle, VK_IMAGE_LAYOUT_UNDEFINED,
+                             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        VkBufferImageCopy copy{};
+        copy.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+        copy.imageExtent = {static_cast<std::uint32_t>(image.width),
+                            static_cast<std::uint32_t>(image.height), 1};
+        vkCmdCopyBufferToImage(upload_commands, staging.handle, result.handle,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+        record_image_barrier(upload_commands, result.handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        end_one_time_commands(ctx.device, ctx.graphics_queue, upload_pool, upload_commands);
         return result;
     }
 };
@@ -538,23 +537,21 @@ void Renderer::reserve(Capacity capacity)
     }
     else if (capacity.textures > p.descriptor_texture_capacity)
         throw std::runtime_error("texture reserve exceeds established descriptor capacity");
-    p.vbo = capacity.vertices
-                ? create_buffer(
-                      p.ctx.device, p.ctx.physical_device, capacity.vertices * sizeof(RenderVertex),
-                      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-                : Buffer{};
-    p.ebo = capacity.indices
-                ? create_buffer(
-                      p.ctx.device, p.ctx.physical_device, capacity.indices * sizeof(std::uint32_t),
-                      VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-                : Buffer{};
+    auto vbo = capacity.vertices ? create_mapped_buffer(p.ctx.device, p.ctx.physical_device,
+                                                        capacity.vertices * sizeof(RenderVertex),
+                                                        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                                 : Buffer{};
+    auto ebo = capacity.indices ? create_mapped_buffer(p.ctx.device, p.ctx.physical_device,
+                                                       capacity.indices * sizeof(std::uint32_t),
+                                                       VK_BUFFER_USAGE_INDEX_BUFFER_BIT)
+                                : Buffer{};
     p.mask_bounds.reserve(capacity.masks);
     p.mask_commands.reserve(capacity.mask_commands);
     p.masks.reserve(capacity.masks);
     p.commands.reserve(capacity.commands);
     p.textures.reserve(capacity.textures);
+    p.vbo = std::move(vbo);
+    p.ebo = std::move(ebo);
     p.vertex_capacity = capacity.vertices;
     p.index_capacity = capacity.indices;
     p.command_capacity = capacity.commands;
@@ -668,14 +665,11 @@ void Renderer::prepare(RenderFrame frame)
             }
         }
 
-    const auto upload = [&p](Buffer& buffer, const void* bytes, std::size_t size)
+    const auto upload = [](Buffer& buffer, const void* bytes, std::size_t size)
     {
         if (!size)
             return;
-        void* mapped = nullptr;
-        check_vk(vkMapMemory(p.ctx.device, buffer.memory, 0, size, 0, &mapped), "map frame buffer");
-        std::memcpy(mapped, bytes, size);
-        vkUnmapMemory(p.ctx.device, buffer.memory);
+        std::memcpy(buffer.mapped_data, bytes, size);
     };
     upload(p.vbo, frame.vertices.data(), frame.vertices.size() * sizeof(RenderVertex));
     upload(p.ebo, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));

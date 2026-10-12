@@ -46,6 +46,8 @@
 
 截至2026-10-12，GLM 已交付共享 Controller/UI/GL 执行、高层 ABI、Plasma 和声音接入；显示阶段起点 `7029eda`，当前 C12 基线 `cfed43e`。Codex 修复 UI 初始化/输出目标/输入/重建与重装配置丢失，隔离包验证见 [说明](docs/plasma-display-fix.md)，用户已确认真实桌面 OpenGL 初步接入正常（具体逐项覆盖未提供）。C12 已复核 Vulkan ABI 0.5.0 并完成 Plasma 的 GL/Vulkan 选择与 GPU 共享图像接入；隔离验收见 [说明](docs/plasma-dual-backend.md)，真实 miku Vulkan 桌面仍待测试。GitHub 基线分发配置已准备，实际基线构建与跨发行版运行未验收。不要继续执行旧“G31 待实现”清单；已有源码与完整独立验收区分，面板业务重复、FPS/静音联动、渐变时间与资源边界仍待收拢。单边界0x7fc/195初态沿用；3 bust_LR20、嵌套/2标量、195全动态、正式声音/长期/多屏未最终验收。按 [摘要](docs/review-agents-current.md)、[路线图](ROADMAP.md)、[清单](docs/agent-workboard.md)、[交接](docs/agent-next-handoff.md)执行。
 
+C13 优化复核从 `3a56ce0` 开始，结论与下一步见 [复核](docs/optimization-audit-2026-10-12.md)。不得把优化候选清单视为已确认缺陷，或据此删除动态帧检查/宿主同步。GLM 下一批 G34 明确契约见 [建议](docs/optimization-suggestions-2026-10-12.md)。
+
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 
 验证以原网页的真实画面/行为为参照，用固定变量、固定步长与一致初态建立证据。Live2D 等材料用于理解模块职责，不能默认把其源码移植进本项目。
@@ -95,7 +97,7 @@ NekoMote 是独立的原生二维模型运行时与动态壁纸项目。核心�
 | `importer` | E-mote 解包数据导入、字段规范化、资产编译 | `model`、必要资产/JSON 工具 | 桌面、运行时隐藏兼容分支 |
 | `render_gl` | 模型/背景/UI绘制协议的OpenGL执行、GPU上传、遮罩、混合和资源释放 | 后端无关绘制协议、图形 API | E-mote 原始字段、反应规则、application/UI业务状态、桌面策略 |
 | `render_vk` | 同一模型/背景/UI协议的 Vulkan 1.0 执行与设备资源；向宿主 command buffer 录制 | 后端无关绘制协议、Vulkan | 原始 E-mote 字段、application/UI 业务、桌面策略、独立呈现状态机 |
-| `application` | 会话与Controller、资产扫描、配置语义、多模型切换/渐变、模型输入处理及音频策略 | `runtime`、`asset_io`、后端无关数据/服务契约、`std::filesystem` | 桌面私有对象、窗口库、OpenGL/Vulkan、`ui`、反向依赖已有`audio`设备目标 |
+| `application` | 会话与Controller、资产扫描、配置语义、多模型切换/渐变、模型输入处理及音频策略 | `runtime`、`asset_io`、后端无关数据/服务契约、`std::filesystem`、私有配置/目录编解码 | 桌面私有对象、窗口库、OpenGL/Vulkan、`ui`、反向依赖已有`audio`设备目标 |
 | `ui` | 共享控制面板、布局、hit-test、事件路由、字体度量及后端无关绘制数据 | `application`、公共绘制/资源值类型、必要CPU字体工具 | 窗口/桌面 API、QML/GTK、`render_gl`、OpenGL/Vulkan调用或句柄 |
 | `preview` | 普通窗口壳与诊断操作 | 核心模块、`ui`、窗口库 | 桌面适配器内部实现 |
 | `adapters` | 输出创建、事件采集转发、尺寸/DPI/能力/宿主暂停通知与生命周期 | 宿主契约、具体桌面 API、C ABI | 原始 E-mote JSON、直接调用application/ui C++、业务逻辑重实现 |

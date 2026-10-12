@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -22,8 +23,8 @@ struct Glyph
 class FontMetrics
 {
   public:
-    FontMetrics() = default;
-    ~FontMetrics() = default;
+    FontMetrics();
+    ~FontMetrics();
     FontMetrics(const FontMetrics&) = delete;
     FontMetrics& operator=(const FontMetrics&) = delete;
 
@@ -32,10 +33,6 @@ class FontMetrics
     float text_width(const char* text, float size);
     void draw_text(std::vector<float>& vertices, std::vector<float>& uvs, float x, float y,
                    const char* text, float size);
-    float height() const
-    {
-        return pixel_height_;
-    }
     int texture_width() const
     {
         return texture_width_;
@@ -43,10 +40,6 @@ class FontMetrics
     int texture_height() const
     {
         return texture_height_;
-    }
-    bool initialized() const
-    {
-        return initialized_;
     }
 
     // Called when a new glyph is prepared (CPU metrics + bitmap ready).
@@ -59,7 +52,9 @@ class FontMetrics
   private:
     bool initialized_{false};
     std::vector<unsigned char> font_data_;
-    std::vector<unsigned char> font_info_storage_;
+    struct FontInfo;
+    std::unique_ptr<FontInfo> font_info_;
+    int ascent_{0};
     float pixel_height_{16.0f};
     std::unordered_map<unsigned int, Glyph> glyphs_;
     int texture_width_{1024};

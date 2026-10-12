@@ -934,13 +934,22 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         // anchors. See docs/validation/p6-world-deformation.json.
         // Interpolate degrees first; the source saves negative-angle wrapping
         // before double trigonometry and the final Float32 matrix coefficients.
-        float degrees = std::fmod(state.transform.angle_degrees, 360.0f);
-        if (degrees < 0)
-            degrees += 360.0f;
-        const double radians = static_cast<double>(degrees) * (std::numbers::pi / 180.0);
-        const float cosine = static_cast<float>(std::cos(radians));
-        const float sine = static_cast<float>(std::sin(radians));
-        const RigidTransform local{cosine, sine, -sine, cosine, state.transform.translation};
+        RigidTransform local;
+        if (state.transform.angle_degrees == 0.0f)
+        {
+            const float sine = state.transform.angle_degrees; // Preserve signed zero.
+            local = {1.0f, sine, -sine, 1.0f, state.transform.translation};
+        }
+        else
+        {
+            float degrees = std::fmod(state.transform.angle_degrees, 360.0f);
+            if (degrees < 0)
+                degrees += 360.0f;
+            const double radians = static_cast<double>(degrees) * (std::numbers::pi / 180.0);
+            const float cosine = static_cast<float>(std::cos(radians));
+            const float sine = static_cast<float>(std::sin(radians));
+            local = {cosine, sine, -sine, cosine, state.transform.translation};
+        }
         const auto& transform_parent = instance.states[state.transform_parent.value];
         state.world = compose(transform_parent.world, local);
         state.excluded_curve = parent.excluded_curve;
@@ -1158,6 +1167,8 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         const auto base = static_cast<std::uint32_t>(instance.vertices.size());
         const auto first = static_cast<std::uint32_t>(instance.indices.size());
         const auto& texture = instance.scene.textures[p.texture.value - 1];
+        const float inv_tex_w = 1.0f / static_cast<float>(texture.width);
+        const float inv_tex_h = 1.0f / static_cast<float>(texture.height);
         const auto& world = instance.states[p.node.value].world;
         const double left = -static_cast<double>(r.origin_x);
         const double top = -static_cast<double>(r.origin_y);
@@ -1202,11 +1213,8 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                     static_cast<float>((1 - column) * row_left_x + column * row_right_x),
                     static_cast<float>((1 - column) * row_left_y + column * row_right_y)};
                 const auto point = instance.deform(p.node, rigid_point);
-                instance.vertices.push_back({point.x,
-                                             point.y,
-                                             u / static_cast<float>(texture.width),
-                                             v / static_cast<float>(texture.height),
-                                             {1, 1, 1, p.opacity}});
+                instance.vertices.push_back(
+                    {point.x, point.y, u * inv_tex_w, v * inv_tex_h, {1, 1, 1, p.opacity}});
             }
         }
         for (int y = 0; y < ny; ++y)

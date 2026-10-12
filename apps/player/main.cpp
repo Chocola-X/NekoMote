@@ -10,6 +10,9 @@
 #include <nekomote/ui/layout.hpp>
 #include <nekomote/ui/menu.hpp>
 
+#include <cstdlib>
+#include <cstring>
+
 #include "backend.hpp"
 #include "touch_overlay.hpp"
 
@@ -675,13 +678,18 @@ int run(int argc, char** argv)
         window.reset(glfwCreateWindow(o.width, o.height, "NekoMote", nullptr, nullptr));
         if (!window)
             throw std::runtime_error("Vulkan window creation failed");
-        vk_host = std::make_unique<player::VkHost>();
+        vk_host = std::make_unique<player::VkHost>(
+            o.measure != 0 ? player::PresentationPolicy::ApplicationPacedMeasurement
+                           : player::PresentationPolicy::Synchronized);
         std::uint32_t glfw_ext_count = 0;
         const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
         if (!glfw_exts || glfw_ext_count == 0)
             throw std::runtime_error("GLFW returned no Vulkan instance extensions");
         std::vector<const char*> required_exts(glfw_exts, glfw_exts + glfw_ext_count);
-        vk_host->create_instance(required_exts);
+        const auto* validation = std::getenv("NEKOMOTE_VK_VALIDATION");
+        vk_host->create_instance(required_exts, validation && std::strcmp(validation, "1") == 0
+                                                    ? player::ValidationPolicy::Required
+                                                    : player::kDefaultValidationPolicy);
         VkSurfaceKHR surface;
         if (glfwCreateWindowSurface(vk_host->instance, window.get(), nullptr, &surface) !=
             VK_SUCCESS)
@@ -781,8 +789,8 @@ int run(int argc, char** argv)
         if (bg)
         {
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
-            apply_background_gpu(gpu, controller.background_path(bg_index), 0, bg_index,
-                                 controller, o.backend
+            apply_background_gpu(gpu, controller.background_path(bg_index), 0, bg_index, controller,
+                                 o.backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                                  ,
                                  vk_ctx_ptr
@@ -1160,12 +1168,11 @@ int run(int argc, char** argv)
         if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
-            const ui::Style style;
 
             if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
                 ui_sidebar.open = !ui_sidebar.open;
 
-            ui_context.sidebar(ui_sidebar, style, static_cast<float>(elapsed));
+            ui_context.sidebar(ui_sidebar, static_cast<float>(elapsed));
 
             const bool mouse_over_icon =
                 ui_context.mouse_in_rect(ui_icon.x, ui_icon.y, ui_icon.size, ui_icon.size);

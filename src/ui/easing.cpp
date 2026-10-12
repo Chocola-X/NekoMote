@@ -1,7 +1,5 @@
 #include <nekomote/ui/easing.hpp>
 
-#include <cmath>
-
 namespace nekomote::ui
 {
 
@@ -9,12 +7,10 @@ float ease_out_back(float t)
 {
     const float c1 = 1.70158f;
     const float c3 = c1 + 1.0f;
-    return 1.0f + c3 * std::pow(t - 1.0f, 3.0f) + c1 * std::pow(t - 1.0f, 2.0f);
-}
-
-float ease_out_cubic(float t)
-{
-    return 1.0f - std::pow(1.0f - t, 3.0f);
+    const float x = t - 1.0f;
+    const float square = x * x;
+    const float cube = square * x;
+    return 1.0f + c3 * cube + c1 * square;
 }
 
 float lerp(float a, float b, float t)

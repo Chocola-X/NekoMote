@@ -2,6 +2,10 @@
 
 2026-10-12，C12 基线 `cfed43e`。player、Vulkan ABI 0.5.0、Plasma 双后端已有源码与隔离验收；先读 [当前摘要](review-agents-current.md)、[Plasma 后端](plasma-dual-backend.md)。不要重新实现 G31/G32 或修改已通过的模型公式。
 
+## GLM：G34 重复几何编译消除（当前优先）
+
+C13 优化之后接手，输入与验收按 [优化建议](optimization-suggestions-2026-10-12.md) 的 G34。声明新 HEAD 与文件；复用一次编译场景并维持唯一所有权、变量来源发现与动画/物理借用寿命。冻结加载性能、CPU/真实会话及同条件截图；不调整模型公式、GPU 同步、错误检查、ABI 借用范围。大量模型的证据准备由 GLM 执行，图像异常交 Gemini，编译契约与边界交 Codex。
+
 ## GLM：G33 基线分发构建
 
 范围为 `.github/workflows/plasma-distribution.yml`、`tools/plasma_baseline*`、`tools/plasma_distribution.py` 和对应分发测试/文档。先声明实际 base 与文件；不同时修改 ABI、Qt/Vulkan 桥或模型求值。

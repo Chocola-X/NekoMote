@@ -1,0 +1,562 @@
+{
+  "stage": "C13",
+  "date": "2026-10-12",
+  "base_commit": "3a56ce0",
+  "source_cpp_diff_sha256": "9d0711dac07fcf1eea3c9b19c2ff62dc9dc704a5dcb158af85a624400caeb97c",
+  "evidence_root": "build/evidence/optimization-20261012",
+  "provenance": {
+    "review": "Codex / GPT-6 (exact variant not exposed)",
+    "input": "CodeArts / GLM-5.2 uncommitted five-source patch",
+    "original_inputs": [
+      "glm-input.patch",
+      "glm-audit.md",
+      "glm-suggestions.md"
+    ]
+  },
+  "environment": {
+    "cpu": "AMD Ryzen 7 5800H",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "575.64.03",
+    "desktop": "KDE / X11",
+    "qt": "6.9.1",
+    "compiler": "GCC 15.1.1",
+    "build": "Release / LTO / WERROR",
+    "builds": [
+      "build/optimization-base (git archive base)",
+      "build/optimization-current (Plasma + tests)",
+      "build/release (normal player rebuilt)"
+    ],
+    "gpu_serialization": "build/gpu-validation.lock",
+    "validation": "Khronos 1.4.309.0 extracted into evidence only; core + synchronization; no system install"
+  },
+  "checks": {
+    "cpu_ctest": {
+      "passed": 181,
+      "failed": 0,
+      "log": "cpu-tests-final.log"
+    },
+    "opengl_gpu": {
+      "cases": 13,
+      "assertions": 233,
+      "passed": true,
+      "log": "opengl-gpu-final.log"
+    },
+    "vulkan_gpu": {
+      "cases": 7,
+      "assertions": 198,
+      "passed": true,
+      "log": "vulkan-gpu-final.log"
+    },
+    "plasma_isolated": {
+      "tests": [
+        "plasma_wallpaper_layers",
+        "plasma_wallpaper_layers_vulkan",
+        "plasma_item_safety",
+        "plasma_config_reject"
+      ],
+      "passed": 4,
+      "failed": 0,
+      "log": "plasma-tests-retry.log"
+    },
+    "vulkan_window": {
+      "mode": "IMMEDIATE measurement only",
+      "samples": 180,
+      "validation_enabled": true,
+      "errors": 0,
+      "log": "vulkan-present-validation.log",
+      "not_performance_sample": true
+    },
+    "required_validation_missing": {
+      "exit": 1,
+      "expected": true,
+      "log": "validation-required-missing.log"
+    },
+    "cpp_format": {
+      "files": 25,
+      "passed": true
+    },
+    "build_release": {
+      "passed": true,
+      "log": "release-build-final.log"
+    }
+  },
+  "images": {
+    "model": "chocola/date-a",
+    "size": [
+      800,
+      1080
+    ],
+    "seed": 1,
+    "ui_steps": 60,
+    "ui_background": "BG_07A",
+    "before_after_opengl": {
+      "reference_sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "native_sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "size": [
+        800,
+        1080
+      ],
+      "raw_max_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_max_error": 0,
+      "composed_max_rgb_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "tolerance": 0,
+      "pixels_over_tolerance": 0,
+      "reference_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "native_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "passed": true
+    },
+    "before_after_vulkan": {
+      "reference_sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "native_sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "size": [
+        800,
+        1080
+      ],
+      "raw_max_rgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "alpha_max_error": 0,
+      "composed_max_rgb_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "tolerance": 0,
+      "pixels_over_tolerance": 0,
+      "reference_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "native_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "passed": true
+    },
+    "gl_vs_vk": {
+      "reference_sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "native_sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "size": [
+        800,
+        1080
+      ],
+      "raw_max_rgba": [
+        0,
+        1,
+        0,
+        0
+      ],
+      "alpha_max_error": 0,
+      "composed_max_rgb_black_white": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "tolerance": 2,
+      "pixels_over_tolerance": 0,
+      "reference_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "native_bbox": [
+        0,
+        0,
+        800,
+        1080
+      ],
+      "passed": true
+    },
+    "gl_vs_vk_strict_zero": "Failed on six green-channel pixels with 1/255 difference, already present in baseline; retained ui-gl-vk.json",
+    "webgl_initial": {
+      "reference_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+      "native_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+      "size": [
+        800,
+        1080
+      ],
+      "raw_max_rgba": [
+        1,
+        1,
+        1,
+        0
+      ],
+      "alpha_max_error": 0,
+      "composed_max_rgb_black_white": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "tolerance": 2,
+      "pixels_over_tolerance": 0,
+      "reference_bbox": [
+        0,
+        196,
+        800,
+        1080
+      ],
+      "native_bbox": [
+        0,
+        196,
+        800,
+        1080
+      ],
+      "passed": true
+    },
+    "webgl_inputs": {
+      "steps": 0,
+      "origin": [
+        0,
+        400
+      ],
+      "scale": 1,
+      "physics": 0,
+      "fixed_clock_ms": 1000,
+      "timeline": "差分用_waiting_loop",
+      "flags": 3,
+      "source_hashes": {
+        "psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "original_psb": "e392deb43cfb033f19eaed5c21d4b06f6a512468bdd60cc5a52b01cc5c7232f4",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      }
+    },
+    "final_binary_capture": [
+      {
+        "argv": [
+          "flock",
+          "/run/media/chocola/DATA/Project/NekoMote/build/gpu-validation.lock",
+          "timeout",
+          "30s",
+          "/run/media/chocola/DATA/Project/NekoMote/build/optimization-current/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--backend",
+          "opengl",
+          "--width",
+          "800",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/optimization-20261012/final-opengl-ui.png",
+          "--steps",
+          "60"
+        ],
+        "code": 0,
+        "sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+        "identical_to_previous": true
+      },
+      {
+        "argv": [
+          "flock",
+          "/run/media/chocola/DATA/Project/NekoMote/build/gpu-validation.lock",
+          "timeout",
+          "30s",
+          "/run/media/chocola/DATA/Project/NekoMote/build/optimization-current/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--backend",
+          "vulkan",
+          "--width",
+          "800",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/optimization-20261012/final-vulkan-ui.png",
+          "--steps",
+          "60"
+        ],
+        "code": 0,
+        "sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+        "identical_to_previous": true
+      }
+    ],
+    "visual_inspection": [
+      "webgl-native.png",
+      "current-vulkan-ui.png",
+      "plasma/settings.png"
+    ]
+  },
+  "performance": {
+    "geometry": {
+      "operation": "evaluate+build_frame; diagnostic, no physical controllers",
+      "variables": {
+        "body_LR": 30
+      },
+      "warmup": 120,
+      "samples_per_round": 10000,
+      "rounds": 3,
+      "order": "base/current alternating per model",
+      "results": [
+        {
+          "model": "chocola/date-a",
+          "version": "base",
+          "p50_p95_p99_ms_by_round": [
+            [
+              0.300946,
+              0.317779,
+              0.329582
+            ],
+            [
+              0.287887,
+              0.31254,
+              0.323785
+            ],
+            [
+              0.285023,
+              0.303741,
+              0.316731
+            ]
+          ],
+          "median_p50_p95_p99_ms": [
+            0.287887,
+            0.31254,
+            0.323785
+          ]
+        },
+        {
+          "model": "chocola/date-a",
+          "version": "current",
+          "p50_p95_p99_ms_by_round": [
+            [
+              0.285302,
+              0.304438,
+              0.314915
+            ],
+            [
+              0.286489,
+              0.308,
+              0.320642
+            ],
+            [
+              0.282858,
+              0.305905,
+              0.318686
+            ]
+          ],
+          "median_p50_p95_p99_ms": [
+            0.285302,
+            0.305905,
+            0.318686
+          ]
+        },
+        {
+          "model": "fraise/maid-b",
+          "version": "base",
+          "p50_p95_p99_ms_by_round": [
+            [
+              0.403264,
+              0.437347,
+              0.456413
+            ],
+            [
+              0.405429,
+              0.442585,
+              0.459836
+            ],
+            [
+              0.407525,
+              0.446985,
+              0.47094
+            ]
+          ],
+          "median_p50_p95_p99_ms": [
+            0.405429,
+            0.442585,
+            0.459836
+          ]
+        },
+        {
+          "model": "fraise/maid-b",
+          "version": "current",
+          "p50_p95_p99_ms_by_round": [
+            [
+              0.393207,
+              0.425334,
+              0.445379
+            ],
+            [
+              0.397886,
+              0.43595,
+              0.455366
+            ],
+            [
+              0.410249,
+              0.442795,
+              0.462489
+            ]
+          ],
+          "median_p50_p95_p99_ms": [
+            0.397886,
+            0.43595,
+            0.455366
+          ]
+        }
+      ],
+      "raw": "runtime-benchmarks.json"
+    },
+    "opengl_single_pair": {
+      "warmup": 120,
+      "samples": 180,
+      "size": [
+        800,
+        1080
+      ],
+      "target_fps": 60,
+      "model": "chocola/date-a",
+      "background": "BG_07A",
+      "ui": "open",
+      "audio": "muted",
+      "base_p50_p95_p99_ms": [
+        1.363654,
+        1.666836,
+        1.78822
+      ],
+      "current_p50_p95_p99_ms": [
+        1.390123,
+        1.753858,
+        1.803655
+      ],
+      "base_fps": 58.793,
+      "current_fps": 58.726,
+      "logs": [
+        "base-opengl-measure-final.log",
+        "current-opengl-measure-final.log"
+      ]
+    },
+    "conclusion": "Timing overlaps/no significant whole-wallpaper gain established. Reduced operation counts are structural, not measured power gains.",
+    "operation_counts": {
+      "vk_model_prepare_maps_unmaps": "2 map + 2 unmap per frame -> zero",
+      "vk_model_texture_upload": "3 submit/wait -> one",
+      "gl_ui_uniform_lookup": "draw-time lookup -> shader creation"
+    },
+    "unmeasured": [
+      "VRAM",
+      "power",
+      "whole-application malloc",
+      "ASan this stage",
+      "all 195 dynamic models",
+      "miku actual Vulkan desktop",
+      "Wayland",
+      "other drivers",
+      "long run"
+    ],
+    "fifo_issue": {
+      "baseline_and_current": "timeout in vkQueuePresentKHR on unfocused NVIDIA/X11 window",
+      "logs": [
+        "base-vulkan-measure-final.log",
+        "current-vulkan-measure-final.log",
+        "vulkan-measure-trace-all.log"
+      ],
+      "measurement_fix": "explicit supported IMMEDIATE; ordinary playback remains FIFO; different policies not compared for speed"
+    }
+  },
+  "binary_sha256": {
+    "build/optimization-base/bin/nekomote_player": "99cdc0110fc46ac359d16813af39c416e0d2768b3cbc40fb1dbd68aa5e667099",
+    "build/optimization-current/bin/nekomote_player": "d45e3ddb8490ac011ab5c787f9398c3528959ce35847f8b05cfc06aef2d76229",
+    "build/release/bin/nekomote_player": "44494e0c29f180cba6e725cd5c95248e9a50d71eee62fa9af34f59e87fab4e80",
+    "build/optimization-current/bin/nekomote_pose": "6af9de3a2a9e9cdd6b09d945d8d9a33976042814e8c83ed0352c47aca2a09426"
+  },
+  "asset_sha256": {
+    "assets/characters/chocola/date-a/meta.json": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e",
+    "assets/characters/chocola/date-a/model.nkm.json": "eddc226dd2056ccf96ab8cf179824386f427d2db9b20f6420689c316a0368690",
+    "assets/characters/chocola/date-a/session.nks.json": "88b5500ed9af6c3df8f62b73a3c706cdd43427481784abf3a62d512a90aacbdd",
+    "assets/characters/chocola/date-a/textures/0.png": "0404f69a42405a4fc3f8f3ed7f381dfc3215bb2c57d938555c79f6db78b29642",
+    "assets/characters/fraise/maid-b/meta.json": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40",
+    "assets/characters/fraise/maid-b/model.nkm.json": "7ddcdab3c9f7d05be82fba2a0231d4ff185f9a0a145ef080f6085f1e0fa1c092",
+    "assets/characters/fraise/maid-b/report.json": "683cc143d9d67e12a571342cf73ec18ae0e6a183156ed8702b4ad9117bd6ffd7",
+    "assets/characters/fraise/maid-b/session.nks.json": "8cb5cbd5e35854f1da37e4e9ec0cd47cd2ae00c80d46798eb0a5e4af7f72b549",
+    "assets/characters/fraise/maid-b/session.nks.json.report.json": "061058f9b29fc4e6032246fdb59361140b0e3904e3a0add0fa8371835913f5f3",
+    "assets/characters/fraise/maid-b/source.json": "ac1725fcca089d575778ba3106ae6e27eb9f719a559b50cab156176fecc41a89",
+    "assets/characters/fraise/maid-b/textures/0.png": "17e5a506cd5252a324af8fb65b4052905d86adeb82ff111684f125305f75908b",
+    "assets/config.json": "3a0611c7f53f5d1b9c59037ce34b078d33b6dc28d5f38de64cb70132f492059c",
+    "assets/backgrounds/BG_07A.png": "13930a48f69e338eb910d9278a96d9366ea09d2ed5fdc779a64875804e37efdd"
+  },
+  "log_sha256": {
+    "cpu-tests-final.log": "b98075c21c04c48b058cb016beb460e0f43b97ebf74e0afa3a089272984c7943",
+    "opengl-gpu-final.log": "67448a848074163bb4e086d317061613fd492a9734b840e6a4766fc209c2570a",
+    "vulkan-gpu-final.log": "4721082fc95a7d103d8d7093d5231df44d4f409dc210ca661da475a209f886a7",
+    "plasma-tests-retry.log": "e99a4a7cec248fde8fc7e5b212e3cd47d79633936cc07ddd5dea70dca56d9150",
+    "vulkan-present-validation.log": "6de1a7fc9ecdce5636a58c352a6445dbfb67ae8ee758e9af200635a1ed3e1bce",
+    "validation-required-missing.log": "1bac531fff28d18c242ef368a7958408f5a0d32ca4184b717d0f881bc9435297",
+    "release-build-final.log": "6ff05ef2b42b5c586cb34386df0df942b6fef32a7f9069d5e24742ab1e90a2d1"
+  },
+  "rejected_attempts": [
+    "rejected-double-mapping.log",
+    "rejected-stale-drag-test.log",
+    "plasma-tests.log (stale fixture coordinates)",
+    "webgl-capture.log (wrong timeline)",
+    "rejected-name-* (old hyphen catalog name)",
+    "vulkan-measure-immediate-validation.log (Release layer actually disabled; smoke only)"
+  ],
+  "next": "G34: remove duplicate Session geometry compilation under docs/optimization-suggestions-2026-10-12.md contract"
+}

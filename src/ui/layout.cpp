@@ -189,11 +189,6 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
     }
 }
 
-void Context::sidebar(SidebarState& sidebar, const Style& /*style*/, float delta_time)
-{
-    this->sidebar(sidebar, delta_time);
-}
-
 void Context::sidebar_header(const SidebarState& sidebar, const char* title, const Style& style)
 {
     if (!painter_)
