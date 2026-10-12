@@ -1,7 +1,6 @@
 # C ABI 当前契约与验证
 
-当前仅支持 **0.4.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
-
+当前仅支持 **0.5.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
 ## 壁纸应用层接口
 
@@ -9,7 +8,7 @@
 
 高层壁纸输入使用输出物理像素、左上原点、Y 向下；Qt 壳按逻辑/输出尺寸转换一次。转发左键按下/释放后，由共享 Controller 区分短按触摸与长按 300ms 拖动；不再额外对同一次左键按下调用 touch。直接 touch 接口保留给明确的触摸/诊断事件。滚轮在 UI 外围绕指针缩放，右键留给桌面。pointer_move/mouse_button 的 `timestamp_ms` 为采集时的单调毫秒时间，同一实例使用一致时钟，按序传递；延迟批次仍按事件时间识别长按。宿主必须按当前头文件重建，不保留旧签名。`set_render_target` 指定 FBO，角色/背景和 UI 都绘制到此目标；UI 可在输出尺寸晚于加载时延迟初始化。显式 model/session 诊断模式不绘控制面板。创建/加载/绘制/重置/销毁中的 GPU 操作须在其有效 GL 上下文与允许线程执行；CPU 查询不能作为跨线程读写许可。当前其他高层接口的异常/借用寿命边界仍需独立复核，不沿用测试数量宣称全部满足。
 
-后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。未来设备/输出/native同步在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。图形入口可按实际后端新增，不提前制造通用handle联合体或空Vulkan接口。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
+后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。GL/Vulkan 设备、输出和 native 同步分别在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
 
 ## 所有权与失败
 
@@ -25,7 +24,7 @@
 
 ## 构建与已验证范围
 
-`NEKOMOTE_BUILD_ABI=ON` 独立于 `NEKOMOTE_BUILD_PREVIEW`。ABI 的函数指针 GL 后端可以编译而不创建上下文、窗口或配置 GLFW/OpenGL 系统库。只有 GPU 正例需要显示环境。
+`NEKOMOTE_BUILD_ABI=ON` 独立于 `NEKOMOTE_BUILD_PREVIEW`。ABI 的函数指针 GL 后端可以编译而不创建上下文、窗口或配置 GLFW/OpenGL 系统库。共享声音服务需要 libpulse ≥16.1 开发包；构建不连接声音服务器。只有 GPU 正例需要显示环境。
 
 ```sh
 cmake --preset asan
@@ -41,34 +40,18 @@ GPU 负例使用真正的 renderer：纹理长度/尺寸、非法 blend/protecti
 
 ## Vulkan 后端契约
 
-### 句柄所有权与寿命
+- `create_vk` 借用宿主的 instance、physical device、device 和 graphics queue；实例只拥有自己的 GPU 资源。当前颜色格式只接受 `VK_FORMAT_R8G8B8A8_UNORM`，其他格式明确失败。所有 native 句柄必须来自同一有效设备，非空检查不证明 native 句柄合法。
+- 所有实例调用在同一求值/图形线程串行执行。宿主须在 `advance`、加载、resize、reset、输入引起资源变更和销毁前等待此前引用实例资源的全部 GPU 工作完成。设备线程共享 queue 时还须按 Vulkan 规则外部串行同步；仅同线程录制并不足以证明 GPU 完成。
+- 销毁顺序：停止录制/新提交 → 等待引用壁纸资源的 GPU 工作 → `nekomote_wallpaper_destroy(wp)` → 宿主释放设备/实例。不能先销毁实例后等待 fence。
+- 宿主在 `advance` 后设置本帧 `nekomote_vk_target`，检查 setter 的 `nekomote_error`，随后 `render_frame` + `render_ui` 可共享 target。`advance`、输出尺寸变化、GPU reset 使旧 target 失效；宿主提交以后也不得继续使用旧借用目标，下一帧重新设置。失败 setter 会使之前的 target 失效。
+- target 借用一个正在录制、处于 render pass 外的 primary command buffer，以及兼容的单颜色 framebuffer：RGBA8 UNORM、sample count 1、attachment 已处于 COLOR_ATTACHMENT_OPTIMAL，render pass 的 LOAD/STORE 和 initial/final layout 同为 COLOR_ATTACHMENT_OPTIMAL。target 正尺寸必须与 `set_output_size` 的当前尺寸一致。 framebuffer 创建使用一个 graphics subpass、color attachment 0，无 resolve/depth；依赖也必须兼容：EXTERNAL→0 为 ALL_COMMANDS/MEMORY_READ|MEMORY_WRITE → COLOR_ATTACHMENT_OUTPUT/COLOR_ATTACHMENT_READ|WRITE，0→EXTERNAL 为 COLOR_ATTACHMENT_OUTPUT/COLOR_ATTACHMENT_WRITE → ALL_COMMANDS/MEMORY_READ|MEMORY_WRITE，两项 dependencyFlags=0。只匹配格式不满足 render pass 兼容性。
+- 壁纸绘制自行开始/结束兼容 render pass，仅录制命令。提交、帧完成 fence、输出采样与呈现属于宿主。加载、字形/图标内容变化可执行独立同步上传；不能把录制入口的约束解释为所有接口都不会提交上传。
+- 内部输出行方向沿用 OpenGL：底部逻辑行位于图像存储起始处。宿主用于屏幕呈现/上左原点截图时翻转一次；共享目标的外部采样必须采用对应 UV 约定，不能在模型投影重复翻转。
+- 首次 `render_frame` 会清理目标或先绘背景，不要求宿主每帧另行清零。UI 在其后保留颜色；未设置有效 target 时绘制返回 RENDERER 错误。
+- 当前 result 型高层壁纸入口捕获 C++ 异常，OOM 返回 OUT_OF_MEMORY，其他后端异常返回可检查错误与固定 TLS 诊断。GPU 候选在上传、prepare、resize 成功后才替换当前 GPU owner；背景资源同样先准备后替换。宿主遇到绘制失败须放弃或明确处理本次未提交命令，不能作为成功帧呈现。
+- 没有 Vulkan 构建支持时 `create_vk` 返回 NULL + UNSUPPORTED；无效必需指针/颜色格式返回 INVALID_INPUT。setter 在有效 OpenGL 壁纸上返回 UNSUPPORTED。ABI 开发期签名已升级，所有调用者重建，不保留旧签名。
 
-- `nekomote_vk_device_context` 中的 `instance`/`physical_device`/`device`/`graphics_queue` 由宿主创建并拥有。`nekomote_wallpaper_create_vk` 借用这些句柄，不创建或销毁设备。
-- `nekomote_wallpaper` 实例及其内部 GPU 资源（纹理、缓冲、管线）必须在宿主销毁 Vulkan 设备之前通过 `nekomote_wallpaper_destroy` 销毁。
-- 销毁顺序：`nekomote_wallpaper_destroy(wp)` → `vkDeviceWaitIdle` → 宿主释放 Vulkan 设备/实例。
-
-### 帧借用契约
-
-- `nekomote_vk_target` 是每帧借用的录制目标。宿主必须在每次 `render_frame` / `render_ui` 调用前通过 `nekomote_wallpaper_set_vk_target` 设置当帧 target。
-- target 的 `commands` 必须处于 `VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT` 录制状态，且 `framebuffer` 的 color attachment 已转换为 `VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL`。
-- 壁纸实例只向 `commands` 录制绘制命令，不提交（`vkQueueSubmit`）、不呈现（`vkQueuePresentKHR`）、不等待 fence。提交和呈现由宿主负责。
-
-### 线程约束
-
-- 同一 `nekomote_wallpaper` 实例的 `render_frame` / `render_ui` / `set_vk_target` 必须在同一线程调用（串行求值线程）。
-- 宿主的 `vkQueueSubmit` / `vkQueuePresentKHR` 可在另一线程，但必须通过 fence/semaphore 保证与壁纸实例的命令录制有明确的 happens-before 关系。
-
-### 错误处理
-
-- `nekomote_wallpaper_create_vk` 在 Vulkan 未编译时返回 NULL + `NEKOMOTE_ERROR_UNSUPPORTED`。
-- device context 任一成员为 NULL 时返回 NULL + `NEKOMOTE_ERROR_INVALID_INPUT`。
-- `render_frame` / `render_ui` 在未设置 target 时返回 `NEKOMOTE_ERROR_RENDERER`。
-
-### 格式约定
-
-- `color_format` 当前固定为 `VK_FORMAT_R8G8B8A8_UNORM`。
-- 宿主 render pass 的 attachment loadOp/storeOp 为 LOAD/STORE，initialLayout/finalLayout 为 COLOR_ATTACHMENT_OPTIMAL。
-- 壁纸实例假定 target 内容在 render_frame 首次写入前已被宿主清零或由背景写入覆盖。
+C12 独立复核（2026-10-12）证据位于 `build/evidence/plasma-dual-20261012/abi-validation.json`：ABI CPU CTest 3/3 通过，真实资产项已执行；新增合成 GPU ABI 用例 39 assertions 通过；60 固定步的巧克力、背景和展开面板 GL/Vulkan PNG 完全一致，普通与同步验证未报告错误。修前 Vulkan PNG 重复翻转导致整体倒置，保留 `before-*` 对照；`--ui-open` 现通过共享 `set_ui_open` 实际展开面板。以上不覆盖驱动失败注入或全部型号动态认证。
 
 ## 尚未认证
 

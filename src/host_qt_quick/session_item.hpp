@@ -16,6 +16,11 @@
 
 namespace nekomote::qt_quick
 {
+enum class GraphicsBackend
+{
+    OpenGL,
+    Vulkan
+};
 template <typename T, void (*Destroy)(T*)>
 using Handle = std::unique_ptr<T, decltype(Destroy)>;
 
@@ -36,6 +41,7 @@ struct WallpaperState
     bool no_save{false};
     bool assets_mode{true};
     bool config_dirty{true};
+    GraphicsBackend backend{GraphicsBackend::OpenGL};
     bool loaded{false};
     // Diagnostics.
     int fixed_steps{0};

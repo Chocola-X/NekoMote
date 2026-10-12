@@ -48,7 +48,8 @@
             "displayName": "Plasma wallpaper QML module and probe",
             "cacheVariables": {
                 "NEKOMOTE_BUILD_QT_QUICK": "ON",
-                "NEKOMOTE_BUILD_PLASMA": "ON"
+                "NEKOMOTE_BUILD_PLASMA": "ON",
+                "NEKOMOTE_BUILD_VULKAN": "ON"
             }
         },
         {

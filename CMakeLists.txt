@@ -24,6 +24,7 @@ option(NEKOMOTE_BUILD_TOOLS   "Build offline tools (importer, ...)" ON)
 option(NEKOMOTE_BUILD_TESTS   "Build unit tests" ON)
 option(NEKOMOTE_BUILD_QT_QUICK "Build the isolated OpenGL Qt Quick diagnostic host" OFF)
 option(NEKOMOTE_BUILD_PLASMA   "Build the Plasma wallpaper QML module and probe" OFF)
+option(NEKOMOTE_BUILD_PLASMA_PROBE "Build local Plasma/KPackage diagnostic hosts" ON)
 option(NEKOMOTE_BUILD_VULKAN  "Build the Vulkan render backend (requires Vulkan SDK)" OFF)
 option(NEKOMOTE_ENABLE_ASAN   "Enable AddressSanitizer + UBSan" OFF)
 option(NEKOMOTE_WERROR        "Treat warnings as errors" ON)
@@ -84,7 +85,7 @@ if(NEKOMOTE_BUILD_QT_QUICK)
     add_subdirectory(src/host_qt_quick)
     add_subdirectory(apps/qt_quick_host)
 endif()
-if(NEKOMOTE_BUILD_PLAYER OR NEKOMOTE_BUILD_PLASMA)
+if(NEKOMOTE_BUILD_ABI OR NEKOMOTE_BUILD_PLAYER OR NEKOMOTE_BUILD_PLASMA)
     add_subdirectory(src/audio)
 endif()
 if(NEKOMOTE_BUILD_PLASMA)
@@ -123,6 +124,14 @@ if(NEKOMOTE_BUILD_TESTS)
             SKIP_RETURN_CODE 77 TIMEOUT 60
             # This screenshot replay measures pixels/input, not presentation FPS.
             ENVIRONMENT "NEKOMOTE_TEST_ASSETS_DIR=${PROJECT_SOURCE_DIR}/assets;QT_SCALE_FACTOR=1;QSG_NO_VSYNC=1")
+        if(NEKOMOTE_BUILD_VULKAN)
+            add_test(NAME plasma_wallpaper_layers_vulkan
+                COMMAND ${NEKOMOTE_FLOCK_LAYERS} ${CMAKE_SOURCE_DIR}/build/gpu-validation.lock
+                    $<TARGET_FILE:nekomote_plasma_wallpaper_layers>)
+            set_tests_properties(plasma_wallpaper_layers_vulkan PROPERTIES
+                LABELS "qt;gpu;vulkan;integration" SKIP_RETURN_CODE 77 TIMEOUT 90
+                ENVIRONMENT "NEKOMOTE_TEST_ASSETS_DIR=${PROJECT_SOURCE_DIR}/assets;NEKOMOTE_TEST_BACKEND=vulkan;NEKOMOTE_TEST_DUAL_BACKEND=1;NEKOMOTE_VK_VALIDATION=1;QT_FORCE_STDERR_LOGGING=1;VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT;QT_SCALE_FACTOR=1;QSG_NO_VSYNC=1")
+        endif()
     endif()
     if(TARGET nekomote_plasma_item_safety)
         find_program(NEKOMOTE_FLOCK flock REQUIRED)

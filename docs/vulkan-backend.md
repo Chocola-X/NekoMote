@@ -1,6 +1,6 @@
 # OpenGL / Vulkan 1.0 双后端
 
-本轮 C11 从 `b733626` 复核并重写 Vulkan 播放链。application、runtime、CPU UI 和模型求值共用；player 的 GPU 执行可选择 OpenGL 或 Vulkan。Plasma 与当前 C ABI 仍使用 OpenGL，本轮没有迁移其宿主。
+本轮 C11 从 `b733626` 复核并重写 Vulkan 播放链。application、runtime、CPU UI 和模型求值共用；player 的 GPU 执行可选择 OpenGL 或 Vulkan。C12 已追加 Vulkan C ABI 独立复核与 Plasma 双后端，见 [Plasma 接入](plasma-dual-backend.md)；本页其余采样数量属于 C11 player 验收。
 
 原实现的问题集中在执行链，而非双后端方向：宿主等待未提交的 fence、present 等待未发出的 semaphore，渲染器另行提交却不等待 acquire；背景/UI 未完整接线，字形/图标/clip 存在空实现；截图没有执行 GPU 复制，descriptor 按帧增长，资源可能在提交完成前释放。C11 统一宿主提交所有权并替换这些路径，没有保留实验实现的兼容入口。
 

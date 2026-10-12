@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-11。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；本轮修复起点 `7029eda`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，player 的 Vulkan 1.0 双栈实现已由 C11 重写，见 [后端契约与验收](docs/vulkan-backend.md)；当前 Plasma / C ABI 仍为 OpenGL。
+版本：执行中，2026-10-12。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；显示阶段起点 `7029eda`，当前 C12 基线 `cfed43e`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，player 的 Vulkan 1.0 双栈实现已由 C11 重写，见 [后端契约与验收](docs/vulkan-backend.md)；C12 已复核 Vulkan C ABI 并接入 Plasma 双后端，默认 OpenGL，见 [接入与验收](docs/plasma-dual-backend.md)。GitHub 基线构建配置已准备，容器/远端/跨发行版运行尚未验证，见 [分发](docs/plasma-distribution.md)。
 
 ## 1. 产品与开发策略
 
@@ -347,7 +347,7 @@ P0 建立后预期统一入口可为 `cmake --preset dev`、`cmake --build --pre
 ### 工作项
 
 1. 记录目标 Plasma、Qt 和实际 Qt Quick 图形后端，不按桌面名称猜测 GPU 接入能力。
-2. 使用当前 ABI 0.4.0 验证真实宿主契约；本轮输入采集时间签名与所有调用者同步迁移。
+2. 使用当前 ABI 0.5.0 验证真实宿主契约；GL/Vulkan native 输出契约与所有调用者同步迁移。
    - headless/ASan已覆盖合成ABI；长度/模式、异常、借用帧失效和RAII已有证据，不重复列为待实现。真实素材集成缺资产时显式Skipped。
    - 独立Qt宿主线程/图形资源释放重建已有小矩阵证据；实际Plasma/context失效、多屏和卸载仍待验证。
    - `apps/abi_host/main.c` 已收敛为静音C/GLFW诊断程序；G8确定步/截图/负例及同输入像素已复核，它不是Plasma实现，也不承载正式声音或壁纸策略。

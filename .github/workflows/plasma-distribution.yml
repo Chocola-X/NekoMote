@@ -1,0 +1,63 @@
+name: Plasma baseline packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+    paths:
+      - '.github/workflows/plasma-distribution.yml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'include/**'
+      - 'src/**'
+      - 'adapters/plasma/**'
+      - 'tools/plasma_*'
+      - 'tools/licenses/**'
+      - 'docs/plasma-distribution.md'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  package:
+    name: Debian 12 baseline (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        # actions/checkout v4.2.2; pin immutable code, not a movable major tag.
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build the pinned toolchain image
+        run: |
+          mkdir -p build/distribution
+          docker build -f tools/plasma_baseline.Containerfile -t nekomote-baseline tools \
+            2>&1 | tee build/distribution/toolchain-build.log
+      - name: Compile and enforce baseline compatibility
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD:/source:ro" -v "$PWD/build/distribution:/output:rw" \
+            nekomote-baseline 2>&1 | tee build/distribution/package-build.log
+          test -s "build/distribution/nekomote-plasma-debian12-${{ matrix.arch }}.tar.gz"
+          test -s "build/distribution/compatibility-${{ matrix.arch }}.json"
+      - name: Upload packages and evidence
+        # actions/upload-artifact v4.6.2; upload does not publish a GitHub release.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nekomote-plasma-debian12-${{ matrix.arch }}
+          path: build/distribution/
+          if-no-files-found: error
+          retention-days: 90

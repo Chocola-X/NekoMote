@@ -61,6 +61,7 @@ struct Options
     bool recovery{false};
     int steps{0};
     unsigned seed{1};
+    std::string backend{"opengl"};
 };
 
 Options parse_options(int argc, char** argv)
@@ -107,6 +108,12 @@ Options parse_options(int argc, char** argv)
             result.steps = std::stoi(value());
         else if (key == "--seed")
             result.seed = static_cast<unsigned>(std::stoul(value()));
+        else if (key == "--backend")
+        {
+            result.backend = value();
+            if (result.backend != "opengl" && result.backend != "vulkan")
+                throw std::runtime_error("backend must be opengl or vulkan");
+        }
         else if (key == "--help")
         {
             std::puts(
@@ -114,6 +121,7 @@ Options parse_options(int argc, char** argv)
                 "  [--lifecycle] [--bad-asset] [--invalid-config] [--recovery]\n"
                 "  [--rounds 20] [--config-rounds 20] [--dpi 1] [--width 800 --height 1080]\n"
                 "  [--steps 0] [--seed 1]\n"
+                "  [--backend opengl|vulkan] (default opengl)\n"
                 "Default: capture one screenshot. --lifecycle: full lifecycle test.\n"
                 "--bad-asset/--invalid-config: error recovery test. --recovery: bad->good cycles.\n"
                 "No desktop settings changed.");
@@ -294,6 +302,7 @@ int run(int argc, char** argv)
         throw std::runtime_error("validation containment could not be created");
     auto config =
         containment->config().group("Wallpaper").group("org.nekomote.wallpaper").group("General");
+    config.writeEntry("renderBackend", QString::fromStdString(opts.backend));
     if (opts.bad_asset)
     {
         config.writeEntry("assetsDir", QStringLiteral("/nonexistent/assets"));

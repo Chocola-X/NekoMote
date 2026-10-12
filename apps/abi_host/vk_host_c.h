@@ -1,10 +1,9 @@
 #ifndef NEKOMOTE_VK_HOST_C_H
 #define NEKOMOTE_VK_HOST_C_H
 
+#include <nekomote/abi.h>
 #include <stdint.h>
 #include <vulkan/vulkan.h>
-
-#include <nekomote/abi.h>
 
 /* Minimal C Vulkan host for abi_host. Owns instance/device/swapchain and the
  * sole in-flight frame submission. The wallpaper instance borrows the device
@@ -51,9 +50,8 @@ int vk_host_c_select_device(VkHostC* host, VkSurfaceKHR surface);
 int vk_host_c_create_device(VkHostC* host);
 
 /* Per-frame: begin returns a target for nekomote_wallpaper_set_vk_target. */
-void vk_host_c_wait_ready(VkHostC* host);
-int vk_host_c_begin_frame(VkHostC* host, int w, int h, int present,
-                          nekomote_vk_target* out_target);
+int vk_host_c_wait_ready(VkHostC* host);
+int vk_host_c_begin_frame(VkHostC* host, int w, int h, int present, nekomote_vk_target* out_target);
 int vk_host_c_present(VkHostC* host);
 
 /* GPU readback for --capture. pixels must be w*h*4 bytes. Returns 0 on success. */

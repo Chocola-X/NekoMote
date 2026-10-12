@@ -13,7 +13,7 @@
 
 ## 已核实范围
 
-[显示阶段冻结摘要](validation/plasma-display-results.json) 对应提交 `cd911cd`，原始证据：`build/evidence/plasma-ui-background-20261011/`。后续左键手势与当前 0.4.0 安装包见 [C10 冻结摘要](validation/plasma-left-hold-results.json)，原始证据：`build/evidence/plasma-left-hold-20261011/accepted/`。构建为 dev/Debug/WERROR，不是发布态性能基准。
+[显示阶段冻结摘要](validation/plasma-display-results.json) 对应提交 `cd911cd`，原始证据：`build/evidence/plasma-ui-background-20261011/`。当期左键手势与 0.4.0 安装包见 [C10 冻结摘要](validation/plasma-left-hold-results.json)，原始证据：`build/evidence/plasma-left-hold-20261011/accepted/`。构建为 dev/Debug/WERROR，不是发布态性能基准。
 
 - 当前 Controller/UI/ABI 相关 30 项通过；GPU 渲染 12 项/221 断言通过，包含显式 FBO、文字、晚到尺寸、两次字体/UI 资源初始化及损坏图标错误/修复后重试。旧显示阶段的 11 项/218 断言保留为历史证据。
 - Qt 自身输入回调驱动的截图检查：背景上下方向、图标、开关面板、展开设置、选择背景、滚轮、resize、图标拖动；DPI 1 与 1.5、缺可选图标分别检查。未向系统窗口注入输入。
@@ -30,20 +30,13 @@
 
 2026-10-11，交付 `8f9f4dd` 后，用户反馈：“我已经测试，确认目前初步接入工作正常”，并授权提交。按此前隔离账户测试上下文，记录实际桌面初步接入通过。未提供具体模型、逐项手势/控件覆盖、截图或测试时长；不据此完成声音/FPS、多屏、休眠及长期验收。前述冻结摘要保留自动化运行时的原始范围。
 
-## miku 一次安装流程
+## 当前安装入口
 
-当前已构建的包为 `build/dev/adapters/plasma/stage`。在 **miku 用户**的终端执行（工作目录不限）：
-
-```sh
-bash /run/media/chocola/DATA/Project/NekoMote/tools/plasma_reinstall_user.sh \
-  --stage /run/media/chocola/DATA/Project/NekoMote/build/dev/adapters/plasma/stage \
-  --assets-dir /run/media/chocola/DATA/Project/NekoMote/assets
-```
-
-安装后重新登录该测试用户，以加载新 native 库和环境；在壁纸配置中选择 NekoMote 并设置上述 assets 目录。右上角猫爪/菜单图标打开共享面板，在设置中选择背景；首次配置未选择背景时显示底色是预期行为。重装保留原偏好。
-
-需要重建时：`cmake --build build/dev --target nekomote_plasma_stage -j4`。不要把其他目录中的旧 stage 当成本轮包。
+C9/C10 的 `build/dev` stage 属于当期 OpenGL 验证。本轮双后端测试包和 miku
+安装命令以 [C12 接入说明](plasma-dual-backend.md) 为准；不要把旧 stage 当作新版包。
+安装后需重新登录测试用户，让 plasmashell 加载新 native 库及 QML 环境。
+重装继续保留业务偏好，Codex 没有改写真实用户配置。
 
 ## ABI 与后续边界
 
-高层 ABI 足以连接角色/背景/UI 绘制。后续用户补充的长按手势已将当前 ABI 更新为 0.4.0：pointer_move/mouse_button 携带采集时的单调毫秒时间，避免延迟批次把长按当短按；仓库内 C/Qt 调用者已迁移，安装时一并替换插件库并重新登录。但 G31/G32 的完整架构验收仍未闭合：player 与 WallpaperInstance 仍分别构建面板业务；Plasma 固定 33ms 定时器没有响应面板 FPS 设置；面板静音只改配置，没有完整联动当前设备；渐变使用墙钟时间；资源语义 ID 的设备映射及其他 ABI 异常边界仍需审查。详见 [当前缺口](known-defects.md)。初步接入已获用户确认，后续分派这些明确任务，不能把“UI 可见”当作所有控件行为已验收。
+高层 ABI 足以连接角色/背景/UI 绘制。C10 用户补充的长按手势在当期将 ABI 更新为 0.4.0（当前为 0.5.0，见 [Plasma 双后端](plasma-dual-backend.md)）：pointer_move/mouse_button 携带采集时的单调毫秒时间，避免延迟批次把长按当短按；仓库内 C/Qt 调用者已迁移，安装时一并替换插件库并重新登录。但 G31/G32 的完整架构验收仍未闭合：player 与 WallpaperInstance 仍分别构建面板业务；Plasma 固定 33ms 定时器没有响应面板 FPS 设置；面板静音只改配置，没有完整联动当前设备；渐变使用墙钟时间；资源语义 ID 的设备映射及其他 ABI 异常边界仍需审查。详见 [当前缺口](known-defects.md)。初步接入已获用户确认，后续分派这些明确任务，不能把“UI 可见”当作所有控件行为已验收。

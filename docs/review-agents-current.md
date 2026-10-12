@@ -1,11 +1,11 @@
 # 当前整合与接手摘要
 
-2026-10-11。GLM 已提交 Controller、CPU UI/GL 执行拆分、高层壁纸 ABI、Plasma 迁移和声音接入；修复起点 `7029eda`。旧“G31 尚未实现”计划已失效，不按旧交接重新抽取模块。
+2026-10-12，C12 基线 `cfed43e`。共享 Controller/UI/高层 ABI/Plasma 已有实现，不重新执行旧 G31 待实现清单。用户此前确认 miku 用户真实桌面 OpenGL 初步接入正常；具体逐项覆盖未提供，Codex 未操作其桌面。
 
-此前用户优先验证隔离 miku 用户的 Plasma 效果。Codex 本轮修复 UI 初始化、输出目标、事件转发、字体/图标重建与重装配置丢失；随后共享左键长按拖动/短按触摸与滚轮缩放，ABI 更新为 0.4.0。完成隔离 Qt/KPackage 截图及包验证，见 [显示补修](plasma-display-fix.md)。用户随后反馈“我已经测试，确认目前初步接入工作正常”。据此记录实际桌面初步接入通过；具体模型、逐项操作和测试时长未提供，不扩大为完整桌面验收。Codex 没有操作其桌面。
+C11 已修复 player 的 Vulkan 1.0 执行链。C12 复核 GLM 的 Vulkan ABI，修复目标借用/异常/资源替换与 C 宿主重复翻转，当前 ABI **0.5.0**。Plasma 设置可选 OpenGL/Vulkan，默认 OpenGL；Vulkan 经 GPU 共享图像接入宿主 OpenGL 场景图，无正式帧 CPU 读回。隔离图像、交互、切换和正常生命周期证据见 [Plasma 后端](plasma-dual-backend.md)、[ABI](abi-contract.md)。真实 miku Vulkan、其他驱动、Wayland、多屏与设备故障仍需各自验收。
 
-G31/G32 已有源码不等于完整架构验收：面板业务仍分别在 player 和 ABI 组合层构建，FPS/静音联动、渐变暂停时间、资源 ID 和异常边界还有缺口。application/ui 保持后端无关。当前用户优先 Vulkan player 修复；C11 重写提交同步、模型/背景/UI 绘制与真实截图，双栈入口和验收范围见 [说明](vulkan-backend.md)。Plasma / C ABI 仍使用 GL。见 [清单](agent-workboard.md)、[缺口](known-defects.md)。
+GitHub Actions 的 x86_64/aarch64 低版本基线配方与包审计已准备；本机包实际要求 Qt 6.9/glibc 2.38，不能作为通用包。容器、GitHub 远端执行及跨发行版运行未验证，见 [分发](plasma-distribution.md)。
 
-既有 G22/G24/G26/V15/V18 独立复核见 [记录](review-g22-g26.md)。单边界 0x7fc/195 初态沿用；3 bust_LR20、嵌套/2 标量、触摸候选、195 全动态、正式声音及长期/多屏仍按各自证据验收。本轮只追加 Chocola 初态 WebGL 回归，不更改公式或扩大认证。
+G31/G32 的完整架构验收仍有缺口：player 和 ABI 组合层重复面板业务，FPS/静音设备联动、角色渐变暂停预算及 CPU 配置保存失败事务未收拢。application/ui 保持后端无关；适配器经 C ABI 复用共享实现，不在 QML 重写控制面板。
 
-GLM 承担显式契约下的主要实现与批量验证，Gemini 做固定输入下的视觉检查，Codex 复核语义/边界并整合。G31 专项交接保留为设计验收要求，不作为当前待开发清单。
+单边界 0x7fc/195 初态沿用；3 bust_LR20、嵌套/2 标量、触摸候选、195 全动态和长期声音未最终验收。本轮不更改模型公式。有效任务见 [清单](agent-workboard.md)、[交接](agent-next-handoff.md)、[缺口](known-defects.md)；历史报告只描述当期证据。

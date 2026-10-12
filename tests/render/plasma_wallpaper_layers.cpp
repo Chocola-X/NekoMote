@@ -125,6 +125,8 @@ int main(int argc, char** argv)
         item->setWidth(800);
         item->setHeight(900);
         item->setMuted(true);
+        const auto backend = qEnvironmentVariable("NEKOMOTE_TEST_BACKEND", "opengl");
+        item->setRenderBackend(backend);
         // Controlled replay uses only these callbacks; ignore the actual desktop pointer.
         item->setAcceptHoverEvents(false);
         item->setAcceptedMouseButtons(Qt::NoButton);
@@ -202,6 +204,12 @@ int main(int argc, char** argv)
                 "settings did not expand");
         click({140, 796});
         frames(35);
+        // The shared background transition is 1.8 seconds. Frame count alone
+        // does not establish elapsed time when Qt also schedules grab frames.
+        QEventLoop settle_background;
+        QTimer::singleShot(2000, &settle_background, &QEventLoop::quit);
+        settle_background.exec();
+        frames(2);
         const auto switched = capture(item, output + "/background-switched.png");
         require(switched.pixelColor(2, 2) == QColor(20, 180, 70) &&
                     switched.pixelColor(2, initial.height() / 2 + 20) == QColor(20, 180, 70),
@@ -302,13 +310,52 @@ int main(int argc, char** argv)
         const auto model_scaled = capture(item, output + "/model-scaled.png");
         require(changed_pixels(model_dragged, model_scaled, {280, 200, 310, 300}) > 10000,
                 "wheel outside UI did not scale model");
+        if (qEnvironmentVariableIsSet("NEKOMOTE_TEST_DUAL_BACKEND"))
+        {
+            const auto other =
+                backend == "vulkan" ? QStringLiteral("opengl") : QStringLiteral("vulkan");
+            for (const auto& selected : {other, backend})
+            {
+                item->setRenderBackend(selected);
+                frames(3);
+                const auto rebuilt = capture(item, output + "/backend-" + selected + ".png");
+                require(item->renderBackend() == selected && item->errorString().isEmpty(),
+                        "backend selection did not recover the item");
+                require(rebuilt.pixelColor(2, 2) == QColor(20, 180, 70),
+                        "backend switch lost the saved background");
+                const auto rebuilt_icon = rebuilt.pixelColor(rebuilt.width() - 30, 30);
+                require(rebuilt_icon.red() > 200 && rebuilt_icon.blue() > 200,
+                        "backend switch did not rebuild shared UI resources");
+            }
+        }
+        // Fail during render_ui after model commands have been recorded, rather
+        // than only rejecting a path before recording starts. Recovery must
+        // discard that unsubmitted Vulkan target and rebuild its resource owners.
+        const auto bad_assets = assets / "bad-ui";
+        fs::create_directories(bad_assets / "icons");
+        fs::create_directory_symlink(assets / "characters", bad_assets / "characters");
+        fs::create_directory_symlink(assets / "backgrounds", bad_assets / "backgrounds");
+        fs::copy_file(assets / "config.json", bad_assets / "config.json");
+        {
+            std::ofstream invalid_icon(bad_assets / "icons/neko.png");
+            invalid_icon << "invalid PNG fixture";
+        }
+        item->setAssetsDir(QString::fromStdString(bad_assets.string()));
+        wait_for([&] { return item->status() == 2; });
+        require(item->errorString().startsWith("render UI:"),
+                "failure fixture did not reach the recorded-frame UI branch");
+        item->setAssetsDir(directory.path());
+        frames(3);
+        const auto recovered = capture(item, output + "/ui-failure-recovered.png");
+        require(recovered.pixelColor(2, 2) == QColor(20, 180, 70),
+                "recorded-frame recovery lost the background");
         window.hide();
         item->setParentItem(nullptr);
         object.reset();
         std::puts(
             "PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag, "
             "left hold model drag and wheel zoom "
-            "through Qt host");
+            "through Qt host; recorded-frame UI failure recovery");
     }
     catch (const std::exception& error)
     {

@@ -30,6 +30,7 @@
 
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include <vulkan/vulkan.h>
+
 #include "vk_host_c.h"
 #endif
 
@@ -387,34 +388,18 @@ static int save_screenshot_png(const char* path, int width, int height)
 static int save_screenshot_png_from_pixels(const char* path, int width, int height,
                                            const uint8_t* pixels)
 {
+    // vk_host_c_capture already returns top-left, straight RGBA. Preserve its
+    // row order; applying the GL readback flip here inverted the entire picture.
     size_t row_bytes = (size_t)width * 4;
-    uint8_t* row = malloc(row_bytes);
-    if (!row)
-        return 0;
-    size_t pixel_count = (size_t)width * (size_t)height * 4;
-    uint8_t* flipped = malloc(pixel_count);
-    if (!flipped)
-    {
-        free(row);
-        return 0;
-    }
-    for (int y = 0; y < height; y++)
-        memcpy(flipped + (size_t)y * row_bytes,
-               pixels + (size_t)(height - 1 - y) * row_bytes, row_bytes);
-    free(row);
     size_t raw_len = (size_t)height * (row_bytes + 1);
     uint8_t* raw = malloc(raw_len);
     if (!raw)
-    {
-        free(flipped);
         return 0;
-    }
     for (int y = 0; y < height; y++)
     {
         raw[(size_t)y * (row_bytes + 1)] = 0;
-        memcpy(raw + (size_t)y * (row_bytes + 1) + 1, flipped + (size_t)y * row_bytes, row_bytes);
+        memcpy(raw + (size_t)y * (row_bytes + 1) + 1, pixels + (size_t)y * row_bytes, row_bytes);
     }
-    free(flipped);
     uLongf compressed_len = compressBound(raw_len);
     uint8_t* compressed = malloc(compressed_len);
     if (!compressed)
@@ -723,6 +708,9 @@ int main(int argc, char** argv)
             goto fail;
     }
 
+    if (ui_open && !check("set_ui_open", nekomote_wallpaper_set_ui_open(wp, 1)))
+        goto fail;
+
     /* ---- Set up callbacks ---- */
     if (!capture_path)
     {
@@ -745,8 +733,11 @@ int main(int argc, char** argv)
     while (!glfwWindowShouldClose(window))
     {
 #if defined(NEKOMOTE_HAS_VULKAN)
-        if (use_vulkan)
-            vk_host_c_wait_ready(&vk_host);
+        if (use_vulkan && vk_host_c_wait_ready(&vk_host) != 0)
+        {
+            exit_code = 1;
+            break;
+        }
 #endif
         glfwPollEvents();
 
@@ -772,14 +763,18 @@ int main(int argc, char** argv)
         if (use_vulkan)
         {
             nekomote_vk_target target;
-            if (vk_host_c_begin_frame(&vk_host, g_host.fb_width, g_host.fb_height,
-                                      !capture_path, &target) != 0)
+            if (vk_host_c_begin_frame(&vk_host, g_host.fb_width, g_host.fb_height, !capture_path,
+                                      &target) != 0)
             {
                 fprintf(stderr, "[abi_host] vk_begin_frame failed\n");
                 exit_code = 1;
                 break;
             }
-            nekomote_wallpaper_set_vk_target(wp, target);
+            if (!check("set_vk_target", nekomote_wallpaper_set_vk_target(wp, target)))
+            {
+                exit_code = 1;
+                break;
+            }
         }
 #endif
 
@@ -788,8 +783,12 @@ int main(int argc, char** argv)
             exit_code = 1;
             break;
         }
-        if (!capture_path || ui_open)
-            nekomote_wallpaper_render_ui(wp, (float)dt);
+        if ((!capture_path || ui_open) &&
+            !check("render_ui", nekomote_wallpaper_render_ui(wp, (float)dt)))
+        {
+            exit_code = 1;
+            break;
+        }
 
         if (capture_path && fixed_mode && frame_count + 1 >= steps && !captured)
         {
@@ -801,7 +800,7 @@ int main(int argc, char** argv)
                 if (px && vk_host_c_capture(&vk_host, g_host.fb_width, g_host.fb_height, px) == 0)
                 {
                     if (!save_screenshot_png_from_pixels(capture_path, g_host.fb_width,
-                                                          g_host.fb_height, px))
+                                                         g_host.fb_height, px))
                         exit_code = 1;
                 }
                 else

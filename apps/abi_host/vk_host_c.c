@@ -4,19 +4,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VK_CHECK(op, msg) \
-    do { \
-        VkResult _r = (op); \
-        if (_r != VK_SUCCESS) { \
-            fprintf(stderr, "[vk_host_c] %s: VkResult %d\n", msg, (int)_r); \
-            return -1; \
-        } \
+#define VK_CHECK(op, msg)                                                                          \
+    do                                                                                             \
+    {                                                                                              \
+        VkResult _r = (op);                                                                        \
+        if (_r != VK_SUCCESS)                                                                      \
+        {                                                                                          \
+            fprintf(stderr, "[vk_host_c] %s: VkResult %d\n", msg, (int)_r);                        \
+            return -1;                                                                             \
+        }                                                                                          \
     } while (0)
 
 static const uint64_t GPU_WAIT_NS = 5000000000ULL;
 
-static uint32_t find_memory_type(VkPhysicalDevice pd, uint32_t filter,
-                                 VkMemoryPropertyFlags props)
+static uint32_t find_memory_type(VkPhysicalDevice pd, uint32_t filter, VkMemoryPropertyFlags props)
 {
     VkPhysicalDeviceMemoryProperties mem;
     vkGetPhysicalDeviceMemoryProperties(pd, &mem);
@@ -52,7 +53,8 @@ static void record_barrier(VkCommandBuffer cmd, VkImage image, VkImageLayout old
         case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
             src_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
             break;
-        default: break;
+        default:
+            break;
     }
     switch (new_l)
     {
@@ -71,7 +73,8 @@ static void record_barrier(VkCommandBuffer cmd, VkImage image, VkImageLayout old
         case VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
             dst_stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
             break;
-        default: break;
+        default:
+            break;
     }
     VkImageMemoryBarrier b = {0};
     b.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -160,7 +163,7 @@ static int create_output_image(VkHostC* h, int w, int hgt)
 
 static int create_swapchain(VkHostC* h, int w, int hgt)
 {
-    vkDeviceWaitIdle(h->device);
+    VK_CHECK(vkDeviceWaitIdle(h->device), "wait swapchain rebuild");
     h->pending = 0;
 
     for (uint32_t i = 0; i < h->swap_image_count; ++i)
@@ -189,13 +192,13 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
         uint32_t cw = (uint32_t)w;
         uint32_t ch = (uint32_t)hgt;
         if (h->extent.width == 0xFFFFFFFF)
-            h->extent.width = cw < caps.minImageExtent.width ? caps.minImageExtent.width
-                                                             : cw > caps.maxImageExtent.width ? caps.maxImageExtent.width
-                                                                                              : cw;
+            h->extent.width = cw < caps.minImageExtent.width   ? caps.minImageExtent.width
+                              : cw > caps.maxImageExtent.width ? caps.maxImageExtent.width
+                                                               : cw;
         if (h->extent.height == 0xFFFFFFFF)
-            h->extent.height = ch < caps.minImageExtent.height ? caps.minImageExtent.height
-                                                               : ch > caps.maxImageExtent.height ? caps.maxImageExtent.height
-                                                                                                 : ch;
+            h->extent.height = ch < caps.minImageExtent.height   ? caps.minImageExtent.height
+                               : ch > caps.maxImageExtent.height ? caps.maxImageExtent.height
+                                                                 : ch;
     }
     if (!h->extent.width || !h->extent.height)
     {
@@ -206,6 +209,11 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     uint32_t n = 0;
     VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(h->physical_device, h->surface, &n, NULL),
              "query surface formats");
+    if (!n)
+    {
+        fprintf(stderr, "[vk_host_c] no surface formats\n");
+        return -1;
+    }
     VkSurfaceFormatKHR* formats = malloc(sizeof(VkSurfaceFormatKHR) * n);
     if (!formats)
     {
@@ -225,6 +233,21 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     free(formats);
     if (selected.format == VK_FORMAT_UNDEFINED)
         selected.format = VK_FORMAT_B8G8R8A8_UNORM;
+    if (selected.format != VK_FORMAT_B8G8R8A8_UNORM && selected.format != VK_FORMAT_R8G8B8A8_UNORM)
+    {
+        fprintf(stderr, "[vk_host_c] no UNORM presentation format\n");
+        return -1;
+    }
+    VkFormatProperties source_props, dest_props;
+    vkGetPhysicalDeviceFormatProperties(h->physical_device, VK_FORMAT_R8G8B8A8_UNORM,
+                                        &source_props);
+    vkGetPhysicalDeviceFormatProperties(h->physical_device, selected.format, &dest_props);
+    if (!(source_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT) ||
+        !(dest_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT))
+    {
+        fprintf(stderr, "[vk_host_c] no GPU presentation blit support\n");
+        return -1;
+    }
     h->surface_format = selected.format;
 
     uint32_t image_count = caps.minImageCount < 2 ? 2 : caps.minImageCount;
@@ -242,9 +265,15 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     info.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     info.preTransform = caps.currentTransform;
-    info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    if (caps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR)
-        info.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
+    const VkCompositeAlphaFlagBitsKHR alpha_modes[] = {
+        VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+        VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR, VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR};
+    for (size_t i = 0; i < sizeof(alpha_modes) / sizeof(alpha_modes[0]); ++i)
+        if (caps.supportedCompositeAlpha & alpha_modes[i])
+        {
+            info.compositeAlpha = alpha_modes[i];
+            break;
+        }
     info.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     info.clipped = VK_TRUE;
     VK_CHECK(vkCreateSwapchainKHR(h->device, &info, NULL, &h->swapchain), "create swapchain");
@@ -258,7 +287,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     }
     VK_CHECK(vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, h->swap_images),
              "read swap images");
-    h->swap_finished = malloc(sizeof(VkSemaphore) * n);
+    h->swap_finished = calloc(n, sizeof(VkSemaphore));
     if (!h->swap_finished)
     {
         fprintf(stderr, "[vk_host_c] alloc failed: swap semaphores\n");
@@ -346,8 +375,9 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, queues);
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(devices[d], &props);
-        int score = props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? 3
-                    : props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? 2 : 1;
+        int score = props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU     ? 3
+                    : props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? 2
+                                                                                 : 1;
         for (uint32_t i = 0; i < n; ++i)
         {
             VkBool32 present = VK_FALSE;
@@ -431,7 +461,8 @@ int vk_host_c_create_device(VkHostC* h)
     deps[0].srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
     deps[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     deps[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-    deps[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    deps[0].dstAccessMask =
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     deps[1].srcSubpass = 0;
     deps[1].dstSubpass = VK_SUBPASS_EXTERNAL;
     deps[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -450,19 +481,20 @@ int vk_host_c_create_device(VkHostC* h)
     return 0;
 }
 
-void vk_host_c_wait_ready(VkHostC* h)
+int vk_host_c_wait_ready(VkHostC* h)
 {
     if (h->pending)
     {
-        vkWaitForFences(h->device, 1, &h->fence, VK_TRUE, GPU_WAIT_NS);
+        VK_CHECK(vkWaitForFences(h->device, 1, &h->fence, VK_TRUE, GPU_WAIT_NS), "wait frame");
         h->pending = 0;
     }
+    return 0;
 }
 
-int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present,
-                          nekomote_vk_target* out_target)
+int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present, nekomote_vk_target* out_target)
 {
-    vk_host_c_wait_ready(h);
+    if (vk_host_c_wait_ready(h) != 0)
+        return -1;
     if (h->recording)
     {
         fprintf(stderr, "[vk_host_c] frame already recording\n");
@@ -486,14 +518,14 @@ int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present,
     h->present_frame = present;
     if (present)
     {
-        VkResult r = vkAcquireNextImageKHR(h->device, h->swapchain, GPU_WAIT_NS,
-                                           h->acquired, VK_NULL_HANDLE, &h->image_index);
+        VkResult r = vkAcquireNextImageKHR(h->device, h->swapchain, GPU_WAIT_NS, h->acquired,
+                                           VK_NULL_HANDLE, &h->image_index);
         if (r == VK_ERROR_OUT_OF_DATE_KHR)
         {
             if (create_swapchain(h, w, hgt) != 0)
                 return -1;
-            r = vkAcquireNextImageKHR(h->device, h->swapchain, GPU_WAIT_NS,
-                                      h->acquired, VK_NULL_HANDLE, &h->image_index);
+            r = vkAcquireNextImageKHR(h->device, h->swapchain, GPU_WAIT_NS, h->acquired,
+                                      VK_NULL_HANDLE, &h->image_index);
         }
         if (r == VK_SUBOPTIMAL_KHR)
             h->recreate = 1;
@@ -603,48 +635,64 @@ int vk_host_c_present(VkHostC* h)
 
 int vk_host_c_capture(VkHostC* h, int w, int hgt, uint8_t* pixels)
 {
-    if (w != h->output_w || hgt != h->output_h)
+    if (!pixels || w <= 0 || hgt <= 0 || (size_t)w > SIZE_MAX / 4 / (size_t)hgt ||
+        w != h->output_w || hgt != h->output_h)
     {
         fprintf(stderr, "[vk_host_c] capture size mismatch\n");
         return -1;
     }
     if (submit(h) != 0)
         return -1;
-    vk_host_c_wait_ready(h);
+    if (vk_host_c_wait_ready(h) != 0)
+        return -1;
 
+    VkBuffer buffer = VK_NULL_HANDLE;
+    VkDeviceMemory mem = VK_NULL_HANDLE;
+    VkCommandBuffer cmd = VK_NULL_HANDLE;
+    VkFence fence = VK_NULL_HANDLE;
+    int submitted = 0;
+    int result = -1;
+#define CAPTURE_CHECK(op, msg)                                                                     \
+    do                                                                                             \
+    {                                                                                              \
+        VkResult capture_result = (op);                                                            \
+        if (capture_result != VK_SUCCESS)                                                          \
+        {                                                                                          \
+            fprintf(stderr, "[vk_host_c] %s: VkResult %d\n", msg, (int)capture_result);            \
+            goto cleanup;                                                                          \
+        }                                                                                          \
+    } while (0)
     size_t size = (size_t)w * (size_t)hgt * 4;
     VkBufferCreateInfo bi = {0};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = size;
     bi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    VkBuffer buffer;
-    VK_CHECK(vkCreateBuffer(h->device, &bi, NULL, &buffer), "create capture buffer");
+    CAPTURE_CHECK(vkCreateBuffer(h->device, &bi, NULL, &buffer), "create capture buffer");
     VkMemoryRequirements req;
     vkGetBufferMemoryRequirements(h->device, buffer, &req);
     uint32_t mt = find_memory_type(h->physical_device, req.memoryTypeBits,
-                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     if (mt == 0xFFFFFFFF)
-        return -1;
+        goto cleanup;
     VkMemoryAllocateInfo ai = {0};
     ai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     ai.allocationSize = req.size;
     ai.memoryTypeIndex = mt;
-    VkDeviceMemory mem;
-    VK_CHECK(vkAllocateMemory(h->device, &ai, NULL, &mem), "alloc capture memory");
-    VK_CHECK(vkBindBufferMemory(h->device, buffer, mem, 0), "bind capture buffer");
+    CAPTURE_CHECK(vkAllocateMemory(h->device, &ai, NULL, &mem), "alloc capture memory");
+    CAPTURE_CHECK(vkBindBufferMemory(h->device, buffer, mem, 0), "bind capture buffer");
 
     VkCommandBufferAllocateInfo ca = {0};
     ca.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     ca.commandPool = h->command_pool;
     ca.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     ca.commandBufferCount = 1;
-    VkCommandBuffer cmd;
-    VK_CHECK(vkAllocateCommandBuffers(h->device, &ca, &cmd), "alloc capture commands");
+    CAPTURE_CHECK(vkAllocateCommandBuffers(h->device, &ca, &cmd), "alloc capture commands");
     VkCommandBufferBeginInfo cb = {0};
     cb.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cb.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    VK_CHECK(vkBeginCommandBuffer(cmd, &cb), "begin capture commands");
+    CAPTURE_CHECK(vkBeginCommandBuffer(cmd, &cb), "begin capture commands");
     record_barrier(cmd, h->output_image, h->output_layout, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
     VkBufferImageCopy copy = {0};
     copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -652,30 +700,29 @@ int vk_host_c_capture(VkHostC* h, int w, int hgt, uint8_t* pixels)
     copy.imageExtent.width = (uint32_t)w;
     copy.imageExtent.height = (uint32_t)hgt;
     copy.imageExtent.depth = 1;
-    vkCmdCopyImageToBuffer(cmd, h->output_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                           buffer, 1, &copy);
+    vkCmdCopyImageToBuffer(cmd, h->output_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1,
+                           &copy);
     record_barrier(cmd, h->output_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    VK_CHECK(vkEndCommandBuffer(cmd), "end capture commands");
+    CAPTURE_CHECK(vkEndCommandBuffer(cmd), "end capture commands");
     VkSubmitInfo si = {0};
     si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     si.commandBufferCount = 1;
     si.pCommandBuffers = &cmd;
     VkFenceCreateInfo fi = {0};
     fi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    VkFence fence;
-    VK_CHECK(vkCreateFence(h->device, &fi, NULL, &fence), "create capture fence");
-    VK_CHECK(vkQueueSubmit(h->graphics_queue, 1, &si, fence), "submit capture");
-    VK_CHECK(vkWaitForFences(h->device, 1, &fence, VK_TRUE, GPU_WAIT_NS), "wait capture");
-    vkDestroyFence(h->device, fence, NULL);
-    vkFreeCommandBuffers(h->device, h->command_pool, 1, &cmd);
+    CAPTURE_CHECK(vkCreateFence(h->device, &fi, NULL, &fence), "create capture fence");
+    CAPTURE_CHECK(vkQueueSubmit(h->graphics_queue, 1, &si, fence), "submit capture");
+    submitted = 1;
+    CAPTURE_CHECK(vkWaitForFences(h->device, 1, &fence, VK_TRUE, GPU_WAIT_NS), "wait capture");
+    submitted = 0;
 
     void* mapped = NULL;
-    VK_CHECK(vkMapMemory(h->device, mem, 0, size, 0, &mapped), "map capture");
+    CAPTURE_CHECK(vkMapMemory(h->device, mem, 0, size, 0, &mapped), "map capture");
     size_t stride = (size_t)w * 4;
     for (int y = 0; y < hgt; ++y)
-        memcpy(pixels + (size_t)y * stride,
-               (const uint8_t*)mapped + (size_t)(hgt - 1 - y) * stride, stride);
+        memcpy(pixels + (size_t)y * stride, (const uint8_t*)mapped + (size_t)(hgt - 1 - y) * stride,
+               stride);
     vkUnmapMemory(h->device, mem);
     h->output_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -692,9 +739,22 @@ int vk_host_c_capture(VkHostC* h, int w, int hgt, uint8_t* pixels)
             }
     }
 
-    vkDestroyBuffer(h->device, buffer, NULL);
-    vkFreeMemory(h->device, mem, NULL);
-    return 0;
+    result = 0;
+cleanup:
+    // A timed out copy may still reference these resources. Stop their device
+    // work before freeing them; do not treat timeout as completed submission.
+    if (submitted)
+        vkDeviceWaitIdle(h->device);
+    if (fence)
+        vkDestroyFence(h->device, fence, NULL);
+    if (cmd)
+        vkFreeCommandBuffers(h->device, h->command_pool, 1, &cmd);
+    if (buffer)
+        vkDestroyBuffer(h->device, buffer, NULL);
+    if (mem)
+        vkFreeMemory(h->device, mem, NULL);
+#undef CAPTURE_CHECK
+    return result;
 }
 
 void vk_host_c_destroy(VkHostC* h)

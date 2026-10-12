@@ -189,8 +189,7 @@ static void test_vk_null_safety(void)
     nekomote_vk_device_context ctx = {0};
     nekomote_wallpaper* wp = nekomote_wallpaper_create_vk(ctx);
     CHECK(wp == NULL, "should reject all-null context");
-    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
-          "should set INVALID_INPUT");
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT, "should set INVALID_INPUT");
     PASS();
 
     TEST("vk: create_vk with partial null (missing device)");
@@ -201,16 +200,15 @@ static void test_vk_null_safety(void)
     ctx.graphics_queue = (void*)0x4;
     wp = nekomote_wallpaper_create_vk(ctx);
     CHECK(wp == NULL, "should reject partial null");
-    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
-          "should set INVALID_INPUT");
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT, "should set INVALID_INPUT");
     PASS();
 
     TEST("vk: set_vk_target on NULL wallpaper");
     nekomote_clear_error();
     nekomote_vk_target target = {0};
-    nekomote_wallpaper_set_vk_target(NULL, target);
-    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT,
-          "should reject NULL wallpaper");
+    CHECK(nekomote_wallpaper_set_vk_target(NULL, target) == NEKOMOTE_ERROR_INVALID_INPUT,
+          "target setter must return INVALID_INPUT");
+    CHECK(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT, "should reject NULL wallpaper");
     PASS();
 
     TEST("vk: create_vk with fake handles does not crash");
@@ -238,7 +236,7 @@ static void test_version(void)
     TEST("version");
     const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.4.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.5.0") == 0, "version mismatch");
     PASS();
 }
 

@@ -1,10 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
+#include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/render_vk/renderer.hpp>
 #include <nekomote/render_vk/ui_renderer.hpp>
 
 #include <glad/gl.h>
+#include <nekomote/abi.h>
 #ifndef GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_NONE
 #endif
@@ -12,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -22,6 +25,7 @@
 #include <new>
 #include <span>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -30,12 +34,15 @@
 namespace
 {
 thread_local bool track_allocations = false;
+thread_local bool fail_allocations = false;
 thread_local std::size_t allocation_count = 0;
 } // namespace
 // Count ordinary C++ allocations on the rendering thread; driver malloc,
 // aligned allocations, other threads and diagnostic readback are excluded.
 void* operator new(std::size_t size)
 {
+    if (fail_allocations)
+        throw std::bad_alloc();
     if (track_allocations)
         ++allocation_count;
     if (void* pointer = std::malloc(size ? size : 1))
@@ -566,3 +573,120 @@ TEST_CASE("Vulkan warmed model and UI frame paths reuse CPU allocations", "[gpu]
     const auto image = f.host.capture(64, 64);
     REQUIRE(pixel(image, 32, 32)[3] > 0);
 }
+
+#if defined(NEKOMOTE_HAS_ABI)
+TEST_CASE("Vulkan wallpaper ABI validates borrowed targets and retains model after failed load",
+          "[gpu][vulkan][abi]")
+{
+    Fixture f;
+    const auto source = std::filesystem::path(__FILE__).parent_path().parent_path() / "fixtures";
+    const auto path = std::filesystem::temp_directory_path() /
+                      ("nekomote-vk-abi-" +
+                       std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    struct RemoveBundle
+    {
+        std::filesystem::path path;
+        ~RemoveBundle()
+        {
+            std::error_code error;
+            std::filesystem::remove_all(path, error);
+        }
+    } cleanup{path};
+    REQUIRE(std::filesystem::create_directory(path));
+    auto imported =
+        asset_io::import_emote({source / "minimal.json", source / "minimal.resx.json", source, {}});
+    REQUIRE(imported.ok);
+    for (auto& part : imported.asset.parts)
+        for (auto& layer : part.layers)
+            layer.inherit_mask = 0x20007fc;
+    imported.asset.base_group = "body_parts";
+    imported.asset.base_motion = "torso";
+    model::Timeline idle;
+    idle.label = "idle";
+    idle.loop_begin = 0;
+    idle.loop_end = 30;
+    idle.tracks.push_back(
+        {"move_UD",
+         {{0, 2, {model::FieldState::Value, 0.f}, {model::FieldState::Value, 0.f}},
+          {30, 0, {}, {}}}});
+    imported.asset.timelines.push_back(std::move(idle));
+    REQUIRE(asset_io::write_bundle(imported, source, path / "model").empty());
+    const auto session = path / "session.nks.json";
+    {
+        std::ofstream out(session);
+        out << R"({"schema":"nekomote.session","version":1,"session":{
+            "model":"synthetic","idle_timeline":"idle","talk_max":5,
+            "interaction":{"eye":null,"regions":{"bust":null,"eye":null,
+            "face":null,"head":null,"pant":null}},"reactions":[]}})";
+    }
+    auto ctx = f.host.context();
+    nekomote_vk_device_context cctx{
+        ctx.instance,       ctx.physical_device,       ctx.device,
+        ctx.graphics_queue, ctx.graphics_queue_family, static_cast<int32_t>(ctx.color_format)};
+    auto bad_ctx = cctx;
+    bad_ctx.color_format = 50; // Unsupported SRGB attachment, with real native handles.
+    REQUIRE(nekomote_wallpaper_create_vk(bad_ctx) == nullptr);
+    REQUIRE(nekomote_last_error() == NEKOMOTE_ERROR_INVALID_INPUT);
+    using Owner = std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)>;
+    Owner wallpaper(nekomote_wallpaper_create_vk(cctx), nekomote_wallpaper_destroy);
+    Owner reference(
+        nekomote_wallpaper_create(reinterpret_cast<nekomote_gl_loader>(glfwGetProcAddress)),
+        nekomote_wallpaper_destroy);
+    // Unwind any assertion only after pending GPU work has finished, before owners.
+    struct WaitBeforeOwners
+    {
+        player::VkHost& host;
+        ~WaitBeforeOwners()
+        {
+            host.wait_noexcept();
+        }
+    } completion{f.host};
+    REQUIRE(wallpaper);
+    REQUIRE(reference);
+    const auto model_path = path / "model/model.nkm.json";
+    for (auto* wp : {wallpaper.get(), reference.get()})
+    {
+        REQUIRE(nekomote_wallpaper_set_muted(wp, 1) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_set_output_size(wp, 64, 64) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_load_model(wp, model_path.c_str(), session.c_str()) ==
+                NEKOMOTE_OK);
+    }
+    f.ensure_output(64, 64);
+    nekomote_wallpaper_set_render_target(reference.get(), f.framebuffer);
+    REQUIRE(nekomote_wallpaper_render_frame(reference.get()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_ERROR_RENDERER);
+    const auto target = f.host.begin_frame(64, 64, false);
+    const nekomote_vk_target valid{target.commands, target.framebuffer, 64, 64};
+    for (const nekomote_vk_target invalid :
+         {nekomote_vk_target{nullptr, target.framebuffer, 64, 64},
+          nekomote_vk_target{target.commands, nullptr, 64, 64},
+          nekomote_vk_target{target.commands, target.framebuffer, 0, 64},
+          nekomote_vk_target{target.commands, target.framebuffer, 32, 64}})
+        REQUIRE(nekomote_wallpaper_set_vk_target(wallpaper.get(), invalid) ==
+                NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_vk_target(reference.get(), valid) == NEKOMOTE_ERROR_UNSUPPORTED);
+    REQUIRE(nekomote_wallpaper_set_vk_target(wallpaper.get(), valid) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), 0) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_ERROR_RENDERER);
+    REQUIRE(nekomote_wallpaper_set_vk_target(wallpaper.get(), valid) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_OK);
+    auto actual = f.host.capture(64, 64);
+    auto expected = f.gl->capture({f.framebuffer, 64, 64});
+    require_same_picture(expected, actual);
+    // Capture completed this frame; failure now cannot destroy active resources.
+    fail_allocations = true;
+    const auto load_error =
+        nekomote_wallpaper_load_model(wallpaper.get(), model_path.c_str(), session.c_str());
+    fail_allocations = false;
+    REQUIRE(load_error == NEKOMOTE_ERROR_OUT_OF_MEMORY);
+    const auto next = f.host.begin_frame(64, 64, false);
+    REQUIRE(nekomote_wallpaper_set_vk_target(
+                wallpaper.get(), {next.commands, next.framebuffer, 64, 64}) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_OK);
+    require_same_picture(actual, f.host.capture(64, 64));
+    nekomote_wallpaper_reset_gl(wallpaper.get());
+    REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_ERROR_RENDERER);
+    REQUIRE(f.host.validation_errors == 0);
+}
+
+#endif

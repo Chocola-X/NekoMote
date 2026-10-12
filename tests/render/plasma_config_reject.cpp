@@ -16,9 +16,9 @@ void check_status(QQmlEngine& engine, const QByteArray& properties, int expected
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 64; height: 64; " +
-                           properties + " }",
-                       {});
+                      "NekoWallpaperItem { width: 64; height: 64; " +
+                          properties + " }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item)
@@ -34,9 +34,9 @@ void check_input_isolation(QQmlEngine& engine, const QString& assets_dir)
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 64; height: 64; assetsDir: '" +
-                           assets_dir.toUtf8() + "'; }",
-                       {});
+                      "NekoWallpaperItem { width: 64; height: 64; assetsDir: '" +
+                          assets_dir.toUtf8() + "'; }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item || item->status() != 1)
@@ -46,6 +46,26 @@ void check_input_isolation(QQmlEngine& engine, const QString& assets_dir)
     if (item->acceptHoverEvents() || item->acceptedMouseButtons() != Qt::NoButton)
         throw std::runtime_error("input isolation: diagnostic mode did not disable input");
     std::puts("input isolation: hover/mouse disabled in diagnostic mode OK");
+}
+
+void check_backend_selection(QQmlEngine& engine)
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
+                      "NekoWallpaperItem { width: 64; height: 64; }",
+                      {});
+    std::unique_ptr<QObject> object(component.create());
+    auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
+    if (!item || item->renderBackend() != "opengl")
+        throw std::runtime_error("backend selection: default is not OpenGL");
+    item->setRenderBackend(QStringLiteral("vulkan"));
+    item->setRenderBackend(QStringLiteral("unknown"));
+    if (item->status() != 2 || item->errorString().isEmpty() || item->renderBackend() != "vulkan")
+        throw std::runtime_error("backend selection: invalid value was not rejected");
+    item->setRenderBackend(QStringLiteral("vulkan"));
+    if (item->status() != 0 || !item->errorString().isEmpty())
+        throw std::runtime_error("backend selection: same-backend retry failed");
+    std::puts("backend selection: OpenGL default, invalid value and retry OK");
 }
 } // namespace
 
@@ -62,6 +82,7 @@ int main(int argc, char** argv)
     try
     {
         check_status(engine, {}, 0, "empty config");
+        check_backend_selection(engine);
         const auto invalid_assets = QUrl::fromLocalFile(dir.filePath("nonexistent")).toString();
         check_status(engine, ("assetsDir: '" + invalid_assets.toUtf8() + "';").constData(), 1,
                      "with assets dir");

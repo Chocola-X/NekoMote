@@ -6,6 +6,7 @@ Item {
 
     property string assetsDir: ""
     property bool paused: false
+    property string renderBackend: "opengl"
     readonly property int status: wallpaper.status
     readonly property string errorString: wallpaper.errorString
 
@@ -15,6 +16,7 @@ Item {
         anchors.fill: parent
         assetsDir: root.assetsDir
         paused: root.paused
+        renderBackend: root.renderBackend
     }
 
     Text {

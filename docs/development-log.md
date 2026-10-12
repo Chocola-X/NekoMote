@@ -857,3 +857,16 @@ V10候选点无实测/姿态证据缺失，撤回结论，version3严格重分�
 ## 2026-10-09 G19/G20/G21/V13/V14复核
 
 基线82ab3b6：保留UI/真实81CPU点/三QML固定图；修Plasma初态重复重建、真正配置页创建、首delta0及40轮/最终GPU销毁验证、截图失败和等待异常边界。G20候选8.95px仍失败、Y残差存在，正式拒绝保持；撤回V14非法version3/下身网格解释。状态及新GLM G23→G22→G24/Gemini V15/V16交接见[记录](agent-review-g19-g21.md)，长期/性能/正式安装未认证。
+
+## 2026-10-12 C12：Plasma 双后端与分发入口
+
+Codex / GPT-6（精确变体未暴露），基线 `cfed43e`。独立复核 GLM Vulkan ABI，
+修正借用目标/异常/资源准备与重复截图翻转，ABI 0.5.0；Plasma 设置默认 GL、可选 VK，
+以 GPU 外部内存/semaphore 共享图像接入 Qt GL 场景图。修复 render pass dependency
+兼容、GUI 配置快照、未提交失败恢复及素材根目录重建；非 GL 宿主保持明确拒绝。
+
+核心/ABI/双后端 GPU、固定图像、交互、正常隔离 KPackage 生命周期与 ASan ABI
+证据见 [C12](plasma-dual-backend.md)。本机包及预检可用，未操作 miku/真实桌面。
+Actions 双架构 Debian 12 基线配方、严格 ELF 审计与可重复归档已准备；容器/远端/
+跨发行版未跑，见 [分发](plasma-distribution.md)。GLM 下一步 G33，Gemini V21；
+模型公式和完整服务收拢仍按当前缺口独立处理。

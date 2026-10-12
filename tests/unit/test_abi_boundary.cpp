@@ -12,6 +12,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <string>
 
 namespace
 {
@@ -173,4 +174,39 @@ TEST_CASE("CPU ABI rejects invalid values on live synthetic sessions", "[abi]")
     REQUIRE_FALSE(failed);
     REQUIRE(nekomote_last_error() == NEKOMOTE_ERROR_OUT_OF_MEMORY);
     REQUIRE(nekomote_error_message());
+}
+
+namespace
+{
+nekomote_gl_proc null_wallpaper_loader(const char*)
+{
+    return nullptr;
+}
+} // namespace
+
+TEST_CASE("Wallpaper valid handle rejects invalid CPU inputs and seals OOM", "[abi][wallpaper]")
+{
+    std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
+        nekomote_wallpaper_create(null_wallpaper_loader), nekomote_wallpaper_destroy};
+    REQUIRE(wallpaper);
+    REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 999) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 1) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 0) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_output_size(wallpaper.get(), -1, 32) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), -1) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), std::numeric_limits<double>::quiet_NaN()) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    const nekomote_vk_target target{nullptr, nullptr, 32, 32};
+    REQUIRE(nekomote_wallpaper_set_vk_target(wallpaper.get(), target) ==
+            NEKOMOTE_ERROR_UNSUPPORTED);
+    // Use a live wallpaper and valid required arguments. Allocation failure must
+    // be converted while constructing filesystem input, before any GL access.
+    const std::string long_path(2048, 'x');
+    fail_allocations = true;
+    const auto error =
+        nekomote_wallpaper_load_model(wallpaper.get(), long_path.c_str(), long_path.c_str());
+    fail_allocations = false;
+    REQUIRE(error == NEKOMOTE_ERROR_OUT_OF_MEMORY);
+    REQUIRE(nekomote_last_error() == NEKOMOTE_ERROR_OUT_OF_MEMORY);
 }

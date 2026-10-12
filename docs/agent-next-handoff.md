@@ -1,11 +1,27 @@
 # 当前独立任务交接
 
-2026-10-11。旧 G31A→G31B→G32 的实施顺序已有 GLM 源码交付，不再次执行旧待实现清单。设计和验收要求保留在 [专项交接](wallpaper-application-handoff.md)。Plasma 初步接入已获用户确认；当前用户优先 Vulkan player 双栈，接手先读 [C11 后端契约与验收](vulkan-backend.md)。此前显示补修与安装入口见 [说明](plasma-display-fix.md)。
+2026-10-12，C12 基线 `cfed43e`。player、Vulkan ABI 0.5.0、Plasma 双后端已有源码与隔离验收；先读 [当前摘要](review-agents-current.md)、[Plasma 后端](plasma-dual-backend.md)。不要重新实现 G31/G32 或修改已通过的模型公式。
 
-用户已确认实际桌面初步接入正常，显示补修和左键手势提交为 `cd911cd`、`8f9f4dd`；不再把首次安装效果确认列为待办。具体逐项覆盖未提供；Codex 未修改该用户配置或亲自运行实际 plasmashell 验收。
+## GLM：G33 基线分发构建
 
-后续可由 GLM 承担面板业务收拢、FPS/静音设备联动及契约测试；开始前 Codex 需明确共享 UI 组合入口、宿主调度反馈和活动设备控制边界，不能继续把设置业务复制到 QML。Gemini 在固定模型、输出/DPI和输入下检查文字、裁剪、背景切换和触摸隔离；没有看图不能计视觉通过。Codex 保留渐变时间、资源/线程、ABI 异常和模型语义的复核与必要修复。
+范围为 `.github/workflows/plasma-distribution.yml`、`tools/plasma_baseline*`、`tools/plasma_distribution.py` 和对应分发测试/文档。先声明实际 base 与文件；不同时修改 ABI、Qt/Vulkan 桥或模型求值。
 
-C8 的 3 个 bust_LR20 与嵌套/2 标量反例独立保留，未确认原因不改正式公式。触摸候选不应用。G27/G28/G29/V19 报告及原始证据按其条件复核，不重新分派历史“下一步”。完整桌面生命周期、长期、多屏、195 全动态仍是独立退出条件。
+1. 在可用 Docker/Podman 环境运行 [分发配方](plasma-distribution.md)。固定镜像与 apt snapshot，不换成最新 Ubuntu 来绕过低版本编译问题。
+2. 分别完成 x86_64/aarch64 构建。无相应环境时记未执行；若运行 GitHub 工作流，记录 run 链接、源码提交、日志与归档 hash，不推送/发布 release 或操作真实桌面，除非用户另行授权。
+3. 两份包必须通过 `--baseline-debian12`，保留实际 Qt 版本、ELF requirements、相对 RPATH、依赖许可和 toolchain 清单。不得降低报告中的 Qt 版本骗过门槛。
+4. 运行八项分发正/负例、actionlint 与 bash 语法检查。兼容版本、缺库、错误架构、篡改 manifest 必须明确拒绝。归档在隔离目录解压，用随包工具预检/安装/verify，不修改真实用户配置。
+5. 仅修复可复现的构建/打包问题，记录失败和修复前后；涉及公开 ABI 或 GPU 行为的调整先交 Codex 复核。构建成功不等于跨发行版 GPU 验收。
 
-接手声明实际 base 与改动文件；有效上下文释放 GPU，GUI/求值线程通过有界交接通信；application/ui 不依赖图形 API。GPU 采样串行，不注入系统输入，不修改外部素材。每阶段验证后提交，填写真实 Agent/Model/Context。
+验收：两个架构的真实日志、兼容审计、归档 hash、负例与隔离安装均可复核；无法执行项单列。本机 Arch 包不满足基线，这是预期拒绝。
+
+## Gemini：V21 固定条件视觉检查
+
+复用 C12 证据，不修改 GPU 同步/公式。固定模型、输出/DPI、seed/步数及同一资产来源；先检查 Chocola 的 GL/VK UI/背景和上下方向，再抽核 Fraise 与 Milk 的遮罩/触摸覆盖。数值比较使用既有容差，不以“看起来相近”放行。
+
+在用户安排的 miku 会话中可核对 OpenGL 默认、Vulkan 选择、背景/完整设置面板、左键长按拖动、滚轮缩放、resize/暂停恢复与改回 GL。只用自身应用事件或用户操作，不向系统窗口注入输入，不自行注销/重启桌面。记录 GPU/驱动、X11/Wayland、实际 Qt 场景后端和每项证据；缺少共享图像扩展时验证错误提示与 GL 可恢复，不能记 Vulkan 成功。源码/固定图像与真实桌面分别统计。
+
+## Codex 保留项
+
+复核基线包与跨模块改动；Qt 非 OpenGL 场景图、意外 device/context loss、角色渐变预算和 CPU 配置保存失败事务仍未闭合。面板/FPS/声音收拢另需明确契约后再分派；不让 GLM 重新猜测同步或模型语义。C8 的 3 bust_LR20、嵌套/2 标量继续保留，触摸候选不应用。
+
+GPU 用 `build/gpu-validation.lock` 串行，冻结二进制/hash/输入；外部素材只读。每阶段验证后提交，填写真实 Agent/Model/Context；未执行、候选与 PASS 分开。

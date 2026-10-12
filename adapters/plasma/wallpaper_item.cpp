@@ -59,6 +59,37 @@ bool NekoWallpaperItem::muted() const
 {
     return muted_;
 }
+QString NekoWallpaperItem::renderBackend() const
+{
+    return render_backend_;
+}
+
+void NekoWallpaperItem::setRenderBackend(const QString& value)
+{
+    if (value != QStringLiteral("opengl") && value != QStringLiteral("vulkan"))
+    {
+        set_error(QStringLiteral("Unknown NekoMote rendering backend: %1").arg(value));
+        return;
+    }
+    if (render_backend_ == value && status_ != 2)
+        return;
+    render_backend_ = value;
+    state_->backend = value == QStringLiteral("vulkan")
+                          ? nekomote::qt_quick::GraphicsBackend::Vulkan
+                          : nekomote::qt_quick::GraphicsBackend::OpenGL;
+    state_->config_dirty = true;
+    if (status_ != 3)
+    {
+        error_string_.clear();
+        emit errorStringChanged();
+        set_status(assets_dir_.isEmpty() ? 0 : 1);
+    }
+    // Choosing the engine backend cannot make an unsupported Qt scene graph
+    // available. Keep that capability failure and suspended scheduling visible.
+    check_backend();
+    emit renderBackendChanged();
+    update();
+}
 
 void NekoWallpaperItem::setAssetsDir(const QString& value)
 {
@@ -72,7 +103,6 @@ void NekoWallpaperItem::setAssetsDir(const QString& value)
             local = QUrl(value).toLocalFile();
         state_->assets_dir = local.toStdString();
         state_->config_dirty = true;
-        state_->loaded = false;
     }
     if (!value.isEmpty())
         set_status(1);
@@ -322,7 +352,6 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32
         state_->fixed_steps = steps;
         state_->deterministic = true;
         state_->config_dirty = true;
-        state_->loaded = false;
     }
     diagnostic_inputs_ = true;
     diagnostic_notification_ = true;

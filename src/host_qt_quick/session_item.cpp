@@ -1,4 +1,7 @@
 #include "session_item.hpp"
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include "vulkan_gl_bridge.hpp"
+#endif
 
 #include <QHoverEvent>
 #include <QMouseEvent>
@@ -49,7 +52,16 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     {
         if (state_)
         {
-            if (state_->wallpaper)
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (bridge_)
+            {
+                bridge_->wait_noexcept();
+                state_->wallpaper.reset();
+                bridge_.reset();
+            }
+            else
+#endif
+                if (state_->wallpaper)
                 nekomote_wallpaper_reset_gl(state_->wallpaper.get());
             state_->loaded = false;
             state_->initialized_time = false;
@@ -76,12 +88,38 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
         }
         if (state_->config_dirty)
         {
+            // GUI setters buffer configuration; synchronize is the only point
+            // at which Qt blocks GUI writes while the render thread copies it.
+            // Catalog, icon/font bindings and GPU resources belong to one asset
+            // root. Switching it must not retain a UI initialized for the old root.
+            needs_rebuild_ = needs_rebuild_ || assets_dir_ != state_->assets_dir ||
+                             assets_mode_ != state_->assets_mode;
+            const bool reload =
+                assets_dir_ != state_->assets_dir || model_path_ != state_->model_path ||
+                session_path_ != state_->session_path || assets_mode_ != state_->assets_mode ||
+                deterministic_ != state_->deterministic || seed_ != state_->seed;
+            assets_dir_ = state_->assets_dir;
+            model_path_ = state_->model_path;
+            session_path_ = state_->session_path;
+            assets_mode_ = state_->assets_mode;
+            muted_ = state_->muted;
+            no_save_ = state_->no_save;
+            seed_ = state_->seed;
+            deterministic_ = state_->deterministic;
+            fixed_steps_ = state_->fixed_steps;
+            trace_frames_ = state_->trace_frames;
+            requested_backend_ = state_->backend;
+            if (reload)
+            {
+                state_->loaded = false;
+                state_->initialized_time = false;
+            }
             config_applied_ = false;
             faulted_ = false;
             state_->config_dirty = false;
         }
         const auto item_state = item->get_item_state();
-        notify_frames_ = state_->deterministic || item_state.notify_frames;
+        notify_frames_ = deterministic_ || item_state.notify_frames;
         if (notify_frames_ && !notifications_connected_)
         {
             connect(
@@ -128,39 +166,70 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             return;
         try
         {
-            const auto trace_start = state_->trace_frames > 0
-                                         ? std::chrono::steady_clock::now()
-                                         : std::chrono::steady_clock::time_point{};
+            const auto trace_start = trace_frames_ > 0 ? std::chrono::steady_clock::now()
+                                                       : std::chrono::steady_clock::time_point{};
             if (graphics_api_ != QSGRendererInterface::OpenGL || !QOpenGLContext::currentContext())
                 throw std::runtime_error("Qt Quick host requires an OpenGL scene graph/context");
             const auto size = framebufferObject()->size();
+            if (active_backend_ != requested_backend_ || needs_rebuild_)
+            {
+#if defined(NEKOMOTE_HAS_VULKAN)
+                if (bridge_)
+                    bridge_->wait_ready();
+#endif
+                state_->wallpaper.reset();
+#if defined(NEKOMOTE_HAS_VULKAN)
+                bridge_.reset();
+#endif
+                active_backend_ = requested_backend_;
+                state_->loaded = false;
+                state_->initialized_time = false;
+                output_size_ = {};
+                clock_attached_ = false;
+                needs_rebuild_ = false;
+            }
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (bridge_)
+                bridge_->wait_ready();
+#endif
             if (!state_->wallpaper)
             {
-                if (state_->trace_frames)
+                if (trace_frames_)
                 {
                     auto* gl = QOpenGLContext::currentContext()->functions();
                     std::fprintf(stderr, "Qt GL vendor=%s renderer=%s version=%s\n",
                                  gl->glGetString(GL_VENDOR), gl->glGetString(GL_RENDERER),
                                  gl->glGetString(GL_VERSION));
                 }
-                state_->wallpaper.reset(nekomote_wallpaper_create(load_gl));
+                if (active_backend_ == GraphicsBackend::Vulkan)
+                {
+#if defined(NEKOMOTE_HAS_VULKAN)
+                    if (!bridge_)
+                        bridge_ = std::make_unique<VulkanGlBridge>();
+                    state_->wallpaper.reset(
+                        nekomote_wallpaper_create_vk(bridge_->device_context()));
+#else
+                    throw std::runtime_error(
+                        "NekoMote was built without Vulkan support; select OpenGL");
+#endif
+                }
+                else
+                    state_->wallpaper.reset(nekomote_wallpaper_create(load_gl));
                 if (!state_->wallpaper)
                     throw std::runtime_error("create wallpaper");
                 config_applied_ = false;
             }
             if (!config_applied_)
             {
-                if (!state_->assets_dir.empty())
+                if (assets_mode_ && !assets_dir_.empty())
                     check(nekomote_wallpaper_set_assets_dir(state_->wallpaper.get(),
-                                                            state_->assets_dir.c_str()),
+                                                            assets_dir_.c_str()),
                           "set assets dir");
-                check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), state_->seed),
-                      "set seed");
-                check(nekomote_wallpaper_set_muted(state_->wallpaper.get(), state_->muted ? 1 : 0),
+                check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), seed_), "set seed");
+                check(nekomote_wallpaper_set_muted(state_->wallpaper.get(), muted_ ? 1 : 0),
                       "set muted");
-                if (state_->no_save)
-                    check(nekomote_wallpaper_set_no_save(state_->wallpaper.get(), 1),
-                          "set no save");
+                check(nekomote_wallpaper_set_no_save(state_->wallpaper.get(), no_save_ ? 1 : 0),
+                      "set no save");
                 config_applied_ = true;
             }
             // Loading may fit the character and initialize output-dependent
@@ -174,17 +243,14 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             }
             if (!state_->loaded)
             {
-                if (state_->assets_mode && !state_->assets_dir.empty())
+                if (assets_mode_ && !assets_dir_.empty())
                     check(nekomote_wallpaper_load_initial(state_->wallpaper.get()), "load initial");
-                else if (!state_->assets_mode && !state_->model_path.empty())
+                else if (!assets_mode_ && !model_path_.empty())
                     check(nekomote_wallpaper_load_model(state_->wallpaper.get(),
-                                                        state_->model_path.c_str(),
-                                                        state_->session_path.c_str()),
+                                                        model_path_.c_str(), session_path_.c_str()),
                           "load model");
                 state_->loaded = true;
             }
-            nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
-                                                 framebufferObject()->handle());
             const auto now = std::chrono::steady_clock::now();
             const bool first = !state_->initialized_time;
             if (first || !clock_attached_ || state_->paused != paused_)
@@ -198,14 +264,14 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             const double elapsed =
                 std::chrono::duration<double>(now - state_->previous_time).count();
             dispatch_inputs();
-            if (first && state_->deterministic && !paused_)
+            if (first && deterministic_ && !paused_)
             {
-                for (int step = 0; step < state_->fixed_steps; ++step)
+                for (int step = 0; step < fixed_steps_; ++step)
                     check(nekomote_wallpaper_advance(state_->wallpaper.get(), 1.0 / 60),
                           "fixed advance");
-                state_->fixed_steps_executed.store(static_cast<unsigned>(state_->fixed_steps));
+                state_->fixed_steps_executed.store(static_cast<unsigned>(fixed_steps_));
             }
-            if (!state_->deterministic && !first)
+            if (!deterministic_ && !first)
                 check(nekomote_wallpaper_advance(state_->wallpaper.get(), elapsed),
                       "advance wallpaper");
             state_->initialized_time = state_->initialized_time || !paused_;
@@ -217,13 +283,26 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                 gl->glClearColor(0, 0, 0, 0);
                 gl->glClear(GL_COLOR_BUFFER_BIT);
             }
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (bridge_)
+                check(nekomote_wallpaper_set_vk_target(state_->wallpaper.get(),
+                                                       bridge_->begin_frame(size)),
+                      "set Vulkan frame target");
+            else
+#endif
+                nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
+                                                     framebufferObject()->handle());
             check(nekomote_wallpaper_render_frame(state_->wallpaper.get()), "render frame");
             check(nekomote_wallpaper_render_ui(state_->wallpaper.get(),
                                                paused_ ? 0.0f : static_cast<float>(elapsed)),
                   "render UI");
-            if (state_->trace_frames > 0)
+#if defined(NEKOMOTE_HAS_VULKAN)
+            if (bridge_)
+                bridge_->present(framebufferObject()->handle());
+#endif
+            if (trace_frames_ > 0)
             {
-                --state_->trace_frames;
+                --trace_frames_;
                 const auto trace_end = std::chrono::steady_clock::now();
                 std::fprintf(
                     stderr, "Native frame CPU_us=%.3f render_us=%.3f elapsed_s=%.6f\n",
@@ -242,6 +321,9 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
         catch (const std::exception& error)
         {
             faulted_ = true;
+            // A failed ABI call can leave a recorded, unsubmitted target. A
+            // later config retry must recreate owners before recording again.
+            needs_rebuild_ = true;
             const auto diagnostic = QString::fromUtf8(error.what());
             emit failed(diagnostic);
         }
@@ -311,6 +393,16 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
     bool config_applied_{false};
+    bool needs_rebuild_{false};
+    std::filesystem::path assets_dir_, model_path_, session_path_;
+    std::uint32_t seed_{0};
+    int fixed_steps_{0}, trace_frames_{0};
+    bool muted_{false}, no_save_{false}, assets_mode_{true}, deterministic_{false};
+    GraphicsBackend requested_backend_{GraphicsBackend::OpenGL};
+    GraphicsBackend active_backend_{GraphicsBackend::OpenGL};
+#if defined(NEKOMOTE_HAS_VULKAN)
+    std::unique_ptr<VulkanGlBridge> bridge_;
+#endif
     bool notify_frames_{false}, notifications_connected_{false};
     std::array<Input, 32> inputs_{};
     std::size_t input_count_{0};

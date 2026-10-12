@@ -4,12 +4,12 @@
 
 - CMake ≥ 3.25
 - Ninja
-- C++20 编译器（GCC ≥ 13 或 Clang ≥ 16；开发机验证 GCC 15.1.1 / Clang 20.1.8）
+- C++20 编译器（本机验证 GCC 15.1.1 / Clang 20.1.8；分发配方 GCC 12 待基线 CI 构建）
 - 首次配置需联网（FetchContent 拉取依赖）
 - 图形 loader 生成需要 Python 3 与 Jinja2。
 - 图形宿主额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
-- 普通播放器额外需要：pkg-config 和 libpulse 17.x 开发包（`NEKOMOTE_BUILD_PLAYER=OFF` 可关闭）
-- 可选Qt宿主需要Qt 6.9.1 Quick/OpenGL开发组件；默认关闭，详见 [Qt宿主](qt-quick-host.md)。
+- ABI/普通播放器需要：pkg-config 和 libpulse ≥16.1 开发包（当前声音服务共享，不依赖显示服务器）
+- 可选 Qt 宿主需要 Qt ≥6.4 Quick/OpenGL 开发组件；默认关闭。Plasma 的 KF6/Plasma 开发包仅诊断探针需要，分发构建可关闭 `NEKOMOTE_BUILD_PLASMA_PROBE`，见 [分发](plasma-distribution.md)。
 
 ## Presets
 
@@ -19,6 +19,7 @@
 | `release` | Release | LTO、警告即错误 | ✓ | ✓ |
 | `asan` | Debug | ASan + UBSan、警告即错误 | ✗ | ✓ |
 | `qt-quick` | Release | LTO、可选Qt Quick OpenGL宿主 | ✓ | ✓ |
+| `plasma` | Release | LTO、Plasma OpenGL/Vulkan 双栈及隔离探针 | ✓ | ✓ |
 | `vulkan` | Debug | OpenGL + Vulkan 1.0、可用验证层 | ✓ | ✓ |
 | `vulkan-release` | Release | LTO、OpenGL + Vulkan 1.0 | ✓ | ✓ |
 

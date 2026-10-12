@@ -43,7 +43,7 @@ class WallpaperInstance
     explicit WallpaperInstance(render_gl::GlLoader loader);
 #if defined(NEKOMOTE_HAS_VULKAN)
     explicit WallpaperInstance(const render_vk::DeviceContext& ctx);
-    void set_vk_target(render_vk::Target target);
+    nekomote_error set_vk_target(render_vk::Target target);
 #endif
     ~WallpaperInstance();
     WallpaperInstance(const WallpaperInstance&) = delete;
@@ -55,6 +55,7 @@ class WallpaperInstance
     nekomote_error set_seed(std::uint32_t seed);
     nekomote_error set_output_size(int width, int height);
     nekomote_error set_paused(bool paused);
+    nekomote_error set_ui_open(bool open);
     void set_render_target_fbo(std::uint32_t fbo);
     void reset_gpu_resources();
     nekomote_error load_initial();

@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.4.0
+ * @version 0.5.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -381,7 +381,7 @@ extern "C"
     const char* nekomote_version(void);
 
     /* ------------------------------------------------------------------ */
-    /* Wallpaper instance (high-level: Controller + UI + GL renderers)     */
+    /* Wallpaper instance (high-level: Controller + UI + GPU renderers)     */
     /* ------------------------------------------------------------------ */
 
     typedef struct nekomote_wallpaper nekomote_wallpaper;
@@ -429,24 +429,30 @@ extern "C"
      * the host destroys the Vulkan device. */
     typedef struct
     {
-        void* instance;          /* VkInstance */
-        void* physical_device;   /* VkPhysicalDevice */
-        void* device;            /* VkDevice */
-        void* graphics_queue;    /* VkQueue */
+        void* instance;        /* VkInstance */
+        void* physical_device; /* VkPhysicalDevice */
+        void* device;          /* VkDevice */
+        void* graphics_queue;  /* VkQueue */
         uint32_t graphics_queue_family;
-        int32_t color_format;    /* VkFormat (e.g. 37 = VK_FORMAT_R8G8B8A8_UNORM) */
+        int32_t color_format; /* VkFormat (e.g. 37 = VK_FORMAT_R8G8B8A8_UNORM) */
     } nekomote_vk_device_context;
 
     typedef struct
     {
-        void* commands;          /* VkCommandBuffer (recording, in COLOR_ATTACHMENT_OPTIMAL) */
-        void* framebuffer;       /* VkFramebuffer (single RGBA8 color attachment) */
+        void* commands;    /* Recording primary VkCommandBuffer, outside a render pass */
+        void* framebuffer; /* VkFramebuffer (single RGBA8 color attachment) */
         int width;
         int height;
     } nekomote_vk_target;
 
     nekomote_wallpaper* nekomote_wallpaper_create_vk(nekomote_vk_device_context ctx);
-    void nekomote_wallpaper_set_vk_target(nekomote_wallpaper* wp, nekomote_vk_target target);
+    /* Borrowed until advance, output-size change, reset or destruction. Set once
+     * after advance for the current frame; render_frame and render_ui share it.
+     * Host waits for ALL prior GPU work before any instance mutation, resource
+     * reset or destruction. Color attachment must be RGBA8 UNORM, sample count 1,
+     * COLOR_ATTACHMENT_OPTIMAL. This API cannot validate native handle identity. */
+    nekomote_error nekomote_wallpaper_set_vk_target(nekomote_wallpaper* wp,
+                                                    nekomote_vk_target target);
 
     /* Setup */
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
@@ -456,6 +462,8 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
                                                       int height);
     nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
+    /* Open/close the shared control panel; works before lazy GPU UI initialization. */
+    nekomote_error nekomote_wallpaper_set_ui_open(nekomote_wallpaper* wp, int open);
     void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo);
     void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp);
@@ -482,7 +490,7 @@ extern "C"
      * is reserved for the desktop and is not required for model control.
      * timestamp_ms is captured when the event is collected, from one monotonic
      * millisecond clock per instance. It preserves holds in delayed batches.
-     * All callers must rebuild for this current ABI (0.4.0). */
+     * All callers must rebuild for this current ABI (0.5.0). */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
                                                    uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);

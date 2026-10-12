@@ -29,6 +29,7 @@ struct Options
     float x{0}, y{400}, scale{1}, dpi{1};
     bool marker{false};
     std::string graphics_api{"opengl"};
+    std::string backend{"opengl"};
 };
 long integer(const std::string& text, long minimum, long maximum)
 {
@@ -91,6 +92,12 @@ Options options(int argc, char** argv)
                 throw std::runtime_error("graphics-api must be opengl or software");
             result.graphics_api = api;
         }
+        else if (key == "--backend")
+        {
+            result.backend = value();
+            if (result.backend != "opengl" && result.backend != "vulkan")
+                throw std::runtime_error("backend must be opengl or vulkan");
+        }
         else if (key == "--help")
         {
             std::puts("nekomote_plasma_probe --model MODEL --session SESSION\n"
@@ -98,6 +105,7 @@ Options options(int argc, char** argv)
                       "  [--dpi 1] [--capture NEW.png --steps N] [--qt-marker]\n"
                       "  [--check-lifecycle NEW-directory --steps N]\n"
                       "  [--max-steps N] [--graphics-api opengl|software]\n"
+                      "  [--backend opengl|vulkan] (wallpaper engine, not Qt scene graph)\n"
                       "Loads the actual wallpaper main.qml. OpenGL default; software asserts\n"
                       "UnsupportedBackend. No desktop settings changed.");
             std::exit(0);
@@ -151,6 +159,7 @@ int run(int argc, char** argv)
     if (!root)
         throw std::runtime_error("QML root is not a QQuickItem");
     root->setProperty("assetsDir", QString::fromStdString(config.model.parent_path().string()));
+    root->setProperty("renderBackend", QString::fromStdString(config.backend));
     component.completeCreate();
     auto* wallpaper =
         qobject_cast<nekomote::plasma::NekoWallpaperItem*>(root->findChild<QObject*>("wallpaper"));
@@ -267,6 +276,19 @@ int run(int argc, char** argv)
                             fail(QStringLiteral(
                                 "initialized software window did not report UnsupportedBackend"));
                             return;
+                        }
+                        for (const auto* backend : {"vulkan", "opengl"})
+                        {
+                            wallpaper->setRenderBackend(QString::fromLatin1(backend));
+                            if (wallpaper->status() != 3 || wallpaper->errorString().isEmpty() ||
+                                !static_cast<nekomote::qt_quick::WallpaperItemBase*>(wallpaper)
+                                     ->get_item_state()
+                                     .paused)
+                            {
+                                fail(QStringLiteral(
+                                    "engine selection concealed the unsupported Qt backend"));
+                                return;
+                            }
                         }
                         std::fprintf(stdout, "wallpaper status=3 errorString=%s\n",
                                      wallpaper->errorString().toUtf8().constData());

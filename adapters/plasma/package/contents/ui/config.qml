@@ -6,6 +6,7 @@ import QtQuick.Dialogs
 ColumnLayout {
     property string cfg_assetsDir: ""
     property bool cfg_muted: false
+    property string cfg_renderBackend: "opengl"
 
     spacing: 8
 
@@ -40,5 +41,17 @@ ColumnLayout {
         text: "静音"
         checked: cfg_muted
         onToggled: cfg_muted = checked
+    }
+    Label { text: "渲染后端"; font.bold: true }
+    ComboBox {
+        id: backendChoice
+        model: ["OpenGL（默认）", "Vulkan"]
+        currentIndex: cfg_renderBackend === "vulkan" ? 1 : 0
+        onActivated: cfg_renderBackend = currentIndex === 1 ? "vulkan" : "opengl"
+    }
+    Label {
+        text: "应用后会重建壁纸渲染设备。Vulkan 需要驱动支持 GPU 图像共享；加载失败时可改回 OpenGL。"
+        wrapMode: Text.Wrap
+        Layout.fillWidth: true
     }
 }

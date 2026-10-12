@@ -1,5 +1,5 @@
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(PULSE REQUIRED IMPORTED_TARGET "libpulse>=17" "libpulse<18")
+pkg_check_modules(PULSE REQUIRED IMPORTED_TARGET "libpulse>=16.1")
 find_package(Threads REQUIRED)
 add_library(nekomote_audio STATIC device.cpp)
 add_library(nekomote::audio ALIAS nekomote_audio)

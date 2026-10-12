@@ -5,7 +5,7 @@
 
 ## 构建与运行
 
-可选依赖Qt 6.9.1的Quick/OpenGL组件，版本固定为本轮实际验证版本。
+可选依赖 Qt ≥6.4 的 Quick/OpenGL 公开组件；本机验证 Qt 6.9.1，6.4 基线编译待 CI 执行。
 Qt只进入宿主目标；默认构建和无窗口ASan不需要Qt。使用现有C ABI，不新建渲染器或声音服务。
 
 ```sh
@@ -44,7 +44,7 @@ QSG_RENDER_LOOP=threaded QT_SCALE_FACTOR=1 flock build/gpu-validation.lock \
 - 普通帧不读回像素、不解码图片。截图只在显式诊断入口；通知等Qt字符串处理也只在诊断路径。
 
 Qt FBO在OpenGL场景图中绘制，native调用后按Qt要求复位状态。应用自己的`--session`不会传入
-Qt的会话管理命令解析器。此进程可选择OpenGL；未来Plasma必须查询宿主实际RHI，不能设置
+Qt的会话管理命令解析器。此进程可选择OpenGL；Plasma 查询宿主实际 RHI；C12 可在 Qt OpenGL 场景图中用 GPU 共享图像承接 Vulkan 引擎，见 [双后端](plasma-dual-backend.md)。不能设置
 plasmashell全局后端或把非OpenGL悄悄转换为CPU传图。
 依据：[Qt FBO契约](https://doc.qt.io/qt-6/qquickframebufferobject.html)、
 [状态复位](https://doc.qt.io/qt-6/qquickopenglutils.html)、

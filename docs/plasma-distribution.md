@@ -1,0 +1,90 @@
+# Plasma 插件分发
+
+目标是每种 CPU 架构构建一份插件，在满足公开 ABI 与运行依赖的 Plasma 6
+发行版间复用。不能保证一个本机二进制覆盖全部 Linux：Qt 插件只能由相同 major、
+不低于构建 minor 的 Qt 加载；glibc、libstdc++、图形能力也有最低要求。
+[Qt 插件部署规则](https://doc.qt.io/qt-6/deployment-plugins.html)明确规定了版本限制。
+
+插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt、KDE Frameworks、glibc、
+libstdc++、Vulkan loader 或 GPU 驱动。把另一套 Qt 装进 plasmashell 进程会造成
+版本和插件冲突；AppImage/Flatpak 更适合独立进程播放器，不能替代这种进程内插件的
+ABI 兼容。Plasma/KF 探针为开发工具，分发构建关闭探针，不把它们的 C++ ABI 带入插件。
+
+## 基线构建
+
+用户无需自己编译：仓库的 [GitHub Actions 工作流](../.github/workflows/plasma-distribution.yml)
+在 `master/main` 的相关变更或手动触发时，分别用 x86_64、aarch64 runner 构建并上传
+`nekomote-plasma-debian12-<架构>` artifact，保存归档、兼容报告、完整编译日志及工具链
+包版本清单。动作 SHA 固定；工作流仅上传构建产物，不创建 release，也不安装桌面。
+维护者在下述验收完成后可把同一归档用于正式分发。
+
+提供 Debian 12 容器配方：Qt 6.4.2、glibc 2.36、GCC 12，使用固定镜像 digest 和
+2025-09-01 Debian snapshot；镜像日期早于 snapshot，避免基础 libc 与开发包版本冲突。
+构建自身依赖仍沿用仓库的固定 FetchContent 版本，静态依赖许可随包保存。
+Qt 6.4 是模块构建基线，使用插件的桌面必须是 Plasma 6；Debian 12 自带 Plasma 5
+不在运行目标中。x86_64 与 aarch64 必须分别原生构建或交叉构建，不能共享二进制。
+
+```bash
+mkdir -p build/distribution
+podman build -f tools/plasma_baseline.Containerfile -t nekomote-baseline tools
+podman run --rm --userns=keep-id \
+    -v "$PWD:/source:ro" -v "$PWD/build/distribution:/output:rw" \
+    nekomote-baseline
+```
+
+Docker 可使用对应的 `docker build/run` 命令；设置 `--user "$(id -u):$(id -g)"`
+保持输出所有权。编译不会修改素材、安装路径或桌面配置。
+
+包生成前严格检查所有文件哈希、ELF 架构、相对 RPATH、Qt 私有符号和版本需求；
+超过 GLIBC_2.36、GLIBCXX_3.4.30、CXXABI_1.3.13 或 Qt 6.4.2 时拒绝基线包。
+归档使用固定文件顺序、所有者及时间戳，不打包模型素材。
+
+已有其他环境的 stage 可生成明确标注实际需求的本地包：
+
+```bash
+python3 tools/plasma_distribution.py audit build/plasma/adapters/plasma/stage \
+    --qt-version 6.9.1 --output build/distribution/compatibility.json
+python3 tools/plasma_distribution.py package build/plasma/adapters/plasma/stage \
+    --qt-version 6.9.1 --output build/distribution/nekomote-plasma-local.tar.gz
+```
+
+`--qt-version` 必须填实际构建版本。降低该数字不能迁移 Qt 插件；工具也会拒绝
+低于 ELF 实际所需 Qt 符号版本的声明。用于广泛分发的包必须通过
+`--baseline-debian12`，不能把未通过的 Arch 本机包改名成通用包。
+
+## 安装前检查
+
+在目标测试账户中解压可信归档后，先检查再执行现有按用户安装工具：
+
+```bash
+tar -xzf nekomote-plasma-debian12-x86_64.tar.gz
+cd nekomote-plasma
+python3 tools/plasma_distribution.py check-host stage
+python3 tools/plasma_deploy.py --install --stage stage --prefix "$HOME/.local/share"
+```
+
+检查不会安装、重启 shell 或修改桌面。它验证 Plasma 6、CPU 架构、plasmashell
+实际解析的 Qt 版本、系统依赖与未定义符号；不使用 `LD_LIBRARY_PATH` 补救不兼容。
+仅对可信自身构建执行检查：该步骤使用系统动态加载器 `ldd -r` 检查 ELF。
+若发行版移除了 Qt 库文件名中的完整版本，可用 `--host-qt-version` 明确提供
+**plasmashell 实际使用的**版本，不能填另一套 SDK 的版本。
+
+安装目录沿用 `<prefix>/nekomote/{qml,lib}`，插件通过
+`$ORIGIN/../../../lib` 找到本体；不依赖构建机绝对路径。随后依现有安装说明配置
+会话 `QML_IMPORT_PATH=<prefix>/nekomote/qml` 并重新登录；`plasma_deploy.py`
+仅生成 `env.sh`，不会自动改写会话。分发包也不自动切换壁纸或复制素材。
+
+## 当前证据与发布门槛
+
+2026-10-12 对C12 双后端本机 stage 的静态核查发现 GLIBC_2.38、GLIBCXX_3.4.31、
+CXXABI_1.3.15、Qt_6.9 需求，证明其不满足上述基线。打包、归档完整性、版本拒绝及预检工具在本机
+验证；**此环境没有 podman/docker，容器基线编译、GitHub Actions 执行及跨发行版
+实机安装尚未执行**。CI 成功后才能提供真实可下载的基线二进制。
+这份配方提供可审核的发布入口，不构成已经完成“多数发行版可运行”的承诺。
+
+正式发布仍须保存基线构建日志和 compatibility.json，并在 Qt 6.6/6.8/6.9+
+代表桌面上验证 QML 加载、GL/Vulkan 角色/背景/UI、切换、休眠及卸载。
+至少覆盖一个 Ubuntu 系桌面、一个 Fedora 系桌面与滚动发行版；X11、Wayland
+分别记录。安装前检查通过仅说明加载条件满足，GPU 画面和长期运行仍是独立门槛。
+仓库根目录尚无项目 LICENSE，插件 metadata 写有 GPL-3.0-or-later；对外发布前
+需项目所有者确认该声明并提供正式许可文本，不能由 Agent 替用户选择。已准备静态依赖的许可收集，素材不属于插件分发包。

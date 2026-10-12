@@ -1,0 +1,197 @@
+{
+  "task": "C12-DIST",
+  "base_commit": "cfed43e",
+  "date": "2026-10-12",
+  "agent": "Codex",
+  "model": "GPT-6 family; exact variant not exposed",
+  "scope": "Read-only distribution audit, local archive and host preflight; no desktop installation or cross-distribution runtime acceptance",
+  "checks": {
+    "synthetic_elf_tests": {
+      "cases": 8,
+      "result": "PASS",
+      "log": "build/evidence/plasma-distribution-20261012/tests.log"
+    },
+    "real_stage_audit": {
+      "result": "PASS",
+      "requirements": {
+        "CXXABI": "1.3.13",
+        "GLIBC": "2.38",
+        "GLIBCXX": "3.4.30"
+      },
+      "qt_build_version": "6.9.1",
+      "binary_sha256": {
+        "lib/libnekomote_plasma_qml.so": "073c99f44a9fd8a831ca52c248a812ece1d0be10759fbcb57e95d52ae3dd4518",
+        "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so": "81d974032799d3e4365c342b98fe897da84f90a00feaeb05407dbb29e602e352"
+      }
+    },
+    "debian12_baseline_rejection": {
+      "result": "PASS (expected refusal)",
+      "failures": [
+        "GLIBC_2.38 > 2.36",
+        "Qt 6.9.1 > 6.4.2"
+      ]
+    },
+    "false_qt_6_4_declaration": {
+      "result": "PASS (expected refusal: required Qt_6.9 symbols)"
+    },
+    "archive_round_trip": {
+      "result": "PASS",
+      "archive_sha256": "b3cec7dc49675670044aae69364d22dda083d70a8095720fad358f84736ac0fe"
+    },
+    "host_preflight": {
+      "architecture": "x86_64",
+      "gpu_validation": "not performed",
+      "passed": true,
+      "plasma": "plasmashell 6.3.6",
+      "qt": "6.9.1"
+    },
+    "workflow_lint": {
+      "result": "PASS",
+      "tool": "actionlint 1.7.12",
+      "shellcheck": "disabled; bash -n run separately",
+      "log": "build/evidence/plasma-distribution-20261012/workflow-lint.log"
+    },
+    "shell_syntax": {
+      "result": "PASS",
+      "command": "bash -n tools/plasma_baseline_build.sh"
+    },
+    "initial_stage_note": "Initial audit used earlier GL-only stage. Current dual-backend package and higher actual symbol requirements follow.",
+    "current_dual_backend_package": {
+      "archive": "build/evidence/plasma-dual-20261012/nekomote-plasma-local-x86_64.tar.gz",
+      "compatibility": {
+        "architecture": "x86_64",
+        "baseline": {
+          "failures": [
+            "GLIBC_2.38 > 2.36",
+            "GLIBCXX_3.4.31 > 3.4.30",
+            "CXXABI_1.3.15 > 1.3.13",
+            "Qt 6.9.1 > 6.4.2"
+          ],
+          "limits": {
+            "CXXABI": "1.3.13",
+            "GLIBC": "2.36",
+            "GLIBCXX": "3.4.30"
+          },
+          "name": "debian12",
+          "passed": false
+        },
+        "binaries": {
+          "lib/libnekomote_plasma_qml.so": {
+            "architecture": "x86_64",
+            "needed": [
+              "libQt6Quick.so.6",
+              "libQt6OpenGL.so.6",
+              "libpulse.so.0",
+              "libfontconfig.so.1",
+              "libQt6QmlMeta.so.6",
+              "libQt6QmlWorkerScript.so.6",
+              "libQt6QmlModels.so.6",
+              "libQt6Qml.so.6",
+              "libQt6Network.so.6",
+              "libQt6Gui.so.6",
+              "libGLX.so.0",
+              "libOpenGL.so.0",
+              "libQt6Core.so.6",
+              "libvulkan.so.1",
+              "libstdc++.so.6",
+              "libm.so.6",
+              "libgcc_s.so.1",
+              "libc.so.6",
+              "ld-linux-x86-64.so.2"
+            ],
+            "qt_symbol_minimum": "6.9",
+            "runpath": [],
+            "sha256": "fd4b2b5e7fb030800229179bb345470a32b8176fa53e47c9ec73e5705ecf54b4",
+            "versions": {
+              "CXXABI": "1.3.15",
+              "GLIBC": "2.38",
+              "GLIBCXX": "3.4.31"
+            }
+          },
+          "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so": {
+            "architecture": "x86_64",
+            "needed": [
+              "libnekomote_plasma_qml.so",
+              "libpulse.so.0",
+              "libfontconfig.so.1",
+              "libQt6Quick.so.6",
+              "libQt6QmlMeta.so.6",
+              "libQt6QmlWorkerScript.so.6",
+              "libQt6QmlModels.so.6",
+              "libQt6Qml.so.6",
+              "libQt6Network.so.6",
+              "libQt6OpenGL.so.6",
+              "libQt6Gui.so.6",
+              "libGLX.so.0",
+              "libOpenGL.so.0",
+              "libQt6Core.so.6",
+              "libvulkan.so.1",
+              "libstdc++.so.6",
+              "libm.so.6",
+              "libgcc_s.so.1",
+              "libc.so.6"
+            ],
+            "qt_symbol_minimum": "6.9",
+            "runpath": [
+              "$ORIGIN/../../../lib"
+            ],
+            "sha256": "58e64113350d2b61cac863d15aa8e4a3e123d32d2efa78c1f830bcc6d12ff97c",
+            "versions": {
+              "CXXABI": "1.3.9",
+              "GLIBC": "2.2.5",
+              "GLIBCXX": "3.4"
+            }
+          }
+        },
+        "plasma_major": 6,
+        "qt_build_version": "6.9.1",
+        "requirements": {
+          "CXXABI": "1.3.15",
+          "GLIBC": "2.38",
+          "GLIBCXX": "3.4.31"
+        },
+        "schema": 1,
+        "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"
+      },
+      "sha256": "c34413266ddf074805925d89d3d2ad2902805d50b485d873f310c37cd8f71b26"
+    },
+    "current_host_preflight": {
+      "architecture": "x86_64",
+      "gpu_validation": "not performed",
+      "passed": true,
+      "plasma": "plasmashell 6.3.6",
+      "qt": "6.9.1"
+    },
+    "current_stage_install_verify": {
+      "result": "PASS",
+      "files": 16,
+      "log": "build/evidence/plasma-dual-20261012/deploy-final.log"
+    }
+  },
+  "pinned_inputs": {
+    "debian_image": "debian:bookworm-20250811-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef",
+    "apt_snapshot": "20250901T000000Z/bookworm",
+    "checkout": "11bd71901bbe5b1630ceea73d27597364c9af683",
+    "upload_artifact": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "input_verification": "Docker Hub tag response and official GitHub tag API stored in evidence directory"
+  },
+  "not_executed": [
+    "Container baseline compile (no podman/docker installed)",
+    "GitHub Actions remote execution",
+    "Cross-distribution installation",
+    "aarch64 compile/runtime",
+    "GPU correctness or long-run tests"
+  ],
+  "publication_pending": "Project root lacks LICENSE; metadata declares GPL-3.0-or-later. Owner to confirm and supply the project license text; no release published.",
+  "artifact_log_sha256": {
+    "tests.log": "50d751f0dee306e479ce8bc030a45a4b29024def6ee81f2042adf373e4192c0b",
+    "workflow-lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "host-check-final.json": "eb079100656a907629767b1f790d6ecbea8079a30f46a5bb7cd02885362cc9bd",
+    "current-stage.json": "218329d5dfc604b60849ac47063325f27f2d64a6f40f6b7f242578b8d02db067"
+  },
+  "licenses": {
+    "Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "CC0-1.0.txt": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "scope": "Full dependency licenses for generated GLAD output; upstream glad/json/stb notices included separately"
+  }
+}
