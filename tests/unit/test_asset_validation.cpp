@@ -272,10 +272,65 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
         j["model"]["parts"][0]["layers"][0]["frame_list"][0]["content"]["value"]["icon"]["value"] =
             "bad";
     }
+    SECTION("streamed list rejects scalar records")
+    {
+        j["model"]["parts"][0]["layers"][0]["frame_list"].push_back(0);
+    }
+    SECTION("streamed list rejects array records")
+    {
+        j["model"]["parts"].push_back(Json::array());
+    }
+    SECTION("streamed layer still requires children array")
+    {
+        j["model"]["parts"][0]["layers"][0]["children"] = nullptr;
+    }
+    SECTION("streamed frame still checks numeric types")
+    {
+        j["model"]["parts"][0]["layers"][0]["frame_list"][0]["time"] = "0";
+    }
     write(bundle / "model.nkm.json", j);
     loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
     REQUIRE_FALSE(loaded.ok);
     REQUIRE_FALSE(loaded.errors.empty());
+}
+TEST_CASE("Streamed model loading retains nested layer order and field states", "[asset]")
+{
+    Workspace workspace;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    auto imported = nekomote::asset_io::import_emote(
+        {root / "minimal.json", root / "minimal.resx.json", root, {}});
+    REQUIRE(imported.ok);
+    const auto bundle = workspace.path / "bundle";
+    REQUIRE(nekomote::asset_io::write_bundle(imported, root, bundle).empty());
+    const auto path = bundle / "model.nkm.json";
+    auto document = read(path);
+    auto original = document["model"]["parts"][0]["layers"][0];
+    auto child = original;
+    child["label"] = "child";
+    auto grandchild = original;
+    grandchild["label"] = "grandchild";
+    child["children"] = Json::array({grandchild});
+    document["model"]["parts"][0]["layers"][0]["children"] = Json::array({child, original});
+    for (const auto* count : {"total_layers", "total_frames", "bp_nonnull", "cc_nonnull"})
+        document["model"][count] = document["model"][count].get<int>() * 4;
+    write(path, document);
+    const auto loaded = nekomote::asset_io::load_asset(path);
+    INFO((loaded.errors.empty() ? "" : loaded.errors.front()));
+    REQUIRE(loaded.ok);
+    const auto& layer = loaded.asset.parts[0].layers[0];
+    REQUIRE(layer.children.size() == 2);
+    REQUIRE(layer.children[0].label == "child");
+    REQUIRE(layer.children[0].children[0].label == "grandchild");
+    REQUIRE(layer.children[1].label == "base");
+    REQUIRE(layer.children[0].frame_list[0].content.data.mesh.data.bp.has_value());
+    REQUIRE(layer.children[0].frame_list[1].content.data.mesh.data.bp.state ==
+            nekomote::model::FieldState::Null);
+    auto text = document.dump();
+    text.insert(1, "\"schema\":6,");
+    std::ofstream(path) << text;
+    const auto duplicate = nekomote::asset_io::load_asset(path);
+    REQUIRE_FALSE(duplicate.ok);
+    REQUIRE(duplicate.errors.front().find("duplicate asset key") != std::string::npos);
 }
 TEST_CASE("Paired clamp data survives compilation and rejects invalid ranges", "[asset][import]")
 {

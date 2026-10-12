@@ -9,6 +9,7 @@
 | 模型资产与正式语义 | [资产格式](asset-format.md)、[字段语义](semantics.md)、[单边界继承](inheritance-semantics.md)、P3–P6语义记录 |
 | 未闭合问题 | [known-defects](known-defects.md)，不使用历史报告的FAIL数量作为当前状态 |
 | 优化审查/下一批 | [C13 复核](optimization-audit-2026-10-12.md)、[G34 契约](optimization-suggestions-2026-10-12.md)、[验证记录](validation/optimization-results.json) |
+| 内存实测与优化 | [C14 报告](memory-footprint-2026-10-12.md)、[测量记录](validation/memory-results.json) |
 | 阶段验收 | [G25正式整合](review-g25-integration.md)、[G22–G26独立复核](review-g22-g26.md)；G27/G28/G29/V19为后续交付报告，独立复核另计 |
 | 原始证据 | validation中的冻结JSON与各报告指向的ignored build/evidence；Git保存源修改和被否决方案历史 |
 

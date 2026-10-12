@@ -890,3 +890,17 @@ Plasma 隔离四项通过。VK core+同步验证及 IMMEDIATE 窗口采样错误
 测量改用 IMMEDIATE，不能用不同呈现策略证明加速。完整范围及 hash 见
 [机器记录](validation/optimization-results.json)。下一批 GLM G34 的重复几何编译契约见
 [建议](optimization-suggestions-2026-10-12.md)，G33 分发验收保持独立。
+
+## 2026-10-12 C14：内存测量与加载峰值优化
+
+Codex / GPT-6（精确变体未暴露），基线 `7e458fb`。按用户要求独立进行内存优化，
+未调整协作任务。减少模型 DOM 重叠、PNG 临时整图副本、字体复制和几何过度预留；
+背景纹理跨角色切换复用、清除时释放，声音移交 PCM 所有权，修正渐变销毁顺序。
+默认 glibc 同条件 18 次切换：静音稳态 RSS 248–322 → 180–201 MiB；
+声音开启 262–286 → 192–211 MiB。独立 player 单模型约 GL 168 / VK 158 MiB。
+
+195 模型强类型数据、324 PNG 解码像素全部一致；CPU 184/184、双后端 GPU、
+ASan/UBSan 生命周期、隔离 Plasma 四项和 owned window 检查通过。
+固定 UI 图与 C13 字节一致，实际查看 WebGL 初态对照；显存改善有限，
+不降低图集质量。条件、噪声、未覆盖范围及复核证据见
+[内存报告](memory-footprint-2026-10-12.md)与[机器记录](validation/memory-results.json)。

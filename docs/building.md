@@ -7,6 +7,7 @@
 - C++20 编译器（本机验证 GCC 15.1.1 / Clang 20.1.8；分发配方 GCC 12 待基线 CI 构建）
 - 首次配置需联网（FetchContent 拉取依赖）
 - 图形 loader 生成需要 Python 3 与 Jinja2。
+- 资产 PNG 解码需要系统 libpng 1.6 开发包（本机 1.6.50）；直接写入最终 RGBA 缓冲，避免完整解码副本。其 libpng/zlib 许可沿用系统依赖；stb 仍提供诊断 PNG 写出和 CPU 字体工具。
 - 图形宿主额外需要：OpenGL 3.3 core 驱动 + X11/Wayland 显示服务器
 - ABI/普通播放器需要：pkg-config 和 libpulse ≥16.1 开发包（当前声音服务共享，不依赖显示服务器）
 - 可选 Qt 宿主需要 Qt ≥6.4 Quick/OpenGL 开发组件；默认关闭。Plasma 的 KF6/Plasma 开发包仅诊断探针需要，分发构建可关闭 `NEKOMOTE_BUILD_PLASMA_PROBE`，见 [分发](plasma-distribution.md)。

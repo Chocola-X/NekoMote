@@ -1,10 +1,10 @@
+#include <nekomote/asset_io/read_only_file.hpp>
 #include <nekomote/ui/font.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <cstring>
-#include <fstream>
+#include <stdexcept>
 #include <utility>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -119,7 +119,11 @@ unsigned int decode_utf8(const char*& p)
 
 struct FontMetrics::FontInfo
 {
+    asset_io::ReadOnlyFile file;
     stbtt_fontinfo value{};
+    explicit FontInfo(const std::string& path) : file(path)
+    {
+    }
 };
 
 FontMetrics::FontMetrics() = default;
@@ -141,20 +145,18 @@ bool FontMetrics::init(const std::string& font_path, float pixel_height)
     }
     if (path.empty())
         return false;
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file)
+    try
+    {
+        font_info_ = std::make_unique<FontInfo>(path);
+    }
+    catch (const std::runtime_error&)
+    {
         return false;
-    const auto size = file.tellg();
-    file.seekg(0);
-    font_data_.resize(static_cast<std::size_t>(size));
-    file.read(reinterpret_cast<char*>(font_data_.data()), size);
-    if (!file)
-        return false;
-
-    font_info_ = std::make_unique<FontInfo>();
+    }
+    const auto font_bytes = font_info_->file.bytes();
     auto* info = &font_info_->value;
-    const int offset = stbtt_GetFontOffsetForIndex(font_data_.data(), font_index);
-    if (offset < 0 || !stbtt_InitFont(info, font_data_.data(), offset))
+    const int offset = stbtt_GetFontOffsetForIndex(font_bytes.data(), font_index);
+    if (offset < 0 || !stbtt_InitFont(info, font_bytes.data(), offset))
         return false;
 
     int descent, line_gap;

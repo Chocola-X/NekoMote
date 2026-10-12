@@ -7,6 +7,7 @@
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 
 #include "validation.hpp"
 
@@ -588,6 +589,143 @@ void write_json(const std::filesystem::path& path, const Json& j)
         throw std::runtime_error("write failed: " + path.string());
 }
 } // namespace
+namespace
+{
+// Consume the large layer/frame trees as records instead of retaining a full
+// DOM alongside their typed copies. The small envelope still uses the same
+// checked serializers, so field-state, numeric and required-field rules agree.
+class ModelStream
+{
+    enum class Kind
+    {
+        Other,
+        Envelope,
+        Model,
+        Parts,
+        Part,
+        Layers,
+        Layer,
+        Frames,
+        Frame
+    };
+    struct Context
+    {
+        Kind kind{Kind::Other};
+        std::string key;
+        std::unordered_set<std::string> keys;
+        std::vector<model::Layer> layers;
+        std::vector<model::LayerFrame> frames;
+    };
+    std::vector<Context> stack_;
+    std::vector<model::Part> parts_;
+
+    static bool records(Kind kind)
+    {
+        return kind == Kind::Parts || kind == Kind::Layers || kind == Kind::Frames;
+    }
+    Context& owner(Kind first, Kind second = Kind::Other)
+    {
+        for (auto i = stack_.rbegin(); i != stack_.rend(); ++i)
+            if (i->kind == first || (second != Kind::Other && i->kind == second))
+                return *i;
+        throw std::runtime_error("invalid streamed model structure");
+    }
+    bool event(Json::parse_event_t event, Json& value)
+    {
+        using Event = Json::parse_event_t;
+        if (event == Event::key)
+        {
+            auto& context = stack_.back();
+            context.key = value.get<std::string>();
+            // A streamed record cannot be replaced after it has been consumed.
+            // Reject ambiguous duplicate keys instead of silently changing data.
+            if (!context.keys.insert(context.key).second)
+                throw std::runtime_error("duplicate asset key: " + context.key);
+            return true;
+        }
+        if (event == Event::object_start || event == Event::array_start)
+        {
+            const bool object = event == Event::object_start;
+            Kind kind = Kind::Other;
+            if (stack_.empty())
+                kind = object ? Kind::Envelope : Kind::Other;
+            else
+            {
+                const auto& parent = stack_.back();
+                if (records(parent.kind) && !object)
+                    throw std::runtime_error("asset record has wrong type");
+                if (object)
+                {
+                    if (parent.kind == Kind::Envelope && parent.key == "model")
+                        kind = Kind::Model;
+                    else if (parent.kind == Kind::Parts)
+                        kind = Kind::Part;
+                    else if (parent.kind == Kind::Layers)
+                        kind = Kind::Layer;
+                    else if (parent.kind == Kind::Frames)
+                        kind = Kind::Frame;
+                }
+                else if (parent.kind == Kind::Model && parent.key == "parts")
+                    kind = Kind::Parts;
+                else if ((parent.kind == Kind::Part && parent.key == "layers") ||
+                         (parent.kind == Kind::Layer && parent.key == "children"))
+                    kind = Kind::Layers;
+                else if (parent.kind == Kind::Layer && parent.key == "frame_list")
+                    kind = Kind::Frames;
+            }
+            stack_.emplace_back();
+            stack_.back().kind = kind;
+            return true;
+        }
+        if (event == Event::value)
+        {
+            if (!stack_.empty() && records(stack_.back().kind))
+                throw std::runtime_error("asset record has wrong type");
+            return true;
+        }
+        auto context = std::move(stack_.back());
+        stack_.pop_back();
+        if (context.kind == Kind::Frame)
+        {
+            owner(Kind::Layer).frames.push_back(model::checked_value<model::LayerFrame>(value));
+            return false;
+        }
+        if (context.kind == Kind::Layer)
+        {
+            auto layer = model::checked_value<model::Layer>(value);
+            context.frames.shrink_to_fit();
+            context.layers.shrink_to_fit();
+            layer.frame_list = std::move(context.frames);
+            layer.children = std::move(context.layers);
+            owner(Kind::Layer, Kind::Part).layers.push_back(std::move(layer));
+            return false;
+        }
+        if (context.kind == Kind::Part)
+        {
+            auto part = model::checked_value<model::Part>(value);
+            context.layers.shrink_to_fit();
+            part.layers = std::move(context.layers);
+            parts_.push_back(std::move(part));
+            return false;
+        }
+        return true;
+    }
+
+  public:
+    model::ModelAsset read(std::istream& input)
+    {
+        auto document = Json::parse(input, [this](int, Json::parse_event_t kind, Json& value)
+                                    { return event(kind, value); });
+        if (document.at("schema") != kAssetSchema)
+            throw std::runtime_error("unsupported asset schema; rebuild with nekomote_import");
+        auto asset = document.at("model").get<model::ModelAsset>();
+        parts_.shrink_to_fit();
+        asset.parts = std::move(parts_);
+        return asset;
+    }
+};
+} // namespace
+
 AssetResult load_asset(const std::filesystem::path& file)
 {
     AssetResult r;
@@ -596,11 +734,7 @@ AssetResult load_asset(const std::filesystem::path& file)
         std::ifstream stream(file, std::ios::binary);
         if (!stream)
             throw std::runtime_error("cannot open " + file.string());
-        Json j;
-        stream >> j;
-        if (j.at("schema") != kAssetSchema)
-            throw std::runtime_error("unsupported asset schema; rebuild with nekomote_import");
-        r.asset = j.at("model").get<model::ModelAsset>();
+        r.asset = ModelStream{}.read(stream);
         validate_asset(r.asset);
         r.ok = true;
     }

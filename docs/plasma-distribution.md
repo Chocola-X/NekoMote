@@ -10,6 +10,9 @@ libstdc++、Vulkan loader 或 GPU 驱动。把另一套 Qt 装进 plasmashell �
 版本和插件冲突；AppImage/Flatpak 更适合独立进程播放器，不能替代这种进程内插件的
 ABI 兼容。Plasma/KF 探针为开发工具，分发构建关闭探针，不把它们的 C++ ABI 带入插件。
 
+PNG 解码另依赖宿主 libpng 1.6（`libpng16.so.16`）及 zlib；基线容器提供开发包，
+目标系统依赖由下述 `check-host` 检查，不将这些库复制进插件包。
+
 ## 基线构建
 
 用户无需自己编译：仓库的 [GitHub Actions 工作流](../.github/workflows/plasma-distribution.yml)

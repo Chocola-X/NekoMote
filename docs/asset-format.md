@@ -18,6 +18,8 @@ build/release/bin/nekomote_import model.json model.resx.json --output assets/new
 
 加载阶段验证数量、有限数值、引用和路径；解析/图片解码不进入稳态帧路径。`Field<T>` 编码为 `{ "state": 0|1|2, "value": ... }`，表示缺失、null、存在；只有 state=2 带 value。末尾空帧不转为可见默认帧。icon 键为 `texture/icon`，motion 键为 `group/name`。
 
+模型加载逐项转换 part/layer/frame 并释放对应 JSON 节点，不同时保留完整 JSON 树与强类型副本。字段顺序不影响数据；重复 JSON 对象键明确拒绝。schema 和资产内容无需迁移。PNG 保留编码色值与 straight alpha，不做 gamma/ICC 变换；解码直接写入最终 RGBA 缓冲。
+
 ## 镜像与参数
 
 `mirror` 和 `mirrored_parameters` 都必须存在。后者保存需反向求值的**完整参数名**，不能重复、为空或引用未声明参数；mirror=false 时须为空。

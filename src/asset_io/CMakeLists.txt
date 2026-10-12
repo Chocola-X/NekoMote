@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
+find_package(PNG 1.6 REQUIRED)
+
 add_library(nekomote_asset_io STATIC)
 add_library(nekomote::asset_io ALIAS nekomote_asset_io)
 
@@ -9,6 +11,7 @@ target_sources(nekomote_asset_io
         ${CMAKE_CURRENT_SOURCE_DIR}/asset_file.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/validation.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/image.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/read_only_file.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/session_asset.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/audio.cpp)
 
@@ -23,7 +26,7 @@ target_link_libraries(nekomote_asset_io
         nekomote::model
         nekomote_warnings
     PRIVATE
-        nlohmann_json::nlohmann_json)
+        nlohmann_json::nlohmann_json PNG::PNG)
 
 add_library(nekomote_stb STATIC stb.cpp)
 target_include_directories(nekomote_stb SYSTEM PUBLIC ${stb_SOURCE_DIR})

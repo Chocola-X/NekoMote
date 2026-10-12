@@ -140,16 +140,18 @@ CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry
         result.model_dir = entry.directory;
         result.cutoff_y = entry.cutoff_y;
         result.has_cutoff = entry.has_cutoff;
-        auto model = asset_io::load_asset(entry.model_path);
-        if (!model.ok)
-            throw std::runtime_error(model.errors.front());
-        auto definition = asset_io::load_session_asset(entry.session_path);
-        if (!definition.ok)
-            throw std::runtime_error(definition.errors.front());
-        auto compiled = compile_session(model.asset, definition.asset);
-        if (!compiled.program)
-            throw std::runtime_error(compiled.errors.front());
-        result.program = std::move(compiled.program);
+        {
+            auto model = asset_io::load_asset(entry.model_path);
+            if (!model.ok)
+                throw std::runtime_error(model.errors.front());
+            auto definition = asset_io::load_session_asset(entry.session_path);
+            if (!definition.ok)
+                throw std::runtime_error(definition.errors.front());
+            auto compiled = compile_session(model.asset, definition.asset);
+            if (!compiled.program)
+                throw std::runtime_error(compiled.errors.front());
+            result.program = std::move(compiled.program);
+        } // Source trees are no longer needed before instance/audio/image allocation.
         const auto& program = *result.program;
         result.instance = std::make_unique<SessionInstance>(
             program, SessionConfig{{cfg.seed}, cfg.seed, cfg.pointer, cfg.audio});
@@ -481,8 +483,7 @@ void WallpaperController::update_fade()
     {
         fade_alpha_ = 1.0f;
         switch_state_ = SwitchState::Idle;
-        previous_program_.reset();
-        previous_instance_.reset();
+        clear_previous();
     }
 }
 

@@ -2986,3 +2986,76 @@ TEST_CASE("Nested shape exclusions remain explicitly unsupported", "[runtime][in
     REQUIRE(instance.primitives().empty());
     REQUIRE(instance.frame().commands.empty());
 }
+
+TEST_CASE("Geometry capacity covers changing atlas aspect ratios without frame allocation",
+          "[runtime][scene][capacity]")
+{
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.textures[0].width = asset.textures[0].height = 128;
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 64, 4, 0, 0};
+    asset.icons["atlas/b"] = {"atlas", 0, 16, 64, 64, 0, 0};
+    auto content = sprite();
+    MeshData mesh;
+    std::array<float, 32> points{};
+    const auto patch = runtime::identity_patch();
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        points[i * 2] = patch[i].x;
+        points[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(points);
+    content.mesh = field(mesh);
+    auto node = layer("sprite", 0, content);
+    node.parameterize = field(0);
+    node.parameter = {{"pick", 0, 1, 1, 0, true}};
+    content.icon = field(std::string{"b"});
+    node.frame_list.push_back({1, 2, field(content)});
+    asset.parts[0].layers = {node};
+    auto compiled = runtime::compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    const auto capacity = compiled.scene->frame_capacity();
+    REQUIRE(capacity.vertices < 300); // Preserve a useful bound, not a 22x22 square.
+    runtime::GeometryInstance instance(*compiled.scene);
+    const auto parameter = compiled.scene->find_variable("pick");
+    bool valid = true;
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 100; ++i)
+    {
+        valid &= static_cast<bool>(instance.set_parameter(parameter, static_cast<float>(i % 2)));
+        valid &= static_cast<bool>(instance.evaluate());
+        valid &= static_cast<bool>(instance.build_frame());
+        valid &= instance.frame().vertices.size() <= capacity.vertices;
+        valid &= instance.frame().indices.size() <= capacity.indices;
+    }
+    measure_allocations = false;
+    REQUIRE(valid);
+    REQUIRE(measured_allocations == 0);
+
+    // Automatic density can be zero while an inherited curve still uses the
+    // minimum 2x2 cells (nine vertices); a division-squared bound misses it.
+    FrameContent parent_content;
+    parent_content.src = field(std::string{"blank"});
+    parent_content.icon = field(std::string{"64:64:0:0"});
+    parent_content.mesh = field(mesh);
+    auto parent = layer("curve", 0, parent_content);
+    parent.mesh_division = 0;
+    auto child = layer("auto", 0, sprite());
+    child.mesh_division = 0;
+    child.obj_tri_priority = 2;
+    parent.children = {child};
+    asset.parts[0].layers = {parent};
+    auto automatic = runtime::compile_geometry_scene(asset);
+    REQUIRE(automatic.scene);
+    REQUIRE(automatic.scene->frame_capacity().vertices >= 9);
+    runtime::GeometryInstance automatic_instance(*automatic.scene);
+    measured_allocations = 0;
+    measure_allocations = true;
+    valid = static_cast<bool>(automatic_instance.evaluate());
+    valid &= static_cast<bool>(automatic_instance.build_frame());
+    measure_allocations = false;
+    REQUIRE(valid);
+    REQUIRE(automatic_instance.frame().vertices.size() == 9);
+    REQUIRE(measured_allocations == 0);
+}

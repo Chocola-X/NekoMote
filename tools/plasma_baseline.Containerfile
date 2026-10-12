@@ -11,7 +11,7 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources && \
       > /etc/apt/sources.list && \
     apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates git cmake ninja-build g++ python3 binutils \
-      qt6-base-dev qt6-declarative-dev libpulse-dev libfontconfig1-dev \
+      qt6-base-dev qt6-declarative-dev libpulse-dev libfontconfig1-dev libpng-dev \
       libvulkan-dev glslang-tools && \
     rm -rf /var/lib/apt/lists/*
 

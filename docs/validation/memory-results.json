@@ -1,0 +1,1133 @@
+{
+  "stage": "C14",
+  "date": "2026-10-12",
+  "base_commit": "7e458fb7f81b0a87dd250a6c1f95ea3c3149152b",
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "evidence_root": "build/evidence/memory-20261012",
+  "measurement_units": {
+    "rss_pss": "KiB; report divides by 1024 for MiB",
+    "mallinfo2": "bytes",
+    "nvml_process_memory": "MiB"
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 7 5800H",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "575.64.03",
+    "desktop": "KDE/X11",
+    "compiler": "GCC 15.1.1",
+    "build": "Release/O3/LTO/WERROR",
+    "qt": "6.9.1",
+    "libpng": "1.6.50"
+  },
+  "conditions": {
+    "output": [
+      1920,
+      1080
+    ],
+    "seed": 1,
+    "initial_character": "fraise/casual-a",
+    "background": "BG_07A",
+    "ui_open": true,
+    "no_save": true,
+    "warmup_frames": 120,
+    "switch_sequence": [
+      "fraise/maid-b",
+      "coconut/hawaii-a",
+      "vanilla/date-a",
+      "milk/teenage",
+      "cinnamon/maid-b",
+      "chocola/date-a"
+    ],
+    "repetitions": 3,
+    "settled_frames": 120,
+    "logical_dt_seconds": 0.016666666666666666,
+    "phase_idle_sleep_ms": 8,
+    "switch_idle_ms": 650,
+    "probe_gl": "hidden GLFW EGL context, swap interval 0",
+    "probe_vk": "offscreen vk_host_c target, submit/fence, no swapchain presentation",
+    "profilers_in_formal_measurements": false,
+    "allocator": "default glibc",
+    "status_sampling_ms": 20,
+    "gpu_sampling_seconds": 1,
+    "config_mtime_utc": "2026-10-12T13:05:44.000858+00:00"
+  },
+  "runs": [
+    {
+      "label": "base-gl",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-gl"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 395444,
+      "peak_anonymous_kib": 251516,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 251364,
+            "Pss": 198217,
+            "Shared_Clean": 61032,
+            "Shared_Dirty": 72,
+            "Private_Clean": 56016,
+            "Private_Dirty": 134244,
+            "Anonymous": 109548
+          },
+          "sha256": "85cdb0d59463e0fed8f3df67f18b40f01c79f60cccfa0028bcb5a911d0dc85f1"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 329856,
+            "Pss": 276646,
+            "Shared_Clean": 61096,
+            "Shared_Dirty": 72,
+            "Private_Clean": 55612,
+            "Private_Dirty": 213076,
+            "Anonymous": 190024
+          },
+          "sha256": "724fcf0b005abfb33579ceeb4e5a6c73f3665a4458469aeeb489796cb1812aa6"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 64008192,
+          "arena_free_bytes": 2899968,
+          "malloc_mmap_bytes": 55111680,
+          "arena_bytes": 66908160
+        },
+        "settled": {
+          "arena_used_bytes": 60856128,
+          "arena_free_bytes": 94341312,
+          "malloc_mmap_bytes": 37720064,
+          "arena_bytes": 155197440
+        }
+      },
+      "gpu_1s_sample_max_mib": 161,
+      "sampling_record_sha256": "b249c94c0fe090f231fcdf2cb577fc4553c2dc8d260a34534d3e49f4e6277403",
+      "log_sha256": "70cc422b92293d99fd4bc8c32c95e651529a6518792154298c2a55734233ce16"
+    },
+    {
+      "label": "base-gl-repeat",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-gl-repeat"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 328800,
+      "peak_anonymous_kib": 201752,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 194648,
+            "Pss": 141299,
+            "Shared_Clean": 61244,
+            "Shared_Dirty": 72,
+            "Private_Clean": 42956,
+            "Private_Dirty": 90376,
+            "Anonymous": 65680
+          },
+          "sha256": "2f458a9057fcc4947764bdaed0164e91e606e2e29389f80b1fb847e316ebc8cb"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 273456,
+            "Pss": 219981,
+            "Shared_Clean": 61372,
+            "Shared_Dirty": 72,
+            "Private_Clean": 42464,
+            "Private_Dirty": 169548,
+            "Anonymous": 146408
+          },
+          "sha256": "ca86e20aee40914fb9a0abb6ecfe9b62064e3d9c2d05a14caf48495f24c8ae5b"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 25270400,
+          "arena_free_bytes": 8451968,
+          "malloc_mmap_bytes": 40386560,
+          "arena_bytes": 33722368
+        },
+        "settled": {
+          "arena_used_bytes": 22153184,
+          "arena_free_bytes": 100292640,
+          "malloc_mmap_bytes": 22994944,
+          "arena_bytes": 122445824
+        }
+      },
+      "gpu_1s_sample_max_mib": 161,
+      "sampling_record_sha256": "163d0a96d0df2dcabb5e61fff84ba1a9c492cbc0f108a741ebfdd3ad860c1681",
+      "log_sha256": "99d28d161ffe3fa46eea41f38d2567e912f8a7feaeaf87aaf824aa5844e34559"
+    },
+    {
+      "label": "final-gl",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-gl"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 244596,
+      "peak_anonymous_kib": 86496,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 172952,
+            "Pss": 117164,
+            "Shared_Clean": 65772,
+            "Shared_Dirty": 72,
+            "Private_Clean": 55820,
+            "Private_Dirty": 51288,
+            "Anonymous": 25176
+          },
+          "sha256": "8e657dd38a30092e8d5d131a10df3f74a6aeb73a0218648b6ae8279f117365cd"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 199536,
+            "Pss": 143623,
+            "Shared_Clean": 65900,
+            "Shared_Dirty": 72,
+            "Private_Clean": 55400,
+            "Private_Dirty": 78164,
+            "Anonymous": 53680
+          },
+          "sha256": "9359f49194a156acfe91f7d87d1baba3e56ba8ebcdf0baf57234e728ed6fcbf7"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 8741952,
+          "arena_free_bytes": 5413824,
+          "malloc_mmap_bytes": 3506176,
+          "arena_bytes": 14155776
+        },
+        "settled": {
+          "arena_used_bytes": 7321072,
+          "arena_free_bytes": 52767248,
+          "malloc_mmap_bytes": 3506176,
+          "arena_bytes": 60088320
+        }
+      },
+      "gpu_1s_sample_max_mib": 143,
+      "sampling_record_sha256": "0918adf0a5fc75c25e78cfb94ce5d2627e1e12f83c081a2a8d7ccfbe043e4275",
+      "log_sha256": "f9623e94d893a8c073d7555e4553baa1b1a1de9922c42959a1e9570a33da4d89"
+    },
+    {
+      "label": "final-gl-repeat",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-gl-repeat"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 238564,
+      "peak_anonymous_kib": 88696,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 172868,
+            "Pss": 117167,
+            "Shared_Clean": 65752,
+            "Shared_Dirty": 72,
+            "Private_Clean": 57172,
+            "Private_Dirty": 49872,
+            "Anonymous": 25176
+          },
+          "sha256": "b70fbbfa4ddfee466151a52b71484634cca53cc1f3e44e84190cda86f45c690c"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 205748,
+            "Pss": 149922,
+            "Shared_Clean": 65880,
+            "Shared_Dirty": 72,
+            "Private_Clean": 56748,
+            "Private_Dirty": 83048,
+            "Anonymous": 55880
+          },
+          "sha256": "6d5c6aa987da4e1f53c6a5f4c7204be371856af82cee2d338f1ff671e304ae83"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 8742656,
+          "arena_free_bytes": 5413120,
+          "malloc_mmap_bytes": 3506176,
+          "arena_bytes": 14155776
+        },
+        "settled": {
+          "arena_used_bytes": 7356208,
+          "arena_free_bytes": 52891856,
+          "malloc_mmap_bytes": 3506176,
+          "arena_bytes": 60248064
+        }
+      },
+      "gpu_1s_sample_max_mib": 143,
+      "sampling_record_sha256": "80871800e202c0718e57bc8aefd028743bdf861295e9459f8293818f6a024127",
+      "log_sha256": "b3b5d0a1827a4ae37668da23b2f2cc080b93335196b7c242d706497486ba33d6"
+    },
+    {
+      "label": "base-vk",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-vk"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 366472,
+      "peak_anonymous_kib": 215288,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 225316,
+            "Pss": 149920,
+            "Shared_Clean": 85488,
+            "Shared_Dirty": 64,
+            "Private_Clean": 58596,
+            "Private_Dirty": 81168,
+            "Anonymous": 79864
+          },
+          "sha256": "423c035b5d766719954615e370815371bb1b1d5edc762d2c0e62c817db4ddcc6"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 286388,
+            "Pss": 210866,
+            "Shared_Clean": 85616,
+            "Shared_Dirty": 64,
+            "Private_Clean": 48020,
+            "Private_Dirty": 152688,
+            "Anonymous": 150684
+          },
+          "sha256": "43837f09b30c98cfafd12607c3039c6d84f67c5cfff40b87057831aa0901b590"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 32641376,
+          "arena_free_bytes": 8580768,
+          "malloc_mmap_bytes": 34213888,
+          "arena_bytes": 41222144
+        },
+        "settled": {
+          "arena_used_bytes": 21846368,
+          "arena_free_bytes": 90560160,
+          "malloc_mmap_bytes": 34213888,
+          "arena_bytes": 112406528
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "5384f6ef2fd58d90881236f3dc9d2630fb86f76b45ea2fecab8dd905faf68e17",
+      "log_sha256": "025b175f1ba8bc47df5b6576dc4f32f83da62dec3e6879e892c7c2f326ccbce1"
+    },
+    {
+      "label": "base-vk-repeat",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-vk-repeat"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 335908,
+      "peak_anonymous_kib": 190772,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 195764,
+            "Pss": 120446,
+            "Shared_Clean": 85408,
+            "Shared_Dirty": 64,
+            "Private_Clean": 43724,
+            "Private_Dirty": 66568,
+            "Anonymous": 65264
+          },
+          "sha256": "56794a8195e3d8443e157b42c450197f84f8f3f74d811dc6e66741ecf816c83e"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 254164,
+            "Pss": 178747,
+            "Shared_Clean": 85536,
+            "Shared_Dirty": 64,
+            "Private_Clean": 33148,
+            "Private_Dirty": 135416,
+            "Anonymous": 133412
+          },
+          "sha256": "ba28f4f05a371fbad061e01ef03a50f8fff27159364ed2799020d3642f7dd5bf"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 31725168,
+          "arena_free_bytes": 9501072,
+          "malloc_mmap_bytes": 19488768,
+          "arena_bytes": 41226240
+        },
+        "settled": {
+          "arena_used_bytes": 20961120,
+          "arena_free_bytes": 89430176,
+          "malloc_mmap_bytes": 19488768,
+          "arena_bytes": 110391296
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "a5711062dd2940a0d851bd34756b23b8729640ee36939a3baea5fc9707a892ea",
+      "log_sha256": "e9e313cf0a88544d17890777456423e60b1fb88142baf5fc4773bfda0291e62c"
+    },
+    {
+      "label": "final-vk",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-vk"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 250884,
+      "peak_anonymous_kib": 85144,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 156532,
+            "Pss": 78659,
+            "Shared_Clean": 90100,
+            "Shared_Dirty": 64,
+            "Private_Clean": 40096,
+            "Private_Dirty": 26272,
+            "Anonymous": 23616
+          },
+          "sha256": "70487ad3557baf0fffe69451db4a8a6a64432b1e28d483a374134a39dc09ed71"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 184784,
+            "Pss": 106846,
+            "Shared_Clean": 90164,
+            "Shared_Dirty": 64,
+            "Private_Clean": 40224,
+            "Private_Dirty": 54332,
+            "Anonymous": 52328
+          },
+          "sha256": "bfb1e911df2ec2366ac04111bf4aa504966255faaeeb2dd49e863ca65b923d83"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 14776144,
+          "arena_free_bytes": 2582704,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 17358848
+        },
+        "settled": {
+          "arena_used_bytes": 13575616,
+          "arena_free_bytes": 33155648,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 46731264
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "6f4ce4c8333e4e11a616f4f22310b99fd1086c18509a0ced13a8e6dce8b8d00f",
+      "log_sha256": "88fcbc94310a861c27487d67c15b23fd8d04f545b158068d5f0e4c298a50dd3f"
+    },
+    {
+      "label": "final-vk-repeat",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-vk-repeat"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 250756,
+      "peak_anonymous_kib": 85136,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 156524,
+            "Pss": 78730,
+            "Shared_Clean": 90052,
+            "Shared_Dirty": 64,
+            "Private_Clean": 41496,
+            "Private_Dirty": 24912,
+            "Anonymous": 23608
+          },
+          "sha256": "4405fe28f81c9cfe718998a12b09192eb803b7fb83bc7875ef706cd037789bf4"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 184776,
+            "Pss": 106879,
+            "Shared_Clean": 90160,
+            "Shared_Dirty": 64,
+            "Private_Clean": 40228,
+            "Private_Dirty": 54324,
+            "Anonymous": 52320
+          },
+          "sha256": "9edfae719c2554293f118e0c72ec497005050e1cefd93f711cde48960e4f42f4"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 14771648,
+          "arena_free_bytes": 2583104,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 17354752
+        },
+        "settled": {
+          "arena_used_bytes": 13575200,
+          "arena_free_bytes": 33151968,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 46727168
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "d3120bd1a86cb83d8111ba782b0e3a4dfd77f34b6bea370ad6b2a80a1fad5fe5",
+      "log_sha256": "120105abe066afc109132544f5eea9c8fe8c8ccff4a4646391e4b453ffa0fb7e"
+    },
+    {
+      "label": "base-gl-audio",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-gl-audio",
+        "audio"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 351980,
+      "peak_anonymous_kib": 224564,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 198932,
+            "Pss": 145170,
+            "Shared_Clean": 61760,
+            "Shared_Dirty": 72,
+            "Private_Clean": 42868,
+            "Private_Dirty": 94232,
+            "Anonymous": 69540
+          },
+          "sha256": "8b6540f70ccb75a90f1a1c30b62281e8c452dedc0fbd1f2d045a2c93ee9a1af8"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 293156,
+            "Pss": 239366,
+            "Shared_Clean": 61792,
+            "Shared_Dirty": 72,
+            "Private_Clean": 42356,
+            "Private_Dirty": 188936,
+            "Anonymous": 165748
+          },
+          "sha256": "3d0a2756b94a6688702a733f8ffdf3ba2ea588b9d79d96aaa4465e2dae20d4ae"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 30968352,
+          "arena_free_bytes": 6739424,
+          "malloc_mmap_bytes": 40386560,
+          "arena_bytes": 37707776
+        },
+        "settled": {
+          "arena_used_bytes": 28312976,
+          "arena_free_bytes": 138082928,
+          "malloc_mmap_bytes": 22994944,
+          "arena_bytes": 166395904
+        }
+      },
+      "gpu_1s_sample_max_mib": 161,
+      "sampling_record_sha256": "a422ce48b5bd78ac4e6f605d1d65cf74c01edbb09fba2f1a02689e555a18ebf2",
+      "log_sha256": "5908b144ca5a7478a0fa146e5c24549d04acfa3405d6378d4136b56ad5356fc0"
+    },
+    {
+      "label": "final-gl-audio",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "opengl",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-gl-audio",
+        "audio"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 257368,
+      "peak_anonymous_kib": 98784,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 176212,
+            "Pss": 120191,
+            "Shared_Clean": 66248,
+            "Shared_Dirty": 72,
+            "Private_Clean": 57304,
+            "Private_Dirty": 52588,
+            "Anonymous": 27892
+          },
+          "sha256": "538379051bdddb6660c042ba50c75374d3b6187a5645cb36ee32e699f5094809"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 216400,
+            "Pss": 160325,
+            "Shared_Clean": 66312,
+            "Shared_Dirty": 72,
+            "Private_Clean": 56888,
+            "Private_Dirty": 93128,
+            "Anonymous": 65968
+          },
+          "sha256": "b842452e193f1e3a688e834f3ca4a5364bc12836543a379ca0177286e25c6cd9"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 13190304,
+          "arena_free_bytes": 3726176,
+          "malloc_mmap_bytes": 4767744,
+          "arena_bytes": 16916480
+        },
+        "settled": {
+          "arena_used_bytes": 13513904,
+          "arena_free_bytes": 55610192,
+          "malloc_mmap_bytes": 3506176,
+          "arena_bytes": 69124096
+        }
+      },
+      "gpu_1s_sample_max_mib": 153,
+      "sampling_record_sha256": "339acd7d76d1e97b9de7675e6423add4d4c24a4da72a98d097a26262b6ab322a",
+      "log_sha256": "f45b0b7f8bad51af95d471c6d8557f07d7c206a258eb6917d385b1ccf536cc4b"
+    },
+    {
+      "label": "base-vk-audio",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-base",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/base-vk-audio",
+        "audio"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 349984,
+      "peak_anonymous_kib": 201880,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 199468,
+            "Pss": 123554,
+            "Shared_Clean": 86184,
+            "Shared_Dirty": 64,
+            "Private_Clean": 43748,
+            "Private_Dirty": 69472,
+            "Anonymous": 68168
+          },
+          "sha256": "bc98141dd45cb4260a339e8d916c54bfe4de71a919a854be319e07c49d30d88b"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 268748,
+            "Pss": 192797,
+            "Shared_Clean": 86196,
+            "Shared_Dirty": 64,
+            "Private_Clean": 33160,
+            "Private_Dirty": 149328,
+            "Anonymous": 147324
+          },
+          "sha256": "53676ca1b6ee64a980eaa2d8f534af0ef570614efc9cd5f436943626472a7b36"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 37424224,
+          "arena_free_bytes": 7545760,
+          "malloc_mmap_bytes": 19488768,
+          "arena_bytes": 44969984
+        },
+        "settled": {
+          "arena_used_bytes": 27103568,
+          "arena_free_bytes": 110481072,
+          "malloc_mmap_bytes": 19488768,
+          "arena_bytes": 137584640
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "4cb72aeac23291d3562432d4d8cac7f975a7234e3289e02e418643d908dd0bfe",
+      "log_sha256": "795b0a1aed7d8c3d69f633caa19690f4e09407e13b6f5e398f85b339985da421"
+    },
+    {
+      "label": "final-vk-audio",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/probe-current",
+        "vulkan",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/final-vk-audio",
+        "audio"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 262892,
+      "peak_anonymous_kib": 96632,
+      "phases": {
+        "initial": {
+          "smaps_kib": {
+            "Rss": 159696,
+            "Pss": 81500,
+            "Shared_Clean": 90616,
+            "Shared_Dirty": 64,
+            "Private_Clean": 41456,
+            "Private_Dirty": 27560,
+            "Anonymous": 26256
+          },
+          "sha256": "7e0719d6223cd6afa65fa8ac3af4e32f740a5dbb014252413f8001af125d76ff"
+        },
+        "settled": {
+          "smaps_kib": {
+            "Rss": 196796,
+            "Pss": 118537,
+            "Shared_Clean": 90680,
+            "Shared_Dirty": 64,
+            "Private_Clean": 40232,
+            "Private_Dirty": 65820,
+            "Anonymous": 63816
+          },
+          "sha256": "28e12f20c269dec5d9f48d6fc11928ed4c4d509525929dc9c8882a6ea3f14665"
+        }
+      },
+      "mallinfo2": {
+        "initial": {
+          "arena_used_bytes": 20467696,
+          "arena_free_bytes": 1642512,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 22110208
+        },
+        "settled": {
+          "arena_used_bytes": 19732224,
+          "arena_free_bytes": 40745216,
+          "malloc_mmap_bytes": 0,
+          "arena_bytes": 60477440
+        }
+      },
+      "gpu_1s_sample_max_mib": 109,
+      "sampling_record_sha256": "cf0d44f19556580845d3bd1312a01a4895a0cd6dba8983c788c1c60fcd6f8fbb",
+      "log_sha256": "49d09c4222e3833551a266280d5133b6e7dc8cbd106e27a33079e3c41aac3767"
+    },
+    {
+      "label": "player-gl",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--backend",
+        "opengl",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "30",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--measure-frames",
+        "300"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 176416,
+      "peak_anonymous_kib": 56704,
+      "phases": {
+        "steady": {
+          "smaps_kib": {
+            "Rss": 171636,
+            "Pss": 116048,
+            "Shared_Clean": 65620,
+            "Shared_Dirty": 72,
+            "Private_Clean": 57268,
+            "Private_Dirty": 48676,
+            "Anonymous": 23948
+          },
+          "sha256": "eaa9465e88bb3338b7cb743aa1a8a3fdb15cebf8353039e874e375bc128e0922"
+        }
+      },
+      "mallinfo2": {},
+      "gpu_1s_sample_max_mib": 73,
+      "sampling_record_sha256": "457b09aff9dbbe84650dca1bc4d28900307b163ddb8225c98820a1b4710e8fdf",
+      "log_sha256": "a66cd22c1bcda1dc012426f52bcc7f4d0516e275fd00625b2a495d366b49f0a1"
+    },
+    {
+      "label": "player-vk",
+      "argv": [
+        "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--backend",
+        "vulkan",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "30",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--measure-frames",
+        "300"
+      ],
+      "environment_overrides": {},
+      "exit_code": 0,
+      "peak_rss_kib": 165872,
+      "peak_anonymous_kib": 55404,
+      "phases": {
+        "steady": {
+          "smaps_kib": {
+            "Rss": 161564,
+            "Pss": 83890,
+            "Shared_Clean": 89928,
+            "Shared_Dirty": 72,
+            "Private_Clean": 45852,
+            "Private_Dirty": 25712,
+            "Anonymous": 22672
+          },
+          "sha256": "03b78947c69b6892b56f95335b4ec35fcebc6d7dee5d3d0054f7ae88041d91ef"
+        }
+      },
+      "mallinfo2": {},
+      "gpu_1s_sample_max_mib": 67,
+      "sampling_record_sha256": "9b3a7e1d57d32438946debd8187f59bf2cc778897924925dfbceddcf48b0ac19",
+      "log_sha256": "095bcf9eebbb9c478c829226b6bcb73d8d69e261a1b8d83e543040e013636885"
+    }
+  ],
+  "attribution_only": {
+    "allocator": "LD_PRELOAD libtcmalloc",
+    "not_comparable_rss": true,
+    "profile_report_sha256": "1dbd520685b1fffa363a1d51cd5d59c74990435f70b11f6f45bbf4e5a2048a98",
+    "total_tracked_heap_mb": 42.3,
+    "font_flat_mb": 18.6,
+    "geometry_instance_flat_mb": 7.6
+  },
+  "checks": {
+    "release_cpu": {
+      "passed": 184,
+      "failed": 0
+    },
+    "release_full_final": {
+      "passed": 187,
+      "failed": 0,
+      "note": "Default CTest VK validation mode is not the explicit core/sync validation evidence."
+    },
+    "gl_gpu": {
+      "cases": 13,
+      "assertions": 233
+    },
+    "vk_gpu": {
+      "cases": 7,
+      "assertions": 198,
+      "validation": "Workspace official Debian 1.4.309.0 layer; core and synchronization enabled"
+    },
+    "asan_ubsan_asset_image_capacity": {
+      "cases": 15,
+      "assertions": 386
+    },
+    "asan_ubsan_controller_application": {
+      "cases": 36,
+      "assertions": 5972,
+      "leak_detection": true
+    },
+    "plasma_isolated": {
+      "passed": 4,
+      "failed": 0,
+      "note": "First run missing validation layer failed; correct workspace layer environment then passed."
+    },
+    "owned_windows": {
+      "opengl": "PASS",
+      "vulkan": "PASS",
+      "os_input_injection": false,
+      "vk_window_validation": false
+    },
+    "typed_model_dom_stream_equivalence": {
+      "passed": 195,
+      "failed": 0,
+      "note": "Old full DOM conversion using the same unchanged field serializers vs streaming load, reserialized typed data equality; not full dynamic certification"
+    },
+    "png_stb_libpng_exact_pixels": {
+      "passed": 324,
+      "failed": 0
+    },
+    "plasma_package_elf_audit": {
+      "result": "PASS local Qt 6.9.1 audit",
+      "debian12_baseline_certified": false
+    }
+  },
+  "images": [
+    {
+      "argv": [
+        "flock",
+        "/run/media/chocola/DATA/Project/NekoMote/build/gpu-validation.lock",
+        "timeout",
+        "30s",
+        "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--capture-ui",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/opengl-ui.png",
+        "--steps",
+        "60"
+      ],
+      "code": 0,
+      "binary_sha256": "cfa2181c2bde449bad1bc2e73199b053497891af2c17eb887e0e6a1cb9ee498e",
+      "image_sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "identical_to_C13": true
+    },
+    {
+      "argv": [
+        "flock",
+        "/run/media/chocola/DATA/Project/NekoMote/build/gpu-validation.lock",
+        "timeout",
+        "30s",
+        "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--capture-ui",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/vulkan-ui.png",
+        "--steps",
+        "60"
+      ],
+      "code": 0,
+      "binary_sha256": "cfa2181c2bde449bad1bc2e73199b053497891af2c17eb887e0e6a1cb9ee498e",
+      "image_sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "identical_to_C13": true
+    },
+    {
+      "argv": [
+        "flock",
+        "/run/media/chocola/DATA/Project/NekoMote/build/gpu-validation.lock",
+        "timeout",
+        "30s",
+        "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+        "--model",
+        "assets/characters/chocola/date-a/model.nkm.json",
+        "--session",
+        "assets/characters/chocola/date-a/session.nks.json",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--scale",
+        "1",
+        "--origin-x",
+        "0",
+        "--origin-y",
+        "400",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--transparent",
+        "--capture",
+        "/run/media/chocola/DATA/Project/NekoMote/build/evidence/memory-20261012/native-webgl-initial.png",
+        "--steps",
+        "0"
+      ],
+      "code": 0,
+      "image_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+      "identical_to_C13": true
+    }
+  ],
+  "webgl_initial": {
+    "reference_sha256": "e23aa19c310b9f0f069d72ed00324eca8d2e2f5cca5427f936fa851f4585a793",
+    "native_sha256": "66829488ea86d27fc1e2d30f7dc78c00db8ded2cfd6ffe091a569a3c325ccc5f",
+    "size": [
+      800,
+      1080
+    ],
+    "raw_max_rgba": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "alpha_max_error": 0,
+    "composed_max_rgb_black_white": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "tolerance": 2,
+    "pixels_over_tolerance": 0,
+    "reference_bbox": [
+      0,
+      196,
+      800,
+      1080
+    ],
+    "native_bbox": [
+      0,
+      196,
+      800,
+      1080
+    ],
+    "passed": true
+  },
+  "webgl_reference_evidence": "build/evidence/optimization-20261012/webgl-waiting.png (C13 frozen same-day controlled reference)",
+  "visual_inspection": [
+    "opengl-ui.png",
+    "webgl-native.png"
+  ],
+  "source_file_sha256": {
+    "apps/player/main.cpp": "e3697074afc23c37e3a537e0e9e5ec2c9c26ab3e43d5ec5cbeb6d04c37497422",
+    "include/nekomote/asset_io/read_only_file.hpp": "194397ab07c8193dd781feaabc1762c9450751981a2bd1a2c53699dab38765db",
+    "include/nekomote/ui/font.hpp": "ff7e1af3dcd2c78b35a3fe2f2c22c35c9b0f1622b7940e0ee79bd7727ef05f51",
+    "src/abi/wallpaper_instance.cpp": "d5c4abb395aabdfd979e254400e54d07ce2d11d412ad621bb598d20c00d6dd10",
+    "src/abi/wallpaper_instance.hpp": "b279e5b8c64a93f3da4ac0dc5ae0fa28c305e859b8752b5945f7a6d45d943204",
+    "src/application/controller.cpp": "bff78eb5f88b4acd8da7714f7f6f772a5b95c5a9e805e76f7d6f1fcfc227b337",
+    "src/asset_io/CMakeLists.txt": "67cfb7eb0e85eb4021c92494dde3f4fa1236e8c7fe2d7c9f8ca2de86f4e069ce",
+    "src/asset_io/asset_file.cpp": "d165a8ca3ba559d95bca12df81fbbbe0d4a31ace9c302eb6e36a3fe8b8b9c9dd",
+    "src/asset_io/image.cpp": "620af41326756e2bd8e17a88717a64f4c85d00fbceaa0e31b8311598df8d4d06",
+    "src/asset_io/read_only_file.cpp": "c434cd20b2db8cd42bbccc9aef6bc9b75d82f0a9c50a6ff0c0422ad8c8a1d135",
+    "src/asset_io/stb.cpp": "932deb3d74085b18d171d3ef22ad11713903063473c612b2e84c70c454068f56",
+    "src/runtime/geometry_scene.cpp": "48326f28736ca748cd886e8b188e0424072e30f47b3b8f01020012e7ea87fba5",
+    "src/ui/CMakeLists.txt": "ffe16ecdfbb35daa24c1faabefffd6582e8fb139a7d5a2eb2e60aef1b778aaa3",
+    "src/ui/font.cpp": "ef75e72ed8c022b0402626cd37561ecc1feb8a65d2e7bb8ea2196473c1531193",
+    "tests/unit/test_asset_validation.cpp": "a80ef7d6fb98eb30157e689df9aacc61d9dc24a54c358a74a46b1fbc47c73e4b",
+    "tests/unit/test_geometry_scene.cpp": "70f4b40fe2ce458cfd42f860be2f5f5d3d19d7f12921d62922358ae775103d3f",
+    "tests/unit/test_image.cpp": "5fcc4d5fa26ae0bf27b6def128a2954f1299309d82da0e6ae29066752c292e03",
+    "tools/plasma_baseline.Containerfile": "63ab6a1270e81de110a1af967b8157c2c53e425deba66a5547844fa5343ae412"
+  },
+  "binary_sha256": {
+    "build/evidence/memory-20261012/probe-base": "05a002b1946462cf5c5e124d3dd017b2983e412cc67b4c34a953b5163618afa9",
+    "build/evidence/memory-20261012/probe-current": "1ef711c159d86eb0ca8bca4adf526f4254090c29abee2891e5abf8219f529631",
+    "build/release/bin/nekomote_player": "cfa2181c2bde449bad1bc2e73199b053497891af2c17eb887e0e6a1cb9ee498e",
+    "build/release/bin/nekomote_abi_host": "c1cd8df5ae25391b8af0606365b698782dc57518871210d755cd10bb28c9111c",
+    "build/evidence/memory-20261012/png_compare": "746b8a9b59dcaafc71da97085180f4d6f931e203e1af4a3bdddaf786977a4d2d",
+    "build/evidence/memory-20261012/model-stream-compare": "af6e44e18a62beda12057f5fb0f0b306c3cbf168caec29cf7d6af48f9379ce6e"
+  },
+  "diagnostic_source_sha256": {
+    "build/evidence/memory-20261012/probe.cpp": "d4ecb8c380efca173de1e427020edb069e1d9b475ce4f21c4734707210e80563",
+    "build/evidence/memory-20261012/sample.py": "0976637c6305f0bb4cd090b0d3a0472d4fd2a8ceb8b019fad4b087500beccc73",
+    "build/evidence/memory-20261012/sample-player.py": "d4f0366e00c1894d71c90c208d60f2f1b3781a3ff1658b5a3bfd125066f957cf",
+    "build/evidence/memory-20261012/compile-probe.py": "e9b095b33a2e3354849eb522cd52fb942733c99994011cca135ddb02d1dad9d3",
+    "build/evidence/memory-20261012/compile-current.py": "10c1d8c77f45d519ab1d971fba0d9925d3239c5f3bf14b8652cdac11633345ca",
+    "build/evidence/memory-20261012/png_compare.cpp": "ec547a47839f72b25e7940391e95fef53f9e156bf7bbdacada7bd4e78b38ec62",
+    "build/evidence/memory-20261012/model-stream-compare.cpp": "1c67ef28b9050e17fbb2174622af9f7015b133719b3b62a5c9b5ac4dbaeb752d"
+  },
+  "input_manifest_sha256": {
+    "build/evidence/memory-20261012/png-inputs.json": "fef59e91aa1279a2d6ba1c649dfb8c98f3faa592e7607a57f91587ba4399ae85",
+    "build/evidence/memory-20261012/model-inputs.json": "576b9631adf22611979355aaf6cb0ea687da251410257e9d1edf9d9906f49fef"
+  },
+  "selected_asset_sha256": {
+    "assets/config.json": "b06d76a0cd16ddcbe5dbcc8d4e091d3bd7fca7fc3320b4a47ba0c1cf234dcb53",
+    "assets/characters/fraise/casual-a/model.nkm.json": "28059164251a9c5aed8eda64fa23524e9e7e0c4654307027d331c58224bffc69",
+    "assets/characters/fraise/casual-a/session.nks.json": "bb4a890a7d7bf11820e19d372b520a0dfeeb352e27e4c07f48b5d652eaa85651",
+    "assets/characters/fraise/maid-b/model.nkm.json": "7ddcdab3c9f7d05be82fba2a0231d4ff185f9a0a145ef080f6085f1e0fa1c092",
+    "assets/characters/fraise/maid-b/session.nks.json": "8cb5cbd5e35854f1da37e4e9ec0cd47cd2ae00c80d46798eb0a5e4af7f72b549",
+    "assets/characters/coconut/hawaii-a/model.nkm.json": "b71369ab041be7a879a1c0d2357697169662d6a08f1fa76f7cc34e198ed6c1fc",
+    "assets/characters/coconut/hawaii-a/session.nks.json": "cd65623f871338e9b9d1e65b560591174f3729eba706df59ceccbbd4fb2eb252",
+    "assets/characters/vanilla/date-a/model.nkm.json": "bb1d094be9626aecd5896a19d3f01e6132a3eaecb938c5a26b8cc5d3475fa3c9",
+    "assets/characters/vanilla/date-a/session.nks.json": "ccf5d2efa055ed9ccd71a348bbe644dfd2baac7995d6889769edc52ed94c1df0",
+    "assets/characters/milk/teenage/model.nkm.json": "602468a1c447c73f4b79f9e122fc99c853136a650805f006a708fbf987e0e02f",
+    "assets/characters/milk/teenage/session.nks.json": "43b946095e62fab05a7add37defd00c2367e4d6d98d1a780376911252bb51e73",
+    "assets/characters/cinnamon/maid-b/model.nkm.json": "61748bfcbbce066500d4845a0037a879bbd4763845c5a653fe94c03028f841b0",
+    "assets/characters/cinnamon/maid-b/session.nks.json": "88471e5bd79a682426ed1b9bc24e1cd401eeda13fb43b416c9b073c10a65bc72",
+    "assets/characters/chocola/date-a/model.nkm.json": "eddc226dd2056ccf96ab8cf179824386f427d2db9b20f6420689c316a0368690",
+    "assets/characters/chocola/date-a/session.nks.json": "88b5500ed9af6c3df8f62b73a3c706cdd43427481784abf3a62d512a90aacbdd"
+  },
+  "log_sha256": {
+    "cpu-final.log": "78b85a2526067da88198dcd60a166175ed00895a1f95a19b1f6494e19e137f7b",
+    "cpu-delivery.log": "666c2a23627329613c8a42e6dbf2f715140576ee03dc6d464efeffac40f437e8",
+    "gl-tests.log": "1aec05362a82796baa7672fc1435e45277fdd4e20c45c81ca9f2b50e13ac16b5",
+    "vk-tests.log": "f1368f09615ef592b2592e3fc11d1c2c0b3c1f3316098bbe591d0a90cc75d2af",
+    "asan-contracts.log": "115763ca695ba94d94aefa679a90960ffdb58d3e9e2cb3ff4b283c71c2247e49",
+    "asan-lifecycle.log": "8ab3613a4ccf99fe3c25d3a237b5a9ab8b0a44683c62d85990cd48d2ec3b90dc",
+    "plasma-tests.log": "ad0bbf6f582f7123bd82de725dae8aef4836d724da36b5442b68b330e6656081",
+    "plasma-tests-missing-layer.log": "7335fb9dcb95eb15929a67f6f3b4f84608e8bfee95a720f7e03ac63368055a63",
+    "window-opengl.log": "3909797db25a303f0bbec7ed0e2e1410cfab714671eebd7ac63126d50717ecd8",
+    "window-vulkan.log": "0fdf8cd4619bd752c3bbf358afad198c9f52d61a45017025dd8cd2889639eec5",
+    "png-compare.log": "b6a9337fb3b7807535730d0c2dd16c7af27e4756b89f2bcd2083b13fa86ab186",
+    "model-stream-compare.log": "37011ffdd28019eb26c4a22a55c7aca6979285eacf6e14665dae60681161502d",
+    "build-delivery.log": "94ee9cd79648b401e36b85f435a013d223c4ed82a86b200ccd06c06d30c6390e",
+    "build-plasma-delivery.log": "1604e81bf824a7088b1b3a5c5c636018767c0acab5424851bfdadfda0c01e81b",
+    "build-asan-delivery.log": "296ece4d48ce9f9c656e96fa2b2ea1649813fa0487c44346253f93ee3116e33e",
+    "opengl-ui.log": "6c6486f62bee5ec742bfab56899f3fdf4ec09cbd3eaf3275c8234c7e2c7f59ec",
+    "vulkan-ui.log": "7a1c9605b16e01e600752f334e92b66a4bba9ba89d2865b2f99aeb0856b017d4",
+    "native-webgl-initial.log": "b0effb660a796fd505c3aeba3a917a808093733f8f8ddd7c6cfd942f8a60704f",
+    "stage-delivery.log": "11f6ce6dfd84e9ec4bfd046b151466dce1255189894ba38d0c4f353c93b9f5a3",
+    "plasma-audit.log": "bdbcda56ae9c8a89e58064e805b723f51ea31977b5dcd6384e5c5a27dadbf9e0",
+    "plasma-compatibility.json": "bdbcda56ae9c8a89e58064e805b723f51ea31977b5dcd6384e5c5a27dadbf9e0"
+  },
+  "not_certified": [
+    "cross-machine or Plasma total-process RAM/VRAM budget",
+    "instantaneous VRAM peaks (1s coarse samples only)",
+    "CPU speedup",
+    "all 195 full dynamic semantics",
+    "long-duration stress",
+    "miku real-desktop installation",
+    "unfocused ordinary Vulkan FIFO presentation"
+  ],
+  "synthetic_fixture_sha256": {
+    "tests/fixtures/png_normalization/adam7.png": "d8de472588545054d5acb4225a22ab289ce761b7562bcd8b15761b5a3495c3ca",
+    "tests/fixtures/png_normalization/empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tests/fixtures/png_normalization/gamma.png": "8ef3aa14097da8fe9201152eb52ec04ecc98c6c79653a1beab97b0cd6d49963c",
+    "tests/fixtures/png_normalization/generate.py": "7fa8ad37db1cdcce715f73cc81c68a0d3c6d03934d75f3f21c5125584b6d6325",
+    "tests/fixtures/png_normalization/gray1.png": "8fb2df98f3c925f2b52cfd08ed5c48b27f84b238f9151d2007e50eb3fd6c3209",
+    "tests/fixtures/png_normalization/gray16.png": "97eea6b1a9d1fab2bf881612516294b83599e4cb2e06824580f1021ca933682f",
+    "tests/fixtures/png_normalization/oversized.png": "6263bbe843fe4af1ee985a124fdaf66b701489bc35d1476c1ff4296ee730153c",
+    "tests/fixtures/png_normalization/palette2.png": "7b75b35b2d49b424fd4d0bcaa183de67e995a629c1885d74b38a35bb3b68f883",
+    "tests/fixtures/png_normalization/rgb_trns.png": "b5c983c10774a6b2117381d3962db8293bcdb9126b72ed018062c58fcd8821bb",
+    "tests/fixtures/png_normalization/rgba16.png": "9c5371187e3de937e38820abed72fcb66f1ff1a262216ffc4bd618f951f4762d",
+    "tests/fixtures/png_normalization/truncated.png": "b61f4a5923ce21c11e5bcab1ebf52d8d96b8512417e0cbe7fb12938f5267cbcf"
+  }
+}

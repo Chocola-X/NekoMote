@@ -101,7 +101,7 @@ class WallpaperInstance
 
   private:
     void finish_candidate_gpu(const application::CandidateCpu& candidate);
-    void create_audio_device(const application::CandidateCpu& candidate);
+    void create_audio_device(application::CandidateCpu& candidate);
     void apply_background(const std::filesystem::path& path, double fade_duration, int bg_index);
     void draw_ui(float dt);
     ui::Painter* painter();
@@ -133,6 +133,7 @@ class WallpaperInstance
     WallpaperPanelState panel_;
 
     TextureId current_background_id_{0};
+    int current_background_width_{0}, current_background_height_{0};
     std::filesystem::path current_background_path_;
     std::filesystem::path assets_dir_;
     mutable std::string name_buffer_;

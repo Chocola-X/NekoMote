@@ -685,9 +685,24 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                                                                   n.maximum_density)));
                 }
             require(n.maximum_division <= 256, n.label, "automatic division capacity exceeded");
-            const auto cells = static_cast<std::size_t>(n.maximum_division + 2);
-            data->vertex_capacity += cells * cells;
-            data->index_capacity += cells * cells * 6;
+            // One sprite is selected per node. Bound every possible resource's
+            // aspect-ratio grid, rather than a square of the total division.
+            // Both axes are monotonic in division; +1 includes grid endpoints.
+            // The minimum 2x2 curved grid also covers rigid 1x1 quads.
+            std::size_t vertices = 0, indices = 0;
+            for (const auto& key : n.keys)
+            {
+                const auto& resource = data->resources[key.pose.resource.value];
+                if (resource.kind != ResourceKind::Sprite)
+                    continue;
+                const auto [nx, ny] = grid(n.maximum_division, resource.rect);
+                vertices = std::max(vertices, static_cast<std::size_t>(nx + 1) *
+                                                  static_cast<std::size_t>(ny + 1));
+                indices = std::max(indices,
+                                   static_cast<std::size_t>(nx) * static_cast<std::size_t>(ny) * 6);
+            }
+            data->vertex_capacity += vertices;
+            data->index_capacity += indices;
         }
         require(data->vertex_capacity <= 1000000 && data->index_capacity <= 6000000, "scene",
                 "geometry capacity exceeded");

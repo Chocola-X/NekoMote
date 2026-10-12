@@ -365,7 +365,7 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
     last_render_height_ = 0;
 }
 
-void WallpaperInstance::create_audio_device(const application::CandidateCpu& candidate)
+void WallpaperInstance::create_audio_device(application::CandidateCpu& candidate)
 {
     if (controller_cfg_.audio != application::AudioMode::Device)
         return;
@@ -375,8 +375,7 @@ void WallpaperInstance::create_audio_device(const application::CandidateCpu& can
         return;
     try
     {
-        auto device =
-            std::make_unique<audio::Device>(std::vector<model::AudioClip>(candidate.audio_clips));
+        auto device = std::make_unique<audio::Device>(std::move(candidate.audio_clips));
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
         while (device->snapshot().state == audio::DeviceState::Connecting &&
                std::chrono::steady_clock::now() < deadline)
@@ -430,6 +429,8 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
         controller_.confirm_background(bg_index, id, id, new_image.image.width,
                                        new_image.image.height, 0);
         current_background_id_ = id;
+        current_background_width_ = new_image.image.width;
+        current_background_height_ = new_image.image.height;
         current_background_path_ = path;
         return;
     }
@@ -461,6 +462,8 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
     controller_.confirm_background(bg_index, old_id, new_id, new_image.image.width,
                                    new_image.image.height, fade_duration);
     current_background_id_ = new_id;
+    current_background_width_ = new_image.image.width;
+    current_background_height_ = new_image.image.height;
     current_background_path_ = path;
 }
 
@@ -478,21 +481,15 @@ void WallpaperInstance::handle_switch_poll()
     }
     try
     {
-        std::filesystem::path bg_path;
-        int bg_index = controller_.current_background_index();
-        if (bg_index >= 0 && bg_index < static_cast<int>(controller_.catalog().backgrounds.size()))
-            bg_path = controller_.background_path(bg_index);
-        auto background_image =
-            bg_path.empty() ? asset_io::ImageResult{} : asset_io::load_png(bg_path);
-        if (!bg_path.empty() && !background_image.ok)
-            throw std::runtime_error(background_image.error);
+        const int bg_index = controller_.current_background_index();
+        const bool keep_background = controller_.has_background();
         finish_candidate_gpu(*candidate_opt);
         create_audio_device(*candidate_opt);
         controller_.confirm_candidate(std::move(*candidate_opt));
-        if (!bg_path.empty())
+        if (keep_background)
             controller_.confirm_background(bg_index, current_background_id_, current_background_id_,
-                                           background_image.image.width,
-                                           background_image.image.height, 0);
+                                           current_background_width_, current_background_height_,
+                                           0);
         if (controller_.config().fit && output_width_ > 0 && output_height_ > 0)
         {
             controller_.prepare_frame();
@@ -545,7 +542,16 @@ void WallpaperInstance::handle_background_poll()
     if (bg_req->action == application::BackgroundAction::Switch)
         apply_background(bg_req->path, bg_req->fade_duration, bg_req->background_index);
     else if (bg_req->action == application::BackgroundAction::Clear)
+    {
         controller_.confirm_background_clear();
+        background_renderer_.reset();
+#if defined(NEKOMOTE_HAS_VULKAN)
+        vk_background_renderer_.reset();
+#endif
+        current_background_id_ = {};
+        current_background_width_ = current_background_height_ = 0;
+        current_background_path_.clear();
+    }
 }
 
 nekomote_error WallpaperInstance::advance(double dt)

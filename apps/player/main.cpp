@@ -274,6 +274,7 @@ struct GpuHolder
     std::unique_ptr<audio::Device> device;
     TextureId current_background_id{0};
     fs::path current_background_path;
+    int background_width{0}, background_height{0};
 };
 
 void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candidate,
@@ -297,13 +298,6 @@ void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candi
                            scene.textures().size(), capacity.mask_commands, capacity.masks});
     for (const auto& [id, image] : candidate.textures)
         gpu.renderer->upload_texture(id, image);
-    gpu.background_renderer = std::make_unique<player::BackendRenderer>(backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                                                        ,
-                                                                        vk_ctx
-#endif
-    );
-    gpu.background_renderer->reserve({8, 12, 2, 2});
 }
 
 std::unique_ptr<audio::Device> create_audio_device(std::vector<model::AudioClip> clips)
@@ -323,14 +317,20 @@ std::unique_ptr<audio::Device> create_audio_device(std::vector<model::AudioClip>
 struct GpuCandidate
 {
     GpuHolder gpu;
-    int background_width{0}, background_height{0};
+    enum class BackgroundOwnership
+    {
+        Prepared,
+        RetainCurrent
+    };
+    BackgroundOwnership background{BackgroundOwnership::Prepared};
 };
 
 // Prepare every fallible device operation against a private candidate. The
 // caller must finish any recorded/submitted frame before replacing current GPU
 // owners, then commit the CPU candidate and these ready resources together.
-GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const fs::path& background,
-                                   int width, int height, player::BackendKind backend
+GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const GpuHolder& current,
+                                   const fs::path& background, int width, int height,
+                                   player::BackendKind backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                                    ,
                                    const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
@@ -348,22 +348,40 @@ GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const f
           candidate.program.get(), candidate.name);
     if (!background.empty())
     {
-        auto loaded = asset_io::load_png(background);
-        if (!loaded.ok)
-            throw std::runtime_error(loaded.error);
-        const TextureId id{1};
-        result.gpu.background_renderer->upload_texture(id, loaded.image);
-        check(candidate.instance->set_background(id, loaded.image.width, loaded.image.height),
+        TextureId id = current.current_background_id;
+        if (current.background_renderer && background == current.current_background_path)
+        {
+            result.background = GpuCandidate::BackgroundOwnership::RetainCurrent;
+            result.gpu.background_width = current.background_width;
+            result.gpu.background_height = current.background_height;
+        }
+        else
+        {
+            auto loaded = asset_io::load_png(background);
+            if (!loaded.ok)
+                throw std::runtime_error(loaded.error);
+            result.gpu.background_renderer = std::make_unique<player::BackendRenderer>(backend
+#if defined(NEKOMOTE_HAS_VULKAN)
+                                                                                       ,
+                                                                                       vk_ctx
+#endif
+            );
+            result.gpu.background_renderer->reserve({8, 12, 2, 2});
+            id = TextureId{1};
+            result.gpu.background_renderer->upload_texture(id, loaded.image);
+            result.gpu.background_width = loaded.image.width;
+            result.gpu.background_height = loaded.image.height;
+        }
+        check(candidate.instance->set_background(id, result.gpu.background_width,
+                                                 result.gpu.background_height),
               candidate.program.get(), candidate.name);
-        result.background_width = loaded.image.width;
-        result.background_height = loaded.image.height;
         result.gpu.current_background_id = id;
         result.gpu.current_background_path = background;
     }
     check(candidate.instance->prepare_frame(), candidate.program.get(), candidate.name);
     result.gpu.renderer->prepare(candidate.instance->frame());
     result.gpu.renderer->resize_output(width, height);
-    if (!background.empty())
+    if (result.gpu.background_renderer)
     {
         result.gpu.background_renderer->prepare(candidate.instance->background_frame());
         result.gpu.background_renderer->resize_output(width, height);
@@ -373,10 +391,12 @@ GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const f
     return result;
 }
 
-void commit_candidate_gpu(GpuHolder& current, GpuHolder ready) noexcept
+void commit_candidate_gpu(GpuHolder& current, GpuCandidate ready) noexcept
 {
-    ready.previous_renderer = std::move(current.renderer);
-    current = std::move(ready);
+    if (ready.background == GpuCandidate::BackgroundOwnership::RetainCurrent)
+        ready.gpu.background_renderer = std::move(current.background_renderer);
+    ready.gpu.previous_renderer = std::move(current.renderer);
+    current = std::move(ready.gpu);
 }
 
 void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_duration,
@@ -418,6 +438,8 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
     gpu.background_renderer = std::move(renderer);
     gpu.current_background_id = new_id;
     gpu.current_background_path = std::move(ready_path);
+    gpu.background_width = new_image.image.width;
+    gpu.background_height = new_image.image.height;
 }
 
 struct Surface
@@ -583,7 +605,7 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
     std::optional<GpuCandidate> ready;
     try
     {
-        ready.emplace(prepare_candidate_gpu(candidate, background, width, height, backend
+        ready.emplace(prepare_candidate_gpu(candidate, gpu, background, width, height, backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                                             ,
                                             vk_ctx
@@ -602,12 +624,12 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
             if (controller.catalog().backgrounds[i].path() == background)
                 background_index = static_cast<int>(i);
     controller.install_candidate_sync(std::move(candidate));
-    commit_candidate_gpu(gpu, std::move(ready->gpu));
+    commit_candidate_gpu(gpu, std::move(*ready));
     controller.set_output_size(std::max(width, 1), std::max(height, 1));
     if (!background.empty())
         controller.confirm_background(background_index, gpu.current_background_id,
-                                      gpu.current_background_id, ready->background_width,
-                                      ready->background_height, 0);
+                                      gpu.current_background_id, gpu.background_width,
+                                      gpu.background_height, 0);
     return true;
 }
 
@@ -781,6 +803,8 @@ int run(int argc, char** argv)
         controller.confirm_background(-1, id, id, new_image.image.width, new_image.image.height, 0);
         gpu.current_background_id = id;
         gpu.current_background_path = o.background;
+        gpu.background_width = new_image.image.width;
+        gpu.background_height = new_image.image.height;
     }
     else if (assets_mode && !controller.config().background.empty())
     {
@@ -984,8 +1008,8 @@ int run(int argc, char** argv)
                     std::optional<GpuCandidate> ready;
                     try
                     {
-                        ready.emplace(prepare_candidate_gpu(*candidate_opt, bg_path, width, height,
-                                                            o.backend
+                        ready.emplace(prepare_candidate_gpu(*candidate_opt, gpu, bg_path, width,
+                                                            height, o.backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                                                             ,
                                                             vk_ctx_ptr
@@ -999,12 +1023,12 @@ int run(int argc, char** argv)
                     if (ready)
                     {
                         controller.confirm_candidate(std::move(*candidate_opt));
-                        commit_candidate_gpu(gpu, std::move(ready->gpu));
+                        commit_candidate_gpu(gpu, std::move(*ready));
                         controller.set_output_size(std::max(width, 1), std::max(height, 1));
                         if (!bg_path.empty())
                             controller.confirm_background(
                                 bg_index, gpu.current_background_id, gpu.current_background_id,
-                                ready->background_width, ready->background_height, 0);
+                                gpu.background_width, gpu.background_height, 0);
                         if (controller.config().fit)
                         {
                             controller.prepare_frame();
@@ -1053,6 +1077,10 @@ int run(int argc, char** argv)
             else if (bg_req->action == application::BackgroundAction::Clear)
             {
                 controller.confirm_background_clear();
+                gpu.background_renderer.reset();
+                gpu.current_background_id = {};
+                gpu.background_width = gpu.background_height = 0;
+                gpu.current_background_path.clear();
                 std::printf("Background cleared\n");
             }
         }

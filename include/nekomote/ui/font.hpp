@@ -51,7 +51,6 @@ class FontMetrics
 
   private:
     bool initialized_{false};
-    std::vector<unsigned char> font_data_;
     struct FontInfo;
     std::unique_ptr<FontInfo> font_info_;
     int ascent_{0};
