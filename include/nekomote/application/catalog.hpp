@@ -16,6 +16,8 @@ struct CharacterEntry
     float cutoff_y{0.0f};
     bool has_cutoff{false};
     std::string display_name{};
+    bool hidden{false};
+    int order{0};
 
     CharacterEntry() = default;
     CharacterEntry(std::string n, std::filesystem::path mp, std::filesystem::path sp,
@@ -46,35 +48,34 @@ enum class BackgroundType
     Dynamic,
 };
 
+struct BackgroundPhase
+{
+    std::filesystem::path image{};
+    int start_minutes{0};
+};
+
 struct BackgroundEntry
 {
     std::string name{};
     std::string display_name{};
     BackgroundType type{BackgroundType::Static};
-    std::filesystem::path path_a{};
-    std::filesystem::path path_b{};
-    std::filesystem::path path_c{};
+    std::vector<BackgroundPhase> phases{};
+    float transition_seconds{1.8f};
 
     BackgroundEntry() = default;
     BackgroundEntry(std::string n, std::string dn, std::filesystem::path p)
         : name(std::move(n)), display_name(std::move(dn)), type(BackgroundType::Static),
-          path_a(std::move(p))
+          phases{{std::move(p), 0}}
     {
     }
     BackgroundEntry(std::string n, std::filesystem::path p)
-        : name(n), display_name(std::move(n)), type(BackgroundType::Static), path_a(std::move(p))
+        : name(n), display_name(std::move(n)), type(BackgroundType::Static),
+          phases{{std::move(p), 0}}
     {
     }
-    const std::filesystem::path& path() const noexcept { return path_a; }
-    const std::filesystem::path& path_for_phase(char phase) const noexcept
-    {
-        switch (phase)
-        {
-            case 'B': return path_b;
-            case 'C': return path_c;
-            default: return path_a;
-        }
-    }
+    const std::filesystem::path& path() const noexcept;
+    std::size_t phase_index_at(int minutes_since_midnight) const noexcept;
+    const std::filesystem::path& path_for_phase(std::size_t index) const noexcept;
 };
 
 struct AssetCatalog

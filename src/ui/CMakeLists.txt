@@ -1,6 +1,7 @@
-add_library(nekomote_ui STATIC easing.cpp font.cpp layout.cpp)
+add_library(nekomote_ui STATIC easing.cpp font.cpp layout.cpp menu.cpp)
 add_library(nekomote::ui ALIAS nekomote_ui)
 target_include_directories(nekomote_ui PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(nekomote_ui PUBLIC nekomote::application)
 target_link_libraries(nekomote_ui PRIVATE nekomote_warnings)
 target_compile_features(nekomote_ui PUBLIC cxx_std_20)
 

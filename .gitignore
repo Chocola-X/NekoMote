@@ -18,9 +18,13 @@ node_modules/
 __pycache__/
 
 # Compiled model assets (large, regenerate via import tools)
-assets/characters/
+assets/characters/*
+!assets/characters/.gitkeep
 assets/config.json
-assets/backgrounds/
+assets/backgrounds/*
+!assets/backgrounds/.gitkeep
+assets/icons/*
+!assets/icons/.gitkeep
 
 # Isolated experiment worktrees (G20/G23 inheritance candidates etc.)
 experiments/

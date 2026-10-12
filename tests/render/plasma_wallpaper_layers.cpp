@@ -81,9 +81,9 @@ int main(int argc, char** argv)
     QGuiApplication app(argc, argv);
     const auto source = qEnvironmentVariable("NEKOMOTE_TEST_ASSETS_DIR");
     if (!std::filesystem::exists(source.toStdString() +
-                                 "/characters/chocola-date-a/model.nkm.json"))
+                                 "/characters/chocola/date-a/model.nkm.json"))
     {
-        std::puts("SKIPPED: set NEKOMOTE_TEST_ASSETS_DIR with chocola-date-a");
+        std::puts("SKIPPED: set NEKOMOTE_TEST_ASSETS_DIR with chocola/date-a");
         return 77;
     }
     QTemporaryDir directory;
@@ -94,17 +94,17 @@ int main(int argc, char** argv)
     {
         namespace fs = std::filesystem;
         const fs::path assets(directory.path().toStdString());
-        fs::create_directories(assets / "characters");
+        fs::create_directories(assets / "characters" / "chocola");
         fs::create_directories(assets / "backgrounds");
         fs::create_directories(assets / "icons");
         fs::create_directory_symlink(fs::absolute(source.toStdString()) /
-                                         "characters/chocola-date-a",
-                                     assets / "characters/chocola-date-a");
+                                         "characters/chocola/date-a",
+                                     assets / "characters/chocola/date-a");
         QImage icon(44, 44, QImage::Format_RGBA8888);
         icon.fill(QColor(255, 0, 255));
         const bool no_icon = qEnvironmentVariableIsSet("NEKOMOTE_TEST_NO_ICON");
         if (!no_icon)
-            require(icon.save(directory.filePath("icons/neko.png")), "icon fixture failed");
+            require(icon.save(directory.filePath("icons/toggle.png")), "icon fixture failed");
         QImage background(800, 900, QImage::Format_RGBA8888);
         background.fill(QColor(20, 90, 220));
         for (int y = 0; y < 450; ++y)
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         fs::create_directory_symlink(assets / "backgrounds", bad_assets / "backgrounds");
         fs::copy_file(assets / "config.json", bad_assets / "config.json");
         {
-            std::ofstream invalid_icon(bad_assets / "icons/neko.png");
+            std::ofstream invalid_icon(bad_assets / "icons/toggle.png");
             invalid_icon << "invalid PNG fixture";
         }
         item->setAssetsDir(QString::fromStdString(bad_assets.string()));

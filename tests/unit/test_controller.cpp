@@ -14,7 +14,7 @@ namespace fs = std::filesystem;
 
 bool assets_available()
 {
-    return fs::exists("assets/characters/coconut-casual/model.nkm.json");
+    return fs::exists("assets/characters/coconut/casual/model.nkm.json");
 }
 } // namespace
 
@@ -54,9 +54,9 @@ TEST_CASE("Controller short click cannot leave a drag active", "[controller][poi
 TEST_CASE("Controller short click reacts on release but long hold does not react",
           "[controller][pointer][integration]")
 {
-    const fs::path directory = "assets/characters/chocola-date-a";
+    const fs::path directory = "assets/characters/chocola/date-a";
     if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
-        SKIP("chocola-date-a assets are unavailable");
+        SKIP("chocola/date-a assets are unavailable");
     WallpaperController c;
     ControllerConfig config;
     config.mute = true;
@@ -403,14 +403,21 @@ TEST_CASE("Catalog scans static and dynamic backgrounds", "[catalog]")
 {
     const auto root = fs::temp_directory_path() / "nekomote_bg_scan_test";
     fs::remove_all(root);
-    fs::create_directories(root / "backgrounds" / "dynamic");
+    fs::create_directories(root / "backgrounds" / "dynamic" / "BG_22");
+    fs::create_directories(root / "backgrounds" / "dynamic" / "BG_29");
     std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
     std::ofstream(root / "backgrounds" / "BG_13A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_29A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_29B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "C.png").put('x');
+    {
+        std::ofstream f(root / "backgrounds" / "dynamic" / "BG_22" / "config.json");
+        f << R"({"phases":[{"image":"A.png","start":"06:00"},)"
+          << R"({"image":"B.png","start":"16:00"},)"
+          << R"({"image":"C.png","start":"18:00"}],"transition_seconds":1.8})";
+        f << "}";
+    }
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_29" / "A.png").put('x');
 
     const auto catalog = AssetCatalog::scan(root);
     REQUIRE(catalog.backgrounds.size() == 3);
@@ -423,12 +430,13 @@ TEST_CASE("Catalog scans static and dynamic backgrounds", "[catalog]")
     const auto* bg22 = catalog.find_background("BG_22");
     REQUIRE(bg22 != nullptr);
     REQUIRE(bg22->type == BackgroundType::Dynamic);
-    REQUIRE(bg22->path_a == root / "backgrounds" / "dynamic" / "BG_22A.png");
-    REQUIRE(bg22->path_b == root / "backgrounds" / "dynamic" / "BG_22B.png");
-    REQUIRE(bg22->path_c == root / "backgrounds" / "dynamic" / "BG_22C.png");
-    REQUIRE(bg22->path_for_phase('A') == bg22->path_a);
-    REQUIRE(bg22->path_for_phase('B') == bg22->path_b);
-    REQUIRE(bg22->path_for_phase('C') == bg22->path_c);
+    REQUIRE(bg22->phases.size() == 3);
+    REQUIRE(bg22->phases[0].image == root / "backgrounds" / "dynamic" / "BG_22" / "A.png");
+    REQUIRE(bg22->phases[1].image == root / "backgrounds" / "dynamic" / "BG_22" / "B.png");
+    REQUIRE(bg22->phases[2].image == root / "backgrounds" / "dynamic" / "BG_22" / "C.png");
+    REQUIRE(bg22->path_for_phase(0) == bg22->phases[0].image);
+    REQUIRE(bg22->path_for_phase(1) == bg22->phases[1].image);
+    REQUIRE(bg22->path_for_phase(2) == bg22->phases[2].image);
 
     REQUIRE(catalog.find_background("BG_29") == nullptr);
 
@@ -439,15 +447,26 @@ TEST_CASE("Catalog reads background names from JSON", "[catalog]")
 {
     const auto root = fs::temp_directory_path() / "nekomote_bg_names_test";
     fs::remove_all(root);
-    fs::create_directories(root / "backgrounds" / "dynamic");
+    fs::create_directories(root / "backgrounds" / "dynamic" / "BG_22");
     std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "C.png").put('x');
     {
-        std::ofstream f(root / "backgrounds" / "background-names.json");
-        f << R"({"BG_07A.png":{"zh-CN":"海滨餐厅露台","en":"Seaside"},)"
-          << R"("BG_22":{"zh-CN":"游乐园入口广场","en":"Amusement"}})";
+        std::ofstream f(root / "backgrounds" / "dynamic" / "BG_22" / "config.json");
+        f << R"({"phases":[{"image":"A.png","start":"06:00"},)"
+          << R"({"image":"B.png","start":"16:00"},)"
+          << R"({"image":"C.png","start":"18:00"}]})";
+        f << "}";
+    }
+    {
+        std::ofstream f(root / "backgrounds" / "background.json");
+        f << R"({"BG_07A.png":{"zh-CN":"海滨餐厅露台","en":"Seaside"}})";
+        f << "}";
+    }
+    {
+        std::ofstream f(root / "backgrounds" / "dynamic" / "background.json");
+        f << R"({"BG_22":"游乐园入口广场"})";
         f << "}";
     }
 
@@ -466,10 +485,17 @@ TEST_CASE("Controller background_path returns current phase for dynamic", "[cont
 {
     const auto root = fs::temp_directory_path() / "nekomote_bg_phase_test";
     fs::remove_all(root);
-    fs::create_directories(root / "backgrounds" / "dynamic");
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22A.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22B.png").put('x');
-    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22C.png").put('x');
+    fs::create_directories(root / "backgrounds" / "dynamic" / "BG_22");
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "B.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "C.png").put('x');
+    {
+        std::ofstream f(root / "backgrounds" / "dynamic" / "BG_22" / "config.json");
+        f << R"({"phases":[{"image":"A.png","start":"06:00"},)"
+          << R"({"image":"B.png","start":"16:00"},)"
+          << R"({"image":"C.png","start":"18:00"}]})";
+        f << "}";
+    }
 
     WallpaperController c;
     c.scan_assets(root);
@@ -479,9 +505,9 @@ TEST_CASE("Controller background_path returns current phase for dynamic", "[cont
     const auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     const auto* tmp = std::localtime(&t);
-    const int hour = tmp ? tmp->tm_hour : 0;
-    const char expected_phase = hour >= 6 && hour < 16 ? 'A' : hour >= 16 && hour < 18 ? 'B' : 'C';
-    REQUIRE(path == c.catalog().backgrounds[0].path_for_phase(expected_phase));
+    const int minutes = tmp ? tmp->tm_hour * 60 + tmp->tm_min : 0;
+    const auto expected_index = c.catalog().backgrounds[0].phase_index_at(minutes);
+    REQUIRE(path == c.catalog().backgrounds[0].path_for_phase(expected_index));
 
     fs::remove_all(root);
 }

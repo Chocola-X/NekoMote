@@ -3,7 +3,7 @@
 
 静态背景（background/*.png）复制到 <dest>/backgrounds/。
 动态背景（background/dynamic/*.png）复制到 <dest>/backgrounds/dynamic/。
-名称配置（config/background-names.json）复制到 <dest>/backgrounds/background-names.json。
+名称配置（config/background-names.json）复制到 <dest>/backgrounds/background.json。
 
 目标目录已存在的文件会被覆盖；不存在的子目录自动创建。
 """
@@ -48,7 +48,7 @@ def main():
 
     names_ok = False
     if names_src.is_file():
-        shutil.copy2(names_src, bg_dest / 'background-names.json')
+        shutil.copy2(names_src, bg_dest / 'background.json')
         names_ok = True
 
     print(f'static backgrounds: {static_count}')

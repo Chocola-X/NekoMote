@@ -1,6 +1,7 @@
 #include "wallpaper_instance.hpp"
 
 #include <nekomote/asset_io/image.hpp>
+#include <nekomote/ui/menu.hpp>
 
 #include <nekomote/abi.h>
 
@@ -743,7 +744,7 @@ nekomote_error WallpaperInstance::render_ui(float dt)
     // first drawable frame, including after explicit graphics-resource reset.
     if (!panel_.ui_ready)
     {
-        const auto icon_path = assets_dir_ / "icons" / "neko.png";
+        const auto icon_path = assets_dir_ / "icons" / "toggle.png";
         auto icon_image = std::filesystem::exists(icon_path) ? asset_io::load_png(icon_path)
                                                              : asset_io::ImageResult{};
         if (icon_image.ok)
@@ -870,192 +871,18 @@ void WallpaperInstance::draw_ui(float dt)
         panel_.sidebar.scroll_y -= ui_context_.scroll_delta() * 32.0f;
     if (panel_.sidebar.animation > 0.001f)
     {
-        const float sidebar_alpha = std::clamp(panel_.sidebar.animation, 0.0f, 1.0f);
-        painter()->set_global_alpha(sidebar_alpha);
-        const float sidebar_x = panel_.sidebar.x;
-        const float sidebar_y = panel_.sidebar.y;
-        const auto& catalog = controller_.catalog();
-        float content_scrollable_h = 0.0f;
-        for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
-        {
-            content_scrollable_h += 42.0f;
-            if (panel_.sidebar.expanded_drawer == static_cast<int>(g))
-                content_scrollable_h +=
-                    static_cast<float>(catalog.character_groups[g].items.size()) * 34.0f;
-        }
-        content_scrollable_h += 42.0f;
-        if (panel_.sidebar.expanded_drawer == 8)
-        {
-            content_scrollable_h += 30.0f + 4.0f * 32.0f;
-            content_scrollable_h += 30.0f + 2.0f * 34.0f + 34.0f;
-            std::size_t static_bg_count = 0, dynamic_bg_count = 0;
-            for (const auto& bg : catalog.backgrounds)
-                if (bg.type == application::BackgroundType::Dynamic)
-                    ++dynamic_bg_count;
-                else
-                    ++static_bg_count;
-            content_scrollable_h += 30.0f;
-            if (static_bg_count > 0)
-                content_scrollable_h += 30.0f + static_cast<float>(static_bg_count) * 32.0f;
-            if (dynamic_bg_count > 0)
-                content_scrollable_h += 30.0f + static_cast<float>(dynamic_bg_count) * 32.0f;
-        }
-        content_scrollable_h += 68.0f;
-        const float max_sidebar_h = std::max(64.0f, static_cast<float>(output_height_) - 16.0f);
-        const float content_total_h = 44.0f + content_scrollable_h;
-        panel_.sidebar.height = std::min(max_sidebar_h, content_total_h);
-        const float max_scroll =
-            std::max(0.0f, content_scrollable_h - (panel_.sidebar.height - 44.0f));
-        panel_.sidebar.scroll_y = std::clamp(panel_.sidebar.scroll_y, 0.0f, max_scroll);
-        painter()->draw_rounded_rect(sidebar_x, sidebar_y, panel_.sidebar.width,
-                                     panel_.sidebar.height, style.corner_radius, style.panel_bg,
-                                     style.accent, 2.0f);
-        ui_context_.sidebar_header(panel_.sidebar, "猫娘乐园角色E-mote图鉴", style);
-        const float clip_y = sidebar_y + 44.0f;
-        const float clip_h = panel_.sidebar.height - 44.0f;
-        painter()->push_clip_rect(sidebar_x, clip_y, panel_.sidebar.width, clip_h);
-        float curr_y = clip_y - panel_.sidebar.scroll_y;
-        for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
-        {
-            const auto& group = catalog.character_groups[g];
-            const bool is_open = (panel_.sidebar.expanded_drawer == static_cast<int>(g));
-            if (ui_context_.drawer_header(group.title.c_str(), is_open, sidebar_x, curr_y,
-                                          panel_.sidebar.width, 42.0f, style))
-                panel_.sidebar.expanded_drawer = is_open ? -1 : static_cast<int>(g);
-            curr_y += 42.0f;
-            if (is_open)
-            {
-                for (const auto& item : group.items)
-                {
-                    const bool is_selected =
-                        (item.character_index == controller_.current_character_index());
-                    if (ui_context_.drawer_item(item.display_name.c_str(), is_selected, sidebar_x,
-                                                curr_y, panel_.sidebar.width, 34.0f, style))
-                        controller_.request_switch_character(item.character_index);
-                    curr_y += 34.0f;
-                }
-            }
-        }
-        const bool is_settings_open = (panel_.sidebar.expanded_drawer == 8);
-        if (ui_context_.drawer_header("设置", is_settings_open, sidebar_x, curr_y,
-                                      panel_.sidebar.width, 42.0f, style))
-            panel_.sidebar.expanded_drawer = is_settings_open ? -1 : 8;
-        curr_y += 42.0f;
-        if (is_settings_open)
-        {
-            ui_context_.section_header("帧率限制", sidebar_x, curr_y, panel_.sidebar.width, 30.0f,
-                                       style);
-            curr_y += 30.0f;
-            const struct
-            {
-                int fps;
-                const char* label;
-                const char* badge;
-            } fps_opts[] = {{0, "无上限", "∞"},
-                            {30, "30 FPS", ""},
-                            {60, "60 FPS", "推荐"},
-                            {120, "120 FPS", ""}};
-            for (const auto& opt : fps_opts)
-            {
-                const bool selected = (panel_.fps_limit == opt.fps);
-                if (ui_context_.radio_row(opt.label, opt.badge, selected, sidebar_x, curr_y,
-                                          panel_.sidebar.width, 32.0f, style))
-                {
-                    panel_.fps_limit = opt.fps;
-                    controller_.config().fps = opt.fps;
-                    if (!controller_.no_save())
-                        controller_.save_config(controller_.config_path());
-                }
-                curr_y += 32.0f;
-            }
-            ui_context_.section_header("角色", sidebar_x, curr_y, panel_.sidebar.width, 30.0f,
-                                       style);
-            curr_y += 30.0f;
-            ui_context_.switch_row("锁定人物位置与大小", panel_.locked, sidebar_x, curr_y,
-                                   panel_.sidebar.width, 34.0f, style);
-            curr_y += 34.0f;
-            bool is_muted = panel_.muted;
-            if (ui_context_.switch_row("关闭声音", is_muted, sidebar_x, curr_y,
-                                       panel_.sidebar.width, 34.0f, style))
-            {
-                panel_.muted = is_muted;
-                controller_.config().mute = is_muted;
-                if (!controller_.no_save())
-                    controller_.save_config(controller_.config_path());
-            }
-            curr_y += 34.0f;
-            if (ui_context_.reset_button("重设角色位置", sidebar_x, curr_y, panel_.sidebar.width,
-                                         34.0f, style))
-            {
-                if (output_width_ > 0 && output_height_ > 0)
-                    controller_.fit_to_output(output_width_, output_height_);
-            }
-            curr_y += 34.0f;
-            ui_context_.section_header("壁纸选择", sidebar_x, curr_y, panel_.sidebar.width, 30.0f,
-                                       style);
-            curr_y += 30.0f;
-            bool has_static = false, has_dynamic = false;
-            for (const auto& bg : catalog.backgrounds)
-                if (bg.type == application::BackgroundType::Dynamic)
-                    has_dynamic = true;
-                else
-                    has_static = true;
-            if (has_static)
-            {
-                ui_context_.section_header("固定背景", sidebar_x, curr_y, panel_.sidebar.width,
-                                           30.0f, style);
-                curr_y += 30.0f;
-                for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
-                {
-                    if (catalog.backgrounds[b].type != application::BackgroundType::Static)
-                        continue;
-                    const auto& bg = catalog.backgrounds[b];
-                    const bool selected =
-                        (static_cast<int>(b) == controller_.current_background_index());
-                    if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
-                                              curr_y, panel_.sidebar.width, 32.0f, style))
-                        controller_.request_switch_background(static_cast<int>(b));
-                    curr_y += 32.0f;
-                }
-            }
-            if (has_dynamic)
-            {
-                ui_context_.section_header("动态背景", sidebar_x, curr_y, panel_.sidebar.width,
-                                           30.0f, style);
-                curr_y += 30.0f;
-                for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
-                {
-                    if (catalog.backgrounds[b].type != application::BackgroundType::Dynamic)
-                        continue;
-                    const auto& bg = catalog.backgrounds[b];
-                    const bool selected =
-                        (static_cast<int>(b) == controller_.current_background_index());
-                    if (ui_context_.radio_row(bg.display_name.c_str(), "", selected, sidebar_x,
-                                              curr_y, panel_.sidebar.width, 32.0f, style))
-                        controller_.request_switch_background(static_cast<int>(b));
-                    curr_y += 32.0f;
-                }
-            }
-        }
-        ui_context_.divider_line(sidebar_x, curr_y, panel_.sidebar.width, style);
-        curr_y += 10.0f;
-        const char* author_txt = "作者：GTX690战术核显卡导弹";
-        const float atw =
-            painter()->font() ? painter()->font()->text_width(author_txt, 12.0f) : 160.0f;
-        ui_context_.label(author_txt, sidebar_x + (panel_.sidebar.width - atw) * 0.5f, curr_y,
-                          12.0f, style.text);
-        curr_y += 24.0f;
-        ui_context_.divider_line(sidebar_x, curr_y, panel_.sidebar.width, style);
-        curr_y += 10.0f;
-        const char* gh_txt = "Github项目：NekoWebShow";
-        const float gtw = painter()->font() ? painter()->font()->text_width(gh_txt, 12.0f) : 170.0f;
-        ui_context_.label(gh_txt, sidebar_x + (panel_.sidebar.width - gtw) * 0.5f, curr_y, 12.0f,
-                          style.text);
-        curr_y += 24.0f;
-        painter()->pop_clip_rect();
-        ui_context_.draw_scrollbar(sidebar_x, clip_y, panel_.sidebar.width, clip_h,
-                                   content_scrollable_h, panel_.sidebar.scroll_y, style);
-        painter()->set_global_alpha(1.0f);
+        ui::MenuState menu;
+        menu.sidebar = panel_.sidebar;
+        menu.fps_limit = panel_.fps_limit;
+        menu.locked = panel_.locked;
+        menu.muted = panel_.muted;
+        if (auto* p = painter())
+            ui::build_sidebar(ui_context_, *p, controller_.catalog(), controller_, menu,
+                              output_width_, output_height_);
+        panel_.sidebar = menu.sidebar;
+        panel_.fps_limit = menu.fps_limit;
+        panel_.locked = menu.locked;
+        panel_.muted = menu.muted;
     }
     ui_context_.end_frame();
     painter()->end_frame();

@@ -697,9 +697,9 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
 #ifdef NEKOMOTE_HAS_ABI
 TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][integration]")
 {
-    const auto source = std::filesystem::absolute("assets/characters/chocola-date-a");
+    const auto source = std::filesystem::absolute("assets/characters/chocola/date-a");
     if (!std::filesystem::exists(source / "model.nkm.json"))
-        SKIP("real asset integration unavailable: chocola-date-a");
+        SKIP("real asset integration unavailable: chocola/date-a");
     struct Assets
     {
         std::filesystem::path path =
@@ -712,17 +712,17 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
             std::filesystem::remove_all(path, error);
         }
     } assets;
-    std::filesystem::create_directories(assets.path / "characters");
+    std::filesystem::create_directories(assets.path / "characters" / "chocola");
     std::filesystem::create_directories(assets.path / "backgrounds");
     std::filesystem::create_directories(assets.path / "icons");
-    std::filesystem::create_directory_symlink(source, assets.path / "characters/chocola-date-a");
+    std::filesystem::create_directory_symlink(source, assets.path / "characters" / "chocola" / "date-a");
     REQUIRE(
         asset_io::write_png(assets.path / "backgrounds/bg.png", {1, 1, {0, 180, 0, 255}}).empty());
     REQUIRE(
-        asset_io::write_png(assets.path / "icons/neko.png", {1, 1, {255, 0, 255, 255}}).empty());
+        asset_io::write_png(assets.path / "icons/toggle.png", {1, 1, {255, 0, 255, 255}}).empty());
     {
         std::ofstream config(assets.path / "config.json");
-        config << R"({"character":"chocola-date-a","background":"bg","fit":true})";
+        config << R"({"character":"chocola/date-a","background":"bg","fit":true})";
     }
     Context context;
     render_gl::Renderer reader(glfwGetProcAddress);
@@ -758,12 +758,12 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     // An optional file that exists but is damaged must report failure, and a
     // corrected file must permit retry without retaining partial UI resources.
     {
-        std::ofstream broken(assets.path / "icons/neko.png", std::ios::trunc);
+        std::ofstream broken(assets.path / "icons/toggle.png", std::ios::trunc);
         broken << "damaged PNG";
     }
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_ERROR_RENDERER);
     REQUIRE(
-        asset_io::write_png(assets.path / "icons/neko.png", {1, 1, {255, 0, 255, 255}}).empty());
+        asset_io::write_png(assets.path / "icons/toggle.png", {1, 1, {255, 0, 255, 255}}).empty());
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
 }
 #endif

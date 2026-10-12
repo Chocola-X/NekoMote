@@ -137,7 +137,7 @@ class WallpaperController
                             int height, double fade_duration);
     void confirm_background_clear();
     bool has_background() const noexcept;
-    char background_phase() const noexcept;
+    int background_phase() const noexcept;
     std::filesystem::path background_path(int index) const noexcept;
 
     // === Fade update ===
@@ -229,7 +229,7 @@ class WallpaperController
     bool need_bg_switch_{false};
     int target_background_index_{-1};
     bool need_bg_clear_{false};
-    char current_bg_phase_{'A'};
+    int current_bg_phase_{0};
 
     ControllerConfig controller_config_{};
     Vec2 initial_origin_{0, 400};

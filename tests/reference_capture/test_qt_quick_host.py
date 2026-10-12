@@ -24,11 +24,11 @@ def configured_host(environment):
 HOST = configured_host(os.environ)
 HOST_ENABLED = HOST is not None and HOST.is_file()
 MODEL = pathlib.Path(os.environ.get(
-    'NEKOMOTE_MODEL', REPO / 'assets/characters/chocola-date-a/model.nkm.json'))
+    'NEKOMOTE_MODEL', REPO / 'assets/characters/chocola/date-a/model.nkm.json'))
 SESSION = pathlib.Path(os.environ.get(
-    'NEKOMOTE_SESSION', REPO / 'assets/characters/chocola-date-a/session.nks.json'))
-FRAISE_MODEL = REPO / 'assets/characters/fraise-france-maid-b/model.nkm.json'
-FRAISE_SESSION = REPO / 'assets/characters/fraise-france-maid-b/session.nks.json'
+    'NEKOMOTE_SESSION', REPO / 'assets/characters/chocola/date-a/session.nks.json'))
+FRAISE_MODEL = REPO / 'assets/characters/fraise/france-maid-b/model.nkm.json'
+FRAISE_SESSION = REPO / 'assets/characters/fraise/france-maid-b/session.nks.json'
 
 try:
     from PIL import Image

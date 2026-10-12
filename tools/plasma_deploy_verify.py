@@ -24,8 +24,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_STAGE = REPO / "build/plasma/adapters/plasma/stage"
 DEFAULT_PROBE = REPO / "build/plasma/bin/nekomote_plasma_package_probe"
-DEFAULT_MODEL = REPO / "assets/characters/coconut-casual/model.nkm.json"
-DEFAULT_SESSION = REPO / "assets/characters/coconut-casual/session.nks.json"
+DEFAULT_MODEL = REPO / "assets/characters/coconut/casual/model.nkm.json"
+DEFAULT_SESSION = REPO / "assets/characters/coconut/casual/session.nks.json"
 
 
 def run(cmd, **kw) -> subprocess.CompletedProcess:

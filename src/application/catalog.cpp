@@ -1,9 +1,7 @@
 #include <nekomote/application/catalog.hpp>
-
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
-#include <array>
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -14,203 +12,220 @@ namespace
 {
 namespace fs = std::filesystem;
 using Json = nlohmann::json;
+
+const std::vector<std::pair<std::string, std::string>> kGroupTitles = {
+    {"chocola", "巧克力"}, {"vanilla", "香草"}, {"azuki", "红豆"}, {"coconut", "椰子"},
+    {"maple", "枫"},       {"cinnamon", "桂"},  {"milk", "牛奶"},  {"fraise", "草莓"}};
+
+std::string group_title(const std::string& id)
+{
+    for (const auto& [gid, title] : kGroupTitles)
+        if (gid == id)
+            return title;
+    return id;
+}
+
+int parse_hhmm(const std::string& s)
+{
+    const auto colon = s.find(':');
+    if (colon == std::string::npos)
+        return 0;
+    try
+    {
+        const int hh = std::stoi(s.substr(0, colon));
+        const int mm = std::stoi(s.substr(colon + 1));
+        return hh * 60 + mm;
+    }
+    catch (...)
+    {
+        return 0;
+    }
+}
+
+std::unordered_map<std::string, std::string> load_name_dict(const fs::path& path)
+{
+    std::unordered_map<std::string, std::string> dict;
+    if (!fs::exists(path))
+        return dict;
+    std::ifstream f(path);
+    if (!f)
+        return dict;
+    try
+    {
+        Json j;
+        f >> j;
+        for (auto it = j.begin(); it != j.end(); ++it)
+        {
+            if (it.value().is_string())
+                dict.emplace(it.key(), it.value().get<std::string>());
+        }
+    }
+    catch (...)
+    {
+    }
+    return dict;
+}
+
+std::unordered_map<std::string, std::string> load_bg_name_dict(const fs::path& path)
+{
+    std::unordered_map<std::string, std::string> dict;
+    if (!fs::exists(path))
+        return dict;
+    std::ifstream f(path);
+    if (!f)
+        return dict;
+    try
+    {
+        Json j;
+        f >> j;
+        for (auto it = j.begin(); it != j.end(); ++it)
+        {
+            if (it.value().is_object() && it.value().contains("zh-CN"))
+                dict.emplace(it.key(), it.value()["zh-CN"].get<std::string>());
+            else if (it.value().is_string())
+                dict.emplace(it.key(), it.value().get<std::string>());
+        }
+    }
+    catch (...)
+    {
+    }
+    return dict;
+}
 } // namespace
+
+const std::filesystem::path& BackgroundEntry::path() const noexcept
+{
+    if (!phases.empty())
+        return phases[0].image;
+    static const std::filesystem::path empty;
+    return empty;
+}
+
+std::size_t BackgroundEntry::phase_index_at(int minutes_since_midnight) const noexcept
+{
+    if (phases.size() <= 1)
+        return 0;
+    for (std::size_t i = phases.size() - 1; i > 0; --i)
+        if (minutes_since_midnight >= phases[i].start_minutes)
+            return i;
+    if (minutes_since_midnight >= phases[0].start_minutes)
+        return 0;
+    return phases.size() - 1;
+}
+
+const std::filesystem::path& BackgroundEntry::path_for_phase(std::size_t index) const noexcept
+{
+    if (index < phases.size())
+        return phases[index].image;
+    static const std::filesystem::path empty;
+    return empty;
+}
 
 AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
 {
     AssetCatalog catalog;
     catalog.assets_root = assets_dir;
     const fs::path characters_dir = assets_dir / "characters";
+
+    const auto char_names = load_name_dict(characters_dir / "characters.json");
+
     if (fs::exists(characters_dir))
-        for (const auto& entry : fs::directory_iterator(characters_dir))
+        for (const auto& char_entry : fs::directory_iterator(characters_dir))
         {
-            if (!entry.is_directory())
+            if (!char_entry.is_directory())
                 continue;
-            const auto dir = entry.path();
-            const auto model = dir / "model.nkm.json";
-            const auto session = dir / "session.nks.json";
-            if (!fs::exists(model) || !fs::exists(session))
-                continue;
-            catalog.characters.push_back({dir.filename().string(), model, session, dir});
-            auto& ch = catalog.characters.back();
-            const fs::path meta = dir / "meta.json";
-            if (fs::exists(meta))
+            const auto char_dir = char_entry.path();
+            const std::string char_id = char_dir.filename().string();
+            for (const auto& variant_entry : fs::directory_iterator(char_dir))
             {
-                std::ifstream mf(meta);
-                if (mf)
+                if (!variant_entry.is_directory())
+                    continue;
+                const auto variant_dir = variant_entry.path();
+                const std::string variant_id = variant_dir.filename().string();
+                const auto model = variant_dir / "model.nkm.json";
+                const auto session = variant_dir / "session.nks.json";
+                if (!fs::exists(model) || !fs::exists(session))
+                    continue;
+                const std::string two_layer_path = char_id + "/" + variant_id;
+                catalog.characters.push_back({two_layer_path, model, session, variant_dir});
+                auto& ch = catalog.characters.back();
+
+                const fs::path meta = variant_dir / "meta.json";
+                if (fs::exists(meta))
                 {
-                    Json mj;
-                    try
+                    std::ifstream mf(meta);
+                    if (mf)
                     {
-                        mf >> mj;
-                        if (mj.contains("cutoff_y"))
+                        try
                         {
-                            ch.cutoff_y = mj["cutoff_y"].get<float>();
-                            ch.has_cutoff = true;
+                            Json mj;
+                            mf >> mj;
+                            if (mj.contains("cutoff_y"))
+                            {
+                                ch.cutoff_y = mj["cutoff_y"].get<float>();
+                                ch.has_cutoff = true;
+                            }
+                            if (mj.contains("display_name") && mj["display_name"].is_string())
+                                ch.display_name = mj["display_name"].get<std::string>();
+                            if (mj.contains("hidden") && mj["hidden"].is_boolean())
+                                ch.hidden = mj["hidden"].get<bool>();
+                            if (mj.contains("order") && mj["order"].is_number_integer())
+                                ch.order = mj["order"].get<int>();
+                        }
+                        catch (...)
+                        {
                         }
                     }
-                    catch (...)
-                    {
-                    }
                 }
+
+                if (ch.display_name.empty())
+                {
+                    if (auto it = char_names.find(two_layer_path); it != char_names.end())
+                        ch.display_name = it->second;
+                }
+                if (ch.display_name.empty())
+                    ch.display_name = variant_id;
             }
         }
+
     std::sort(catalog.characters.begin(), catalog.characters.end(),
-              [](const auto& a, const auto& b) { return a.name < b.name; });
+              [](const auto& a, const auto& b)
+              {
+                  const auto a_group = a.name.substr(0, a.name.find('/'));
+                  const auto b_group = b.name.substr(0, b.name.find('/'));
+                  if (a_group != b_group)
+                      return a_group < b_group;
+                  if (a.order != b.order)
+                      return a.order < b.order;
+                  return a.name < b.name;
+              });
 
-    const std::vector<std::pair<std::string, std::string>> group_defs = {
-        {"chocola", "巧克力"}, {"vanilla", "香草"}, {"azuki", "红豆"}, {"coconut", "椰子"},
-        {"maple", "枫"},       {"cinnamon", "桂"},  {"milk", "牛奶"},  {"fraise", "草莓"}};
-
-    auto parse_display_name = [](const std::string& char_id,
-                                 const std::string& model_id) -> std::string
+    std::unordered_map<std::string, std::size_t> group_index;
+    for (std::size_t i = 0; i < catalog.characters.size(); ++i)
     {
-        std::string rem = model_id;
-        if (rem.rfind(char_id + "-", 0) == 0)
-            rem = rem.substr(char_id.size() + 1);
-        else if (rem == char_id)
-            return "原版";
-
-        const std::vector<std::pair<std::string, std::string>> costumes = {
-            {"france-maid", "法国女仆"}, {"wintermaid", "冬季女仆"}, {"casual", "日常"},
-            {"dress", "礼服"},           {"lolita", "洛丽塔"},       {"maid", "女仆"},
-            {"pajama", "睡衣"},          {"santa", "圣诞"},          {"winter", "冬季"},
-            {"yukata", "浴衣"},          {"teenage", "少女"},        {"koneko", "小猫"},
-            {"hawaii", "夏威夷"},        {"swimsuit", "泳装"},       {"date", "约会"},
-            {"shirt", "衬衫"},           {"summer", "夏装"}};
-
-        const std::vector<std::pair<std::string, std::string>> variants = {
-            {"no-bell-tail-pin", "无铃铛 / 尾部固定"},
-            {"no-bell", "无铃铛"},
-            {"with-bell", "有铃铛"},
-            {"ohtoro", "Ohtoro"},
-            {"custard", "卡仕达"},
-            {"4yo", "4yo 版本"},
-            {"v2", "版本 2"},
-            {"a", "站姿 A"},
-            {"b", "站姿 B"},
-            {"original", "原版"}};
-
-        std::string costume_name;
-        for (const auto& [key, name] : costumes)
+        const auto& ch = catalog.characters[i];
+        if (ch.hidden)
+            continue;
+        const auto slash = ch.name.find('/');
+        const std::string group_id =
+            (slash != std::string::npos) ? ch.name.substr(0, slash) : ch.name;
+        if (group_index.find(group_id) == group_index.end())
         {
-            if (rem == key)
-            {
-                costume_name = name;
-                rem.clear();
-                break;
-            }
-            if (rem.rfind(key + "-", 0) == 0)
-            {
-                costume_name = name;
-                rem = rem.substr(key.size() + 1);
-                break;
-            }
+            group_index[group_id] = catalog.character_groups.size();
+            CharacterGroup group;
+            group.id = group_id;
+            group.title = group_title(group_id);
+            catalog.character_groups.push_back(std::move(group));
         }
-        if (costume_name.empty())
-        {
-            auto dash = rem.find('-');
-            if (dash != std::string::npos)
-            {
-                costume_name = rem.substr(0, dash);
-                rem = rem.substr(dash + 1);
-            }
-            else
-            {
-                costume_name = rem;
-                rem.clear();
-            }
-        }
-
-        std::vector<std::string> var_names;
-        while (!rem.empty())
-        {
-            bool matched = false;
-            for (const auto& [key, name] : variants)
-            {
-                if (rem == key)
-                {
-                    var_names.push_back(name);
-                    rem.clear();
-                    matched = true;
-                    break;
-                }
-                if (rem.rfind(key + "-", 0) == 0)
-                {
-                    var_names.push_back(name);
-                    rem = rem.substr(key.size() + 1);
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched)
-            {
-                auto dash = rem.find('-');
-                if (dash != std::string::npos)
-                {
-                    var_names.push_back(rem.substr(0, dash));
-                    rem = rem.substr(dash + 1);
-                }
-                else
-                {
-                    var_names.push_back(rem);
-                    rem.clear();
-                }
-            }
-        }
-
-        if (var_names.empty())
-            return costume_name + "·原版";
-
-        std::string result = costume_name;
-        for (const auto& v : var_names)
-            result += "·" + v;
-        return result;
-    };
-
-    for (const auto& [gid, gtitle] : group_defs)
-    {
-        CharacterGroup group;
-        group.id = gid;
-        group.title = gtitle;
-        for (std::size_t i = 0; i < catalog.characters.size(); ++i)
-        {
-            auto& ch = catalog.characters[i];
-            if (ch.name == gid || ch.name.rfind(gid + "-", 0) == 0)
-            {
-                ch.display_name = parse_display_name(gid, ch.name);
-                group.items.push_back({static_cast<int>(i), ch.name, ch.display_name});
-            }
-        }
-        catalog.character_groups.push_back(std::move(group));
+        auto& group = catalog.character_groups[group_index[group_id]];
+        group.items.push_back({static_cast<int>(i), ch.name, ch.display_name});
     }
 
     const fs::path backgrounds_dir = assets_dir / "backgrounds";
     if (!fs::exists(backgrounds_dir))
         return catalog;
 
-    std::unordered_map<std::string, std::string> bg_names;
-    const auto names_path = backgrounds_dir / "background-names.json";
-    if (fs::exists(names_path))
-    {
-        std::ifstream nf(names_path);
-        if (nf)
-        {
-            try
-            {
-                Json names_json;
-                nf >> names_json;
-                for (auto it = names_json.begin(); it != names_json.end(); ++it)
-                {
-                    if (it.value().is_object() && it.value().contains("zh-CN"))
-                        bg_names.emplace(it.key(), it.value()["zh-CN"].get<std::string>());
-                }
-            }
-            catch (...)
-            {
-            }
-        }
-    }
+    const auto bg_names = load_bg_name_dict(backgrounds_dir / "background.json");
     const auto lookup_name = [&](const std::string& filename,
                                  const std::string& fallback) -> std::string
     {
@@ -235,36 +250,53 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
     const auto dynamic_dir = backgrounds_dir / "dynamic";
     if (fs::exists(dynamic_dir))
     {
-        std::unordered_map<std::string, std::array<fs::path, 3>> groups;
-        for (const auto& entry : fs::directory_iterator(dynamic_dir))
+        const auto dyn_names = load_name_dict(dynamic_dir / "background.json");
+        for (const auto& group_entry : fs::directory_iterator(dynamic_dir))
         {
-            if (!entry.is_regular_file())
+            if (!group_entry.is_directory())
                 continue;
-            const auto path = entry.path();
-            const auto ext = path.extension().string();
-            if (ext != ".png" && ext != ".PNG")
+            const auto group_dir = group_entry.path();
+            const std::string group_id = group_dir.filename().string();
+            const auto config_path = group_dir / "config.json";
+            if (!fs::exists(config_path))
                 continue;
-            const auto stem = path.stem().string();
-            if (stem.empty())
+            std::ifstream cf(config_path);
+            if (!cf)
                 continue;
-            const auto phase = stem.back();
-            if (phase < 'A' || phase > 'C')
+            Json cj;
+            try
+            {
+                cf >> cj;
+            }
+            catch (...)
+            {
                 continue;
-            const auto group = stem.substr(0, stem.size() - 1);
-            groups[group][static_cast<std::size_t>(phase - 'A')] = path;
-        }
-        for (const auto& [group, paths] : groups)
-        {
-            if (paths[0].empty() || paths[1].empty() || paths[2].empty())
+            }
+            if (!cj.contains("phases") || !cj["phases"].is_array())
                 continue;
-            const auto disp = lookup_name(group, group);
             BackgroundEntry bg;
-            bg.name = group;
-            bg.display_name = disp;
+            bg.name = group_id;
             bg.type = BackgroundType::Dynamic;
-            bg.path_a = paths[0];
-            bg.path_b = paths[1];
-            bg.path_c = paths[2];
+            if (auto it = dyn_names.find(group_id); it != dyn_names.end())
+                bg.display_name = it->second;
+            else
+                bg.display_name = group_id;
+            if (cj.contains("transition_seconds") && cj["transition_seconds"].is_number())
+                bg.transition_seconds = cj["transition_seconds"].get<float>();
+            for (const auto& phase : cj["phases"])
+            {
+                if (!phase.contains("image") || !phase["image"].is_string())
+                    continue;
+                BackgroundPhase bp;
+                bp.image = group_dir / phase["image"].get<std::string>();
+                if (phase.contains("start") && phase["start"].is_string())
+                    bp.start_minutes = parse_hhmm(phase["start"].get<std::string>());
+                bg.phases.push_back(std::move(bp));
+            }
+            if (bg.phases.empty())
+                continue;
+            std::sort(bg.phases.begin(), bg.phases.end(), [](const auto& a, const auto& b)
+                      { return a.start_minutes < b.start_minutes; });
             catalog.backgrounds.push_back(std::move(bg));
         }
     }

@@ -16,18 +16,18 @@ namespace
 {
 using Clock = std::chrono::steady_clock;
 
-char phase_at(std::chrono::system_clock::time_point now)
+int minutes_at(std::chrono::system_clock::time_point now)
 {
     const std::time_t t = std::chrono::system_clock::to_time_t(now);
     const auto* tmp = std::localtime(&t);
     if (!tmp)
-        return 'C';
-    const int hour = tmp->tm_hour;
-    if (hour >= 6 && hour < 16)
-        return 'A';
-    if (hour >= 16 && hour < 18)
-        return 'B';
-    return 'C';
+        return 0;
+    return tmp->tm_hour * 60 + tmp->tm_min;
+}
+
+int phase_at(const BackgroundEntry& bg, std::chrono::system_clock::time_point now)
+{
+    return static_cast<int>(bg.phase_index_at(minutes_at(now)));
 }
 } // namespace
 
@@ -353,7 +353,7 @@ void WallpaperController::request_switch_background(int index)
         return;
     target_background_index_ = index;
     if (catalog_.backgrounds[index].type == BackgroundType::Dynamic)
-        current_bg_phase_ = phase_at(std::chrono::system_clock::now());
+        current_bg_phase_ = phase_at(catalog_.backgrounds[index], std::chrono::system_clock::now());
     need_bg_switch_ = true;
 }
 
@@ -372,10 +372,10 @@ std::optional<BackgroundRequest> WallpaperController::poll_background()
         {
             const auto& bg = catalog_.backgrounds[target_background_index_];
             const auto path = bg.type == BackgroundType::Dynamic
-                                  ? bg.path_for_phase(current_bg_phase_)
-                                  : bg.path_a;
-            return BackgroundRequest{BackgroundAction::Switch, target_background_index_,
-                                     path, kBackgroundFadeSeconds};
+                                  ? bg.path_for_phase(static_cast<std::size_t>(current_bg_phase_))
+                                  : bg.path();
+            return BackgroundRequest{BackgroundAction::Switch, target_background_index_, path,
+                                     kBackgroundFadeSeconds};
         }
     }
     if (need_bg_clear_)
@@ -407,7 +407,8 @@ void WallpaperController::confirm_background(int background_index, TextureId old
     {
         config_.background = catalog_.backgrounds[background_index].name;
         if (catalog_.backgrounds[background_index].type == BackgroundType::Dynamic)
-            current_bg_phase_ = phase_at(std::chrono::system_clock::now());
+            current_bg_phase_ =
+                phase_at(catalog_.backgrounds[background_index], std::chrono::system_clock::now());
     }
     if (!no_save_ && !config_path_.empty())
         config_.save(config_path_);
@@ -429,7 +430,7 @@ bool WallpaperController::has_background() const noexcept
     return current_has_background_;
 }
 
-char WallpaperController::background_phase() const noexcept
+int WallpaperController::background_phase() const noexcept
 {
     return current_bg_phase_;
 }
@@ -440,8 +441,9 @@ std::filesystem::path WallpaperController::background_path(int index) const noex
         return {};
     const auto& bg = catalog_.backgrounds[index];
     if (bg.type == BackgroundType::Dynamic)
-        return bg.path_for_phase(phase_at(std::chrono::system_clock::now()));
-    return bg.path_a;
+        return bg.path_for_phase(
+            static_cast<std::size_t>(phase_at(bg, std::chrono::system_clock::now())));
+    return bg.path();
 }
 
 void WallpaperController::update_background_phase()
@@ -453,7 +455,7 @@ void WallpaperController::update_background_phase()
     const auto& bg = catalog_.backgrounds[current_background_index_];
     if (bg.type != BackgroundType::Dynamic)
         return;
-    const auto new_phase = phase_at(std::chrono::system_clock::now());
+    const auto new_phase = phase_at(bg, std::chrono::system_clock::now());
     if (new_phase == current_bg_phase_)
         return;
     current_bg_phase_ = new_phase;
