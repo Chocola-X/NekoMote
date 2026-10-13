@@ -8,7 +8,7 @@
         "Description[zh_CN]": "原生二维模型动态壁纸",
         "Version": "0.1.0",
         "License": "GPL-3.0-or-later",
-        "Website": "https://github.com/nekomote"
+        "Website": "https://nekopara.uk"
     },
     "X-Plasma-DropMimeTypes": [
         "image/png"
