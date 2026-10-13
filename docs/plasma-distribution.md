@@ -57,13 +57,13 @@ python3 tools/plasma_distribution.py package build/plasma/adapters/plasma/stage 
 
 ## 安装前检查
 
-在目标测试账户中解压可信归档后，先检查再执行现有按用户安装工具：
+在目标测试账户中解压可信归档后，先检查，再用统一部署工具安装：
 
 ```bash
 tar -xzf nekomote-plasma-debian12-x86_64.tar.gz
 cd nekomote-plasma
 python3 tools/plasma_distribution.py check-host stage
-python3 tools/plasma_deploy.py --install --stage stage --prefix "$HOME/.local/share"
+python3 tools/plasma_deploy.py install --stage stage
 ```
 
 检查不会安装、重启 shell 或修改桌面。它验证 Plasma 6、CPU 架构、plasmashell
@@ -73,9 +73,22 @@ python3 tools/plasma_deploy.py --install --stage stage --prefix "$HOME/.local/sh
 **plasmashell 实际使用的**版本，不能填另一套 SDK 的版本。
 
 安装目录沿用 `<prefix>/nekomote/{qml,lib}`，插件通过
-`$ORIGIN/../../../lib` 找到本体；不依赖构建机绝对路径。随后依现有安装说明配置
-会话 `QML_IMPORT_PATH=<prefix>/nekomote/qml` 并重新登录；`plasma_deploy.py`
-仅生成 `env.sh`，不会自动改写会话。分发包也不自动切换壁纸或复制素材。
+`$ORIGIN/../../../lib` 找到本体；不依赖构建机绝对路径。统一工具提供
+`install`、`reinstall`、`uninstall`、`status` 和 `verify` 子命令。安装会自动写入
+`$XDG_CONFIG_HOME/environment.d/nekomote.conf`，为 Plasma 配置 `QML_IMPORT_PATH`，并刷新
+KPackage 缓存；
+要立即在当前会话启用，可显式加 `--restart-shell`，让工具重启 plasmashell 并加载新环境：
+
+```bash
+python3 tools/plasma_deploy.py install --stage stage --restart-shell
+```
+
+不加该选项时，安装不会中断桌面；注销并重新登录后环境变量生效。重装或卸载也可加
+`--restart-shell`，避免当前 plasmashell 继续持有旧插件库。卸载只删除安装记录中由工具管理的文件，
+并在环境配置仍与工具生成内容一致时移除它。`--prefix` 可选，默认使用 `$XDG_DATA_HOME`，
+未设置时使用 `~/.local/share`；普通用户安装不需要额外指定目录。`reinstall` 会识别并清理
+旧插件 ID `org.nekomote.wallpaper` 对应的 KPackage 目录，再安装为 `uk.nekopara.nekomote`。
+Plasma 中保存的旧壁纸引用仍需要重新选择一次。分发包不自动切换壁纸或复制素材。
 
 ## 当前证据与发布门槛
 

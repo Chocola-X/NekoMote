@@ -229,12 +229,12 @@ std::filesystem::path setup_workspace(const std::filesystem::path& output)
     std::filesystem::create_directories(output / "config");
     std::filesystem::create_directories(output / "cache");
     std::filesystem::copy(NEKOMOTE_PACKAGE_PATH,
-                          output / "data/plasma/wallpapers/org.nekomote.wallpaper",
+                          output / "data/plasma/wallpapers/uk.nekopara.nekomote",
                           std::filesystem::copy_options::recursive);
     std::filesystem::copy(NEKOMOTE_CONTAINMENT_PATH,
                           output / "data/plasma/plasmoids/org.nekomote.validation",
                           std::filesystem::copy_options::recursive);
-    return output / "data/plasma/wallpapers/org.nekomote.wallpaper";
+    return output / "data/plasma/wallpapers/uk.nekopara.nekomote";
 }
 
 int run(int argc, char** argv)
@@ -301,7 +301,7 @@ int run(int argc, char** argv)
     if (!containment)
         throw std::runtime_error("validation containment could not be created");
     auto config =
-        containment->config().group("Wallpaper").group("org.nekomote.wallpaper").group("General");
+        containment->config().group("Wallpaper").group("uk.nekopara.nekomote").group("General");
     config.writeEntry("renderBackend", QString::fromStdString(opts.backend));
     if (opts.bad_asset)
     {
@@ -317,7 +317,7 @@ int run(int argc, char** argv)
     {
         config.writeEntry("assetsDir", QString::fromStdString(assets_root.string()));
     }
-    containment->setWallpaperPlugin(QStringLiteral("org.nekomote.wallpaper"));
+    containment->setWallpaperPlugin(QStringLiteral("uk.nekopara.nekomote"));
     auto* item = PlasmaQuick::AppletQuickItem::itemForApplet(containment);
     if (!item)
         throw std::runtime_error("containment QML item could not be created");

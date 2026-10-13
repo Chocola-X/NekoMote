@@ -25,12 +25,13 @@
         {
             "name": "release",
             "inherits": "base",
-            "displayName": "Release with LTO",
+            "displayName": "Release with LTO, OpenGL + Vulkan 1.0",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "NEKOMOTE_WERROR": "ON",
                 "NEKOMOTE_BUILD_PREVIEW": "ON",
                 "NEKOMOTE_BUILD_TESTS": "ON",
+                "NEKOMOTE_BUILD_VULKAN": "ON",
                 "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
             }
         },
@@ -48,8 +49,7 @@
             "displayName": "Plasma wallpaper QML module and probe",
             "cacheVariables": {
                 "NEKOMOTE_BUILD_QT_QUICK": "ON",
-                "NEKOMOTE_BUILD_PLASMA": "ON",
-                "NEKOMOTE_BUILD_VULKAN": "ON"
+                "NEKOMOTE_BUILD_PLASMA": "ON"
             }
         },
         {
@@ -74,14 +74,6 @@
             "cacheVariables": {
                 "NEKOMOTE_BUILD_VULKAN": "ON"
             }
-        },
-        {
-            "name": "vulkan-release",
-            "inherits": "release",
-            "displayName": "Release with OpenGL and Vulkan 1.0 backends",
-            "cacheVariables": {
-                "NEKOMOTE_BUILD_VULKAN": "ON"
-            }
         }
     ],
     "buildPresets": [
@@ -90,8 +82,7 @@
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "qt-quick", "configurePreset": "qt-quick" },
         { "name": "plasma",   "configurePreset": "plasma" },
-        { "name": "vulkan",   "configurePreset": "vulkan" },
-        { "name": "vulkan-release", "configurePreset": "vulkan-release" }
+        { "name": "vulkan",   "configurePreset": "vulkan" }
     ],
     "testPresets": [
         {
@@ -121,12 +112,6 @@
         {
             "name": "vulkan",
             "configurePreset": "vulkan",
-            "output": { "outputOnFailure": true },
-            "execution": { "noTestsAction": "error", "stopOnFailure": false, "jobs": 1 }
-        },
-        {
-            "name": "vulkan-release",
-            "configurePreset": "vulkan-release",
             "output": { "outputOnFailure": true },
             "execution": { "noTestsAction": "error", "stopOnFailure": false, "jobs": 1 }
         }

@@ -27,10 +27,10 @@ ELFS = (
 REQUIRED = ELFS + (
     "qml/NekoMote/Wallpaper/qmldir",
     "qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/metadata.json",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/ui/main.qml",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/ui/config.qml",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/config/main.xml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/metadata.json",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/main.qml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/config.qml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/config/main.xml",
 )
 BASELINE = {"GLIBC": "2.36", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}
 MACHINES = {"Advanced Micro Devices X86-64": "x86_64", "AArch64": "aarch64"}

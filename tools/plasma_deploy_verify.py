@@ -72,10 +72,16 @@ def main() -> int:
             return fail(f"stage verify failed:\n{r.stderr}")
         (evidence / "01_stage_verify.txt").write_text(r.stdout)
 
+        # Keep installer-owned environment.d changes isolated from the user.
+        deploy_env = dict(os.environ)
+        deploy_env["XDG_DATA_HOME"] = str(tmproot)
+        deploy_env["XDG_CONFIG_HOME"] = str(tmproot / "config")
+        deploy_env["XDG_CACHE_HOME"] = str(tmproot / "cache")
+
         # 2. Install to temp XDG root
         print("\n[2/6] install")
         r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
-                 "--install", "--stage", str(stage), "--prefix", str(tmproot)])
+                 "install", "--stage", str(stage)], env=deploy_env)
         if r.returncode != 0:
             return fail(f"install failed:\n{r.stderr}")
         (evidence / "02_install.txt").write_text(r.stdout)
@@ -83,12 +89,12 @@ def main() -> int:
         # 3. Status
         print("\n[3/6] status")
         r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
-                 "--status", "--prefix", str(tmproot)])
+                 "status"], env=deploy_env)
         if r.returncode != 0:
             return fail(f"status failed:\n{r.stderr}")
         (evidence / "03_status.txt").write_text(r.stdout)
 
-        # 4. Dynamic load via probe (no LD_LIBRARY_PATH, QML_IMPORT_PATH from install)
+        # 4. Dynamic load via probe (no LD_LIBRARY_PATH; QML_IMPORT_PATH from install)
         print("\n[4/6] dynamic host load")
         qml_path = tmproot / "nekomote" / "qml"
         probe_out = evidence / "04_probe"
@@ -128,10 +134,46 @@ def main() -> int:
             return fail("recovery: marker not found")
         print("  recovery: passed")
 
+        # 4c. Reinstall exercises the same single deployment entry point.
+        print("\n[4c/6] reinstall")
+        r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
+                 "reinstall", "--stage", str(stage)], env=deploy_env)
+        if r.returncode != 0:
+            return fail(f"reinstall failed:\n{r.stderr}")
+        (evidence / "04c_reinstall.txt").write_text(r.stdout)
+
+        # A pre-ID-change installation may have no deployment record. Reinstall
+        # must remove that exact legacy KPackage after validating its metadata.
+        print("\n[4d/6] legacy package migration")
+        legacy_prefix = tmproot / "legacy-prefix"
+        legacy_dir = legacy_prefix / "plasma/wallpapers/org.nekomote.wallpaper"
+        legacy_dir.mkdir(parents=True)
+        (legacy_dir / "metadata.json").write_text(json.dumps({
+            "KPackageStructure": "Plasma/Wallpaper",
+            "KPlugin": {"Id": "org.nekomote.wallpaper"},
+        }))
+        (legacy_dir / "legacy-marker").write_text("old plugin")
+        legacy_env = dict(deploy_env)
+        legacy_env["XDG_CONFIG_HOME"] = str(tmproot / "legacy-config")
+        r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
+                 "reinstall", "--stage", str(stage), "--prefix", str(legacy_prefix)],
+                env=legacy_env)
+        if r.returncode != 0:
+            return fail(f"legacy reinstall failed:\n{r.stderr}")
+        if legacy_dir.exists():
+            return fail(f"legacy package directory remains after reinstall: {legacy_dir}")
+        if not (legacy_prefix / "plasma/wallpapers/uk.nekopara.nekomote/metadata.json").is_file():
+            return fail("legacy reinstall did not install the package under the new ID")
+        (evidence / "04d_legacy_migration.txt").write_text(r.stdout)
+        r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
+                 "uninstall", "--prefix", str(legacy_prefix)], env=legacy_env)
+        if r.returncode != 0:
+            return fail(f"legacy migration cleanup failed:\n{r.stderr}")
+
         # 5. Uninstall
         print("\n[5/6] uninstall")
         r = run([sys.executable, str(REPO / "tools/plasma_deploy.py"),
-                 "--uninstall", "--prefix", str(tmproot)])
+                 "uninstall"], env=deploy_env)
         if r.returncode != 0:
             return fail(f"uninstall failed:\n{r.stderr}")
         (evidence / "05_uninstall.txt").write_text(r.stdout)
@@ -143,6 +185,9 @@ def main() -> int:
         residual = [str(f) for f in nekomote_files + plasma_files if f.is_file()]
         if residual:
             return fail(f"residual files after uninstall: {residual}")
+        environment_file = tmproot / "config/environment.d/nekomote.conf"
+        if environment_file.exists():
+            return fail(f"residual session environment after uninstall: {environment_file}")
         print("  no residual files")
 
         # Save evidence to build
@@ -150,7 +195,7 @@ def main() -> int:
         if build_evidence.exists():
             shutil.rmtree(build_evidence)
         shutil.copytree(evidence, build_evidence)
-        print(f"\nPASS: all 6 steps passed, evidence saved to {build_evidence}")
+        print(f"\nPASS: all deployment checks passed, evidence saved to {build_evidence}")
         return 0
     except subprocess.TimeoutExpired:
         return fail("probe timed out")

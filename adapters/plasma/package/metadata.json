@@ -1,7 +1,7 @@
 {
     "KPackageStructure": "Plasma/Wallpaper",
     "KPlugin": {
-        "Id": "org.nekomote.wallpaper",
+        "Id": "uk.nekopara.nekomote",
         "Name": "NekoMote",
         "Name[zh_CN]": "NekoMote 壁纸",
         "Description": "Native 2D model live wallpaper",

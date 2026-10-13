@@ -24,15 +24,16 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parent.parent
+PACKAGE_ID = "uk.nekopara.nekomote"
 REQUIRED = [
     "lib/libnekomote_plasma_qml.so",
     "qml/NekoMote/Wallpaper/qmldir",
     "qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes",
     "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/metadata.json",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/ui/main.qml",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/ui/config.qml",
-    "share/plasma/wallpapers/org.nekomote.wallpaper/contents/config/main.xml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/metadata.json",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/main.qml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/config.qml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/config/main.xml",
     "share/plasma/plasmoids/org.nekomote.validation/metadata.json",
     "share/plasma/plasmoids/org.nekomote.validation/contents/ui/main.qml",
 ]
@@ -55,6 +56,14 @@ def check_files(stage: Path) -> int:
     missing = [r for r in REQUIRED if not (stage / r).is_file()]
     if missing:
         return fail(f"missing stage files: {missing}")
+    metadata_path = stage / "share/plasma/wallpapers" / PACKAGE_ID / "metadata.json"
+    try:
+        metadata = json.loads(metadata_path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        return fail(f"wallpaper metadata invalid: {error}")
+    plugin_id = metadata.get("KPlugin", {}).get("Id")
+    if metadata.get("KPackageStructure") != "Plasma/Wallpaper" or plugin_id != PACKAGE_ID:
+        return fail(f"wallpaper package identity mismatch: {plugin_id!r}")
     print(f"check: {len(REQUIRED)} required files present")
     return 0
 

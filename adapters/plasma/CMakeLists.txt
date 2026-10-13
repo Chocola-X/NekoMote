@@ -52,10 +52,10 @@ set_source_files_properties(
 
 add_custom_target(nekomote_plasma_package ALL
     COMMAND ${CMAKE_COMMAND} -E rm -f
-        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper/contents/config/main.qml
+        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote/contents/config/main.qml
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/package
-        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper)
+        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote)
 
 if(NEKOMOTE_BUILD_PLASMA_PROBE)
     add_executable(nekomote_plasma_probe probe/main.cpp)
@@ -96,7 +96,7 @@ if(NEKOMOTE_BUILD_PLASMA_PROBE)
     find_package(Qt6 6.4 REQUIRED COMPONENTS Widgets)
     add_executable(nekomote_plasma_package_probe probe/package_main.cpp)
     target_compile_definitions(nekomote_plasma_package_probe PRIVATE
-        NEKOMOTE_PACKAGE_PATH="${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper"
+        NEKOMOTE_PACKAGE_PATH="${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote"
         NEKOMOTE_CONTAINMENT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/probe/containment"
         NEKOMOTE_QML_IMPORT_PATH="${CMAKE_CURRENT_BINARY_DIR}")
     target_link_libraries(nekomote_plasma_package_probe PRIVATE
@@ -110,7 +110,7 @@ endif() # NEKOMOTE_BUILD_PLASMA_PROBE
 # Install layout:
 #   <prefix>/lib/libnekomote_plasma_qml.so
 #   <prefix>/qml/NekoMote/Wallpaper/{qmldir,qmltypes,plugin.so}
-#   <prefix>/share/plasma/wallpapers/org.nekomote.wallpaper/
+#   <prefix>/share/plasma/wallpapers/uk.nekopara.nekomote/
 #   <prefix>/share/plasma/plasmoids/org.nekomote.validation/
 install(TARGETS nekomote_plasma_qml
     LIBRARY DESTINATION lib
@@ -123,7 +123,7 @@ install(FILES
 install(TARGETS nekomote_plasma_qmlplugin
     LIBRARY DESTINATION qml/NekoMote/Wallpaper
     COMPONENT plasma)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/org.nekomote.wallpaper
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote
     DESTINATION share/plasma/wallpapers
     COMPONENT plasma)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/probe/containment/

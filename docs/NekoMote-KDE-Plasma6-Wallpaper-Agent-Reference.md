@@ -75,7 +75,7 @@ Plasma 6 应使用 `metadata.json`。旧项目中的 `metadata.desktop` 属于 P
 ```json
 {
   "KPlugin": {
-    "Id": "org.nekomote.wallpaper",
+    "Id": "uk.nekopara.nekomote",
     "Name": "NekoMote",
     "Description": "Native E-mote animated wallpaper",
     "Version": "0.1.0",
@@ -98,7 +98,7 @@ Plasma 6 应使用 `metadata.json`。旧项目中的 `metadata.desktop` 属于 P
 `Id` 最好与安装目录名相同，例如：
 
 ```text
-~/.local/share/plasma/wallpapers/org.nekomote.wallpaper/
+~/.local/share/plasma/wallpapers/uk.nekopara.nekomote/
 ```
 
 ### 参考
@@ -192,7 +192,7 @@ kpackagetool6 --type Plasma/Wallpaper --upgrade ./package
 删除：
 
 ```bash
-kpackagetool6 --type Plasma/Wallpaper --remove org.nekomote.wallpaper
+kpackagetool6 --type Plasma/Wallpaper --remove uk.nekopara.nekomote
 ```
 
 实际支持的 type 名称可先查：
@@ -208,7 +208,7 @@ find_package(Plasma REQUIRED)
 
 plasma_install_package(
     package
-    org.nekomote.wallpaper
+    uk.nekopara.nekomote
     wallpapers
     wallpaper
 )
@@ -413,7 +413,7 @@ Plasma 6 官方根类型：
 ```qml
 import QtQuick
 import org.kde.plasma.plasmoid
-import org.nekomote.wallpaper
+import NekoMote.Wallpaper
 
 WallpaperItem {
     id: root
@@ -1260,7 +1260,7 @@ add_subdirectory(src)
 
 plasma_install_package(
     package
-    org.nekomote.wallpaper
+    uk.nekopara.nekomote
     wallpapers
     wallpaper
 )
@@ -1270,7 +1270,7 @@ src：
 
 ```cmake
 qt_add_qml_module(nekomote_wallpaper_qml
-    URI org.nekomote.wallpaper
+    URI NekoMote.Wallpaper
     VERSION 1.0
     SOURCES
         nekowallpaperitem.cpp
@@ -1303,13 +1303,13 @@ target_link_libraries(... PRIVATE Qt6::OpenGL)
 系统：
 
 ```text
-/usr/share/plasma/wallpapers/org.nekomote.wallpaper/
+/usr/share/plasma/wallpapers/uk.nekopara.nekomote/
 ```
 
 用户：
 
 ```text
-~/.local/share/plasma/wallpapers/org.nekomote.wallpaper/
+~/.local/share/plasma/wallpapers/uk.nekopara.nekomote/
 ```
 
 QML C++ module 的 `.so/qmldir` 则进入 Qt/KDE 的 QML import path，不应塞进 wallpaper package 后再用绝对路径 dlopen。
@@ -1478,7 +1478,7 @@ systemctl --user | grep plasma
 ```qml
 import QtQuick
 import QtQuick.Window
-import org.nekomote.wallpaper
+import NekoMote.Wallpaper
 
 Window {
     width: 1280
@@ -1606,7 +1606,7 @@ https://doc.qt.io/qt-6/qquickframebufferobject.html
 ```json
 {
   "KPlugin": {
-    "Id": "org.nekomote.wallpaper",
+    "Id": "uk.nekopara.nekomote",
     "Name": "NekoMote",
     "Description": "NekoMote animated wallpaper",
     "Version": "0.1.0",
@@ -1621,7 +1621,7 @@ https://doc.qt.io/qt-6/qquickframebufferobject.html
 ```qml
 import QtQuick
 import org.kde.plasma.plasmoid
-import org.nekomote.wallpaper
+import NekoMote.Wallpaper
 
 WallpaperItem {
     id: root
@@ -1690,7 +1690,7 @@ QSGNode *NekoWallpaperItem::updatePaintNode(
 
 ```cmake
 qt_add_qml_module(nekomote_wallpaper_qml
-    URI org.nekomote.wallpaper
+    URI NekoMote.Wallpaper
     VERSION 1.0
     SOURCES
         nekowallpaperitem.cpp
@@ -1724,7 +1724,7 @@ add_subdirectory(src)
 
 plasma_install_package(
     package
-    org.nekomote.wallpaper
+    uk.nekopara.nekomote
     wallpapers
     wallpaper
 )

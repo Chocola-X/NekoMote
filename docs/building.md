@@ -17,12 +17,11 @@
 | Preset | 类型 | 特性 | 预览 | 测试 |
 | --- | --- | --- | --- | --- |
 | `dev` | Debug | 警告即错误、compile_commands.json | ✓ | ✓ |
-| `release` | Release | LTO、警告即错误 | ✓ | ✓ |
+| `release` | Release | LTO、OpenGL + Vulkan 1.0、警告即错误 | ✓ | ✓ |
 | `asan` | Debug | ASan + UBSan、警告即错误 | ✗ | ✓ |
-| `qt-quick` | Release | LTO、可选Qt Quick OpenGL宿主 | ✓ | ✓ |
+| `qt-quick` | Release | LTO、OpenGL + Vulkan、可选Qt Quick OpenGL宿主 | ✓ | ✓ |
 | `plasma` | Release | LTO、Plasma OpenGL/Vulkan 双栈及隔离探针 | ✓ | ✓ |
 | `vulkan` | Debug | OpenGL + Vulkan 1.0、可用验证层 | ✓ | ✓ |
-| `vulkan-release` | Release | LTO、OpenGL + Vulkan 1.0 | ✓ | ✓ |
 
 `asan` 不构建预览：GLFW + 图形驱动与 ASan 混用会产生大量非项目噪声，核心与测试路径已覆盖语义。
 

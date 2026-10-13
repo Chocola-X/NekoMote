@@ -9,18 +9,17 @@
 需要 Vulkan loader/开发头、`glslangValidator` 与支持 Vulkan 的驱动；shader 在构建时生成，运行时不调用编译器。设备 API 和 SPIR-V 均以 Vulkan 1.0 为目标。
 
 ```sh
-cmake --preset vulkan-release
-cmake --build --preset vulkan-release -j4
-build/vulkan-release/bin/nekomote_player --assets assets --backend vulkan
-build/vulkan-release/bin/nekomote_player --assets assets --backend opengl
-```
-
-两个命令运行同一二进制，共用模型、背景、配置及控制。默认 OpenGL；选择在启动时生效。`--backend` 只接受 `opengl` / `vulkan`，原实验参数 `--vulkan` 已删除。也可在现有 release 输出目录启用双栈：
-
-```sh
-cmake --preset release -DNEKOMOTE_BUILD_VULKAN=ON
+cmake --preset release
 cmake --build --preset release -j4
 build/release/bin/nekomote_player --assets assets --backend vulkan
+build/release/bin/nekomote_player --assets assets --backend opengl
+```
+
+两个命令运行同一二进制，共用模型、背景、配置及控制。默认 OpenGL；选择在启动时生效。`--backend` 只接受 `opengl` / `vulkan`，原实验参数 `--vulkan` 已删除。`release` preset 默认启用 Vulkan；如需仅 OpenGL 构建可显式关闭：
+
+```sh
+cmake --preset release -DNEKOMOTE_BUILD_VULKAN=OFF
+cmake --build --preset release -j4
 ```
 
 不启用 Vulkan 时，OpenGL 与无窗口核心构建不要求 Vulkan SDK。图形负例/图像测试需要显示服务器，不能把没有执行的 GPU 检查记作通过。
