@@ -17,6 +17,7 @@ struct IconState
     float start_y{0.0f};
     bool moved{false};
     bool initialized{false};
+    bool position_reset{false};
 };
 
 struct SidebarState
@@ -31,6 +32,10 @@ struct SidebarState
     bool dragging{false};
     float drag_offset_x{0.0f};
     float drag_offset_y{0.0f};
+    float start_x{8.0f};
+    float start_y{8.0f};
+    bool moved{false};
+    bool position_reset{false};
     float scroll_y{0.0f};
     int expanded_drawer{-1};
 };

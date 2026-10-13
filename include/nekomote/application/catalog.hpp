@@ -98,9 +98,17 @@ struct WallpaperConfig
     float origin_y{400};
     int width{800};
     int height{1080};
-    int fps{30};
+    int fps{60};
     bool mute{false};
     bool fit{false};
+    bool transform_saved{false};
+    bool icon_position_saved{false};
+    float icon_x{0};
+    float icon_y{8};
+    bool sidebar_position_saved{false};
+    float sidebar_x{8};
+    float sidebar_y{8};
+    bool sidebar_free{false};
     float background_fade_seconds{1.0f};
     static WallpaperConfig load(const std::filesystem::path& path);
     void save(const std::filesystem::path& path) const;

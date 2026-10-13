@@ -11,13 +11,13 @@ namespace nekomote::ui
 struct MenuState
 {
     SidebarState sidebar{};
-    int fps_limit{30};
+    int fps_limit{60};
     bool locked{false};
     bool muted{false};
 };
 
 void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatalog& catalog,
-                   application::WallpaperController& controller, MenuState& menu, int output_width,
+                   application::WallpaperController& controller, MenuState& menu,
                    int output_height);
 
 } // namespace nekomote::ui

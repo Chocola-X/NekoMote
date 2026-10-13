@@ -490,7 +490,7 @@ extern "C"
 
     const char* nekomote_version(void)
     {
-        return "0.5.0";
+        return "0.6.0";
     }
 
     /* ---- Asset loading ---- */
@@ -1841,6 +1841,11 @@ extern "C"
     int nekomote_wallpaper_paused(const nekomote_wallpaper* wp)
     {
         return (wp && wp->instance) ? (wp->instance->paused() ? 1 : 0) : 0;
+    }
+
+    int nekomote_wallpaper_fps_limit(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->fps_limit() : -1;
     }
 
     nekomote_audio_state nekomote_wallpaper_audio_state(const nekomote_wallpaper* wp)

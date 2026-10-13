@@ -56,6 +56,29 @@ void WallpaperController::save_config(const fs::path& path) const
     config_.save(path);
 }
 
+void WallpaperController::persist_character_transform()
+{
+    config_.scale = controller_config_.scale;
+    config_.origin_x = controller_config_.origin.x;
+    config_.origin_y = controller_config_.origin.y;
+    config_.transform_saved = true;
+    if (!no_save_ && !config_path_.empty())
+    {
+        try
+        {
+            config_.save(config_path_);
+        }
+        catch (const std::exception& error)
+        {
+            // Input can arrive through noexcept window callbacks. Preserve the
+            // failure for the next checked application/ABI frame boundary.
+            std::fprintf(stderr, "Cannot save character transform to %s: %s\n",
+                         config_path_.c_str(), error.what());
+            accept({SessionError::Faulted, {}});
+        }
+    }
+}
+
 WallpaperConfig& WallpaperController::config() noexcept
 {
     return config_;
@@ -111,6 +134,9 @@ void WallpaperController::apply_controller_config(const ControllerConfig& cfg)
     controller_config_ = cfg;
     initial_origin_ = cfg.origin;
     initial_scale_ = cfg.scale;
+    reset_origin_ = cfg.origin;
+    reset_scale_ = cfg.scale;
+    reset_transform_pending_fit_ = true;
 }
 
 void WallpaperController::accept(SessionStatus status)
@@ -227,8 +253,14 @@ void WallpaperController::install_candidate_sync(CandidateCpu candidate)
     current_has_cutoff_ = candidate.has_cutoff;
     current_has_background_ = false;
     current_background_index_ = -1;
+    config_.character = current_name_;
+    config_.transform_saved = false;
+    initial_layout_pending_ = true;
     controller_config_.origin = initial_origin_;
     controller_config_.scale = initial_scale_;
+    reset_origin_ = initial_origin_;
+    reset_scale_ = initial_scale_;
+    reset_transform_pending_fit_ = true;
     if (current_instance_)
     {
         accept(current_instance_->set_origin(initial_origin_));
@@ -271,6 +303,10 @@ void WallpaperController::install_initial(CandidateCpu candidate)
     current_model_dir_ = std::move(candidate.model_dir);
     current_cutoff_y_ = candidate.cutoff_y;
     current_has_cutoff_ = candidate.has_cutoff;
+    initial_layout_pending_ = true;
+    if (!config_.character.empty() && config_.character != current_name_)
+        config_.transform_saved = false;
+    config_.character = current_name_;
     for (std::size_t i = 0; i < catalog_.characters.size(); ++i)
         if (catalog_.characters[i].name == current_name_)
             current_character_index_ = static_cast<int>(i);
@@ -285,9 +321,9 @@ void WallpaperController::request_switch_character(int index)
     fade_target_character_ = index;
     switch_state_ = SwitchState::Pending;
     const auto& entry = catalog_.characters[index];
-    controller_config_.origin = initial_origin_;
-    controller_config_.scale = initial_scale_;
-    const auto cfg = controller_config_;
+    auto cfg = controller_config_;
+    cfg.origin = initial_origin_;
+    cfg.scale = initial_scale_;
     candidate_future_ =
         std::async(std::launch::async, [entry, cfg]() { return load_candidate_cpu(entry, cfg); });
 }
@@ -323,8 +359,12 @@ void WallpaperController::confirm_candidate(CandidateCpu candidate)
     current_background_index_ = -1;
     current_character_index_ = fade_target_character_;
     config_.character = current_name_;
+    config_.transform_saved = false;
     controller_config_.origin = initial_origin_;
     controller_config_.scale = initial_scale_;
+    reset_origin_ = initial_origin_;
+    reset_scale_ = initial_scale_;
+    reset_transform_pending_fit_ = true;
     if (current_instance_)
     {
         accept(current_instance_->set_origin(initial_origin_));
@@ -509,6 +549,13 @@ void WallpaperController::prepare_frame()
 
 void WallpaperController::fit_to_output(int width, int height)
 {
+    fit_character_to_output(width, height);
+    if (current_instance_ && width > 32 && height > 32)
+        persist_character_transform();
+}
+
+void WallpaperController::fit_character_to_output(int width, int height)
+{
     if (!current_instance_ || width <= 32 || height <= 32)
         return;
     const auto frame = current_instance_->frame();
@@ -555,12 +602,110 @@ void WallpaperController::fit_to_output(int width, int height)
     }
     accept(current_instance_->set_scale(scale));
     accept(current_instance_->set_origin(origin));
+    if (reset_transform_pending_fit_)
+    {
+        reset_origin_ = origin;
+        reset_scale_ = scale;
+        reset_transform_pending_fit_ = false;
+    }
+}
+
+bool WallpaperController::character_visible(int width, int height) const
+{
+    // Frame geometry uses centered output pixels; intentional partial cropping
+    // is valid. Inspect draw geometry rather than the model's origin, which can
+    // be outside the view even when the character remains visible.
+    const auto frame = current_instance_->frame();
+    const float half_width = static_cast<float>(width) * .5f;
+    const float half_height = static_cast<float>(height) * .5f;
+    for (const auto& command : frame.commands)
+    {
+        float left = INFINITY, top = INFINITY, right = -INFINITY, bottom = -INFINITY;
+        for (std::uint32_t i = 0; i < command.index_count; ++i)
+        {
+            const auto& v = frame.vertices[frame.indices[command.first_index + i]];
+            if (v.color[3] <= 0)
+                continue;
+            left = std::min(left, v.x);
+            right = std::max(right, v.x);
+            top = std::min(top, v.y);
+            bottom = std::max(bottom, v.y);
+        }
+        if (left < half_width && right > -half_width && top < half_height && bottom > -half_height)
+            return true;
+    }
+    return false;
+}
+
+void WallpaperController::restore_character_transform(int width, int height)
+{
+    const Vec2 saved_origin{config_.origin_x, config_.origin_y};
+    const float saved_scale = config_.scale;
+    const bool has_saved = config_.transform_saved;
+    // Establish reset from the default pose for this output, independently of
+    // a previous session's user transform. No intermediate configuration writes.
+    set_scale(initial_scale_);
+    set_origin(initial_origin_);
+    reset_transform_pending_fit_ = true;
+    prepare_frame();
+    fit_character_to_output(width, height);
+    if (has_saved && std::isfinite(saved_origin.x) && std::isfinite(saved_origin.y) &&
+        std::isfinite(saved_scale) && saved_scale >= .05f && saved_scale <= 5.0f)
+    {
+        set_scale(saved_scale);
+        set_origin(saved_origin);
+        prepare_frame();
+        if (!character_visible(width, height))
+        {
+            set_scale(reset_scale_);
+            set_origin(reset_origin_);
+        }
+    }
+    prepare_frame();
+    persist_character_transform();
+}
+
+void WallpaperController::save_ui_layout(Vec2 icon_position, Vec2 sidebar_position,
+                                         bool sidebar_free)
+{
+    config_.icon_position_saved = true;
+    config_.icon_x = icon_position.x;
+    config_.icon_y = icon_position.y;
+    config_.sidebar_position_saved = sidebar_free;
+    config_.sidebar_x = sidebar_free ? sidebar_position.x : 8.0f;
+    config_.sidebar_y = sidebar_free ? sidebar_position.y : 8.0f;
+    config_.sidebar_free = sidebar_free;
+    if (!no_save_ && !config_path_.empty())
+        config_.save(config_path_);
 }
 
 void WallpaperController::set_output_size(int width, int height)
 {
+    const bool resized = width != output_width_ || height != output_height_;
+    output_width_ = width;
+    output_height_ = height;
     if (current_instance_)
+    {
         accept(current_instance_->set_output_size(width, height));
+        if (width > 32 && height > 32)
+        {
+            if (initial_layout_pending_)
+            {
+                initial_layout_pending_ = false;
+                if (config_.fit || config_.transform_saved)
+                    restore_character_transform(width, height);
+            }
+            else if (resized && (config_.fit || config_.transform_saved))
+            {
+                prepare_frame();
+                if (!character_visible(width, height))
+                {
+                    config_.transform_saved = false;
+                    restore_character_transform(width, height);
+                }
+            }
+        }
+    }
 }
 
 void WallpaperController::set_paused(bool paused)
@@ -593,6 +738,14 @@ void WallpaperController::set_scale(float scale)
     controller_config_.scale = scale;
     if (current_instance_)
         accept(current_instance_->set_scale(scale));
+}
+
+void WallpaperController::reset_character_transform()
+{
+    cancel_pointer_gesture();
+    set_scale(reset_scale_);
+    set_origin(reset_origin_);
+    persist_character_transform();
 }
 
 Vec2 WallpaperController::origin() const noexcept
@@ -643,7 +796,10 @@ void WallpaperController::pointer_release(Vec2 position, PointerTime now)
         return;
     pointer_move(position, now);
     const bool click = !pointer_moved_;
+    const bool dragged = pointer_moved_;
     cancel_pointer_gesture();
+    if (dragged)
+        persist_character_transform();
     if (click && !paused_ && !minimized_ && !output_unavailable_)
         touch(position);
 }
@@ -667,6 +823,7 @@ void WallpaperController::zoom_at(Vec2 position, double wheel_steps)
     set_scale(new_scale);
     set_origin({position.x + (old_origin.x - position.x) * ratio,
                 position.y + (old_origin.y - position.y) * ratio});
+    persist_character_transform();
 }
 
 void WallpaperController::pointer_enter(Vec2 position)

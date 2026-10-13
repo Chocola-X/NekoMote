@@ -96,6 +96,10 @@ static void test_null_safety(void)
     CHECK(nekomote_renderer_create(NULL) == NULL, "should reject NULL");
     PASS();
 
+    TEST("null: wallpaper_fps_limit(NULL)");
+    CHECK(nekomote_wallpaper_fps_limit(NULL) == -1, "should reject NULL");
+    PASS();
+
     TEST("null: image_load_png(NULL)");
     CHECK(nekomote_image_load_png(NULL) == NULL, "should reject NULL");
     PASS();
@@ -236,7 +240,7 @@ static void test_version(void)
     TEST("version");
     const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.5.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.6.0") == 0, "version mismatch");
     PASS();
 }
 

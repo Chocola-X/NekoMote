@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.5.0
+ * @version 0.6.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -490,7 +490,7 @@ extern "C"
      * is reserved for the desktop and is not required for model control.
      * timestamp_ms is captured when the event is collected, from one monotonic
      * millisecond clock per instance. It preserves holds in delayed batches.
-     * All callers must rebuild for this current ABI (0.5.0). */
+     * All callers must rebuild for this current ABI (0.6.0). */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
                                                    uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
@@ -521,6 +521,9 @@ extern "C"
     const char* nekomote_wallpaper_current_character_name(const nekomote_wallpaper* wp);
     int nekomote_wallpaper_has_background(const nekomote_wallpaper* wp);
     int nekomote_wallpaper_paused(const nekomote_wallpaper* wp);
+    /* Returns the configured frame limit (0 means unlimited), or -1 for an
+     * invalid wallpaper handle. Query on the wallpaper evaluation thread. */
+    int nekomote_wallpaper_fps_limit(const nekomote_wallpaper* wp);
 
     /* Audio state. Returns one of NEKOMOTE_AUDIO_STATE_* below.
      * audio_rms returns 0..1 (0 when disabled). audio_error returns the

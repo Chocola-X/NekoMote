@@ -1,10 +1,14 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/application/controller.hpp>
+#include <nekomote/asset_io/asset_file.hpp>
+#include <nekomote/asset_io/import_emote.hpp>
+#include <nlohmann/json.hpp>
 
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <thread>
 
 namespace
@@ -16,6 +20,67 @@ bool assets_available()
 {
     return fs::exists("assets/characters/coconut/casual/model.nkm.json");
 }
+struct LayoutFixture
+{
+    fs::path path = fs::temp_directory_path() /
+                    ("nekomote-layout-" +
+                     std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    CharacterEntry entry;
+    LayoutFixture()
+    {
+        const fs::path root{NEKOMOTE_FIXTURES_DIR};
+        auto imported = nekomote::asset_io::import_emote(
+            {root / "minimal.json", root / "minimal.resx.json", root, {}});
+        REQUIRE(imported.ok);
+        for (auto& part : imported.asset.parts)
+            for (auto& layer : part.layers)
+                layer.inherit_mask = 0x20007fc;
+        imported.asset.base_group = "body_parts";
+        imported.asset.base_motion = "torso";
+        nekomote::model::Timeline idle;
+        idle.label = "idle";
+        idle.loop_begin = 0;
+        idle.loop_end = 30;
+        idle.tracks.push_back({"move_UD",
+                               {{0,
+                                 2,
+                                 {nekomote::model::FieldState::Value, 0.f},
+                                 {nekomote::model::FieldState::Value, 0.f}},
+                                {30, 0, {}, {}}}});
+        imported.asset.timelines.push_back(idle);
+        REQUIRE(nekomote::asset_io::write_bundle(imported, root, path / "model").empty());
+        const nlohmann::json document{{"schema", "nekomote.session"},
+                                      {"version", 1},
+                                      {"session",
+                                       {{"model", "synthetic"},
+                                        {"idle_timeline", "idle"},
+                                        {"talk_max", 5},
+                                        {"interaction",
+                                         {{"eye", nullptr},
+                                          {"regions",
+                                           {{"bust", nullptr},
+                                            {"eye", nullptr},
+                                            {"face", nullptr},
+                                            {"head", nullptr},
+                                            {"pant", nullptr}}}}},
+                                        {"reactions", nlohmann::json::array()}}}};
+        std::ofstream(path / "session.nks.json") << document;
+        entry = {"synthetic", path / "model/model.nkm.json", path / "session.nks.json", path};
+    }
+    ~LayoutFixture()
+    {
+        fs::remove_all(path);
+    }
+    void install(WallpaperController& controller)
+    {
+        ControllerConfig cfg;
+        cfg.audio = AudioMode::Disabled;
+        auto candidate = controller.load_initial(entry, cfg);
+        INFO(candidate.error);
+        REQUIRE(candidate.ok);
+        controller.install_initial(std::move(candidate));
+    }
+};
 } // namespace
 
 TEST_CASE("Controller held left button drags immediately after movement tolerance",
@@ -149,9 +214,43 @@ TEST_CASE("Controller wheel zoom keeps the model point under the pointer", "[con
     }
 }
 
+TEST_CASE("Controller character transform reset restores its first fitted state",
+          "[controller][integration][fit]")
+{
+    const fs::path directory = "assets/characters/chocola/date-a";
+    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+        SKIP("chocola/date-a assets are unavailable");
+
+    WallpaperController c;
+    ControllerConfig config;
+    config.audio = AudioMode::Disabled;
+    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm.json",
+                                                   directory / "session.nks.json", directory},
+                                    config);
+    INFO(candidate.error);
+    REQUIRE(candidate.ok);
+    c.install_initial(std::move(candidate));
+    c.set_output_size(1920, 1080);
+    c.prepare_frame();
+    c.fit_to_output(1920, 1080);
+    const auto initial_origin = c.origin();
+    const auto initial_scale = c.scale();
+
+    for (int i = 0; i < 5; ++i)
+    {
+        c.set_origin({static_cast<float>(i * 37), static_cast<float>(i * -29)});
+        c.set_scale(.25f + static_cast<float>(i) * .1f);
+        c.reset_character_transform();
+        REQUIRE(c.origin().x == Catch::Approx(initial_origin.x));
+        REQUIRE(c.origin().y == Catch::Approx(initial_origin.y));
+        REQUIRE(c.scale() == Catch::Approx(initial_scale));
+    }
+}
+
 TEST_CASE("Controller default state", "[controller]")
 {
     WallpaperController c;
+    REQUIRE(c.config().fps == 60);
     REQUIRE(c.switch_state() == SwitchState::Idle);
     REQUIRE(c.fade_alpha() == 1.0f);
     REQUIRE(c.current_character_index() == 0);
@@ -421,6 +520,14 @@ TEST_CASE("Controller config save load", "[controller]")
     c.config().background = "test_background";
     c.config().scale = 1.5f;
     c.config().fps = 60;
+    c.config().transform_saved = true;
+    c.config().icon_position_saved = true;
+    c.config().icon_x = 123.0f;
+    c.config().icon_y = 45.0f;
+    c.config().sidebar_position_saved = true;
+    c.config().sidebar_x = 76.0f;
+    c.config().sidebar_y = 89.0f;
+    c.config().sidebar_free = true;
     c.set_config_path(path);
     c.save_config(path);
     WallpaperController c2;
@@ -429,6 +536,43 @@ TEST_CASE("Controller config save load", "[controller]")
     REQUIRE(c2.config().background == "test_background");
     REQUIRE(c2.config().scale == 1.5f);
     REQUIRE(c2.config().fps == 60);
+    REQUIRE(c2.config().transform_saved);
+    REQUIRE(c2.config().icon_position_saved);
+    REQUIRE(c2.config().icon_x == 123.0f);
+    REQUIRE(c2.config().icon_y == 45.0f);
+    REQUIRE(c2.config().sidebar_position_saved);
+    REQUIRE(c2.config().sidebar_x == 76.0f);
+    REQUIRE(c2.config().sidebar_y == 89.0f);
+    REQUIRE(c2.config().sidebar_free);
+    fs::remove(path);
+}
+
+TEST_CASE("Controller persists model transform and shared panel layout", "[controller][config]")
+{
+    const fs::path path = fs::temp_directory_path() / "nekomote_controller_layout_test.json";
+    fs::remove(path);
+    WallpaperController controller;
+    controller.set_config_path(path);
+    using namespace std::chrono_literals;
+    const WallpaperController::PointerTime start{1s};
+    controller.pointer_press({100, 100}, start);
+    controller.pointer_move({112, 121}, start + 1ms);
+    controller.pointer_release({112, 121}, start + 2ms);
+    controller.zoom_at({20, 30}, 1.0);
+    controller.save_ui_layout({500, 24}, {32, 80}, true);
+
+    const auto saved = WallpaperConfig::load(path);
+    REQUIRE(saved.transform_saved);
+    REQUIRE(saved.origin_x == controller.origin().x);
+    REQUIRE(saved.origin_y == controller.origin().y);
+    REQUIRE(saved.scale == controller.scale());
+    REQUIRE(saved.icon_position_saved);
+    REQUIRE(saved.icon_x == 500.0f);
+    REQUIRE(saved.icon_y == 24.0f);
+    REQUIRE(saved.sidebar_position_saved);
+    REQUIRE(saved.sidebar_x == 32.0f);
+    REQUIRE(saved.sidebar_y == 80.0f);
+    REQUIRE(saved.sidebar_free);
     fs::remove(path);
 }
 
@@ -543,4 +687,129 @@ TEST_CASE("Controller background_path returns current phase for dynamic", "[cont
     REQUIRE(path == c.catalog().backgrounds[0].path_for_phase(expected_index));
 
     fs::remove_all(root);
+}
+
+TEST_CASE("Saved transform restores after first output and reset keeps default fit",
+          "[controller][config][layout]")
+{
+    LayoutFixture fixture;
+    const auto path = fixture.path / "config.json";
+    WallpaperController first;
+    first.set_config_path(path);
+    first.config().fit = true;
+    fixture.install(first);
+    first.set_output_size(800, 600);
+    const auto default_origin = first.origin();
+    const auto default_scale = first.scale();
+    first.pointer_press({0, 0});
+    first.pointer_release({80, 50});
+    first.zoom_at({0, 0}, -1);
+    first.config().fps = 120;
+    first.save_ui_layout({300, 120}, {200, 60}, true);
+    const auto saved = WallpaperConfig::load(path);
+    WallpaperController reopened;
+    reopened.load_config(path);
+    fixture.install(reopened);
+    // Loading without an output must not discard the saved layout.
+    reopened.set_output_size(0, 0);
+    REQUIRE(reopened.config().origin_x == saved.origin_x);
+    reopened.set_output_size(800, 600);
+    REQUIRE(reopened.origin().x == Catch::Approx(saved.origin_x));
+    REQUIRE(reopened.origin().y == Catch::Approx(saved.origin_y));
+    REQUIRE(reopened.scale() == Catch::Approx(saved.scale));
+    REQUIRE(reopened.config().fps == 120);
+    reopened.reset_character_transform();
+    REQUIRE(reopened.origin().x == Catch::Approx(default_origin.x));
+    REQUIRE(reopened.origin().y == Catch::Approx(default_origin.y));
+    REQUIRE(reopened.scale() == Catch::Approx(default_scale));
+}
+
+TEST_CASE("Saved transform outside new output or invalid returns to default fit",
+          "[controller][config][layout]")
+{
+    LayoutFixture fixture;
+    WallpaperController defaults;
+    defaults.config().fit = true;
+    fixture.install(defaults);
+    defaults.set_output_size(320, 240);
+    WallpaperController reopened;
+    reopened.set_no_save(true);
+    reopened.config().fit = true;
+    reopened.config().transform_saved = true;
+    reopened.config().scale = .05f;
+    reopened.config().origin_x = 500;
+    reopened.config().origin_y = 0;
+    SECTION("character outside a smaller new window")
+    {
+    }
+    SECTION("nonfinite origin")
+    {
+        reopened.config().origin_x = INFINITY;
+    }
+    SECTION("invalid scale")
+    {
+        reopened.config().scale = -1;
+    }
+    SECTION("nonfinite scale")
+    {
+        reopened.config().scale = std::numeric_limits<float>::quiet_NaN();
+    }
+    fixture.install(reopened);
+    reopened.set_output_size(320, 240);
+    REQUIRE(reopened.last_error());
+    REQUIRE(reopened.origin().x == Catch::Approx(defaults.origin().x));
+    REQUIRE(reopened.origin().y == Catch::Approx(defaults.origin().y));
+    REQUIRE(reopened.scale() == Catch::Approx(defaults.scale()));
+    REQUIRE(reopened.config().origin_x == reopened.origin().x);
+}
+
+TEST_CASE("Resize retains visible transforms and recovers fully offscreen characters",
+          "[controller][config][layout]")
+{
+    LayoutFixture fixture;
+    WallpaperController c;
+    c.config().fit = true;
+    fixture.install(c);
+    c.set_output_size(800, 600);
+    c.set_scale(.05f);
+    c.set_origin({250, 0});
+    c.set_output_size(700, 500);
+    REQUIRE(c.origin().x == 250.0f);
+    REQUIRE(c.scale() == .05f);
+    c.set_output_size(100, 100);
+    REQUIRE(c.origin().x != 250.0f);
+    REQUIRE(c.last_error());
+}
+
+TEST_CASE("Malformed layout fields preserve valid preferences and recover fps defaults",
+          "[controller][config][layout]")
+{
+    const auto path = fs::temp_directory_path() / "nekomote-layout-corrupt.json";
+    std::ofstream(path) << R"({"character":"saved", "background":"bg", "fps":-1,
+        "transform_saved":true, "scale":"bad", "origin_x":null, "icon_x":null})";
+    const auto config = WallpaperConfig::load(path);
+    REQUIRE(config.character == "saved");
+    REQUIRE(config.background == "bg");
+    REQUIRE(config.fps == 60);
+    REQUIRE_FALSE(config.transform_saved);
+    fs::remove(path);
+}
+
+TEST_CASE("Layout persistence honors no-save and clears recovered sidebar coordinates",
+          "[controller][config][layout]")
+{
+    const auto path = fs::temp_directory_path() / "nekomote-layout-no-save.json";
+    fs::remove(path);
+    WallpaperController c;
+    c.set_config_path(path);
+    c.set_no_save(true);
+    c.zoom_at({0, 0}, 1);
+    c.save_ui_layout({100, 80}, {200, 120}, true);
+    REQUIRE_FALSE(fs::exists(path));
+    c.set_no_save(false);
+    c.save_ui_layout({100, 80}, {8, 8}, false);
+    const auto saved = WallpaperConfig::load(path);
+    REQUIRE_FALSE(saved.sidebar_position_saved);
+    REQUIRE_FALSE(saved.sidebar_free);
+    fs::remove(path);
 }

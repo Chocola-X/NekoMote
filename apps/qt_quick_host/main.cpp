@@ -281,7 +281,7 @@ int run(int argc, char** argv)
                              });
         }
         QTimer timer;
-        timer.setInterval(33);
+        timer.setInterval(17);
         QObject::connect(&timer, &QTimer::timeout, item,
                          [item, &config, &traced_gui_ticks]
                          {

@@ -20,8 +20,7 @@ constexpr float kSidebarMinHeight = 64.0f;
 } // namespace
 
 void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatalog& catalog,
-                   application::WallpaperController& controller, MenuState& menu, int output_width,
-                   int output_height)
+                   application::WallpaperController& controller, MenuState& menu, int output_height)
 {
     auto& sidebar = menu.sidebar;
     if (sidebar.animation <= 0.001f)
@@ -30,9 +29,6 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     const Style style;
     const float sidebar_alpha = std::clamp(sidebar.animation, 0.0f, 1.0f);
     painter.set_global_alpha(sidebar_alpha);
-
-    const float sidebar_x = sidebar.x;
-    const float sidebar_y = sidebar.y;
 
     const int settings_drawer_index = static_cast<int>(catalog.character_groups.size());
 
@@ -69,6 +65,9 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         std::max(kSidebarMinHeight, static_cast<float>(output_height) - kSidebarMargin);
     const float content_total_h = kSidebarHeaderHeight + content_scrollable_h;
     sidebar.height = std::min(max_sidebar_h, content_total_h);
+    ctx.validate_sidebar_position(sidebar);
+    const float sidebar_x = sidebar.x;
+    const float sidebar_y = sidebar.y;
 
     const float max_scroll =
         std::max(0.0f, content_scrollable_h - (sidebar.height - kSidebarHeaderHeight));
@@ -154,10 +153,7 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         curr_y += kSwitchRowHeight;
         if (ctx.reset_button("重设角色位置", sidebar_x, curr_y, sidebar.width, kSwitchRowHeight,
                              style))
-        {
-            if (output_width > 0 && output_height > 0)
-                controller.fit_to_output(output_width, output_height);
-        }
+            controller.reset_character_transform();
         curr_y += kSwitchRowHeight;
 
         ctx.section_header("壁纸选择", sidebar_x, curr_y, sidebar.width, kSectionHeaderHeight,

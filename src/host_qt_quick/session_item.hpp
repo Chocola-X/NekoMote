@@ -54,6 +54,7 @@ struct WallpaperState
     std::atomic<unsigned> renderer_destroyed{0};
     std::atomic<unsigned> rendered_frames{0};
     std::atomic<unsigned> fixed_steps_executed{0};
+    std::atomic<int> fps_limit{60};
 };
 
 enum class InputKind

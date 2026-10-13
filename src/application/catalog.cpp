@@ -2,7 +2,9 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -339,34 +341,80 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
     {
         return config;
     }
-    if (json.contains("character"))
+    if (!json.is_object())
+        return config;
+    if (json.contains("character") && json["character"].is_string())
         config.character = json["character"].get<std::string>();
-    if (json.contains("background"))
+    if (json.contains("background") && json["background"].is_string())
         config.background = json["background"].get<std::string>();
-    if (json.contains("scale"))
+    if (json.contains("scale") && json["scale"].is_number())
         config.scale = json["scale"].get<float>();
-    if (json.contains("origin_x"))
+    if (json.contains("origin_x") && json["origin_x"].is_number())
         config.origin_x = json["origin_x"].get<float>();
-    if (json.contains("origin_y"))
+    if (json.contains("origin_y") && json["origin_y"].is_number())
         config.origin_y = json["origin_y"].get<float>();
-    if (json.contains("width"))
-        config.width = json["width"].get<int>();
-    if (json.contains("height"))
-        config.height = json["height"].get<int>();
-    if (json.contains("fps"))
-        config.fps = json["fps"].get<int>();
-    if (json.contains("mute"))
-        config.mute = json["mute"].get<bool>();
-    if (json.contains("fit"))
-        config.fit = json["fit"].get<bool>();
-    if (json.contains("background_fade_seconds"))
+    if (json.contains("icon_x") && json["icon_x"].is_number())
+        config.icon_x = json["icon_x"].get<float>();
+    if (json.contains("icon_y") && json["icon_y"].is_number())
+        config.icon_y = json["icon_y"].get<float>();
+    if (json.contains("sidebar_x") && json["sidebar_x"].is_number())
+        config.sidebar_x = json["sidebar_x"].get<float>();
+    if (json.contains("sidebar_y") && json["sidebar_y"].is_number())
+        config.sidebar_y = json["sidebar_y"].get<float>();
+    if (json.contains("background_fade_seconds") && json["background_fade_seconds"].is_number())
         config.background_fade_seconds = json["background_fade_seconds"].get<float>();
+    if (json.contains("width") && json["width"].is_number_integer())
+    {
+        const double value = json["width"].get<double>();
+        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
+            config.width = static_cast<int>(value);
+    }
+    if (json.contains("height") && json["height"].is_number_integer())
+    {
+        const double value = json["height"].get<double>();
+        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
+            config.height = static_cast<int>(value);
+    }
+    if (json.contains("fps") && json["fps"].is_number_integer())
+    {
+        const double value = json["fps"].get<double>();
+        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
+            config.fps = static_cast<int>(value);
+    }
+    if (json.contains("mute") && json["mute"].is_boolean())
+        config.mute = json["mute"].get<bool>();
+    if (json.contains("fit") && json["fit"].is_boolean())
+        config.fit = json["fit"].get<bool>();
+    if (json.contains("transform_saved") && json["transform_saved"].is_boolean())
+        config.transform_saved = json["transform_saved"].get<bool>();
+    if (json.contains("icon_position_saved") && json["icon_position_saved"].is_boolean())
+        config.icon_position_saved = json["icon_position_saved"].get<bool>();
+    if (json.contains("sidebar_position_saved") && json["sidebar_position_saved"].is_boolean())
+        config.sidebar_position_saved = json["sidebar_position_saved"].get<bool>();
+    if (json.contains("sidebar_free") && json["sidebar_free"].is_boolean())
+        config.sidebar_free = json["sidebar_free"].get<bool>();
+    if (config.fps != 0 && (config.fps < 5 || config.fps > 240))
+        config.fps = 60;
+    if (!std::isfinite(config.background_fade_seconds) || config.background_fade_seconds < 0)
+        config.background_fade_seconds = 1.0f;
+    // A saved transform needs all three numeric values. Incomplete or corrupt
+    // layout data must not prevent valid character/background/FPS preferences loading.
+    for (const auto* key : {"scale", "origin_x", "origin_y"})
+        if (!json.contains(key) || !json[key].is_number())
+            config.transform_saved = false;
+    for (const auto* key : {"icon_x", "icon_y"})
+        if (!json.contains(key) || !json[key].is_number())
+            config.icon_position_saved = false;
+    for (const auto* key : {"sidebar_x", "sidebar_y"})
+        if (!json.contains(key) || !json[key].is_number())
+            config.sidebar_position_saved = false;
     return config;
 }
 
 void WallpaperConfig::save(const fs::path& path) const
 {
-    fs::create_directories(path.parent_path());
+    if (!path.parent_path().empty())
+        fs::create_directories(path.parent_path());
     Json json = Json::object();
     json["character"] = character;
     json["background"] = background;
@@ -378,10 +426,34 @@ void WallpaperConfig::save(const fs::path& path) const
     json["fps"] = fps;
     json["mute"] = mute;
     json["fit"] = fit;
+    json["transform_saved"] = transform_saved;
+    json["icon_position_saved"] = icon_position_saved;
+    json["icon_x"] = icon_x;
+    json["icon_y"] = icon_y;
+    json["sidebar_position_saved"] = sidebar_position_saved;
+    json["sidebar_x"] = sidebar_x;
+    json["sidebar_y"] = sidebar_y;
+    json["sidebar_free"] = sidebar_free;
     json["background_fade_seconds"] = background_fade_seconds;
-    std::ofstream file(path);
+    // Each config path is owned by its serial application controller. Replace
+    // only after a complete write, so interruption cannot truncate preferences.
+    const auto temporary = fs::path(path.string() + ".tmp");
+    struct PendingFile
+    {
+        fs::path path;
+        ~PendingFile()
+        {
+            std::error_code ec;
+            fs::remove(path, ec);
+        }
+    } pending{temporary};
+    std::ofstream file(temporary);
     if (!file)
-        throw std::runtime_error("cannot write config " + path.string());
+        throw std::runtime_error("cannot write config " + temporary.string());
     file << json.dump(2);
+    file.close();
+    if (!file)
+        throw std::runtime_error("cannot finish config " + temporary.string());
+    fs::rename(temporary, path);
 }
 } // namespace nekomote::application

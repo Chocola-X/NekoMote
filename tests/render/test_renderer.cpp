@@ -5,6 +5,7 @@
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
+#include <nekomote/ui/layout.hpp>
 
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
@@ -760,11 +761,21 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
     glClearColor(0, 1, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     render_gl::UiRenderer ui;
+    nekomote::ui::Context layout;
+    layout.init(&ui);
+    nekomote::ui::IconState icon;
+    nekomote::ui::SidebarState sidebar;
     const auto paint = [&]
     {
         ui.begin_frame();
+        // Include the idle layout/recovery checks in the warmed allocation
+        // measurement. Cover them with red so the host-target assertion remains
+        // independent of the control styling.
+        layout.toggle_icon(icon, 0);
+        layout.sidebar(sidebar, 1.0f / 60.0f);
         ui.draw_solid_rect(0, 0, 64, 64, {1, 0, 0, 1});
         ui.draw_text(4, 4, "菜单 UI", 16, {1, 1, 1, 1});
+        layout.end_frame();
         ui.end_frame();
     };
     for (int generation = 0; generation < 2; ++generation)
@@ -826,7 +837,7 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
             .empty());
     {
         std::ofstream config(assets.path / "config.json");
-        config << R"({"character":"chocola/date-a","background":"bg","fit":true})";
+        config << R"({"character":"chocola/date-a","background":"bg","fit":true,"fps":120})";
     }
     Context context;
     render_gl::Renderer reader(glfwGetProcAddress);
@@ -839,6 +850,7 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     REQUIRE(nekomote_wallpaper_set_muted(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.path.c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_load_initial(wallpaper.get()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_fps_limit(wallpaper.get()) == 120);
     REQUIRE(nekomote_wallpaper_pointer_move(wallpaper.get(), 0, 0, UINT64_MAX) ==
             NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_mouse_button(wallpaper.get(), 0, 99, 1000) ==

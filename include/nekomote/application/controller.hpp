@@ -155,8 +155,11 @@ class WallpaperController
 
     // === Fit ===
     void fit_to_output(int width, int height);
+    void save_ui_layout(Vec2 icon_position, Vec2 sidebar_position, bool sidebar_free);
 
     // === Output ===
+    // First nonzero output restores the saved transform and establishes the
+    // default reset pose. Later resizes recover a character fully outside view.
     void set_output_size(int width, int height);
     void set_paused(bool paused);
     void set_minimized(bool minimized);
@@ -165,6 +168,7 @@ class WallpaperController
     // === Interaction ===
     void set_origin(Vec2 origin);
     void set_scale(float scale);
+    void reset_character_transform();
     Vec2 origin() const noexcept;
     float scale() const noexcept;
     using PointerTime = std::chrono::steady_clock::time_point;
@@ -207,6 +211,10 @@ class WallpaperController
     void synchronize_pause();
     void accept(SessionStatus status);
     void update_background_phase();
+    void persist_character_transform();
+    void fit_character_to_output(int width, int height);
+    void restore_character_transform(int width, int height);
+    bool character_visible(int width, int height) const;
 
     AssetCatalog catalog_{};
     WallpaperConfig config_{};
@@ -241,6 +249,12 @@ class WallpaperController
     ControllerConfig controller_config_{};
     Vec2 initial_origin_{0, 400};
     float initial_scale_{1};
+    Vec2 reset_origin_{0, 400};
+    float reset_scale_{1};
+    bool reset_transform_pending_fit_{true};
+    bool initial_layout_pending_{true};
+    int output_width_{0};
+    int output_height_{0};
     bool paused_{false};
     bool minimized_{false};
     bool output_unavailable_{false};

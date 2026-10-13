@@ -1,6 +1,9 @@
 #include <QEventLoop>
+#include <QFile>
 #include <QGuiApplication>
 #include <QImage>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMouseEvent>
 #include <QQuickItemGrabResult>
 #include <QQuickWindow>
@@ -198,7 +201,11 @@ int main(int argc, char** argv)
             QMouseEvent release(QEvent::MouseButtonRelease, position / dpi, position / dpi,
                                 Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
             item->mouseReleaseEvent(&release);
-            frames(12);
+            // Opening uses 280ms of wall time, independent of the FPS choice.
+            QEventLoop settle_menu;
+            QTimer::singleShot(350, &settle_menu, &QEventLoop::quit);
+            settle_menu.exec();
+            frames(2);
         };
         click({static_cast<double>(initial.width()) - 30, 30});
         const auto open = capture(item, output + "/open.png");
@@ -209,6 +216,17 @@ int main(int argc, char** argv)
         const auto settings = capture(item, output + "/settings.png");
         require(changed_pixels(open, settings, {20, 440, 220, 350}) > 5000,
                 "settings did not expand");
+        const auto saved_config = [&]
+        {
+            QFile file(directory.filePath("config.json"));
+            require(file.open(QIODevice::ReadOnly), "cannot read saved configuration");
+            return QJsonDocument::fromJson(file.readAll()).object();
+        };
+        // Pick a nondefault value and verify both preference and GUI scheduling.
+        click({140, 278});
+        require(saved_config()["fps"].toInt() == 120, "FPS selection not saved");
+        require(item->wallpaper_state()->fps_limit.load() == 120, "FPS not published to GUI");
+        require(item->findChild<QTimer*>()->interval() == 8, "FPS timer not updated");
         // First static background row (second.png sorts before test.png).
         click({140, 502});
         frames(35);
@@ -261,6 +279,24 @@ int main(int argc, char** argv)
         require(no_icon ? dragged_icon != resized.pixelColor(to.toPoint())
                         : dragged_icon.red() > 200 && dragged_icon.blue() > 200,
                 "pressed mouse move did not drag the UI icon");
+        // Drag the shared menu header separately from the toggle button.
+        QMouseEvent panel_press(QEvent::MouseButtonPress, QPointF(100, 24) / dpi,
+                                QPointF(100, 24) / dpi, Qt::LeftButton, Qt::LeftButton,
+                                Qt::NoModifier);
+        item->mousePressEvent(&panel_press);
+        frames(2);
+        QMouseEvent panel_move(QEvent::MouseMove, QPointF(140, 24) / dpi, QPointF(140, 24) / dpi,
+                               Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        item->mouseMoveEvent(&panel_move);
+        frames(2);
+        QMouseEvent panel_release(QEvent::MouseButtonRelease, QPointF(140, 24) / dpi,
+                                  QPointF(140, 24) / dpi, Qt::LeftButton, Qt::NoButton,
+                                  Qt::NoModifier);
+        item->mouseReleaseEvent(&panel_release);
+        frames(3);
+        require(saved_config()["sidebar_free"].toBool() &&
+                    saved_config()["sidebar_x"].toDouble() > 8,
+                "dragged menu position not saved");
         // Hold on the model, then move in output pixels. The UI is left of x=272.
         const QPointF model_from(420, 360), model_to(460, 390);
         // Settle gaze before the reference image: dragging keeps the pointer's
@@ -296,7 +332,8 @@ int main(int argc, char** argv)
         const auto model_dragged = capture(item, output + "/model-dragged.png");
         long long shifted_error = 0, unmoved_error = 0;
         for (int y = 200; y < 500; ++y)
-            for (int x = 280; x < 590; ++x)
+            // The moved menu now ends at x=312; compare only model pixels.
+            for (int x = 340; x < 590; ++x)
             {
                 const auto before = before_model_drag.pixelColor(x, y);
                 const auto shifted = model_dragged.pixelColor(x + 40, y + 30);
@@ -331,11 +368,68 @@ int main(int argc, char** argv)
                         "backend selection did not recover the item");
                 require(rebuilt.pixelColor(2, 2) == QColor(20, 180, 70),
                         "backend switch lost the saved background");
-                const auto rebuilt_icon = rebuilt.pixelColor(rebuilt.width() - 30, 30);
+                const auto rebuilt_icon = rebuilt.pixelColor(to.toPoint());
                 require(rebuilt_icon.red() > 200 && rebuilt_icon.blue() > 200,
-                        "backend switch did not rebuild shared UI resources");
+                        "backend switch did not restore the saved icon position");
             }
         }
+        const auto before_reload = saved_config();
+        const auto reload_layout = [&]
+        {
+            // Recreate only the native item, in this isolated window. No system input.
+            item->setParentItem(nullptr);
+            object.reset();
+            object = std::make_unique<InputItem>();
+            item = object.get();
+            item->setWidth(640);
+            item->setHeight(720);
+            item->setMuted(true);
+            item->setRenderBackend(backend);
+            item->setAcceptHoverEvents(false);
+            item->setAcceptedMouseButtons(Qt::NoButton);
+            item->componentComplete();
+            item->setAssetsDir(directory.path());
+            item->setParentItem(window.contentItem());
+            frames(3);
+        };
+        reload_layout();
+        require(item->wallpaper_state()->fps_limit.load() == 120,
+                "reopening Plasma item lost FPS preference");
+        require(item->findChild<QTimer*>()->interval() == 8,
+                "reopening Plasma item lost FPS scheduling");
+        const auto after_reload = saved_config();
+        for (const auto* key : {"origin_x", "origin_y", "scale", "icon_x", "icon_y", "sidebar_x",
+                                "sidebar_y", "sidebar_free"})
+            require(before_reload[key] == after_reload[key], "reopening lost saved layout");
+        const auto reopened_image = capture(item, output + "/reopened.png");
+        require(reopened_image.pixelColor(to.toPoint()).red() > 200,
+                "reopened icon did not use saved coordinates");
+        // Corrupt only layout fields; character, background and FPS must survive.
+        auto invalid_layout = after_reload;
+        invalid_layout["origin_x"] = 100000;
+        invalid_layout["icon_x"] = 100000;
+        invalid_layout["sidebar_position_saved"] = true;
+        invalid_layout["sidebar_free"] = true;
+        invalid_layout["sidebar_y"] = -100000;
+        {
+            QFile file(directory.filePath("config.json"));
+            require(file.open(QIODevice::WriteOnly | QIODevice::Truncate), "write bad layout");
+            file.write(QJsonDocument(invalid_layout).toJson());
+        }
+        reload_layout();
+        const auto recovered_layout = saved_config();
+        require(recovered_layout["origin_x"].toDouble() != 100000,
+                "offscreen character did not recover");
+        require(recovered_layout["icon_x"].toDouble() < 640 * dpi,
+                "offscreen icon did not recover");
+        require(!recovered_layout["sidebar_free"].toBool(), "offscreen sidebar did not recover");
+        require(recovered_layout["fps"].toInt() == 120, "layout recovery overwrote FPS");
+        item->setMuted(false);
+        frames(2);
+        item->setMuted(true);
+        frames(2);
+        require(item->wallpaper_state()->fps_limit.load() == 120,
+                "host settings change reloaded FPS");
         // Fail during render_ui after model commands have been recorded, rather
         // than only rejecting a path before recording starts. Recovery must
         // discard that unsubmitted Vulkan target and rebuild its resource owners.
@@ -363,7 +457,7 @@ int main(int argc, char** argv)
         std::puts(
             "PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag, "
             "left hold model drag and wheel zoom "
-            "through Qt host; recorded-frame UI failure recovery");
+            "through Qt host; FPS/save/reopen/layout recovery; recorded-frame UI failure recovery");
     }
     catch (const std::exception& error)
     {

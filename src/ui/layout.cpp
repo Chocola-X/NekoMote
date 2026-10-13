@@ -60,16 +60,16 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
         return false;
     const float vw = static_cast<float>(painter_->viewport_width());
     const float vh = static_cast<float>(painter_->viewport_height());
-    if (!icon.initialized)
+    const bool invalid_position =
+        icon.initialized && !icon.dragging &&
+        (!std::isfinite(icon.x) || !std::isfinite(icon.y) || icon.x < 0 || icon.y < 0 ||
+         icon.x + icon.size > vw || icon.y + icon.size > vh);
+    if (!icon.initialized || invalid_position)
     {
+        icon.position_reset = invalid_position;
         icon.x = std::max(8.0f, vw - icon.size - 8.0f);
         icon.y = 8.0f;
         icon.initialized = true;
-    }
-    else if (!icon.dragging)
-    {
-        icon.x = std::clamp(icon.x, 8.0f, std::max(8.0f, vw - icon.size - 8.0f));
-        icon.y = std::clamp(icon.y, 8.0f, std::max(8.0f, vh - icon.size - 8.0f));
     }
     icon.hover = mouse_in_rect(icon.x, icon.y, icon.size, icon.size);
     if (icon.hover && mouse_pressed_ && !icon.dragging)
@@ -116,6 +116,21 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
     return clicked;
 }
 
+void Context::validate_sidebar_position(SidebarState& sidebar)
+{
+    if (!painter_ || !sidebar.is_free || sidebar.dragging)
+        return;
+    const float vw = static_cast<float>(painter_->viewport_width());
+    const float vh = static_cast<float>(painter_->viewport_height());
+    if (!std::isfinite(sidebar.x) || !std::isfinite(sidebar.y) || sidebar.x < 0 || sidebar.y < 0 ||
+        sidebar.x + sidebar.width > vw || sidebar.y + std::max(sidebar.height, 44.0f) > vh)
+    {
+        sidebar.is_free = false;
+        sidebar.x = sidebar.y = 8.0f;
+        sidebar.position_reset = true;
+    }
+}
+
 void Context::sidebar(SidebarState& sidebar, float delta_time)
 {
     if (!painter_)
@@ -126,15 +141,7 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
     const float header_h = 44.0f;
     const float eff_h = std::max(sidebar.height, header_h);
 
-    if (sidebar.open && sidebar.animation <= 0.001f && sidebar.is_free)
-    {
-        if (sidebar.x + sidebar.width < 16.0f || sidebar.x > vw - 16.0f || sidebar.y > vh - 16.0f)
-        {
-            sidebar.is_free = false;
-            sidebar.x = 8.0f;
-            sidebar.y = 8.0f;
-        }
-    }
+    validate_sidebar_position(sidebar);
 
     if (sidebar.animation > 0.001f)
     {
@@ -144,6 +151,9 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
             sidebar.dragging = true;
             sidebar.drag_offset_x = mouse_x_ - sidebar.x;
             sidebar.drag_offset_y = mouse_y_ - sidebar.y;
+            sidebar.start_x = sidebar.x;
+            sidebar.start_y = sidebar.y;
+            sidebar.moved = false;
         }
         if (sidebar.dragging)
         {
@@ -152,6 +162,9 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
             sidebar.y = mouse_y_ - sidebar.drag_offset_y;
             sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
             sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - eff_h - 8.0f));
+            sidebar.moved = sidebar.moved || std::abs(sidebar.x - sidebar.start_x) +
+                                                     std::abs(sidebar.y - sidebar.start_y) >
+                                                 3.0f;
             if (mouse_released_ || !mouse_down_)
                 sidebar.dragging = false;
         }

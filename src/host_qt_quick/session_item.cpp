@@ -224,19 +224,23 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     state_->wallpaper.reset(nekomote_wallpaper_create(load_gl));
                 if (!state_->wallpaper)
                     throw std::runtime_error("create wallpaper");
+                assets_applied_ = false;
                 config_applied_ = false;
             }
             if (!config_applied_)
             {
-                if (assets_mode_ && !assets_dir_.empty())
+                check(nekomote_wallpaper_set_no_save(state_->wallpaper.get(), no_save_ ? 1 : 0),
+                      "set no save");
+                if (assets_mode_ && !assets_dir_.empty() && !assets_applied_)
+                {
                     check(nekomote_wallpaper_set_assets_dir(state_->wallpaper.get(),
                                                             assets_dir_.c_str()),
                           "set assets dir");
+                    assets_applied_ = true;
+                }
                 check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), seed_), "set seed");
                 check(nekomote_wallpaper_set_muted(state_->wallpaper.get(), muted_ ? 1 : 0),
                       "set muted");
-                check(nekomote_wallpaper_set_no_save(state_->wallpaper.get(), no_save_ ? 1 : 0),
-                      "set no save");
                 config_applied_ = true;
             }
             // Loading may fit the character and initialize output-dependent
@@ -303,6 +307,10 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             check(nekomote_wallpaper_render_ui(state_->wallpaper.get(),
                                                paused_ ? 0.0f : static_cast<float>(elapsed)),
                   "render UI");
+            const int fps_limit = nekomote_wallpaper_fps_limit(state_->wallpaper.get());
+            if (fps_limit < 0)
+                throw std::runtime_error("query wallpaper frame limit");
+            state_->fps_limit.store(fps_limit, std::memory_order_release);
 #if defined(NEKOMOTE_HAS_VULKAN)
             if (bridge_)
                 bridge_->present(framebufferObject()->handle());
@@ -407,6 +415,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
     bool config_received_{false}, config_applied_{false};
+    bool assets_applied_{false};
     bool needs_rebuild_{false};
     std::filesystem::path assets_dir_, model_path_, session_path_;
     std::uint32_t seed_{0};

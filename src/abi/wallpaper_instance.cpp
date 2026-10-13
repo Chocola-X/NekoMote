@@ -135,6 +135,21 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     controller_.set_config_path(config_path);
     controller_.load_config(config_path);
     auto& config = controller_.config();
+    panel_.fps_limit = config.fps;
+    panel_.icon = {};
+    panel_.sidebar = {};
+    if (config.icon_position_saved)
+    {
+        panel_.icon.x = config.icon_x;
+        panel_.icon.y = config.icon_y;
+        panel_.icon.initialized = true;
+    }
+    if (config.sidebar_position_saved && config.sidebar_free)
+    {
+        panel_.sidebar.x = config.sidebar_x;
+        panel_.sidebar.y = config.sidebar_y;
+        panel_.sidebar.is_free = true;
+    }
     if (config.character.empty())
         config.character = controller_.catalog().characters.front().name;
     config.fit = true;
@@ -263,12 +278,6 @@ nekomote_error WallpaperInstance::load_initial()
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
             apply_background(controller_.background_path(bg_index), 0, bg_index);
         }
-    }
-    if (output_width_ > 0 && output_height_ > 0)
-    {
-        controller_.prepare_frame();
-        if (controller_.config().fit)
-            controller_.fit_to_output(output_width_, output_height_);
     }
     initialized_ = true;
     return NEKOMOTE_OK;
@@ -902,11 +911,20 @@ void WallpaperInstance::draw_ui(float dt)
         menu.muted = panel_.muted;
         if (auto* p = painter())
             ui::build_sidebar(ui_context_, *p, controller_.catalog(), controller_, menu,
-                              output_width_, output_height_);
+                              output_height_);
         panel_.sidebar = menu.sidebar;
         panel_.fps_limit = menu.fps_limit;
         panel_.locked = menu.locked;
         panel_.muted = menu.muted;
+    }
+    if ((panel_.icon.moved || panel_.sidebar.moved || panel_.icon.position_reset ||
+         panel_.sidebar.position_reset) &&
+        !panel_.icon.dragging && !panel_.sidebar.dragging)
+    {
+        controller_.save_ui_layout({panel_.icon.x, panel_.icon.y},
+                                   {panel_.sidebar.x, panel_.sidebar.y}, panel_.sidebar.is_free);
+        panel_.icon.moved = panel_.sidebar.moved = false;
+        panel_.icon.position_reset = panel_.sidebar.position_reset = false;
     }
     ui_context_.end_frame();
     painter()->end_frame();
@@ -1147,6 +1165,11 @@ bool WallpaperInstance::has_background() const
 bool WallpaperInstance::paused() const
 {
     return paused_;
+}
+
+int WallpaperInstance::fps_limit() const
+{
+    return controller_.config().fps;
 }
 
 float WallpaperInstance::fade_alpha() const

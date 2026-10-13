@@ -30,7 +30,7 @@ struct WallpaperPanelState
 {
     ui::IconState icon{};
     ui::SidebarState sidebar{};
-    int fps_limit{30};
+    int fps_limit{60};
     bool locked{false};
     bool muted{false};
     std::uint32_t icon_texture{0};
@@ -91,6 +91,7 @@ class WallpaperInstance
     const char* current_character_name() const;
     bool has_background() const;
     bool paused() const;
+    int fps_limit() const;
     float fade_alpha() const;
 
     int audio_state() const;

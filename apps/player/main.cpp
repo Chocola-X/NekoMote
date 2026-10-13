@@ -50,6 +50,7 @@ struct Options
     int width{1920}, height{1080}, steps{0}, measure{0}, fps{0}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
     bool show_touch_regions{false};
+    bool scale_set{false}, origin_x_set{false}, origin_y_set{false};
     player::BackendKind backend{player::BackendKind::OpenGL};
     bool vulkan() const noexcept
     {
@@ -104,11 +105,20 @@ std::optional<Options> options(int argc, char** argv)
                 throw std::runtime_error("backend must be opengl or vulkan");
         }
         else if (key == "--scale")
+        {
             o.scale = std::stof(value());
+            o.scale_set = true;
+        }
         else if (key == "--origin-x")
+        {
             o.origin.x = std::stof(value());
+            o.origin_x_set = true;
+        }
         else if (key == "--origin-y")
+        {
             o.origin.y = std::stof(value());
+            o.origin_y_set = true;
+        }
         else if (key == "--width")
             o.width = std::stoi(value());
         else if (key == "--height")
@@ -151,12 +161,12 @@ std::optional<Options> options(int argc, char** argv)
             std::puts(
                 "nekomote_player --assets <dir> [--character name] [--background-name name]\n"
                 "  [--no-save] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y 400]\n"
-                "  [--width 800 --height 1080] [--fps 30] [--seed 1]\n"
+                "  [--width 800 --height 1080] [--fps 60] [--seed 1]\n"
                 "  [--backend opengl|vulkan] (default opengl; Vulkan requires enabled build)\n"
                 "Or: nekomote_player --model model.nkm.json --session session.nks.json\n"
                 "  [--background image.png] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y "
                 "400]\n"
-                "  [--width 800 --height 1080] [--fps 30] [--seed 1] [--reaction label]\n"
+                "  [--width 800 --height 1080] [--fps 60] [--seed 1] [--reaction label]\n"
                 "  [--capture output.png --steps N --mute --transparent] [--measure-frames N]\n"
                 "  [--capture-ui output.png --steps N --mute --ui-open --ui-drawer N]\n"
                 "  Diagnostic: --check-window output-directory --mute (no OS input injection)\n"
@@ -180,9 +190,8 @@ std::optional<Options> options(int argc, char** argv)
         throw std::runtime_error("--assets or (--model and --session) required; see --help");
     if (o.width < 64 || o.width > 8192 || o.height < 64 || o.height > 8192 || o.steps < 0 ||
         o.steps > 100000 || (o.fps != 0 && (o.fps < 5 || o.fps > 240)) || o.measure < 0 ||
-        o.measure > 1000000 ||
-        !std::isfinite(o.scale) || o.scale <= 0 || !std::isfinite(o.origin.x) ||
-        !std::isfinite(o.origin.y))
+        o.measure > 1000000 || !std::isfinite(o.scale) || o.scale <= 0 ||
+        !std::isfinite(o.origin.x) || !std::isfinite(o.origin.y))
         throw std::runtime_error(
             "invalid dimensions, FPS (5..240), step count, measurement count or placement");
     if (!o.capture.empty() && (!o.mute || o.measure != 0))
@@ -670,17 +679,32 @@ int run(int argc, char** argv)
         controller.load_config(o.assets / "config.json");
         auto& config = controller.config();
         if (!o.character.empty())
+        {
+            if (config.character != o.character)
+                config.transform_saved = false;
             config.character = o.character;
+        }
         if (!o.background_name.empty())
             config.background = o.background_name;
         if (config.character.empty())
             config.character = catalog.characters.front().name;
         config.fit = true;
+        if (o.fit)
+            config.transform_saved = false;
+        if (o.origin_x_set)
+            controller_cfg.origin.x = o.origin.x;
+        if (o.origin_y_set)
+            controller_cfg.origin.y = o.origin.y;
+        if (o.scale_set)
+            controller_cfg.scale = o.scale;
         if (!o.no_save)
         {
-            config.scale = o.scale;
-            config.origin_x = o.origin.x;
-            config.origin_y = o.origin.y;
+            if (!config.transform_saved || o.scale_set || o.fit)
+                config.scale = controller_cfg.scale;
+            if (!config.transform_saved || o.origin_x_set || o.fit)
+                config.origin_x = controller_cfg.origin.x;
+            if (!config.transform_saved || o.origin_y_set || o.fit)
+                config.origin_y = controller_cfg.origin.y;
             config.width = o.width;
             config.height = o.height;
             if (o.fps > 0)
@@ -865,14 +889,32 @@ int run(int argc, char** argv)
             if (!ui_icon_texture)
                 throw std::runtime_error("wallpaper UI icon upload failed: " + icon_path.string());
         }
-        ui_icon.x = static_cast<float>(fw) - 60;
-        ui_icon.y = 16;
+        if (controller.config().icon_position_saved)
+        {
+            ui_icon.x = controller.config().icon_x;
+            ui_icon.y = controller.config().icon_y;
+            ui_icon.initialized = true;
+        }
+        else
+        {
+            ui_icon.x = static_cast<float>(fw) - 60;
+            ui_icon.y = 16;
+        }
+        if (controller.config().sidebar_position_saved && controller.config().sidebar_free)
+        {
+            ui_sidebar.x = controller.config().sidebar_x;
+            ui_sidebar.y = controller.config().sidebar_y;
+            ui_sidebar.is_free = true;
+        }
         ui_ready = true;
         surface.ui_context = &ui_context;
         surface.ui_icon = &ui_icon;
         surface.ui_sidebar = &ui_sidebar;
     }
-    if (o.fit || (assets_mode && controller.config().fit))
+    int initial_width = 0, initial_height = 0;
+    glfwGetFramebufferSize(window.get(), &initial_width, &initial_height);
+    controller.set_output_size(initial_width, initial_height);
+    if (o.fit && !assets_mode)
     {
         controller.prepare_frame();
         surface.fit();
@@ -919,8 +961,7 @@ int run(int argc, char** argv)
     if (!o.capture.empty())
         for (int i = 0; i < o.steps; ++i)
             check(controller.current_instance()->advance(1.0 / 60));
-    int current_fps_limit =
-        o.fps > 0 ? o.fps : (controller.config().fps > 0 ? controller.config().fps : 30);
+    int current_fps_limit = o.fps > 0 ? o.fps : controller.config().fps;
     if (o.capture.empty())
     {
         glfwSetWindowUserPointer(window.get(), &surface);
@@ -1230,11 +1271,21 @@ int run(int argc, char** argv)
                 menu.locked = surface.locked;
                 menu.muted = o.mute;
                 if (auto* p = ui_renderer.painter())
-                    ui::build_sidebar(ui_context, *p, controller.catalog(), controller, menu, w, h);
+                    ui::build_sidebar(ui_context, *p, controller.catalog(), controller, menu, h);
                 ui_sidebar = menu.sidebar;
                 current_fps_limit = menu.fps_limit;
                 surface.locked = menu.locked;
                 o.mute = menu.muted;
+            }
+            if ((ui_icon.moved || ui_sidebar.moved || ui_icon.position_reset ||
+                 ui_sidebar.position_reset) &&
+                !ui_icon.dragging && !ui_sidebar.dragging)
+            {
+                controller.save_ui_layout({ui_icon.x, ui_icon.y}, {ui_sidebar.x, ui_sidebar.y},
+                                          ui_sidebar.is_free);
+                ui_icon.moved = false;
+                ui_sidebar.moved = false;
+                ui_icon.position_reset = ui_sidebar.position_reset = false;
             }
             ui_context.end_frame();
             ui_renderer.end_frame();

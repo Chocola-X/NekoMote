@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-13",
+  "base_commit": "6e9bd21",
+  "state": "validated combined implementation including inherited changes against base commit",
+  "build": "plasma preset Release/LTO/WERROR",
+  "session": "x11",
+  "desktop_updated": false,
+  "default_fps": 60,
+  "focused_cpu": {
+    "cases": 39,
+    "assertions": 535,
+    "result": "PASS"
+  },
+  "full_cpu_runner": {
+    "reported_cases": 194,
+    "assertions": 43631,
+    "result": "PASS",
+    "unexecuted": [
+      "Real model chocola-date-a imports: NEKOMOTE_TEST_REAL_ASSET not set; old runner returns after warning"
+    ]
+  },
+  "abi_ctest": {
+    "cases": 3,
+    "result": "PASS"
+  },
+  "gpu_abi_ui": {
+    "cases": 4,
+    "assertions": 90,
+    "result": "PASS",
+    "cpp_new_after_warmup": 0,
+    "frames_per_generation": 120,
+    "generations": 2
+  },
+  "qt_layers": {
+    "opengl": "PASS",
+    "vulkan_and_backend_rebuild": "PASS",
+    "env": {
+      "NEKOMOTE_TEST_ASSETS_DIR": "assets",
+      "QSG_NO_VSYNC": "1",
+      "QT_SCALE_FACTOR": "1"
+    },
+    "coverage": [
+      "FPS UI selection 120, saved file and atomic GUI snapshot",
+      "timer 8ms after selection and reopening",
+      "model drag and wheel persistence",
+      "toggle icon and menu header drag persistence",
+      "native item destruction and reload",
+      "invalid model/icon/sidebar recovery",
+      "host muted property update",
+      "GPU backend switching and recorded-frame failure recovery"
+    ]
+  },
+  "stage_verify": "PASS: required files, manifest, RPATH, ldd, symbols, smoke recovery",
+  "evidence": "build/evidence/layout-persistence-20261013",
+  "hashes": {
+    "build/plasma/bin/nekomote_unit_tests": "f2803810131f7a1ea2252eb959f43560f07f1e9715626a81b0dcad284a37a399",
+    "build/plasma/bin/nekomote_render_tests": "87882bfe6c3f1f33b3cd494a5bd7c1f647f1b9cdd2a16d264f52b5c26a19a791",
+    "build/plasma/bin/nekomote_plasma_wallpaper_layers": "c301c1cff16354e743a7023d05ad24920f3ddd6c6d82dec50139d1f954176315",
+    "build/plasma/adapters/plasma/stage/lib/libnekomote_plasma_qml.so": "107b57aa4d67b1c71e5bc7fe5af26e737b4b8e8acc8a2c3fd043cf89875584a4"
+  },
+  "performance": "No new CPU timing, VRAM or power measurements; allocation evidence only as scoped above"
+}

@@ -20,8 +20,20 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
     setAcceptedMouseButtons(Qt::LeftButton);
     connect(this, &WallpaperItemBase::failed, this, &NekoWallpaperItem::set_error);
     timer_ = new QTimer(this);
-    timer_->setInterval(33);
-    connect(timer_, &QTimer::timeout, this, [this] { update(); });
+    timer_->setTimerType(Qt::PreciseTimer);
+    timer_->setInterval(17);
+    connect(timer_, &QTimer::timeout, this,
+            [this]
+            {
+                const int fps_limit = state_->fps_limit.load(std::memory_order_acquire);
+                const int interval =
+                    fps_limit == 0
+                        ? 0
+                        : (fps_limit > 0 ? std::max(1, (1000 + fps_limit / 2) / fps_limit) : 17);
+                if (timer_->interval() != interval)
+                    timer_->setInterval(interval);
+                update();
+            });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
 }
 

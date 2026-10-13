@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -152,6 +153,7 @@ TEST_CASE("UI Sidebar dragging coordinates and synchronous title position", "[ui
     REQUIRE_THAT(sidebar.y, Catch::Matchers::WithinAbs(54.0f - expected_drag_offset_y, 0.01f));
     REQUIRE_THAT(sidebar.x, Catch::Matchers::WithinAbs(58.0f, 0.01f));
     REQUIRE_THAT(sidebar.y, Catch::Matchers::WithinAbs(38.0f, 0.01f));
+    REQUIRE(sidebar.moved);
 
     const float title_x = sidebar.x + 16.0f;
     const float title_y = sidebar.y + 12.0f;
@@ -164,6 +166,7 @@ TEST_CASE("UI Sidebar dragging coordinates and synchronous title position", "[ui
     REQUIRE(sidebar.is_free == true);
     REQUIRE_THAT(sidebar.x, Catch::Matchers::WithinAbs(58.0f, 0.01f));
     REQUIRE_THAT(sidebar.y, Catch::Matchers::WithinAbs(38.0f, 0.01f));
+    REQUIRE(sidebar.moved);
 }
 
 TEST_CASE("UI Sidebar dragging viewport bounds clamping", "[ui_layout]")
@@ -440,4 +443,79 @@ TEST_CASE("font atlas growth preserves glyph locations and final UVs", "[ui][fon
                                    second.atlas_y + second.atlas_h <= first.atlas_y;
             REQUIRE(separated);
         }
+}
+
+TEST_CASE("Saved UI coordinates outside new viewport return to defaults", "[ui_layout][config]")
+{
+    MockPainter painter;
+    painter.vw = 640;
+    painter.vh = 480;
+    Context ctx;
+    ctx.init(&painter);
+    IconState icon;
+    icon.initialized = true;
+    SidebarState sidebar;
+    sidebar.is_free = true;
+    sidebar.height = 300;
+    sidebar.open = true;
+    sidebar.animation = 1;
+    SECTION("right edge")
+    {
+        icon.x = 620;
+        sidebar.x = 500;
+    }
+    SECTION("bottom edge")
+    {
+        icon.y = 470;
+        sidebar.y = 400;
+    }
+    SECTION("negative coordinates")
+    {
+        icon.x = -10;
+        sidebar.y = -500;
+    }
+    SECTION("nonfinite coordinates")
+    {
+        icon.y = std::numeric_limits<float>::quiet_NaN();
+        sidebar.x = std::numeric_limits<float>::infinity();
+    }
+    ctx.toggle_icon(icon, 0);
+    ctx.sidebar(sidebar, .016f);
+    REQUIRE(icon.x == 588.0f);
+    REQUIRE(icon.y == 8.0f);
+    REQUIRE(icon.position_reset);
+    REQUIRE_FALSE(sidebar.is_free);
+    REQUIRE(sidebar.x == 8.0f);
+    REQUIRE(sidebar.y == 8.0f);
+    REQUIRE(sidebar.position_reset);
+}
+
+TEST_CASE("Valid saved UI coordinates survive reopen and viewport resize", "[ui_layout][config]")
+{
+    MockPainter painter;
+    Context ctx;
+    ctx.init(&painter);
+    IconState icon;
+    icon.initialized = true;
+    icon.x = 320;
+    icon.y = 100;
+    SidebarState sidebar;
+    sidebar.is_free = true;
+    sidebar.x = 100;
+    sidebar.y = 120;
+    sidebar.height = 300;
+    ctx.toggle_icon(icon, 0);
+    ctx.sidebar(sidebar, .016f);
+    REQUIRE(sidebar.is_free);
+    painter.vw = 640;
+    painter.vh = 480;
+    ctx.toggle_icon(icon, 0);
+    ctx.sidebar(sidebar, .016f);
+    REQUIRE(icon.x == 320.0f);
+    REQUIRE(icon.y == 100.0f);
+    REQUIRE(sidebar.x == 100.0f);
+    REQUIRE(sidebar.y == 120.0f);
+    REQUIRE(sidebar.is_free);
+    REQUIRE_FALSE(icon.position_reset);
+    REQUIRE_FALSE(sidebar.position_reset);
 }
