@@ -46,7 +46,8 @@ struct DrawCommand
     ColorProtection protection{ColorProtection::None};
     MaskId mask{};
 };
-// Union of sampled alpha, cleared to zero for every application. Mask commands
+// Union of sampled alpha, generated on a zero-cleared attachment. The same ID
+// may reuse coverage within one render until another mask overwrites it. Mask commands
 // use texture alpha independently of vertex colour/opacity and share the colour
 // geometry buffers. IDs are one-based indices
 // into RenderFrame::masks; zero means no mask. Current raster contract: five-bit

@@ -11,6 +11,7 @@
 #include <nekomote/runtime/spring.hpp>
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdlib>
@@ -18,6 +19,7 @@
 #include <limits>
 #include <new>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -313,6 +315,85 @@ TEST_CASE("Warmed geometry evaluation and frame building allocate no project hea
     measure_allocations = false;
     REQUIRE(success);
     REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Geometry topology survives repeated builds and resource and visibility changes",
+          "[runtime][scene]")
+{
+    auto input = rig();
+    input.icons.emplace("atlas/b", IconRect{"atlas", 8, 0, 4, 8, 1, 3});
+    input.icons.emplace("atlas/c", IconRect{"atlas", 16, 0, 8, 4, 3, 1});
+    MeshData mesh;
+    std::array<float, 32> raw{};
+    const auto patch = runtime::identity_patch();
+    for (std::size_t i = 0; i < patch.size(); ++i)
+    {
+        raw[i * 2] = patch[i].x;
+        raw[i * 2 + 1] = patch[i].y;
+    }
+    mesh.bp = field(raw);
+    for (std::size_t i = 1; i < input.parts.size(); ++i)
+    {
+        auto& node = input.parts[i].layers[0];
+        node.mesh_division = 3;
+        node.frame_list[0].content.data.mesh = field(mesh);
+    }
+    input.parts[2].layers[0].frame_list[0].content.data.icon = field(std::string{"b"});
+    auto same_grid = input.parts[1];
+    same_grid.name = "C";
+    same_grid.layers[0].frame_list[0].content.data.icon = field(std::string{"c"});
+    input.parts.push_back(same_grid);
+    auto& selector = input.parts[0].layers[0];
+    selector.parameter[0].range_end = 3;
+    selector.parameter[0].division = 3;
+    auto hidden = selector.frame_list.back();
+    hidden.time = 2;
+    hidden.content.data.opa = field(0.0f);
+    selector.frame_list.push_back(hidden);
+    hidden.time = 3;
+    hidden.content.data.icon = field(std::string{"C"});
+    hidden.content.data.opa = field(1.0f);
+    selector.frame_list.push_back(hidden);
+    auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance reused(*compiled.scene);
+    const auto parameter = compiled.scene->find_variable("pick");
+    std::vector<std::uint32_t> initial;
+    for (const float value : {0.0f, 0.0f, 3.0f, 3.0f, 1.0f, 1.0f, 2.0f, 2.0f, 0.0f})
+    {
+        CAPTURE(value);
+        REQUIRE(reused.set_parameter(parameter, value));
+        REQUIRE(reused.evaluate());
+        REQUIRE(reused.build_frame());
+        REQUIRE(reused.build_frame()); // No evaluate between these calls.
+        runtime::GeometryInstance fresh(*compiled.scene);
+        REQUIRE(fresh.set_parameter(parameter, value));
+        REQUIRE(fresh.evaluate());
+        REQUIRE(fresh.build_frame());
+        const auto actual = reused.frame(), expected = fresh.frame();
+        REQUIRE(std::equal(actual.indices.begin(), actual.indices.end(), expected.indices.begin(),
+                           expected.indices.end()));
+        REQUIRE(actual.vertices.size() == expected.vertices.size());
+        REQUIRE(actual.commands.size() == expected.commands.size());
+        for (std::size_t i = 0; i < actual.vertices.size(); ++i)
+        {
+            const auto& a = actual.vertices[i];
+            const auto& b = expected.vertices[i];
+            REQUIRE(std::array{a.x, a.y, a.u, a.v} == std::array{b.x, b.y, b.u, b.v});
+            REQUIRE(a.color == b.color);
+        }
+        if (value == 0)
+            initial.assign(actual.indices.begin(), actual.indices.end());
+        else if (value == 1)
+        {
+            REQUIRE(actual.indices.size() == initial.size());
+            REQUIRE_FALSE(std::equal(initial.begin(), initial.end(), actual.indices.begin()));
+        }
+        else if (value == 2)
+            REQUIRE(actual.indices.empty());
+        else
+            REQUIRE(std::equal(initial.begin(), initial.end(), actual.indices.begin()));
+    }
 }
 
 TEST_CASE("Automatic priority-two meshes match original size boundary captures", "[runtime][scene]")

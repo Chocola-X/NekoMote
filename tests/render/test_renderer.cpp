@@ -926,3 +926,49 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
     REQUIRE_FALSE(std::filesystem::exists(data / "nekomote/config.json"));
 }
 #endif
+
+TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask", "[gpu][mask]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.reserve({8, 12, 6, 2, 1, 2});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 255, 0, 255}});
+    auto left = quad(.5f, .5f, .5f, .5f);
+    left[1].x = left[2].x = 24;
+    const auto full = quad(.5f, .5f, .5f, .5f);
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(left.begin(), left.end(), vertices.begin());
+    std::copy(full.begin(), full.end(), vertices.begin() + 4);
+    const std::array<DrawCommand, 6> commands{
+        {{TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{2}, 6, 6, BlendMode::Over},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{1}, 0, 0, BlendMode::Over, ColorProtection::None, MaskId{2}},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{2}},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    const std::array<DrawCommand, 1> sources{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    std::array<MaskDefinition, 2> masks{{{0, 1}, {0, 0}}};
+    const RenderFrame frame{vertices, std::span(kIndices).first(12),
+                            commands, ColorComposition::ProtectedStraight,
+                            sources,  masks};
+    renderer.prepare(frame);
+    renderer.resize_output(64, 64);
+    for (const bool flip : {false, true})
+    {
+        render_gl::View view;
+        view.flip_x = flip;
+        renderer.render({output.framebuffer, 64, 64}, view);
+        const auto image = renderer.capture({output.framebuffer, 64, 64});
+        REQUIRE(pixel(image, flip ? 56 : 8, 32) == std::array<std::uint8_t, 4>{255, 0, 0, 255});
+        REQUIRE(pixel(image, flip ? 8 : 56, 32) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
+    }
+    masks[0].command_count = 0;
+    renderer.prepare(frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(pixel(renderer.capture({output.framebuffer, 64, 64}), 8, 32) ==
+            std::array<std::uint8_t, 4>{0, 255, 0, 255});
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}

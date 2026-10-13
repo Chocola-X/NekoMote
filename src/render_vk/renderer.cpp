@@ -841,52 +841,60 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc),
                            &pc);
     };
+    // The scratch attachment survives ordinary draws, but another mask overwrites it.
+    // Keep this cache local: every render must observe fresh geometry and view bounds.
+    MaskId scratch_mask{};
+    Clip scratch_clip{};
     for (const auto& command : p.commands)
     {
         if (!command.index_count)
             continue;
         if (command.mask.valid())
         {
-            vkCmdEndRenderPass(cmd);
-            record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
-                                 VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-            p.mask_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            begin(p.mask_pass, p.mask_framebuffer, p.mask_target.width, p.mask_target.height, true,
-                  {});
-            const auto& bounds = p.mask_bounds[command.mask.value - 1];
-            const auto output_clip = intersect(
-                intersect(clip(bounds.source, target, view), clip(bounds.content, target, view)),
-                full);
-            // Internal framebuffer rows follow GL's lower-left arithmetic.
-            const auto scaled = [](int value, int size, int original)
-            { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
-            set_scissor({scaled(output_clip.x, p.mask_target.width, target.width),
-                         scaled(output_clip.y, p.mask_target.height, target.height),
-                         scaled(output_clip.width, p.mask_target.width, target.width),
-                         scaled(output_clip.height, p.mask_target.height, target.height)});
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kMaskWrite]);
-            pc.mask_write = 1;
-            pc.use_mask = 0;
-            const auto& definition = p.masks[command.mask.value - 1];
-            for (std::uint32_t i = 0; i < definition.command_count; ++i)
+            if (scratch_mask != command.mask)
             {
-                const auto& draw = p.mask_commands[definition.first_command + i];
-                if (!draw.index_count)
-                    continue;
-                const auto* texture = p.find_texture(draw.texture);
-                pc.atlas_texels = texture->texel_transform;
-                push();
-                // Dummy mask prevents sampling an attachment currently being written.
-                vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0,
-                                        1, &texture->unmasked, 0, nullptr);
-                vkCmdDrawIndexed(cmd, draw.index_count, 1, draw.first_index, 0, 0);
+                vkCmdEndRenderPass(cmd);
+                record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+                p.mask_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                begin(p.mask_pass, p.mask_framebuffer, p.mask_target.width, p.mask_target.height,
+                      true, {});
+                const auto& bounds = p.mask_bounds[command.mask.value - 1];
+                scratch_clip = intersect(intersect(clip(bounds.source, target, view),
+                                                   clip(bounds.content, target, view)),
+                                         full);
+                // Internal framebuffer rows follow GL's lower-left arithmetic.
+                const auto scaled = [](int value, int size, int original)
+                { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
+                set_scissor({scaled(scratch_clip.x, p.mask_target.width, target.width),
+                             scaled(scratch_clip.y, p.mask_target.height, target.height),
+                             scaled(scratch_clip.width, p.mask_target.width, target.width),
+                             scaled(scratch_clip.height, p.mask_target.height, target.height)});
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kMaskWrite]);
+                pc.mask_write = 1;
+                pc.use_mask = 0;
+                const auto& definition = p.masks[command.mask.value - 1];
+                for (std::uint32_t i = 0; i < definition.command_count; ++i)
+                {
+                    const auto& draw = p.mask_commands[definition.first_command + i];
+                    if (!draw.index_count)
+                        continue;
+                    const auto* texture = p.find_texture(draw.texture);
+                    pc.atlas_texels = texture->texel_transform;
+                    push();
+                    // Dummy mask prevents sampling an attachment currently being written.
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout,
+                                            0, 1, &texture->unmasked, 0, nullptr);
+                    vkCmdDrawIndexed(cmd, draw.index_count, 1, draw.first_index, 0, 0);
+                }
+                vkCmdEndRenderPass(cmd);
+                record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
+                                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                p.mask_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                begin(p.color_pass, p.color_framebuffer, target.width, target.height, false, {});
+                scratch_mask = command.mask;
             }
-            vkCmdEndRenderPass(cmd);
-            record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
-                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            p.mask_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            begin(p.color_pass, p.color_framebuffer, target.width, target.height, false, {});
-            set_scissor(output_clip);
+            set_scissor(scratch_clip);
             pc.mask_write = 0;
             pc.use_mask = 1;
         }

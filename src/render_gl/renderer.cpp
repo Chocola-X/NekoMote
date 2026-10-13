@@ -292,14 +292,13 @@ struct Renderer::Impl
     }
     void bind_texture(TextureId id, TextureId& uv_texture) const
     {
+        if (id == uv_texture)
+            return;
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
         glBindTexture(GL_TEXTURE_RECTANGLE, it->handle);
-        if (id != uv_texture)
-        {
-            glUniform4fv(atlas_texels, 1, it->texel_transform.data());
-            uv_texture = id;
-        }
+        glUniform4fv(atlas_texels, 1, it->texel_transform.data());
+        uv_texture = id;
     }
     GLuint texture(TextureId id) const
     {
@@ -589,52 +588,61 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    // The scratch attachment survives ordinary draws, but another mask overwrites it.
+    // Keep this cache local: every render must observe fresh geometry and view bounds.
+    MaskId scratch_mask{};
+    Clip scratch_clip{};
     for (const auto& command : p.commands)
     {
         if (command.mask.valid())
         {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, 0); // avoid read/write feedback on the scratch mask
-            glActiveTexture(GL_TEXTURE0);
-            glBindFramebuffer(GL_FRAMEBUFFER, p.mask_target->framebuffer);
-            glViewport(0, 0, p.mask_target->width, p.mask_target->height);
-            glDisable(GL_SCISSOR_TEST);
-            glClearColor(0, 0, 0, 0);
-            glClear(GL_COLOR_BUFFER_BIT);
-            // The masked group owns its clip, shared by pupil and highlights.
-            // V7 #25/#29 retain that clip across child draws. Clipping each small
-            // child truncates filtered coverage; unclipped sources also diverge.
-            const auto& bounds = p.mask_bounds[command.mask.value - 1];
-            const auto output_clip = intersect(
-                intersect(clip(bounds.source, target, view), clip(bounds.content, target, view)),
-                {0, 0, target.width, target.height});
-            const auto scaled = [](int value, int size, int original)
-            { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
-            glEnable(GL_SCISSOR_TEST);
-            glScissor(scaled(output_clip.x, p.mask_target->width, target.width),
-                      scaled(output_clip.y, p.mask_target->height, target.height),
-                      scaled(output_clip.width, p.mask_target->width, target.width),
-                      scaled(output_clip.height, p.mask_target->height, target.height));
-            glUniform1i(p.mask_write, 1);
-            glUniform1i(p.use_mask, 0);
-            glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE);
-            const auto& definition = p.masks[command.mask.value - 1];
-            for (std::uint32_t i = 0; i < definition.command_count; ++i)
+            if (scratch_mask != command.mask)
             {
-                const auto& draw = p.mask_commands[definition.first_command + i];
-                p.bind_texture(draw.texture, uv_texture);
-                glDrawElements(
-                    GL_TRIANGLES, static_cast<GLsizei>(draw.index_count), GL_UNSIGNED_INT,
-                    reinterpret_cast<const void*>(static_cast<std::uintptr_t>(draw.first_index) *
-                                                  sizeof(std::uint32_t)));
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, 0); // avoid read/write feedback on the scratch mask
+                glActiveTexture(GL_TEXTURE0);
+                glBindFramebuffer(GL_FRAMEBUFFER, p.mask_target->framebuffer);
+                glViewport(0, 0, p.mask_target->width, p.mask_target->height);
+                glDisable(GL_SCISSOR_TEST);
+                glClearColor(0, 0, 0, 0);
+                glClear(GL_COLOR_BUFFER_BIT);
+                // The masked group owns its clip, shared by pupil and highlights.
+                // V7 #25/#29 retain that clip across child draws. Clipping each small
+                // child truncates filtered coverage; unclipped sources also diverge.
+                const auto& bounds = p.mask_bounds[command.mask.value - 1];
+                scratch_clip = intersect(intersect(clip(bounds.source, target, view),
+                                                   clip(bounds.content, target, view)),
+                                         {0, 0, target.width, target.height});
+                const auto scaled = [](int value, int size, int original)
+                { return static_cast<int>(static_cast<std::int64_t>(value) * size / original); };
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(scaled(scratch_clip.x, p.mask_target->width, target.width),
+                          scaled(scratch_clip.y, p.mask_target->height, target.height),
+                          scaled(scratch_clip.width, p.mask_target->width, target.width),
+                          scaled(scratch_clip.height, p.mask_target->height, target.height));
+                glUniform1i(p.mask_write, 1);
+                glUniform1i(p.use_mask, 0);
+                glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE);
+                const auto& definition = p.masks[command.mask.value - 1];
+                for (std::uint32_t i = 0; i < definition.command_count; ++i)
+                {
+                    const auto& draw = p.mask_commands[definition.first_command + i];
+                    p.bind_texture(draw.texture, uv_texture);
+                    glDrawElements(
+                        GL_TRIANGLES, static_cast<GLsizei>(draw.index_count), GL_UNSIGNED_INT,
+                        reinterpret_cast<const void*>(
+                            static_cast<std::uintptr_t>(draw.first_index) * sizeof(std::uint32_t)));
+                }
+                glBindFramebuffer(GL_FRAMEBUFFER, p.color_target->framebuffer);
+                glViewport(0, 0, target.width, target.height);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, p.mask_target->texture);
+                glActiveTexture(GL_TEXTURE0);
+                glUniform1i(p.mask_write, 0);
+                scratch_mask = command.mask;
             }
-            glBindFramebuffer(GL_FRAMEBUFFER, p.color_target->framebuffer);
-            glViewport(0, 0, target.width, target.height);
-            glScissor(output_clip.x, output_clip.y, output_clip.width, output_clip.height);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, p.mask_target->texture);
-            glActiveTexture(GL_TEXTURE0);
-            glUniform1i(p.mask_write, 0);
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(scratch_clip.x, scratch_clip.y, scratch_clip.width, scratch_clip.height);
             glUniform1i(p.use_mask, 1);
         }
         else

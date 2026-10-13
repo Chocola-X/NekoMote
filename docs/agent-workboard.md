@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| C16 稳态帧优化 | 基线 `958a404`，Codex；索引/UV 和帧内图集/遮罩状态复用；195 初态、12 对画面、CPU 189/189、GL/VK 及隔离 Plasma 通过 | CPU probe P50 降低 2.0–4.6%，player 提交改善约 1.5–1.8%；显存不变、尾部及范围见 [说明](frame-optimization-2026-10-13.md) 与 [记录](validation/frame-optimization-results.json) |
 | C15 纹理裁切 | 基线 `a17b5ad`，Codex；加载时 RGBA 精确边界 + 过滤边缘，GL/VK texel 采样，映射像素所有权；202 图集复原、12 对画面、异步切换及隔离 Plasma 通过 | 已构建验证，未安装桌面；首次驱动编译/其他驱动/长期范围见 [说明](texture-cropping-2026-10-12.md) 与 [记录](validation/texture-cropping-results.json) |
 | C14 内存优化 | `a17b5ad` 已交付，流式模型加载、libpng、字体映射与生命周期测量 | 本轮 C15 接续，原范围见 [报告](memory-footprint-2026-10-12.md) |
 | C12 Plasma / ABI | ABI 0.5.0；GPU 共享图像、设置选择、GL/VK 画面与隔离正常生命周期通过 | 真实 miku Vulkan、其他驱动与 Wayland 未验收，见 [说明](plasma-dual-backend.md) |

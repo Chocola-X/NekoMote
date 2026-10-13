@@ -730,6 +730,14 @@ struct GeometryInstance::Impl
     std::vector<GeometryPrimitive> primitives;
     std::vector<RenderVertex> vertices;
     std::vector<std::uint32_t> indices;
+    struct FrameGrid
+    {
+        std::pair<int, int> dimensions;
+        const model::IconRect* rect;
+        TextureId texture;
+    };
+    // Index topology and atlas UVs survive pose-only changes. Rects belong to scene.
+    std::vector<FrameGrid> frame_grids;
     std::vector<DrawCommand> commands, mask_commands;
     std::vector<MaskDefinition> masks;
     std::vector<DrawCommand> node_commands;
@@ -745,6 +753,7 @@ struct GeometryInstance::Impl
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
         indices.reserve(data.index_capacity);
+        frame_grids.reserve(data.nodes.size());
         commands.reserve(data.nodes.size());
         mask_commands.reserve(data.mask_command_capacity);
         masks.resize(data.masks.size());
@@ -833,8 +842,6 @@ GeometryStatus GeometryInstance::evaluate() noexcept
 {
     auto& instance = *impl_;
     instance.primitives.clear();
-    instance.vertices.clear();
-    instance.indices.clear();
     instance.commands.clear();
     instance.mask_commands.clear();
     std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
@@ -1161,8 +1168,6 @@ GeometryStatus GeometryInstance::build_frame() noexcept
 {
     auto& instance = *impl_;
     instance.frame_ready = false;
-    instance.vertices.clear();
-    instance.indices.clear();
     instance.commands.clear();
     instance.mask_commands.clear();
     std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
@@ -1174,13 +1179,44 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         if (p.mesh_division == 0 && instance.states[p.node.value].mesh_path &&
             instance.scene.nodes[p.node.value].priority != 2)
             return {GeometryError::UnsupportedTessellation, p.node, {}};
+    bool rebuild_indices = instance.frame_grids.size() != instance.primitives.size();
+    std::size_t vertex_count = 0;
+    for (std::size_t i = 0; i < instance.primitives.size(); ++i)
+    {
+        const auto& p = instance.primitives[i];
+        const auto dimensions = instance.states[p.node.value].mesh_path
+                                    ? grid(p.mesh_division, *p.rect)
+                                    : std::pair<int, int>{1, 1};
+        vertex_count += static_cast<std::size_t>(dimensions.first + 1) *
+                        static_cast<std::size_t>(dimensions.second + 1);
+        if (!rebuild_indices)
+            rebuild_indices = instance.frame_grids[i].dimensions != dimensions;
+    }
+    if (rebuild_indices)
+    {
+        instance.indices.clear();
+        instance.frame_grids.clear();
+    }
+    instance.vertices.resize(vertex_count);
+    std::uint32_t first_index = 0, base = 0;
+    std::size_t primitive_index = 0;
     for (auto& p : instance.primitives)
     {
         const auto& r = *p.rect;
         const auto [nx, ny] = instance.states[p.node.value].mesh_path ? grid(p.mesh_division, r)
                                                                       : std::pair<int, int>{1, 1};
-        const auto base = static_cast<std::uint32_t>(instance.vertices.size());
-        const auto first = static_cast<std::uint32_t>(instance.indices.size());
+        const bool reuse_uv = !rebuild_indices &&
+                              instance.frame_grids[primitive_index].rect == p.rect &&
+                              instance.frame_grids[primitive_index].texture == p.texture;
+        const Impl::FrameGrid frame_grid{{nx, ny}, p.rect, p.texture};
+        if (rebuild_indices)
+            instance.frame_grids.push_back(frame_grid);
+        else
+            instance.frame_grids[primitive_index] = frame_grid;
+        ++primitive_index;
+        const auto first = first_index;
+        const auto index_count = static_cast<std::uint32_t>(nx * ny * 6);
+        first_index += index_count;
         const auto& texture = instance.scene.textures[p.texture.value - 1];
         const float inv_tex_w = 1.0f / static_cast<float>(texture.width);
         const float inv_tex_h = 1.0f / static_cast<float>(texture.height);
@@ -1209,18 +1245,6 @@ GeometryStatus GeometryInstance::build_frame() noexcept
             const double row_right_y = (1 - row) * top_right[1] + row * bottom_right[1];
             for (int x = 0; x <= nx; ++x)
             {
-                // Atlas coordinates use the original local grid ratios in
-                // double, independently of the saved rigid corner interpolation.
-                // UV packing has its own Float32 boundary.
-                const double local_x = static_cast<double>(x) / nx * static_cast<double>(r.width);
-                const double local_y = static_cast<double>(y) / ny * static_cast<double>(r.height);
-                const float u = static_cast<float>(static_cast<double>(r.left) + local_x);
-                // Source atlas V is saved from the lower edge before converting
-                // to our top-origin UV. Reversing the save order changes the
-                // texture sample along translucent edges.
-                const float bottom_v = static_cast<float>(static_cast<double>(texture.height) -
-                                                          static_cast<double>(r.top) - local_y);
-                const float v = static_cast<float>(texture.height) - bottom_v;
                 // Atlas packing affects UV only. Adding a large atlas offset and
                 // subtracting it before deformation loses local subpixel precision.
                 const double column = static_cast<double>(x) / nx;
@@ -1228,24 +1252,48 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                     static_cast<float>((1 - column) * row_left_x + column * row_right_x),
                     static_cast<float>((1 - column) * row_left_y + column * row_right_y)};
                 const auto point = instance.deform(p.node, rigid_point);
-                instance.vertices.push_back(
-                    {point.x, point.y, u * inv_tex_w, v * inv_tex_h, {1, 1, 1, p.opacity}});
+                auto& vertex =
+                    instance.vertices[base + static_cast<std::uint32_t>(y * (nx + 1) + x)];
+                vertex.x = point.x;
+                vertex.y = point.y;
+                vertex.color = {1, 1, 1, p.opacity};
+                if (!reuse_uv)
+                {
+                    // Atlas coordinates use the original local grid ratios in
+                    // double, independently of the saved rigid corner interpolation.
+                    // UV packing has its own Float32 boundary.
+                    const double local_x =
+                        static_cast<double>(x) / nx * static_cast<double>(r.width);
+                    const double local_y =
+                        static_cast<double>(y) / ny * static_cast<double>(r.height);
+                    const float u = static_cast<float>(static_cast<double>(r.left) + local_x);
+                    // Source atlas V is saved from the lower edge before converting
+                    // to our top-origin UV. Reversing the save order changes the
+                    // texture sample along translucent edges.
+                    const float bottom_v = static_cast<float>(static_cast<double>(texture.height) -
+                                                              static_cast<double>(r.top) - local_y);
+                    const float v = static_cast<float>(texture.height) - bottom_v;
+                    vertex.u = u * inv_tex_w;
+                    vertex.v = v * inv_tex_h;
+                }
             }
         }
-        for (int y = 0; y < ny; ++y)
-            for (int x = 0; x < nx; ++x)
-            {
-                const auto a = base + static_cast<std::uint32_t>(y * (nx + 1) + x);
-                const auto b = a + 1, c = a + static_cast<std::uint32_t>(nx + 1), d = c + 1;
-                for (const auto index : {a, b, c, b, d, c})
-                    instance.indices.push_back(index);
-            }
+        if (rebuild_indices)
+            for (int y = 0; y < ny; ++y)
+                for (int x = 0; x < nx; ++x)
+                {
+                    const auto a = base + static_cast<std::uint32_t>(y * (nx + 1) + x);
+                    const auto b = a + 1, c = a + static_cast<std::uint32_t>(nx + 1), d = c + 1;
+                    for (const auto index : {a, b, c, b, d, c})
+                        instance.indices.push_back(index);
+                }
+        base += static_cast<std::uint32_t>((nx + 1) * (ny + 1));
         const auto mask = instance.scene.nodes[p.node.value].mask;
         if (mask.valid() && p.opacity > 0)
             instance.used_masks[mask.value - 1] = true;
         const DrawCommand command{p.texture,
                                   first,
-                                  static_cast<std::uint32_t>(instance.indices.size()) - first,
+                                  index_count,
                                   instance.states[p.node.value].pose.blend,
                                   r.attr == 1 && instance.states[p.node.value].pose.blend ==
                                                      BlendMode::Over

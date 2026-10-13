@@ -772,3 +772,43 @@ TEST_CASE("Cropped atlases preserve original sampling and mask UVs on GL and Vul
             }
     REQUIRE(f.host.validation_errors == 0);
 }
+
+TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask", "[gpu][mask]")
+{
+    Fixture f;
+    f.upload(TextureId{1}, {1, 1, {255, 0, 0, 255}});
+    f.upload(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    const auto left = quad(0, 0, 24, 64);
+    const auto full = quad();
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(left.begin(), left.end(), vertices.begin());
+    std::copy(full.begin(), full.end(), vertices.begin() + 4);
+    const std::array<DrawCommand, 6> commands{
+        {{TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{2}, 6, 6, BlendMode::Over},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}},
+         {TextureId{1}, 0, 0, BlendMode::Over, ColorProtection::None, MaskId{2}},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{2}},
+         {TextureId{1}, 6, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    const std::array<DrawCommand, 1> sources{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    std::array<MaskDefinition, 2> masks{{{0, 1}, {0, 0}}};
+    const RenderFrame frame{vertices, std::span(kIndices).first(12),
+                            commands, ColorComposition::ProtectedStraight,
+                            sources,  masks};
+    for (const bool flip : {false, true})
+    {
+        render_vk::View view;
+        view.flip_x = flip;
+        f.draw(frame, view);
+        const auto images = f.capture();
+        require_same_picture(images);
+        REQUIRE(pixel(images.second, flip ? 56 : 8, 32) ==
+                std::array<std::uint8_t, 4>{255, 0, 0, 255});
+        REQUIRE(pixel(images.second, flip ? 8 : 56, 32) ==
+                std::array<std::uint8_t, 4>{0, 255, 0, 255});
+    }
+    // A new prepare may change mask contents while retaining the same IDs.
+    masks[0].command_count = 0;
+    f.draw(frame);
+    REQUIRE(pixel(f.capture().second, 8, 32) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
+}

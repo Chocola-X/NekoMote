@@ -6,6 +6,8 @@
 
 C13 优化之后接手，输入与验收按 [优化建议](optimization-suggestions-2026-10-12.md) 的 G34。声明新 HEAD 与文件；复用一次编译场景并维持唯一所有权、变量来源发现与动画/物理借用寿命。冻结加载性能、CPU/真实会话及同条件截图；不调整模型公式、GPU 同步、错误检查、ABI 借用范围。大量模型的证据准备由 GLM 执行，图像异常交 Gemini，编译契约与边界交 Codex。
 
+当前优化基线已推进至 C15 `958a404`，C16 索引/UV 与局部渲染状态复用已实测，见 [说明](frame-optimization-2026-10-13.md)。接手先确认新 HEAD；G34 仍是加载期独立任务，FPS 宿主联动和 GPU 区域目标尚未实施，不能将 C16 的小幅 CPU 收益当作显存/功耗或 8–24h 验收。
+
 ## GLM：G33 基线分发构建
 
 范围为 `.github/workflows/plasma-distribution.yml`、`tools/plasma_baseline*`、`tools/plasma_distribution.py` 和对应分发测试/文档。先声明实际 base 与文件；不同时修改 ABI、Qt/Vulkan 桥或模型求值。
