@@ -76,7 +76,7 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
 
     painter.draw_rounded_rect(sidebar_x, sidebar_y, sidebar.width, sidebar.height,
                               style.corner_radius, style.panel_bg, style.accent, 2.0f);
-    ctx.sidebar_header(sidebar, "猫娘乐园角色E-mote图鉴", style);
+    ctx.sidebar_header(sidebar, "NekoMote Wallpaper", style);
 
     const float clip_y = sidebar_y + kSidebarHeaderHeight;
     const float clip_h = sidebar.height - kSidebarHeaderHeight;
@@ -215,7 +215,7 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     curr_y += 24.0f;
     ctx.divider_line(sidebar_x, curr_y, sidebar.width, style);
     curr_y += 10.0f;
-    const char* gh_txt = "Github项目：NekoWebShow";
+    const char* gh_txt = "Github项目：NekoMote";
     const float gtw = painter.font() ? painter.font()->text_width(gh_txt, 12.0f) : 170.0f;
     ctx.label(gh_txt, sidebar_x + (sidebar.width - gtw) * 0.5f, curr_y, 12.0f, style.text);
     curr_y += 24.0f;

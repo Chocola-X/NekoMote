@@ -47,7 +47,7 @@ struct Options
 {
     fs::path model, session, background, capture, check_window, assets, capture_ui;
     std::string reaction, character, background_name;
-    int width{1920}, height{1080}, steps{0}, measure{0}, fps{30}, ui_drawer{-1};
+    int width{1920}, height{1080}, steps{0}, measure{0}, fps{0}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
     bool show_touch_regions{false};
     player::BackendKind backend{player::BackendKind::OpenGL};
@@ -179,7 +179,8 @@ std::optional<Options> options(int argc, char** argv)
     if (o.assets.empty() && (o.model.empty() || o.session.empty()))
         throw std::runtime_error("--assets or (--model and --session) required; see --help");
     if (o.width < 64 || o.width > 8192 || o.height < 64 || o.height > 8192 || o.steps < 0 ||
-        o.steps > 100000 || o.fps < 5 || o.fps > 240 || o.measure < 0 || o.measure > 1000000 ||
+        o.steps > 100000 || (o.fps != 0 && (o.fps < 5 || o.fps > 240)) || o.measure < 0 ||
+        o.measure > 1000000 ||
         !std::isfinite(o.scale) || o.scale <= 0 || !std::isfinite(o.origin.x) ||
         !std::isfinite(o.origin.y))
         throw std::runtime_error(
@@ -682,7 +683,8 @@ int run(int argc, char** argv)
             config.origin_y = o.origin.y;
             config.width = o.width;
             config.height = o.height;
-            config.fps = o.fps;
+            if (o.fps > 0)
+                config.fps = o.fps;
             config.mute = o.mute;
             config.fit = o.fit || config.fit;
         }
@@ -918,7 +920,7 @@ int run(int argc, char** argv)
         for (int i = 0; i < o.steps; ++i)
             check(controller.current_instance()->advance(1.0 / 60));
     int current_fps_limit =
-        o.fps > 0 ? o.fps : (controller.config().fps > 0 ? controller.config().fps : 60);
+        o.fps > 0 ? o.fps : (controller.config().fps > 0 ? controller.config().fps : 30);
     if (o.capture.empty())
     {
         glfwSetWindowUserPointer(window.get(), &surface);
