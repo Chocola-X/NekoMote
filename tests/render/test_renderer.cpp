@@ -23,6 +23,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace
 {
@@ -135,6 +136,92 @@ std::array<RenderVertex, 4> quad(float u0, float v0, float u1, float v1, float o
              {0, 64, u0, v1, {1, 1, 1, opacity}}}};
 }
 } // namespace
+TEST_CASE("GPU cropped atlas storage preserves filtering and original clamp edges", "[gpu][crop]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    struct HostRectangle
+    {
+        GLuint handle{0};
+        HostRectangle()
+        {
+            glGenTextures(1, &handle);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_RECTANGLE, handle);
+        }
+        ~HostRectangle()
+        {
+            glDeleteTextures(1, &handle);
+        }
+    } host_rectangle;
+    renderer.reserve({4, 6, 1, 4});
+    ImageRgba8 cropped{7, 5, std::vector<std::uint8_t>(7 * 5 * 4, 0)};
+    cropped.pixels[(2 * 7 + 3) * 4] = 240;
+    cropped.pixels[(2 * 7 + 3) * 4 + 3] = 128;
+    cropped.pixels[(1 * 7 + 2) * 4 + 3] = 1;
+    cropped.pixels[(3 * 7 + 4) * 4 + 1] = 200; // transparent RGB
+    for (const auto region : {TextureRegion{13, 11, 3, 2}, TextureRegion{13, 11, 0, 0}})
+    {
+        const bool edge = region.left == 0;
+        if (edge)
+        {
+            cropped.pixels[0] = 220;
+            cropped.pixels[3] = 180;
+        }
+        ImageRgba8 full{13, 11, std::vector<std::uint8_t>(13 * 11 * 4, 0)};
+        for (int y = 0; y < cropped.height; ++y)
+            std::copy_n(cropped.pixels.data() + y * cropped.width * 4, cropped.width * 4,
+                        full.pixels.data() + ((y + region.top) * full.width + region.left) * 4);
+        const TextureId original_id{edge ? 3U : 1U}, cropped_id{edge ? 4U : 2U};
+        glActiveTexture(GL_TEXTURE0);
+        GLint before = 0;
+        glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &before);
+        renderer.upload_texture(original_id, full);
+        renderer.upload_texture(cropped_id, cropped, region);
+        GLint after = -1;
+        glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
+        REQUIRE(after == before);
+        for (const auto composition :
+             {ColorComposition::PremultipliedOver, ColorComposition::ProtectedStraight})
+            for (const bool outside : {false, true})
+            {
+                INFO("original edge=" << edge << "; outside=" << outside);
+                const auto vertices = quad(outside ? -.5f : 0, outside ? -.5f : 0,
+                                           outside ? 1.5f : 1, outside ? 1.5f : 1);
+                std::array<DrawCommand, 1> commands{{{original_id, 0, 6, BlendMode::Over}}};
+                RenderFrame frame{vertices, std::span(kIndices).first(6), commands, composition};
+                output.resize(64, 64);
+                renderer.prepare(frame);
+                renderer.resize_output(64, 64);
+                renderer.render({output.framebuffer, 64, 64}, {});
+                const auto reference = renderer.capture({output.framebuffer, 64, 64});
+                commands[0].texture = cropped_id;
+                renderer.prepare(frame);
+                renderer.render({output.framebuffer, 64, 64}, {});
+                const auto actual = renderer.capture({output.framebuffer, 64, 64});
+                glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
+                REQUIRE(after == before);
+                unsigned max_error = 0;
+                for (std::size_t i = 0; i < actual.pixels.size(); ++i)
+                    max_error = std::max(
+                        max_error, static_cast<unsigned>(std::abs(
+                                       static_cast<int>(actual.pixels[i]) - reference.pixels[i])));
+                INFO("RGBA max error=" << max_error);
+                REQUIRE(max_error <= 1);
+                allocation_count = 0;
+                track_allocations = true;
+                for (int i = 0; i < 16; ++i)
+                {
+                    renderer.prepare(frame);
+                    renderer.render({output.framebuffer, 64, 64}, {});
+                }
+                track_allocations = false;
+                REQUIRE(allocation_count == 0);
+            }
+    }
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
 TEST_CASE("GPU atlas orientation, alpha, host target and resize", "[gpu]")
 {
     Context context;
@@ -258,8 +345,8 @@ TEST_CASE("GPU protected straight colour differs from ordinary premultiplied ove
     Output output;
     output.resize(64, 64);
     renderer.reserve({8, 12, 2, 2});
-    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
-    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 255, 0, 255}});
     const auto red = quad(0.5f, 0.5f, 0.5f, 0.5f);
     auto green = quad(0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
     std::array<RenderVertex, 8> vertices{};
@@ -307,10 +394,10 @@ TEST_CASE("GPU multiply preserves alpha, weights opacity and restores ordinary o
     output.resize(64, 64);
     renderer.resize_output(64, 64);
     renderer.reserve({8, 12, 3, 4});
-    renderer.upload_texture(TextureId{1}, {1, 1, {200, 100, 50, 255}});
-    renderer.upload_texture(TextureId{2}, {1, 1, {128, 64, 255, 128}});
-    renderer.upload_texture(TextureId{3}, {1, 1, {255, 0, 0, 128}});
-    renderer.upload_texture(TextureId{4}, {1, 1, {200, 100, 50, 128}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {200, 100, 50, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {128, 64, 255, 128}});
+    renderer.upload_texture(TextureId{3}, ImageRgba8{1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{4}, ImageRgba8{1, 1, {200, 100, 50, 128}});
     const auto background = quad(0.5f, 0.5f, 0.5f, 0.5f);
     const auto multiply = quad(0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
     std::array<RenderVertex, 8> vertices{};
@@ -388,8 +475,8 @@ TEST_CASE("GPU alpha masks union with observed five-bit precision and reuse resi
     Output output;
     output.resize(64, 64);
     renderer.reserve({8, 12, 1, 2, 2, 1});
-    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
-    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 255, 0, 255}});
     auto vertices = quad(0.5f, 0.5f, 0.5f, 0.5f);
     std::array<DrawCommand, 1> commands{
         {{TextureId{2}, 0, 6, BlendMode::Over, ColorProtection::PreserveTranslucent, MaskId{1}}}};
@@ -451,8 +538,8 @@ TEST_CASE("Small masked highlights share the group clip at reduced mask resoluti
     Output output;
     output.resize(800, 1080);
     renderer.reserve({12, 18, 3, 2, 1, 1});
-    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 255}});
-    renderer.upload_texture(TextureId{2}, {1, 1, {0, 0, 0, 255}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 0, 0, 255}});
     auto color = quad(0, 0, 1, 1);
     color[0].x = color[3].x = 447;
     color[1].x = color[2].x = 455;
@@ -498,8 +585,8 @@ TEST_CASE("Opacity-zero source vertices retain full texture mask coverage", "[gp
     Output output;
     output.resize(64, 64);
     renderer.reserve({8, 12, 1, 2, 1, 1});
-    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 255}});
-    renderer.upload_texture(TextureId{2}, {1, 1, {0, 255, 0, 255}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 255, 0, 255}});
     const auto color = quad(0, 0, 1, 1);
     const auto mask = quad(0, 0, 1, 1, 0);
     std::array<RenderVertex, 8> vertices;
@@ -526,7 +613,7 @@ TEST_CASE("Model compositing preserves a host background in both composition mod
     output.resize(64, 64);
     renderer.resize_output(64, 64);
     renderer.reserve({4, 6, 1, 1});
-    renderer.upload_texture(TextureId{1}, {1, 1, {255, 0, 0, 128}});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 128}});
     const auto vertices = quad(0, 0, 1, 1);
     std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
     for (const auto composition :
@@ -720,9 +807,11 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     std::filesystem::create_directory_symlink(source,
                                               assets.path / "characters" / "chocola" / "date-a");
     REQUIRE(
-        asset_io::write_png(assets.path / "backgrounds/bg.png", {1, 1, {0, 180, 0, 255}}).empty());
+        asset_io::write_png(assets.path / "backgrounds/bg.png", ImageRgba8{1, 1, {0, 180, 0, 255}})
+            .empty());
     REQUIRE(
-        asset_io::write_png(assets.path / "icons/toggle.png", {1, 1, {255, 0, 255, 255}}).empty());
+        asset_io::write_png(assets.path / "icons/toggle.png", ImageRgba8{1, 1, {255, 0, 255, 255}})
+            .empty());
     {
         std::ofstream config(assets.path / "config.json");
         config << R"({"character":"chocola/date-a","background":"bg","fit":true})";
@@ -766,7 +855,8 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     }
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_ERROR_RENDERER);
     REQUIRE(
-        asset_io::write_png(assets.path / "icons/toggle.png", {1, 1, {255, 0, 255, 255}}).empty());
+        asset_io::write_png(assets.path / "icons/toggle.png", ImageRgba8{1, 1, {255, 0, 255, 255}})
+            .empty());
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
 }
 TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-only config",

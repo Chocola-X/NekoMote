@@ -185,10 +185,13 @@ CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry
         const auto& scene = program.playback().scene();
         for (const auto& texture : scene.textures())
         {
-            auto image = asset_io::load_png(entry.model_path.parent_path() / texture.path);
+            auto image = asset_io::load_cropped_png(entry.model_path.parent_path() / texture.path);
             if (!image.ok)
                 throw std::runtime_error(image.error);
-            result.textures.emplace_back(texture.id, std::move(image.image));
+            if (image.region.source_width != texture.width ||
+                image.region.source_height != texture.height)
+                throw std::runtime_error(texture.path + ": PNG dimensions disagree with scene");
+            result.textures.push_back({texture.id, std::move(image.image), image.region});
         }
         result.ok = true;
     }

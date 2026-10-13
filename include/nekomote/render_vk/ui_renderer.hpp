@@ -31,7 +31,7 @@ class UiRenderer : public nekomote::ui::Painter
 
     bool init_font(const std::string& font_path, float pixel_height);
 
-    std::uint32_t upload_icon(const ImageRgba8& image);
+    std::uint32_t upload_icon(ImageViewRgba8 image);
     void destroy_icon(std::uint32_t id);
 
     void begin_frame() override;

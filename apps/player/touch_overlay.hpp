@@ -33,7 +33,7 @@ class TouchOverlay
           )
     {
         renderer_.reserve({vertices_.size(), indices_.size(), commands_.size(), 1});
-        renderer_.upload_texture(TextureId{1}, {1, 1, {255, 255, 255, 255}});
+        renderer_.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 255, 255, 255}});
         for (std::size_t i = 0; i < kSegments; ++i)
         {
             const float angle = static_cast<float>(i) * 2 * std::numbers::pi_v<float> /

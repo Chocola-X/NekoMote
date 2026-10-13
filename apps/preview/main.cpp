@@ -476,12 +476,13 @@ int run(const Options& o)
                           capacity.masks});
         for (const auto& texture : geometry_scene->textures())
         {
-            auto decoded = asset_io::load_png(o.asset.parent_path() / texture.path);
+            auto decoded = asset_io::load_cropped_png(o.asset.parent_path() / texture.path);
             if (!decoded.ok)
                 throw std::runtime_error(decoded.error);
-            if (decoded.image.width != texture.width || decoded.image.height != texture.height)
+            if (decoded.region.source_width != texture.width ||
+                decoded.region.source_height != texture.height)
                 throw std::runtime_error("PNG dimensions disagree with compiled scene");
-            renderer.upload_texture(texture.id, decoded.image);
+            renderer.upload_texture(texture.id, decoded.image, decoded.region);
         }
         view.alpha = o.opacity; // Whole-model opacity is applied at the final composite.
         view.flip_x = loaded.asset.mirror;
@@ -506,12 +507,13 @@ int run(const Options& o)
         const auto& r = icon->second;
         const auto texture = std::find_if(a.textures.begin(), a.textures.end(),
                                           [&r](const auto& t) { return t.name == r.texture; });
-        auto image = asset_io::load_png(o.asset.parent_path() / texture->path);
+        auto image = asset_io::load_cropped_png(o.asset.parent_path() / texture->path);
         if (!image.ok)
             throw std::runtime_error(image.error);
-        if (image.image.width != texture->width || image.image.height != texture->height)
+        if (image.region.source_width != texture->width ||
+            image.region.source_height != texture->height)
             throw std::runtime_error("PNG dimensions disagree with asset atlas");
-        renderer.upload_texture(TextureId{1}, image.image);
+        renderer.upload_texture(TextureId{1}, image.image, image.region);
         const float w = static_cast<float>(texture->width), h = static_cast<float>(texture->height);
         const float x0 = -r.origin_x, y0 = -r.origin_y, x1 = x0 + r.width, y1 = y0 + r.height;
         const float u0 = r.left / w, v0 = r.top / h, u1 = (r.left + r.width) / w,

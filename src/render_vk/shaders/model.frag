@@ -19,12 +19,13 @@ layout(push_constant) uniform PC {
     int use_mask;
     vec2 mask_output_size;
     float global_alpha;
+    vec4 atlas_texels;
 } pc;
 
 layout(location = 0) out vec4 output_color;
 
 void main() {
-    vec4 sampled = texture(atlas, texture_uv);
+    vec4 sampled = textureLod(atlas, texture_uv * pc.atlas_texels.xy + pc.atlas_texels.zw, 0.0);
     if (pc.mask_write != 0) {
         output_color = vec4(0.0, sampled.a, 0.0, 0.0);
         return;

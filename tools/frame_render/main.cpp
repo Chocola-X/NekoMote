@@ -106,10 +106,13 @@ int run(int argc, char** argv)
                       geometry.scene->textures().size(), mask_commands.size(), masks.size()});
     for (const auto& t : geometry.scene->textures())
     {
-        auto image = asset_io::load_png(std::filesystem::path(argv[1]).parent_path() / t.path);
+        auto image =
+            asset_io::load_cropped_png(std::filesystem::path(argv[1]).parent_path() / t.path);
         if (!image.ok)
             throw std::runtime_error(image.error);
-        renderer.upload_texture(t.id, image.image);
+        if (image.region.source_width != t.width || image.region.source_height != t.height)
+            throw std::runtime_error(t.path + ": PNG dimensions disagree with scene");
+        renderer.upload_texture(t.id, image.image, image.region);
     }
     renderer.prepare({vertices, indices, draws,
                       static_cast<ColorComposition>(frame.at("composition").get<int>()),

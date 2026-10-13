@@ -159,11 +159,11 @@ struct Fixture
     Fixture(const Fixture&) = delete;
     Fixture& operator=(const Fixture&) = delete;
 
-    void upload(TextureId id, const ImageRgba8& image)
+    void upload(TextureId id, const ImageRgba8& image, TextureRegion region = {})
     {
         host.wait_ready();
-        gl->upload_texture(id, image);
-        vk->upload_texture(id, image);
+        gl->upload_texture(id, image, region);
+        vk->upload_texture(id, image, region);
     }
     void ensure_output(int w, int h)
     {
@@ -690,3 +690,85 @@ TEST_CASE("Vulkan wallpaper ABI validates borrowed targets and retains model aft
 }
 
 #endif
+
+TEST_CASE("Cropped atlases preserve original sampling and mask UVs on GL and Vulkan",
+          "[gpu][vulkan][crop]")
+{
+    Fixture f;
+    ImageRgba8 cropped{7, 5, std::vector<std::uint8_t>(7 * 5 * 4, 0)};
+    for (int y = 1; y < 4; ++y)
+        for (int x = 1; x < 6; ++x)
+        {
+            const auto i = static_cast<std::size_t>(y * 7 + x) * 4;
+            cropped.pixels[i] = static_cast<std::uint8_t>(x * 40);
+            cropped.pixels[i + 1] = static_cast<std::uint8_t>(y * 60);
+            cropped.pixels[i + 2] = 180;
+            cropped.pixels[i + 3] = x == 1 ? 0 : (x == 2 ? 1 : 160);
+        }
+    const TextureRegion region{13, 11, 3, 2};
+    ImageRgba8 full{13, 11, std::vector<std::uint8_t>(13 * 11 * 4, 0)};
+    for (int y = 0; y < cropped.height; ++y)
+        std::copy_n(cropped.pixels.data() + y * cropped.width * 4, cropped.width * 4,
+                    full.pixels.data() + ((y + region.top) * full.width + region.left) * 4);
+    f.upload(TextureId{1}, full);
+    f.upload(TextureId{2}, cropped, region);
+    // Reach crop validation using real devices, valid pixels and unused IDs.
+    for (const auto invalid : {TextureRegion{13, 11, -1, 2}, TextureRegion{13, 11, 8, 2},
+                               TextureRegion{13, 0, 0, 0}, TextureRegion{0, 0, 1, 0}})
+    {
+        REQUIRE_THROWS(f.gl->upload_texture(TextureId{3}, cropped, invalid));
+        REQUIRE_THROWS(f.vk->upload_texture(TextureId{3}, cropped, invalid));
+    }
+    f.upload(TextureId{3}, {1, 1, {255, 255, 255, 255}});
+    for (const auto composition :
+         {ColorComposition::PremultipliedOver, ColorComposition::ProtectedStraight})
+        for (const bool masked : {false, true})
+            for (const bool outside : {false, true})
+            {
+                if (masked && composition == ColorComposition::PremultipliedOver)
+                    continue;
+                INFO("composition=" << static_cast<int>(composition) << "; mask=" << masked
+                                    << "; outside=" << outside);
+                auto vertices = quad(0, 0, 64, 64, outside ? -.5f : 0, outside ? -.5f : 0,
+                                     outside ? 1.5f : 1, outside ? 1.5f : 1);
+                std::array<DrawCommand, 1> commands{
+                    {{TextureId{1}, 0, 6, BlendMode::Over,
+                      composition == ColorComposition::ProtectedStraight
+                          ? ColorProtection::PreserveTranslucent
+                          : ColorProtection::None,
+                      masked ? MaskId{1} : MaskId{}}}};
+                std::array<DrawCommand, 1> sources{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+                const std::array<MaskDefinition, 1> masks{{{0, 1}}};
+                RenderFrame frame{vertices,
+                                  std::span(kIndices).first(6),
+                                  commands,
+                                  composition,
+                                  masked ? std::span<const DrawCommand>(sources)
+                                         : std::span<const DrawCommand>{},
+                                  masked ? std::span<const MaskDefinition>(masks)
+                                         : std::span<const MaskDefinition>{}};
+                f.draw(frame);
+                const auto reference = f.capture();
+                commands[0].texture = TextureId{2};
+                sources[0].texture = TextureId{2};
+                f.draw(frame);
+                const auto actual = f.capture();
+                require_same_picture(reference.first, actual.first, 1);
+                require_same_picture(reference.second, actual.second, 1);
+                require_same_picture(actual.first, actual.second, 1);
+                // Compare cropped mask + identity texture against the original
+                // mask + identity texture, so stale transforms cannot pass.
+                if (masked)
+                {
+                    commands[0].texture = TextureId{3};
+                    f.draw(frame);
+                    const auto mixed = f.capture();
+                    sources[0].texture = TextureId{1};
+                    f.draw(frame);
+                    const auto mixed_reference = f.capture();
+                    require_same_picture(mixed_reference.first, mixed.first, 1);
+                    require_same_picture(mixed_reference.second, mixed.second, 1);
+                }
+            }
+    REQUIRE(f.host.validation_errors == 0);
+}

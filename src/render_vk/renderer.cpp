@@ -31,8 +31,11 @@ struct PushConstants
     std::int32_t use_mask{0};
     float mask_output_size[2]{};
     float global_alpha{1};
+    float padding{0};
+    std::array<float, 4> atlas_texels{1, 1, 0, 0};
 };
-static_assert(sizeof(PushConstants) == 60, "push constant layout mismatch");
+static_assert(offsetof(PushConstants, atlas_texels) == 64, "atlas UV layout mismatch");
+static_assert(sizeof(PushConstants) == 80, "push constant layout mismatch");
 
 enum PipelineIndex
 {
@@ -302,13 +305,14 @@ struct Renderer::Impl
     VkPipeline pipelines[kPipelineCount]{};
     VkShaderModule model_vert{VK_NULL_HANDLE}, model_frag{VK_NULL_HANDLE};
     VkShaderModule blit_vert{VK_NULL_HANDLE}, blit_frag{VK_NULL_HANDLE};
-    VkSampler sampler{VK_NULL_HANDLE};
+    VkSampler sampler{VK_NULL_HANDLE}, atlas_sampler{VK_NULL_HANDLE};
     Buffer vbo, ebo;
     Image dummy;
     struct Texture
     {
         TextureId id;
         Image image;
+        std::array<float, 4> texel_transform;
         VkDescriptorSet unmasked{VK_NULL_HANDLE}, masked{VK_NULL_HANDLE};
     };
     std::vector<Texture> textures;
@@ -346,6 +350,8 @@ struct Renderer::Impl
             vkDestroyDescriptorPool(dev, descriptor_pool, nullptr);
         if (set_layout)
             vkDestroyDescriptorSetLayout(dev, set_layout, nullptr);
+        if (atlas_sampler)
+            vkDestroySampler(dev, atlas_sampler, nullptr);
         if (sampler)
             vkDestroySampler(dev, sampler, nullptr);
         if (model_vert)
@@ -378,13 +384,14 @@ struct Renderer::Impl
         return result;
     }
 
-    void write_descriptor_set(VkDescriptorSet set, VkImageView atlas, VkImageView mask)
+    void write_descriptor_set(VkDescriptorSet set, VkImageView atlas, VkImageView mask,
+                              VkSampler image_sampler)
     {
         std::array<VkWriteDescriptorSet, 2> writes{};
         std::array<VkDescriptorImageInfo, 2> images{};
         for (std::size_t i = 0; i < images.size(); ++i)
         {
-            images[i].sampler = sampler;
+            images[i].sampler = i == 0 ? image_sampler : sampler;
             images[i].imageView = i == 0 ? atlas : mask;
             images[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -405,7 +412,7 @@ struct Renderer::Impl
         return it == textures.end() ? nullptr : &*it;
     }
 
-    Image upload_image(const ImageRgba8& image)
+    Image upload_image(ImageViewRgba8 image)
     {
         if (image.width <= 0 || image.height <= 0 ||
             static_cast<std::uint32_t>(image.width) > max_texture_size ||
@@ -476,6 +483,7 @@ Renderer::Renderer(const DeviceContext& ctx) : impl_(std::make_unique<Impl>())
     p.mask_pass = create_color_render_pass(ctx.device, p.mask_format);
     p.set_layout = create_descriptor_set_layout(ctx.device);
     p.sampler = create_sampler(ctx.device);
+    p.atlas_sampler = create_sampler(ctx.device, SamplerCoordinates::Texels);
     p.model_vert = create_shader_module(ctx.device, model_vert_spv, model_vert_size);
     p.model_frag = create_shader_module(ctx.device, model_frag_spv, model_frag_size);
     p.blit_vert = create_shader_module(ctx.device, blit_vert_spv, blit_vert_size);
@@ -533,7 +541,7 @@ void Renderer::reserve(Capacity capacity)
                  "create model descriptor pool");
         p.descriptor_texture_capacity = capacity.textures;
         p.blit_set = p.allocate_descriptor_set();
-        p.write_descriptor_set(p.blit_set, p.dummy.view, p.dummy.view);
+        p.write_descriptor_set(p.blit_set, p.dummy.view, p.dummy.view, p.sampler);
     }
     else if (capacity.textures > p.descriptor_texture_capacity)
         throw std::runtime_error("texture reserve exceeds established descriptor capacity");
@@ -560,19 +568,22 @@ void Renderer::reserve(Capacity capacity)
     p.mask_capacity = capacity.masks;
 }
 
-void Renderer::upload_texture(TextureId id, const ImageRgba8& image)
+void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
     auto& p = *impl_;
     if (!id.valid() || p.find_texture(id) || p.textures.size() >= p.texture_capacity)
         throw std::runtime_error("invalid, duplicate or excessive texture ID");
+    if (!region.valid_for(image.width, image.height))
+        throw std::runtime_error("invalid texture crop region");
     Impl::Texture texture;
     texture.id = id;
+    texture.texel_transform = region.texel_transform(image.width, image.height);
     texture.image = p.upload_image(image);
     texture.unmasked = p.allocate_descriptor_set();
     texture.masked = p.allocate_descriptor_set();
-    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view);
+    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view, p.atlas_sampler);
     p.write_descriptor_set(texture.masked, texture.image.view,
-                           p.mask_target.view ? p.mask_target.view : p.dummy.view);
+                           p.mask_target.view ? p.mask_target.view : p.dummy.view, p.atlas_sampler);
     p.textures.push_back(std::move(texture));
 }
 
@@ -732,9 +743,10 @@ void Renderer::resize_output(int width, int height)
     p.color_layout = p.mask_layout = VK_IMAGE_LAYOUT_UNDEFINED;
     p.output_width = width;
     p.output_height = height;
-    p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view);
+    p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view, p.sampler);
     for (const auto& texture : p.textures)
-        p.write_descriptor_set(texture.masked, texture.image.view, p.mask_target.view);
+        p.write_descriptor_set(texture.masked, texture.image.view, p.mask_target.view,
+                               p.atlas_sampler);
 }
 
 void Renderer::render(Target target, const View& view, TargetContents contents)
@@ -855,7 +867,6 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kMaskWrite]);
             pc.mask_write = 1;
             pc.use_mask = 0;
-            push();
             const auto& definition = p.masks[command.mask.value - 1];
             for (std::uint32_t i = 0; i < definition.command_count; ++i)
             {
@@ -863,6 +874,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                 if (!draw.index_count)
                     continue;
                 const auto* texture = p.find_texture(draw.texture);
+                pc.atlas_texels = texture->texel_transform;
+                push();
                 // Dummy mask prevents sampling an attachment currently being written.
                 vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0,
                                         1, &texture->unmasked, 0, nullptr);
@@ -883,6 +896,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             pc.use_mask = 0;
         }
         const auto* texture = p.find_texture(command.texture);
+        pc.atlas_texels = texture->texel_transform;
         const auto set = command.mask.valid() ? texture->masked : texture->unmasked;
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0, 1, &set,
                                 0, nullptr);

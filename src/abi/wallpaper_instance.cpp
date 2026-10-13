@@ -316,8 +316,8 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
         auto next = std::make_unique<render_gl::Renderer>(loader_);
         next->reserve({capacity.vertices, capacity.indices, capacity.commands,
                        scene.textures().size(), capacity.mask_commands, capacity.masks});
-        for (const auto& [id, image] : candidate.textures)
-            next->upload_texture(id, image);
+        for (const auto& [id, image, region] : candidate.textures)
+            next->upload_texture(id, image, region);
         if (output_width_ > 0 && output_height_ > 0)
         {
             next->prepare(candidate.instance->frame());
@@ -341,8 +341,8 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
         auto next = std::make_unique<render_vk::Renderer>(vk_ctx_);
         next->reserve({capacity.vertices, capacity.indices, capacity.commands,
                        scene.textures().size(), capacity.mask_commands, capacity.masks});
-        for (const auto& [id, image] : candidate.textures)
-            next->upload_texture(id, image);
+        for (const auto& [id, image, region] : candidate.textures)
+            next->upload_texture(id, image, region);
         if (output_width_ > 0 && output_height_ > 0)
         {
             next->prepare(candidate.instance->frame());

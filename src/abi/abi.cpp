@@ -464,9 +464,7 @@ struct nekomote_renderer
 
 struct nekomote_image
 {
-    int width{0};
-    int height{0};
-    std::vector<uint8_t> pixels;
+    nekomote::asset_io::DecodedImageRgba8 image;
 };
 
 extern "C"
@@ -1200,10 +1198,7 @@ extern "C"
         }
         try
         {
-            nekomote::ImageRgba8 image;
-            image.width = width;
-            image.height = height;
-            image.pixels.assign(pixels, pixels + byte_count);
+            nekomote::ImageViewRgba8 image{width, height, {pixels, byte_count}};
             renderer->renderer->upload_texture(nekomote::TextureId{id}, image);
             return NEKOMOTE_OK;
         }
@@ -1367,9 +1362,7 @@ extern "C"
                 return nullptr;
             }
             auto img = std::make_unique<nekomote_image>();
-            img->width = result.image.width;
-            img->height = result.image.height;
-            img->pixels = std::move(result.image.pixels);
+            img->image = std::move(result.image);
             return img.release();
         }
         catch (const std::exception& e)
@@ -1391,22 +1384,22 @@ extern "C"
 
     int nekomote_image_width(const nekomote_image* image)
     {
-        return image ? image->width : 0;
+        return image ? image->image.width : 0;
     }
 
     int nekomote_image_height(const nekomote_image* image)
     {
-        return image ? image->height : 0;
+        return image ? image->image.height : 0;
     }
 
     size_t nekomote_image_byte_count(const nekomote_image* image)
     {
-        return image ? image->pixels.size() : 0;
+        return image ? image->image.pixels.size() : 0;
     }
 
     const uint8_t* nekomote_image_pixels(const nekomote_image* image)
     {
-        return image ? image->pixels.data() : nullptr;
+        return image ? image->image.pixels.data() : nullptr;
     }
 
     /* ---- Wallpaper instance ---- */

@@ -71,7 +71,7 @@ class Renderer
     Renderer& operator=(const Renderer&) = delete;
 
     void reserve(Capacity capacity);
-    void upload_texture(TextureId id, const ImageRgba8& image);
+    void upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region = {});
     void prepare(RenderFrame frame);
     void resize_output(int width, int height);
     void render(Target target, const View& view, TargetContents contents = TargetContents::Clear);

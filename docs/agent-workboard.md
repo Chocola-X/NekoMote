@@ -1,11 +1,13 @@
 # Agent 协作任务
 
-2026-10-12，C12 基线 `cfed43e`。Plasma OpenGL 初步接入已获用户确认；当前完成 Vulkan ABI 复核、Plasma 双后端和分发入口。详见 [显示补修](plasma-display-fix.md)、[任务交接](agent-next-handoff.md)。源码交付与完整独立验收分别计。
+2026-10-13，C12 基线 `cfed43e`。Plasma OpenGL 初步接入已获用户确认；当前完成 Vulkan ABI 复核、Plasma 双后端和分发入口。详见 [显示补修](plasma-display-fix.md)、[任务交接](agent-next-handoff.md)。源码交付与完整独立验收分别计。
 
 本轮 C13 以 `3a56ce0` 复核 GLM 未提交优化，实际结论见 [优化审查](optimization-audit-2026-10-12.md) 与 [验证](validation/optimization-results.json)。优先级按用户最新优化任务调整：下一批 GLM 可执行 G34 重复几何编译消除，契约/验收见 [建议](optimization-suggestions-2026-10-12.md)。原优化清单的“135 项已确认”和全量立即执行顺序不再有效。
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| C15 纹理裁切 | 基线 `a17b5ad`，Codex；加载时 RGBA 精确边界 + 过滤边缘，GL/VK texel 采样，映射像素所有权；202 图集复原、12 对画面、异步切换及隔离 Plasma 通过 | 已构建验证，未安装桌面；首次驱动编译/其他驱动/长期范围见 [说明](texture-cropping-2026-10-12.md) 与 [记录](validation/texture-cropping-results.json) |
+| C14 内存优化 | `a17b5ad` 已交付，流式模型加载、libpng、字体映射与生命周期测量 | 本轮 C15 接续，原范围见 [报告](memory-footprint-2026-10-12.md) |
 | C12 Plasma / ABI | ABI 0.5.0；GPU 共享图像、设置选择、GL/VK 画面与隔离正常生命周期通过 | 真实 miku Vulkan、其他驱动与 Wayland 未验收，见 [说明](plasma-dual-backend.md) |
 | G33 基线分发 | Actions 双架构配方、严格 ELF/版本审计、归档与预检工具已交付；本机工具验证通过 | GLM 按 [交接](agent-next-handoff.md) 执行实际基线构建，不能把未执行 CI 当作 PASS |
 | V21 双后端桌面 | 隔离窗口/包证据通过；真实 miku 的 Vulkan 待用户测试 | Gemini 按受控条件核对角色/背景/UI，记录桌面/驱动与未覆盖项 |

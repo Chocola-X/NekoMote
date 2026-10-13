@@ -296,7 +296,7 @@ bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
     return true;
 }
 
-std::uint32_t UiRenderer::upload_icon(const ImageRgba8& image)
+std::uint32_t UiRenderer::upload_icon(ImageViewRgba8 image)
 {
     std::uint32_t id = 0;
     glGenTextures(1, &id);

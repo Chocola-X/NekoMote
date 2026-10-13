@@ -56,7 +56,7 @@ class UiRenderer : public nekomote::ui::Painter
     bool init_font(const std::string& font_path, float pixel_height);
 
     // Icon texture management. Returns an opaque ID for use with draw_icon.
-    std::uint32_t upload_icon(const ImageRgba8& image);
+    std::uint32_t upload_icon(ImageViewRgba8 image);
     void destroy_icon(std::uint32_t id);
 
     // ui::Painter

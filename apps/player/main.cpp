@@ -296,8 +296,8 @@ void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candi
     const auto capacity = scene.frame_capacity();
     gpu.renderer->reserve({capacity.vertices, capacity.indices, capacity.commands,
                            scene.textures().size(), capacity.mask_commands, capacity.masks});
-    for (const auto& [id, image] : candidate.textures)
-        gpu.renderer->upload_texture(id, image);
+    for (const auto& [id, image, region] : candidate.textures)
+        gpu.renderer->upload_texture(id, image, region);
 }
 
 std::unique_ptr<audio::Device> create_audio_device(std::vector<model::AudioClip> clips)
@@ -412,7 +412,7 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
     if (!new_image.ok)
         throw std::runtime_error(new_image.error);
     const bool fade = controller.has_background() && fade_duration > 0;
-    std::optional<ImageRgba8> old_image;
+    std::optional<asset_io::DecodedImageRgba8> old_image;
     if (fade)
     {
         auto loaded = asset_io::load_png(gpu.current_background_path);

@@ -17,7 +17,7 @@
 - CPU session由一个求值线程顺序调用，不能并发advance/prepare/输入；immutable program可供各自独立的session借用。
 - model/session_asset 可在 program 编译成功后销毁；program 必须比借用它的 session 活得更久。GPU renderer 与 CPU session 分别拥有资源；renderer 创建、调用和销毁都要求宿主提供同一有效上下文及图形线程。
 - C/C++ 帧逐字段复制到各自预分配的存储，不互转对象指针。session 创建时按 scene 容量预分配主帧，背景预留 8 顶点/12 索引/2 命令；renderer reserve 同时预留复制缓冲区和 GPU 容量。
-- `upload_texture` 输入为紧密排列的 RGBA8，新增 `pixel_bytes` 必须等于 width × height × 4；图像加载后的实际长度由 `nekomote_image_byte_count` 取得。宿主负责保证指针在声明的长度内可读。
+- `upload_texture` 输入为紧密排列的 RGBA8，新增 `pixel_bytes` 必须等于 width × height × 4；图像加载后的实际长度由 `nekomote_image_byte_count` 取得。宿主负责保证指针在声明的长度内可读，并保持到同步上传调用返回；后端不保留 CPU 像素指针。图像句柄拥有解码缓冲，销毁时释放映射；模型内部加载裁切不改变此完整 PNG 接口，详见 [C15](texture-cropping-2026-10-12.md)。
 - renderer `prepare` 失败后，`render` 明确失败且不绘制旧帧；下一次成功 prepare 恢复。此策略与 resize/upload 的资源操作失败分开：未成功修改的资源不会自动使整个 renderer 永久 fault。
 - 复制、预分配和初始化的异常封闭于 C 边界。线程本地诊断使用固定 1024 字节缓冲区，OOM 报告不再分配；过长诊断截断，错误码保留。成功调用不清除此前的错误；需要时显式 `nekomote_clear_error`。
 - 帧/字符串/像素的借用有效期以 header 为准；模型推进后查询 frame 不再返回上次复制的陈旧模型帧。背景与模型共用 250ms 时间预算，暂停时均不推进。

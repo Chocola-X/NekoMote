@@ -36,7 +36,13 @@ inline VkShaderModule create_shader_module(VkDevice device, const unsigned char*
     check_vk(vkCreateShaderModule(device, &info, nullptr, &shader), "create shader module");
     return shader;
 }
-inline VkSampler create_sampler(VkDevice device)
+enum class SamplerCoordinates
+{
+    Normalized,
+    Texels
+};
+inline VkSampler create_sampler(VkDevice device,
+                                SamplerCoordinates coordinates = SamplerCoordinates::Normalized)
 {
     VkSamplerCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -45,6 +51,7 @@ inline VkSampler create_sampler(VkDevice device)
     info.addressModeU = info.addressModeV = info.addressModeW =
         VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
     info.maxLod = 0;
+    info.unnormalizedCoordinates = coordinates == SamplerCoordinates::Texels ? VK_TRUE : VK_FALSE;
     VkSampler sampler = VK_NULL_HANDLE;
     check_vk(vkCreateSampler(device, &info, nullptr, &sampler), "create sampler");
     return sampler;

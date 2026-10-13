@@ -20,6 +20,8 @@ build/release/bin/nekomote_import model.json model.resx.json --output assets/new
 
 模型加载逐项转换 part/layer/frame 并释放对应 JSON 节点，不同时保留完整 JSON 树与强类型副本。字段顺序不影响数据；重复 JSON 对象键明确拒绝。schema 和资产内容无需迁移。PNG 保留编码色值与 straight alpha，不做 gamma/ICC 变换；解码直接写入最终 RGBA 缓冲。
 
+模型 PNG 在加载边界按非零 RGBA 包围盒裁切，并保留一像素过滤边距；alpha=0 的 RGB 也参与包围盒，避免改变 straight-alpha 线性过滤。原始 texture/icon 尺寸、原点、几何和帧 UV 不变，`TextureRegion` 记录原图尺寸及裁切偏移；GL/Vulkan 后端在像素坐标中采样裁切纹理。普通非交错 PNG 从同一打开的文件按行扫描后再解码，仅保留裁切区域和一行工作缓冲；Adam7 合并完整行后裁切。全零纹理存为 1×1。源 PNG、schema 6 和 C ABI 0.5.0 无需迁移。具体收益与验收见 [纹理裁切优化](texture-cropping-2026-10-12.md)。
+
 ## 镜像与参数
 
 `mirror` 和 `mirrored_parameters` 都必须存在。后者保存需反向求值的**完整参数名**，不能重复、为空或引用未声明参数；mirror=false 时须为空。

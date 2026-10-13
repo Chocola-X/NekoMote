@@ -2,6 +2,7 @@
 
 #include <nekomote/application/catalog.hpp>
 #include <nekomote/application/session.hpp>
+#include <nekomote/asset_io/image.hpp>
 #include <nekomote/image.hpp>
 #include <nekomote/model/audio_clip.hpp>
 #include <nekomote/types.hpp>
@@ -44,11 +45,18 @@ struct ControllerConfig
     AudioMode audio{AudioMode::Device};
 };
 
+struct CandidateTexture
+{
+    TextureId id;
+    asset_io::DecodedImageRgba8 image;
+    TextureRegion region;
+};
+
 struct CandidateCpu
 {
     std::unique_ptr<const SessionProgram> program;
     std::unique_ptr<SessionInstance> instance;
-    std::vector<std::pair<TextureId, ImageRgba8>> textures;
+    std::vector<CandidateTexture> textures;
     std::vector<model::AudioClip> audio_clips;
     std::string name;
     fs::path model_dir;

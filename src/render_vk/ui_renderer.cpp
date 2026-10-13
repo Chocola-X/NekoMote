@@ -489,7 +489,7 @@ bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
     return true;
 }
 
-std::uint32_t UiRenderer::upload_icon(const ImageRgba8& image)
+std::uint32_t UiRenderer::upload_icon(ImageViewRgba8 image)
 {
     if (!impl_ || !impl_->initialized || image.width <= 0 || image.height <= 0)
         return 0;

@@ -87,13 +87,13 @@ class BackendRenderer
             vk_->reserve({c.vertices, c.indices, c.commands, c.textures, c.mask_commands, c.masks});
 #endif
     }
-    void upload_texture(TextureId id, const ImageRgba8& image)
+    void upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region = {})
     {
         if (gl_)
-            gl_->upload_texture(id, image);
+            gl_->upload_texture(id, image, region);
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (vk_)
-            vk_->upload_texture(id, image);
+            vk_->upload_texture(id, image, region);
 #endif
     }
     void prepare(RenderFrame frame)
@@ -222,7 +222,7 @@ class BackendUiRenderer
 #endif
         return false;
     }
-    std::uint32_t upload_icon(const ImageRgba8& image)
+    std::uint32_t upload_icon(ImageViewRgba8 image)
     {
         if (gl_)
             return gl_->upload_icon(image);

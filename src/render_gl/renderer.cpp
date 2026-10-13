@@ -3,6 +3,7 @@
 #include <glad/gl.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -12,6 +13,25 @@ namespace nekomote::render_gl
 {
 namespace
 {
+// Qt resets its 2D bindings after our pass. Preserve the additional rectangle
+// namespace ourselves, including on upload/render failure, so the host does
+// not need to know which atlas sampling representation we use.
+struct RectangleBinding
+{
+    GLint active{GL_TEXTURE0}, previous{0};
+    RectangleBinding()
+    {
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
+        glActiveTexture(GL_TEXTURE0);
+        glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &previous);
+    }
+    ~RectangleBinding()
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_RECTANGLE, static_cast<GLuint>(previous));
+        glActiveTexture(static_cast<GLenum>(active));
+    }
+};
 constexpr const char* kVertexShader = R"(#version 330 core
 layout(location=0) in vec2 position;
 layout(location=1) in vec2 uv;
@@ -32,7 +52,8 @@ void main() {
 constexpr const char* kFragmentShader = R"(#version 330 core
 in vec2 texture_uv;
 in vec4 vertex_color;
-uniform sampler2D atlas;
+uniform sampler2DRect atlas;
+uniform vec4 atlas_texels;
 uniform int premultiply;
 uniform int protection_pass;
 uniform int mask_write;
@@ -42,7 +63,7 @@ uniform vec2 mask_output_size;
 uniform float global_alpha;
 out vec4 output_color;
 void main() {
-    vec4 sampled=texture(atlas,texture_uv);
+    vec4 sampled=texture(atlas,texture_uv*atlas_texels.xy+atlas_texels.zw);
     if (mask_write != 0) {
         output_color=vec4(0.0,sampled.a,0.0,0.0);
         return;
@@ -241,11 +262,12 @@ struct Renderer::Impl
     GLint global_alpha{-1}, blit_global_alpha{-1};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
-    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1};
+    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1}, atlas_texels{-1};
     struct Texture
     {
         TextureId id;
         GLuint handle;
+        std::array<float, 4> texel_transform;
     };
     std::vector<Texture> textures;
     std::vector<DrawCommand> commands, mask_commands;
@@ -267,6 +289,17 @@ struct Renderer::Impl
             glDeleteProgram(program);
         if (blit_program)
             glDeleteProgram(blit_program);
+    }
+    void bind_texture(TextureId id, TextureId& uv_texture) const
+    {
+        const auto it = std::find_if(textures.begin(), textures.end(),
+                                     [id](const Texture& t) { return t.id == id; });
+        glBindTexture(GL_TEXTURE_RECTANGLE, it->handle);
+        if (id != uv_texture)
+        {
+            glUniform4fv(atlas_texels, 1, it->texel_transform.data());
+            uv_texture = id;
+        }
     }
     GLuint texture(TextureId id) const
     {
@@ -297,6 +330,7 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
     p.view = glGetUniformLocation(p.program, "view");
     p.projection = glGetUniformLocation(p.program, "projection");
     p.flip_x = glGetUniformLocation(p.program, "flip_x");
+    p.atlas_texels = glGetUniformLocation(p.program, "atlas_texels");
     glUseProgram(p.program);
     glUniform1i(glGetUniformLocation(p.program, "atlas"), 0);
     glUniform1i(glGetUniformLocation(p.program, "alpha_mask"), 1);
@@ -341,35 +375,38 @@ void Renderer::reserve(Capacity capacity)
     p.command_capacity = commands;
     p.texture_capacity = textures;
 }
-void Renderer::upload_texture(TextureId id, const ImageRgba8& image)
+void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
     auto& p = *impl_;
     if (!id.valid() || p.texture(id) || p.textures.size() >= p.texture_capacity)
         throw std::runtime_error("invalid, duplicate or excessive texture ID");
     GLint max_size = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
+    glGetIntegerv(GL_MAX_RECTANGLE_TEXTURE_SIZE, &max_size);
     if (image.width <= 0 || image.height <= 0 || image.width > max_size ||
         image.height > max_size ||
         image.pixels.size() !=
             static_cast<std::size_t>(image.width) * static_cast<std::size_t>(image.height) * 4)
         throw std::runtime_error("invalid or unsupported texture dimensions");
+    if (!region.valid_for(image.width, image.height))
+        throw std::runtime_error("invalid texture crop region");
+    const RectangleBinding rectangle_binding;
     GLuint handle = 0;
     glGenTextures(1, &handle);
     // Register ownership before any subsequent operation can fail.
-    p.textures.push_back({id, handle});
+    p.textures.push_back({id, handle, region.texel_transform(image.width, image.height)});
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
+    glBindTexture(GL_TEXTURE_RECTANGLE, handle);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, image.pixels.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     check_gl("upload texture");
 }
 void Renderer::prepare(RenderFrame frame)
@@ -510,10 +547,12 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                     [](float value) { return !std::isfinite(value); }))
         throw std::runtime_error("invalid output view");
     const auto& p = *impl_;
+    TextureId uv_texture; // Cache only within this pass; host state may change between calls.
     const bool straight = p.composition == ColorComposition::ProtectedStraight;
     if (straight && (!p.color_target || p.color_target->width != target.width ||
                      p.color_target->height != target.height))
         throw std::runtime_error("protected composition requires explicit output resize");
+    const RectangleBinding rectangle_binding;
     glBindFramebuffer(GL_FRAMEBUFFER, straight ? p.color_target->framebuffer : target.framebuffer);
     glViewport(0, 0, target.width, target.height);
     glDisable(GL_SCISSOR_TEST);
@@ -583,7 +622,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             for (std::uint32_t i = 0; i < definition.command_count; ++i)
             {
                 const auto& draw = p.mask_commands[definition.first_command + i];
-                glBindTexture(GL_TEXTURE_2D, p.texture(draw.texture));
+                p.bind_texture(draw.texture, uv_texture);
                 glDrawElements(
                     GL_TRIANGLES, static_cast<GLsizei>(draw.index_count), GL_UNSIGNED_INT,
                     reinterpret_cast<const void*>(static_cast<std::uintptr_t>(draw.first_index) *
@@ -603,7 +642,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             glDisable(GL_SCISSOR_TEST);
             glUniform1i(p.use_mask, 0);
         }
-        glBindTexture(GL_TEXTURE_2D, p.texture(command.texture));
+        p.bind_texture(command.texture, uv_texture);
         const int command_premultiply = command.blend == BlendMode::Multiply || !straight ? 1 : 0;
         if (command_premultiply != premultiply)
         {

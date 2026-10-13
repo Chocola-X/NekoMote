@@ -17,6 +17,7 @@ layout(push_constant) uniform PC {
     int use_mask;
     vec2 mask_output_size;
     float global_alpha;
+    vec4 atlas_texels;
 } pc;
 
 layout(location = 0) out vec2 texture_uv;

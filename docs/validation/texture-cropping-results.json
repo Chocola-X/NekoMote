@@ -1,0 +1,3869 @@
+{
+  "stage": "C15",
+  "dates": [
+    "2026-10-12",
+    "2026-10-13"
+  ],
+  "base_commit": "a17b5ad7aab8d7c8b8cba68f8134ba4bfd962f09",
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "generated_utc": "2026-10-13T01:11:01.305735+00:00",
+  "evidence_root": "build/evidence/texture-crop-20261012",
+  "code_patch_sha256": "da64eef15f5ddc8f098feb7e53e39815195d9fdab730c8aed87b8f90842d2bcb",
+  "source_files": {
+    "apps/player/backend.hpp": "642706948c33573e432cc42000593bd16320e99f9dc58ef0156a1953291c4f78",
+    "apps/player/main.cpp": "c214753e6f84bb2492bd0e8374955d0f9a8da1ceba052af5d3285e15244278c8",
+    "apps/player/touch_overlay.hpp": "b5363e59b70035d4e68f51c3683d6a81a9b2c5cd3f09a577e2d3b78cf14b8ce2",
+    "apps/preview/main.cpp": "3c40848623d56eac85fed063755f3038438dcd94d84fb99b64bd274ae0580722",
+    "include/nekomote/application/controller.hpp": "453bb9c2adbe73bf5c50569df1e2bd36872751f57dccd54ce604ac8b4ce2cdda",
+    "include/nekomote/asset_io/image.hpp": "0bf488f82e97a1739a150a4f85c04f7d792b9009ec207baf4fbd1bc0d5ef7a62",
+    "include/nekomote/image.hpp": "b6a4ee0c9f58f756192e5eb427241d1684b7ee27567b14e24017d33b21c147a7",
+    "include/nekomote/render_gl/renderer.hpp": "48988cb423a3947a5188a8647c03d683207455e7c232006860ec33c9983ccf0b",
+    "include/nekomote/render_gl/ui_renderer.hpp": "45414805b57174888256381e21156c8278b9ecd33b10c96fdd5eb1e5811f8371",
+    "include/nekomote/render_vk/renderer.hpp": "a4e2da3ef029b5a728e4970960c34f80cab73426638cc3f54a518a7677a3ed2b",
+    "include/nekomote/render_vk/ui_renderer.hpp": "21c393e750e5dd363aace2f4f94e6e302ba642a30bd98c2d8a86d164357ee15d",
+    "src/abi/abi.cpp": "29848f164e16b85825b7c59876bf57b9ef24549a0916acafa9960fde9911d231",
+    "src/abi/wallpaper_instance.cpp": "c68b39ecaec9c339abf07e5c159816981a254e27d3394d7acd6df78db3ba43d7",
+    "src/application/controller.cpp": "dcddfa70601b2aeb37c4167e365853b8ff8134ba5acf3fdd600b750a9fea05af",
+    "src/asset_io/image.cpp": "a2bdaa586395a157533fc1e3e2dc31bf39f468b1864ab90d6f9e2658d75ab58e",
+    "src/render_gl/renderer.cpp": "1591439ab7e543778c040a8eea9ecea5c141dadab3cd1a14cb860228a6ced3c5",
+    "src/render_gl/ui_renderer.cpp": "ce0c4ff1a084885a543d100706207524af301a0ef1d8009fd9b4d91c843701cf",
+    "src/render_vk/renderer.cpp": "c1774ad8386f4e1d0269cbaadd9b43bdb6b1d05e22d3b3354c64737fe46293bc",
+    "src/render_vk/shaders/model.frag": "6de376c2118030be5d59c6645c02a4b06780e93e9da19d3e07b401c8d7c05c1f",
+    "src/render_vk/shaders/model.vert": "bb674508481160b3fcf63f3a5fe936cd745de5a040256bbc8f7667ee669b5ec8",
+    "src/render_vk/ui_renderer.cpp": "6e53405df720290c0f253ed82db479c80e815b033010dbe9f9617f2e0ed8eac2",
+    "src/render_vk/vk_util.hpp": "07e44398c9dd7ccef8ea2ab33e06cf81849308329c93981d52699520bb912657",
+    "tests/render/test_renderer.cpp": "8ad6dd6f61505297b7d83626810aeec2caa1913cee319b795871e5eee7c241d6",
+    "tests/render/test_vk.cpp": "ba04c0761c9131ffdf59fe9b69271d4db4d6c4fce48a69beb093aef2d068349c",
+    "tests/unit/test_image.cpp": "ad98268c3f148a3198832486772b9b3b5a2c0a3e1ae1181df0d0f440cc8161fe",
+    "tools/frame_render/main.cpp": "b58779d6da5c5dadda8e1cc9e7fcff533fe1338861daf1aeebe8260eec3b71f8"
+  },
+  "machine": {
+    "cpu": "AMD Ryzen 7 5800H",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "driver": "575.64.03",
+    "desktop": "KDE/X11",
+    "compiler": "GCC 15.1.1",
+    "build": "Release/O3/LTO/WERROR",
+    "qt": "6.9.1",
+    "libpng": "1.6.50"
+  },
+  "implementation": {
+    "png_bounds": "any nonzero RGBA byte, not alpha threshold",
+    "gutter_texels": 1,
+    "noninterlaced": "two row streaming passes of one FILE",
+    "adam7": "full combine before crop",
+    "pixel_owner": "asset_io DecodedImageRgba8; pmr vector with dedicated mmap/munmap policy",
+    "upload_view": "synchronous borrowed ImageViewRgba8",
+    "gl_atlas": "sampler2DRect, original normalized UV to cropped texels",
+    "vk_atlas": "unnormalized sampler, textureLod 0, push bytes80/vec4 offset64",
+    "schema": "unchanged (6)",
+    "c_abi": "unchanged (0.5.0)",
+    "switch_cpu": "existing std::async, poll wait_for(0)",
+    "first_load": "synchronous",
+    "gpu_upload": "graphics thread"
+  },
+  "atlas_audit": {
+    "models": 195,
+    "texture_references": 202,
+    "pngs": 202,
+    "cropped": 199,
+    "original_rgba_bytes": 6296633344,
+    "retained_rgba_bytes": 4489676856,
+    "reduction_percent": 28.697184499742722,
+    "all_noninterlaced": true,
+    "reconstructed_bytes_equal": true,
+    "final_input_hashes_unchanged": true,
+    "inputs": [
+      {
+        "path": "assets/characters/fraise/swimsuit-b/textures/0.png",
+        "sha256": "fb883f09a0a643b91b70f480ed4af83b29fe3d0eee01cc2089460a1e684d118e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/swimsuit-a/textures/0.png",
+        "sha256": "b7b3674e02cc7ce0e4929eeecebe8e06f5a9f0f32a7b4d403da3d05dc4e58a30",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/pajama-b/textures/0.png",
+        "sha256": "44121fb1ee3b0aea235d9106355d9ad2846a472822bb3d6ec1ed885705a44799",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/maid-b/textures/0.png",
+        "sha256": "17e5a506cd5252a324af8fb65b4052905d86adeb82ff111684f125305f75908b",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/pajama-a/textures/0.png",
+        "sha256": "df17ab04ed0ffb2586f49a7e5daae0e88c07534d4b7e0fefb42c778ae7fd060c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/maid-a/textures/0.png",
+        "sha256": "574e2b89229cf077b57fc27b02f70b9b55e31778a89a84e1822433d37467cd9d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/hawaii-b/textures/0.png",
+        "sha256": "cec9da48ca36b05fca0614f039afb5fc2cd4659ff2eab3704a7ec9ca98c85953",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/hawaii-a/textures/0.png",
+        "sha256": "e77a9d004dc83f8c380e0b4c46ed08f6d3c59dcc2e9b63881275f8a014beda5e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/france-maid-a/textures/0.png",
+        "sha256": "d1468576a2fb70f6b93bb5e46a445861c0308bc39351d54b2016431a1ba210be",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/casual-b/textures/0.png",
+        "sha256": "8d520498112febe8d2a8299d571b2fb36543e4e375de82a89d2ad99d792d62b8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/casual-a/textures/0.png",
+        "sha256": "5048bc19a60f2e0a47cbe3d79d91935b5f001b7de195bd8e347fff45cf5e3ac8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/fraise/france-maid-b/textures/0.png",
+        "sha256": "7e0a3a873fc623df9d9f7af54aa0114c45624e970e63b5ce4b8f59b9ab2ef233",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/yukata-b/textures/0.png",
+        "sha256": "2ab975d60921c338e8fb5bf8686121f2d527f8140ffd5e57f4933707ad113d50",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/yukata/textures/0.png",
+        "sha256": "ad674e850d82763db0829b645c87b37c666afd5fcfd7879500c7e160e7001854",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/wintermaid-b/textures/0.png",
+        "sha256": "f31d4387f63d310e1cf85c92b97ee66539dd7452ef76d65c8593640e925ae3ab",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/wintermaid/textures/0.png",
+        "sha256": "140e40f5d0cbce90019831378a4686e47ae9d807168e739c00b646953d5900d5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/winter-b/textures/0.png",
+        "sha256": "350ca628916b1056f18f4f53725d05ec3ea70e1245f0f3a9dbd289c07f44a5d0",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/winter/textures/0.png",
+        "sha256": "13388fd3863956f8fd5c51b857b1f84eafefede19c948bd710f9ff236126fb8f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/teenage-b/textures/0.png",
+        "sha256": "dbb78b1995fb36b82613a33b459ae9c813a6a318004291cbb4cb004d23d7dd82",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/teenage-a/textures/0.png",
+        "sha256": "a5108ed01b68b5256975d9ae503fc8840e44970fe673ed8873fac2001ddb374e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/teenage/textures/0.png",
+        "sha256": "35c1b802e186f295ed30b70d9995aac54ec2f285773ecd41d2c8c45726f28f24",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/swimsuit-b/textures/0.png",
+        "sha256": "584ab8fad9410fda09386388d0d6276a00e521a5c4e29ac7c5216eb201b5c1fb",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/swimsuit-a/textures/0.png",
+        "sha256": "0030736e4fb425cd458fcded6f04febabe1171d81ee73f1d1337a6914e7a8177",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/santa-b/textures/0.png",
+        "sha256": "004d84e86a7b01b97fa5330c80b1800b897c966557db30ad17a1e3755dc78a61",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/santa/textures/0.png",
+        "sha256": "8b172321be3d417061265416699dac55f03eeb4aeb65b23a68301d20ec803fcf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/maid-b/textures/0.png",
+        "sha256": "6aedd2df68479124041bc2b098ba1086aec8ad27a1701158ee60db97e92aa47f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/maid-a/textures/0.png",
+        "sha256": "30078e5914e201d6484ac47f4e800fc21447595a55e8dd00a7630069a46412a3",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/maid/textures/0.png",
+        "sha256": "f20fe2d631996ec924717a9b9632db34928d68f1832e0947c9c085fcbd537715",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/hawaii-b/textures/0.png",
+        "sha256": "b329df381b20133bbd687be515b3c819f0ca17ebbe9ec2b933dd519f3b4f4756",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/hawaii-a/textures/0.png",
+        "sha256": "115fcc253a4c37013139533c49742f51966b7909c2b2e4f4e8db56c8efad4076",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/dress-b/textures/0.png",
+        "sha256": "5da4d17df89cbb2a3a14601899bb05f1dca3063596c2c736512e91cf257cd35e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/dress-a/textures/0.png",
+        "sha256": "b53d0b05a979612f4936d7160c9964ddf24f8a40498f8de2a952a2ac4425e361",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/casual-b/textures/0.png",
+        "sha256": "3d9779f128145ab98a2086d8f311e23c6d025718b9778be3b978a50e9d3e6f57",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/dress/textures/0.png",
+        "sha256": "0462aded360ce30c1e946960df5fa4c7faea6765064ae8f282142da722d2acee",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/casual-a/textures/0.png",
+        "sha256": "2c6cbb07bf1b5707c71557444da5371db8110aabdfc4de54d4bbf5bafe1a39a2",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/maple/casual/textures/0.png",
+        "sha256": "7e6a96fc15960ef4ad73c54087bf8abf21603c730e447ca14e634d11ca751f02",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/dress/textures/0.png",
+        "sha256": "ca8a90911245171a619168640d5a96384e7f4c011c1bee63dba300bde3533baa",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/yukata-b/textures/0.png",
+        "sha256": "a8af174ed552c0f74d96495ea315a2aa38aca7337f39b319d8505c15564ae3ee",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/yukata/textures/0.png",
+        "sha256": "5c7ddd58b6106c279719dbe23a9929cae535dffed468eb6d97270e53e82d3489",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/wintermaid-b/textures/0.png",
+        "sha256": "d49985f979ee97f77fae0b28f395b1ceaeb8224ebd991a743b5f596f3a9a391c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/wintermaid/textures/0.png",
+        "sha256": "fa760e30cfb2a029f04044572c342d8ecfb1575ac18f08553e4705afd1f17fd5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/winter-b/textures/0.png",
+        "sha256": "0dd773e95cf925e728eb6b66dc610b367ae162c1027040934f0f358bac4439c9",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/winter/textures/0.png",
+        "sha256": "aa4af4a98a31d53ccdc2c8de18c5b2b81297cdd117ad366368b37f87b069bae3",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/teenage-b/textures/0.png",
+        "sha256": "401d9f4aff334fc50226880dd45bce5da1a7ed6145aa26a09d4e7f7690177144",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/teenage-a/textures/0.png",
+        "sha256": "26cd50b22d5bffd536e619b51da04e03bdba326ecc6926c0910334f4a607576a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/teenage/textures/0.png",
+        "sha256": "c39f401d25f25b66b019f782c4f13a50821506cd0c256972e659e3286a50a545",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/swimsuit-b/textures/0.png",
+        "sha256": "a47c763c4c16faac713c874d886b467ce7ab412418fdee940fe61b1aba307de5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/swimsuit-a/textures/0.png",
+        "sha256": "e6ee0bcf77489f6a4f20108e23c866c7e0909cba3447fb22502f4e79df54ca2e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/santa-b/textures/0.png",
+        "sha256": "3b20a3ec9f443aad18cd79ccec1527158a6f1388e138d7f4bde7abc30bd3e526",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/shirt-a/textures/0.png",
+        "sha256": "7ef28819c8fb6d9c70bc077062792e37707be0a489937cfd1a4db47603f5dac3",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/santa/textures/0.png",
+        "sha256": "e1eefea4b1fff22a254a9cc5f7bf28de3e67a0dc3a43f53459957a3bf498702f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/pajama/textures/0.png",
+        "sha256": "f27dbae46943553de1f39f7e9164d14a903ca0aa78a160757f6ca704f8cc11e9",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/maid-b-4yo/textures/0.png",
+        "sha256": "badd6ed0a44cce230289d2ca926bc90ec8946591b0e03630cd61f4dab89cf38f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/maid-b/textures/0.png",
+        "sha256": "c10093d047cbebabb924d8f13c3a48196c57d6ca6edc9479955f323c3bb475f2",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/maid-a-4yo/textures/0.png",
+        "sha256": "b34249cf5c256ebc6a0043f1943f490d941b68cf30427b157e07933a57f52473",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/maid-a/textures/0.png",
+        "sha256": "880e3d9a098a8d0d16b5ce015fb317842dc6950f812b3b6ede3b3a54983c518e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/maid/textures/0.png",
+        "sha256": "f5b81732bb1592b0871847c44e81851a5ee0bc75bf42db0234b9ac2fff29d08f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/koneko-b/textures/0.png",
+        "sha256": "f2e073dc9ba007e19224574ee4dc5f9b1d47a64b6264e2c1f51214035550ca47",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/koneko-a/textures/0.png",
+        "sha256": "fd95f88c989212611008816cb4e1804121738a9bf00b6847d5f155c68b36a7a0",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/koneko/textures/0.png",
+        "sha256": "16c922e3f14a050a382c43f308654069e1b0855d49399b26f88e569002c73911",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/hawaii-b/textures/0.png",
+        "sha256": "663b0075c2ab5e24658fefc34251489fa189dc3feef008780027118928c7b3bc",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/hawaii-a/textures/0.png",
+        "sha256": "8ab21bab2fd83de26a8836061af3111be2e1c94c8c1fea7891ea3e059b1f8b15",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/dress-a/textures/0.png",
+        "sha256": "380b2cb314c1e3c9c44c20b6ba61b3e15f3126d02ab0cf008d1110719aa1f2b1",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/casual-b-4yo/textures/0.png",
+        "sha256": "ed60895bfd6b3c0900fe9ac8a43f084719a0043798d002efe1bc4490d430fe18",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/casual-b/textures/0.png",
+        "sha256": "71c6fcb94b63039c20557047b332067f04044c64edb59c143cd21ee3f3aa5723",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/casual-a-4yo/textures/0.png",
+        "sha256": "a3e164060c8a4da31e7580cd27ca37e0cd238a420dfcc1c543a5eede2796b9b6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/casual-a/textures/0.png",
+        "sha256": "4fb0b83c0c813b99b5f8828f0afbb9797da717792c24d86202e2055c9eab40fc",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/coconut/casual/textures/0.png",
+        "sha256": "80442952e1e11dc612d2aec2b6bb83f4d54fea6ee12e0f78a1e9281dc5ccbbbb",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/yukata-b/textures/0.png",
+        "sha256": "6523fe61bf453a94ce5760e51e32708d1c23a7ddf4ebc6e005592637190e218a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/yukata/textures/0.png",
+        "sha256": "2eb6d3189e5db533e8f362548e6114839f1ece69bb47e4f473c6bf5f6dcfc591",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/wintermaid-b/textures/0.png",
+        "sha256": "e0dbe6756d23f4b94af1d1927a679d084113f1aaf247d19318527507c8a42b52",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/winter-b/textures/0.png",
+        "sha256": "1c049df5d1b51bd440947f4d1c27bc7cfbe504324c44af22b2b30cb93bed2599",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/wintermaid/textures/0.png",
+        "sha256": "747640e6ce420327200a13505de4ed5c0a92a44981485e328e97e93ca58d9fbf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/winter/textures/0.png",
+        "sha256": "c0c3887a661c96996bb260827cfec03702f1e47dfb9e07e8e79bb696f23e05a5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/teenage-b/textures/0.png",
+        "sha256": "40c802bac53f408a5e0e7c0479d457773708e4141e68165f3519f2fe97af4955",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/teenage-a/textures/0.png",
+        "sha256": "c7d4338503382fcf2ed90cb2ba07ac0752dae0a1c9e620e48116980ffc775d0d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/teenage/textures/0.png",
+        "sha256": "da829dec85d36da0c53020d718a6982ab4325b6271966ba472215de0a97e1c2c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/swimsuit-b/textures/0.png",
+        "sha256": "d1f2c2a28afacb52096ad6af34c3c3c5411b03e3837c6e410a10ff0c1139c884",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/swimsuit-a/textures/0.png",
+        "sha256": "fe9b7c8598abcf66bc5788682e84252dd9353d3e80c89268d97dd1122d34de10",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/santa/textures/0.png",
+        "sha256": "d480d81e9955655edd9e79f6bc02bd54b02877051920bf56befe874c74e5f6b6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/santa-b/textures/0.png",
+        "sha256": "abd2e3061c66349ca956c9ddf93388ef66e39d9989b0cc9970625dfd852ace50",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/maid-b/textures/0.png",
+        "sha256": "80b7458c4ba700b1f986ccd5e1c1dab0d0498666311043b4f1f4de6cb6e4bb46",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/maid-a/textures/0.png",
+        "sha256": "1e30d66ab900bd84faf50702d2aa78106d8ed9f694ee39c4e6722beca581162a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/maid/textures/0.png",
+        "sha256": "2a21d4cfe20c899d0b6fea7c7753eb409866d2953d59e43a7ea083e84e4c04bf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/hawaii-b/textures/0.png",
+        "sha256": "20992b37c444cf9e3086d76e1aa897acfb3f28e19a9fbe295297d0d148a06534",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/hawaii-a/textures/0.png",
+        "sha256": "8877865a541d772ba791f5853b8f5f47b7c649d0c82cf248ba4d47894e16bd15",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/dress-b/textures/0.png",
+        "sha256": "9f904f1627cf8ae34915efa2dcf40a93d9cec5071cf43ac42e105c4468a0fcc1",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/dress-a/textures/0.png",
+        "sha256": "3e5b5c218b959692d48272339b26a6911ac03249a3c962ed6cd14a24e4b9cdfa",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/dress/textures/0.png",
+        "sha256": "5e9ba96b556904653d6b56bdad0108ca59807a1422922afa8364c361d2c14ab1",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/casual-b/textures/0.png",
+        "sha256": "632215af911e1c6225aaf288e5d1281fb39e6566e016ee6f62477714757e4eab",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/casual-a/textures/0.png",
+        "sha256": "c1ada83da2ffa3e37b7e10b4f9adb0ceb7c208524702aaf7ceb10b88b47ccb1a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/cinnamon/casual/textures/0.png",
+        "sha256": "3ebf4c97d6ba9af0c8b457999fe1a60da0fac416d40e47a9c3db02c2cb968526",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/yukata-b/textures/0.png",
+        "sha256": "394819c0345de66d3bda990eceecc52e1db563ecce1621ff57d9c989303a6d42",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/yukata/textures/0.png",
+        "sha256": "ce6243826bee5a63c96907f39611fff42d384683b6e2199ef5de039149fcb868",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/wintermaid-b/textures/0.png",
+        "sha256": "bbfdc08a2b8e780a2e7b6dd7a6b189cb2546f7bbfe6d9f1be27f6c785b399728",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/wintermaid/textures/0.png",
+        "sha256": "10d4cc9b250b438b8b2cbb6960b1b68a37ee12fb60cebfd55a5f69dcc2a641fe",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/winter-b/textures/0.png",
+        "sha256": "4d3c6744b82125eae0d4db0179218cb433fcc0e6137057f280eb9a38025a8b9e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/winter-b/textures/1.png",
+        "sha256": "82db8cafba6deb9416a0a9fe1e07765f00b60886637c5aba38d1355a24a8deb6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/winter/textures/0.png",
+        "sha256": "8d094c0a1f394d6fb2969fe91ecf51dc5a7e5a5a8072b3a83bfb2b33f78d232d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/teenage-b/textures/0.png",
+        "sha256": "bda029b60aecaf3d3cdd4c54436747722b5a9339f7c67a7c26806fd72d69cccc",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/teenage-a/textures/0.png",
+        "sha256": "85ae6254e5ccea6afba27bc2f2783a0ece1397a3d9837a895158adeb0d579953",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/teenage/textures/0.png",
+        "sha256": "c73595bcd55b2b17286ba7d53929469cf3ac04f703930f8cea7918c75a65b060",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/teenage/textures/1.png",
+        "sha256": "e8c28e28ca3ea31d9908b50e412986de4c02b4e8ed38d146a7f9fba8372995e2",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/swimsuit-a/textures/0.png",
+        "sha256": "5b8c1952a5cc6d2e9685d98fa776d5b38d4d40f69c2ffda8b68c5c52c9512169",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/swimsuit-b/textures/0.png",
+        "sha256": "60951c7c71e14509fb768f1c66e684d0f6039b1aef3b7ed998e9db828c27789f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/santa-b/textures/0.png",
+        "sha256": "99797a46a382dceed6ade6be00f08277a5a3d8e4c50aaa18d5df6fe0b1cd00cf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/santa/textures/0.png",
+        "sha256": "d2996a6b2b6db5ec26e109e0741c0b2720abfc5a8485317352056348558a3a95",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/maid-b-custard/textures/0.png",
+        "sha256": "f2ce2c5e6897bea0fb65bbc7c1b270ff71827ef9059136322dc1a2afc71253ac",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/maid-b/textures/0.png",
+        "sha256": "2ea0e6e2e5fa35d7de1c1b63e0fa93ad94997ecec58a373900f60438ec4dd710",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/maid-a-custard/textures/0.png",
+        "sha256": "e1c39f6af21b43333ab7a0db96c252d62447fff176995ddc91cf47cc0c712a0d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/maid-a/textures/0.png",
+        "sha256": "beede50c0bc040df896ffd17d48f920664df07c07fce68bd79d5be413e45afd0",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/hawaii-b/textures/0.png",
+        "sha256": "5c84676023f5ddc669e2a9b83dec8d08e79429acce70dc279f71f98a62004b29",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/hawaii-a/textures/0.png",
+        "sha256": "16da3ee4f5e03be1f089e30db9a73bb9626eb29751d1044616d16d804713d383",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/maid/textures/0.png",
+        "sha256": "01ada2bc083bfc3fbd569e0d728b1eeaba7a7b753dade76723185b38357629a2",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/dress-a/textures/0.png",
+        "sha256": "eef4a4f9bbdc78dc29da76af032d865603cb2344caeb25f4aaace01970885799",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/casual-b/textures/0.png",
+        "sha256": "84261cbfba3eb49a9a789b6bd92c658c68f3cc50fc83b85c1af9878f757f1e5b",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/casual-a/textures/0.png",
+        "sha256": "bb1f545a96f692d5bd282f8a289dcafbb778078e009b5dc06ad071d788437dee",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/casual-a-ohtoro/textures/0.png",
+        "sha256": "00461e1c502c308d54c9d4627959d2320f259f91e4f9a83cbc78234d86993298",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/dress/textures/0.png",
+        "sha256": "5146915239f95109713617c6ff54bb0c32069445b64cdc47a41bc43c3a6f0da4",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/casual/textures/0.png",
+        "sha256": "1449ac60ca12bc56bb2f41b94ccded494361264d247e8488262613e6bec0f9f6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/azuki/casual/textures/1.png",
+        "sha256": "450160c5a78bc4e940be68821b274a57bd4fb09ffdb137814f061913f074fad6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/teenage/textures/0.png",
+        "sha256": "39c739f7023dba6ae0f24880188e67fe57a0fd5a9e7c8556e4426d4d021a470b",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/pajama/textures/0.png",
+        "sha256": "c5083f72fdcf36d2fcfbf8bc2b08df57ccc8b12cebffd149cf5b70b41ed0dd0c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/maid/textures/0.png",
+        "sha256": "5fb3d72e1603f63a6218c43c3031e724459a52552346681303ba9759825939ed",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/koneko/textures/0.png",
+        "sha256": "9c7f7bbf671eaceacba8972487510b440f093fe0a2efd5c398a2df8194839dc8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/koneko/textures/1.png",
+        "sha256": "d73a11886cf3953fb6990738aecd153346b95c0c7d5839b68de3df66d32affa8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual/textures/0.png",
+        "sha256": "3093ab61fb3306cbfbf8fb56344b1a577e068519867c4a0e685d13f2b15872b6",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/dress/textures/0.png",
+        "sha256": "a1d2287e4fa1192e381cf670b03b7b0ece2ab17ab89dbe602745c5b490a7e106",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/yukata-b/textures/0.png",
+        "sha256": "edd3fb5d7c4e102a50fe135632893e7c489c2f75f2224ce1f49c164f28d9b13b",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/yukata/textures/0.png",
+        "sha256": "149c5886441594dc7c138def0acf535825d4c5791b12370aed5ae934b93db7b9",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/wintermaid-b/textures/0.png",
+        "sha256": "a7b650f6852a19c03ee23a7e4e58f4304ffa211bbdb11c0c5bba74ad48ea1ec9",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/wintermaid/textures/0.png",
+        "sha256": "564f063c2a83dfd7c137a59891e81510ee3dea3ebaca85a20c0e9acaa9b7be3d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/winter-b/textures/0.png",
+        "sha256": "a457e624da50a54149f1341d6cf0b54c9af78003c82bdd2194c18c1cb343d84a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/winter/textures/0.png",
+        "sha256": "a5a089b71d3ee21c9495ec0116bedd396b4f65fb02da89a97535ef47d88e8f1d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/teenage-b/textures/0.png",
+        "sha256": "cc166c02b266f69d36c24a5728c2d273f4691838deb3244e2930533d319373da",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/teenage-a/textures/0.png",
+        "sha256": "414098e9688b52fc70d0b51356d1082c65617926332722d376ad1c791ed78860",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/swimsuit-b/textures/0.png",
+        "sha256": "a76746c03db7aed59866bf77e58018c42726629f214e328e875df742920b463f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/santa-b/textures/0.png",
+        "sha256": "96afdc452c56966ef0bd62f9b8859b805e1b15c71ee016f504535badf0a523ff",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/swimsuit-a/textures/0.png",
+        "sha256": "37e69b5edfe48af40e5188d05133ccf93be5d3dfe16f0473ae11939c223b61a8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/pajama-b/textures/0.png",
+        "sha256": "2f0f866062569d9ddfa0f5d8af8a2f33046c15ae9d68ff674ba4db799298b37a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/pajama-a/textures/0.png",
+        "sha256": "da6ec055c1d8734478737c6f2a6dfec83fc2fcfcdb60a25188cdc8719a7f94fc",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/maid-a-with-bell/textures/0.png",
+        "sha256": "c71cc45d866b7e12e5ef840716d8fc714dc690ec66189c8cc2df3d8fb63c3960",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/maid-b-with-bell/textures/0.png",
+        "sha256": "07cfd9aa5b29433a8c2588c901e17d7bc4e3cf9fb38804bd10e77600391bb6b5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/maid-b-no-bell/textures/0.png",
+        "sha256": "8e40e8c83e7598f6076dda2338d6a1622544b6cd3213628f76cbe08b87750b54",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/maid-a-no-bell/textures/0.png",
+        "sha256": "dbe8164fa320c2dac52bd983cd3126725f14e896b7ab7fc16dee26e4274950b4",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/koneko-b/textures/0.png",
+        "sha256": "f7c05cfa13a7beb6f8e8f181ede6ceaf52da72bc1851cb455450a7dd4554f577",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/koneko-a/textures/0.png",
+        "sha256": "a73009a8f2b420f341dfab8080ee63dc3333d5dd63210a19e968be95728a36bf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/hawaii-b/textures/0.png",
+        "sha256": "104a67f4f1511333dc794ce1e2b56a92f726dd96d138c99be1bb6c0600d0c4ee",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/hawaii-a/textures/0.png",
+        "sha256": "eb47932b412da1f13dda296fc602a09fa6cdd1ea30205d736f450897c2ef0555",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/date-b/textures/0.png",
+        "sha256": "2cb97fb277cf85d199a334f486fd87892fa1128bd673f2cbc81f44052792af78",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/dress-a/textures/0.png",
+        "sha256": "3792082303ced05797ced4000dd4fec9594d9f542bfdff2d49ce555c0f0a41a0",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/date-a/textures/0.png",
+        "sha256": "ec17ddef264a978a26f01b845f0e5a32c1c1d0c18f75b6b9423a3466d57eaa45",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual-b-with-bell/textures/0.png",
+        "sha256": "6780bd3687b4e4584acdb00eb12537a03f51640763adc67db01fbf6a08b82677",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual-b-no-bell-tail-pin/textures/0.png",
+        "sha256": "190625591dcdd971ef12c689b4b1ab14f1b9d4972b4de61101a7abbd6ca6938a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual-b-no-bell/textures/0.png",
+        "sha256": "18f85e22e4936d66eea85d0a1d8e0979a62b95190c48ad76eeaedeaa03763dbf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual-a-with-bell/textures/0.png",
+        "sha256": "cedb0baf15f5128360c628ce2813527e6282871d1c1f47b7071ec294c2d113b2",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/casual-a-no-bell/textures/0.png",
+        "sha256": "a5a1464d42307ba922ecd41540f0fa5593b472e8287a9e466f6ad6f27699d914",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/santa/textures/0.png",
+        "sha256": "5e58e4712f583221c5add4bc4a23a049d74ca8de6df5ff04255de8545d83072d",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/vanilla/lolita/textures/0.png",
+        "sha256": "5c6ce3bf63aac2ec4a6b41c930c9eea3f72b69822ac7512fef98382b628f5b01",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/teenage/textures/0.png",
+        "sha256": "be126054291ce3743b1df186bbafcb870be3544cc15eb110c4694d35f8b17de4",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/teenage-4yo/textures/0.png",
+        "sha256": "a5208b97a285b8e2c381072f7aa18c8306400a2d457829122ad3f08643962fdf",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/teenage-4yo/textures/1.png",
+        "sha256": "284d93508d5a403a95fce4fbcdaf1ca4b8aa2b9e1b7be9b30c8c73c01601bc43",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/teenage-4yo/textures/2.png",
+        "sha256": "2e19e4b82024a4682d026b2aabdf556b51cc4b5c665e3214a3e1c1e97850b1cd",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/summer/textures/0.png",
+        "sha256": "fac319c3d2eff049e29e7d8a2f6deb73cd07810d6e26f94c5409ac99e2632922",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/milk/winter/textures/0.png",
+        "sha256": "3a50e04ea04aada242cef6fc3e0896495bcfe07274413e2f858bbec0ce1d61d5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/yukata-b/textures/0.png",
+        "sha256": "97e6a2c41f6c12bffb8a0c255051976fff85d4cbb0c191436dc9d296c8c0ca03",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/yukata-b/textures/1.png",
+        "sha256": "9da9e20b2b3d03f085c4088298135d7c00df4416a5c11d72edb28756c51d1e9e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/yukata/textures/0.png",
+        "sha256": "c5995e885edb2ca7d3cffdc2bc2388c575ffa050bc7031431ec3beb50fc73bcd",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/wintermaid-b/textures/0.png",
+        "sha256": "65d351033143af5cdb808347655edd86fd050be4026230794e8e3d4dbce49014",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/wintermaid/textures/0.png",
+        "sha256": "1f0ffe68419ac5cbeb35d4e03da67046cabc26b1230eec23c8ef36d506cc023f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/winter-b/textures/0.png",
+        "sha256": "5b597debf00364a0e18d78fa582a3f53d47c0f342949c525917fa3f76f2d0209",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/winter/textures/0.png",
+        "sha256": "22c4f13ab17e61d311fc6569927d685f0cb3d81aaf73af302b1aa372c20395e8",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/teenage-b/textures/0.png",
+        "sha256": "6c74f74cf552b915f29a48a8443e6ccc8d9e449f7615b420aed2f5932a900d01",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/teenage-a/textures/0.png",
+        "sha256": "57e993e8d2bacd81232b1310831ef0a129dc28a0428d34907c309f771e1a1981",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/teenage/textures/0.png",
+        "sha256": "903fb82e5d8302424c4e31742bfa17780fe8cb226122173df589b588fa30f252",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/swimsuit-b/textures/0.png",
+        "sha256": "8655b6570486e6a97f324a81cef3efd5a999e637558147d34fad892517462d7a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/swimsuit-a/textures/0.png",
+        "sha256": "3e442df758984509372dee22079a4e94bcc422527b6f7a6c746f7a60fc8b5b2b",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/santa-b/textures/0.png",
+        "sha256": "9dd2f00cec50782733a1a19aa9461f1ee0b17c2676e4b80744f5ea4f614ef455",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/santa/textures/0.png",
+        "sha256": "ddb8618c1af8fa3684df52595af9083d01f97a5aaec9cc1975949e4260f379a5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/pajama-b/textures/0.png",
+        "sha256": "1fa83ffd01f1c55a0894734c94dc32cbed821adf27fd395b74fe3bba0868f0c9",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/pajama-a/textures/0.png",
+        "sha256": "d1b19b046a7cf64d9693b141747f20ebee3f3dbe4a57503954cf67ba48143de1",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/pajama/textures/0.png",
+        "sha256": "99ac263aa29778cc00c9e1446cddee7e5e2017fd67ff60959773775e7cd2de4f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/maid-b-with-bell/textures/0.png",
+        "sha256": "6cf2170d2626f6722134da3b6d865e5ae31d470289867527bb5a0766544110ae",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/maid-b-no-bell/textures/0.png",
+        "sha256": "f990c9c07a6c214dbce7012727dcc0fca9ce76307908d607142ee261f631e34c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/maid-a-with-bell/textures/0.png",
+        "sha256": "71187bd536b090274766be54b347a873cb289a07f6d250fe7c2b6d0581316b68",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/maid-a-no-bell/textures/0.png",
+        "sha256": "e4b6a2e0695c18934ed250024af6521b4fb97f37be9c66248502c736b0d3b60e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/maid/textures/0.png",
+        "sha256": "de6ff39f29baf9762d22d6eaabe0794c67670d79b58953afac894903f8d72ceb",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/lolita/textures/0.png",
+        "sha256": "06ce1fc3bb1e19cede43f02e856dcde672e0145e74d92fe4c1019206cfd480d0",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/koneko-b/textures/0.png",
+        "sha256": "f2d6cbc79eb92ecac817d9377cb9e7bbd14eec8ff195e456fbb05e85cd087549",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/koneko-a/textures/0.png",
+        "sha256": "2354e9469dfbf5cde0db838a50b5d642afaa3889fae39ee87cd7f6cf11eb3836",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/hawaii-b/textures/0.png",
+        "sha256": "2fbb914bd33eca84ea5e4a0d99ad113dd70335b6534a5d49b964c9d1f73caa8e",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/koneko/textures/0.png",
+        "sha256": "e49f6238954314cc91a02070cc46f95689522482f56b6c0e863421dc355086a5",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/hawaii-a/textures/0.png",
+        "sha256": "25da1efc3cfc10709b2748143bbd87241bf27d32fc7b1107955dc5a150381e3c",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/dress-a/textures/0.png",
+        "sha256": "a05f3f3d35815723eea0b53ae96ae1bf937f3e6190918c396c9b5438ec36975f",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/date-b/textures/0.png",
+        "sha256": "5a3aa31def871a0e047c926b7ceabb96219c1fdd27b22092eabc32366209fe0a",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/dress/textures/0.png",
+        "sha256": "2701911ade07a8e5458ae93ee735d0c72314a88ba76a20f7e70997bfbd0861a1",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/casual-b-with-bell/textures/0.png",
+        "sha256": "d48ac317a3fab81106f5a389389dbe1d6093cc7d18529753671e43b302ce0633",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/casual-b-no-bell/textures/0.png",
+        "sha256": "c205bb2d07d52b20b48da0e87ae5cb370609713868fcd5c9b49f1e45068e86a4",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/casual-a-with-bell/textures/0.png",
+        "sha256": "cb87304e9f41b2eb48fb02c690d95080057a7075f1f7115625ff12de0dbdcc65",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/casual-a-no-bell/textures/0.png",
+        "sha256": "449c351f817be5145ed6ff5910cad4fd0b6c7d1d1ba39fb6964ef3ed7143a606",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/casual/textures/0.png",
+        "sha256": "899cc0f3a06b77e9e51bc25633a6ef1b10b5460c7898f50ab226e48353586851",
+        "interlace": 0
+      },
+      {
+        "path": "assets/characters/chocola/date-a/textures/0.png",
+        "sha256": "0404f69a42405a4fc3f8f3ed7f381dfc3215bb2c57d938555c79f6db78b29642",
+        "interlace": 0
+      }
+    ]
+  },
+  "tests": {
+    "release_cpu": {
+      "passed": 188,
+      "failed": 0,
+      "log": "cpu-tests-mapped.log"
+    },
+    "gl": {
+      "cases": 14,
+      "assertions": 268,
+      "log": "gl-tests-mapped.log"
+    },
+    "vk": {
+      "cases": 8,
+      "assertions": 328,
+      "core_and_sync_validation_required": true,
+      "log": "vk-tests-mapped.log"
+    },
+    "asan_ubsan": {
+      "cases": 28,
+      "assertions": 6202,
+      "filters": "[image],[controller]",
+      "leak_detection": true,
+      "log": "asan-final.log",
+      "earlier_mapped_pass": {
+        "assertions": 6232,
+        "cases": 28,
+        "log": "asan-mapped.log"
+      }
+    },
+    "plasma_isolated": {
+      "passed": 4,
+      "tests": [
+        "plasma_wallpaper_layers",
+        "plasma_wallpaper_layers_vulkan",
+        "plasma_item_safety",
+        "plasma_config_reject"
+      ],
+      "log": "plasma-tests-mapped.log",
+      "actual_desktop_install": false
+    }
+  },
+  "validation_environment": {
+    "VK_LAYER_PATH": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/optimization-20261012/validation-layer/usr/share/vulkan/explicit_layer.d",
+    "LD_LIBRARY_PATH": "/run/media/chocola/DATA/Project/NekoMote/build/evidence/optimization-20261012/validation-layer/usr/lib/x86_64-linux-gnu",
+    "VK_LAYER_ENABLES": "VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT",
+    "NEKOMOTE_VK_VALIDATION": "1"
+  },
+  "image_validation": {
+    "captures": 24,
+    "comparisons": 12,
+    "threshold_max_rgba": 1,
+    "actual_max_rgba": 0,
+    "steps": [
+      0,
+      240
+    ],
+    "fixed_dt_seconds": 0.016666666666666666,
+    "seed": 1,
+    "output": [
+      1920,
+      1080
+    ],
+    "background": "BG_07A",
+    "ui_open": true,
+    "capture_records": [
+      {
+        "label": "chocola-date-a-0-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-0-opengl-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752"
+      },
+      {
+        "label": "chocola-date-a-0-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-0-opengl-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752"
+      },
+      {
+        "model": "chocola/date-a",
+        "step": 0,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "chocola-date-a-0-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-0-vulkan-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "57ec0b686639973ad8a82fe877a81018eb04d121e864fa58ab1637d6a3e933f5"
+      },
+      {
+        "label": "chocola-date-a-0-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-0-vulkan-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "57ec0b686639973ad8a82fe877a81018eb04d121e864fa58ab1637d6a3e933f5"
+      },
+      {
+        "model": "chocola/date-a",
+        "step": 0,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "chocola-date-a-240-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-240-opengl-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "5ff32003887a4d70a934f446e9e4b3afd6f6a2609982594c8b23ba5f5d051035"
+      },
+      {
+        "label": "chocola-date-a-240-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-240-opengl-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "5ff32003887a4d70a934f446e9e4b3afd6f6a2609982594c8b23ba5f5d051035"
+      },
+      {
+        "model": "chocola/date-a",
+        "step": 240,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "chocola-date-a-240-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-240-vulkan-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "9ccf65d4c2d06bcbf2fdd1bbc91a07907914edf914e92f876097df9d795ef241"
+      },
+      {
+        "label": "chocola-date-a-240-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/chocola-date-a-240-vulkan-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "9ccf65d4c2d06bcbf2fdd1bbc91a07907914edf914e92f876097df9d795ef241"
+      },
+      {
+        "model": "chocola/date-a",
+        "step": 240,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-maid-b-0-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-0-opengl-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "cd1dc2b76319b24432c03cdae3b40214b646ea058f732ecdff5f9e6f673ada5d"
+      },
+      {
+        "label": "fraise-maid-b-0-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-0-opengl-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "cd1dc2b76319b24432c03cdae3b40214b646ea058f732ecdff5f9e6f673ada5d"
+      },
+      {
+        "model": "fraise/maid-b",
+        "step": 0,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-maid-b-0-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-0-vulkan-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2c7ad07120faf76678dc00ced0c3ee5a02b43fad9f96ceab4d77b2bf954f4840"
+      },
+      {
+        "label": "fraise-maid-b-0-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-0-vulkan-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2c7ad07120faf76678dc00ced0c3ee5a02b43fad9f96ceab4d77b2bf954f4840"
+      },
+      {
+        "model": "fraise/maid-b",
+        "step": 0,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-maid-b-240-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-240-opengl-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "7315086aa566ac08b0c4c9d92d76d72a19652fa5a354c50c7867cef2941517d0"
+      },
+      {
+        "label": "fraise-maid-b-240-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-240-opengl-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "7315086aa566ac08b0c4c9d92d76d72a19652fa5a354c50c7867cef2941517d0"
+      },
+      {
+        "model": "fraise/maid-b",
+        "step": 240,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-maid-b-240-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-240-vulkan-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "d63803389db5e7d2fd936c3b0425894d70b424348c8d900cf40e4feb89ea0d63"
+      },
+      {
+        "label": "fraise-maid-b-240-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/maid-b",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-maid-b-240-vulkan-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "d63803389db5e7d2fd936c3b0425894d70b424348c8d900cf40e4feb89ea0d63"
+      },
+      {
+        "model": "fraise/maid-b",
+        "step": 240,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-casual-a-0-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-0-opengl-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "ec700249c973dcd1d9383431cce9a6ec07e5f052095cf11ebd6558fa3fb9a5f2"
+      },
+      {
+        "label": "fraise-casual-a-0-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-0-opengl-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "ec700249c973dcd1d9383431cce9a6ec07e5f052095cf11ebd6558fa3fb9a5f2"
+      },
+      {
+        "model": "fraise/casual-a",
+        "step": 0,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-casual-a-0-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-0-vulkan-base.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2f6999877f67dbd94aa140f4d7e643bdbfd0e6cdef8be04d73ecaa7f9d74d127"
+      },
+      {
+        "label": "fraise-casual-a-0-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-0-vulkan-crop.png",
+          "--steps",
+          "0"
+        ],
+        "exit_code": 0,
+        "image_sha256": "2f6999877f67dbd94aa140f4d7e643bdbfd0e6cdef8be04d73ecaa7f9d74d127"
+      },
+      {
+        "model": "fraise/casual-a",
+        "step": 0,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-casual-a-240-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-240-opengl-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "95ccf1584def379994957495cacbe3942576758707ac9d5fe08f16a0b3e60da2"
+      },
+      {
+        "label": "fraise-casual-a-240-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-240-opengl-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "95ccf1584def379994957495cacbe3942576758707ac9d5fe08f16a0b3e60da2"
+      },
+      {
+        "model": "fraise/casual-a",
+        "step": 240,
+        "backend": "opengl",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      },
+      {
+        "label": "fraise-casual-a-240-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-240-vulkan-base.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "d25f14a617d2309d8f2c4020dcf9bdf36e01b2a1563ac3b8959849bcf829ebfb"
+      },
+      {
+        "label": "fraise-casual-a-240-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "fraise/casual-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--fit",
+          "--capture-ui",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/fraise-casual-a-240-vulkan-crop.png",
+          "--steps",
+          "240"
+        ],
+        "exit_code": 0,
+        "image_sha256": "d25f14a617d2309d8f2c4020dcf9bdf36e01b2a1563ac3b8959849bcf829ebfb"
+      },
+      {
+        "model": "fraise/casual-a",
+        "step": 240,
+        "backend": "vulkan",
+        "max_rgba": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pixels_changed": 0,
+        "pixels_over_one": 0
+      }
+    ]
+  },
+  "player_measurement": {
+    "output": [
+      1920,
+      1080
+    ],
+    "character": "chocola/date-a",
+    "background": "BG_07A",
+    "ui_open": true,
+    "seed": 1,
+    "mute": true,
+    "no_save": true,
+    "fps_limit": 30,
+    "warmup_frames": 120,
+    "sample_frames": 300,
+    "steady_seconds": [
+      6,
+      12
+    ],
+    "status_sample_ms": 20,
+    "nvml_process_sample_seconds": 1,
+    "instrumentation": "no validation/screenshot/sanitizer/replacement allocator; idle builds",
+    "vk_presentation": "IMMEDIATE diagnostic entry",
+    "runs": [
+      {
+        "label": "memory-opengl-0-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 156.96875,
+        "steady_rss_mib": 152.90625,
+        "steady_anon_mib": 23.390625,
+        "steady_gpu_mib": [
+          73
+        ],
+        "cpu_ms": {
+          "p50": 1.473552,
+          "p95": 1.881887,
+          "p99": 2.038041
+        },
+        "actual_fps": 29.757,
+        "cadence_ms": {
+          "p50": 33.519959,
+          "p95": 33.84875,
+          "p99": 33.923825
+        }
+      },
+      {
+        "label": "memory-opengl-1-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 161.44921875,
+        "steady_rss_mib": 154.7265625,
+        "steady_anon_mib": 25.3828125,
+        "steady_gpu_mib": [
+          67
+        ],
+        "cpu_ms": {
+          "p50": 1.450785,
+          "p95": 1.843127,
+          "p99": 1.963386
+        },
+        "actual_fps": 29.758,
+        "cadence_ms": {
+          "p50": 33.515071,
+          "p95": 33.843513,
+          "p99": 33.931717
+        }
+      },
+      {
+        "label": "memory-opengl-2-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 161.50390625,
+        "steady_rss_mib": 152.83203125,
+        "steady_anon_mib": 23.38671875,
+        "steady_gpu_mib": [
+          67
+        ],
+        "cpu_ms": {
+          "p50": 1.481234,
+          "p95": 1.873786,
+          "p99": 1.973652
+        },
+        "actual_fps": 29.75,
+        "cadence_ms": {
+          "p50": 33.530714,
+          "p95": 33.832268,
+          "p99": 34.026973
+        }
+      },
+      {
+        "label": "memory-opengl-3-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "opengl",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 164.6875,
+        "steady_rss_mib": 152.62109375,
+        "steady_anon_mib": 23.38671875,
+        "steady_gpu_mib": [
+          73
+        ],
+        "cpu_ms": {
+          "p50": 1.477603,
+          "p95": 1.917224,
+          "p99": 2.214519
+        },
+        "actual_fps": 29.753,
+        "cadence_ms": {
+          "p50": 33.531901,
+          "p95": 33.838903,
+          "p99": 33.958114
+        }
+      },
+      {
+        "label": "memory-vulkan-0-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 162.015625,
+        "steady_rss_mib": 142.99609375,
+        "steady_anon_mib": 22.140625,
+        "steady_gpu_mib": [
+          67
+        ],
+        "cpu_ms": {
+          "p50": 1.146019,
+          "p95": 1.507632,
+          "p99": 1.659317
+        },
+        "actual_fps": 29.758,
+        "cadence_ms": {
+          "p50": 33.505853,
+          "p95": 33.885345,
+          "p99": 33.984512
+        }
+      },
+      {
+        "label": "memory-vulkan-1-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 179.30859375,
+        "steady_rss_mib": 143.03125,
+        "steady_anon_mib": 22.14453125,
+        "steady_gpu_mib": [
+          61
+        ],
+        "cpu_ms": {
+          "p50": 1.147834,
+          "p95": 1.496808,
+          "p99": 1.681106
+        },
+        "actual_fps": 29.755,
+        "cadence_ms": {
+          "p50": 33.507668,
+          "p95": 33.841208,
+          "p99": 33.949384
+        }
+      },
+      {
+        "label": "memory-vulkan-2-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/release/bin/nekomote_player",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 179.40234375,
+        "steady_rss_mib": 143.10546875,
+        "steady_anon_mib": 22.15234375,
+        "steady_gpu_mib": [
+          61
+        ],
+        "cpu_ms": {
+          "p50": 1.134566,
+          "p95": 1.465521,
+          "p99": 1.631383
+        },
+        "actual_fps": 29.741,
+        "cadence_ms": {
+          "p50": 33.525616,
+          "p95": 33.85762,
+          "p99": 33.969986
+        }
+      },
+      {
+        "label": "memory-vulkan-3-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/nekomote_player-base",
+          "--assets",
+          "assets",
+          "--character",
+          "chocola/date-a",
+          "--background-name",
+          "BG_07A",
+          "--backend",
+          "vulkan",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--fps",
+          "30",
+          "--seed",
+          "1",
+          "--mute",
+          "--no-save",
+          "--ui-open",
+          "--measure-frames",
+          "300"
+        ],
+        "code": 0,
+        "peak_rss_mib": 193.99609375,
+        "steady_rss_mib": 142.9765625,
+        "steady_anon_mib": 22.14453125,
+        "steady_gpu_mib": [
+          67
+        ],
+        "cpu_ms": {
+          "p50": 1.13261,
+          "p95": 1.514895,
+          "p99": 1.622374
+        },
+        "actual_fps": 29.74,
+        "cadence_ms": {
+          "p50": 33.508855,
+          "p95": 33.927177,
+          "p99": 34.083052
+        }
+      }
+    ]
+  },
+  "switch_measurement": {
+    "initial": "fraise/casual-a from unchanged local config",
+    "output": [
+      1920,
+      1080
+    ],
+    "seed": 1,
+    "ui_open": true,
+    "background": "BG_07A",
+    "mute": true,
+    "no_save": true,
+    "sequence": [
+      "fraise/maid-b",
+      "coconut/hawaii-a",
+      "vanilla/date-a",
+      "milk/teenage",
+      "cinnamon/maid-b",
+      "chocola/date-a"
+    ],
+    "repetitions": 3,
+    "warmup_frames": 120,
+    "settled_frames": 120,
+    "fade_idle_ms": 650,
+    "dt": 0.016666666666666666,
+    "gl_target": "hidden EGL window",
+    "vk_target": "offscreen ABI host",
+    "runs": [
+      {
+        "label": "switch-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-base",
+          "opengl",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-opengl-base"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 215.12890625,
+        "phases_kib": {
+          "initial": {
+            "Rss": 156800,
+            "Pss": 115918,
+            "Pss_Dirty": 48554,
+            "Pss_Anon": 24200,
+            "Pss_File": 91706,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59192,
+            "Shared_Dirty": 72,
+            "Private_Clean": 48988,
+            "Private_Dirty": 48548,
+            "Referenced": 156800,
+            "Anonymous": 24200,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 183392,
+            "Pss": 142385,
+            "Pss_Dirty": 75834,
+            "Pss_Anon": 52712,
+            "Pss_File": 89661,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59320,
+            "Shared_Dirty": 72,
+            "Private_Clean": 48172,
+            "Private_Dirty": 75828,
+            "Referenced": 183392,
+            "Anonymous": 52712,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 179808,
+            "Pss": 138801,
+            "Pss_Dirty": 75834,
+            "Pss_Anon": 52712,
+            "Pss_File": 86077,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59320,
+            "Shared_Dirty": 72,
+            "Private_Clean": 44588,
+            "Private_Dirty": 75828,
+            "Referenced": 179808,
+            "Anonymous": 52712,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-crop",
+          "opengl",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-opengl-crop"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 257.20703125,
+        "phases_kib": {
+          "initial": {
+            "Rss": 216484,
+            "Pss": 175773,
+            "Pss_Dirty": 98514,
+            "Pss_Anon": 74492,
+            "Pss_File": 101268,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59024,
+            "Shared_Dirty": 72,
+            "Private_Clean": 58880,
+            "Private_Dirty": 98508,
+            "Referenced": 216484,
+            "Anonymous": 74492,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 16384,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 49152,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 233236,
+            "Pss": 192462,
+            "Pss_Dirty": 116466,
+            "Pss_Anon": 93228,
+            "Pss_File": 99222,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59088,
+            "Shared_Dirty": 72,
+            "Private_Clean": 57616,
+            "Private_Dirty": 116460,
+            "Referenced": 233236,
+            "Anonymous": 93228,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 22528,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 49152,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 229652,
+            "Pss": 188878,
+            "Pss_Dirty": 116466,
+            "Pss_Anon": 93228,
+            "Pss_File": 95638,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59088,
+            "Shared_Dirty": 72,
+            "Private_Clean": 54032,
+            "Private_Dirty": 116460,
+            "Referenced": 229652,
+            "Anonymous": 93228,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 22528,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 49152,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-base",
+          "vulkan",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-vulkan-base"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 228.96484375,
+        "phases_kib": {
+          "initial": {
+            "Rss": 140192,
+            "Pss": 81125,
+            "Pss_Dirty": 23768,
+            "Pss_Anon": 22640,
+            "Pss_File": 58481,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81488,
+            "Shared_Dirty": 64,
+            "Private_Clean": 34876,
+            "Private_Dirty": 23764,
+            "Referenced": 140192,
+            "Anonymous": 22640,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 168660,
+            "Pss": 109467,
+            "Pss_Dirty": 53356,
+            "Pss_Anon": 51356,
+            "Pss_File": 58107,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81616,
+            "Shared_Dirty": 64,
+            "Private_Clean": 33628,
+            "Private_Dirty": 53352,
+            "Referenced": 168660,
+            "Anonymous": 51356,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 14336,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 163764,
+            "Pss": 104571,
+            "Pss_Dirty": 53120,
+            "Pss_Anon": 51356,
+            "Pss_File": 53211,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81616,
+            "Shared_Dirty": 64,
+            "Private_Clean": 28968,
+            "Private_Dirty": 53116,
+            "Referenced": 163764,
+            "Anonymous": 51356,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 14336,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-crop",
+          "vulkan",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-vulkan-crop"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 227.796875,
+        "phases_kib": {
+          "initial": {
+            "Rss": 167048,
+            "Pss": 107894,
+            "Pss_Dirty": 39000,
+            "Pss_Anon": 37872,
+            "Pss_File": 70017,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81580,
+            "Shared_Dirty": 64,
+            "Private_Clean": 46408,
+            "Private_Dirty": 38996,
+            "Referenced": 167048,
+            "Anonymous": 37872,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 73728,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 179140,
+            "Pss": 119861,
+            "Pss_Dirty": 52216,
+            "Pss_Anon": 50212,
+            "Pss_File": 69644,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81708,
+            "Shared_Dirty": 64,
+            "Private_Clean": 45156,
+            "Private_Dirty": 52212,
+            "Referenced": 179140,
+            "Anonymous": 50212,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 73728,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 174244,
+            "Pss": 114965,
+            "Pss_Dirty": 51980,
+            "Pss_Anon": 50212,
+            "Pss_File": 64749,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81708,
+            "Shared_Dirty": 64,
+            "Private_Clean": 40496,
+            "Private_Dirty": 51976,
+            "Referenced": 174244,
+            "Anonymous": 50212,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 73728,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-repeat-opengl-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-crop",
+          "opengl",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-repeat-opengl-crop"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 199.765625,
+        "phases_kib": {
+          "initial": {
+            "Rss": 156528,
+            "Pss": 115682,
+            "Pss_Dirty": 48506,
+            "Pss_Anon": 24088,
+            "Pss_File": 91581,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59168,
+            "Shared_Dirty": 72,
+            "Private_Clean": 48788,
+            "Private_Dirty": 48500,
+            "Referenced": 156528,
+            "Anonymous": 24088,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 171136,
+            "Pss": 130165,
+            "Pss_Dirty": 63798,
+            "Pss_Anon": 40616,
+            "Pss_File": 89536,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59296,
+            "Shared_Dirty": 72,
+            "Private_Clean": 47976,
+            "Private_Dirty": 63792,
+            "Referenced": 171136,
+            "Anonymous": 40616,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 4096,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 167552,
+            "Pss": 126581,
+            "Pss_Dirty": 63798,
+            "Pss_Anon": 40616,
+            "Pss_File": 85952,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59296,
+            "Shared_Dirty": 72,
+            "Private_Clean": 44392,
+            "Private_Dirty": 63792,
+            "Referenced": 167552,
+            "Anonymous": 40616,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 4096,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-repeat-opengl-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-base",
+          "opengl",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-repeat-opengl-base"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 219.23046875,
+        "phases_kib": {
+          "initial": {
+            "Rss": 156756,
+            "Pss": 115899,
+            "Pss_Dirty": 48554,
+            "Pss_Anon": 24200,
+            "Pss_File": 91686,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59184,
+            "Shared_Dirty": 72,
+            "Private_Clean": 48952,
+            "Private_Dirty": 48548,
+            "Referenced": 156756,
+            "Anonymous": 24200,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 187624,
+            "Pss": 146642,
+            "Pss_Dirty": 79850,
+            "Pss_Anon": 52892,
+            "Pss_File": 93737,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59312,
+            "Shared_Dirty": 72,
+            "Private_Clean": 48396,
+            "Private_Dirty": 79844,
+            "Referenced": 187624,
+            "Anonymous": 52892,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 184040,
+            "Pss": 143058,
+            "Pss_Dirty": 79850,
+            "Pss_Anon": 52892,
+            "Pss_File": 90153,
+            "Pss_Shmem": 12,
+            "Shared_Clean": 59312,
+            "Shared_Dirty": 72,
+            "Private_Clean": 44812,
+            "Private_Dirty": 79844,
+            "Referenced": 184040,
+            "Anonymous": 52892,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 12288,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 45056,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-repeat-vulkan-crop",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-crop",
+          "vulkan",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-repeat-vulkan-crop"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 200.21875,
+        "phases_kib": {
+          "initial": {
+            "Rss": 140204,
+            "Pss": 81127,
+            "Pss_Dirty": 23772,
+            "Pss_Anon": 22644,
+            "Pss_File": 58479,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81484,
+            "Shared_Dirty": 64,
+            "Private_Clean": 34888,
+            "Private_Dirty": 23768,
+            "Referenced": 140204,
+            "Anonymous": 22644,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 152556,
+            "Pss": 93355,
+            "Pss_Dirty": 37248,
+            "Pss_Anon": 35244,
+            "Pss_File": 58106,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81612,
+            "Shared_Dirty": 64,
+            "Private_Clean": 33636,
+            "Private_Dirty": 37244,
+            "Referenced": 152556,
+            "Anonymous": 35244,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 147660,
+            "Pss": 88459,
+            "Pss_Dirty": 37012,
+            "Pss_Anon": 35244,
+            "Pss_File": 53210,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81612,
+            "Shared_Dirty": 64,
+            "Private_Clean": 28976,
+            "Private_Dirty": 37008,
+            "Referenced": 147660,
+            "Anonymous": 35244,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      },
+      {
+        "label": "switch-repeat-vulkan-base",
+        "argv": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/probe-base",
+          "vulkan",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/texture-crop-20261012/switch-repeat-vulkan-base"
+        ],
+        "exit_code": 0,
+        "peak_rss_mib": 229.1640625,
+        "phases_kib": {
+          "initial": {
+            "Rss": 140216,
+            "Pss": 81113,
+            "Pss_Dirty": 23764,
+            "Pss_Anon": 22636,
+            "Pss_File": 58472,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81532,
+            "Shared_Dirty": 64,
+            "Private_Clean": 34860,
+            "Private_Dirty": 23760,
+            "Referenced": 140216,
+            "Anonymous": 22636,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 0,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "settled": {
+            "Rss": 168684,
+            "Pss": 109456,
+            "Pss_Dirty": 53352,
+            "Pss_Anon": 51352,
+            "Pss_File": 58099,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81660,
+            "Shared_Dirty": 64,
+            "Private_Clean": 33612,
+            "Private_Dirty": 53348,
+            "Referenced": 168684,
+            "Anonymous": 51352,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 14336,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          },
+          "destroyed": {
+            "Rss": 163788,
+            "Pss": 104560,
+            "Pss_Dirty": 53116,
+            "Pss_Anon": 51352,
+            "Pss_File": 53203,
+            "Pss_Shmem": 4,
+            "Shared_Clean": 81660,
+            "Shared_Dirty": 64,
+            "Private_Clean": 28952,
+            "Private_Dirty": 53112,
+            "Referenced": 163788,
+            "Anonymous": 51352,
+            "KSM": 0,
+            "LazyFree": 0,
+            "AnonHugePages": 14336,
+            "ShmemPmdMapped": 0,
+            "FilePmdMapped": 69632,
+            "Shared_Hugetlb": 0,
+            "Private_Hugetlb": 0,
+            "Swap": 0,
+            "SwapPss": 0,
+            "Locked": 0
+          }
+        }
+      }
+    ],
+    "comparability": "first new GL/VK shader path has cold driver compilation/cache overhead, retained; warm repeat reported separately",
+    "gpu_correctness_instrumentation": false
+  },
+  "decode_timing": {
+    "loads_per_process": 10,
+    "repetitions": 3,
+    "records": [
+      {
+        "model": "chocola/date-a",
+        "repetition": 0,
+        "mode": "full",
+        "mean_decode_ms": 74.552,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "chocola/date-a",
+        "repetition": 0,
+        "mode": "crop",
+        "mean_decode_ms": 145.899,
+        "decoded_bytes": 25837568
+      },
+      {
+        "model": "chocola/date-a",
+        "repetition": 1,
+        "mode": "crop",
+        "mean_decode_ms": 147.028,
+        "decoded_bytes": 25837568
+      },
+      {
+        "model": "chocola/date-a",
+        "repetition": 1,
+        "mode": "full",
+        "mean_decode_ms": 75.138,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "chocola/date-a",
+        "repetition": 2,
+        "mode": "full",
+        "mean_decode_ms": 75.404,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "chocola/date-a",
+        "repetition": 2,
+        "mode": "crop",
+        "mean_decode_ms": 146.561,
+        "decoded_bytes": 25837568
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 0,
+        "mode": "full",
+        "mean_decode_ms": 73.827,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 0,
+        "mode": "crop",
+        "mean_decode_ms": 144.614,
+        "decoded_bytes": 26673152
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 1,
+        "mode": "crop",
+        "mean_decode_ms": 142.953,
+        "decoded_bytes": 26673152
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 1,
+        "mode": "full",
+        "mean_decode_ms": 73.089,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 2,
+        "mode": "full",
+        "mean_decode_ms": 73.707,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/maid-b",
+        "repetition": 2,
+        "mode": "crop",
+        "mean_decode_ms": 144.693,
+        "decoded_bytes": 26673152
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 0,
+        "mode": "full",
+        "mean_decode_ms": 76.934,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 0,
+        "mode": "crop",
+        "mean_decode_ms": 148.622,
+        "decoded_bytes": 19513344
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 1,
+        "mode": "crop",
+        "mean_decode_ms": 148.992,
+        "decoded_bytes": 19513344
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 1,
+        "mode": "full",
+        "mean_decode_ms": 76.225,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 2,
+        "mode": "full",
+        "mean_decode_ms": 76.862,
+        "decoded_bytes": 33554432
+      },
+      {
+        "model": "fraise/casual-a",
+        "repetition": 2,
+        "mode": "crop",
+        "mean_decode_ms": 147.518,
+        "decoded_bytes": 19513344
+      }
+    ],
+    "cost": "about70ms extra per atlas; worker switches, synchronous first load"
+  },
+  "initial_rejected_candidate": {
+    "normal_vector_extra_steady_anon_mib": 8,
+    "diagnostic_heap_base_live_bytes": 7241728,
+    "diagnostic_heap_crop_live_bytes": 7192640,
+    "base_arena_free_bytes": 14209024,
+    "crop_arena_free_bytes": 22552512,
+    "heap_snapshot_is_separate_diagnostic_not_formal_measurement": true
+  },
+  "independent_review": {
+    "agent": "Codex inherited GPT-6 (exact variant not exposed)",
+    "scope": "read-only PNG/ownership/thread/backend/ABI review",
+    "result": "no newly introduced blocking defect found",
+    "tests_run": false,
+    "evidence": "independent-review.md"
+  },
+  "binary_sha256": {
+    "build/evidence/texture-crop-20261012/nekomote_player-base": "cfa2181c2bde449bad1bc2e73199b053497891af2c17eb887e0e6a1cb9ee498e",
+    "build/evidence/texture-crop-20261012/probe-base": "1ef711c159d86eb0ca8bca4adf526f4254090c29abee2891e5abf8219f529631",
+    "build/evidence/texture-crop-20261012/probe-crop": "e63de1059418d3d6684efca7a3235079215d16676840e5173115b72ddb1b3b0b",
+    "build/evidence/texture-crop-20261012/crop-audit": "88db009946f74fc98606ca6a13d9ef77893bc86b6d40aae44de0effb5de518fa",
+    "build/release/bin/nekomote_player": "d509ec268f467743b1094f6965d285f1a11c2d13995d227187712e27ea5825ee",
+    "build/release/bin/nekomote_render_tests": "b4ac2f4913726a271e8edf2ce1617cf89e777d0d179fa14f5815a26c772081b4",
+    "build/release/bin/nekomote_vk_tests": "52e899e0dd4c384a31c35ad8ac91c83993cf23172305c9c4c1ca172d275da27a",
+    "build/memory-asan/bin/nekomote_unit_tests": "8715371d75a78c3a6b9d61edc92f7e5b24c51a84a75f6195624b7f5ff57ac9c4",
+    "build/optimization-current/lib/libnekomote_plasma_qml.so": "5e6ad0afe56bc84fc772ee28fb9ea4d6d238577bdb05d2574615bbf547146f55"
+  },
+  "failed_attempts_retained": [
+    "failed-vertex-transform/",
+    "failed-normalized-fragment-transform/",
+    "failed-concurrent-asan.log",
+    "failed-relative-layer-plasma-tests.log",
+    "build-mapped.log",
+    "failed-audit-missing-directory.log",
+    "before-mapped-memory-summary.json"
+  ],
+  "limitations": [
+    "single tested driver/device",
+    "first shader compilation/cache overhead",
+    "GPU upload can delay render-thread frame",
+    "synchronous first load",
+    "Adam7 full decode peak",
+    "internal transparent holes remain",
+    "no actual desktop installation",
+    "no multi-screen/long-term/cross-driver/195 full-dynamic certification",
+    "coarse nvidia-smi cannot prove instantaneous VRAM peak"
+  ],
+  "artifact_sha256": {
+    "asan-build-mapped.log": "e44c83c439611cf9f446d6ba16efa5e7e12a792e234675aefcc15eb07d689a70",
+    "asan-final.log": "256e56b64f6d50ad2bd3d1288b412447ebab73f3865890698c9cdefd4db63a57",
+    "asan-include-final.log": "110a77fa2757325da9940eab318c9956c1f7d9d62213c71a1af0efad732e18f1",
+    "asan-mapped.log": "2ace79085c2a889e165ce2a7df66344d9841fd7ea282de30c2f1a54963a22942",
+    "asan.log": "0e55057ef736184dde9b95488b8bd9588bef8c41548191845dd438ce5f69f776",
+    "atlas-inputs.json": "334a7d4fb2f260068d94c741d2ee9de8646142d8b24c528ba950bd80e09b8ff4",
+    "atlas-survey.json": "27f186627c3e655a30acd3c869ff32c1d43b2a72d828c7d99862d6cb56d54b86",
+    "before-mapped-binaries.json": "422d9f399f14e0c9281f48b68e2822246cb4f20353f38c066a7ac371ca2e470c",
+    "before-mapped-decode-timing.json": "7bd817f072d6bd0a6747bece11269473d22bff919b542c256489d7bf3bf12397",
+    "before-mapped-images.json": "205a9f0bc43607bb7d1115467495938a30881b5ef0f7bd05bff9a6072ac01dff",
+    "before-mapped-memory-summary.json": "b501cf0b8d07f818e40f222b5fecf7fda7c75be15bc702d2a7a30c754915d550",
+    "binaries.json": "c9886a91f1f6ce2e54946ea289cc73886bd18d3d27dd2114a29768de02cd23be",
+    "build-asan.log": "1f594526e5f3f3be6edf354f0c8147c2f8fd75332b293a84d7d51f59f16a1055",
+    "build-final.log": "46f6d90cc00b586a8b4ae3fa6f3fa72015c9aa209832848b8c5d79f9d4cd69fd",
+    "build-include-final.log": "a1879bd4956fed4d7196c4a6e368ea69e6a63ef9b801c268194860383b0d41ae",
+    "build-mapped-final.log": "2fb8ae93dd0cde967ecf86a8fd5e32eff1e3c3d870f4f93304e725bcf0bc77f1",
+    "build-mapped.log": "5b9bafb6a66ca3fea3823c8d2e0ceb1655aca257567c8cd56948accd22345087",
+    "build-plasma-final.log": "277474835f622093da2d44f6f32b542277c3148829bf84592a459b0c6811f10a",
+    "build-plasma.log": "d023c2036989aca72e69d85370fafb4092a18817e6c73d013b3cf65de919ccc7",
+    "chocola-date-a-0-opengl-base.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "chocola-date-a-0-opengl-base.png": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752",
+    "chocola-date-a-0-opengl-crop.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "chocola-date-a-0-opengl-crop.png": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752",
+    "chocola-date-a-0-vulkan-base.log": "574fdfca3dbce07aa35eef0d183916863a2f4012be9b3bf91e65ed8db982e238",
+    "chocola-date-a-0-vulkan-base.png": "57ec0b686639973ad8a82fe877a81018eb04d121e864fa58ab1637d6a3e933f5",
+    "chocola-date-a-0-vulkan-crop.log": "574fdfca3dbce07aa35eef0d183916863a2f4012be9b3bf91e65ed8db982e238",
+    "chocola-date-a-0-vulkan-crop.png": "57ec0b686639973ad8a82fe877a81018eb04d121e864fa58ab1637d6a3e933f5",
+    "chocola-date-a-240-opengl-base.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "chocola-date-a-240-opengl-base.png": "5ff32003887a4d70a934f446e9e4b3afd6f6a2609982594c8b23ba5f5d051035",
+    "chocola-date-a-240-opengl-crop.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "chocola-date-a-240-opengl-crop.png": "5ff32003887a4d70a934f446e9e4b3afd6f6a2609982594c8b23ba5f5d051035",
+    "chocola-date-a-240-vulkan-base.log": "574fdfca3dbce07aa35eef0d183916863a2f4012be9b3bf91e65ed8db982e238",
+    "chocola-date-a-240-vulkan-base.png": "9ccf65d4c2d06bcbf2fdd1bbc91a07907914edf914e92f876097df9d795ef241",
+    "chocola-date-a-240-vulkan-crop.log": "574fdfca3dbce07aa35eef0d183916863a2f4012be9b3bf91e65ed8db982e238",
+    "chocola-date-a-240-vulkan-crop.png": "9ccf65d4c2d06bcbf2fdd1bbc91a07907914edf914e92f876097df9d795ef241",
+    "compile-probe.py": "67851ed4765104dddcb364d8e9498b3ebb19cb89ec827ecb4e0087e1a3e38ed2",
+    "cpu-tests-mapped.log": "33d60f2498985c62cf6af5c4b1855554c6c31f92fdc0649a732bcf2c0f0dd1b8",
+    "cpu-tests.log": "54eb5cd6d961295bf788a2e581469f55e01117d12f380ae1d0e0c3464366a4da",
+    "crop-audit-mapped.log": "194bfeb999eb0c6a5403d81cff1cb411b784b020a366e7b752ec0208e7ba47e5",
+    "crop-audit.cpp": "33bf1b52cc3f11dcbe492323b2efaaba66d3c9453776b8ea50588c21ed71f44b",
+    "crop-audit.log": "194bfeb999eb0c6a5403d81cff1cb411b784b020a366e7b752ec0208e7ba47e5",
+    "decode-timing-concurrent-build.json": "8710b58e44a79d1b1983b03ac878ac3ba49a226564d4cbf8e19b12c75c28b057",
+    "decode-timing.json": "2d3b3b3ed53915dbb899268277022313fe4330373074dfd6ae6d131dea54e8b5",
+    "failed-audit-missing-directory.log": "f22eee9199b9c9b62c39ec42c354eeaeab6c0bd9c78f08ce40777b149f02ed1b",
+    "failed-concurrent-asan.log": "3e4e2ce7a8f49935deb595e6a515ef11eeae280b143647fe98952e09d56a5dc3",
+    "failed-concurrent-build-final.log": "43ef5c2b99d6c9671dcc416b064be3f8a158a79dfd23db56b9d803d64d6df38f",
+    "failed-normalized-fragment-transform/chocola-date-a-0-opengl-base.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "failed-normalized-fragment-transform/chocola-date-a-0-opengl-base.png": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752",
+    "failed-normalized-fragment-transform/chocola-date-a-0-opengl-crop.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "failed-normalized-fragment-transform/chocola-date-a-0-opengl-crop.png": "0910838994c7cb2d351db9d562b5133a6d1c3aad5050b94bfab030e0f2edb6eb",
+    "failed-relative-layer-plasma-tests.log": "726c90f89e0d456be0e4c891fedad0ede8ab9990680c2655bcf9b1901b832da4",
+    "failed-vertex-transform/chocola-date-a-0-opengl-base.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "failed-vertex-transform/chocola-date-a-0-opengl-base.png": "2b4e34c4aa681c839e54ecb1f45145ccaa4be7f240006acd45815314a63b8752",
+    "failed-vertex-transform/chocola-date-a-0-opengl-crop.log": "bafa052fc0d3142c9288c0c519cbb733368e6acb9dda75bb9c872d92e5210635",
+    "failed-vertex-transform/chocola-date-a-0-opengl-crop.png": "1463f7de38929e989181da11a566925c7ecf24f21f9d71b75538ef7a8e9b5e62",
+    "final-code.patch": "da64eef15f5ddc8f098feb7e53e39815195d9fdab730c8aed87b8f90842d2bcb",
+    "finish-checks.py": "f0589dfff9812844a33d08e9fbe5ba40fe20ee8777993af5bc703e0a2236f327",
+    "first-switch-summary.json": "87aa67f44805109634bb9cac02a9e9376cd669b2c48ab9cbd0015bd877408bae",
+    "format-final.log": "bde294368bfed77c2cddf8cec271d398aee9cdbab3b26e1059281bd33adb0120",
+    "fraise-casual-a-0-opengl-base.log": "167af1017566e78f5040e4f6843da1343b8869c8ed36cc4d27466e2829696b44",
+    "fraise-casual-a-0-opengl-base.png": "ec700249c973dcd1d9383431cce9a6ec07e5f052095cf11ebd6558fa3fb9a5f2",
+    "fraise-casual-a-0-opengl-crop.log": "167af1017566e78f5040e4f6843da1343b8869c8ed36cc4d27466e2829696b44",
+    "fraise-casual-a-0-opengl-crop.png": "ec700249c973dcd1d9383431cce9a6ec07e5f052095cf11ebd6558fa3fb9a5f2",
+    "fraise-casual-a-0-vulkan-base.log": "ed640445f73882a062ed3c5636c03015c530437b88754544baed08e04f3a1f92",
+    "fraise-casual-a-0-vulkan-base.png": "2f6999877f67dbd94aa140f4d7e643bdbfd0e6cdef8be04d73ecaa7f9d74d127",
+    "fraise-casual-a-0-vulkan-crop.log": "ed640445f73882a062ed3c5636c03015c530437b88754544baed08e04f3a1f92",
+    "fraise-casual-a-0-vulkan-crop.png": "2f6999877f67dbd94aa140f4d7e643bdbfd0e6cdef8be04d73ecaa7f9d74d127",
+    "fraise-casual-a-240-opengl-base.log": "167af1017566e78f5040e4f6843da1343b8869c8ed36cc4d27466e2829696b44",
+    "fraise-casual-a-240-opengl-base.png": "95ccf1584def379994957495cacbe3942576758707ac9d5fe08f16a0b3e60da2",
+    "fraise-casual-a-240-opengl-crop.log": "167af1017566e78f5040e4f6843da1343b8869c8ed36cc4d27466e2829696b44",
+    "fraise-casual-a-240-opengl-crop.png": "95ccf1584def379994957495cacbe3942576758707ac9d5fe08f16a0b3e60da2",
+    "fraise-casual-a-240-vulkan-base.log": "ed640445f73882a062ed3c5636c03015c530437b88754544baed08e04f3a1f92",
+    "fraise-casual-a-240-vulkan-base.png": "d25f14a617d2309d8f2c4020dcf9bdf36e01b2a1563ac3b8959849bcf829ebfb",
+    "fraise-casual-a-240-vulkan-crop.log": "ed640445f73882a062ed3c5636c03015c530437b88754544baed08e04f3a1f92",
+    "fraise-casual-a-240-vulkan-crop.png": "d25f14a617d2309d8f2c4020dcf9bdf36e01b2a1563ac3b8959849bcf829ebfb",
+    "fraise-maid-b-0-opengl-base.log": "a6e66ec2ae20979b492c41445153502dfc4a3d68ea91394f4b650904d8e049e3",
+    "fraise-maid-b-0-opengl-base.png": "cd1dc2b76319b24432c03cdae3b40214b646ea058f732ecdff5f9e6f673ada5d",
+    "fraise-maid-b-0-opengl-crop.log": "a6e66ec2ae20979b492c41445153502dfc4a3d68ea91394f4b650904d8e049e3",
+    "fraise-maid-b-0-opengl-crop.png": "cd1dc2b76319b24432c03cdae3b40214b646ea058f732ecdff5f9e6f673ada5d",
+    "fraise-maid-b-0-vulkan-base.log": "ca009f475901a9a223527eaa4c2c1db10c3a6f23973194a0609ae5d2a0e9a98c",
+    "fraise-maid-b-0-vulkan-base.png": "2c7ad07120faf76678dc00ced0c3ee5a02b43fad9f96ceab4d77b2bf954f4840",
+    "fraise-maid-b-0-vulkan-crop.log": "ca009f475901a9a223527eaa4c2c1db10c3a6f23973194a0609ae5d2a0e9a98c",
+    "fraise-maid-b-0-vulkan-crop.png": "2c7ad07120faf76678dc00ced0c3ee5a02b43fad9f96ceab4d77b2bf954f4840",
+    "fraise-maid-b-240-opengl-base.log": "a6e66ec2ae20979b492c41445153502dfc4a3d68ea91394f4b650904d8e049e3",
+    "fraise-maid-b-240-opengl-base.png": "7315086aa566ac08b0c4c9d92d76d72a19652fa5a354c50c7867cef2941517d0",
+    "fraise-maid-b-240-opengl-crop.log": "a6e66ec2ae20979b492c41445153502dfc4a3d68ea91394f4b650904d8e049e3",
+    "fraise-maid-b-240-opengl-crop.png": "7315086aa566ac08b0c4c9d92d76d72a19652fa5a354c50c7867cef2941517d0",
+    "fraise-maid-b-240-vulkan-base.log": "ca009f475901a9a223527eaa4c2c1db10c3a6f23973194a0609ae5d2a0e9a98c",
+    "fraise-maid-b-240-vulkan-base.png": "d63803389db5e7d2fd936c3b0425894d70b424348c8d900cf40e4feb89ea0d63",
+    "fraise-maid-b-240-vulkan-crop.log": "ca009f475901a9a223527eaa4c2c1db10c3a6f23973194a0609ae5d2a0e9a98c",
+    "fraise-maid-b-240-vulkan-crop.png": "d63803389db5e7d2fd936c3b0425894d70b424348c8d900cf40e4feb89ea0d63",
+    "gl-tests-mapped.log": "852a62c6fc4c14153c24c8bdab311075eaef592a8cb83072942996793c4771b8",
+    "gl-tests.log": "d2bec805ff52d9540b97d06c6c57e03e802b832015b59be014769f8f22111544",
+    "gpu-tests.log": "15654337735a49965384bef2d9c3bd9fb363bd6baa871de1f9daa6cd42687674",
+    "heap-base.log": "084226486f2367e2bfa0ace945e8b77f878c7cfabf347023634062b640b7830f",
+    "heap-base.malloc.xml": "3eacbb1bed77dd513b949bf4baddd934a45906a9ec9676b4bad2717d4c900a01",
+    "heap-base.maps": "9c1839ecb811dc2a664fd3c011e4694e7f817a7e95de82bc8cfb1cadabb294df",
+    "heap-crop.log": "86bee09b46ed67a4f02027725675ebf0520743bde7f52c79089b55624e557c17",
+    "heap-crop.malloc.xml": "fc4da5ffc031de15563cb2669ca89c724b6ac1167c7773b8191b970d10070cf8",
+    "heap-crop.maps": "edf147acec7af5204a343ffa7f0120b2e3fd5e33d4c0bbe76536b1053cbd3111",
+    "heap-probe.cpp": "afddcdebd017dbdc3f70cb163c54936f85645d5214848f178fe1976f07e8fba5",
+    "images.json": "205a9f0bc43607bb7d1115467495938a30881b5ef0f7bd05bff9a6072ac01dff",
+    "include-binary-parity.json": "7e156bdaf79d523cdb035dd29c6f293b6aa22a69422cf75e6c286b7e02b9de4b",
+    "independent-review.md": "4d0fbfdc27eb157b32ebcefb9dc5dbbe4ed35c1280cc107595cb9546c179999b",
+    "measure.py": "4f383502dd30ab6a3e91de5004de4c4b9c9163a803a1a2803d0bdd184aa90236",
+    "memory-opengl-0-base.json": "b3bfb030709bcd781bfc623bc865a72e656fa1ccd361f70c9112560985b29a2e",
+    "memory-opengl-0-base.log": "6dc46b014bfe496d8dfdf3cb4e8d7468374bb674e277275dfdfc9f9f834b4f09",
+    "memory-opengl-1-crop.json": "1fa0a0d459fe4bf401d77fa76113fc892fc1c12f364691fde5eb3fc53687d073",
+    "memory-opengl-1-crop.log": "aff382d9555004fb3b814eda1149d093c48242cd261acf08442221ca3b9fd73a",
+    "memory-opengl-2-crop.json": "ac75b773de99f7fa02fc4dbe2ed6ec5d8c0a635df3c5343d7acf5557a457e33e",
+    "memory-opengl-2-crop.log": "da2448e1c0a10e6f98b9e2964aed78c6f1f7a06c7254e5f48ebec172f620d5b0",
+    "memory-opengl-3-base.json": "a11f3923ebb15a022dbf2358b1fbc4c5ac4f35240911c35b02721e4a5f211c33",
+    "memory-opengl-3-base.log": "b98561d54d44654864870c21911380d0b42ea696268004d3f5bf8d9c3dfa165c",
+    "memory-summary.json": "1b1c18139b2cc3ad9f7f405816d375a8d74fa327474aa12c7cddcb81f19e92e3",
+    "memory-vulkan-0-base.json": "c74d1bfe0eac7587b4706941fecd9da8bd8e9dc59302b3c1f58b0cbb28a3a2de",
+    "memory-vulkan-0-base.log": "7c72b43223940cbf41e2658b4787d4e46bedbfb6ae5c50033bd1e3d71db09fe1",
+    "memory-vulkan-1-crop.json": "32d82b48cd37c4cddcce151128d7d4719bb0d690e9b148d57fb092e49af6cf80",
+    "memory-vulkan-1-crop.log": "5b18288a21d2b37e2ab7e37e154b884b44dee70122695dfe67f6842b6e23ad1f",
+    "memory-vulkan-2-crop.json": "1e2848f1cecdf8a0297e50c880f47effdf633ca85af45ed9d29fd0ef747ae06f",
+    "memory-vulkan-2-crop.log": "5b2dc17d59238be9f966322b06fa1ac2f29ff29f0087e8f77cb47a4f40abf5c0",
+    "memory-vulkan-3-base.json": "db0bd7772f04bafcbc933408abf11ecc6e0c3ec87d21f2de518cc358fbd0b370",
+    "memory-vulkan-3-base.log": "3d7e29b0e77372b18572528526c85a193797e9c66d0a2deec63372dfdb917dd1",
+    "model-dimensions.json": "b18b2efb04dd8bf3ecb6793907308ee9d688c1dca20d1a49e2750897f32e0ad2",
+    "plasma-build-mapped.log": "3b9f8d11bf4adcebe96af4abacb9a0424f34d8ea70fc0bfc3d797b0473c3df44",
+    "plasma-include-final.log": "97c1ddd17b0417253054ed2aa3e0cc8b71ce458e2d55d5e4f6290ae77a4fc593",
+    "plasma-tests-mapped.log": "541319c623eada8299266771172ac7b7cbfb6feb06a1550432662cf6e6991b5e",
+    "plasma-tests.log": "726c90f89e0d456be0e4c891fedad0ede8ab9990680c2655bcf9b1901b832da4",
+    "plasma-vulkan-tests.log": "386338f2d8a6f71a200239f497dcf445e943af6c8d711623e013ee8faf5042fe",
+    "probe-measure.py": "279ee79e9302afa72e2522ed3fd7671accaf8b4557f3661ee3b194d173aed547",
+    "probe-repeat.py": "3aecedbce78d6549a4887191bca64c504b1cd728234bff0f17a724b6b848f010",
+    "switch-opengl-base/destroyed.malloc.xml": "d75693e39a79a46dd276552ec9b66b853c8600570149a6b818893b8575aebea0",
+    "switch-opengl-base/destroyed.maps": "de0d1174e2da4eb1f2b5046db90c890f28f7b750de8317d7464f549836d16dc2",
+    "switch-opengl-base/device.malloc.xml": "0c37fdcb5b06b8d9f91a14db6285f32455034bc0bb9f3e6afa611afb56b45ed3",
+    "switch-opengl-base/device.maps": "d4b552099495d81e4127274e63a4fd52e157d8cfab259abc7f90a23a1f937878",
+    "switch-opengl-base/exit.malloc.xml": "6ee1312bd662b323a29e9ac72380739f3b644aa91a6d95f70eddb0dc8e03fe87",
+    "switch-opengl-base/exit.maps": "7ac38442f2ef284d526ff74202f5af1b2b25d42440566a9cb6aabcce21716200",
+    "switch-opengl-base/initial.malloc.xml": "590a8e94a49f4da689b775c5cd9bf354d30380af56e364db16598e5191037581",
+    "switch-opengl-base/initial.maps": "f57d66796e992f1b4ac43acb4f6c2650eda003395e8d182347640f93b33f2160",
+    "switch-opengl-base/loaded.malloc.xml": "c2a9f1f9a3da20ec860aaf7aecf8909d55d02e6fd565fb4d784edc29f47cf423",
+    "switch-opengl-base/loaded.maps": "8f11bac64d618acb5c665ef420a9b061a49d1fc463d1b8ff502a30b8abbdeb83",
+    "switch-opengl-base/settled.malloc.xml": "bafc6368ead33dd3dca24d6d7fe55145ffd3abd6b792f161ec5557525f0deda5",
+    "switch-opengl-base/settled.maps": "743e2a84528bee9602405d8d8c3192355c4b12d1bf817821a728f09cd4ccf610",
+    "switch-opengl-base/start.malloc.xml": "511e880b1851b36711c831e0e47b60e548e51624992c23c5b11f9675e022f96a",
+    "switch-opengl-base/start.maps": "7a28f7b90995122827361b8507f5c46c38f409f85d3eef4c8068c22e760fd143",
+    "switch-opengl-base/switch-0-fraise-maid-b.malloc.xml": "958719997613e4beb7793ffa0e8640d60d60c6be433eabe1621b31cbe2ece5e2",
+    "switch-opengl-base/switch-0-fraise-maid-b.maps": "341af735a5d6380ad0dcb607446f55d23aabbacc21a2d156e9115bf3277d50f2",
+    "switch-opengl-base/switch-1-coconut-hawaii-a.malloc.xml": "88453739aa04317b57b8c575a011b4f16f53c2969b44b95f42ae631cec67d125",
+    "switch-opengl-base/switch-1-coconut-hawaii-a.maps": "bc7ae1fd8c96a11b5e80ecad330660bb49f76add509a242d281833bc9dc8a5ed",
+    "switch-opengl-base/switch-10-cinnamon-maid-b.malloc.xml": "46b89becaa58cfe949afff7f2a006af12d148d2dd25797af5e9eef3992b6e012",
+    "switch-opengl-base/switch-10-cinnamon-maid-b.maps": "3dc61305be627152c86274b69180ec27e8546fa1421341ed006dad56d3e79b91",
+    "switch-opengl-base/switch-11-chocola-date-a.malloc.xml": "c98122d037f4b3a6721882bed8fee0ea55f30b9afce2783ff9c86bbb37d87fdc",
+    "switch-opengl-base/switch-11-chocola-date-a.maps": "82e17f0d5233240d95f673ebfbd7c2b49e21fd59709f91dd223db35ce4106ec7",
+    "switch-opengl-base/switch-12-fraise-maid-b.malloc.xml": "83689fedd3dd10df202ee6805a82e7537fe90d5e08a18e95f177d374d7162a97",
+    "switch-opengl-base/switch-12-fraise-maid-b.maps": "83fd8dd4ce4172d8417718fe2814ea07c833022de7fe95e0988993588f1c6348",
+    "switch-opengl-base/switch-13-coconut-hawaii-a.malloc.xml": "8452de1a38dcfefdea44352a17e3d698c643344a15cada1dc278d47f16ed79fc",
+    "switch-opengl-base/switch-13-coconut-hawaii-a.maps": "f30c2782bf5ea5de3549c288249164b4ae8c5bc1083cbccfd6ac1f0f79b5ea6a",
+    "switch-opengl-base/switch-14-vanilla-date-a.malloc.xml": "9d0b6c4e17716204e1802b9bb37fe8029a4f3be19f6ed02cc335dfa475f00c48",
+    "switch-opengl-base/switch-14-vanilla-date-a.maps": "0077126e7b845b5ac97ce528014f89225ae39a9d6b64f0a7d0168d7f97dec789",
+    "switch-opengl-base/switch-15-milk-teenage.malloc.xml": "3475dcd26079d7fbdec7993f85b459ae11de1f616ad7d10e0a88960eb8ada312",
+    "switch-opengl-base/switch-15-milk-teenage.maps": "a22733deab168163a85508031040e64ec15deadb387ead84f4cd49fa83860344",
+    "switch-opengl-base/switch-16-cinnamon-maid-b.malloc.xml": "7afe45d0f8f98b92c8161daca09429c7e3b87e2b8a8520551994ee8ded695798",
+    "switch-opengl-base/switch-16-cinnamon-maid-b.maps": "22c9b59200636f8b86b869f9ccf908d7e00000a614a19596a9ae20f24cf1f1f4",
+    "switch-opengl-base/switch-17-chocola-date-a.malloc.xml": "9e658e03709209fe4f0dceae8777585219fdd4bb344530f4e73892ff1a759c59",
+    "switch-opengl-base/switch-17-chocola-date-a.maps": "743e2a84528bee9602405d8d8c3192355c4b12d1bf817821a728f09cd4ccf610",
+    "switch-opengl-base/switch-2-vanilla-date-a.malloc.xml": "cef005209e505475bcc0dc4a6f2744799c24f0915be8b254396003628fcc1112",
+    "switch-opengl-base/switch-2-vanilla-date-a.maps": "6aa78731f276cad6caa3e0fcd0a4da17544dee0b00ce1c1288d9d412eac3279d",
+    "switch-opengl-base/switch-3-milk-teenage.malloc.xml": "4c7d230875dd360db66553f88885c0184cc25b5b43032bd04d3f4be057372a52",
+    "switch-opengl-base/switch-3-milk-teenage.maps": "4086d3951ad229fbba774f0b7a573904cd07c80a7a1485bc932fb1858590f1f9",
+    "switch-opengl-base/switch-4-cinnamon-maid-b.malloc.xml": "99e98c314fa13ca203b6b9bfcf38105d85f8990a82dce935fa764eb6519cd960",
+    "switch-opengl-base/switch-4-cinnamon-maid-b.maps": "ec1c7b2980839f837cd5fe491e6d40d7a9311beb6aac7166125f43d09ac4ad48",
+    "switch-opengl-base/switch-5-chocola-date-a.malloc.xml": "1908411b2e6fa8d8bbd5faa7452a6b4c3bfcd5157698c45d69dd5b1b96dfc5e4",
+    "switch-opengl-base/switch-5-chocola-date-a.maps": "e1d06074fb4b629ec44f17a2227ea728e1450681ce0d0845f8f7685190e2066f",
+    "switch-opengl-base/switch-6-fraise-maid-b.malloc.xml": "5adb52bfb018fd7c02c5c70276bb9e32efd258c5a7d3c2b28c9a68edf47f56fb",
+    "switch-opengl-base/switch-6-fraise-maid-b.maps": "c9ae2e03f65f5e46afe744c901d8a618984ffa530d38ccdef20d71292cbea629",
+    "switch-opengl-base/switch-7-coconut-hawaii-a.malloc.xml": "9a52e393e63b087e5c4b61d9292243263eff68a30dab8bfdf4d50b1d171d78e0",
+    "switch-opengl-base/switch-7-coconut-hawaii-a.maps": "7f7a7270fb2bb5c22d573de9e6e5c11f36625bbe7dcb6723c1efd59d23e50924",
+    "switch-opengl-base/switch-8-vanilla-date-a.malloc.xml": "85b4180fd96429866be1c0fd954f005c706564bce8b524714815dd1d05561ed7",
+    "switch-opengl-base/switch-8-vanilla-date-a.maps": "cecca6eac2709f5e295b8e74b63dd9f3279c6a672d425da76e6ed49ca2552907",
+    "switch-opengl-base/switch-9-milk-teenage.malloc.xml": "73115fac6a2cba5753edecfb3df7c141ffb7a502a17854e0b0eb72f9001fce50",
+    "switch-opengl-base/switch-9-milk-teenage.maps": "da078de346e72ccbcfdf973bb593a1a5b6c72ec27eb310a18d43c4ff062283bc",
+    "switch-opengl-base.json": "0b38b190d2fe4ddb8e147e48463216082c1d1c945c9ab1341b7d6100315471ed",
+    "switch-opengl-base.log": "626babc091f034c73127d091892725605370792c5829fdaa41d2d920b6ff0999",
+    "switch-opengl-crop/destroyed.malloc.xml": "e98c058d1e9646cfc87108d430e4687c8191145a3aec38003288d2f3cd477fd1",
+    "switch-opengl-crop/destroyed.maps": "f9cd00fb481b04566f8bb10f2de1580ae3bd45d83b5d33de1e980ba34762b442",
+    "switch-opengl-crop/device.malloc.xml": "f2d9a8d0e5e88ac53b52c1334b6cc071fb44938206fdb08b20868208aad85294",
+    "switch-opengl-crop/device.maps": "0de0fe19cdd398ef62982103aa36c557bc4287119fc4169304712ea1c2d22e34",
+    "switch-opengl-crop/exit.malloc.xml": "c12e6b9d5342bc6d83b1e6fb641b658ebf82fdfadef8550cc8149e0e5d9c91d4",
+    "switch-opengl-crop/exit.maps": "c83dd1b5335b2d47d453912164a936a2aab60a27f0f7d65b4aedcdf99f3b541f",
+    "switch-opengl-crop/initial.malloc.xml": "f1750be991ee921f94ce91af9b3bedfa5c864b705678613661d924c6cc9d0219",
+    "switch-opengl-crop/initial.maps": "d20b6a33a9daf6c426ddc35b607922cbc59d7da4ba1a9ad99edac80b6690ad5d",
+    "switch-opengl-crop/loaded.malloc.xml": "bd5a2f9a68572d66f3493f27362a371a6225b11d62c2771329a987eea0018840",
+    "switch-opengl-crop/loaded.maps": "a1ae9103cf48ab002edbd0dbcc581b882d18bdc39f9a549d25e98be608509263",
+    "switch-opengl-crop/settled.malloc.xml": "5a003c4521c4d31a6f324f7f564954aa6511bca2fb255e7b64ceb74f40b9d08b",
+    "switch-opengl-crop/settled.maps": "5db63057dabd43a0d51323d56b97da76db2e0093e61e4bbf92ae6ccbef9f14dc",
+    "switch-opengl-crop/start.malloc.xml": "511e880b1851b36711c831e0e47b60e548e51624992c23c5b11f9675e022f96a",
+    "switch-opengl-crop/start.maps": "e5db6f1313c52f63bb82e0d3b6234787076720e3ae0658b458d58dd712544793",
+    "switch-opengl-crop/switch-0-fraise-maid-b.malloc.xml": "6daedfef78770e293a3a6e3a06ae172e47dd6875498b9cb3e770e3afbede82b5",
+    "switch-opengl-crop/switch-0-fraise-maid-b.maps": "d38584acfca27ce60adad3a937c50f5199b44e3ef3f7bee27617b4a5f4c12f83",
+    "switch-opengl-crop/switch-1-coconut-hawaii-a.malloc.xml": "22a78a2a0085c1d4a4cb4b1139b1db6a0ca94b2595183fa8fc5e9f4af8882c82",
+    "switch-opengl-crop/switch-1-coconut-hawaii-a.maps": "14cfd8d4057a98a391dfc37a00e0185812cb60ae59378458fead361276b0a87a",
+    "switch-opengl-crop/switch-10-cinnamon-maid-b.malloc.xml": "59eeae2c31aa300dc67ada8b72a1a207f08b31fb8ada738585cbe624ec5a2a21",
+    "switch-opengl-crop/switch-10-cinnamon-maid-b.maps": "96bdee1c5a340b55b81c6b118a63fd7404c52af35d0ca056b9a48b99f410ff81",
+    "switch-opengl-crop/switch-11-chocola-date-a.malloc.xml": "47159dcbce2d073beb911e4d2cb67774b5406d12cf311694d4ec52debc14d21e",
+    "switch-opengl-crop/switch-11-chocola-date-a.maps": "8013dc448970b5056fd9cb32dc51266b0bd9fba81b72a03e09694bfc7e4a70de",
+    "switch-opengl-crop/switch-12-fraise-maid-b.malloc.xml": "b43ce6f8e2a94e83270258400e6a5fa5a40d4b57531c53b9920d49c52b93c53d",
+    "switch-opengl-crop/switch-12-fraise-maid-b.maps": "c1642ad9828f39e97113db02b819d1ca205034d39b9713eab77711b2ec503c57",
+    "switch-opengl-crop/switch-13-coconut-hawaii-a.malloc.xml": "bdc5a3c8710a28cbb7a92ea251c540b384f37cf8001a119fec9b8ef4c9701627",
+    "switch-opengl-crop/switch-13-coconut-hawaii-a.maps": "a4605e392dcd4becf5c7b9470e69c2b4966474795b4169f7b8b0be2b26f77f60",
+    "switch-opengl-crop/switch-14-vanilla-date-a.malloc.xml": "6a166f50c91658fdb9e5222c7fa61d0ab81a8e34788abead516e01758a7bc76b",
+    "switch-opengl-crop/switch-14-vanilla-date-a.maps": "8ab489dc9d82cf25614b077fc0ea948f060f584b0a1017805ff17c7baede2d0f",
+    "switch-opengl-crop/switch-15-milk-teenage.malloc.xml": "f6bbd19aaba59e110784f5535e1c74985a01372673f5291c72bb7f380bed4135",
+    "switch-opengl-crop/switch-15-milk-teenage.maps": "1fbf92df72b8cced5f8d9f346954a3ee09a48b3c9767345f4b4f514b3e205bc7",
+    "switch-opengl-crop/switch-16-cinnamon-maid-b.malloc.xml": "31991607926d0327d8da555e3ccbc4908d0605060dca6efa85c80ec36c79cac6",
+    "switch-opengl-crop/switch-16-cinnamon-maid-b.maps": "54dd622f6c67ac73d1a0483dcd635ddb466ac5f7ddf600cb1490843cc5ed09f4",
+    "switch-opengl-crop/switch-17-chocola-date-a.malloc.xml": "76481afce0e1b115a5000fb8b31743a3c5665896d1248f5da5c0b6a831fdbaea",
+    "switch-opengl-crop/switch-17-chocola-date-a.maps": "5db63057dabd43a0d51323d56b97da76db2e0093e61e4bbf92ae6ccbef9f14dc",
+    "switch-opengl-crop/switch-2-vanilla-date-a.malloc.xml": "841060a99590e6145107ccce1865df9aa157b08c0f5cf12833435403d24fb435",
+    "switch-opengl-crop/switch-2-vanilla-date-a.maps": "40e32826376a110fd62b912e41ed8760b8aa120fb61e663d530af7cda6338414",
+    "switch-opengl-crop/switch-3-milk-teenage.malloc.xml": "4a0a0371496ed55b0051f10a64376bb5f63f38d418078fe1764de57b2c60ffda",
+    "switch-opengl-crop/switch-3-milk-teenage.maps": "f6e5dce9cd974a9bcab9decea1f553e849ca89e567f0b117c05b97d2898fe24c",
+    "switch-opengl-crop/switch-4-cinnamon-maid-b.malloc.xml": "d7c30f4e9e0cef7091bbee5f3fc464dc4c36a1fd3634c8ed5506970d35e39df7",
+    "switch-opengl-crop/switch-4-cinnamon-maid-b.maps": "5edec0608f475df54a86c3345f798365aad4698cc44008543d740d0063f8332b",
+    "switch-opengl-crop/switch-5-chocola-date-a.malloc.xml": "68119fe6339acc2e15bd8dfecf74c87ed51d9c3dd5a6ab0e9b7b1dd3df3f41d3",
+    "switch-opengl-crop/switch-5-chocola-date-a.maps": "eac1d0f8b220aad36e01f4b8a7031155d8d01a7ba487e3ce79f30bacd437c405",
+    "switch-opengl-crop/switch-6-fraise-maid-b.malloc.xml": "9df9079adc36eb6a0ff9e1a6188c9e8d288a3655193713c4ee2a68fc098f759d",
+    "switch-opengl-crop/switch-6-fraise-maid-b.maps": "243ee96b608ef8c36622e39e0be8f0cb1656da4d9179a82497b2bec371af33f5",
+    "switch-opengl-crop/switch-7-coconut-hawaii-a.malloc.xml": "211e53223468d7dd60c4359dd301357d512aab2645f8284774f48930079a23cb",
+    "switch-opengl-crop/switch-7-coconut-hawaii-a.maps": "89369d22b702b2466cc3c2f6fa00ee956a9f298b430a327a4300240fc72e6384",
+    "switch-opengl-crop/switch-8-vanilla-date-a.malloc.xml": "f0cfa49505da13d350e6c6f5ae087d7303a9936a5f4e6a1ac2fb3d773924ad67",
+    "switch-opengl-crop/switch-8-vanilla-date-a.maps": "d5ab136a922a8775e24e0de647afd324e07e8f38835fff9439363680f67b0c3b",
+    "switch-opengl-crop/switch-9-milk-teenage.malloc.xml": "1394eb7d1b456ef9464ce9813fba03d165f11c230d5b79ff4f99038d13c300a3",
+    "switch-opengl-crop/switch-9-milk-teenage.maps": "2f576bdae55ebd74540e82159dca32afe98d28b43127a6ad43a549db7b6cae18",
+    "switch-opengl-crop.json": "10b08a1acfcdd502f6475d04f8206e5484fc10594aae017976ec4735c397b46d",
+    "switch-opengl-crop.log": "872a82c2baab3da7149c9c4250ff11c17ac352c0be398de831b796f3a72eb98f",
+    "switch-repeat-opengl-base/destroyed.malloc.xml": "e89e1c391430cb6da7a427cf72f048abe0f84c7b82f0349a1215264265195ccb",
+    "switch-repeat-opengl-base/destroyed.maps": "570801d0f9afa50088ab02a99c1fed699028574772893089af4070fff01c3494",
+    "switch-repeat-opengl-base/device.malloc.xml": "8fe1b604bbdd7772c3f331e9e08ff4d8664411b9a15f853d84e99ccbeed59f5f",
+    "switch-repeat-opengl-base/device.maps": "20fb4367ee6de5519a4f6005f7c0b2638f473e33e768aaff7d5006f094c1eb3c",
+    "switch-repeat-opengl-base/exit.malloc.xml": "fe5b17897fabae82acf18ce6fd1207e1edcfd043cc41d7615f54acd9dc63629c",
+    "switch-repeat-opengl-base/exit.maps": "34d48a3f4c31cddb674828cfc15c900c9c483c63b83c3e14d24c5fd19135031d",
+    "switch-repeat-opengl-base/initial.malloc.xml": "4d00c69b8192f30b137a2518275f8ed431ed284b0c62a1e3aa16b879eedde0fa",
+    "switch-repeat-opengl-base/initial.maps": "192632c655bb51a4b7e4ec0262e47c8b92635c446ae42e4b73a9f40615cf62df",
+    "switch-repeat-opengl-base/loaded.malloc.xml": "b12704172166bcd3940e22db381c6c3fe1cb28a50ed1359a574a5885075b2055",
+    "switch-repeat-opengl-base/loaded.maps": "a944a2ff469460436694fc40b09422640ff68b68aeb4830febd16afb1cc58a1d",
+    "switch-repeat-opengl-base/settled.malloc.xml": "e70a9c65f7db6d4664d2ac52c68646b4cdc27e2cbbd10b1221225fdc2fb5abd8",
+    "switch-repeat-opengl-base/settled.maps": "ce2495eb2b361f6d50632be22e6d332fd871c6dd5c7566cb51f905ac053d7230",
+    "switch-repeat-opengl-base/start.malloc.xml": "4b4ae597674a671dab381c031bd16642a63c7b4678ee96f145135e1b9d1077bd",
+    "switch-repeat-opengl-base/start.maps": "6e3087975c8991c04d7f702124084058391b083a51f4409dc6bdc4d3e131ccba",
+    "switch-repeat-opengl-base/switch-0-fraise-maid-b.malloc.xml": "2957f9120d4162011edc450fa2bad3daa4ff70ba47f9a323bb302599c2546ed8",
+    "switch-repeat-opengl-base/switch-0-fraise-maid-b.maps": "edaa011e29dcf92af3528c6d43a65b5e2a25e6e269dbecdab668f292d85d59cb",
+    "switch-repeat-opengl-base/switch-1-coconut-hawaii-a.malloc.xml": "e017bfac2db443bb654110fd46f3ce1c2647c3da2fc0d206455904b45091373e",
+    "switch-repeat-opengl-base/switch-1-coconut-hawaii-a.maps": "3c10cc80f3acce9fba2332dc2176f13ee06e5f0bf4e4ac94b4184f859882e4e8",
+    "switch-repeat-opengl-base/switch-10-cinnamon-maid-b.malloc.xml": "28e7a20cdb4df12d8eab660675e7cd5821eec9dd0f5b094767b786fc9a771c1f",
+    "switch-repeat-opengl-base/switch-10-cinnamon-maid-b.maps": "7ca1954a312cb7a451c4b2eb178822509f53af89d756cb83a4d1bfa6a7789a9b",
+    "switch-repeat-opengl-base/switch-11-chocola-date-a.malloc.xml": "a20d7479b53d00b47f0671267a947857b8ad4b646d50ff278622868fd3eb9226",
+    "switch-repeat-opengl-base/switch-11-chocola-date-a.maps": "34147b866dd50de216da790650df84e6f1dac95d98e97fbe00ebeb402c7e8f40",
+    "switch-repeat-opengl-base/switch-12-fraise-maid-b.malloc.xml": "10cb6dc247f00207d2081bb200d9cfc8078a02cfe066d918e1ba48ecd813439e",
+    "switch-repeat-opengl-base/switch-12-fraise-maid-b.maps": "d67d35a84f06d4bd4a1d2377193c0c945203c49a516fc80fdc8673abdb0a7721",
+    "switch-repeat-opengl-base/switch-13-coconut-hawaii-a.malloc.xml": "2fa874458acd3fdf94d9ba8eff864bcf7ccf0a9c9bde5c32a24968e043d4b4fe",
+    "switch-repeat-opengl-base/switch-13-coconut-hawaii-a.maps": "96adb535cc4a72698402834ec53225a9b4aa76eeca3a1fba2d7183b3c1bdebe7",
+    "switch-repeat-opengl-base/switch-14-vanilla-date-a.malloc.xml": "f4c7ad0d005be271742b4db2c740b514d310a076502bfa0d44797f645dfa4c73",
+    "switch-repeat-opengl-base/switch-14-vanilla-date-a.maps": "6f0170dc0f790eb61a4eadb36df9ade99c7e569785fb27f3d771bc3f41120fe1",
+    "switch-repeat-opengl-base/switch-15-milk-teenage.malloc.xml": "8a22f4c16e21bfeb543f63922562ade2fd725a8f067e0cac847f0b290291748c",
+    "switch-repeat-opengl-base/switch-15-milk-teenage.maps": "c875b5c657c9aa75e24940f14fd79ec1ef31fe9b421666b7a563056cb8f90228",
+    "switch-repeat-opengl-base/switch-16-cinnamon-maid-b.malloc.xml": "84db2e68468d1adf5c0bf758c28d7f3759719ee87cb918bfec2f2c0d317e01ba",
+    "switch-repeat-opengl-base/switch-16-cinnamon-maid-b.maps": "4c16768e85f6f6f960b05de13203e35bac6c4c6790cdaff3cde800427077de0c",
+    "switch-repeat-opengl-base/switch-17-chocola-date-a.malloc.xml": "7eaa3cc0671b5ce26969c4a8855805994970b7f4a515cd5b0fd4353e9443cd03",
+    "switch-repeat-opengl-base/switch-17-chocola-date-a.maps": "ce2495eb2b361f6d50632be22e6d332fd871c6dd5c7566cb51f905ac053d7230",
+    "switch-repeat-opengl-base/switch-2-vanilla-date-a.malloc.xml": "2a18367fbf60ca370f61d2869f83f030dbf8eb0f8805f1991db7a789b0aa9a6a",
+    "switch-repeat-opengl-base/switch-2-vanilla-date-a.maps": "e794cf35d9c272efc3d653770952d3f5e3a92dba3a05cd22310a7d6294c720fd",
+    "switch-repeat-opengl-base/switch-3-milk-teenage.malloc.xml": "e84070fb94d12e9b21460b10df66db43e1e9a3ddeca82629106c83401ba4c664",
+    "switch-repeat-opengl-base/switch-3-milk-teenage.maps": "cf72c30243df10b604af6d2341dfef2aa683453cd1f450008881c25270fcc260",
+    "switch-repeat-opengl-base/switch-4-cinnamon-maid-b.malloc.xml": "84cb9ff7205328e8970a5b9dc64d8dc976fafced21e5b2f9faeec63a8ef50fe9",
+    "switch-repeat-opengl-base/switch-4-cinnamon-maid-b.maps": "ef286cd40da313958946b2e4245be02a84568b2365812c5efdf64147d4618510",
+    "switch-repeat-opengl-base/switch-5-chocola-date-a.malloc.xml": "f44a24dd3e7635f4174eece2b45c98f9882bb40b9c7fb59785234c73b7e25bcb",
+    "switch-repeat-opengl-base/switch-5-chocola-date-a.maps": "5d1ca04317969fb0963b3cac5130e3fdf01dc31ce1d2b4d4d5fc96bc35f0571d",
+    "switch-repeat-opengl-base/switch-6-fraise-maid-b.malloc.xml": "1fb1c85ccea64ded9d9c3e06bb26400c9ce1e7b1cc6eb84f31c71165425e3103",
+    "switch-repeat-opengl-base/switch-6-fraise-maid-b.maps": "7d1457280d105bb57e13f08902e2f2985873ef6a4899c49e5463766b5a678620",
+    "switch-repeat-opengl-base/switch-7-coconut-hawaii-a.malloc.xml": "bab9a4d5f496b0dc15bafde86fc118e59e19712b69ac4b12c4e67d64f466eeb6",
+    "switch-repeat-opengl-base/switch-7-coconut-hawaii-a.maps": "4c04cad4bfb5c6c700eaa0d1d932cd88287ea458d19efffb535c540158854b62",
+    "switch-repeat-opengl-base/switch-8-vanilla-date-a.malloc.xml": "f1e53788b6811151e3c3cdb1f522b079dbccd33c2eb9021d912d1af6830363fb",
+    "switch-repeat-opengl-base/switch-8-vanilla-date-a.maps": "b7d4c411981ee5f074842458eac10575b8f5ae781191ce901a41f01dd5204a6a",
+    "switch-repeat-opengl-base/switch-9-milk-teenage.malloc.xml": "fb41279884c57f703b7b46ca1f8cbd3d90a34afca15ade1e751b05ab4359d064",
+    "switch-repeat-opengl-base/switch-9-milk-teenage.maps": "c3dffe52d421e02e156cf0a46c09993a425715fd66e21149941296af9bfb04f3",
+    "switch-repeat-opengl-base.json": "42f6d0fca591f1b078f6bb7aff201903bb687543b16de2fb6d19fff5662869ab",
+    "switch-repeat-opengl-base.log": "1d7253c606214ec90df0bd9e4abf054f31f0ae92222468c521d07c42e1b4cbae",
+    "switch-repeat-opengl-crop/destroyed.malloc.xml": "7f2b00ea1680cec2104b07837ea3f8c52929ebda0db44ea6dbeed8c67847d116",
+    "switch-repeat-opengl-crop/destroyed.maps": "308370fcbb64d3b980e1b4c9cf83f2cf7f785f910014bf2e879ed166e68278d3",
+    "switch-repeat-opengl-crop/device.malloc.xml": "a7ba292fa500b632343ff6e45a4510cb52ca308761714ba6bddcde6967769315",
+    "switch-repeat-opengl-crop/device.maps": "16ed70d6472ea890a66ae2d457542a644ba9d2a79223ba75e52cd6a179dd6328",
+    "switch-repeat-opengl-crop/exit.malloc.xml": "b1e40baa05e6d1c5bd7bb2cb2ad98d092eafce9b7c0a046d27ec95aceba3a045",
+    "switch-repeat-opengl-crop/exit.maps": "82b916c58afd0fb958fcd21220032d4f6373ae6b3982c1be70f5a3474b5b5908",
+    "switch-repeat-opengl-crop/initial.malloc.xml": "a67e7ccf2ad43fe192ac124cde5b2af0486c57dbb52cd1643f9456d8b0cbc9b9",
+    "switch-repeat-opengl-crop/initial.maps": "53c2ab2484909a8c94010779b4f914fc825afb4e52b63309cc16c62e7a6c5193",
+    "switch-repeat-opengl-crop/loaded.malloc.xml": "25ccfa750352080413d6c71921188e1c449d2923665f84cefdc60efc393ac3b8",
+    "switch-repeat-opengl-crop/loaded.maps": "307a493d7a3abd37f71842c73a45a1ca31f3ef15f401c3a691afa5f8cc2b4443",
+    "switch-repeat-opengl-crop/settled.malloc.xml": "aa0aa31a1151f9eb1d98777cb050f6fc1eeefa4cc4270f55e96aaad5cd9d17c6",
+    "switch-repeat-opengl-crop/settled.maps": "6f2fdceb9200cc99d281dcfb118af6ac9949cd8004fb0747a15274f99a9b8339",
+    "switch-repeat-opengl-crop/start.malloc.xml": "4b4ae597674a671dab381c031bd16642a63c7b4678ee96f145135e1b9d1077bd",
+    "switch-repeat-opengl-crop/start.maps": "c32ae9795fbc2727fded1dbcc7347cf7f4d258a6071ce62fa78e83de44b26255",
+    "switch-repeat-opengl-crop/switch-0-fraise-maid-b.malloc.xml": "6cd5861e82af4f8064758b8672c1f2600afe53856c766624c594471628668a90",
+    "switch-repeat-opengl-crop/switch-0-fraise-maid-b.maps": "fbff269adc8d6d431b14860e22a3d6367d0b33d16e8282e9bf2a6cd7de3af272",
+    "switch-repeat-opengl-crop/switch-1-coconut-hawaii-a.malloc.xml": "a0da60cf05d4f204bae122ac9c31af6833fb0489ed0e432025fd4d3827e752b0",
+    "switch-repeat-opengl-crop/switch-1-coconut-hawaii-a.maps": "722f43a391dca9bccfdca101a2d966552a55f4581a4150bae76cfde2ae1df02a",
+    "switch-repeat-opengl-crop/switch-10-cinnamon-maid-b.malloc.xml": "8930814a282c70f396aae1043f335213759b426b19a264b9347fe18a62de445d",
+    "switch-repeat-opengl-crop/switch-10-cinnamon-maid-b.maps": "eaa0f055ead8c12bd77c9d3f817274e74adf0200fd7821b10a912a519103129f",
+    "switch-repeat-opengl-crop/switch-11-chocola-date-a.malloc.xml": "d785bda42f87b375c39903562057ea986ceef00a875bf97058a76fe68c45cdd9",
+    "switch-repeat-opengl-crop/switch-11-chocola-date-a.maps": "b24b27f4fc719b3049f62cc1de1fd4f306157145aa72551dcba7f717853a58b6",
+    "switch-repeat-opengl-crop/switch-12-fraise-maid-b.malloc.xml": "d87b7d859a2d6913208725674bac0f612be3f3bd89847213fca3ce77b9e019b5",
+    "switch-repeat-opengl-crop/switch-12-fraise-maid-b.maps": "29c4afa893566d768a97b32d4c007f44563fdb1739d0e879360e1e4cfc3b5403",
+    "switch-repeat-opengl-crop/switch-13-coconut-hawaii-a.malloc.xml": "92f23e1933d8b363b2fca093c2fd9eb296e72d293734df96cb1d805f48f19bc5",
+    "switch-repeat-opengl-crop/switch-13-coconut-hawaii-a.maps": "aa5613191600ae4228010f5038aa4d2bc1c2838caa1a64145f356c7e816783f3",
+    "switch-repeat-opengl-crop/switch-14-vanilla-date-a.malloc.xml": "cab6a7832a224f45e186dbaf247a3cff5b23f6f889aa450557d456d1a1dfb439",
+    "switch-repeat-opengl-crop/switch-14-vanilla-date-a.maps": "a8091279c3ef3bfacf4d5d04868e502aa7e8017ea7ad4f056ea3023a9c6ace29",
+    "switch-repeat-opengl-crop/switch-15-milk-teenage.malloc.xml": "47b758a6a7ca39ac962abfe28b802c932a5176e9b0617c62a27b3abd2f9bb567",
+    "switch-repeat-opengl-crop/switch-15-milk-teenage.maps": "c6c8fe6afadedd92faf49c2e7003d12e67d0ebe0850036082d721a1f60648480",
+    "switch-repeat-opengl-crop/switch-16-cinnamon-maid-b.malloc.xml": "ac060c7fe8433bd66b7dd980d1fa56ff0193343a9a6aa478a210810997a24e22",
+    "switch-repeat-opengl-crop/switch-16-cinnamon-maid-b.maps": "0aff8a6a28ed418acc2a3dc48199f523a712897e16a692955ffc475ed2bc90f1",
+    "switch-repeat-opengl-crop/switch-17-chocola-date-a.malloc.xml": "46aebc20af560bea011e8ed405933fb8a47cec1beb2fd6ed9a95b5b6d8eacc2e",
+    "switch-repeat-opengl-crop/switch-17-chocola-date-a.maps": "6f2fdceb9200cc99d281dcfb118af6ac9949cd8004fb0747a15274f99a9b8339",
+    "switch-repeat-opengl-crop/switch-2-vanilla-date-a.malloc.xml": "b61773973c475870c177cf127e5400783943c5984e7cd639ac70aa6228a886f9",
+    "switch-repeat-opengl-crop/switch-2-vanilla-date-a.maps": "1bca748b5d5f017d88f929579fb9aafc253e3133fad9a3659463547f54294abe",
+    "switch-repeat-opengl-crop/switch-3-milk-teenage.malloc.xml": "02ad8e1750941d58b93dac4888bb2fd8b7fe093db226b274dcbfcaf4a66ddbc1",
+    "switch-repeat-opengl-crop/switch-3-milk-teenage.maps": "576c1a25fa2a73273f3f756b94764addc0173e87fa39610ff2d37916b42f43cf",
+    "switch-repeat-opengl-crop/switch-4-cinnamon-maid-b.malloc.xml": "13dc13a109fcf3028267f729be66148d859738d48cbafaa4292cbfbc4eb5dd04",
+    "switch-repeat-opengl-crop/switch-4-cinnamon-maid-b.maps": "7e43860c10c791f1d6a665635eb4786a544661f24406bd1740e5d26728679424",
+    "switch-repeat-opengl-crop/switch-5-chocola-date-a.malloc.xml": "1b3dfcaee156fff2350c1d86de8b5b469536c5305173fb80cdc3e3c4558b7bc8",
+    "switch-repeat-opengl-crop/switch-5-chocola-date-a.maps": "5381a1261659accca79aab76605359605873414671db99c1b186497ccd780491",
+    "switch-repeat-opengl-crop/switch-6-fraise-maid-b.malloc.xml": "cfa93d8ee39c91ee9c2d2cc18f5a8cd1d655d249da960ad682160b9a1f6e5fae",
+    "switch-repeat-opengl-crop/switch-6-fraise-maid-b.maps": "abeeaa9a66676f7faaa0cd24dd9f00965280c01de488c7739e3d524026a672c1",
+    "switch-repeat-opengl-crop/switch-7-coconut-hawaii-a.malloc.xml": "55f08d1b958e9afec01b0dab74a34d52358838b11de2db01c00cae588cbca552",
+    "switch-repeat-opengl-crop/switch-7-coconut-hawaii-a.maps": "6bc14fedd1d60cb76cf3fb4b30eaeaf850a917d34aa98da549b80ec428e819b0",
+    "switch-repeat-opengl-crop/switch-8-vanilla-date-a.malloc.xml": "5ce3f38cf333446899ed236ebb3db60e84a27f4253f581cafae156d6aaf6d531",
+    "switch-repeat-opengl-crop/switch-8-vanilla-date-a.maps": "f0232cc90accbccd6ffa3b7db3441053e5b9e41ccc588ef6bf261984b1e90786",
+    "switch-repeat-opengl-crop/switch-9-milk-teenage.malloc.xml": "a7788f10f420a2e81879569f11046fe5a4b5b5b5c76b8d9bb175bfc332884874",
+    "switch-repeat-opengl-crop/switch-9-milk-teenage.maps": "eaa0f055ead8c12bd77c9d3f817274e74adf0200fd7821b10a912a519103129f",
+    "switch-repeat-opengl-crop.json": "e11114ca5fb788011f879003e87b5ba5e455c7f0b64a72fb723797a09b2d92ca",
+    "switch-repeat-opengl-crop.log": "77a97ae612840888bbd50c6c69008e63196f544875b3fc9241db90a31658a797",
+    "switch-repeat-summary.json": "44c1a9149d994c025f1c902e00a5bb3f889ec0ff44b6441798ad6515c1a14f76",
+    "switch-repeat-vulkan-base/destroyed.malloc.xml": "989daa9c5390db50b44d401a69b3cbbe5f75ec83a3a72e9f8942bc4aa00feb85",
+    "switch-repeat-vulkan-base/destroyed.maps": "88958b81feca56750c8f892947ce620e07e26a40dfa6c2270e7e9ca7426d9fb0",
+    "switch-repeat-vulkan-base/device.malloc.xml": "39e09e4572c8918155079bdd3638e3fa708536ff4b4e0f343f9ac740c4fcfd20",
+    "switch-repeat-vulkan-base/device.maps": "750d5b586f3ecff05d15b9854353f022ad492832e0a983b491168a7fb6df4d01",
+    "switch-repeat-vulkan-base/exit.malloc.xml": "36d37d1058c124439f2ba039bea26d467306833867a45d830fc757e4f17a5d03",
+    "switch-repeat-vulkan-base/exit.maps": "813d78c86ea124215dce0d116d1911257861c690940b1a7c8927693d4ae02450",
+    "switch-repeat-vulkan-base/initial.malloc.xml": "aca3647afce43f4e8e87c524f9274ba3b3061ee5efedc3af3b094455d2586e54",
+    "switch-repeat-vulkan-base/initial.maps": "6b770d4c1154b4e1789907d3272e37c8dc6c714357e1b329fd88a94d292ab3e9",
+    "switch-repeat-vulkan-base/loaded.malloc.xml": "0a5fd40db92034a65a27da068fd67057398ec9c322f0556c93ee5e41d6d2be3f",
+    "switch-repeat-vulkan-base/loaded.maps": "5a903b5cee93f152959562d0851620ba6f66639147e6278d01ad333bc6f06257",
+    "switch-repeat-vulkan-base/settled.malloc.xml": "1f90696042e2ffbf4304cc4bc39359ebeccc3f2dd441833ede591bfb5a8a766f",
+    "switch-repeat-vulkan-base/settled.maps": "c8ce5051153f208081c306552851786b6fbf60966059e9313372b4c3511d94f2",
+    "switch-repeat-vulkan-base/start.malloc.xml": "4b4ae597674a671dab381c031bd16642a63c7b4678ee96f145135e1b9d1077bd",
+    "switch-repeat-vulkan-base/start.maps": "2c81d29237cd7fddcc77e99ebe63508b1b883b21f9378151add3d9b8abeb6d8c",
+    "switch-repeat-vulkan-base/switch-0-fraise-maid-b.malloc.xml": "50f981ada7c152c783bd2b7f64c1c63a37e2b8b1d607e7f38bda163191708db8",
+    "switch-repeat-vulkan-base/switch-0-fraise-maid-b.maps": "c7e8c180267c5f15fc0f9a7e159a6bacd1ffd7a79b0d020ea7a300125504613f",
+    "switch-repeat-vulkan-base/switch-1-coconut-hawaii-a.malloc.xml": "e634b579a485994644eff0b22f7693dd74c77d1628a644ef0af0a7a4e79aac6f",
+    "switch-repeat-vulkan-base/switch-1-coconut-hawaii-a.maps": "cbce797d9fca3e21b37d8d318eee2cc7c9404c10eb7ca34e6ee42f7bedf31260",
+    "switch-repeat-vulkan-base/switch-10-cinnamon-maid-b.malloc.xml": "00cbdb6cae612d1f4acd504efecd5ce013082c65698a75b5c317837357301938",
+    "switch-repeat-vulkan-base/switch-10-cinnamon-maid-b.maps": "c711c45761902c5fe97d7c051e3a0afce1946a8398a7aecd8972c7876b3b168d",
+    "switch-repeat-vulkan-base/switch-11-chocola-date-a.malloc.xml": "381e3f749ef4bc5595ba30d238b8ded1afe0317ce2615df1595e5aa77250e1b2",
+    "switch-repeat-vulkan-base/switch-11-chocola-date-a.maps": "c7fb28b780a68649c2d5fd4ec6b32bbc333678353fc55d73f84e235097cac965",
+    "switch-repeat-vulkan-base/switch-12-fraise-maid-b.malloc.xml": "d41248ff2671e410e1e5f17822f6214d7478730c98ba0c572cb9b28e92c94396",
+    "switch-repeat-vulkan-base/switch-12-fraise-maid-b.maps": "ca665ad52a87504743439999743a308ef9159cd12abf954d519da17b61eceafe",
+    "switch-repeat-vulkan-base/switch-13-coconut-hawaii-a.malloc.xml": "329993a1c283ec1425b92b44af6abcd6efed974b10cb1a2ba16746dbb2792386",
+    "switch-repeat-vulkan-base/switch-13-coconut-hawaii-a.maps": "d15ed05e304315f8d16fd0d2e3c9b63ea9098fe232f2c4191c11dd5e9a071489",
+    "switch-repeat-vulkan-base/switch-14-vanilla-date-a.malloc.xml": "d2f454263f9a900d336b488d000c6f5a001b0c21df770a3164e7fd786a863332",
+    "switch-repeat-vulkan-base/switch-14-vanilla-date-a.maps": "fde633d99ade056db47c95b8843ec9110ac60cd34bc08eef89e861cd246f4ece",
+    "switch-repeat-vulkan-base/switch-15-milk-teenage.malloc.xml": "f7289aaef861c3787af468997a258b8975976c31d0b1a6e8c06bca8708c85b5b",
+    "switch-repeat-vulkan-base/switch-15-milk-teenage.maps": "689e3497686072843e9c32fad01ce3ccd1c176e7dcc7e4624f4fdc9a91b89461",
+    "switch-repeat-vulkan-base/switch-16-cinnamon-maid-b.malloc.xml": "2eb5a4152369fe38563cf9ab4333923894ea41c8fd1f8e04f4444b08080d5273",
+    "switch-repeat-vulkan-base/switch-16-cinnamon-maid-b.maps": "61d7d0fe762b6f8c56a6b5ee4754de28c630459e53b86d0c266ff339d62af15b",
+    "switch-repeat-vulkan-base/switch-17-chocola-date-a.malloc.xml": "bf290e931972eac33284653588382c0b9ae58d43a5351050b0733e08ded115d7",
+    "switch-repeat-vulkan-base/switch-17-chocola-date-a.maps": "c8ce5051153f208081c306552851786b6fbf60966059e9313372b4c3511d94f2",
+    "switch-repeat-vulkan-base/switch-2-vanilla-date-a.malloc.xml": "85b0a8c05ca325dc6918dc1844616922fc45806f8c920c330cc674ce8daf16b6",
+    "switch-repeat-vulkan-base/switch-2-vanilla-date-a.maps": "8befb7382e4cb8d18a83ee8d5712465c8e802bcb4ba5d815cea2360a69c54521",
+    "switch-repeat-vulkan-base/switch-3-milk-teenage.malloc.xml": "3ff2966e0d83a01eae932b1102bf16a357aabc791c37a662706fd1e386164973",
+    "switch-repeat-vulkan-base/switch-3-milk-teenage.maps": "53d427806f7112d5d59356b95227ece1f2985c6429bb732a69e742b42fd6255f",
+    "switch-repeat-vulkan-base/switch-4-cinnamon-maid-b.malloc.xml": "5b74f74c6c34169f813ab96a0ab96f4712e5c609f10e58b525935866b597636b",
+    "switch-repeat-vulkan-base/switch-4-cinnamon-maid-b.maps": "07403c0bdbe7df3daeb692b61e45d41814a8dc8945a0c80e3ad53365fb8a4cf0",
+    "switch-repeat-vulkan-base/switch-5-chocola-date-a.malloc.xml": "05557c503550de1ec719441c00b19a1de43f7df3fb5b2f48703c7175ec8ee7fb",
+    "switch-repeat-vulkan-base/switch-5-chocola-date-a.maps": "18295dc1a7b0a85499c164d7c0b1437c38cb7027cc68c3ded1a82ca7a1786482",
+    "switch-repeat-vulkan-base/switch-6-fraise-maid-b.malloc.xml": "d5df9283e4e02483ea310f7fb252774d50c4237fd5f1e8f1438dbbd317e3ae4a",
+    "switch-repeat-vulkan-base/switch-6-fraise-maid-b.maps": "a895261d38b7046dc5918516e85c17d4008cf72f9e861ee9396a10c901c725a0",
+    "switch-repeat-vulkan-base/switch-7-coconut-hawaii-a.malloc.xml": "8065071262e60abbefb17785e5db6b2e94758a907e8fbf8310383fd92c5522b3",
+    "switch-repeat-vulkan-base/switch-7-coconut-hawaii-a.maps": "4a5292723659a6915976f481fd53608dad15408d0125a20bf9afa7dc722d2905",
+    "switch-repeat-vulkan-base/switch-8-vanilla-date-a.malloc.xml": "74c5238e798c45d4c0c1313f2b5739c5806d2cf062c21aef3bf0f4d88272328e",
+    "switch-repeat-vulkan-base/switch-8-vanilla-date-a.maps": "a371c9fe3a9db80bd35e4782cd68a4a4b44eeaf8c8a6ec83edf00f3602bb858f",
+    "switch-repeat-vulkan-base/switch-9-milk-teenage.malloc.xml": "4ff6e8cad4ed8112950be9db4e6e7414f9fbfe5942ccf28834c2a3ba653450d6",
+    "switch-repeat-vulkan-base/switch-9-milk-teenage.maps": "03e8e8a3387065c12db14ca0708b601ba3f2cce174d2f58a4f43842c9143388f",
+    "switch-repeat-vulkan-base.json": "d943e97e0c8591e83dc7ba8ae63cb8bd5df7b0ede6f87aabcdbe3a61ff6ac1c1",
+    "switch-repeat-vulkan-base.log": "824684dcb250a95fce2c84cef205f58fca56941031a831cc1e8d120fa427dee1",
+    "switch-repeat-vulkan-crop/destroyed.malloc.xml": "d35b025452eb32d768a0c9553bbf57e62db2017c8e2caf11b9b924dd8e06cac2",
+    "switch-repeat-vulkan-crop/destroyed.maps": "5f267217a20ccfbcd8b61608970550dcf088e2f2a93e35fd939844cfeeef7845",
+    "switch-repeat-vulkan-crop/device.malloc.xml": "5c36f58a3b839e89d22dfe8c1d0c2c4f22971cb19d261e15027b1f5200f2105c",
+    "switch-repeat-vulkan-crop/device.maps": "31918a04abdfaa990a803b1bcc87929e55dadaec41eaa27d2c126b4a6c28d1e9",
+    "switch-repeat-vulkan-crop/exit.malloc.xml": "12a05ef2f13f4cfcc1455c543e10ed3262a4ab72205513e6546f4574d58fae3e",
+    "switch-repeat-vulkan-crop/exit.maps": "50089899920ecd2224ec760b4a94986d6b233a517e9599bb16048ee675d99336",
+    "switch-repeat-vulkan-crop/initial.malloc.xml": "39ddbe3c9d36b5fbef96620e0538659675815ca96a94a733036304a354f03b81",
+    "switch-repeat-vulkan-crop/initial.maps": "888ccfd41e86eb962ab732f9e0f12fe5a62945c45558dedfbc0ea7b32eef8e11",
+    "switch-repeat-vulkan-crop/loaded.malloc.xml": "7bef3b913bb25f08a91b7adccf92ac897b3974e7d989e344d85f26348a7c9417",
+    "switch-repeat-vulkan-crop/loaded.maps": "1a64bf958053ee28d460f6b774ad940e472de2ac62054543033c025c9ca18f74",
+    "switch-repeat-vulkan-crop/settled.malloc.xml": "f2eaedbce8338158af060cb18cdb9aa11da7c54a6dafbaa321faa1e6c25bab8e",
+    "switch-repeat-vulkan-crop/settled.maps": "64b0caae5515bd58361eb0c1d8c045d6cd3e63b092dc68e4748efe355d5d9a2b",
+    "switch-repeat-vulkan-crop/start.malloc.xml": "4b4ae597674a671dab381c031bd16642a63c7b4678ee96f145135e1b9d1077bd",
+    "switch-repeat-vulkan-crop/start.maps": "e23e7dbc47374ac815d4513e4534690874ce48ede804e6631190ff4e8c7c0f58",
+    "switch-repeat-vulkan-crop/switch-0-fraise-maid-b.malloc.xml": "3512705b21c129bf8b42718ffd4045f8c96a9fd6e2982e5f850b25aff9d2bfc9",
+    "switch-repeat-vulkan-crop/switch-0-fraise-maid-b.maps": "bdfd01c3ed764eb3f2c1cf46a4d713091f7ab25ad38dd918d7ac05e924e8d8a9",
+    "switch-repeat-vulkan-crop/switch-1-coconut-hawaii-a.malloc.xml": "3978214ebc1139c08616204966515a2e9f32b8d360afcc107261b8c5ebbe91ee",
+    "switch-repeat-vulkan-crop/switch-1-coconut-hawaii-a.maps": "7b636f46858323bf0b0036da04d30a913e1386c587f427171cc7a4d536bb1e40",
+    "switch-repeat-vulkan-crop/switch-10-cinnamon-maid-b.malloc.xml": "fc58c075a211a46835a4186c6d4cc2b733d788213aa705dcef8304f3bb24ab21",
+    "switch-repeat-vulkan-crop/switch-10-cinnamon-maid-b.maps": "8282c772853b7cf11399e4fdd8db96aa366766895f762c2ab4fe5a9e268463f3",
+    "switch-repeat-vulkan-crop/switch-11-chocola-date-a.malloc.xml": "3ed999bc03a17c4ba7f00bfb4867f7886d3d6cfd4138b1ef72b489aed7fe6b35",
+    "switch-repeat-vulkan-crop/switch-11-chocola-date-a.maps": "e966bd66e26acfbf981591702ebfc68aa2c8030951db15e37d89e74695f10499",
+    "switch-repeat-vulkan-crop/switch-12-fraise-maid-b.malloc.xml": "41c455181add0d0edc36c39a6af88492622ecadc9fe2376f3f71655979a7731f",
+    "switch-repeat-vulkan-crop/switch-12-fraise-maid-b.maps": "4697084b92aa5e0243b77508fe2a0aff3cd7e08da25428f8bdd528ff2c18fd63",
+    "switch-repeat-vulkan-crop/switch-13-coconut-hawaii-a.malloc.xml": "0c96539150a44a5c8b5551b302eba1ff287d2e9d26d8cefc8f63e0bb53ff99b1",
+    "switch-repeat-vulkan-crop/switch-13-coconut-hawaii-a.maps": "836e5eaa31ad5ef78e00211b46b28d3bde700ddb6dce59f07e0a1b7b1d0ae386",
+    "switch-repeat-vulkan-crop/switch-14-vanilla-date-a.malloc.xml": "e37b3f8542a612cd0d091175dd389991a19874454ca3a721de315a01452dde07",
+    "switch-repeat-vulkan-crop/switch-14-vanilla-date-a.maps": "53e622b522c6f4ed7c92b06f14d6842267658fb715a8c77aa79c739df17df831",
+    "switch-repeat-vulkan-crop/switch-15-milk-teenage.malloc.xml": "9cd6b3c6aa55d0fea8b8c6f917cb5025cd9a66b533b28205f86885cb39ecb79c",
+    "switch-repeat-vulkan-crop/switch-15-milk-teenage.maps": "a94bf52615ddc8a6fd88af18db5604ddd5eddf2c98b4954816dd775cab4dac20",
+    "switch-repeat-vulkan-crop/switch-16-cinnamon-maid-b.malloc.xml": "b995f4c403b5abdc557f712da6dfabbe5b95879ac88ba0ae282846fe49753232",
+    "switch-repeat-vulkan-crop/switch-16-cinnamon-maid-b.maps": "64eb3f5c8dbbf74ad0409781fd0978ddf8c7086193addbb280a2dc49b477acb7",
+    "switch-repeat-vulkan-crop/switch-17-chocola-date-a.malloc.xml": "f6a5291fae568d3c730c715d6941b8e117ad1020c81e8e45a707dc7c6459d6f9",
+    "switch-repeat-vulkan-crop/switch-17-chocola-date-a.maps": "248068ec374ffb85269d2b63cdae749020041b50e76d9f39a0c941b9b156237e",
+    "switch-repeat-vulkan-crop/switch-2-vanilla-date-a.malloc.xml": "47d3a75f9d05501bbcd9f6c90a83cee59339507fc1f677f2a5b5230ea2ef193a",
+    "switch-repeat-vulkan-crop/switch-2-vanilla-date-a.maps": "b19334336129a8797fc5397cd95636981d4121369f15b93eb94a070e866c91fa",
+    "switch-repeat-vulkan-crop/switch-3-milk-teenage.malloc.xml": "d5c9d86080422fc3f01f01693ec18805a7825b3865f8e8cfaf50dcca20451210",
+    "switch-repeat-vulkan-crop/switch-3-milk-teenage.maps": "1ed4c0c8e6ab8d9032628b3b983ba83592c4e7c352765501e13a9afbabb8e527",
+    "switch-repeat-vulkan-crop/switch-4-cinnamon-maid-b.malloc.xml": "7f91a95c5e8adf8a9a26efcc3ce67cb35dca0c3bfd2216660740884d7e36f335",
+    "switch-repeat-vulkan-crop/switch-4-cinnamon-maid-b.maps": "3895c3f7881faf80d211658ae1c78f53cd01825313a79c0c4bd2b96c1c894e9d",
+    "switch-repeat-vulkan-crop/switch-5-chocola-date-a.malloc.xml": "d0772a5fe7f01bbdd7cb1af6650639c78e6dd4689b85ec29255e1cc4e132238b",
+    "switch-repeat-vulkan-crop/switch-5-chocola-date-a.maps": "7e277ea504a1b68183cc4d1bdd0d75a7ec5627777a9a5ba07e9449f147f24952",
+    "switch-repeat-vulkan-crop/switch-6-fraise-maid-b.malloc.xml": "8f369e829c531db971dc5b02548050f54e78ed118e303d5a50dfc7efb6501587",
+    "switch-repeat-vulkan-crop/switch-6-fraise-maid-b.maps": "3f83256d9bc5e48a0fabf5d7ad7dba777cf564960fae7504af3a64d2d4e9841a",
+    "switch-repeat-vulkan-crop/switch-7-coconut-hawaii-a.malloc.xml": "947c92807474679774431de7c87f6d3907ab833db67cb52a72df5c38fbe16f23",
+    "switch-repeat-vulkan-crop/switch-7-coconut-hawaii-a.maps": "b49cbeb4298afeeb78114ea60c459bf80cd298c1272236bbcd6a25f6749c2363",
+    "switch-repeat-vulkan-crop/switch-8-vanilla-date-a.malloc.xml": "1fd204812e5d8096a969ef3abc45df277815601302566c715cf6627bbeddadbb",
+    "switch-repeat-vulkan-crop/switch-8-vanilla-date-a.maps": "80eeeb5fd9d6b83f93e9e63a445574c13580728ac6cfdfc06d75ddb5af3026a0",
+    "switch-repeat-vulkan-crop/switch-9-milk-teenage.malloc.xml": "e9c51746d7e33da0a827e2fc71562a28ba48d50edf8c8e1184b29f38700f039a",
+    "switch-repeat-vulkan-crop/switch-9-milk-teenage.maps": "e6b4bb7be2cef7968e36086f1e8e4b2deaae2c8f84cb7b74a935fe2a6d6fc4c1",
+    "switch-repeat-vulkan-crop.json": "ea30d83f69976a47cc2543e53f94af4c647c9961e2949bf17f346aace30c2c49",
+    "switch-repeat-vulkan-crop.log": "afaa6fb640451b4fada1b4120263ba6e62f266ef483e13408e7e41a78eacba25",
+    "switch-summary.json": "87aa67f44805109634bb9cac02a9e9376cd669b2c48ab9cbd0015bd877408bae",
+    "switch-vulkan-base/destroyed.malloc.xml": "14ed96a1c3438918d1c36d34b403f202973ab98c91b37928bb8dbd5de7327c6b",
+    "switch-vulkan-base/destroyed.maps": "7f04f76eeb049eff503b76b51a03dff57c7eff8984d9b54ddf17092ef550ecf3",
+    "switch-vulkan-base/device.malloc.xml": "a928d6e73de52a6a5e54d86bddc86c6f65624a25db43fafa7913b0690368cd9f",
+    "switch-vulkan-base/device.maps": "6b0f1d293c201255e30c10b2599b7c81c10cbd28375bb206237449268ce7bff3",
+    "switch-vulkan-base/exit.malloc.xml": "36de2094fc91aa05a50217eb1cc1ecbba8cda8b79cd27bc5ff28e366fd709f35",
+    "switch-vulkan-base/exit.maps": "f7e365b09669957eae7fc850bf4f856e2d1d912b9499425ed243be51d8d2f1f5",
+    "switch-vulkan-base/initial.malloc.xml": "c3e934d7d04bbb9df60d1fb8443574daeac8149ca25b88cdbb0f30f057e3b23b",
+    "switch-vulkan-base/initial.maps": "050201b8395697bf53862403a6b1c060abad612f75b71cdd2bf9d2eb4c16323f",
+    "switch-vulkan-base/loaded.malloc.xml": "a9c41b1da7df5de7477e97b60951d5bca4284255d3b1f6d0a5275bb284b0c309",
+    "switch-vulkan-base/loaded.maps": "61f5a83b6a30fc44a16b7bb4ec64d61a35eef6f3792cd1f9d31457487b4bd897",
+    "switch-vulkan-base/settled.malloc.xml": "25bb419f927178d38e8aa84cb2b7abcf6621d52d8a3a1f2ce297c4edcd336dca",
+    "switch-vulkan-base/settled.maps": "f62fdbf75e458f6f206d2ec852a363908869aa424cb095545d142cd704b14923",
+    "switch-vulkan-base/start.malloc.xml": "511e880b1851b36711c831e0e47b60e548e51624992c23c5b11f9675e022f96a",
+    "switch-vulkan-base/start.maps": "dfe4451570510507b9db7b55f6bd3315b8ef4dfee150784c08f8b329a1ee1522",
+    "switch-vulkan-base/switch-0-fraise-maid-b.malloc.xml": "42b317c12223623d01b4587104b953716ecf1a051d27c7a191743001efa8cfb4",
+    "switch-vulkan-base/switch-0-fraise-maid-b.maps": "2f24d3a8c99cbcf3611e954eb065c2b6ac2253ad7cbdb223a7d561b6d5eb6bba",
+    "switch-vulkan-base/switch-1-coconut-hawaii-a.malloc.xml": "87517a44f429c73faba43e2db335a0c5617dbbb98513193833858603e7805444",
+    "switch-vulkan-base/switch-1-coconut-hawaii-a.maps": "14d5afc5031eef3b0d144fd126e5ad0b4d57414dfb435565d86aed53a9f731c5",
+    "switch-vulkan-base/switch-10-cinnamon-maid-b.malloc.xml": "8b0fffa55e083aee21454b1029d31065e1794c56119b1321bdc9bfaa80e6e1f0",
+    "switch-vulkan-base/switch-10-cinnamon-maid-b.maps": "ab42bc18be4c7bcd376e68545d65d686dec555fe471b441138aef0eb74de6986",
+    "switch-vulkan-base/switch-11-chocola-date-a.malloc.xml": "666ffa65730bfb8a825fe95e6fa1ac1da47f0f7bcd71c365cb04ac31d2f06494",
+    "switch-vulkan-base/switch-11-chocola-date-a.maps": "dd37c89f11dad0a8ec7d54f475555793e2d641988f53cd6a4c2c392264bb73af",
+    "switch-vulkan-base/switch-12-fraise-maid-b.malloc.xml": "ac5a688f86267f2ff1c532fd3a12ddd5d6e0cf2db7bfb7e830dccacf32c2a89f",
+    "switch-vulkan-base/switch-12-fraise-maid-b.maps": "7a599d66b61fdd6bb66c2b7f47ae9423194178f181fb304931a562892ad78f4c",
+    "switch-vulkan-base/switch-13-coconut-hawaii-a.malloc.xml": "ad76fe68a72a492831b57fe03c8e32036a8e39c8df36f322a210220d8ecd5e9d",
+    "switch-vulkan-base/switch-13-coconut-hawaii-a.maps": "e088a9971c4b789b8e8f167ae6e2ec4725d579f8bbb631a7666c9cf3ddd2e99e",
+    "switch-vulkan-base/switch-14-vanilla-date-a.malloc.xml": "a4369615d21933f50d287eac2f6a3890c41499d3b0ecbe6e81693dd32e117343",
+    "switch-vulkan-base/switch-14-vanilla-date-a.maps": "ddb5c84260c85c97b3ecacfc0e49e8e0e51f2540d20eed3db21b313b4eddcce5",
+    "switch-vulkan-base/switch-15-milk-teenage.malloc.xml": "bf616c4105ca89aba05b8adc9e35c0174aa1dd4fa5f1bf8d5105cc37c4a795dd",
+    "switch-vulkan-base/switch-15-milk-teenage.maps": "5606cd31b9f1d219ce9aa8e07429761aedda9399412995766ae4ff4d123146f9",
+    "switch-vulkan-base/switch-16-cinnamon-maid-b.malloc.xml": "923eb38aba815b5144757e854c64980fae6b30cff2492f6e35acb1b5bcc3696a",
+    "switch-vulkan-base/switch-16-cinnamon-maid-b.maps": "0d1f87565695841d728e2d5c864562e30c016a02d10b9123573b5d9748614dc6",
+    "switch-vulkan-base/switch-17-chocola-date-a.malloc.xml": "756e6af5eed29c1d0b11dbc80a2c3e5f4cc31035fd77e2a450514ecf037d8f07",
+    "switch-vulkan-base/switch-17-chocola-date-a.maps": "c3f30ef42d01b60c697710a4b762de5c68411cd41004e7737f8001d6bb732347",
+    "switch-vulkan-base/switch-2-vanilla-date-a.malloc.xml": "e35e85a8caf32f68ca089b7c79c85237012d45b98b0814805e34d3f9dbdf4bd7",
+    "switch-vulkan-base/switch-2-vanilla-date-a.maps": "cb777dde6166ef0bca7700aab70cfd8f55f5204fd5f1a78edf00b897f69f580e",
+    "switch-vulkan-base/switch-3-milk-teenage.malloc.xml": "b886ce3dd3e7d39553969bbb56432aa4ae66605a2b0a8cfe376aed08c31eb4b0",
+    "switch-vulkan-base/switch-3-milk-teenage.maps": "250b1de6deac5e2b337c043cad741ccecd036b3940818764991a05c44869d708",
+    "switch-vulkan-base/switch-4-cinnamon-maid-b.malloc.xml": "9fbf8272f14ca6d7ebedba6bcce7f8f819f4dbcd9bf0b6415e1455eea5578a09",
+    "switch-vulkan-base/switch-4-cinnamon-maid-b.maps": "c37385676ef286156fbedd83e33d519717eef4c6cd7e2eb454bb80de69e1c293",
+    "switch-vulkan-base/switch-5-chocola-date-a.malloc.xml": "9dd1675e676e52896236e60fff9745b4889113aefeb70f8ca55fd18c7366f819",
+    "switch-vulkan-base/switch-5-chocola-date-a.maps": "0a626e20d297c87d4f7a5ec522805529740e28fdcd92758e3bb94d7824f433f9",
+    "switch-vulkan-base/switch-6-fraise-maid-b.malloc.xml": "c5cafbe2ea959c0384e14d8fc574413b45a4e98e9d0cd4683506ef674b8193a0",
+    "switch-vulkan-base/switch-6-fraise-maid-b.maps": "3ce40d5d6ed35efa18487d4dcab9613152ec21b08ee44c52be0398866a40af59",
+    "switch-vulkan-base/switch-7-coconut-hawaii-a.malloc.xml": "7f54104e14cda1f85e7c8e1b4c614711dfbdbe76ff89b45dec1b98706441f930",
+    "switch-vulkan-base/switch-7-coconut-hawaii-a.maps": "653c1c7275333f92074e90c40122530258c155611871b2300f75c8dc92693f53",
+    "switch-vulkan-base/switch-8-vanilla-date-a.malloc.xml": "c4a9a3e83df9ac321bcde8704ee7ce8e837e79f9476ba0cb68b837a64a93b9da",
+    "switch-vulkan-base/switch-8-vanilla-date-a.maps": "cbb380ea078a0ef0d3dd167d7bc842e5dc7f1767b25b123fa4ff7e1a608b7dd5",
+    "switch-vulkan-base/switch-9-milk-teenage.malloc.xml": "6e21226e27f6d0bb6124cf7c04d1ca7e4946f92b7606c725b95d9fb114ed5700",
+    "switch-vulkan-base/switch-9-milk-teenage.maps": "eb0315942a9b76c18d9fefdfe2308aa2fea6b13bf5f9dfea7da5e7e059fad8b0",
+    "switch-vulkan-base.json": "311d332539fc93cc19a2fa7583fa0a002c16d15654adf965c5045e119960ac10",
+    "switch-vulkan-base.log": "e6ad7f1904902c668682fe700d7c719c4bee58ed9014608cb180f235cd4be428",
+    "switch-vulkan-crop/destroyed.malloc.xml": "7e34407ea730f5af564821e6abb774464017d75032c1941fb1ee1975e37c9a6e",
+    "switch-vulkan-crop/destroyed.maps": "77224e1b2c1f91c3d105a082088278f24cc0840c2dc35d15f39a7aba38a61ca2",
+    "switch-vulkan-crop/device.malloc.xml": "c38a4e85655962ceb99ce1516f6727eaf026108d76faf4ec0b1eddcdad6ee782",
+    "switch-vulkan-crop/device.maps": "9211e275ef27ecf548df876108531b74997a789a558b05aea21ad8b181232ec4",
+    "switch-vulkan-crop/exit.malloc.xml": "f49b5a7c379fd3844dd2e0658fc8f51f1810112ae76229252e85f1ad88b7d470",
+    "switch-vulkan-crop/exit.maps": "d89e3839b3e2ccdee36c8b51bfed6961b62944ba265d1c6ae32d05b136002b33",
+    "switch-vulkan-crop/initial.malloc.xml": "681945ba1e586b846532d1c94ba57a8d0ba1a93c194d6142c6509709b0dc6f7f",
+    "switch-vulkan-crop/initial.maps": "7a49e493d8d2b569c1dafb0e08ac72f3147a0c77e1f66dd34fa8d970b5e16471",
+    "switch-vulkan-crop/loaded.malloc.xml": "e7446e4b044602d450d6f63f0e74237216ffc4c254b32b0e1854fe71448c31f2",
+    "switch-vulkan-crop/loaded.maps": "405e2160e7eb02c61999964ab53e8f259caab69f2d34d31a2478ff24e0fbd0df",
+    "switch-vulkan-crop/settled.malloc.xml": "30ae293a48b7f0d6135f1f52e5f7b7c8e4c878e73579db6fb20f23e21f894a0e",
+    "switch-vulkan-crop/settled.maps": "94222fd046ec5c59c7eafe2f50b4ca297febb4325f4c8c28ae3240c957cef9c7",
+    "switch-vulkan-crop/start.malloc.xml": "511e880b1851b36711c831e0e47b60e548e51624992c23c5b11f9675e022f96a",
+    "switch-vulkan-crop/start.maps": "8c62003984897b8b930d97b28b84dda58ea3ca1ee169d709f52fa0a9a20d5e1f",
+    "switch-vulkan-crop/switch-0-fraise-maid-b.malloc.xml": "27d072f6ae4064ca53e8387dd3ee438b3712d37da879b6477e9cf177f13bab68",
+    "switch-vulkan-crop/switch-0-fraise-maid-b.maps": "c9da052ccaeae51edb7d4b75ebe960798e418ce27b24309d5b7b59bac3cd49b2",
+    "switch-vulkan-crop/switch-1-coconut-hawaii-a.malloc.xml": "3cd9417eb1653899d969581caf902085158fa4fa7987af46fd44f92931c5ecc7",
+    "switch-vulkan-crop/switch-1-coconut-hawaii-a.maps": "87c5f842e1c853efc51515eb9409a30bc3073dc3fceaf43181f41366b3818e72",
+    "switch-vulkan-crop/switch-10-cinnamon-maid-b.malloc.xml": "10760b313dd25501327d79b915cd3496ab6d194f75ed05675df699d4036cba35",
+    "switch-vulkan-crop/switch-10-cinnamon-maid-b.maps": "740408a0eeb92710a325e5da0480b735ddd07b91cb8e06bb1710e6df58a719cb",
+    "switch-vulkan-crop/switch-11-chocola-date-a.malloc.xml": "861f9110af57c29fd43f46b77fbfe0ac832254460f5ecfa20c63328e2699fbb4",
+    "switch-vulkan-crop/switch-11-chocola-date-a.maps": "98c8eb131cc042094481bc7f08ff48602573e84820b635bb2798ebf99298a5dd",
+    "switch-vulkan-crop/switch-12-fraise-maid-b.malloc.xml": "970dad17183061e2682e89a6e4898e8320caf5ec3692851825b6bd5b9d85508d",
+    "switch-vulkan-crop/switch-12-fraise-maid-b.maps": "edd0d38e5e2126d5e89743eae94a77903d6b972c802239f8661bbd5861216865",
+    "switch-vulkan-crop/switch-13-coconut-hawaii-a.malloc.xml": "80ce8365fe288146204e949514d77883c473510f9be5428bc3274c4327e9d40d",
+    "switch-vulkan-crop/switch-13-coconut-hawaii-a.maps": "ff382b15c12c89146710574443a1fedd3b237b7f32bb645640611b5cb83ed4dd",
+    "switch-vulkan-crop/switch-14-vanilla-date-a.malloc.xml": "44af4d89918e17cb9d07dd75a24eb16059d1b157054eb7486c8bb4ca66510cd7",
+    "switch-vulkan-crop/switch-14-vanilla-date-a.maps": "326122ba130738ec3081077e546c8b1ff203bfbd546f11b7cc8dfe70972db506",
+    "switch-vulkan-crop/switch-15-milk-teenage.malloc.xml": "4640b8df2148394b987c1c292f7b55ed786f063ab9e2efc2ecdd469a490cd190",
+    "switch-vulkan-crop/switch-15-milk-teenage.maps": "b4762304524b4e714570c59b8e09ac980bcb3725379e523838e20bdf25f85d84",
+    "switch-vulkan-crop/switch-16-cinnamon-maid-b.malloc.xml": "2ead10faaea35902a4ee9248aaf0aaba8fdfb7a46745e1eec7c2aaf740dca3ae",
+    "switch-vulkan-crop/switch-16-cinnamon-maid-b.maps": "d3c15acd9f84dc115b092ac646335d9ec281eace7623e08f17079d0de12d7a96",
+    "switch-vulkan-crop/switch-17-chocola-date-a.malloc.xml": "d66ad7cc5db17d31c7c4002585844ea79adbccf5fe8747744870312c093663e3",
+    "switch-vulkan-crop/switch-17-chocola-date-a.maps": "df0738f4831d3e84d401eb284a5b0cd7a03fcf1a8b4ff4e71bc08102ae2f9ab9",
+    "switch-vulkan-crop/switch-2-vanilla-date-a.malloc.xml": "6099b9ab5f2918d3b46a253facaacc5a308bfcb9962f0c10a5bf4117ee790c44",
+    "switch-vulkan-crop/switch-2-vanilla-date-a.maps": "9b90453fd4e2babbcb7392c38fd9477d5e8a46b132341a85059627c9b53f5e3d",
+    "switch-vulkan-crop/switch-3-milk-teenage.malloc.xml": "44a97f3a216107f81c04c322ee819a0e0f246ecd23ff7465334fb9ee0162f771",
+    "switch-vulkan-crop/switch-3-milk-teenage.maps": "0b19cd632cf4c5c5e1dcd3b92608a8ca079da4d27a2eb7f9af6b85494e0af712",
+    "switch-vulkan-crop/switch-4-cinnamon-maid-b.malloc.xml": "50a0cfb73c30b1374bd0a5f55845d3ff2a822eab0ea21e0de1e2c63dc4c82349",
+    "switch-vulkan-crop/switch-4-cinnamon-maid-b.maps": "98e9ac1d46a654e89eebe7e7ad3bc0d7468ab569ca81ee7d71b8553215b41019",
+    "switch-vulkan-crop/switch-5-chocola-date-a.malloc.xml": "520b40e2c0021409b3cfd3affde964d0dcfbb7da15009481917e08f61bf92b35",
+    "switch-vulkan-crop/switch-5-chocola-date-a.maps": "902794d712851206fbfddebeccf451039ce9458ee834ca9e1f29186b553a8a29",
+    "switch-vulkan-crop/switch-6-fraise-maid-b.malloc.xml": "cd2d78ee35ea5d890acfc93591979ffdedb1538a18a1fc2e3ab99d733de5083b",
+    "switch-vulkan-crop/switch-6-fraise-maid-b.maps": "36e6f65f192e385d8b05e480df8c1ae208ca5632f722d7f7090935bbce55861e",
+    "switch-vulkan-crop/switch-7-coconut-hawaii-a.malloc.xml": "fd4010ff27e4362b4dc080598f2648b52a9696e32544474f1b2c6cd441c73b0b",
+    "switch-vulkan-crop/switch-7-coconut-hawaii-a.maps": "86ccc964b9ef82b9842cf385b0272214f95103de8f3312dc73d808be801528f8",
+    "switch-vulkan-crop/switch-8-vanilla-date-a.malloc.xml": "cc0c18abf98c00a85c9d7cca35bd247bd63d3ce12c4c14be61cc66caef6a0975",
+    "switch-vulkan-crop/switch-8-vanilla-date-a.maps": "d92a847a74dae0d42d7a9bf35cf91df5db2072484168129337f2044c38856945",
+    "switch-vulkan-crop/switch-9-milk-teenage.malloc.xml": "df21e8a0e03a22612019cb660968f2412e887a4fef1edfeb25c9fc6545f6c83d",
+    "switch-vulkan-crop/switch-9-milk-teenage.maps": "23a05c951ecf51cb4d2f81d8fce7690d1ba198c8845122e519fb89f321cf939f",
+    "switch-vulkan-crop.json": "29fa3e9eb6f35ea793c7baf952a9024c693edeb6c37af25bf322dc224ffc4f8a",
+    "switch-vulkan-crop.log": "034d473ee82ec21b93915da6490ef3b64e9b0bc56814700e37e3052f89ed5c3e",
+    "verify.py": "c0ff69587c43aeebf2f15b19e0ab571ee0501734765c736c68183539595389f3",
+    "vk-tests-mapped.log": "2794294354d36410dda8702dc24edae730ccf800e847df4666083eaa3d925d85",
+    "vk-tests.log": "d58a7e5108c786a06f3811ea339fdb0e553e0f618d51e879d876de0ea46f57c0"
+  },
+  "final_header_include_cleanup": {
+    "changes": "direct required standard/project includes only",
+    "release_player_gl_vk_tests_and_plasma_binary_sha256_unchanged": true,
+    "evidence": "include-binary-parity.json"
+  },
+  "measured_binary_sha256": {
+    "build/evidence/texture-crop-20261012/nekomote_player-base": "cfa2181c2bde449bad1bc2e73199b053497891af2c17eb887e0e6a1cb9ee498e",
+    "build/evidence/texture-crop-20261012/probe-base": "1ef711c159d86eb0ca8bca4adf526f4254090c29abee2891e5abf8219f529631",
+    "build/evidence/texture-crop-20261012/probe-crop": "e63de1059418d3d6684efca7a3235079215d16676840e5173115b72ddb1b3b0b",
+    "build/evidence/texture-crop-20261012/crop-audit": "88db009946f74fc98606ca6a13d9ef77893bc86b6d40aae44de0effb5de518fa",
+    "build/release/bin/nekomote_player": "d509ec268f467743b1094f6965d285f1a11c2d13995d227187712e27ea5825ee",
+    "build/release/bin/nekomote_render_tests": "b4ac2f4913726a271e8edf2ce1617cf89e777d0d179fa14f5815a26c772081b4",
+    "build/release/bin/nekomote_vk_tests": "52e899e0dd4c384a31c35ad8ac91c83993cf23172305c9c4c1ca172d275da27a",
+    "build/memory-asan/bin/nekomote_unit_tests": "1ed90e7bcbd9135b426533ed6c514fba2a02388ce141c42f9852cde961018ca4",
+    "build/optimization-current/lib/libnekomote_plasma_qml.so": "5e6ad0afe56bc84fc772ee28fb9ea4d6d238577bdb05d2574615bbf547146f55"
+  }
+}

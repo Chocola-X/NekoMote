@@ -27,8 +27,8 @@ struct View
 {
     float origin_x{0}, origin_y{0}, scale{1};
     std::array<float, 4> clear{0, 0, 0, 0}; // premultiplied target clear
-    float alpha{1}; // global alpha multiplier for all drawn fragments
-    bool flip_x{false}; // mirror model horizontally about output center
+    float alpha{1};                         // global alpha multiplier for all drawn fragments
+    bool flip_x{false};                     // mirror model horizontally about output center
 };
 enum class TargetContents
 {
@@ -49,7 +49,7 @@ class Renderer
     Renderer& operator=(const Renderer&) = delete;
     // Reserves capacity once; prepare rejects larger frames instead of allocating.
     void reserve(Capacity capacity);
-    void upload_texture(TextureId id, const ImageRgba8& image);
+    void upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region = {});
     void prepare(RenderFrame frame);
     // Explicit loading/resize boundary. ProtectedStraight needs a matching
     // RGBA8 intermediate. Repeated unchanged dimensions retain GPU storage.
