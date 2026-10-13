@@ -590,7 +590,7 @@
   - 新增构建目标 `nekomote_ui_tests`（Catch2 v3.5.3），完全独立于核心 136 项测试；
   - 覆盖展开/关闭动画时序、拖拽位移同帧对齐（0px）、视口边界 clamp、自由态原位淡入淡出、中途反向打断、输入捕获状态机、图标点击与拖动区分、越界重置等 8 组用例，**8 passed / 0 failed, 124 assertions passed (100%)**。
 - **视觉报告与缺陷上报**：
-  - 实机捕获收起、展开角色、展开香草、展开设置 4 张状态截图（`build/evidence/v5-next/`），目视核实视觉风格、阴影、层级与 NekoWebShow 一致，交付 [docs/v5-ui-visual-report.md](v5-ui-visual-report.md)；
+  - 实机捕获收起、展开角色、展开香草、展开设置 4 张状态截图（`build/evidence/v5-next/`），目视核实视觉风格、阴影、层级与 NekoWebShow 一致，交付 docs/v5-ui-visual-report.md（已归档）；
   - 发现并上报 Codex：`apps/player/main.cpp` 的 `Surface::move` 缺失 `captures_mouse()` 检查，导致鼠标在 UI 面板上滑动时注视坐标（gaze）穿透到底层模型，建议后续修复。
 
 ## 2026-10-07 V3：源 GPU 混合模式与属性保护证据（Antigravity / Gemini 3.8 Flash）
@@ -608,7 +608,7 @@
     - `attr = 2`（`fraise-france-maid-b` Draw #9，`icon: "0029"`）：`blendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA)`，为单遍标准 Over 混合，无颜色保护双遍绘制，对应 `ColorProtection::None`。
 - **严格门槛与证据交付**：
   - 原生播放器加载验证：严格返回 `session failure 6/3`（`NEKOMOTE_ERROR_UNSUPPORTED`），遵守规范未提前放行未闭合语义；
-  - 保存 WebGL 参考图、黑白合成图及高倍局部裁切图至 `build/evidence/v3/`；交付完整报告 [docs/v3-source-blending-report.md](v3-source-blending-report.md)，移交 Codex 依据数学公式完成原生求值与 GPU 映射。
+  - 保存 WebGL 参考图、黑白合成图及高倍局部裁切图至 `build/evidence/v3/`；交付完整报告 docs/v3-source-blending-report.md（已归档），移交 Codex 依据数学公式完成原生求值与 GPU 映射。
 
 ## 2026-10-07 Codex：默认启动6/3定位及诊断
 
@@ -665,7 +665,7 @@
 - **动态拖拽与过渡未测项上报与接口契约**：
   - 明确动态拖拽轨迹与逐帧渐变核验由于原生端缺乏应用内确定性回放入口，标记为未测项（UNTESTED）。
   - 遵循规范不向系统注入 OS 键鼠、不修改 main；向 Codex 提出最小所需事件回放接口契约（`SimulatedMouseEvent` 与 `replay_mouse_events`），由 Codex 在 C6 闭合。
-- 交付完整报告 [docs/v6-visual-report.md](v6-visual-report.md) 与产物完整账本（115 个条目）。
+- 交付完整报告 docs/v6-visual-report.md（已归档）与产物完整账本（115 个条目）。
 
 ## 2026-10-07 Codex：G7/G8/G9/V6独立复核与补修
 
@@ -705,7 +705,7 @@
   - 编写 `tools/reference_capture/build_v7_evidence.py`，后处理证据包（其硬编码结论已在本轮被通用工具替代）；
   - 生成 5 组 Side-by-Side 高清对比图（WebGL | 原生 | x4 放大差分）、高倍局部裁切（面部轮廓、眼部遮罩、胸围围裙）、拓扑分析 `fraise-france-maid-b_stencil_hierarchy.json`、GPU 绘制流分析 `fraise-france-maid-b_v7_gpu_analysis.json`；
   - 冻结所有输入、工具、原生二进制及产物 SHA-256 账本于 `build/evidence/v7/v7_ledger.json`；
-  - 交付完整报告 [docs/v7-mirror-mask-report.md](v7-mirror-mask-report.md)，向 Codex C5 提出 `mirrorControl` 变量反转支持与可选 stencil 图层解析的最小修复契约。
+  - 交付完整报告 docs/v7-mirror-mask-report.md（已归档），向 Codex C5 提出 `mirrorControl` 变量反转支持与可选 stencil 图层解析的最小修复契约。
 
 ## 2026-10-08：G10/V7 复核及 C5 整合
 
@@ -722,7 +722,7 @@ V7 后处理器，新增显式图集 hash 与离线资产迁移。项目内修�
 项通过。当前默认角色、French maid-b、milk-summer 实际应用 60 步截图及退出检查通过。
 完整目录 CPU 重审和局部性能数据见机器摘要，未测全目录画面/交互/soak。
 
-当前结论、失败复现及迁移入口集中于 [C5 交接](c5-mirror-mask-handoff.md)，
+当前结论、失败复现及迁移入口集中于 C5 交接（已归档），
 后续按 [G11 → V8 → Codex](agent-workboard.md) 执行；旧阶段记录仅作历史证据。
 
 ## 2026-10-08：V8 镜像与遮罩独立复核
@@ -737,7 +737,7 @@ V7 后处理器，新增显式图集 hash 与离线资产迁移。项目内修�
 3. **动作裁剪组隔离**：Chocola date-a 待机 `full-idle24` 与跳跃 `full-jump24` 动作下，不同 motion 共享 stencil 保持裁剪组独立，高光边界整洁无溢出，几何误差 $\le 1.80\times 10^{-5}\text{px}$，像素差 0。
 4. **真实遮罩保留**：Fraise maid-a 局部作用域的真实 `add_mask` 被正确解析并参与绘制，未被按名称误删，几何误差 0.0px，像素差 0。
 5. **反例复现**：精确复现 C5 遗留的两个缩放外力标量反例（`force-negative30` 最大标量误差 $1.6689\times 10^{-5}$，`force-half-positive30` 最大标量误差 $1.1444\times 10^{-5}$），图像与几何均 PASS，保留字段、日志及 hash 移交 Codex。
-6. **视觉与产物交付**：生成多部位高分辨率局部裁切图（眼眶、轮廓、耳尖、围裙）及 3-panel 复合对照图，建立冻结账本 `build/evidence/v8/v8_ledger.json`，交付完整报告 [docs/v8-visual-report.md](v8-visual-report.md)。
+6. **视觉与产物交付**：生成多部位高分辨率局部裁切图（眼眶、轮廓、耳尖、围裙）及 3-panel 复合对照图，建立冻结账本 `build/evidence/v8/v8_ledger.json`，交付完整报告 docs/v8-visual-report.md（已归档）。
 
 ## 2026-10-08：G11/V8 复核与 C6 触摸诊断
 
@@ -755,7 +755,7 @@ dev/release/无窗口ASan构建通过；GPU串行Debug145/145、无显示ASan/UB
 四种真实布局各生成原图/覆盖图及区域JSON，目视读取Fraise B两图；胸中心/左右内边缘触发，
 旧镜像偏移点不触发。沿用旧CPU180 OK/15 FAIL，不宣称全目录触摸认证或性能改善。
 后续GLM G12准备目录证据，Gemini V9独立目视核对，Codex复核数据候选及继续C5/C6/C7。
-当前证据见 [C6交接](c6-input-review-handoff.md) 与 [机器摘要](validation/c6-input-review-results.json)。
+当前证据见 C6交接（已归档） 与 [机器摘要](validation/c6-input-review-results.json)。
 
 ## 2026-10-08：G12 触摸诊断目录与覆盖账本
 
@@ -763,13 +763,13 @@ dev/release/无窗口ASan构建通过；GPU串行Debug145/145、无显示ASan/UB
 1. 建立 195 项触摸审计批量脚本 `tools/touch_audit/run_touch_audit.py` 及 17 项合成契约测试 `tests/reference_capture/test_touch_audit.py`。
 2. 冻结覆盖账本 `build/evidence/g12-touch-audit/ledger.json`：总计 195 项，OK 180 项，CPU_REJECTED 15 项（沿用 C5 冻结账本）。
 3. 先行 Fraise B 完整证据包：生成 4 组条件（默认、120 待机步、移动、半缩放）覆盖图与触发测试，全部通过。
-4. 详见 [docs/g12-touch-handoff.md](g12-touch-handoff.md)。
+4. 详见 docs/g12-touch-handoff.md（已归档）。
 
 ## 2026-10-08：V9历史交付（评级已撤回）
 
 Antigravity / Gemini 3.8 Flash提交7c055dd：20代表型号60PNG及40裁图、两数据候选和12项合成测试。
 原“180视觉通过”由工具硬编码且缺逐项观察，不能作为验收；来源计数和候选数值也不一致。
-复核现状见下一节及 [V9复核](v9-touch-report.md)，旧证据仅保留溯源，不应用候选。
+复核现状见下一节及 V9复核（已归档），旧证据仅保留溯源，不应用候选。
 
 ## 2026-10-08：G12/V9独立复核与证据判定修补
 
@@ -856,7 +856,7 @@ V10候选点无实测/姿态证据缺失，撤回结论，version3严格重分�
 
 ## 2026-10-09 G19/G20/G21/V13/V14复核
 
-基线82ab3b6：保留UI/真实81CPU点/三QML固定图；修Plasma初态重复重建、真正配置页创建、首delta0及40轮/最终GPU销毁验证、截图失败和等待异常边界。G20候选8.95px仍失败、Y残差存在，正式拒绝保持；撤回V14非法version3/下身网格解释。状态及新GLM G23→G22→G24/Gemini V15/V16交接见[记录](agent-review-g19-g21.md)，长期/性能/正式安装未认证。
+基线82ab3b6：保留UI/真实81CPU点/三QML固定图；修Plasma初态重复重建、真正配置页创建、首delta0及40轮/最终GPU销毁验证、截图失败和等待异常边界。G20候选8.95px仍失败、Y残差存在，正式拒绝保持；撤回V14非法version3/下身网格解释。状态及新GLM G23→G22→G24/Gemini V15/V16交接见记录（已归档），长期/性能/正式安装未认证。
 
 ## 2026-10-12 C12：Plasma 双后端与分发入口
 

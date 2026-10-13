@@ -29,7 +29,7 @@ build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model
   --session assets/characters/chocola-date-a/session.nks.json --fit
 ```
 
-正式播放只依赖当前资产/背景和设备服务，不需要原仓库、Python、Node、浏览器或asm核心。只接受当前模型schema 6和会话version 1，不自动回退；旧资产重建入口见 [C5交接](c5-mirror-mask-handoff.md)。
+正式播放只依赖当前资产/背景和设备服务，不需要原仓库、Python、Node、浏览器或asm核心。只接受当前模型schema 6和会话version 1，不自动回退；旧资产重建入口见 C5交接（已归档）。
 
 ## 操作与配置
 
@@ -60,7 +60,7 @@ build/release/bin/nekomote_player --assets assets --character fraise-france-maid
 只显示配置了反应的静态作者椭圆，不随网格变形。区域重叠时优先级为胸/眼/脸/头/下身；
 暂停、反应Busy或UI拦截仍可能阻止触发。宿主输入使用呈现方向的中心framebuffer像素，
 Y向下，不再自行镜像。该诊断与 `--measure-frames` 互斥。
-确定步截图、判定数据与逐模型核查入口见 [C6交接](c6-input-review-handoff.md)。
+确定步截图、判定数据与逐模型核查入口见 C6交接（已归档）。
 
 模型/会话程序拥有CPU资产，实例借用程序；GPU对象在有效context中销毁，音频Device拥有工作线程及有界命令队列。PCM解码/纹理上传发生在加载边界。声音RMS用于口型，未声称与浏览器分析器逐样本一致。正式帧路径不读回GPU像素。
 

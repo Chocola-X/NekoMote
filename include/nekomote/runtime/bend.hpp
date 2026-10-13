@@ -19,7 +19,7 @@ struct BendState
 // Advances one 60 Hz author step. Inputs/state are finite; coefficients are
 // nonnegative, gain is in [0,1]. The owning controller validates these at load.
 // Scope: output bending, not particle integration or locator initialization.
-// Source evidence and numerical reference: docs/p6-physics-investigation.md.
+// Source evidence and numerical reference archived in project history.
 ChainVariables advance_bend(BendState& state, BendCoefficients coefficients,
                             ChainVariables unbent) noexcept;
 } // namespace nekomote::runtime

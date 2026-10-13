@@ -32,7 +32,7 @@ struct SpringOutput
 // Absolute anchor and persistent external displacement are author units. First
 // call initializes the negative anchor offset without advancing the snapshot.
 // Subsequent calls accumulate external position disturbance in that Float32 offset.
-// Source observations: docs/p6-physics-investigation.md.
+// Source observations archived in project history.
 SpringDeformation advance_spring(SpringState& state, SpringCoefficients coefficients,
                                  Vec2 anchor_position, Vec2 outer_displacement) noexcept;
 // Verified paired scalar map and dead zone. Amplitude scales particle position

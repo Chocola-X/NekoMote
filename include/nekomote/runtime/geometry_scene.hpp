@@ -154,7 +154,7 @@ class GeometryInstance
     // ID must come from scene.locators(). Inactive resource branches are explicit.
     // Valid after evaluate(); never substitutes zero for unverified inheritance.
     // Supports full inheritance and verified zero-local-origin type-one markers
-    // with mask 0x200020c. Evidence: docs/p6-physics-investigation.md.
+    // with mask 0x200020c.
     LocatorSample sample_locator(NodeId node) const noexcept;
     // Static diagnostic frame. Supports verified union masks and protected straight
     // composition; unsupported selected mask sources/nesting fail explicitly.

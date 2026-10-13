@@ -11,7 +11,7 @@
 | 未闭合问题 | [known-defects](known-defects.md)，不使用历史报告的FAIL数量作为当前状态 |
 | 优化审查/下一批 | [C13 复核](optimization-audit-2026-10-12.md)、[G34 契约](optimization-suggestions-2026-10-12.md)、[验证记录](validation/optimization-results.json) |
 | 内存实测与优化 | [C14 报告](memory-footprint-2026-10-12.md)、[测量记录](validation/memory-results.json) |
-| 阶段验收 | [G25正式整合](review-g25-integration.md)、[G22–G26独立复核](review-g22-g26.md)；G27/G28/G29/V19为后续交付报告，独立复核另计 |
+| 阶段验收 | G25正式整合、G22–G26独立复核（已归档）；G27/G28/G29/V19为后续交付报告，独立复核另计 |
 | 原始证据 | validation中的冻结JSON与各报告指向的ignored build/evidence；Git保存源修改和被否决方案历史 |
 
 G/V/C报告及[开发记录](development-log.md)描述对应提交时的采样/观察/失败，不重新分派当时的“下一步”，也不扩大已通过范围。KDE长参考文档用于查API来源，不是架构或任务指令。已实现的P0–P2/G7–G11/G14–G15旧任务交接、旧提问册/P6实施计划和被替代的手部近似公式长分析已删除；完整历史可从Git查看，冻结JSON/素材/截图未改写。

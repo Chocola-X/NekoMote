@@ -42,7 +42,7 @@ struct ChainOutput
 // Subsequent ticks use the absolute anchor plus the saved origin/force offset.
 // External displacement accumulates in that offset (author units).
 // Coefficients/rest/state are validated by the caller; lengths must be positive.
-// Evidence and remaining binding scope: docs/p6-physics-investigation.md.
+// Evidence and remaining binding scope archived in project history.
 ChainDeformation advance_chain(ChainState& state, const ChainCoefficients& coefficients,
                                const ChainRest& rest, Vec2 anchor_position,
                                Vec2 external_displacement) noexcept;

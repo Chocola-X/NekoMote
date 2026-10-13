@@ -4,7 +4,7 @@
 
 | 范围 | 当前缺口 | 负责人/任务 |
 | --- | --- | --- |
-| 求值/精度 | 3个bust_LR20仍FAIL待诊断；未验证嵌套/其他继承语义继续拒绝；两镜像外力标量反例和非零X快照对照未闭合 | Codex C8；[正式继承](inheritance-semantics.md)、[标量原始记录](c5-mirror-mask-handoff.md) |
+| 求值/精度 | 3个bust_LR20仍FAIL待诊断；未验证嵌套/其他继承语义继续拒绝；两镜像外力标量反例和非零X快照对照未闭合 | Codex C8；[正式继承](inheritance-semantics.md)、标量原始记录（已归档） |
 | 资源/线程 | Controller 已有候选/就绪契约；高层 result ABI 异常与 GPU 替换已补修；CPU Controller 配置保存失败事务、意外上下文丢失与驱动故障仍待复核。未做 TSan 或驱动故障注入 | Codex抽核；后续TSan在确有需要时另做 |
 | 服务与时间 | ABI 已接入声音；面板静音只改配置、未联动当前设备；角色渐变使用墙钟，暂停/恢复与 reset/重入未闭合。Plasma 帧率选择和 60 FPS 默认值已接线，仍需真实桌面验收 | Codex复核；长期运行验收 |
 | 触摸/UI | player 与 WallpaperInstance 仍分别构建面板业务；本轮 Qt 输入/绘图通过不代表所有控件有效。触摸候选不应用，逐型号区域与动态姿态待验收 | Gemini按共享UI与有效证据观察；G28/V19后续结果待范围复核 |
@@ -15,4 +15,4 @@
 
 基线分发配方与工具已交付，容器/双架构 CI 与跨发行版实际运行尚未执行；当前 Arch 包不能作为通用包。见 [分发](plasma-distribution.md)。
 
-真实素材缺失/损坏按来源记录，不以结构导入或目录通过推定画面。Coconut dress来源差异和Vanilla santa项目图集修复记录留在[C5证据](c5-mirror-mask-handoff.md)、C6与冻结账本，不再分派已完成图集重审。当前执行见 [任务交接](agent-next-handoff.md)，原专项交接保留为设计门槛。
+真实素材缺失/损坏按来源记录，不以结构导入或目录通过推定画面。Coconut dress来源差异和Vanilla santa项目图集修复记录留在C5证据（已归档）、C6与冻结账本，不再分派已完成图集重审。当前执行见 [任务交接](agent-next-handoff.md)，原专项交接保留为设计门槛。

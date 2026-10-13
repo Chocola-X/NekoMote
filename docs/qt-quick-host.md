@@ -70,7 +70,7 @@ X11隐藏/show/resize的旧尺寸回执会晚到，直接window读回可能得�
 不包含声音/UI，未测GPU/显存/功耗、帧时间分位或全应用分配，不作性能改善结论。
 Qt框架创建renderer/synchronize的极端分配失败尚未完整注入验证；普通矩阵不认证所有异常情况。
 
-动态模块与真正Plasma隔离KPackage/WallpaperItem已接入，当前见[独立复核](agent-review-2026-10-09.md)。
+动态模块与真正Plasma隔离KPackage/WallpaperItem已接入，当前见独立复核（已归档）。
 GLM G19补配置/生命周期/部署，Gemini V13核对实际包；G14入口保持。实际包常态截图与本页确定步组件证据分开。
 
 C17 Wayland 兼容验证见 [说明](wayland-compatibility-2026-10-13.md)。自有宿主默认显式请求 desktop GL 3.3；`--gl-api gles` 可验证 GLES 3.0 上下文。窗口平台由 Qt 自动选择，启动诊断显示实际平台与上下文 API。此选项不改变 Plasma 宿主的全局 RHI。
