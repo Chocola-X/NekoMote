@@ -141,7 +141,7 @@ int main(int argc, char** argv)
         if (qEnvironmentVariableIsSet("NEKOMOTE_LAYER_TRACE"))
             item->wallpaper_state()->trace_frames = 256;
         QQuickWindow window;
-        window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
+        window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
         window.resize(800, 900);
         item->setParentItem(window.contentItem());
         window.show();

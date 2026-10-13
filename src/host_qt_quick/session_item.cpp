@@ -87,7 +87,9 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     Qt::QueuedConnection);
             connected_ = true;
         }
-        if (state_->config_dirty)
+        // A recreated scene graph gets a new renderer even when GUI settings
+        // are unchanged. Copy its initial snapshot before attempting a reload.
+        if (!config_received_ || state_->config_dirty)
         {
             // GUI setters buffer configuration; synchronize is the only point
             // at which Qt blocks GUI writes while the render thread copies it.
@@ -118,6 +120,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             config_applied_ = false;
             faulted_ = false;
             state_->config_dirty = false;
+            config_received_ = true;
         }
         const auto item_state = item->get_item_state();
         notify_frames_ = deterministic_ || item_state.notify_frames;
@@ -403,7 +406,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     unsigned generation_{0};
     std::uint64_t playback_revision_{0};
     bool paused_{false}, faulted_{false}, connected_{false}, clock_attached_{false};
-    bool config_applied_{false};
+    bool config_received_{false}, config_applied_{false};
     bool needs_rebuild_{false};
     std::filesystem::path assets_dir_, model_path_, session_path_;
     std::uint32_t seed_{0};

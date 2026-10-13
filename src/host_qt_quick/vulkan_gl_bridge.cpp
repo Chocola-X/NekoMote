@@ -156,8 +156,8 @@ struct VulkanGlBridge::Impl
     void initialize_gl()
     {
         gl_context = QOpenGLContext::currentContext();
-        if (!gl_context || gl_context->isOpenGLES())
-            throw std::runtime_error("Vulkan wallpaper requires a current desktop OpenGL context");
+        if (!gl_context)
+            throw std::runtime_error("Vulkan wallpaper requires a current OpenGL context");
         gl = gl_context->extraFunctions();
         for (const auto* name : {"GL_EXT_memory_object", "GL_EXT_memory_object_fd",
                                  "GL_EXT_semaphore", "GL_EXT_semaphore_fd"})
@@ -708,9 +708,12 @@ struct VulkanGlBridge::Impl
         gl->glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previous_read);
         gl->glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previous_draw);
         const bool scissor = gl->glIsEnabled(GL_SCISSOR_TEST);
-        const bool srgb = gl->glIsEnabled(GL_FRAMEBUFFER_SRGB);
+        const bool srgb_control =
+            !gl_context->isOpenGLES() || gl_context->hasExtension("GL_EXT_sRGB_write_control");
+        const bool srgb = srgb_control && gl->glIsEnabled(GL_FRAMEBUFFER_SRGB);
         gl->glDisable(GL_SCISSOR_TEST);
-        gl->glDisable(GL_FRAMEBUFFER_SRGB);
+        if (srgb_control)
+            gl->glDisable(GL_FRAMEBUFFER_SRGB);
         gl->glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_fbo);
         gl->glBindFramebuffer(GL_DRAW_FRAMEBUFFER, qt_fbo);
         gl->glBlitFramebuffer(0, 0, size.width(), size.height(), 0, 0, size.width(), size.height(),

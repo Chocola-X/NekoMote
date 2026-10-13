@@ -2,10 +2,11 @@
 
 2026-10-13，C12 基线 `cfed43e`。Plasma OpenGL 初步接入已获用户确认；当前完成 Vulkan ABI 复核、Plasma 双后端和分发入口。详见 [显示补修](plasma-display-fix.md)、[任务交接](agent-next-handoff.md)。源码交付与完整独立验收分别计。
 
-本轮 C13 以 `3a56ce0` 复核 GLM 未提交优化，实际结论见 [优化审查](optimization-audit-2026-10-12.md) 与 [验证](validation/optimization-results.json)。优先级按用户最新优化任务调整：下一批 GLM 可执行 G34 重复几何编译消除，契约/验收见 [建议](optimization-suggestions-2026-10-12.md)。原优化清单的“135 项已确认”和全量立即执行顺序不再有效。
+本轮 C13 以 `3a56ce0` 复核 GLM 未提交优化，实际结论见 [优化审查](optimization-audit-2026-10-12.md) 与 [验证](validation/optimization-results.json)。G34 优化候选契约见 [建议](optimization-suggestions-2026-10-12.md)；用户现已结束本轮优化，当前任务为 C17 Wayland 兼容，后续优化不自动领用。原优化清单的“135 项已确认”和全量立即执行顺序不再有效。
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| C17 Wayland/X11 兼容 | base `0c0f400`，Codex 实现及独立复核；GLFW 双平台、Qt GL/GLES、GPU 共享和 renderer 重建快照；189 CPU、3 GPU runner、8 对基线 / 10 对 GL/ES 画面、隔离 Qt/Plasma 通过 | 未安装用户桌面；真实桌面、原生 X11 登录及其他驱动仍待验收，GLES padding 显存代价见 [报告](wayland-compatibility-2026-10-13.md) 与 [记录](validation/wayland-compatibility-results.json) |
 | C16 稳态帧优化 | 基线 `958a404`，Codex；索引/UV 和帧内图集/遮罩状态复用；195 初态、12 对画面、CPU 189/189、GL/VK 及隔离 Plasma 通过 | CPU probe P50 降低 2.0–4.6%，player 提交改善约 1.5–1.8%；显存不变、尾部及范围见 [说明](frame-optimization-2026-10-13.md) 与 [记录](validation/frame-optimization-results.json) |
 | C15 纹理裁切 | 基线 `a17b5ad`，Codex；加载时 RGBA 精确边界 + 过滤边缘，GL/VK texel 采样，映射像素所有权；202 图集复原、12 对画面、异步切换及隔离 Plasma 通过 | 已构建验证，未安装桌面；首次驱动编译/其他驱动/长期范围见 [说明](texture-cropping-2026-10-12.md) 与 [记录](validation/texture-cropping-results.json) |
 | C14 内存优化 | `a17b5ad` 已交付，流式模型加载、libpng、字体映射与生命周期测量 | 本轮 C15 接续，原范围见 [报告](memory-footprint-2026-10-12.md) |
@@ -21,4 +22,4 @@
 | G27/G28/G29/V19 | 报告和提交存在，部分独立证据未复核 | 按真实覆盖抽核，不盲重跑或把报告当最终 PASS |
 | V20/长期/全动态 | 实际桌面初步接入已获用户确认；完整生命周期、多屏、8–24h及 195 全动态未最终验收 | 各自记录条件；Gemini 补充固定条件下的逐项视觉与交互证据 |
 
-GLM 优先按当前用户任务执行 G34；G33 基线构建与打包验收仍是独立待办；不猜测 Vulkan 同步与图像语义。其余可承担明确契约下的测试运行、证据清单和其他设备构建；不得因没有错误日志宣布 GPU 画面通过。Gemini 可按固定模型/步长/输出补充跨后端文字、遮罩与触摸覆盖的截图目视检查。当前没有要求 GLM/Gemini 并发修改本轮修复文件。接手先声明 base/文件，保护未提交工作；GPU 使用 `build/gpu-validation.lock`，输入仅经应用回调，外部素材只读。新证据目录冻结二进制/hash/输入/argv/截图，失败、未跑、候选与通过分开。触摸候选不应用；旧历史失败数量不代表当前加载状态。
+用户已结束优化，本轮优先 C17 兼容交付及明确范围的后续验收；G33 基线构建与打包验收仍是独立待办；不猜测 Vulkan 同步与图像语义。GLM 其余可承担明确契约下的测试运行、证据清单和其他设备构建；不得因没有错误日志宣布 GPU 画面通过。Gemini 可按固定模型/步长/输出补充跨后端文字、遮罩与触摸覆盖的截图目视检查。当前没有要求 GLM/Gemini 并发修改本轮修复文件。接手先声明 base/文件，保护未提交工作；GPU 使用 `build/gpu-validation.lock`，输入仅经应用回调，外部素材只读。新证据目录冻结二进制/hash/输入/argv/截图，失败、未跑、候选与通过分开。触摸候选不应用；旧历史失败数量不代表当前加载状态。

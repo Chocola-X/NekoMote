@@ -8,6 +8,8 @@ C14 内存优化已交付（`a17b5ad`），见 [测量](docs/memory-footprint-20
 
 C16 从 `958a404` 继续稳态帧优化：复用索引/UV 和局部 GPU 状态；195 初态与 12 对 GL/VK 画面一致，CPU probe P50 降低 2.0–4.6%，显存不变。完整范围及不利样本见 [报告](docs/frame-optimization-2026-10-13.md)。
 
+C17（2026-10-13）按用户要求暂告优化工作，完成原生 Wayland / X11 兼容修复：GLFW 双平台自动选择、Qt GL / GLES 后端和上下文重建快照；隔离 Wayland Plasma、当前 XWayland 的 X11 API 及固定画面对照通过。未安装用户桌面；GLES padding 资源代价和剩余验收见 [报告](docs/wayland-compatibility-2026-10-13.md)。
+
 ## 1. 产品与开发策略
 
 NekoMote 独立实现原生二维模型运行时，使用已有 E-mote 解包素材，目标是在 Linux 桌面长期运行动态壁纸。动画/变形核心、GPU 后端和桌面适配分别组织，共用真实模型开展开发和验证。
@@ -26,7 +28,7 @@ NekoMote 独立实现原生二维模型运行时，使用已有 E-mote 解包素
 - 原项目：同级目录 `../NekoWebShow/`，调查基线 `main` / `47751f6a2cbce50ed7b1cdc8727e4d4bacf83b0e`。
 - 原项目目录当前有 195 条模型目录记录；完整原生兼容性尚未验证。
 - 本地 `refer/` 保存旧调查报告和参考源码，已被 Git 忽略。
-- 当前开发环境：KDE / X11，CMake 4.0.3、Ninja 1.12.1、GCC 15.1.1、Clang/clang-format 20.1.8。仅用于说明当前环境，不把这些精确版本强制写成未来最低要求。
+- 当前开发环境：KDE，用户于 2026-10-13 临时切换为 Wayland（此前 X11）；CMake 4.0.3、Ninja 1.12.1、GCC 15.1.1、Clang/clang-format 20.1.8。仅用于说明当前环境，不把这些精确版本强制写成未来最低要求。
 
 用户已批准路线规划和开发规范；阶段状态依据当前源码与可复核证据。历史交接不能替代当前HEAD回归，接手时核对Git状态并保护他人工作。
 

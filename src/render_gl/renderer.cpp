@@ -5,9 +5,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 #include <vector>
+
+#include "shader_source.hpp"
 
 namespace nekomote::render_gl
 {
@@ -19,21 +22,25 @@ namespace
 struct RectangleBinding
 {
     GLint active{GL_TEXTURE0}, previous{0};
-    RectangleBinding()
+    bool enabled;
+    explicit RectangleBinding(GLenum atlas_target) : enabled(atlas_target == GL_TEXTURE_RECTANGLE)
     {
+        if (!enabled)
+            return;
         glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
         glActiveTexture(GL_TEXTURE0);
         glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &previous);
     }
     ~RectangleBinding()
     {
+        if (!enabled)
+            return;
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_RECTANGLE, static_cast<GLuint>(previous));
         glActiveTexture(static_cast<GLenum>(active));
     }
 };
-constexpr const char* kVertexShader = R"(#version 330 core
-layout(location=0) in vec2 position;
+constexpr const char* kVertexShader = R"(layout(location=0) in vec2 position;
 layout(location=1) in vec2 uv;
 layout(location=2) in vec4 color;
 uniform vec2 output_size;
@@ -49,10 +56,14 @@ void main() {
     texture_uv=uv;
     vertex_color=color;
 })";
-constexpr const char* kFragmentShader = R"(#version 330 core
-in vec2 texture_uv;
+constexpr const char* kFragmentShader = R"(in vec2 texture_uv;
 in vec4 vertex_color;
+#ifdef GL_ES
+uniform highp sampler2D atlas;
+uniform vec2 atlas_extent;
+#else
 uniform sampler2DRect atlas;
+#endif
 uniform vec4 atlas_texels;
 uniform int premultiply;
 uniform int protection_pass;
@@ -63,7 +74,15 @@ uniform vec2 mask_output_size;
 uniform float global_alpha;
 out vec4 output_color;
 void main() {
-    vec4 sampled=texture(atlas,texture_uv*atlas_texels.xy+atlas_texels.zw);
+    vec2 texels=texture_uv*atlas_texels.xy+atlas_texels.zw;
+#ifdef GL_ES
+    // Binary scaling preserves the original texel position on ES, which has no
+    // rectangle sampler. Clamp to the uploaded crop, excluding storage padding.
+    vec4 sampled=texture(atlas,clamp(texels,vec2(0.5),atlas_extent-vec2(0.5)) /
+                                vec2(textureSize(atlas,0)));
+#else
+    vec4 sampled=texture(atlas,texels);
+#endif
     if (mask_write != 0) {
         output_color=vec4(0.0,sampled.a,0.0,0.0);
         return;
@@ -74,15 +93,13 @@ void main() {
     if (protection_pass != 0 && color.a < 0.0000001) discard;
     output_color=vec4(premultiply != 0 ? color.rgb*color.a : color.rgb,color.a);
 })";
-constexpr const char* kBlitVertex = R"(#version 330 core
-out vec2 texture_uv;
+constexpr const char* kBlitVertex = R"(out vec2 texture_uv;
 void main() {
     vec2 p=vec2((gl_VertexID << 1) & 2,gl_VertexID & 2);
     texture_uv=p;
     gl_Position=vec4(p*2.0-1.0,0.0,1.0);
 })";
-constexpr const char* kBlitFragment = R"(#version 330 core
-in vec2 texture_uv;
+constexpr const char* kBlitFragment = R"(in vec2 texture_uv;
 uniform sampler2D scene;
 uniform float global_alpha;
 out vec4 output_color;
@@ -107,7 +124,7 @@ struct Shader
     Shader& operator=(const Shader&) = delete;
     void compile(const char* source)
     {
-        glShaderSource(handle, 1, &source, nullptr);
+        set_shader_source(handle, source);
         glCompileShader(handle);
         GLint ok = 0;
         glGetShaderiv(handle, GL_COMPILE_STATUS, &ok);
@@ -257,17 +274,20 @@ Clip intersect(Clip a, Clip b) noexcept
 } // namespace
 struct Renderer::Impl
 {
+    GLenum atlas_target{GL_TEXTURE_RECTANGLE};
+    bool srgb_control{true};
     GLuint program{0}, blit_program{0}, vao{0}, vbo{0}, ebo{0};
     GLint premultiply{-1}, protection_pass{-1}, mask_write{-1}, use_mask{-1}, mask_output_size{-1};
     GLint global_alpha{-1}, blit_global_alpha{-1};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
-    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1}, atlas_texels{-1};
+    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1}, atlas_texels{-1}, atlas_extent{-1};
     struct Texture
     {
         TextureId id;
         GLuint handle;
         std::array<float, 4> texel_transform;
+        std::array<float, 2> extent;
     };
     std::vector<Texture> textures;
     std::vector<DrawCommand> commands, mask_commands;
@@ -296,8 +316,10 @@ struct Renderer::Impl
             return;
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
-        glBindTexture(GL_TEXTURE_RECTANGLE, it->handle);
+        glBindTexture(atlas_target, it->handle);
         glUniform4fv(atlas_texels, 1, it->texel_transform.data());
+        if (atlas_target == GL_TEXTURE_2D)
+            glUniform2fv(atlas_extent, 1, it->extent.data());
         uv_texture = id;
     }
     GLuint texture(TextureId id) const
@@ -309,11 +331,20 @@ struct Renderer::Impl
 };
 Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
 {
-    if (!loader || !gladLoadGL(loader))
-        throw std::runtime_error("cannot load OpenGL 3.3");
-    if (!GLAD_GL_VERSION_3_3)
-        throw std::runtime_error("OpenGL 3.3 core required");
+    if (!loader)
+        throw std::runtime_error("missing OpenGL function loader");
+    const auto get_string = reinterpret_cast<PFNGLGETSTRINGPROC>(loader("glGetString"));
+    const auto* version =
+        get_string ? reinterpret_cast<const char*>(get_string(GL_VERSION)) : nullptr;
+    if (!version)
+        throw std::runtime_error("OpenGL requires a current context");
+    const bool gles = std::strncmp(version, "OpenGL ES", 9) == 0;
+    if (gles ? (!gladLoadGLES2(loader) || !GLAD_GL_ES_VERSION_3_0)
+             : (!gladLoadGL(loader) || !GLAD_GL_VERSION_3_3))
+        throw std::runtime_error("OpenGL 3.3 core or OpenGL ES 3.0 required");
     auto& p = *impl_;
+    p.atlas_target = gles ? GL_TEXTURE_2D : GL_TEXTURE_RECTANGLE;
+    p.srgb_control = !gles || GLAD_GL_EXT_sRGB_write_control;
     p.program = link_program(kVertexShader, kFragmentShader);
     p.blit_program = link_program(kBlitVertex, kBlitFragment);
     glUseProgram(p.blit_program);
@@ -330,6 +361,7 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
     p.projection = glGetUniformLocation(p.program, "projection");
     p.flip_x = glGetUniformLocation(p.program, "flip_x");
     p.atlas_texels = glGetUniformLocation(p.program, "atlas_texels");
+    p.atlas_extent = glGetUniformLocation(p.program, "atlas_extent");
     glUseProgram(p.program);
     glUniform1i(glGetUniformLocation(p.program, "atlas"), 0);
     glUniform1i(glGetUniformLocation(p.program, "alpha_mask"), 1);
@@ -380,7 +412,9 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
     if (!id.valid() || p.texture(id) || p.textures.size() >= p.texture_capacity)
         throw std::runtime_error("invalid, duplicate or excessive texture ID");
     GLint max_size = 0;
-    glGetIntegerv(GL_MAX_RECTANGLE_TEXTURE_SIZE, &max_size);
+    glGetIntegerv(p.atlas_target == GL_TEXTURE_RECTANGLE ? GL_MAX_RECTANGLE_TEXTURE_SIZE
+                                                         : GL_MAX_TEXTURE_SIZE,
+                  &max_size);
     if (image.width <= 0 || image.height <= 0 || image.width > max_size ||
         image.height > max_size ||
         image.pixels.size() !=
@@ -388,24 +422,48 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
         throw std::runtime_error("invalid or unsupported texture dimensions");
     if (!region.valid_for(image.width, image.height))
         throw std::runtime_error("invalid texture crop region");
-    const RectangleBinding rectangle_binding;
+    const RectangleBinding rectangle_binding(p.atlas_target);
     GLuint handle = 0;
     glGenTextures(1, &handle);
     // Register ownership before any subsequent operation can fail.
-    p.textures.push_back({id, handle, region.texel_transform(image.width, image.height)});
+    p.textures.push_back({id,
+                          handle,
+                          region.texel_transform(image.width, image.height),
+                          {static_cast<float>(image.width), static_cast<float>(image.height)}});
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_RECTANGLE, handle);
+    glBindTexture(p.atlas_target, handle);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, image.pixels.data());
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (p.atlas_target == GL_TEXTURE_2D)
+    {
+        // GLES has only normalized samplers. Power-of-two storage gives exact
+        // binary scaling; arbitrary crop dimensions caused mask-amplified errors.
+        const auto storage_size = [max_size](int value)
+        {
+            int result = 1;
+            while (result < value)
+            {
+                if (result > max_size / 2)
+                    throw std::runtime_error("OpenGL ES atlas padding exceeds texture limits");
+                result *= 2;
+            }
+            return result;
+        };
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, storage_size(image.width),
+                     storage_size(image.height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGBA,
+                        GL_UNSIGNED_BYTE, image.pixels.data());
+    }
+    else
+        glTexImage2D(p.atlas_target, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, image.pixels.data());
+    glTexParameteri(p.atlas_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(p.atlas_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(p.atlas_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(p.atlas_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     check_gl("upload texture");
 }
 void Renderer::prepare(RenderFrame frame)
@@ -551,14 +609,15 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     if (straight && (!p.color_target || p.color_target->width != target.width ||
                      p.color_target->height != target.height))
         throw std::runtime_error("protected composition requires explicit output resize");
-    const RectangleBinding rectangle_binding;
+    const RectangleBinding rectangle_binding(p.atlas_target);
     glBindFramebuffer(GL_FRAMEBUFFER, straight ? p.color_target->framebuffer : target.framebuffer);
     glViewport(0, 0, target.width, target.height);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_CULL_FACE);
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    if (p.srgb_control)
+        glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DITHER);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     if (straight)

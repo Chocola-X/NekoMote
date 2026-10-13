@@ -43,16 +43,16 @@ void verify_playback(QQmlEngine& engine, const QString& assets_dir)
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 128; height: 128; assetsDir: '" +
-                           assets_dir.toUtf8() + "'; }",
-                       {});
+                      "NekoWallpaperItem { width: 128; height: 128; assetsDir: '" +
+                          assets_dir.toUtf8() + "'; }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item)
         throw std::runtime_error("playback fixture did not create");
     auto state = item->wallpaper_state();
     auto window = std::make_unique<QQuickWindow>();
-    window->setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
+    window->setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
     window->resize(128, 128);
     item->setParentItem(window->contentItem());
     std::vector<double> deltas;
@@ -109,15 +109,15 @@ void verify(QQmlEngine& engine, const QByteArray& properties, int expected_statu
 {
     QQmlComponent component(&engine);
     component.setData("import QtQuick\nimport NekoMote.Wallpaper\n"
-                       "NekoWallpaperItem { width: 128; height: 128; " +
-                           properties + " }",
-                       {});
+                      "NekoWallpaperItem { width: 128; height: 128; " +
+                          properties + " }",
+                      {});
     std::unique_ptr<QObject> object(component.create());
     auto* item = qobject_cast<nekomote::plasma::NekoWallpaperItem*>(object.get());
     if (!item || item->status() != expected_status)
         throw std::runtime_error("QML configuration status incorrect");
     QQuickWindow window;
-    window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
+    window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
     window.setColor(Qt::transparent);
     window.resize(128, 128);
     item->setParentItem(window.contentItem());

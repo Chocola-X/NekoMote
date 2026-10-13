@@ -308,6 +308,8 @@ struct Glfw
                              { std::fprintf(stderr, "GLFW %d: %s\n", code, text); });
         if (!glfwInit())
             throw std::runtime_error("GLFW initialization failed");
+        std::fprintf(stderr, "Window platform=%s\n",
+                     glfwGetPlatform() == GLFW_PLATFORM_WAYLAND ? "wayland" : "x11");
     }
     ~Glfw()
     {

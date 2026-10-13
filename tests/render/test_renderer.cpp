@@ -76,8 +76,11 @@ struct Context
             throw std::runtime_error("GLFW init failed");
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        const bool gles = std::getenv("NEKOMOTE_TEST_GLES") != nullptr;
+        glfwWindowHint(GLFW_CLIENT_API, gles ? GLFW_OPENGL_ES_API : GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gles ? 0 : 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE,
+                       gles ? GLFW_OPENGL_ANY_PROFILE : GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
         window = glfwCreateWindow(64, 64, "GPU regression", nullptr, nullptr);
         if (!window)
@@ -148,7 +151,8 @@ TEST_CASE("GPU cropped atlas storage preserves filtering and original clamp edge
         {
             glGenTextures(1, &handle);
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_RECTANGLE, handle);
+            if (!std::getenv("NEKOMOTE_TEST_GLES"))
+                glBindTexture(GL_TEXTURE_RECTANGLE, handle);
         }
         ~HostRectangle()
         {
@@ -176,12 +180,17 @@ TEST_CASE("GPU cropped atlas storage preserves filtering and original clamp edge
         const TextureId original_id{edge ? 3U : 1U}, cropped_id{edge ? 4U : 2U};
         glActiveTexture(GL_TEXTURE0);
         GLint before = 0;
-        glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &before);
+        const bool rectangle = !std::getenv("NEKOMOTE_TEST_GLES");
+        if (rectangle)
+            glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &before);
         renderer.upload_texture(original_id, full);
         renderer.upload_texture(cropped_id, cropped, region);
         GLint after = -1;
-        glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
-        REQUIRE(after == before);
+        if (rectangle)
+        {
+            glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
+            REQUIRE(after == before);
+        }
         for (const auto composition :
              {ColorComposition::PremultipliedOver, ColorComposition::ProtectedStraight})
             for (const bool outside : {false, true})
@@ -200,8 +209,11 @@ TEST_CASE("GPU cropped atlas storage preserves filtering and original clamp edge
                 renderer.prepare(frame);
                 renderer.render({output.framebuffer, 64, 64}, {});
                 const auto actual = renderer.capture({output.framebuffer, 64, 64});
-                glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
-                REQUIRE(after == before);
+                if (rectangle)
+                {
+                    glGetIntegerv(GL_TEXTURE_BINDING_RECTANGLE, &after);
+                    REQUIRE(after == before);
+                }
                 unsigned max_error = 0;
                 for (std::size_t i = 0; i < actual.pixels.size(); ++i)
                     max_error = std::max(

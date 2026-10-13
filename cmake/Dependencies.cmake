@@ -56,6 +56,11 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 if(NEKOMOTE_BUILD_PREVIEW)
+    # Ship both native Linux platforms; GLFW 3.4 selects from XDG_SESSION_TYPE.
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE)
+        set(GLFW_BUILD_X11 ON CACHE BOOL "" FORCE)
+    endif()
     FetchContent_MakeAvailable(glfw)
 endif()
 
@@ -68,7 +73,10 @@ if(NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_ABI)
         GIT_SHALLOW TRUE
         SOURCE_SUBDIR cmake)
     FetchContent_MakeAvailable(glad)
-    glad_add_library(nekomote_gl_loader STATIC REPRODUCIBLE API gl:core=3.3)
+    # A comma-separated spec keeps glad 2.0.8's CMake output list consistent
+    # with MERGE: both APIs are emitted into gl.h/gl.c, not a second gles2.c.
+    glad_add_library(nekomote_gl_loader STATIC REPRODUCIBLE MERGE
+        API "gl:core=3.3,gles2=3.0" EXTENSIONS GL_EXT_sRGB_write_control)
 endif()
 
 # --- Vulkan (render_vk backend) ---------------------------------------------------

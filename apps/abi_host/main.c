@@ -468,6 +468,11 @@ static void print_usage(const char* prog)
 /* Main                                                               */
 /* ------------------------------------------------------------------ */
 
+static void glfw_error(int code, const char* message)
+{
+    fprintf(stderr, "GLFW %d: %s\n", code, message);
+}
+
 int main(int argc, char** argv)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -575,12 +580,16 @@ int main(int argc, char** argv)
     }
 #endif
 
-    /* ---- Init GLFW ---- */
+    /* GLFW 3.4 chooses native Wayland/X11 from the current session. */
+    glfwSetErrorCallback(glfw_error);
     if (!glfwInit())
     {
         fprintf(stderr, "Error: glfwInit failed\n");
         return 1;
     }
+
+    fprintf(stderr, "Window platform=%s\n",
+            glfwGetPlatform() == GLFW_PLATFORM_WAYLAND ? "wayland" : "x11");
 
 #if defined(NEKOMOTE_HAS_VULKAN)
     VkHostC vk_host;

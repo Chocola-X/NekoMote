@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "shader_source.hpp"
+
 namespace nekomote::render_gl
 {
 
@@ -18,7 +20,6 @@ namespace
 {
 
 constexpr const char* kRectVertexShader = R"(
-#version 330 core
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in vec2 a_uv;
 uniform vec2 u_viewport;
@@ -31,7 +32,6 @@ void main() {
 )";
 
 constexpr const char* kRectFragmentShader = R"(
-#version 330 core
 in vec2 v_uv;
 out vec4 frag;
 uniform vec4 u_fill;
@@ -61,7 +61,6 @@ void main() {
 )";
 
 constexpr const char* kTextVertexShader = R"(
-#version 330 core
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in vec2 a_uv;
 uniform vec2 u_viewport;
@@ -74,7 +73,6 @@ void main() {
 )";
 
 constexpr const char* kTextFragmentShader = R"(
-#version 330 core
 in vec2 v_uv;
 out vec4 frag;
 uniform vec4 u_color;
@@ -86,7 +84,6 @@ void main() {
 )";
 
 constexpr const char* kIconVertexShader = R"(
-#version 330 core
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in vec2 a_uv;
 uniform vec2 u_viewport;
@@ -99,7 +96,6 @@ void main() {
 )";
 
 constexpr const char* kIconFragmentShader = R"(
-#version 330 core
 in vec2 v_uv;
 out vec4 frag;
 uniform vec4 u_tint;
@@ -111,7 +107,6 @@ void main() {
 )";
 
 constexpr const char* kTriVertexShader = R"(
-#version 330 core
 layout(location = 0) in vec2 a_pos;
 uniform vec2 u_viewport;
 void main() {
@@ -121,7 +116,6 @@ void main() {
 )";
 
 constexpr const char* kTriFragmentShader = R"(
-#version 330 core
 out vec4 frag;
 uniform vec4 u_color;
 void main() {
@@ -132,7 +126,7 @@ void main() {
 std::uint32_t compile_shader(GLenum type, const char* source)
 {
     std::uint32_t shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
+    set_shader_source(shader, source);
     glCompileShader(shader);
     int success = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);

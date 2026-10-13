@@ -81,6 +81,17 @@ class ExplicitOptIn(unittest.TestCase):
 @unittest.skipUnless(HOST_ENABLED,
                      'Set NEKOMOTE_QT_QUICK_HOST to an existing binary to opt in')
 class CliErrors(unittest.TestCase):
+    def test_unsupported_gl_context_api(self):
+        r = run_host(['--model', MODEL, '--session', SESSION,
+                      '--gl-api', 'vulkan'])
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('gl-api must be desktop or gles', r.stderr)
+
+    def test_missing_gl_context_api(self):
+        r = run_host(['--model', MODEL, '--session', SESSION, '--gl-api'])
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('missing option value', r.stderr)
+
     def test_unsupported_graphics_api(self):
         r = run_host(['--model', MODEL, '--session', SESSION,
                       '--graphics-api', 'vulkan', '--steps', '1',
@@ -121,6 +132,7 @@ class CliErrors(unittest.TestCase):
         r = run_host(['--help'])
         self.assertEqual(r.returncode, 0)
         self.assertIn('model', r.stdout)
+        self.assertIn('--gl-api desktop|gles', r.stdout)
 
     def test_missing_required_option(self):
         r = run_host(['--session', SESSION, '--steps', '1',
@@ -135,25 +147,27 @@ class CliErrors(unittest.TestCase):
 @unittest.skipUnless(HAVE_PIL, 'Pillow not available')
 class LifecycleCapture(unittest.TestCase):
     def test_lifecycle_30_steps(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            lifecycle = pathlib.Path(tmp) / 'lifecycle'
-            env = dict(os.environ, QSG_RENDER_LOOP='threaded', QT_SCALE_FACTOR='1')
-            r = run_host(
-                ['--model', str(MODEL), '--session', str(SESSION),
-                 '--steps', '30', '--check-lifecycle', str(lifecycle)],
-                timeout=60, gpu=True, env=env)
-            self.assertEqual(r.returncode, 0, r.stderr)
-            initial = Image.open(lifecycle / 'initial.png')
-            resized = Image.open(lifecycle / 'resized.png')
-            recreated = Image.open(lifecycle / 'recreated.png')
-            self.assertEqual(initial.size, (800, 1080))
-            self.assertEqual(resized.size, (640, 480))
-            self.assertEqual(recreated.size, (800, 1080))
-            self.assertEqual(
-                initial.tobytes(), recreated.tobytes(),
-                'recreated frame differs from initial')
-            self.assertIn('created=2', r.stdout)
-            self.assertIn('destroyed=2', r.stdout)
+        for gl_api in ('desktop', 'gles'):
+            with self.subTest(gl_api=gl_api), tempfile.TemporaryDirectory() as tmp:
+                lifecycle = pathlib.Path(tmp) / 'lifecycle'
+                env = dict(os.environ, QSG_RENDER_LOOP='threaded', QT_SCALE_FACTOR='1')
+                r = run_host(
+                    ['--model', str(MODEL), '--session', str(SESSION),
+                     '--gl-api', gl_api, '--steps', '30',
+                     '--check-lifecycle', str(lifecycle)],
+                    timeout=60, gpu=True, env=env)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                with Image.open(lifecycle / 'initial.png') as initial, \
+                        Image.open(lifecycle / 'resized.png') as resized, \
+                        Image.open(lifecycle / 'recreated.png') as recreated:
+                    self.assertEqual(initial.size, (800, 1080))
+                    self.assertEqual(resized.size, (640, 480))
+                    self.assertEqual(recreated.size, (800, 1080))
+                    self.assertEqual(
+                        initial.tobytes(), recreated.tobytes(),
+                        'recreated frame differs from initial')
+                self.assertIn('created=2', r.stdout)
+                self.assertIn('destroyed=2', r.stdout)
 
     def test_capture_chocola(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -164,8 +178,8 @@ class LifecycleCapture(unittest.TestCase):
                  '--steps', '0', '--capture', str(capture)],
                 gpu=True, env=env)
             self.assertEqual(r.returncode, 0, r.stderr)
-            img = Image.open(capture)
-            self.assertEqual(img.size, (800, 1080))
+            with Image.open(capture) as img:
+                self.assertEqual(img.size, (800, 1080))
 
     def test_capture_fraise_moved_scaled(self):
         if not FRAISE_MODEL.is_file() or not FRAISE_SESSION.is_file():
@@ -179,8 +193,8 @@ class LifecycleCapture(unittest.TestCase):
                  '--steps', '0', '--capture', str(capture)],
                 gpu=True, env=env)
             self.assertEqual(r.returncode, 0, r.stderr)
-            img = Image.open(capture)
-            self.assertEqual(img.size, (800, 1080))
+            with Image.open(capture) as img:
+                self.assertEqual(img.size, (800, 1080))
 
     def test_dpi_1_5(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -192,8 +206,8 @@ class LifecycleCapture(unittest.TestCase):
                  '--steps', '0', '--capture', str(capture)],
                 gpu=True, env=env)
             self.assertEqual(r.returncode, 0, r.stderr)
-            img = Image.open(capture)
-            self.assertEqual(img.size, (1200, 1620))
+            with Image.open(capture) as img:
+                self.assertEqual(img.size, (1200, 1620))
 
 
 if __name__ == '__main__':

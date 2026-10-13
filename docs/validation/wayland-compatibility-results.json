@@ -1,0 +1,1570 @@
+{
+  "schema": 1,
+  "task": "C17 native Wayland / X11 compatibility",
+  "generated_utc": "2026-10-13T05:20:38.073585+00:00",
+  "base_commit": "0c0f400a3206835d5e0d94b46308883385c408f5",
+  "source_revision": "C17 working tree delivered with this record; not the base binaries",
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "independent_review": "Second Codex / GPT-6 executor, /root/review_wayland",
+  "environment": {
+    "build": "Release / LTO / WERROR",
+    "compiler": "GCC 15.1.1",
+    "cpu": "Ryzen 7 5800H",
+    "gpu": "NVIDIA RTX 3060 Laptop",
+    "driver": "575.64.03",
+    "qt": "6.9.1",
+    "plasma": "6.3.6",
+    "session": "Wayland",
+    "wayland_display": "wayland-0",
+    "x11_display": ":1 (XWayland)",
+    "glfw": "3.4, both platforms built",
+    "nested_wayland": "private DBus, runtime/config/cache; KWin virtual output 2560x2160; actual NVIDIA GLES 3.2"
+  },
+  "final_binaries": [
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_player",
+        "sha256": "e87a9132e2add98ea33b1b96160e184c494cb4444e235dae52801c37b78db694"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_player",
+        "sha256": "e87a9132e2add98ea33b1b96160e184c494cb4444e235dae52801c37b78db694"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_abi_host",
+        "sha256": "d5f1cb0fb200364688f2846bfcc5ebb3e7dd1b17a5d57167ed31e1217d6a2cdc"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_abi_host",
+        "sha256": "d5f1cb0fb200364688f2846bfcc5ebb3e7dd1b17a5d57167ed31e1217d6a2cdc"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_qt_quick_host",
+        "sha256": "55b4a71c6971ae502ede4243ffbb0ed8b1b9efd80f214149a1e139f6a916327f"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_qt_quick_host",
+        "sha256": "55b4a71c6971ae502ede4243ffbb0ed8b1b9efd80f214149a1e139f6a916327f"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_plasma_package_probe",
+        "sha256": "457210d3179d310188781b987d3b6e76fde0ae4666c9c0c611802f93dfa44557"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_plasma_package_probe",
+        "sha256": "457210d3179d310188781b987d3b6e76fde0ae4666c9c0c611802f93dfa44557"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_render_tests",
+        "sha256": "97762c24a5245dd9c789f13337c3dc9fad383c3e8f5c54773ec53bf7df108f4f"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_render_tests",
+        "sha256": "97762c24a5245dd9c789f13337c3dc9fad383c3e8f5c54773ec53bf7df108f4f"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/bin/nekomote_vk_tests",
+        "sha256": "94c7762b5d3054ba0cd2321827b7f2c174262db54e6d48b59ab7a629cbc4513e"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/nekomote_vk_tests",
+        "sha256": "94c7762b5d3054ba0cd2321827b7f2c174262db54e6d48b59ab7a629cbc4513e"
+      }
+    },
+    {
+      "built": {
+        "path": "build/optimization-current/lib/libnekomote_plasma_qml.so",
+        "sha256": "fe646dffbb8299112aaff6a2621da69ea379cd492db3750f435beac6835fccce"
+      },
+      "frozen": {
+        "path": "build/evidence/wayland-20261013/final-binaries/libnekomote_plasma_qml.so",
+        "sha256": "fe646dffbb8299112aaff6a2621da69ea379cd492db3750f435beac6835fccce"
+      }
+    }
+  ],
+  "base_binaries": [
+    {
+      "path": "build/evidence/wayland-20261013/nekomote_player-base",
+      "sha256": "79cda0357fb7bb946eec3ba5dbcde11de29fd80dc1fe8fc5d5fbcce34d0f14c7"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nekomote_abi_host-base",
+      "sha256": "7439f0b32e2f61502e554156f9dd8cac0681f5ed9b0b0707856ac0e9bdff3824"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nekomote_qt_quick_host-base",
+      "sha256": "c5b4a80f60cd48cab94b7484b86bdcf121e964ca7fce647e440f0b6e3e99802c"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/libnekomote_plasma_qml-base.so",
+      "sha256": "fb9e2f821521fb531cd647960bfe477ce5b86231258a198b64f3cc7de5fd59e4"
+    }
+  ],
+  "real_inputs": [
+    {
+      "path": "assets/characters/chocola/date-a/model.nkm.json",
+      "sha256": "eddc226dd2056ccf96ab8cf179824386f427d2db9b20f6420689c316a0368690"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/session.nks.json",
+      "sha256": "88b5500ed9af6c3df8f62b73a3c706cdd43427481784abf3a62d512a90aacbdd"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/textures/0.png",
+      "sha256": "0404f69a42405a4fc3f8f3ed7f381dfc3215bb2c57d938555c79f6db78b29642"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/model.nkm.json",
+      "sha256": "7a107af7b64c245fe2b8309c43dbe61b88e177fc95ebc9912850ad3a4f75ccba"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/session.nks.json",
+      "sha256": "4c0441515bfedfddebbdf376383685c872b3819505dd0a2dc03f0c57e29f6bdf"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/textures/0.png",
+      "sha256": "e4b6a2e0695c18934ed250024af6521b4fb97f37be9c66248502c736b0d3b60e"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/model.nkm.json",
+      "sha256": "bb1d094be9626aecd5896a19d3f01e6132a3eaecb938c5a26b8cc5d3475fa3c9"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/session.nks.json",
+      "sha256": "ccf5d2efa055ed9ccd71a348bbe644dfd2baac7995d6889769edc52ed94c1df0"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/textures/0.png",
+      "sha256": "ec17ddef264a978a26f01b845f0e5a32c1c1d0c18f75b6b9423a3466d57eaa45"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/model.nkm.json",
+      "sha256": "28059164251a9c5aed8eda64fa23524e9e7e0c4654307027d331c58224bffc69"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/session.nks.json",
+      "sha256": "bb4a890a7d7bf11820e19d372b520a0dfeeb352e27e4c07f48b5d652eaa85651"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/textures/0.png",
+      "sha256": "5048bc19a60f2e0a47cbe3d79d91935b5f001b7de195bd8e347fff45cf5e3ac8"
+    },
+    {
+      "path": "assets/characters/azuki/casual/model.nkm.json",
+      "sha256": "24c75468a7a5797496a288c13e69836e0933c506090e4412a3c3ad1de13932cc"
+    },
+    {
+      "path": "assets/characters/azuki/casual/session.nks.json",
+      "sha256": "c8d77c2b2db49505be745ce6f6769f7cc9ba80b4e2a8fe8a32eb7e38f63ccb28"
+    },
+    {
+      "path": "assets/characters/azuki/casual/textures/0.png",
+      "sha256": "1449ac60ca12bc56bb2f41b94ccded494361264d247e8488262613e6bec0f9f6"
+    },
+    {
+      "path": "assets/characters/azuki/casual/textures/1.png",
+      "sha256": "450160c5a78bc4e940be68821b274a57bd4fb09ffdb137814f061913f074fad6"
+    },
+    {
+      "path": "assets/characters/coconut/casual/model.nkm.json",
+      "sha256": "6d9ac456a61b9185fa29f484b835cf0f8033e7fb67a132b77828d17d8d2b36e8"
+    },
+    {
+      "path": "assets/characters/coconut/casual/session.nks.json",
+      "sha256": "2968d2d4a726813bd3fb99f7684c982961a5b890c8a8345c35cc4bea451e3f3f"
+    },
+    {
+      "path": "assets/characters/coconut/casual/textures/0.png",
+      "sha256": "80442952e1e11dc612d2aec2b6bb83f4d54fea6ee12e0f78a1e9281dc5ccbbbb"
+    },
+    {
+      "path": "assets/characters/chocola/casual/model.nkm.json",
+      "sha256": "69b737c07823ffd055647be78eb113914d7f187ee5727f0da7993ec8dbec4097"
+    },
+    {
+      "path": "assets/characters/chocola/casual/session.nks.json",
+      "sha256": "747a531451ea0c4531dba228fea77dfdb7fc103ce94b83e1b94f66fadb002ec1"
+    },
+    {
+      "path": "assets/characters/chocola/casual/textures/0.png",
+      "sha256": "899cc0f3a06b77e9e51bc25633a6ef1b10b5460c7898f50ab226e48353586851"
+    },
+    {
+      "path": "assets/config.json",
+      "sha256": "f33dbdcedab9e41d38bfca7eeef3f1c301c013ffffbff94eab5dd7cf81a55868"
+    },
+    {
+      "path": "assets/backgrounds/background.json",
+      "sha256": "e89daf38b846fc8feb7e1c7778bbdd35b440487f8f30eee21718612123ec721b"
+    },
+    {
+      "path": "assets/backgrounds/BG_07A.png",
+      "sha256": "13930a48f69e338eb910d9278a96d9366ea09d2ed5fdc779a64875804e37efdd"
+    }
+  ],
+  "validation": {
+    "build": {
+      "passed": true,
+      "log": "build/evidence/wayland-20261013/build-recreation.log"
+    },
+    "cpu": {
+      "passed": 189,
+      "failed": 0,
+      "real_asset_import_executed": true,
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "build/optimization-current",
+        "-LE",
+        "gpu|qt",
+        "-j4"
+      ],
+      "environment": {
+        "NEKOMOTE_TEST_REAL_ASSET": "${repo}/../NekoWebShow/model_conversion"
+      }
+    },
+    "gpu": {
+      "desktop_gl": {
+        "cases": 15,
+        "assertions": 275
+      },
+      "gles": {
+        "cases": 15,
+        "assertions": 265,
+        "rectangle_only_assertions_excluded": true
+      },
+      "vulkan": {
+        "cases": 9,
+        "assertions": 348
+      },
+      "final_ctest_runners": {
+        "passed": 3,
+        "failed": 0,
+        "argv": [
+          "ctest",
+          "--test-dir",
+          "build/optimization-current",
+          "-R",
+          "^renderer_(gles_|vulkan_)?gpu$",
+          "-j1",
+          "--output-on-failure"
+        ]
+      }
+    },
+    "qt_wayland_python": {
+      "passed": 14,
+      "failed": 0,
+      "lifecycle_gl_api_subtests": [
+        "desktop",
+        "gles"
+      ],
+      "recreated_images_byte_identical": true,
+      "created_each": 2,
+      "destroyed_each": 2
+    },
+    "qt_x11_python": {
+      "passed": 1,
+      "failed": 0,
+      "lifecycle_gl_api_subtests": [
+        "desktop",
+        "gles"
+      ],
+      "scope": "X11 API via XWayland, not native X11 login"
+    },
+    "plasma_wayland_ctest": {
+      "passed": 4,
+      "failed": 0,
+      "tests": [
+        "plasma_wallpaper_layers",
+        "plasma_wallpaper_layers_vulkan",
+        "plasma_item_safety",
+        "plasma_config_reject"
+      ],
+      "vulkan_sync_validation_errors": 0,
+      "scope": "isolated compositor / build-tree plugin; before final renderer snapshot fix, which was subsequently covered by Qt lifecycle and KPackage"
+    },
+    "plasma_x11_ctest": {
+      "passed": 4,
+      "failed": 0,
+      "scope": "XWayland / desktop GL / build-tree plugin; same snapshot-fix timing as Wayland CTest"
+    },
+    "plasma_kpackage_wayland": {
+      "passed": 6,
+      "failed": 0,
+      "final_binary": true,
+      "tests": [
+        "bad_asset",
+        "invalid_config",
+        "capture",
+        "lifecycle_5_config_rounds",
+        "lifecycle_dpi_1_5",
+        "recovery"
+      ],
+      "scope": "real KPackage / build-tree QML plugin, not installed desktop"
+    },
+    "package": {
+      "archive": {
+        "path": "build/evidence/wayland-20261013/nekomote-plasma-wayland-x86_64.tar.gz",
+        "sha256": "a9798117f6ee0c87b0ac86e7efef9a749f387544931b1def3aaffac55324214c"
+      },
+      "host_preflight": {
+        "architecture": "x86_64",
+        "gpu_validation": "not performed",
+        "passed": true,
+        "plasma": "plasmashell 6.3.6",
+        "qt": "6.9.1"
+      },
+      "compatibility": {
+        "architecture": "x86_64",
+        "baseline": {
+          "failures": [
+            "GLIBC_2.38 > 2.36",
+            "GLIBCXX_3.4.31 > 3.4.30",
+            "CXXABI_1.3.15 > 1.3.13",
+            "Qt 6.9.1 > 6.4.2"
+          ],
+          "limits": {
+            "CXXABI": "1.3.13",
+            "GLIBC": "2.36",
+            "GLIBCXX": "3.4.30"
+          },
+          "name": "debian12",
+          "passed": false
+        },
+        "binaries": {
+          "lib/libnekomote_plasma_qml.so": {
+            "architecture": "x86_64",
+            "needed": [
+              "libQt6Quick.so.6",
+              "libQt6OpenGL.so.6",
+              "libpulse.so.0",
+              "libpng16.so.16",
+              "libz.so.1",
+              "libfontconfig.so.1",
+              "libQt6QmlMeta.so.6",
+              "libQt6QmlWorkerScript.so.6",
+              "libQt6QmlModels.so.6",
+              "libQt6Qml.so.6",
+              "libQt6Network.so.6",
+              "libQt6Gui.so.6",
+              "libGLX.so.0",
+              "libOpenGL.so.0",
+              "libQt6Core.so.6",
+              "libvulkan.so.1",
+              "libstdc++.so.6",
+              "libm.so.6",
+              "libgcc_s.so.1",
+              "libc.so.6",
+              "ld-linux-x86-64.so.2"
+            ],
+            "qt_symbol_minimum": "6.9",
+            "runpath": [],
+            "sha256": "fe646dffbb8299112aaff6a2621da69ea379cd492db3750f435beac6835fccce",
+            "versions": {
+              "CXXABI": "1.3.15",
+              "GLIBC": "2.38",
+              "GLIBCXX": "3.4.31"
+            }
+          },
+          "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so": {
+            "architecture": "x86_64",
+            "needed": [
+              "libnekomote_plasma_qml.so",
+              "libpulse.so.0",
+              "libpng16.so.16",
+              "libz.so.1",
+              "libfontconfig.so.1",
+              "libQt6Quick.so.6",
+              "libQt6QmlMeta.so.6",
+              "libQt6QmlWorkerScript.so.6",
+              "libQt6QmlModels.so.6",
+              "libQt6Qml.so.6",
+              "libQt6Network.so.6",
+              "libQt6OpenGL.so.6",
+              "libQt6Gui.so.6",
+              "libGLX.so.0",
+              "libOpenGL.so.0",
+              "libQt6Core.so.6",
+              "libvulkan.so.1",
+              "libstdc++.so.6",
+              "libm.so.6",
+              "libgcc_s.so.1",
+              "libc.so.6"
+            ],
+            "qt_symbol_minimum": "6.9",
+            "runpath": [
+              "$ORIGIN/../../../lib"
+            ],
+            "sha256": "d8a4b05decde0d9e7c1bd8355aa1df4fee823b2ccd324cf9c0330b80f66bafa8",
+            "versions": {
+              "CXXABI": "1.3.9",
+              "GLIBC": "2.2.5",
+              "GLIBCXX": "3.4"
+            }
+          }
+        },
+        "plasma_major": 6,
+        "qt_build_version": "6.9.1",
+        "requirements": {
+          "CXXABI": "1.3.15",
+          "GLIBC": "2.38",
+          "GLIBCXX": "3.4.31"
+        },
+        "schema": 1,
+        "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"
+      },
+      "staged_plugin_gpu_verified": false,
+      "stage_import_attempt": "QML import trace still chooses compiled build-tree path; six tests not counted a second time"
+    },
+    "format_and_diff": {
+      "clang_format_dry_run": true,
+      "git_diff_check": true
+    }
+  },
+  "player_abi_baseline_captures": [
+    {
+      "name": "player-wayland-opengl-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_player-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-wayland-opengl-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49"
+    },
+    {
+      "name": "player-wayland-opengl-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_player",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-wayland-opengl-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "comparison": {
+        "reference": "player-wayland-opengl-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "abi_host-wayland-opengl-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_abi_host-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-wayland-opengl-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "742b1ee9a5fd40d074f0e0c47d12ab8c87d70b4e1f58cd7eb6132204d26e11a6"
+    },
+    {
+      "name": "abi_host-wayland-opengl-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_abi_host",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-wayland-opengl-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "742b1ee9a5fd40d074f0e0c47d12ab8c87d70b4e1f58cd7eb6132204d26e11a6",
+      "comparison": {
+        "reference": "abi_host-wayland-opengl-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "player-wayland-vulkan-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_player-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-wayland-vulkan-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73"
+    },
+    {
+      "name": "player-wayland-vulkan-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_player",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-wayland-vulkan-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "comparison": {
+        "reference": "player-wayland-vulkan-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "abi_host-wayland-vulkan-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_abi_host-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-wayland-vulkan-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "d8ceeb065f3bf7c49cbe6cdb24f6dc6a5d790c00463f8fd5dfba16eb51a5a8c8"
+    },
+    {
+      "name": "abi_host-wayland-vulkan-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_abi_host",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-wayland-vulkan-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "wayland",
+        "QT_QPA_PLATFORM": "wayland"
+      },
+      "returncode": 0,
+      "sha256": "d8ceeb065f3bf7c49cbe6cdb24f6dc6a5d790c00463f8fd5dfba16eb51a5a8c8",
+      "comparison": {
+        "reference": "abi_host-wayland-vulkan-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "player-x11-opengl-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_player-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-x11-opengl-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49"
+    },
+    {
+      "name": "player-x11-opengl-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_player",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-x11-opengl-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "44c1a1ec34607180fa75cdecaaa982cdf2553346b6a541e50decf5e26bb41e49",
+      "comparison": {
+        "reference": "player-x11-opengl-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "abi_host-x11-opengl-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_abi_host-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-x11-opengl-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "742b1ee9a5fd40d074f0e0c47d12ab8c87d70b4e1f58cd7eb6132204d26e11a6"
+    },
+    {
+      "name": "abi_host-x11-opengl-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_abi_host",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "opengl",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-x11-opengl-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "742b1ee9a5fd40d074f0e0c47d12ab8c87d70b4e1f58cd7eb6132204d26e11a6",
+      "comparison": {
+        "reference": "abi_host-x11-opengl-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "player-x11-vulkan-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_player-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-x11-vulkan-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73"
+    },
+    {
+      "name": "player-x11-vulkan-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_player",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--character",
+        "chocola/date-a",
+        "--background-name",
+        "BG_07A",
+        "--fit",
+        "--capture-ui",
+        "${repo}/build/evidence/wayland-20261013/final-captures/player-x11-vulkan-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "edeedbcb5236ccc04d8058a7853aa0336692efdf8496de47fa69651294cf8b73",
+      "comparison": {
+        "reference": "player-x11-vulkan-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    },
+    {
+      "name": "abi_host-x11-vulkan-base",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/evidence/wayland-20261013/nekomote_abi_host-base",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-x11-vulkan-base.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "d8ceeb065f3bf7c49cbe6cdb24f6dc6a5d790c00463f8fd5dfba16eb51a5a8c8"
+    },
+    {
+      "name": "abi_host-x11-vulkan-current",
+      "argv": [
+        "flock",
+        "${repo}/build/gpu-validation.lock",
+        "${repo}/build/optimization-current/bin/nekomote_abi_host",
+        "--assets",
+        "${repo}/assets",
+        "--backend",
+        "vulkan",
+        "--width",
+        "800",
+        "--height",
+        "1080",
+        "--seed",
+        "1",
+        "--mute",
+        "--no-save",
+        "--ui-open",
+        "--steps",
+        "60",
+        "--capture",
+        "${repo}/build/evidence/wayland-20261013/final-captures/abi_host-x11-vulkan-current.png"
+      ],
+      "environment": {
+        "XDG_SESSION_TYPE": "x11",
+        "QT_QPA_PLATFORM": "xcb"
+      },
+      "returncode": 0,
+      "sha256": "d8ceeb065f3bf7c49cbe6cdb24f6dc6a5d790c00463f8fd5dfba16eb51a5a8c8",
+      "comparison": {
+        "reference": "abi_host-x11-vulkan-base",
+        "max_error": 0,
+        "different_pixels": 0
+      }
+    }
+  ],
+  "qt_gl_gles_captures": [
+    {
+      "model": "chocola/date-a",
+      "steps": 0,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-date-a-0-desktop.png",
+          "sha256": "b5a3281c34f4912390e2941cee8435508fd9ea7ff37bb465f37950830bcfc4b8"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-date-a-0-gles.png",
+          "sha256": "b5a3281c34f4912390e2941cee8435508fd9ea7ff37bb465f37950830bcfc4b8"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/chocola/date-a/model.nkm.json",
+        "--session",
+        "assets/characters/chocola/date-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "0",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "chocola/date-a",
+      "steps": 60,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-date-a-60-desktop.png",
+          "sha256": "cf6d400eadeab5567f65a4c332064da087aa5ab6a65fce1fbbed3ed792730531"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-date-a-60-gles.png",
+          "sha256": "cf6d400eadeab5567f65a4c332064da087aa5ab6a65fce1fbbed3ed792730531"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/chocola/date-a/model.nkm.json",
+        "--session",
+        "assets/characters/chocola/date-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "60",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "chocola/maid-a-no-bell",
+      "steps": 0,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-maid-a-no-bell-0-desktop.png",
+          "sha256": "c5064189f9bb18fc7c15e180006e12e017c8be7aeb6904273d85a4ff56ce419d"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-maid-a-no-bell-0-gles.png",
+          "sha256": "c5064189f9bb18fc7c15e180006e12e017c8be7aeb6904273d85a4ff56ce419d"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/chocola/maid-a-no-bell/model.nkm.json",
+        "--session",
+        "assets/characters/chocola/maid-a-no-bell/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "0",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "chocola/maid-a-no-bell",
+      "steps": 60,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-maid-a-no-bell-60-desktop.png",
+          "sha256": "6e9aa67058826e466e3e8bd6b31a8603d3cb458a1f66f01c44a427ab910e2fd2"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-chocola-maid-a-no-bell-60-gles.png",
+          "sha256": "6e9aa67058826e466e3e8bd6b31a8603d3cb458a1f66f01c44a427ab910e2fd2"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/chocola/maid-a-no-bell/model.nkm.json",
+        "--session",
+        "assets/characters/chocola/maid-a-no-bell/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "60",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "vanilla/date-a",
+      "steps": 0,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-vanilla-date-a-0-desktop.png",
+          "sha256": "52eeebee64f0ded473234e5d2f92654374faaaa0ba23cda2bb28ddefd35fc0d6"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-vanilla-date-a-0-gles.png",
+          "sha256": "52eeebee64f0ded473234e5d2f92654374faaaa0ba23cda2bb28ddefd35fc0d6"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/vanilla/date-a/model.nkm.json",
+        "--session",
+        "assets/characters/vanilla/date-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "0",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "vanilla/date-a",
+      "steps": 60,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-vanilla-date-a-60-desktop.png",
+          "sha256": "b8d48ee841931804c0c46547f87b1e9a9038fede2dd21e70533ba1ad6431f904"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-vanilla-date-a-60-gles.png",
+          "sha256": "b8d48ee841931804c0c46547f87b1e9a9038fede2dd21e70533ba1ad6431f904"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/vanilla/date-a/model.nkm.json",
+        "--session",
+        "assets/characters/vanilla/date-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "60",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "fraise/casual-a",
+      "steps": 0,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-fraise-casual-a-0-desktop.png",
+          "sha256": "17762cd15c7e7e97374a715ee71b9f07c611fad318038cb2e325284f3d727844"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-fraise-casual-a-0-gles.png",
+          "sha256": "17762cd15c7e7e97374a715ee71b9f07c611fad318038cb2e325284f3d727844"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/fraise/casual-a/model.nkm.json",
+        "--session",
+        "assets/characters/fraise/casual-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "0",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "fraise/casual-a",
+      "steps": 60,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-fraise-casual-a-60-desktop.png",
+          "sha256": "8bc8bc64847b5b45cd3947c29a0a19f76f8383f2b27b2f380f69187533b71bce"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-fraise-casual-a-60-gles.png",
+          "sha256": "8bc8bc64847b5b45cd3947c29a0a19f76f8383f2b27b2f380f69187533b71bce"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/fraise/casual-a/model.nkm.json",
+        "--session",
+        "assets/characters/fraise/casual-a/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "60",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "azuki/casual",
+      "steps": 0,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-azuki-casual-0-desktop.png",
+          "sha256": "718adc0accd80c2c77d782e189d3e69c2161bbc4972d67d26e9c582bdf48fa67"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-azuki-casual-0-gles.png",
+          "sha256": "718adc0accd80c2c77d782e189d3e69c2161bbc4972d67d26e9c582bdf48fa67"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/azuki/casual/model.nkm.json",
+        "--session",
+        "assets/characters/azuki/casual/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "0",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    },
+    {
+      "model": "azuki/casual",
+      "steps": 60,
+      "max_error": 0,
+      "different_pixels": 0,
+      "over1_pixels": 0,
+      "captures": [
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-azuki-casual-60-desktop.png",
+          "sha256": "cbf67dd3b01305a482a329b23a2681fc297c250064bd7c51ab2b15e8c1c2a88e"
+        },
+        {
+          "path": "build/evidence/wayland-20261013/final-qt/qt-azuki-casual-60-gles.png",
+          "sha256": "cbf67dd3b01305a482a329b23a2681fc297c250064bd7c51ab2b15e8c1c2a88e"
+        }
+      ],
+      "environment": {
+        "QT_QPA_PLATFORM": "wayland",
+        "QT_FORCE_STDERR_LOGGING": "1"
+      },
+      "argv_template": [
+        "flock",
+        "build/gpu-validation.lock",
+        "build/optimization-current/bin/nekomote_qt_quick_host",
+        "--model",
+        "assets/characters/azuki/casual/model.nkm.json",
+        "--session",
+        "assets/characters/azuki/casual/session.nks.json",
+        "--seed",
+        "1",
+        "--steps",
+        "60",
+        "--gl-api",
+        "${desktop_or_gles}",
+        "--capture",
+        "${new_png}",
+        "--trace-frames",
+        "1"
+      ]
+    }
+  ],
+  "missing_asset": {
+    "path": "assets/characters/coconut/date-a",
+    "status": "Skipped, excluded from ten Qt image pairs"
+  },
+  "gles_storage_capacity": {
+    "source_audit": "docs/validation/texture-cropping-results.json",
+    "source_audit_sha256": "fae87d4e93f90152e61dbcf45f43f3b427de9541ac4b8560b48aaceef9085923",
+    "script_sha256": "2651affdde960e304f58a14a7a1094b3c5dac82922057e574c0c0a829bfad7f0",
+    "algorithm": "Decode RGBA8 without colour/gamma transforms; bound any nonzero RGBA channel, retain one texel on each discarded edge, constrain to original dimensions; empty image is 1x1. GLES storage rounds each crop dimension up to the next power of two. Sum width*height*4; no mipmaps, driver allocation, intermediate targets or simultaneous model assumptions.",
+    "capacity_only": true,
+    "driver_memory_measured": false,
+    "input_hashes_match_c15": true,
+    "atlases": 202,
+    "totals": {
+      "original_rgba_bytes": 6296633344,
+      "cropped_rgba_bytes": 4489676856,
+      "gles_padded_rgba_bytes": 6262882304
+    },
+    "exact_crop_reduction_percent": 28.697184499742722,
+    "gles_padded_reduction_percent": 0.5360172358163551,
+    "atlases_with_padding": 199
+  },
+  "capacity_audit": {
+    "path": "build/evidence/wayland-20261013/padding-capacity-audit.json",
+    "sha256": "b6836895f10a905c740da82ed4a5005a181ad96b72a9dc11dbe86fc6a356e4fa"
+  },
+  "rejected_or_harness_failures": [
+    "Default Qt 3.3 CoreProfile on Wayland requested invalid GLES context (EGL_BAD_MATCH).",
+    "Arbitrary-size normalized GLES atlas produced mask-amplified 3/255 error; manual interpolation / quantization candidates rejected.",
+    "Occluded current-desktop Qt windows time out frame callbacks; DPI output exceeded screen. Final exposed-output tests use private virtual KWin.",
+    "Initial nested lifecycle failed renderer recreation due to missing configuration snapshot; final desktop / GLES lifecycle passes.",
+    "Initial private Wayland socket name exceeded Unix path limit; short c17-* sockets used."
+  ],
+  "performance_scope": "Compatibility change; no new steady-state CPU/GPU/power measurements. GLES has padding cost; desktop GL/Vulkan storage unchanged.",
+  "not_verified": [
+    "Updated wallpaper in actual user plasmashell (not installed)",
+    "Native X11 login session",
+    "AMD / Intel / Mesa",
+    "Devices missing external image/semaphore FD extensions",
+    "Multi-monitor / 8-24h operation",
+    "Debian12 or other distro baseline build",
+    "GPU loading specifically from relocated stage plugin"
+  ],
+  "logs": [
+    {
+      "path": "build/evidence/wayland-20261013/cpu-tests.log",
+      "sha256": "946dbcc58ba858ea437fc36c83ac3301bff4978071eed461a407f2e15c62e90d"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/gl-tests-final.log",
+      "sha256": "5b01095f297d6d1912121dcd7f17bc235166f7c3307c3ad4b9c09853c36fe853"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/gles-padded-tests.log",
+      "sha256": "5b1ebcd626a77023aa8e9f24ff306f3548e7b6d1643acea9f3996ac0d5716de0"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/vk-tests-final.log",
+      "sha256": "583745ef73ee1ea12d1ee79a2c5eb2019cab7844161a326e3e057f853ec6cea5"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/ctest-renderers-final.log",
+      "sha256": "10203eb5577105ab2c4f2e5d754bc5f87d55992552318a1bc7ac5697f136fd07"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-python-final.log",
+      "sha256": "d93c25de911757981a1521d5f60293744c420945a1f1b93f1af67c34f2c41ba3"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/python-lifecycle-xcb-final.log",
+      "sha256": "2084484f70b6410dc7005b3965750f29e4ef51d18fac40cf2e684bbd0c097be6"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-final.log",
+      "sha256": "c711a862951e697d341635fc37ee470678e9549d2027844fc1ea0721986114ab"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/plasma-xcb-final.log",
+      "sha256": "dccd06cf6e9d7302bf5f98d9712aa304e2971da27d0cb3190daecb40d8724f12"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-package.log",
+      "sha256": "298394c98389131871cc53467cff1488e9b28ab0de8227b5bd2e73a50d0f8b12"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-package-stage.log",
+      "sha256": "9891b7cb09012ebc608f46200f9e531cda7aa355cf69798a824c8cffa34d13be"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/stage-import-trace.log",
+      "sha256": "3f9b02e743271b15db285d180a11ea4bf9c7b0b28813fd4d8a5cd9df58604bdd"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/stage-final.log",
+      "sha256": "b0205c6b515431927cb5914011e213b6ada11003929db560e4a40636fd20ee88"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/package-final.json",
+      "sha256": "c71ca67e050bced235ac84f197db00afd1e0b91778565dc7b186af35c8548795"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/check-host-final.json",
+      "sha256": "eb079100656a907629767b1f790d6ecbea8079a30f46a5bb7cd02885362cc9bd"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/qt-image-final-summary.log",
+      "sha256": "84cb7a2bac7c114a4dac8312b870fa8746e6ec337dda0f64706b37a371a8aa26"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/capture-matrix-final-summary.log",
+      "sha256": "29cbe69aa34992376b7c287c71fef56fae7215e84075ebb32595cea7ff66f62e"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/build-recreation.log",
+      "sha256": "059fed6645220c790600890db32574e899bade4cf7ed3d5549181dde5d644879"
+    }
+  ],
+  "scripts": [
+    {
+      "path": "build/evidence/wayland-20261013/capture_matrix_final.py",
+      "sha256": "368dae1e669e12f1caf8ab0261a8ba8b6e5c07383c93f333a8fd8aba69fd5652"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/qt_image_matrix_final.py",
+      "sha256": "b0180c3d6d4c95352122556314a405a45bc87148d369303fae85c803aa325b35"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/padding_capacity_audit.py",
+      "sha256": "2651affdde960e304f58a14a7a1094b3c5dac82922057e574c0c0a829bfad7f0"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-tests-final.sh",
+      "sha256": "2cb1a7891154939d43e6c245b3eb4d7cfdcab7e8147a9a2db8988b895816ee02"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-final.sh",
+      "sha256": "30cf7cfa0adacc9dc48fddf61b45c40eba97f97f83e26fa95bc653c77398df4f"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-python.sh",
+      "sha256": "a8100b70ed5a3f60e62334d7bc3b82acdfdff8cd92e8a1def304e1378ca95feb"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-package.sh",
+      "sha256": "75e1134801fef6e8d1e69ba011b198ade9febec8227ce9813126f59bfe74fee7"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-package-stage.sh",
+      "sha256": "f1d44f7cf3e3228895bda0dd38605060dc26b7c81dd7b94e32d87c9b6af4d095"
+    },
+    {
+      "path": "build/evidence/wayland-20261013/nested-stage-trace.sh",
+      "sha256": "9d8d725fdb412bcfe434730b529de1a0a2e12f42cc35f641def6e64b446ec00d"
+    }
+  ]
+}

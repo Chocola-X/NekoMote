@@ -1,6 +1,7 @@
 #include <QColor>
 #include <QCoreApplication>
 #include <QImage>
+#include <QOpenGLContext>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
@@ -127,6 +128,9 @@ int run(int argc, char** argv)
 {
     const auto config = options(argc, argv);
     QSurfaceFormat format;
+    // Specify desktop GL together with its version/profile. Qt's Wayland
+    // default can otherwise choose GLES and reject the core-profile request.
+    format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setVersion(3, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setAlphaBufferSize(8);
@@ -137,6 +141,7 @@ int run(int argc, char** argv)
     int qt_argc = 1;
     char* qt_argv[] = {argv[0], nullptr};
     QGuiApplication application(qt_argc, qt_argv);
+    std::fprintf(stderr, "Qt platform=%s\n", QGuiApplication::platformName().toUtf8().constData());
     if (config.graphics_api == "opengl")
         QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
     else
@@ -218,6 +223,32 @@ int run(int argc, char** argv)
     };
     QObject::connect(wallpaper, &nekomote::plasma::NekoWallpaperItem::failed, callbacks.get(),
                      fail);
+    QObject::connect(&window, &QQuickWindow::sceneGraphError, callbacks.get(),
+                     [&](QQuickWindow::SceneGraphError, const QString& message) { fail(message); });
+    QObject::connect(
+        &window, &QQuickWindow::sceneGraphInitialized, callbacks.get(),
+        [&]
+        {
+            const auto api = window.rendererInterface()->graphicsApi();
+            auto* context = QOpenGLContext::currentContext();
+            if (api != QSGRendererInterface::OpenGL || !context)
+            {
+                if (config.graphics_api != "software")
+                {
+                    const auto message =
+                        QStringLiteral("OpenGL scene graph initialization failed; actual API=%1")
+                            .arg(static_cast<int>(api));
+                    QMetaObject::invokeMethod(
+                        callbacks.get(), [&, message] { fail(message); }, Qt::QueuedConnection);
+                }
+                return;
+            }
+            const auto actual = context->format();
+            std::fprintf(stderr, "Qt context=%s version=%d.%d profile=%d\n",
+                         context->isOpenGLES() ? "OpenGL ES" : "OpenGL", actual.majorVersion(),
+                         actual.minorVersion(), static_cast<int>(actual.profile()));
+        },
+        Qt::DirectConnection);
     QObject::connect(&timeout, &QTimer::timeout, callbacks.get(),
                      [&] { fail(QStringLiteral("probe timed out")); });
     // The screenshot completion is asynchronous. No nested event loop can

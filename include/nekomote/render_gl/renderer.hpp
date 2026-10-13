@@ -43,6 +43,7 @@ struct Capacity
 class Renderer
 {
   public:
+    // Accepts desktop OpenGL 3.3 core or OpenGL ES 3.0 (e.g. Qt Wayland).
     explicit Renderer(GlLoader loader);
     ~Renderer();
     Renderer(const Renderer&) = delete;

@@ -1,6 +1,7 @@
 #include <QEventLoop>
 #include <QGuiApplication>
 #include <QImage>
+#include <QOpenGLContext>
 #include <QQuickItem>
 #include <QQuickItemGrabResult>
 #include <QQuickWindow>
@@ -25,6 +26,11 @@
 
 namespace
 {
+enum class GlApi
+{
+    Desktop,
+    Gles
+};
 struct Options
 {
     std::filesystem::path model, session, capture, lifecycle;
@@ -32,6 +38,7 @@ struct Options
     std::uint32_t seed{1};
     float x{0}, y{400}, scale{1};
     bool fixed{false}, marker{false};
+    GlApi gl_api{GlApi::Desktop};
     std::optional<QPointF> touch;
 };
 long integer(const std::string& text, long minimum, long maximum)
@@ -101,12 +108,23 @@ Options options(int argc, char** argv)
             if (value() != "opengl")
                 throw std::runtime_error("only the OpenGL Qt Quick backend is supported");
         }
+        else if (key == "--gl-api")
+        {
+            const auto api = value();
+            if (api == "desktop")
+                result.gl_api = GlApi::Desktop;
+            else if (api == "gles")
+                result.gl_api = GlApi::Gles;
+            else
+                throw std::runtime_error("gl-api must be desktop or gles");
+        }
         else if (key == "--help")
         {
             std::puts(
                 "nekomote_qt_quick_host --model MODEL --session SESSION\n"
                 "  [--width 800 --height 1080 --origin-x 0 --origin-y 400 --scale 1 --seed 1]\n"
                 "  [--capture NEW.png --steps N] [--qt-marker]\n"
+                "  [--gl-api desktop|gles] (OpenGL context API; desktop default)\n"
                 "  [--trace-frames N] (bounded CPU submission diagnostics)\n"
                 "  [--touch LOGICAL_X LOGICAL_Y] (diagnostic callback, no OS injection)\n"
                 "  [--check-lifecycle NEW-directory --steps N] [--run-seconds N]\n"
@@ -167,12 +185,24 @@ int run(int argc, char** argv)
     state->assets_mode = false;
     state->fixed_steps = config.steps;
     state->deterministic = config.fixed;
-    // This choice is confined to our own diagnostic process. A future Plasma
-    // item must query the host backend and reject unsupported RHI implementations.
+    // This choice belongs to our diagnostic process. The Plasma item instead
+    // queries its host's backend and rejects unsupported RHI implementations.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
     QSurfaceFormat format;
-    format.setVersion(3, 3);
-    format.setProfile(QSurfaceFormat::CoreProfile);
+    // Wayland's default renderable type may select GLES, where a desktop
+    // 3.3 core profile request is invalid. This format belongs to our process.
+    if (config.gl_api == GlApi::Gles)
+    {
+        format.setRenderableType(QSurfaceFormat::OpenGLES);
+        format.setVersion(3, 0);
+        format.setProfile(QSurfaceFormat::NoProfile);
+    }
+    else
+    {
+        format.setRenderableType(QSurfaceFormat::OpenGL);
+        format.setVersion(3, 3);
+        format.setProfile(QSurfaceFormat::CoreProfile);
+    }
     format.setAlphaBufferSize(8);
     format.setSamples(0);
     QSurfaceFormat::setDefaultFormat(format);
@@ -181,6 +211,7 @@ int run(int argc, char** argv)
     int qt_argc = 1;
     char* qt_argv[] = {argv[0], nullptr};
     QGuiApplication application(qt_argc, qt_argv);
+    std::fprintf(stderr, "Qt platform=%s\n", QGuiApplication::platformName().toUtf8().constData());
     int exit_code = 0;
     {
         QQuickWindow window;
@@ -210,6 +241,30 @@ int run(int argc, char** argv)
             application.quit();
         };
         QObject::connect(item, &nekomote::qt_quick::WallpaperItem::failed, callbacks.get(), fail);
+        QObject::connect(&window, &QQuickWindow::sceneGraphError, callbacks.get(),
+                         [&](QQuickWindow::SceneGraphError, const QString& message)
+                         { fail(message); });
+        QObject::connect(
+            &window, &QQuickWindow::sceneGraphInitialized, callbacks.get(),
+            [&]
+            {
+                const auto api = window.rendererInterface()->graphicsApi();
+                auto* context = QOpenGLContext::currentContext();
+                if (api != QSGRendererInterface::OpenGL || !context)
+                {
+                    const auto message =
+                        QStringLiteral("OpenGL scene graph initialization failed; actual API=%1")
+                            .arg(static_cast<int>(api));
+                    QMetaObject::invokeMethod(
+                        callbacks.get(), [&, message] { fail(message); }, Qt::QueuedConnection);
+                    return;
+                }
+                const auto actual = context->format();
+                std::fprintf(stderr, "Qt context=%s version=%d.%d profile=%d\n",
+                             context->isOpenGLES() ? "OpenGL ES" : "OpenGL", actual.majorVersion(),
+                             actual.minorVersion(), static_cast<int>(actual.profile()));
+            },
+            Qt::DirectConnection);
         int traced_gui_ticks = 0;
         int traced_presentations = 0;
         if (config.trace_frames)

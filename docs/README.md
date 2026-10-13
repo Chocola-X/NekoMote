@@ -4,6 +4,7 @@
 
 | 需要的信息 | 当前入口 |
 | --- | --- |
+| Wayland/X11 兼容 | [C17 修复与验收](wayland-compatibility-2026-10-13.md) |
 | 构建/运行 | [building](building.md)、[player](native-player.md)、[Qt宿主](qt-quick-host.md) |
 | 模块/ABI/所有权 | [规范](../AGENTS.md)、[G31契约](wallpaper-application-handoff.md)、[C ABI](abi-contract.md)、[约定](conventions.md) |
 | 模型资产与正式语义 | [资产格式](asset-format.md)、[字段语义](semantics.md)、[单边界继承](inheritance-semantics.md)、P3–P6语义记录 |

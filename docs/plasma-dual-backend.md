@@ -7,7 +7,7 @@ C12，2026-10-12，基线 `cfed43e`。设置页新增“渲染后端”，默认
 
 ## 输出、同步和线程
 
-当前插件仍要求 **宿主 Qt Quick 使用 OpenGL 场景图**。壁纸选择 Vulkan 只改变
+当前插件仍要求 **宿主 Qt Quick 使用 OpenGL 场景图**。C17 已补齐 Wayland 常见的 GLES 3.0 上下文，desktop GL 3.3 路径保留，见 [兼容修复与验收](wayland-compatibility-2026-10-13.md)。壁纸选择 Vulkan 只改变
 NekoMote 的 GPU 执行后端，不修改 plasmashell 全局 RHI。Qt 自身为 Vulkan/software
 时报告不支持；原生 Qt Vulkan 场景图接入尚未实现。
 
@@ -22,7 +22,7 @@ Vulkan framebuffer 的 render pass 与 ABI 兼容，包含两项 external depend
 详见 [ABI 契约](abi-contract.md)。内部行序沿用 GL；桥直接复制相同行，
 item 保留既有 `mirrorVertically`，不再额外翻转。
 
-需要 desktop GL 的 `EXT_memory_object[_fd]`、`EXT_semaphore[_fd]`，同驱动
+需要 desktop GL 或 GLES 的 `EXT_memory_object[_fd]`、`EXT_semaphore[_fd]`，同驱动
 Vulkan 的 KHR external memory/semaphore FD、dedicated allocation 与
 get_memory_requirements2；还须满足 render_vk 的五位遮罩格式等要求。
 这些是 Vulkan 1.0 的扩展能力，不能以“支持 Vulkan 1.0”推定全部可用。
