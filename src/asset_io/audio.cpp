@@ -1,8 +1,8 @@
 #include <nekomote/asset_io/audio.hpp>
 
 #include <algorithm>
-#include <bit>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <span>
 #include <stdexcept>
@@ -97,15 +97,23 @@ AudioLoadResult load_wave(const std::filesystem::path& path)
             auto raw = integer(data, i * bytes, bytes);
             double sample;
             if (encoding == 3)
-                sample = std::bit_cast<float>(raw);
+            {
+                // Preserve the IEEE sample bits without aliasing or alignment assumptions.
+                // memcpy also supports the GCC 10 standard library used on Ubuntu 20.04.
+                float decoded;
+                static_assert(sizeof(decoded) == sizeof(raw));
+                std::memcpy(&decoded, &raw, sizeof(decoded));
+                sample = decoded;
+            }
             else if (bits == 8)
                 sample = (static_cast<double>(raw) - 128) / 128;
             else
             {
                 if (bits < 32 && (raw & (std::uint32_t{1} << (bits - 1))) != 0)
                     raw |= ~((std::uint32_t{1} << bits) - 1);
-                sample = static_cast<double>(std::bit_cast<std::int32_t>(raw)) /
-                         std::ldexp(1.0, static_cast<int>(bits - 1));
+                std::int32_t decoded;
+                std::memcpy(&decoded, &raw, sizeof(decoded));
+                sample = static_cast<double>(decoded) / std::ldexp(1.0, static_cast<int>(bits - 1));
             }
             if (!std::isfinite(sample) || sample < -1 || sample > 1)
                 throw std::runtime_error("PCM sample outside finite -1..1");

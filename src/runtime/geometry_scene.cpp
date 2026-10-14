@@ -1,9 +1,10 @@
 #include <nekomote/runtime/deformation.hpp>
 #include <nekomote/runtime/geometry_scene.hpp>
 
+#include <fast_float/fast_float.h>
+
 #include <algorithm>
 #include <cassert>
-#include <charconv>
 #include <cmath>
 #include <limits>
 #include <map>
@@ -122,7 +123,8 @@ model::IconRect blank_rect(std::string_view text)
     {
         const auto end = text.find(':');
         const auto token = text.substr(0, end);
-        const auto parsed = std::from_chars(token.data(), token.data() + token.size(), values[i]);
+        const auto parsed =
+            fast_float::from_chars(token.data(), token.data() + token.size(), values[i]);
         require(parsed.ec == std::errc{} && parsed.ptr == token.data() + token.size() &&
                     std::isfinite(values[i]),
                 std::string(text), "invalid blank domain");

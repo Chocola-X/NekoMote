@@ -1,0 +1,63 @@
+name: KDE Plasma 5 plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build baseline toolchain image
+        run: |
+          mkdir -p build/ci-plasma5
+          docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-plasma5 tools \
+            2>&1 | tee build/ci-plasma5/toolchain-build.log
+      - name: Release build, tests and dependency audit
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" \
+            nekomote-plasma5 plasma5 2>&1 | tee build/ci-plasma5/build-test.log
+          test -s build/ci-plasma5/tests.xml
+          test -s build/ci-plasma5/compatibility.json
+          test -s build/ci-plasma5/nekomote-plasma5-x86_64.tar.gz
+      - name: Upload release package
+        # actions/upload-artifact v4.6.2; no GitHub release is published.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nekomote-plasma5-x86_64
+          path: |
+            build/ci-plasma5/*.tar.gz
+            build/ci-plasma5/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload tests and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: evidence-plasma5-x86_64
+          path: |
+            build/ci-plasma5/*.log
+            build/ci-plasma5/*.xml
+            build/ci-plasma5/*.json
+            build/ci-plasma5/*.txt
+          if-no-files-found: warn
+          retention-days: 14

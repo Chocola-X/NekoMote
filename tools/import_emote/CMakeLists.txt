@@ -7,3 +7,5 @@ target_link_libraries(nekomote_import
         nekomote_warnings
         nlohmann_json::nlohmann_json)
 target_compile_features(nekomote_import PRIVATE cxx_std_20)
+
+install(TARGETS nekomote_import RUNTIME DESTINATION bin COMPONENT runtime)

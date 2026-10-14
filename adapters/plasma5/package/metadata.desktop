@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=NekoMote
+Name[zh_CN]=NekoMote 壁纸
+Comment=Native 2D model live wallpaper
+Type=Service
+X-KDE-ServiceTypes=Plasma/Wallpaper
+X-KDE-ParentApp=org.kde.plasmashell
+X-KDE-PluginInfo-Name=uk.nekopara.nekomote
+X-KDE-PluginInfo-Version=0.1.0
+X-KDE-PluginInfo-License=AGPL-3.0-or-later
+X-KDE-PluginInfo-Website=https://nekopara.uk
+X-Plasma-MainScript=ui/main.qml

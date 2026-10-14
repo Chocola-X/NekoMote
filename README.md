@@ -10,7 +10,7 @@ Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解
 
 - 独立 C++ 模型求值核心：参数、时间线、差分、变形、遮罩、物理、视线/触摸反应
 - OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
-- KDE Plasma 6 桌面壁纸插件（进程内 QML，复用宿主 Qt 场景图）
+- KDE Plasma 6 壁纸插件；独立 Plasma 5 适配器（Qt5，桌面实机验收待完成）
 - 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
 - 声音与口型（PulseAudio），可静音
 - PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
@@ -24,7 +24,7 @@ Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解
 - CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang）
 - Python 3 + Jinja2（GL loader 生成）
 - libpng 1.6 开发包 + zlib
-- pkg-config + libpulse ≥ 16.1 开发包（音频）
+- pkg-config + libpulse ≥ 13.99 开发包（音频）
 - 首次配置需联网（CMake FetchContent 拉取固定版本依赖）
 
 运行时：
@@ -37,10 +37,11 @@ Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解
 可选：
 
 - Vulkan SDK（headers + glslangValidator）——启用 Vulkan 后端构建
-- Qt ≥ 6.4 Quick/OpenGL——Qt Quick 隔离宿主与 Plasma 插件
+- Qt ≥ 6.4 Quick/OpenGL——Qt6 宿主与 Plasma6 插件
+- Qt ≥ 5.12 Quick/OpenGL——独立 Plasma5 插件，显式选择 `NEKOMOTE_QT_MAJOR=5`
 - KF6/Plasma 6 开发包——Plasma 诊断探针（分发构建可关闭）
 
-FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、stb、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。
+FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、fast_float v6.1.6、stb、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。
 
 ## 构建
 
@@ -58,7 +59,8 @@ cmake --build --preset release
 | `dev` | Debug | 警告即错误，开发主力 |
 | `release` | Release | LTO、OpenGL + Vulkan，不含测试/探针（发布构建） |
 | `asan` | Debug | ASan/UBSan，不构建预览/播放器（无窗口语义检查） |
-| `plasma` | Release | LTO、Qt Quick + Plasma QML 模块，不含测试/探针 |
+| `plasma` | Release | LTO、Qt6 + Plasma6 QML 模块；分发时关闭 KF6 探针 |
+| `plasma5` | Release | LTO、Qt5 + Plasma5 QML 模块，不构建 KF6 探针/普通窗口 |
 | `qt-quick` | Release | LTO、Qt Quick 隔离宿主（不需 Plasma 依赖） |
 | `vulkan` | Debug | Vulkan + 验证层调试 |
 
@@ -206,10 +208,17 @@ python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stag
 
 ### 分发包
 
-仓库 GitHub Actions 工作流在推送时用 Debian 12 容器（Qt 6.4.2、glibc 2.36、GCC 12）构建 x86_64 与 aarch64 基线包。目标机器安装前先检查：
+三个独立 GitHub Actions 工作流在 push、PR 或手动触发时分别构建：
+
+- Ubuntu 20.04：Release 的 `nekomote_player`、`nekomote_import`、`nekomote_abi_host`。
+- KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 插件。
+- KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 aarch64 插件。
+
+构建、测试与依赖审计通过后上传 Actions artifacts；失败日志与测试报告单独保存。
+配置和兼容范围见 [自动构建说明](docs/github-actions.md)。目标机器安装前先检查：
 
 ```bash
-tar -xzf nekomote-plasma-debian12-x86_64.tar.gz
+tar -xzf nekomote-plasma6-x86_64.tar.gz
 cd nekomote-plasma
 python3 tools/plasma_distribution.py check-host stage
 python3 tools/plasma_deploy.py install --stage stage

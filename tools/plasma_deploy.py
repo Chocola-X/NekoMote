@@ -16,6 +16,8 @@ Usage:
 Default stage:  build/plasma/adapters/plasma/stage
 Default prefix: $XDG_DATA_HOME (or ~/.local/share if unset)
 """
+from __future__ import annotations
+
 import hashlib
 import json
 import os
@@ -67,6 +69,13 @@ def validate_prefix(prefix: Path) -> None:
         sys.exit(f"FAIL: prefix parent does not exist: {prefix.parent}")
 
 
+def stage_plasma_major(stage: Path) -> int:
+    package = stage / "share/plasma/wallpapers" / PACKAGE_ID
+    if (package / "metadata.desktop").is_file():
+        return 5
+    return 6
+
+
 def stage_to_prefix_map(stage: Path) -> list[tuple[Path, Path]]:
     """Return list of (stage_path, relative_dest) for all installable files."""
     mapping = [
@@ -74,11 +83,12 @@ def stage_to_prefix_map(stage: Path) -> list[tuple[Path, Path]]:
          "nekomote/lib/libnekomote_plasma_qml.so"),
         (stage / "qml/NekoMote/Wallpaper/qmldir",
          "nekomote/qml/NekoMote/Wallpaper/qmldir"),
-        (stage / "qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes",
-         "nekomote/qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes"),
         (stage / "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so",
          "nekomote/qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so"),
     ]
+    if stage_plasma_major(stage) == 6:
+        mapping.append((stage / "qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes",
+                        "nekomote/qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes"))
     wallpaper_package = stage / "share/plasma/wallpapers" / PACKAGE_ID
     for p in sorted(wallpaper_package.rglob("*")):
         if p.is_file():
@@ -99,12 +109,13 @@ def environment_file() -> Path:
     return config_home / "environment.d" / ENVIRONMENT_NAME
 
 
-def environment_content(prefix: Path) -> str:
+def environment_content(prefix: Path, major: int = 6) -> str:
     qml_path = prefix / "nekomote" / "qml"
     # environment.d is parsed by systemd, not by a shell. Keep this a plain,
     # single assignment instead of relying on shell-only ${VAR:-default} syntax.
     escaped = str(qml_path).replace("\\", "\\\\").replace('"', '\\"').replace("$", "$$")
-    return f'QML_IMPORT_PATH="{escaped}"\n'
+    variable = "QML2_IMPORT_PATH" if major == 5 else "QML_IMPORT_PATH"
+    return f'{variable}="{escaped}"\n'
 
 
 def remove_recorded_environment(record: dict) -> None:
@@ -146,7 +157,7 @@ def do_install(stage: Path, prefix: Path) -> int:
     prefix.mkdir(parents=True, exist_ok=True)
     stage_manifest = stage / "manifest.json"
     env_path = environment_file()
-    env_text = environment_content(prefix)
+    env_text = environment_content(prefix, stage_plasma_major(stage))
     env_path.parent.mkdir(parents=True, exist_ok=True)
     if env_path.exists():
         legacy = f'QML_IMPORT_PATH="{prefix}/nekomote/qml:${{QML_IMPORT_PATH:-}}"\n'
@@ -240,29 +251,31 @@ def do_reinstall(stage: Path, prefix: Path) -> int:
     return do_install(stage, prefix)
 
 
-def restart_plasmashell(prefix: Path, action: str) -> int:
-    quit_app = shutil.which("kquitapp6")
-    start_app = shutil.which("kstart") or shutil.which("kstart6")
+def restart_plasmashell(prefix: Path, action: str, major: int = 6) -> int:
+    quit_app = shutil.which(f"kquitapp{major}")
+    start_app = (shutil.which("kstart5") if major == 5
+                 else shutil.which("kstart") or shutil.which("kstart6"))
     if not quit_app or not start_app:
-        print("restart: requires kquitapp6 and kstart from KDE Frameworks", file=sys.stderr)
+        print(f"restart: requires KDE {major} kquitapp/kstart tools", file=sys.stderr)
         return 1
     env = dict(os.environ)
     qml_path = str(prefix / "nekomote" / "qml")
+    variable = "QML2_IMPORT_PATH" if major == 5 else "QML_IMPORT_PATH"
     if action != "uninstall":
-        existing = env.get("QML_IMPORT_PATH", "")
+        existing = env.get(variable, "")
         paths = [path for path in existing.split(":") if path and path != qml_path]
-        env["QML_IMPORT_PATH"] = ":".join([qml_path, *paths])
+        env[variable] = ":".join([qml_path, *paths])
         update_env = shutil.which("dbus-update-activation-environment")
         if update_env:
             try:
-                subprocess.run([update_env, "--systemd", "QML_IMPORT_PATH"],
+                subprocess.run([update_env, "--systemd", variable],
                                check=True, env=env, timeout=10)
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
                 print(f"restart: failed to update session environment: {error}", file=sys.stderr)
                 return 1
     else:
-        env["QML_IMPORT_PATH"] = ":".join(
-            path for path in env.get("QML_IMPORT_PATH", "").split(":")
+        env[variable] = ":".join(
+            path for path in env.get(variable, "").split(":")
             if path and path != qml_path
         )
     try:
@@ -278,10 +291,10 @@ def restart_plasmashell(prefix: Path, action: str) -> int:
     return 0
 
 
-def refresh_package_cache() -> None:
-    refresh = shutil.which("kbuildsycoca6")
+def refresh_package_cache(major: int = 6) -> None:
+    refresh = shutil.which(f"kbuildsycoca{major}")
     if not refresh:
-        print("package cache: kbuildsycoca6 unavailable; refresh it in the Plasma session")
+        print(f"package cache: kbuildsycoca{major} unavailable; refresh it in the Plasma session")
         return
     try:
         result = subprocess.run([refresh, "--noincremental"], capture_output=True,
@@ -362,6 +375,9 @@ def main() -> int:
     prefix = args.prefix
     if args.restart_shell and action in ("status", "verify"):
         parser.error("--restart-shell is only valid with install, reinstall, or uninstall")
+    major = (stage_plasma_major(stage) if action in ("install", "reinstall")
+             else 5 if (prefix / "plasma/wallpapers" / PACKAGE_ID / "metadata.desktop").is_file()
+             else 6)
     if action == "install":
         result = do_install(stage, prefix)
     elif action == "uninstall":
@@ -373,9 +389,9 @@ def main() -> int:
     else:
         result = do_verify(prefix)
     if result == 0 and action in ("install", "reinstall", "uninstall"):
-        refresh_package_cache()
+        refresh_package_cache(major)
     if result == 0 and args.restart_shell:
-        return restart_plasmashell(prefix, action)
+        return restart_plasmashell(prefix, action, major)
     return result
 
 

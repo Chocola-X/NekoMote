@@ -25,8 +25,10 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
     Q_PROPERTY(
         QString renderBackend READ renderBackend WRITE setRenderBackend NOTIFY renderBackendChanged)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QML_ELEMENT
     QML_NAMED_ELEMENT(NekoWallpaperItem)
+#endif
   public:
     explicit NekoWallpaperItem(QQuickItem* parent = nullptr);
     ~NekoWallpaperItem() override;

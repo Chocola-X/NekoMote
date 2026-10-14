@@ -133,6 +133,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/probe/containment/
 # Deployable stage: self-contained directory with correct RPATH via cmake --install.
 # Independent hosts load via QML import + relative RPATH, not build-tree paths.
 set(NEKOMOTE_STAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/stage)
+set(NEKOMOTE_STAGE_DIR ${NEKOMOTE_STAGE_DIR} PARENT_SCOPE)
 add_custom_target(nekomote_plasma_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}
     COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR}

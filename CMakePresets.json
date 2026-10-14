@@ -54,6 +54,19 @@
             }
         },
         {
+            "name": "plasma5",
+            "inherits": "release",
+            "displayName": "Plasma 5 / Qt 5 native wallpaper package",
+            "cacheVariables": {
+                "NEKOMOTE_QT_MAJOR": "5",
+                "NEKOMOTE_BUILD_QT_QUICK": "ON",
+                "NEKOMOTE_BUILD_PLASMA": "ON",
+                "NEKOMOTE_BUILD_PLASMA_PROBE": "OFF",
+                "NEKOMOTE_BUILD_PREVIEW": "OFF",
+                "NEKOMOTE_BUILD_PLAYER": "OFF"
+            }
+        },
+        {
             "name": "asan",
             "inherits": "base",
             "displayName": "Debug with AddressSanitizer + UBSan",
@@ -83,6 +96,7 @@
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "qt-quick", "configurePreset": "qt-quick" },
         { "name": "plasma",   "configurePreset": "plasma" },
+        { "name": "plasma5",  "configurePreset": "plasma5" },
         { "name": "vulkan",   "configurePreset": "vulkan" }
     ],
     "testPresets": [

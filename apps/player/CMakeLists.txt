@@ -11,4 +11,4 @@ if(NEKOMOTE_BUILD_VULKAN)
     target_link_libraries(nekomote_player PRIVATE nekomote::render_vk Vulkan::Vulkan)
 endif()
 
-install(TARGETS nekomote_player RUNTIME DESTINATION bin)
+install(TARGETS nekomote_player RUNTIME DESTINATION bin COMPONENT runtime)

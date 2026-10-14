@@ -1,4 +1,6 @@
 #include "session_item.hpp"
+
+#include "qt_input.hpp"
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "vulkan_gl_bridge.hpp"
 #endif
@@ -9,7 +11,10 @@
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
+#include <QPointer>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QQuickOpenGLUtils>
+#endif
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QWheelEvent>
@@ -72,6 +77,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     void synchronize(QQuickFramebufferObject* base) override
     {
         auto* item = static_cast<WallpaperItemBase*>(base);
+        window_ = item->window();
         if (!state_)
         {
             state_ = item->wallpaper_state();
@@ -126,7 +132,14 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
         if (notify_frames_ && !notifications_connected_)
         {
             connect(
-                item->window(), &QQuickWindow::afterFrameEnd, this,
+                item->window(),
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                &QQuickWindow::afterFrameEnd,
+#else
+                // Qt5 has no afterFrameEnd: report after scene rendering, not presentation.
+                &QQuickWindow::afterRendering,
+#endif
+                this,
                 [this]
                 {
                     if (!diagnostic_pending_)
@@ -161,7 +174,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                 gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                 gl->glClearColor(0, 0, 0, 0);
                 gl->glClear(GL_COLOR_BUFFER_BIT);
-                QQuickOpenGLUtils::resetOpenGLState();
+                reset_gl_state();
             }
             return;
         }
@@ -346,7 +359,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             const auto diagnostic = QString::fromUtf8(error.what());
             emit failed(diagnostic);
         }
-        QQuickOpenGLUtils::resetOpenGLState();
+        reset_gl_state();
     }
 
   signals:
@@ -355,6 +368,16 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     void failed(QString diagnostic);
 
   private:
+    void reset_gl_state()
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        QQuickOpenGLUtils::resetOpenGLState();
+#else
+        if (window_)
+            window_->resetOpenGLState();
+#endif
+    }
+    QPointer<QQuickWindow> window_;
     void dispatch_inputs()
     {
         for (std::size_t i = 0; i < input_count_; ++i)
@@ -491,11 +514,11 @@ void WallpaperItem::replay_touch(QPointF logical_position)
 }
 void WallpaperItem::hoverEnterEvent(QHoverEvent* event)
 {
-    enqueue(InputKind::Enter, event->position(), 0, 0, event->timestamp());
+    enqueue(InputKind::Enter, input_position(*event), 0, 0, event->timestamp());
 }
 void WallpaperItem::hoverMoveEvent(QHoverEvent* event)
 {
-    enqueue(InputKind::Move, event->position(), 0, 0, event->timestamp());
+    enqueue(InputKind::Move, input_position(*event), 0, 0, event->timestamp());
 }
 void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 {
@@ -503,25 +526,25 @@ void WallpaperItem::hoverLeaveEvent(QHoverEvent*)
 }
 void WallpaperItem::mousePressEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Press, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0,
+    enqueue(InputKind::Press, input_position(*event), 0, event->button() == Qt::RightButton ? 1 : 0,
             event->timestamp());
     event->accept();
 }
 void WallpaperItem::mouseReleaseEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Release, event->position(), 0, event->button() == Qt::RightButton ? 1 : 0,
-            event->timestamp());
+    enqueue(InputKind::Release, input_position(*event), 0,
+            event->button() == Qt::RightButton ? 1 : 0, event->timestamp());
     event->accept();
 }
 void WallpaperItem::mouseMoveEvent(QMouseEvent* event)
 {
-    enqueue(InputKind::Move, event->position(), 0, 0, event->timestamp());
+    enqueue(InputKind::Move, input_position(*event), 0, 0, event->timestamp());
     event->accept();
 }
 void WallpaperItem::wheelEvent(QWheelEvent* event)
 {
-    enqueue(InputKind::Scroll, event->position(), static_cast<float>(event->angleDelta().y()) / 120,
-            0, event->timestamp());
+    enqueue(InputKind::Scroll, input_position(*event),
+            static_cast<float>(event->angleDelta().y()) / 120, 0, event->timestamp());
     event->accept();
 }
 } // namespace nekomote::qt_quick

@@ -1,0 +1,63 @@
+name: Ubuntu 20.04 native programs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build baseline toolchain image
+        run: |
+          mkdir -p build/ci-native20
+          docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-native20 tools \
+            2>&1 | tee build/ci-native20/toolchain-build.log
+      - name: Release build, tests and dependency audit
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" \
+            nekomote-native20 native20 2>&1 | tee build/ci-native20/build-test.log
+          test -s build/ci-native20/tests.xml
+          test -s build/ci-native20/compatibility.json
+          test -s build/ci-native20/nekomote-native-ubuntu20-x86_64.tar.gz
+      - name: Upload release package
+        # actions/upload-artifact v4.6.2; no GitHub release is published.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nekomote-native-ubuntu20-x86_64
+          path: |
+            build/ci-native20/*.tar.gz
+            build/ci-native20/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload tests and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: evidence-native20-x86_64
+          path: |
+            build/ci-native20/*.log
+            build/ci-native20/*.xml
+            build/ci-native20/*.json
+            build/ci-native20/*.txt
+          if-no-files-found: warn
+          retention-days: 14

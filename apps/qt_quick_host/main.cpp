@@ -187,7 +187,11 @@ int run(int argc, char** argv)
     state->deterministic = config.fixed;
     // This choice belongs to our diagnostic process. The Plasma item instead
     // queries its host's backend and rejects unsupported RHI implementations.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+#else
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGL);
+#endif
     QSurfaceFormat format;
     // Wayland's default renderable type may select GLES, where a desktop
     // 3.3 core profile request is invalid. This format belongs to our process.
@@ -220,7 +224,11 @@ int run(int argc, char** argv)
         window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus);
         window.setColor(Qt::transparent);
         window.setPersistentSceneGraph(false);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         window.setPersistentGraphics(false);
+#else
+        window.setPersistentOpenGLContext(false);
+#endif
         window.resize(config.width, config.height);
         auto* item = new nekomote::qt_quick::WallpaperItem(state, window.contentItem());
         item->setSize({static_cast<qreal>(config.width), static_cast<qreal>(config.height)});
@@ -271,7 +279,13 @@ int run(int argc, char** argv)
         {
             std::fprintf(stderr, "Qt diagnostic screen_hz=%.3f swap_interval=%d\n",
                          window.screen()->refreshRate(), window.format().swapInterval());
-            QObject::connect(&window, &QQuickWindow::afterFrameEnd, callbacks.get(),
+            QObject::connect(&window,
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                             &QQuickWindow::afterFrameEnd,
+#else
+                             &QQuickWindow::afterRendering,
+#endif
+                             callbacks.get(),
                              [&]
                              {
                                  if (traced_presentations++ >= config.trace_frames * 2)

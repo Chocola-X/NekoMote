@@ -227,8 +227,9 @@ static void on_cursor_enter(GLFWwindow* w, int entered)
         nekomote_wallpaper_pointer_leave(g_host.wp);
 }
 
-static void on_mouse_button(GLFWwindow* w, int button, int action, int)
+static void on_mouse_button(GLFWwindow* w, int button, int action, int modifiers)
 {
+    (void)modifiers;
     double x = 0, y = 0;
     glfwGetCursorPos(w, &x, &y);
     on_cursor_pos(w, x, y);
@@ -237,16 +238,19 @@ static void on_mouse_button(GLFWwindow* w, int button, int action, int)
     nekomote_wallpaper_mouse_button(g_host.wp, button, ma, (uint64_t)(glfwGetTime() * 1000.0));
 }
 
-static void on_scroll(GLFWwindow* w, double, double amount)
+static void on_scroll(GLFWwindow* w, double horizontal, double amount)
 {
+    (void)horizontal;
     double x = 0, y = 0;
     glfwGetCursorPos(w, &x, &y);
     on_cursor_pos(w, x, y);
     nekomote_wallpaper_mouse_scroll(g_host.wp, amount);
 }
 
-static void on_key(GLFWwindow* w, int key, int, int action, int)
+static void on_key(GLFWwindow* w, int key, int scancode, int action, int modifiers)
 {
+    (void)scancode;
+    (void)modifiers;
     (void)w;
     nekomote_key ak = glfw_to_abi_key(key);
     if (ak == 0)

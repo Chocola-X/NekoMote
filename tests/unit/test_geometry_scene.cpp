@@ -169,6 +169,29 @@ void near(Vec2 actual, Vec2 expected)
 }
 } // namespace
 
+TEST_CASE("Blank domains accept decimal exponents and reject malformed or out-of-range numbers",
+          "[runtime][scene]")
+{
+    const auto compile_domain = [](const char* text)
+    {
+        auto asset = rig();
+        auto& content = asset.parts[1].layers[0].frame_list[0].content.data;
+        content.src = field(std::string{"blank"});
+        content.icon = field(std::string{text});
+        return runtime::compile_geometry_scene(asset);
+    };
+    REQUIRE(compile_domain("16:8:-2.5:1e0").scene);
+    for (const auto* text : {"+16:8:0:0", " 16:8:0:0", "16:8:0,5:0", "16:8:0:0junk", "1e999:8:0:0",
+                             "1e-999:8:0:0", "nan:8:0:0"})
+    {
+        INFO(text);
+        const auto compiled = compile_domain(text);
+        REQUIRE_FALSE(compiled.scene);
+        REQUIRE_FALSE(compiled.errors.empty());
+        REQUIRE(compiled.errors.front().find("invalid blank domain") != std::string::npos);
+    }
+}
+
 TEST_CASE("Reusable motion branches switch without sharing instance state", "[runtime][scene]")
 {
     auto input = rig();

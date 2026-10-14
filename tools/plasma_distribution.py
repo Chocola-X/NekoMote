@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit/package a staged public-Qt Plasma plugin; never change desktop settings.
 
-Requires Python 3.10+ and binutils. check-host only examines trusted local builds
+Requires Python 3.8+ and binutils. check-host only examines trusted local builds
 with the system dynamic loader (ldd); it does not load the plugin into Plasma.
 """
 
@@ -32,8 +32,19 @@ REQUIRED = ELFS + (
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/config.qml",
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/config/main.xml",
 )
+UBUNTU20_BASELINE = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.12"}
 BASELINE = {"GLIBC": "2.36", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}
 MACHINES = {"Advanced Micro Devices X86-64": "x86_64", "AArch64": "aarch64"}
+# Some Qt5 builds version-tag the public nested Renderer exports as PRIVATE_API.
+# Its Q_QUICK_EXPORT interface is identical in upstream 5.12/5.15 headers.
+# Accept only these public exports, not arbitrary Qt5 private implementation APIs.
+QT5_PUBLIC_RENDERER_EXPORTS = {
+    "_ZN23QQuickFramebufferObject8RendererC2Ev",
+    "_ZN23QQuickFramebufferObject8RendererD2Ev",
+    "_ZNK23QQuickFramebufferObject8Renderer17framebufferObjectEv",
+    "_ZTIN23QQuickFramebufferObject8RendererE",
+    "_ZN23QQuickFramebufferObject8Renderer23createFramebufferObjectERK5QSize",
+}
 
 
 def version(value):
@@ -96,11 +107,18 @@ def elf_info(path):
     symbols = run("readelf", "--dyn-syms", "--wide", str(path))
     undefined = "\n".join(line for line in symbols.splitlines() if " UND " in line)
     # Qt explicitly excludes its private API from its binary compatibility promise.
-    if "PRIVATE_API" in undefined:
-        raise ValueError(f"Qt private API dependency in {path}")
+    public_qt5_exports = []
+    for line in undefined.splitlines():
+        if "PRIVATE_API" not in line:
+            continue
+        symbol = re.search(r"(\S+)@Qt_5_PRIVATE_API\b", line)
+        if ("libQt5Quick.so.5" not in needed or not symbol or
+                symbol.group(1) not in QT5_PUBLIC_RENDERER_EXPORTS):
+            raise ValueError(f"Qt private API dependency in {path}")
+        public_qt5_exports.append(symbol.group(1))
     if "GLIBC_PRIVATE" in undefined:
         raise ValueError(f"glibc private API dependency in {path}")
-    qt_symbols = re.findall(r"\bQt_(6\.\d+)\b", undefined)
+    qt_symbols = re.findall(r"\bQt_([56]\.\d+)\b", undefined)
     requirements = {}
     for family in BASELINE:
         matches = re.findall(rf"\b{family}_([0-9]+(?:\.[0-9]+)+)\b", undefined)
@@ -108,15 +126,26 @@ def elf_info(path):
             requirements[family] = max(matches, key=version)
     return {"architecture": MACHINES[machine], "needed": needed,
             "runpath": paths, "versions": requirements, "sha256": digest(path),
-            "qt_symbol_minimum": max(qt_symbols, key=version) if qt_symbols else "6.0"}
+            "qt_symbol_minimum": max(qt_symbols, key=version) if qt_symbols else "0.0",
+            "public_qt5_renderer_exports": sorted(public_qt5_exports)}
 
 
-def audit(stage, qt_version, baseline=False):
+def audit(stage, qt_version, baseline=False, ubuntu20=False):
     stage = stage.resolve()
-    if version(qt_version)[0] != 6:
-        raise ValueError("only Qt 6 / Plasma 6 is supported")
+    major = version(qt_version)[0]
+    if major not in (5, 6):
+        raise ValueError("only Qt 5 / Plasma 5 and Qt 6 / Plasma 6 are supported")
+    if (baseline and major != 6) or (ubuntu20 and major != 5) or (baseline and ubuntu20):
+        raise ValueError("baseline must match the Qt/Plasma major")
+    limits = UBUNTU20_BASELINE if major == 5 else BASELINE
+    qt_limit = "5.12.8" if major == 5 else "6.4.2"
+    baseline_name = "ubuntu20" if major == 5 else "debian12"
     check_manifest(stage)
-    missing = [name for name in REQUIRED if not (stage / name).is_file()]
+    required_files = list(REQUIRED)
+    if major == 5:
+        required_files.remove("qml/NekoMote/Wallpaper/nekomote_plasma_qml.qmltypes")
+        required_files.append("share/plasma/wallpapers/uk.nekopara.nekomote/metadata.desktop")
+    missing = [name for name in required_files if not (stage / name).is_file()]
     if missing:
         raise ValueError(f"missing required plugin package files: {missing}")
     for path in stage_files(stage):
@@ -124,6 +153,8 @@ def audit(stage, qt_version, baseline=False):
             raise ValueError(f"unexpected bundled ELF (Qt/drivers/runtime must stay host-owned): {path}")
     binaries = {name: elf_info(stage / name) for name in ELFS}
     for info in binaries.values():
+        if any(name.startswith(f"libQt{11 - major}") for name in info["needed"]):
+            raise ValueError("binary Qt major does not match the declared build Qt")
         if version(qt_version)[:2] < version(info["qt_symbol_minimum"]):
             raise ValueError("declared build Qt version is below the required Qt symbol version")
     architectures = {info["architecture"] for info in binaries.values()}
@@ -140,29 +171,29 @@ def audit(stage, qt_version, baseline=False):
                   if family in info["versions"]]
         if values:
             requirements[family] = max(values, key=version)
-    failures = [f"{family}_{required} > {BASELINE[family]}"
+    failures = [f"{family}_{required} > {limits[family]}"
                 for family, required in requirements.items()
-                if version(required) > version(BASELINE[family])]
-    if version(qt_version) > version("6.4.2"):
-        failures.append(f"Qt {qt_version} > 6.4.2")
-    if baseline and failures:
-        raise ValueError("Debian 12 baseline rejected: " + "; ".join(failures))
+                if version(required) > version(limits[family])]
+    if version(qt_version) > version(qt_limit):
+        failures.append(f"Qt {qt_version} > {qt_limit}")
+    if (baseline or ubuntu20) and failures:
+        raise ValueError(f"{baseline_name} baseline rejected: " + "; ".join(failures))
     return {"schema": 1, "architecture": architectures.pop(),
-            "qt_build_version": qt_version, "plasma_major": 6,
+            "qt_build_version": qt_version, "plasma_major": major,
             "requirements": requirements, "binaries": binaries,
-            "baseline": {"name": "debian12", "passed": not failures,
-                         "limits": BASELINE, "failures": failures},
+            "baseline": {"name": baseline_name, "passed": not failures,
+                         "limits": limits, "failures": failures},
             "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"}
 
 
-def host_qt_version(shell):
+def host_qt_version(shell, major=6):
     # Use the Qt library actually resolved by plasmashell, not an unrelated qmake.
     libraries = run("ldd", shell)
-    match = re.search(r"libQt6Core\.so\.6\s+=>\s+(\S+)", libraries)
+    match = re.search(rf"libQt{major}Core\.so\.{major}\s+=>\s+(\S+)", libraries)
     if not match:
-        raise ValueError("plasmashell does not resolve libQt6Core.so.6")
+        raise ValueError(f"plasmashell does not resolve libQt{major}Core.so.{major}")
     target = Path(match.group(1)).resolve()
-    match = re.search(r"libQt6Core\.so\.(6\.\d+\.\d+)$", target.name)
+    match = re.search(rf"libQt{major}Core\.so\.({major}\.\d+\.\d+)$", target.name)
     if not match:
         raise ValueError(f"cannot infer plasmashell Qt version from {target}; use --host-qt-version")
     return match.group(1)
@@ -176,14 +207,15 @@ def check_host(stage, host_qt=None, shell=None):
     machine = platform.machine()
     if machine != metadata["architecture"]:
         raise ValueError(f"architecture mismatch: host {machine}, bundle {metadata['architecture']}")
+    major = metadata["plasma_major"]
     shell = shell or shutil.which("plasmashell")
     if not shell:
-        raise ValueError("plasmashell not found (Plasma 6 is required)")
+        raise ValueError(f"plasmashell not found (Plasma {major} is required)")
     shell_version = run(shell, "--version")
-    if not re.search(r"plasmashell\s+6\.", shell_version):
-        raise ValueError(f"Plasma 6 required: {shell_version.strip()}")
-    host_qt = host_qt or host_qt_version(shell)
-    if version(host_qt)[0] != 6 or version(host_qt)[:2] < version(metadata["qt_build_version"])[:2]:
+    if not re.search(rf"plasmashell\s+{major}\.", shell_version):
+        raise ValueError(f"Plasma {major} required: {shell_version.strip()}")
+    host_qt = host_qt or host_qt_version(shell, major)
+    if version(host_qt)[0] != major or version(host_qt)[:2] < version(metadata["qt_build_version"])[:2]:
         raise ValueError(f"host Qt {host_qt} cannot load plugin built with Qt {metadata['qt_build_version']}")
     env = dict(os.environ)
     env.pop("LD_LIBRARY_PATH", None)
@@ -196,8 +228,8 @@ def check_host(stage, host_qt=None, shell=None):
             "plasma": shell_version.strip(), "gpu_validation": "not performed"}
 
 
-def package(stage, qt_version, output, baseline):
-    metadata = audit(stage, qt_version, baseline)
+def package(stage, qt_version, output, baseline, ubuntu20=False):
+    metadata = audit(stage, qt_version, baseline, ubuntu20)
     extras = {
         "stage/compatibility.json": json.dumps(metadata, indent=2, sort_keys=True).encode() + b"\n",
     }
@@ -226,7 +258,9 @@ def main():
         command.add_argument("stage", type=Path)
         if name != "check-host":
             command.add_argument("--qt-version", required=True, help="actual build Qt version")
-            command.add_argument("--baseline-debian12", action="store_true")
+            baselines = command.add_mutually_exclusive_group()
+            baselines.add_argument("--baseline-debian12", action="store_true")
+            baselines.add_argument("--baseline-ubuntu20", action="store_true")
         if name == "package":
             command.add_argument("--output", required=True, type=Path)
         elif name == "audit":
@@ -237,11 +271,11 @@ def main():
     args = parser.parse_args()
     try:
         if args.command == "audit":
-            result = audit(args.stage, args.qt_version, args.baseline_debian12)
+            result = audit(args.stage, args.qt_version, args.baseline_debian12, args.baseline_ubuntu20)
             if args.output:
                 args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
         elif args.command == "package":
-            result = package(args.stage, args.qt_version, args.output, args.baseline_debian12)
+            result = package(args.stage, args.qt_version, args.output, args.baseline_debian12, args.baseline_ubuntu20)
         else:
             result = check_host(args.stage, args.host_qt_version, args.plasmashell)
         print(json.dumps(result, indent=2, sort_keys=True))

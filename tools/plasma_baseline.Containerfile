@@ -12,9 +12,11 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources && \
     apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates git cmake ninja-build g++ python3 binutils \
       qt6-base-dev qt6-declarative-dev libpulse-dev libfontconfig1-dev libpng-dev \
-      libvulkan-dev glslang-tools && \
+      libvulkan-dev glslang-tools python3-jinja2 fonts-dejavu-core \
+      qml6-module-qtquick qml6-module-qtqml-workerscript \
+      qml6-module-qtquick-window && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /work
 # Source mounted read-only at /source; artifacts written to explicit /output.
-ENTRYPOINT ["bash", "/source/tools/plasma_baseline_build.sh", "/source", "/output"]
+ENTRYPOINT ["bash", "/source/tools/ci_build.sh"]

@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <chrono>
 
+#include "qt_input.hpp"
+
 namespace nekomote::plasma
 {
 NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(parent)
@@ -202,11 +204,13 @@ void NekoWallpaperItem::enqueue(nekomote::qt_quick::InputKind kind, QPointF posi
 
 void NekoWallpaperItem::hoverEnterEvent(QHoverEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Enter, event->position(), 0, 0, event->timestamp());
+    enqueue(nekomote::qt_quick::InputKind::Enter, nekomote::qt_quick::input_position(*event), 0, 0,
+            event->timestamp());
 }
 void NekoWallpaperItem::hoverMoveEvent(QHoverEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Move, event->position(), 0, 0, event->timestamp());
+    enqueue(nekomote::qt_quick::InputKind::Move, nekomote::qt_quick::input_position(*event), 0, 0,
+            event->timestamp());
 }
 void NekoWallpaperItem::hoverLeaveEvent(QHoverEvent*)
 {
@@ -214,24 +218,25 @@ void NekoWallpaperItem::hoverLeaveEvent(QHoverEvent*)
 }
 void NekoWallpaperItem::mousePressEvent(QMouseEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Press, event->position(), 0,
+    enqueue(nekomote::qt_quick::InputKind::Press, nekomote::qt_quick::input_position(*event), 0,
             event->button() == Qt::RightButton ? 1 : 0, event->timestamp());
     event->accept();
 }
 void NekoWallpaperItem::mouseReleaseEvent(QMouseEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Release, event->position(), 0,
+    enqueue(nekomote::qt_quick::InputKind::Release, nekomote::qt_quick::input_position(*event), 0,
             event->button() == Qt::RightButton ? 1 : 0, event->timestamp());
     event->accept();
 }
 void NekoWallpaperItem::mouseMoveEvent(QMouseEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Move, event->position(), 0, 0, event->timestamp());
+    enqueue(nekomote::qt_quick::InputKind::Move, nekomote::qt_quick::input_position(*event), 0, 0,
+            event->timestamp());
     event->accept();
 }
 void NekoWallpaperItem::wheelEvent(QWheelEvent* event)
 {
-    enqueue(nekomote::qt_quick::InputKind::Scroll, event->position(),
+    enqueue(nekomote::qt_quick::InputKind::Scroll, nekomote::qt_quick::input_position(*event),
             static_cast<float>(event->angleDelta().y()) / 120, 0, event->timestamp());
     event->accept();
 }

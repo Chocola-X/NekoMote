@@ -19,12 +19,23 @@ include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 
 # --- nlohmann/json (header-only) -------------------------------------------------
+set(JSON_SystemInclude ON CACHE BOOL "Treat third-party JSON headers as system includes" FORCE)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
     GIT_TAG        v3.11.3
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(nlohmann_json)
+
+# GCC 10 lacks floating-point std::from_chars. Use the same strict,
+# locale-independent conversion on every toolchain, only during scene compilation.
+# Header-only, MIT/Apache-2.0/BSL-1.0; no platform/runtime-library dependency.
+FetchContent_Declare(fast_float SYSTEM
+    GIT_REPOSITORY https://github.com/fastfloat/fast_float.git
+    GIT_TAG v6.1.6
+    GIT_SHALLOW TRUE)
+set(FASTFLOAT_TEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(fast_float)
 
 # --- stb (header-only, single-file image decode) ---------------------------------
 # nothings/stb has no official release tags; pinned to a specific commit.

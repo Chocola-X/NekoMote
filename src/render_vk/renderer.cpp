@@ -880,6 +880,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                     if (!draw.index_count)
                         continue;
                     const auto* texture = p.find_texture(draw.texture);
+                    if (!texture)
+                        throw std::runtime_error("prepared mask texture is unavailable");
                     pc.atlas_texels = texture->texel_transform;
                     push();
                     // Dummy mask prevents sampling an attachment currently being written.
@@ -904,6 +906,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             pc.use_mask = 0;
         }
         const auto* texture = p.find_texture(command.texture);
+        if (!texture)
+            throw std::runtime_error("prepared draw texture is unavailable");
         pc.atlas_texels = texture->texel_transform;
         const auto set = command.mask.valid() ? texture->masked : texture->unmasked;
         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0, 1, &set,

@@ -21,3 +21,5 @@ target_compile_features(nekomote_abi_host PRIVATE c_std_11)
 target_compile_options(nekomote_abi_host PRIVATE
     -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2
     -Wno-double-promotion)
+
+install(TARGETS nekomote_abi_host RUNTIME DESTINATION bin COMPONENT runtime)
