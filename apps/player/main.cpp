@@ -286,6 +286,7 @@ struct GpuHolder
     std::unique_ptr<player::BackendRenderer> previous_renderer;
     std::unique_ptr<player::BackendRenderer> background_renderer;
     std::unique_ptr<audio::Device> device;
+    std::vector<model::AudioClip> audio_clips;
     TextureId current_background_id{0};
     fs::path current_background_path;
     int background_width{0}, background_height{0};
@@ -344,7 +345,8 @@ struct GpuCandidate
 // owners, then commit the CPU candidate and these ready resources together.
 GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const GpuHolder& current,
                                    const fs::path& background, int width, int height,
-                                   player::BackendKind backend
+                                   player::BackendKind backend,
+                                   application::AudioMode audio_mode
 #if defined(NEKOMOTE_HAS_VULKAN)
                                    ,
                                    const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
@@ -400,7 +402,8 @@ GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const G
         result.gpu.background_renderer->prepare(candidate.instance->background_frame());
         result.gpu.background_renderer->resize_output(width, height);
     }
-    if (!candidate.audio_clips.empty())
+    result.gpu.audio_clips = candidate.audio_clips;
+    if (audio_mode == application::AudioMode::Device && !candidate.audio_clips.empty())
         result.gpu.device = create_audio_device(std::move(candidate.audio_clips));
     return result;
 }
@@ -619,7 +622,8 @@ bool try_switch_sync(application::WallpaperController& controller, GpuHolder& gp
     std::optional<GpuCandidate> ready;
     try
     {
-        ready.emplace(prepare_candidate_gpu(candidate, gpu, background, width, height, backend
+        ready.emplace(prepare_candidate_gpu(candidate, gpu, background, width, height, backend,
+                                            cfg.audio
 #if defined(NEKOMOTE_HAS_VULKAN)
                                             ,
                                             vk_ctx
@@ -678,6 +682,13 @@ int run(int argc, char** argv)
         controller.set_config_path(o.assets / "config.json");
         controller.load_config(o.assets / "config.json");
         auto& config = controller.config();
+        if (!o.mute)
+        {
+            o.mute = config.mute;
+            controller_cfg.mute = o.mute;
+            controller_cfg.audio =
+                o.mute ? application::AudioMode::Disabled : application::AudioMode::Device;
+        }
         if (!o.character.empty())
         {
             if (config.character != o.character)
@@ -802,7 +813,8 @@ int run(int argc, char** argv)
                          vk_ctx_ptr
 #endif
     );
-    if (!candidate.audio_clips.empty())
+    gpu.audio_clips = candidate.audio_clips;
+    if (controller_cfg.audio == application::AudioMode::Device && !candidate.audio_clips.empty())
         gpu.device = create_audio_device(std::move(candidate.audio_clips));
     controller.install_initial(std::move(candidate));
     std::unique_ptr<player::TouchOverlay> touch_overlay;
@@ -1056,7 +1068,8 @@ int run(int argc, char** argv)
                     try
                     {
                         ready.emplace(prepare_candidate_gpu(*candidate_opt, gpu, bg_path, width,
-                                                            height, o.backend
+                                                            height, o.backend,
+                                                            controller_cfg.audio
 #if defined(NEKOMOTE_HAS_VULKAN)
                                                             ,
                                                             vk_ctx_ptr
@@ -1275,7 +1288,26 @@ int run(int argc, char** argv)
                 ui_sidebar = menu.sidebar;
                 current_fps_limit = menu.fps_limit;
                 surface.locked = menu.locked;
+                const bool muted_changed = o.mute != menu.muted;
                 o.mute = menu.muted;
+                if (muted_changed)
+                {
+                    controller_cfg.audio = o.mute ? application::AudioMode::Disabled
+                                                  : application::AudioMode::Device;
+                    if (o.mute)
+                        gpu.device.reset();
+                    else if (!gpu.audio_clips.empty())
+                    {
+                        try
+                        {
+                            gpu.device = create_audio_device(gpu.audio_clips);
+                        }
+                        catch (const std::exception& error)
+                        {
+                            std::fprintf(stderr, "Cannot restore audio: %s\n", error.what());
+                        }
+                    }
+                }
             }
             if ((ui_icon.moved || ui_sidebar.moved || ui_icon.position_reset ||
                  ui_sidebar.position_reset) &&

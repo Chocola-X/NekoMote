@@ -135,6 +135,13 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     controller_.set_config_path(config_path);
     controller_.load_config(config_path);
     auto& config = controller_.config();
+    if (!mute_forced_)
+    {
+        panel_.muted = config.mute;
+        controller_cfg_.mute = config.mute;
+        controller_cfg_.audio =
+            config.mute ? application::AudioMode::Disabled : application::AudioMode::Device;
+    }
     panel_.fps_limit = config.fps;
     panel_.icon = {};
     panel_.sidebar = {};
@@ -164,6 +171,7 @@ nekomote_error WallpaperInstance::set_no_save(bool value)
 
 nekomote_error WallpaperInstance::set_muted(bool value)
 {
+    mute_forced_ = true;
     panel_.muted = value;
     controller_cfg_.mute = value;
     controller_cfg_.audio =
@@ -171,7 +179,29 @@ nekomote_error WallpaperInstance::set_muted(bool value)
     if (value)
         audio_device_.reset();
     else
+    {
         audio_failed_ = false;
+        if (!audio_device_ && !audio_clips_.empty())
+        {
+            try
+            {
+                auto device = std::make_unique<audio::Device>(audio_clips_);
+                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
+                while (device->snapshot().state == audio::DeviceState::Connecting &&
+                       std::chrono::steady_clock::now() < deadline)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                const auto snapshot = device->snapshot();
+                if (snapshot.state == audio::DeviceState::Failed)
+                    audio_failed_ = true;
+                else
+                    audio_device_ = std::move(device);
+            }
+            catch (const std::exception&)
+            {
+                audio_failed_ = true;
+            }
+        }
+    }
     return NEKOMOTE_OK;
 }
 
@@ -380,6 +410,7 @@ void WallpaperInstance::create_audio_device(application::CandidateCpu& candidate
         return;
     if (candidate.audio_clips.empty())
         return;
+    audio_clips_ = candidate.audio_clips;
     if (audio_failed_)
         return;
     try
@@ -915,7 +946,10 @@ void WallpaperInstance::draw_ui(float dt)
         panel_.sidebar = menu.sidebar;
         panel_.fps_limit = menu.fps_limit;
         panel_.locked = menu.locked;
+        const bool muted_changed = panel_.muted != menu.muted;
         panel_.muted = menu.muted;
+        if (muted_changed)
+            set_muted(panel_.muted);
     }
     if ((panel_.icon.moved || panel_.sidebar.moved || panel_.icon.position_reset ||
          panel_.sidebar.position_reset) &&

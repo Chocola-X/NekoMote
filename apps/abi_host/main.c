@@ -693,7 +693,7 @@ int main(int argc, char** argv)
 
     if (!check("set_seed", nekomote_wallpaper_set_seed(wp, seed)))
         goto fail;
-    if (!check("set_muted", nekomote_wallpaper_set_muted(wp, mute)))
+    if (mute && !check("set_muted", nekomote_wallpaper_set_muted(wp, 1)))
         goto fail;
     if (no_save)
         nekomote_wallpaper_set_no_save(wp, 1);

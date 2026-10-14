@@ -133,7 +133,6 @@ int main(int argc, char** argv)
         auto* item = object.get();
         item->setWidth(800);
         item->setHeight(900);
-        item->setMuted(true);
         const auto backend = qEnvironmentVariable("NEKOMOTE_TEST_BACKEND", "opengl");
         item->setRenderBackend(backend);
         // Controlled replay uses only these callbacks; ignore the actual desktop pointer.
@@ -382,9 +381,8 @@ int main(int argc, char** argv)
             object = std::make_unique<InputItem>();
             item = object.get();
             item->setWidth(640);
-            item->setHeight(720);
-            item->setMuted(true);
-            item->setRenderBackend(backend);
+        item->setHeight(720);
+        item->setRenderBackend(backend);
             item->setAcceptHoverEvents(false);
             item->setAcceptedMouseButtons(Qt::NoButton);
             item->componentComplete();
@@ -424,9 +422,7 @@ int main(int argc, char** argv)
                 "offscreen icon did not recover");
         require(!recovered_layout["sidebar_free"].toBool(), "offscreen sidebar did not recover");
         require(recovered_layout["fps"].toInt() == 120, "layout recovery overwrote FPS");
-        item->setMuted(false);
         frames(2);
-        item->setMuted(true);
         frames(2);
         require(item->wallpaper_state()->fps_limit.load() == 120,
                 "host settings change reloaded FPS");

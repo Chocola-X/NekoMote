@@ -67,10 +67,6 @@ QString NekoWallpaperItem::assetsDir() const
 {
     return assets_dir_;
 }
-bool NekoWallpaperItem::muted() const
-{
-    return muted_;
-}
 QString NekoWallpaperItem::renderBackend() const
 {
     return render_backend_;
@@ -131,19 +127,6 @@ void NekoWallpaperItem::setPaused(bool value)
     refresh_playback();
     emit pausedChanged();
     update();
-}
-
-void NekoWallpaperItem::setMuted(bool value)
-{
-    if (muted_ == value)
-        return;
-    muted_ = value;
-    if (state_)
-    {
-        state_->muted = value;
-        state_->config_dirty = true;
-    }
-    emit mutedChanged();
 }
 
 unsigned NekoWallpaperItem::queryRendererCreated() const

@@ -37,7 +37,6 @@ struct WallpaperState
     std::filesystem::path model_path;
     std::filesystem::path session_path;
     std::uint32_t seed{0};
-    bool muted{false};
     bool no_save{false};
     bool assets_mode{true};
     bool config_dirty{true};

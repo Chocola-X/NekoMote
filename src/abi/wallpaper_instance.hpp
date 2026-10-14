@@ -2,6 +2,7 @@
 
 #include <nekomote/application/controller.hpp>
 #include <nekomote/audio/device.hpp>
+#include <nekomote/model/audio_clip.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/ui/layout.hpp>
@@ -120,6 +121,7 @@ class WallpaperInstance
     std::unique_ptr<render_gl::Renderer> previous_renderer_;
     std::unique_ptr<render_gl::Renderer> background_renderer_;
     std::unique_ptr<audio::Device> audio_device_;
+    std::vector<model::AudioClip> audio_clips_;
     render_gl::UiRenderer ui_renderer_;
 #if defined(NEKOMOTE_HAS_VULKAN)
     render_vk::DeviceContext vk_ctx_{};
@@ -150,6 +152,7 @@ class WallpaperInstance
     bool assets_scanned_{false};
     bool initialized_{false};
     bool audio_failed_{false};
+    bool mute_forced_{false};
     std::string error_string_;
 };
 

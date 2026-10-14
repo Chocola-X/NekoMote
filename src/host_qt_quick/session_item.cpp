@@ -105,7 +105,6 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             model_path_ = state_->model_path;
             session_path_ = state_->session_path;
             assets_mode_ = state_->assets_mode;
-            muted_ = state_->muted;
             no_save_ = state_->no_save;
             seed_ = state_->seed;
             deterministic_ = state_->deterministic;
@@ -239,8 +238,6 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     assets_applied_ = true;
                 }
                 check(nekomote_wallpaper_set_seed(state_->wallpaper.get(), seed_), "set seed");
-                check(nekomote_wallpaper_set_muted(state_->wallpaper.get(), muted_ ? 1 : 0),
-                      "set muted");
                 config_applied_ = true;
             }
             // Loading may fit the character and initialize output-dependent
@@ -420,7 +417,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     std::filesystem::path assets_dir_, model_path_, session_path_;
     std::uint32_t seed_{0};
     int fixed_steps_{0}, trace_frames_{0};
-    bool muted_{false}, no_save_{false}, assets_mode_{true}, deterministic_{false};
+    bool no_save_{false}, assets_mode_{true}, deterministic_{false};
     GraphicsBackend requested_backend_{GraphicsBackend::OpenGL};
     GraphicsBackend active_backend_{GraphicsBackend::OpenGL};
 #if defined(NEKOMOTE_HAS_VULKAN)
