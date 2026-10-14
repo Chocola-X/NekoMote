@@ -30,7 +30,8 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "NEKOMOTE_WERROR": "ON",
                 "NEKOMOTE_BUILD_PREVIEW": "ON",
-                "NEKOMOTE_BUILD_TESTS": "ON",
+                "NEKOMOTE_BUILD_TESTS": "OFF",
+                "NEKOMOTE_BUILD_TOOLS": "OFF",
                 "NEKOMOTE_BUILD_VULKAN": "ON",
                 "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
             }

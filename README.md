@@ -1,44 +1,266 @@
 # NekoMote
 
-接手文档入口：[docs/README.md](docs/README.md)。共享壁纸应用层与 Plasma 初步接入已可用；player 与 Plasma 壁纸支持 OpenGL / Vulkan 1.0 双后端，默认 OpenGL，见 [player 后端](docs/vulkan-backend.md)、[Plasma 后端](docs/plasma-dual-backend.md)、[Wayland/X11 兼容](docs/wayland-compatibility-2026-10-13.md)和 [GitHub 基线分发](docs/plasma-distribution.md)。实现与验收范围以当前任务清单为准。
+Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解包素材，独立实现模型求值、动画、物理、变形、遮罩、GPU 渲染与桌面接入，不依赖浏览器、JavaScript 或 asm.js 核心。
 
-面向 Linux 原生动态壁纸的独立二维模型运行时项目。目标是复用已有模型素材，将动画求值、GPU 渲染与桌面环境接入解耦。
+支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经桌面插件或普通窗口运行。
 
-当前已有独立的 C++ 模型求值、时间线/差分、变形、遮罩、物理和可操作窗口播放器，支持视线、触摸反应、真实声音/口型及 PNG 背景。Chocola、Vanilla、Fraise 的反应会话已导入验证。P0/P1/P2 完成；完整模型认证、Plasma 接入和全素材/长期运行仍在开发，严格 WebGL 对照中的几何/物理 FAIL 保留，未宣布最终交付。
+许可证：GNU AGPL-3.0-or-later（见 [LICENSE](LICENSE)）。
 
-启动及操作见 [原生播放器](docs/native-player.md)。接手先读 [当前整合摘要](docs/review-agents-current.md)、[剩余缺口](docs/known-defects.md) 和 [Agent任务](docs/agent-workboard.md)；阶段见 [路线图](ROADMAP.md)。旧阶段报告与development-log仅保存历史证据，不作为当前待办。
+## 功能
 
-## 快速构建
+- 独立 C++ 模型求值核心：参数、时间线、差分、变形、遮罩、物理、视线/触摸反应
+- OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
+- KDE Plasma 6 桌面壁纸插件（进程内 QML，复用宿主 Qt 场景图）
+- 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
+- 声音与口型（PulseAudio），可静音
+- PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
+- 运行时 UI 控制面板：角色/背景切换、声音开关、FPS、锁定、位置调整
+- 配置持久化：角色、背景、变换、UI 布局、静音状态写入 `config.json`
 
-需要 CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang），首次配置需联网以拉取依赖。普通播放器额外需要显示服务器、OpenGL及libpulse开发包；UI需要可用字体，建议安装Fontconfig。完整检查入口见构建说明。
+## 系统要求
+
+构建：
+
+- CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang）
+- Python 3 + Jinja2（GL loader 生成）
+- libpng 1.6 开发包 + zlib
+- pkg-config + libpulse ≥ 16.1 开发包（音频）
+- 首次配置需联网（CMake FetchContent 拉取固定版本依赖）
+
+运行时：
+
+- OpenGL 3.3 core 驱动；Vulkan 后端另需 libvulkan（ICD loader）
+- X11 或 Wayland 会话 + xkbcommon
+- PulseAudio（音频；不可用时静音运行）
+- 可用字体（建议安装 Fontconfig；缺失时回退源码内置字体路径）
+
+可选：
+
+- Vulkan SDK（headers + glslangValidator）——启用 Vulkan 后端构建
+- Qt ≥ 6.4 Quick/OpenGL——Qt Quick 隔离宿主与 Plasma 插件
+- KF6/Plasma 6 开发包——Plasma 诊断探针（分发构建可关闭）
+
+FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、stb、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。
+
+## 构建
 
 ```bash
-cmake --preset dev              # 配置 Debug 构建
-cmake --build --preset dev      # 编译核心库、预览和测试
-ctest --preset dev              # 运行单元测试
-./build/dev/bin/nekomote_player --help  # 普通播放器操作/素材参数
+cmake --preset release          # Release + LTO + Vulkan，发布构建
+cmake --build --preset release
 ```
 
-其他 preset：`release`（Release + LTO）、`asan`（Debug + ASan/UBSan，不构建预览）。
+产物在 `build/release/bin/`：`nekomote_player`、`nekomote_import`、`nekomote_abi_host`、`nekomote_preview`（不含测试与诊断探针）。
 
-## 开发入口
+其他 preset：
 
-- [分阶段开发路线图](ROADMAP.md)：模块结构、阶段任务、里程碑、风险与验收。
-- [项目背景与开发规范](AGENTS.md)：项目目标、当前进度、模块边界、性能、生命周期及破坏性重构规则，同时作为 Agent 标准入口。
-- [构建与验证](docs/building.md)：preset、命令、依赖与检查入口。
-- [约定](docs/conventions.md)：坐标、矩阵、时间、alpha、ID 与所有权约定。
+| Preset | 类型 | 特性 |
+| --- | --- | --- |
+| `dev` | Debug | 警告即错误，开发主力 |
+| `release` | Release | LTO、OpenGL + Vulkan，不含测试/探针（发布构建） |
+| `asan` | Debug | ASan/UBSan，不构建预览/播放器（无窗口语义检查） |
+| `plasma` | Release | LTO、Qt Quick + Plasma QML 模块，不含测试/探针 |
+| `qt-quick` | Release | LTO、Qt Quick 隔离宿主（不需 Plasma 依赖） |
+| `vulkan` | Debug | Vulkan + 验证层调试 |
 
-开发阶段以性能与代码规范性为优先约束，允许直接演进 API 和资产格式，不维护兼容层。
+无显示服务器环境构建核心与测试：
 
-普通播放器使用自己的当前资产，不需要参考仓库参与运行：
-
-```sh
-build/release/bin/nekomote_player --model /path/model.nkm.json \
-  --session /path/session.nks.json --fit --background /path/background.png
+```bash
+cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
+cmake --build --preset dev
+ctest --test-dir build/dev -LE gpu
 ```
 
-鼠标视线、左键短按触摸、左键长按 300ms 后拖动、滚轮围绕指针缩放；空格暂停，F 适配完整模型，R 重置，Esc 关闭。没有声音服务时可显式 `--mute`。
+## 资产准备
 
-已导入assets时可使用 `build/release/bin/nekomote_player --assets assets --character chocola-date-a --no-save`。部分型号仍因未验证语义拒绝加载；保存角色milk-summer的6/3错误说明及当前可用范围见播放器文档，导入成功不代表完整支持。
+运行时只接受当前 schema 6 模型与 version 1 会话，不自动回退旧格式。资产从已解包的 E-mote 模型导入，放在 `assets/` 目录。
 
-`nekomote_preview`、`nekomote_playback_probe`、`nekomote_session_probe` 和 `nekomote_frame_render` 保留为独立诊断入口。固定步截图、数值、GPU 帧观察不得混入性能基准或替代正式模型求值。
+导入单个模型：
+
+```bash
+build/release/bin/nekomote_import \
+  model.json model.resx.json --output assets/characters/<角色名>
+```
+
+导入会话（反应规则、视线、触摸区域）：
+
+```bash
+python3 tools/import_session/import_session.py \
+  --reference-root <原解包素材根目录> \
+  --model <角色名> --output assets/characters/<角色名>/session.nks.json
+```
+
+批量导入与背景：
+
+```bash
+python3 tools/import_all_assets.py --reference-root <原素材根目录> \
+  --importer build/release/bin/nekomote_import \
+  --session-tool tools/import_session/import_session.py \
+  --output assets/characters --report assets/import-report.json
+python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest assets
+```
+
+导入产物：
+
+| 文件 | 用途 |
+| --- | --- |
+| `model.nkm.json` | schema 6 规范化模型 |
+| `session.nks.json` | 反应会话 |
+| `textures/N.png` | 引用的 PNG 图集 |
+| `report.json` | 结构状态与警告（非播放认证） |
+
+背景放 `assets/backgrounds/`：静态 PNG 放根目录，动态背景放 `dynamic/` 子目录（A/B/C 三相分别对应白天/黄昏/夜晚）。
+
+### 资产目录结构
+
+```
+assets/
+├── config.json                       # 壁纸配置（角色、背景、变换、UI、静音等，自动读写）
+├── characters/
+│   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"
+│   └── <角色组>/                     # 一级目录：角色组（如 chocola）
+│       └── <变体>/                   # 二级目录：型号变体（如 date-a）
+│           ├── model.nkm.json        # schema 6 模型（必需）
+│           ├── session.nks.json      # 反应会话（必需）
+│           ├── meta.json             # 可选：cutoff_y / display_name / hidden / order
+│           ├── textures/             # PNG 图集
+│           └── report.json           # 导入结构报告
+├── backgrounds/
+│   ├── background.json               # 可选，静态背景显示名字典
+│   ├── BG_07A.png                    # 静态背景（根目录，name 为文件 stem）
+│   └── dynamic/
+│       ├── background.json           # 可选，动态背景显示名字典
+│       └── <组名>/                   # 动态背景组（如 BG_01）
+│           ├── config.json           # phases 数组 + transition_seconds
+│           ├── A.png                 # 白天相
+│           ├── B.png                 # 黄昏相
+│           └── C.png                 # 夜晚相
+└── icons/
+    └── toggle.png                    # UI 面板图标
+```
+
+角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm.json` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供中文显示名，键为完整角色名。
+
+静态背景的 `name` 为 PNG 文件 stem（如 `BG_07A`）。动态背景的 `name` 为组目录名（如 `BG_01`），其 `config.json` 定义各相图片与切换时间：
+
+```json
+{
+  "phases": [
+    {"image": "A.png", "start": "06:00"},
+    {"image": "B.png", "start": "16:00"},
+    {"image": "C.png", "start": "18:00"}
+  ],
+  "transition_seconds": 1.8
+}
+```
+
+`start` 为 24 小时制 HH:MM，按当天分钟数排序选择当前相。`meta.json` 的 `cutoff_y` 为角色裁切 Y 坐标，`hidden` 为 `true` 时不在 UI 列表显示，`order` 控制组内排序。
+
+## 运行播放器
+
+```bash
+# 目录模式：从 assets/ 加载，UI 可切换角色/背景
+build/release/bin/nekomote_player --assets assets --character <角色名>
+
+# 单模型模式
+build/release/bin/nekomote_player \
+  --model assets/characters/<角色名>/model.nkm.json \
+  --session assets/characters/<角色名>/session.nks.json --fit
+
+# 无音频环境
+build/release/bin/nekomote_player --assets assets --character <角色名> --mute
+```
+
+常用参数：`--backend opengl|vulkan`、`--fit`、`--scale`、`--origin-x/--origin-y`、`--width/--height`、`--fps`、`--seed`、640×64 范围。完整列表见 `--help`。
+
+操作：
+
+- 鼠标移动：视线跟随；左键短按释放：触摸；左键长按 300ms 后：拖动角色；滚轮：围绕指针缩放
+- 空格：暂停/继续；F：适配完整模型；R：重置角色；Esc：关闭
+- Tab / 1–9：切换角色；B / N：切换背景；C：清除背景
+- 右上角图标：打开 UI 控制面板（角色、背景、关闭声音、FPS、锁定、重设位置）
+
+声音开关统一由 UI 控制面板的"关闭声音"管理，状态写入 `config.json` 的 `mute` 字段，下次启动自动恢复。`--mute` 仅作启动时强制静音覆盖。
+
+## KDE Plasma 壁纸部署
+
+### 从源码构建插件
+
+```bash
+cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
+cmake --build --preset plasma
+```
+
+`NEKOMOTE_BUILD_PLASMA_PROBE=OFF` 关闭需要 KF6/Plasma 开发包的本地探针，仅构建可分发的 QML 模块与插件。产物在 `build/plasma/adapters/plasma/`。
+
+### 安装到桌面
+
+使用统一部署工具（`install`/`reinstall`/`uninstall`/`status`/`verify`）：
+
+```bash
+python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stage
+```
+
+安装到 `$XDG_DATA_HOME/nekomote/`（默认 `~/.local/share/nekomote/`），自动写入 `environment.d` 的 `QML_IMPORT_PATH` 并刷新 KPackage 缓存。注销重新登录后生效；要立即生效加 `--restart-shell`。
+
+安装后在 Plasma 桌面右键 → 配置壁纸 → 选择 NekoMote，在壁纸配置中设置 assets 目录路径。
+
+### 分发包
+
+仓库 GitHub Actions 工作流在推送时用 Debian 12 容器（Qt 6.4.2、glibc 2.36、GCC 12）构建 x86_64 与 aarch64 基线包。目标机器安装前先检查：
+
+```bash
+tar -xzf nekomote-plasma-debian12-x86_64.tar.gz
+cd nekomote-plasma
+python3 tools/plasma_distribution.py check-host stage
+python3 tools/plasma_deploy.py install --stage stage
+```
+
+插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt/KDE/glibc/GPU 驱动。一个二进制不能覆盖所有 Linux 发行版：Qt 插件要求相同 major、不低于构建 minor 的 Qt。详见 [Plasma 分发](docs/plasma-distribution.md)。
+
+## 配置
+
+`assets/config.json` 由播放器/壁纸自动读写，字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `character` | 当前角色名 |
+| `background` | 当前背景名（静态为文件 stem，动态为组名） |
+| `scale`、`origin_x`、`origin_y` | 角色缩放与中心原点位置（Y 向下） |
+| `width`、`height` | 输出尺寸 |
+| `fps` | 显示帧率限制（作者时钟仍 60Hz） |
+| `mute` | 静音状态（由 UI 面板维护） |
+| `fit` | 适配完整模型 |
+| `icon_x`、`icon_y` | UI 图标位置 |
+| `sidebar_x`、`sidebar_y`、`sidebar_free` | UI 面板位置与自由浮动 |
+| `background_fade_seconds` | 背景切换渐变时长 |
+
+`--no-save` 保留原配置不写回。
+
+## 诊断工具
+
+- `nekomote_preview`：部件级预览与截图
+- `nekomote_abi_host`：C ABI 隔离宿主，确定性回放与截图（`--assets`/`--model`/`--steps`/`--capture`/`--mute`）
+- `nekomote_playback_probe`、`nekomote_session_probe`、`nekomote_frame_render`：逐帧数值与 GPU 帧观察
+
+固定步截图须静音（`--mute --steps N --capture out.png`），独立于性能测量，不混入性能基准。
+
+## 项目结构
+
+```
+src/model        强类型资产与数学基础
+src/runtime      参数、场景图、动画、变形、物理求值
+src/asset_io     资产加载与图片解码
+src/abi          C ABI 壁纸实例（宿主接入边界）
+src/render_gl    OpenGL 后端
+src/render_vk    Vulkan 后端
+src/application  会话、Controller、配置、多模型切换
+src/ui           共享控制面板与布局
+src/host_qt_quick Qt Quick 共享宿主基础
+adapters/plasma  Plasma 壁纸 QML 模块
+apps/player      普通窗口播放器
+apps/abi_host    C ABI 诊断宿主
+apps/preview     部件预览
+tools            导入、分发与验证脚本
+```
+
+模块边界、性能规范与开发约定见 [AGENTS.md](AGENTS.md)；开发路线图见 [ROADMAP.md](ROADMAP.md)；构建细节见 [docs/building.md](docs/building.md)。

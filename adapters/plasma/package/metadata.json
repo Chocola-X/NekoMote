@@ -7,7 +7,7 @@
         "Description": "Native 2D model live wallpaper",
         "Description[zh_CN]": "原生二维模型动态壁纸",
         "Version": "0.1.0",
-        "License": "GPL-3.0-or-later",
+        "License": "AGPL-3.0",
         "Website": "https://nekopara.uk"
     },
     "X-Plasma-DropMimeTypes": [

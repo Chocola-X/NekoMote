@@ -64,8 +64,9 @@ add_subdirectory(src/asset_io)
 add_subdirectory(src/application)
 add_subdirectory(src/ui)
 
+add_subdirectory(tools/import_emote)
+
 if(NEKOMOTE_BUILD_TOOLS)
-    add_subdirectory(tools/import_emote)
     add_subdirectory(tools/pose_probe)
     add_subdirectory(tools/playback_probe)
     add_subdirectory(tools/session_probe)
