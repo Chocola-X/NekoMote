@@ -95,4 +95,6 @@ preview `--playback-script <JSON>` 仅允许固定步数截图诊断，执行同
 
 `synthetic_model.py --output DIR` 生成独立的几何层级、四色棋盘 PNG、JSON/resx 与未加密 PSB；没有人物素材。`capture.py --psb FILE --trace-geometry` 使用公开 SDK 和最终 WebGL 几何/状态/截图进行观察，禁用 shader 源码和内部执行观察器。`--model` 与 `--psb` 二选一；捕获超时保存 `.failure.json`。
 
+C19 的 `probe_mesh_cc.py` 生成15组固定坐标的 BP/cc 端点对照，可用 `--cc-json` 指定候选、`--generate-only` 只生成输入。它始终标记 `accepted_semantics=false`，捕获失败最终返回非零；当前默认候选有4组NaN，不能称为语义PASS。几何捕获失败时额外保存 `.failure.trace.json`；属性 `nonfinite` 区分已提交值中的 NaN 和 ±Inf。复现与限定结论见 [cc调查](../../docs/mesh-cc-investigation-2026-10-14.md)。
+
 完整51组用 `validate_synthetic.py` 对照实际 importer/GeometryInstance/preview GL 后端。它冻结二进制、来源与输入hash，并检查图元、UV顶点与三角形覆盖；`--case NAME` 可重复，`--reuse-reference DIR` 严格验证捕获输入与文件hash，旧的未带artifact hash记录不能复用。GPU命令用 `flock build/gpu-validation.lock` 串行执行。独立PsBuild工具也可在生成目录把JSON编译为 `model.pure.psb`。公式、大小图集、失败记录和复现命令见 [报告](../../docs/synthetic-semantics-2026-10-14.md)。

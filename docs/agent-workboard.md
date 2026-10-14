@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| C19 mesh.cc 调查 | base `94af01c`，Codex及独立只读复核；程序生成15格受控实验11正常捕获/4 NaN，PsBuild失败复现，114 Python用例（12 skipped） | 尚无在生效路径产生有限可辨识效果的非空布局，不放行公式；见[调查](mesh-cc-investigation-2026-10-14.md) |
 | C18 合成模型求值 | base `693fd3f`，Codex 实现与独立只读复核；discretization1、嵌套0x7fc、sync/combine传播；51/51合成图/几何、4真实/2PsBuild、197 CPU与76 ASan runtime通过 | cc、其他离散/继承位、frame.type1及既有标量仍待验证；见 [报告](synthetic-semantics-2026-10-14.md) 与 [记录](validation/synthetic-semantics-results.json) |
 | C17 Wayland/X11 兼容 | base `0c0f400`，Codex 实现及独立复核；GLFW 双平台、Qt GL/GLES、GPU 共享和 renderer 重建快照；189 CPU、3 GPU runner、8 对基线 / 10 对 GL/ES 画面、隔离 Qt/Plasma 通过 | 未安装用户桌面；真实桌面、原生 X11 登录及其他驱动仍待验收，GLES padding 显存代价见 [报告](wayland-compatibility-2026-10-13.md) 与 [记录](validation/wayland-compatibility-results.json) |
 | C16 稳态帧优化 | 基线 `958a404`，Codex；索引/UV 和帧内图集/遮罩状态复用；195 初态、12 对画面、CPU 189/189、GL/VK 及隔离 Plasma 通过 | CPU probe P50 降低 2.0–4.6%，player 提交改善约 1.5–1.8%；显存不变、尾部及范围见 [说明](frame-optimization-2026-10-13.md) 与 [记录](validation/frame-optimization-results.json) |

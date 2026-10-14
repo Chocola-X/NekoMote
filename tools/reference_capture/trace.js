@@ -116,6 +116,15 @@ window.maskPixels = [];
             }
             attributes[info.name]={type,size,stride,offset,data,
                 bufferByteOffset:bufferOffsets.get(buffer)};
+            // JSON would otherwise encode NaN and both infinities identically
+            // as null. Classify only the values submitted to this GPU buffer.
+            const nonfinite={nan:0,positiveInfinity:0,negativeInfinity:0};
+            for(const values of data) for(const value of values) {
+                if(Number.isNaN(value)) nonfinite.nan++;
+                else if(value===Infinity) nonfinite.positiveInfinity++;
+                else if(value===-Infinity) nonfinite.negativeInfinity++;
+            }
+            if(Object.values(nonfinite).some(value=>value)) attributes[info.name].nonfinite=nonfinite;
         }
         const uniforms={};
         for(let u=0;u<gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);u++) {

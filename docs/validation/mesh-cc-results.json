@@ -1,0 +1,1055 @@
+{
+  "accepted_semantics": false,
+  "candidate": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "cases": [
+    {
+      "name": "absent-none",
+      "bp_mode": "absent",
+      "cc_side": "none",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "72c9010529161b1802a1c54064b66bfcbc453cf10543a634131d160d6e79d11c",
+        "model.psb": "6bf54a11f6acd530fa29625a3c5e5ddd0a01322bc3bae1cce37b00863eec306c",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/absent-none/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/absent-none/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "835603f9810696c923dc84bfee81e5a930b31b208416ae260dd33192cdd4ae15",
+        "reference.trace.json": "cc0d3ffbeba021df1547ce6b52f9deecd7f1245121e8a64d1c355f851b981d4f",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      }
+    },
+    {
+      "name": "absent-left",
+      "bp_mode": "absent",
+      "cc_side": "left",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "685c8ef38aa2523a1d069019c98e5d9a530a0bb22b746f5a065b55124dd612b7",
+        "model.psb": "872068172cc09f6e458822b0d2b5d1c87313269f5191ea098eee3895b36d2eb1",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/absent-left/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/absent-left/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "1fc84c0189ff90f6400e1e9ee4c926dfb9d8d3dec02918584023128e21ca8feb",
+        "reference.trace.json": "1d0e3422f16210c984952f03be6859618885fefdd65b34e9e0a2189690928834",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "absent-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "absent-right",
+      "bp_mode": "absent",
+      "cc_side": "right",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "581696d2425393e27486b04365e61c720231292335f30ff2271f4771bf930d9f",
+        "model.psb": "acd1675f9cc874b8d80691182ff063a1b45f41cc55074a0fea5edf5a5d479bf3",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/absent-right/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/absent-right/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "5081b74cdcd45c00b187f8adb5a24dd2addff0037260b6d041dc68794d7754ec",
+        "reference.trace.json": "1d0e3422f16210c984952f03be6859618885fefdd65b34e9e0a2189690928834",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "absent-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "absent-both",
+      "bp_mode": "absent",
+      "cc_side": "both",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "d371d1e58a6566aca1e7489454019d06ef2d6961f15672fdf3b6e9f3c839a509",
+        "model.psb": "81128188e99cbad68180410764669760bf983a4aff391c66c81e3b719fbabb88",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/absent-both/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/absent-both/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "048617d7cc677ff934543287a5638f8c0a8df93ecddc024264c24bc49a0ccf42",
+        "reference.trace.json": "1d0e3422f16210c984952f03be6859618885fefdd65b34e9e0a2189690928834",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "absent-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "identity-none",
+      "bp_mode": "identity",
+      "cc_side": "none",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "2d11ee33d242679884d9026142594fe23b46e9e0ebcadd66e5bb7a4c8a03817b",
+        "model.psb": "5871848366b2be5e964c0d3d4985beb3b5742eb4f2ea26b69410098585000228",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-none/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-none/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "667ad24b06bb40abe45be2cff6381d466768ed5f297add9c7c663fa4599255c3",
+        "reference.trace.json": "60664aaeb2ba018fb3c779267c21e09ff60a64051b08e3c5377804fc7795e176",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      }
+    },
+    {
+      "name": "identity-left",
+      "bp_mode": "identity",
+      "cc_side": "left",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "8ac3f27ab77d69d1701ab5cbd21d74e38b13bb989a9acc059ac77ba2c11abcf2",
+        "model.psb": "1245e80420112ee4a6c6007829fdd168faa09cd0c26b60380655e0ae542d16be",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "nonfinite_gpu_submission",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-left/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-left/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 1,
+      "nonfinite": {
+        "nan": 200,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "artifact_hashes": {
+        "reference.failure.trace.json": "f054ca021575989ec5e6c59bfa8f51084c98837b608694aa01f2499f4ff45fa2",
+        "reference.failure.json": "7882de21527450fa99b5ee402edcb3a0ce14d9416f31f9d64518ab66549177b8"
+      }
+    },
+    {
+      "name": "identity-right",
+      "bp_mode": "identity",
+      "cc_side": "right",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "d87ece7ab185ddc8e93717c5b43ac113be1eaaef27800786add0a8ccbcf7250f",
+        "model.psb": "058ac849f2c52e5552221311f7b9d825f0b3038dfdd9e75e759f696012108ce3",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-right/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-right/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "0353a7ae12622021491614561f19133b90fdbc1024bdf604f9c7725fdc9f7256",
+        "reference.trace.json": "60664aaeb2ba018fb3c779267c21e09ff60a64051b08e3c5377804fc7795e176",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "identity-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "identity-both",
+      "bp_mode": "identity",
+      "cc_side": "both",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "a1555e645aecf76c6b67d23b55fb1f42ecd2cffd2de40f12a6c40eb933262313",
+        "model.psb": "faabed7bb5b1531dfaf6b11abb5d6fd2c6b98068852c1d50853b6cd088845fba",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "nonfinite_gpu_submission",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-both/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-both/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 1,
+      "nonfinite": {
+        "nan": 200,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "artifact_hashes": {
+        "reference.failure.trace.json": "f054ca021575989ec5e6c59bfa8f51084c98837b608694aa01f2499f4ff45fa2",
+        "reference.failure.json": "17742a4d9d681020323eb68dece41873d12663006018b3015035ad2499abd33e"
+      }
+    },
+    {
+      "name": "varying-none",
+      "bp_mode": "varying",
+      "cc_side": "none",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "8a5395c6c8cb946e3fced72cd757a6843536c6076cdf8ae319b39bd61277503a",
+        "model.psb": "11386354d11694980808acb29a87b0f4dff901967c518ab9cd7e13a484a9d476",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/varying-none/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/varying-none/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "9d9417ee949aa2ebb48036a3f7d368daa0ca3a5d8e32f211c8afb0bcbc7f25b2",
+        "reference.json": "f40055b49f684700208168b7b0489b443911629b331a5140c6ab22974d557979",
+        "reference.trace.json": "cab9590c555dc8d88bf86a718cbccdf92663ed201c2006daab42d2e9b6db1c0b",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      }
+    },
+    {
+      "name": "varying-left",
+      "bp_mode": "varying",
+      "cc_side": "left",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "b16168b5443ea04d9a5b57ba4397da7efc0e54949fb8350cbd03cf0a22441a1e",
+        "model.psb": "49f8b1b22e9c2c39a1fa2f0bd7941156496c41b3029ddc351dd06cd269af093c",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "nonfinite_gpu_submission",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/varying-left/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/varying-left/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 1,
+      "nonfinite": {
+        "nan": 200,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "artifact_hashes": {
+        "reference.failure.trace.json": "f054ca021575989ec5e6c59bfa8f51084c98837b608694aa01f2499f4ff45fa2",
+        "reference.failure.json": "1ae65233f6c269563937856d445d6da99448797e59aed36c82365fa3998f729c"
+      }
+    },
+    {
+      "name": "varying-right",
+      "bp_mode": "varying",
+      "cc_side": "right",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "ef17af0a92ed81e6178cddca0323b90d5babf5a33f4698b2fd881b5112575197",
+        "model.psb": "140bbf297f6f46a6072e2a09f27682cca3ec1604bdef0fd010f471ef8cd2ff63",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/varying-right/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/varying-right/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "9d9417ee949aa2ebb48036a3f7d368daa0ca3a5d8e32f211c8afb0bcbc7f25b2",
+        "reference.json": "46129111fc0f7e9c427cb3a5af56297420d1aacfb74686365310baebaa66ef34",
+        "reference.trace.json": "cab9590c555dc8d88bf86a718cbccdf92663ed201c2006daab42d2e9b6db1c0b",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "varying-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "varying-both",
+      "bp_mode": "varying",
+      "cc_side": "both",
+      "frame_type": 3,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "14a2f37a1ca7fd4270e67fe34eb5b9fc3f9a4236081d0eb507b8b0f7c5f5ca10",
+        "model.psb": "542d0cfd8426b74aafe2490711c6950e9e257249772d4abebae4a7c59b2d7246",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "nonfinite_gpu_submission",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/varying-both/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/varying-both/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 1,
+      "nonfinite": {
+        "nan": 200,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "artifact_hashes": {
+        "reference.failure.trace.json": "f054ca021575989ec5e6c59bfa8f51084c98837b608694aa01f2499f4ff45fa2",
+        "reference.failure.json": "d627d78d1d3752c0531d344bace2db3c0e3120a56b663254a8641eebb138d9ce"
+      }
+    },
+    {
+      "name": "identity-left-begin",
+      "bp_mode": "identity",
+      "cc_side": "left",
+      "frame_type": 3,
+      "variables": {
+        "p": 0
+      },
+      "input_hashes": {
+        "model.json": "8ac3f27ab77d69d1701ab5cbd21d74e38b13bb989a9acc059ac77ba2c11abcf2",
+        "model.psb": "1245e80420112ee4a6c6007829fdd168faa09cd0c26b60380655e0ae542d16be",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-left-begin/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-left-begin/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 0}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "b5d6ac5c1aa4dd83484d298aed0b7828cda95eb6f7cdb73c81ff16bd51555fdd",
+        "reference.trace.json": "60664aaeb2ba018fb3c779267c21e09ff60a64051b08e3c5377804fc7795e176",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "identity-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "identity-left-end",
+      "bp_mode": "identity",
+      "cc_side": "left",
+      "frame_type": 3,
+      "variables": {
+        "p": 60
+      },
+      "input_hashes": {
+        "model.json": "8ac3f27ab77d69d1701ab5cbd21d74e38b13bb989a9acc059ac77ba2c11abcf2",
+        "model.psb": "1245e80420112ee4a6c6007829fdd168faa09cd0c26b60380655e0ae542d16be",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-left-end/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-left-end/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 60}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "f5faa4630e2f64751d5933cf3417768f03f89acd4ce26bb86fc5e46d96520e96",
+        "reference.trace.json": "60664aaeb2ba018fb3c779267c21e09ff60a64051b08e3c5377804fc7795e176",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "identity-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    },
+    {
+      "name": "identity-left-hold",
+      "bp_mode": "identity",
+      "cc_side": "left",
+      "frame_type": 2,
+      "variables": {
+        "p": 15
+      },
+      "input_hashes": {
+        "model.json": "8c6f0c31f1197b0b56a0a916bd7ff32800cf6ff9399cbfab56e66c5999cb7787",
+        "model.psb": "099ff46a0337440ad0eabe63d2cbf0cce8bab425493f0c19ab9f692f807754c2",
+        "model.resx.json": "7b43086de3cdcc718839e23820a674130440165fedd2f5779f7da53a3a4bdabe",
+        "texture.png": "43b761d49aa5fee1477ca442b655e78de20c32649dd04769de6c7fc74c87147e"
+      },
+      "status": "captured",
+      "command": [
+        "/usr/bin/python3",
+        "/run/media/chocola/DATA/Project/NekoMote/tools/reference_capture/capture.py",
+        "--reference-root",
+        "../NekoWebShow",
+        "--browser",
+        "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome",
+        "--psb",
+        "build/evidence/cc-20261014/minimal-final/identity-left-hold/model.psb",
+        "--output",
+        "build/evidence/cc-20261014/minimal-final/identity-left-hold/reference",
+        "--width",
+        "256",
+        "--height",
+        "256",
+        "--x",
+        "0",
+        "--y",
+        "0",
+        "--variables",
+        "{\"p\": 15}",
+        "--trace-geometry",
+        "--capture-timeout-ms",
+        "3000"
+      ],
+      "returncode": 0,
+      "nonfinite": {
+        "nan": 0,
+        "positiveInfinity": 0,
+        "negativeInfinity": 0
+      },
+      "visible_pixels": 1024,
+      "artifact_hashes": {
+        "reference.png": "610a9c307be6e1cfe55a0318ae3ce2a0716d7e4aafc833a22a8fb521079eeeb1",
+        "reference.json": "81d9970d9cf6b8a3ecaa1f09bfbe07860060fe89038baec6cfc748b6b0d17d3e",
+        "reference.trace.json": "60664aaeb2ba018fb3c779267c21e09ff60a64051b08e3c5377804fc7795e176",
+        "reference.state.json": "ef74b82eb9d8a88fc23386945a54a4060da35ebdce37851b5ff7ee941205f6ed"
+      },
+      "null_control_comparison": {
+        "baseline": "identity-none",
+        "submitted_attribute_data_and_indices_equal": true,
+        "rgba_equal": true
+      }
+    }
+  ],
+  "source_commit": "94af01cca02e362774b8afe6e341aea0819473fe",
+  "observation": "public SDK / submitted GPU geometry / final image",
+  "hashes": {
+    "probe_mesh_cc.py": "8adb2f5c654ad563d9c93432aa52a594c3a3bd2b323367cc10ae57f2e6bd1fcf",
+    "synthetic_model.py": "150c5050759d600f8aba51195c36448da2912fd1e522b50f7193f24f109fba52",
+    "capture.py": "11d809902035aa3efddc05506be3174c0b80a7e5438522a5f01a95307d5eaee7",
+    "capture.cjs": "0e30eaec04e3aa606a7e5a4e42784576312172e54f30daddcf6d31f12aa01393",
+    "reference.html": "976fd4a790efbbd3de3f81dddbc9cbc4eb170bf48236dfbbf54521686552f663",
+    "trace.js": "d56f327215ce3cad61152883c1a7b933127b7a43fb7a635c8c1dcd96a540a044",
+    "/home/chocola/.cache/ms-playwright/chromium-1194/chrome-linux/chrome": "85918a9937192b78da8edb51c38a7af4920ac6bd9ba19939ecb0bb724d5a1a95",
+    "../NekoWebShow/driver/FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+    "../NekoWebShow/driver/emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+  },
+  "phase": "C19 mesh.cc hypotheses",
+  "runtime_support_implemented": false,
+  "capture_exit_code": 1,
+  "captured_cases": 11,
+  "failed_cases": 4,
+  "evidence_directory": "build/evidence/cc-20261014/minimal-final",
+  "exploratory_groups": [
+    {
+      "directory": "build/evidence/cc-20261014/component-curves",
+      "results_sha256": "9f096a823769a8d48cda3e7275c9a19af537efc50afb6bf7f12b04f06af6e76a",
+      "observations": 8,
+      "statuses": {
+        "captured": 1,
+        "capture_failed": 7
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/curve-layout",
+      "results_sha256": "b21e8cdacec8c181042e4bd6dce6d8262d925f360cb032144061e7b526332d96",
+      "observations": 13,
+      "statuses": {
+        "captured": 1,
+        "capture_failed": 12
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/easing-table",
+      "results_sha256": "89a49bf9b0c29cf942c7de99bf3b6b7ad676a3f62d20b9556683ed48142dfcd3",
+      "observations": 16,
+      "statuses": {
+        "capture_failed": 12,
+        "captured": 4
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/exploration",
+      "results_sha256": "b699109790aff114a62bd83d367b06e96abbbb20e0c01822595363bea6befbaf",
+      "observations": 28,
+      "statuses": {
+        "captured": 28
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/interpolation",
+      "results_sha256": "dfbe7fd25ef9a0bfb733a79e218795b3d3538c680d06bd02c20acd3de4216721",
+      "observations": 16,
+      "statuses": {
+        "captured": 4,
+        "capture_failed": 12
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/key-sides",
+      "results_sha256": "4fc096f581074081821ac4fcaef09a6cd29b5cdf23cb10b804973b9f28202a10",
+      "observations": 16,
+      "statuses": {
+        "captured": 8,
+        "capture_failed": 8
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/masks",
+      "results_sha256": "70de798b33b108aabff1555835a43143a94af7fc2de1de715dbc6cc58ac5cac5",
+      "observations": 21,
+      "statuses": {
+        "captured": 21
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/modes",
+      "results_sha256": "e5b4c6c64397e7bc52b252417d24adda2f1faff3c6caaa1bb3a9c342c67821f2",
+      "observations": 20,
+      "statuses": {
+        "captured": 12,
+        "capture_failed": 8
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/nested-layout",
+      "results_sha256": "612e8064d298b743c26512a2dd677db5a99acfa1b2239e82c860b26622777033",
+      "observations": 20,
+      "statuses": {
+        "capture_failed": 20
+      },
+      "accepted_semantics": false
+    },
+    {
+      "directory": "build/evidence/cc-20261014/scalars",
+      "results_sha256": "5bc8ec2bacbd42825d61d632850dc1160d7c40a92cfe5b36967e1241e58b59dc",
+      "observations": 18,
+      "statuses": {
+        "capture_failed": 9,
+        "captured": 9
+      },
+      "accepted_semantics": false
+    }
+  ],
+  "toolkit_crosscheck": {
+    "directory": "build/evidence/cc-20261014/curve-layout/controls-128",
+    "compiler": "refer/Ulysses-FreeMoteToolkit-v4.8.0/PsBuild.exe",
+    "compiler_sha256": "9a14b4b730378c2ef276df917aca44c34872539deb5981c91a5074c981e35fc1",
+    "files": {
+      "model.json": "bd3bbcc0bf23a68936c2439f668e203c98c6f0947bdd3e4a529fb440d30e6d38",
+      "model.psb": "c5f12dc9e672d330c0d9f429fcf66dc24671cb370199e4275fec39bba09c71e9",
+      "model.pure.psb": "3810b3b8c5255e3b99a372a16b3cc23ad60d9c42a5e981d84b47e8a11c2a0f53",
+      "toolkit-observation.failure.json": "793113fb7f805a80c3cdfd6ed25d15589542d1cae7e12817e36d446d9523aff4",
+      "toolkit-observation.failure.trace.json": "f054ca021575989ec5e6c59bfa8f51084c98837b608694aa01f2499f4ff45fa2"
+    },
+    "variables": {
+      "p": 15
+    },
+    "status": "nonfinite_gpu_submission",
+    "position_nonfinite": {
+      "nan": 200,
+      "positiveInfinity": 0,
+      "negativeInfinity": 0
+    },
+    "candidate": "[0,0,1,1] repeated 32 times at both endpoints; BP x warp .3 to -.2; last coord.x=5"
+  },
+  "native_rejection": {
+    "command": [
+      "build/evidence/semantics-20261014/accepted-matrix/bin/nekomote_pose",
+      "--asset",
+      "build/evidence/cc-20261014/native-reject/model.nkm.json",
+      "--variables",
+      "{\"p\":15}",
+      "--output",
+      "build/evidence/cc-20261014/native-reject/geometry.json",
+      "--dump-frame"
+    ],
+    "returncode": 1,
+    "message": "nekomote_pose: test/root/tile: cc deformation is unverified",
+    "binary_sha256": "36aaa16bf67cb019aa3cf4353ba0618d8880e4e896d4f310b8b755d298fba1dc",
+    "asset_sha256": "959b81ee49707b72c97f5e973eb5c96fe93c6f146d615f4521e674c316a8fe9a",
+    "log_sha256": "de23a70c5a73f2e3f72b7e349392bc67c9ff4821382286bceea0604d4c1bdb1f"
+  },
+  "tests": {
+    "python": {
+      "total": 114,
+      "passed": 102,
+      "skipped": 12,
+      "log_sha256": "28bdb445ed2cb1242371ca5a04f0267fa0d61dde83d5d4e1055624e6f981148b"
+    },
+    "node_syntax": [
+      "capture.cjs",
+      "trace.js"
+    ],
+    "cpp_asan_perf": "not repeated: diagnostic tools only; runtime unchanged"
+  },
+  "independent_review": {
+    "agent": "Codex / GPT-6 family (exact variant not exposed)",
+    "task": "/root/semantics_review",
+    "scope": "input isolation, used-vertex NaN counts, artifacts and tool hashes, no shader sources, no semantic acceptance; final report, exploratory/PsBuild hashes, exact normal-case attribute/index/RGBA comparisons",
+    "initial_matrix_reviewed": "build/evidence/cc-20261014/minimal-matrix",
+    "final_matrix": "same inputs and results; generator only gained pre-write JSON overflow validation",
+    "final_matrix_reviewed": "build/evidence/cc-20261014/minimal-final"
+  }
+}

@@ -27,6 +27,22 @@ const fs = require('node:fs');
             ]);
         }
         catch(error) {
+            // Failed/empty output can still explain an invalid procedural input.
+            // Preserve submitted GPU data only; it never becomes a passing reference.
+            if(options.traceGeometry) {
+                let failureTimer;
+                try {
+                    const observation=await Promise.race([
+                        page.evaluate(()=>({trace:window.drawTrace||[],state:window.stateTrace||[]})),
+                        new Promise((_,reject)=>{
+                            failureTimer=setTimeout(()=>reject(new Error('failure observation timed out')),1000);
+                        })
+                    ]);
+                    fs.writeFileSync(options.output+'.failure.trace.json',JSON.stringify(observation,null,2)+'\n');
+                }
+                catch(observationError) {messages.push(String(observationError));}
+                finally {clearTimeout(failureTimer);}
+            }
             fs.writeFileSync(options.output+'.failure.json',JSON.stringify({
                 ...options,error:String(error),console:messages,pageErrors:errors},null,2)+'\n');
             throw new Error(String(error)+'\n'+messages.join('\n'));

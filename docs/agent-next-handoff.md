@@ -1,6 +1,6 @@
 # 当前独立任务交接
 
-C18（2026-10-14）当前交付见 [合成模型求值报告](synthetic-semantics-2026-10-14.md)：51 组程序生成模型、4 组真实回归及2份PsBuild产物通过；下一步优先 cc/其他离散与继承位，不重新推测已验证公式。
+C18（2026-10-14）已提交 `94af01c`，见 [合成模型求值报告](synthetic-semantics-2026-10-14.md)：51 组程序生成模型、4 组真实回归及2份PsBuild产物通过。C19 已尝试 cc，15格最小对照有4组NaN，尚未建立有效布局/公式，正式求值继续拒绝；复现、限定结论与下一步见[cc调查](mesh-cc-investigation-2026-10-14.md)。不重新推测已验证公式。
 
 2026-10-12，C12 基线 `cfed43e`。player、Vulkan ABI 0.6.0、Plasma 双后端已有源码与隔离验收；先读 [当前摘要](review-agents-current.md)、[Plasma 后端](plasma-dual-backend.md)。不要重新实现 G31/G32 或修改已通过的模型公式。
 

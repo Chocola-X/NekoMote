@@ -10,7 +10,7 @@
 | motion.parameter / layer.parameterize | 固定姿态映射已验证 | 线性范围/端点、null 覆盖与组合控制见下文；其他离散化拒绝 |
 | frame.content 缺失/null | 固定姿态已验证 | type=0/无 content 不可见；type=2 hold、type=3 linear；type=1 未验证且选中时拒绝 |
 | mesh.bp | 代表矩阵精度已闭合 | 4×4 双三次 Bézier、域和组合见 30 组证据；不可推广到 cc/所有继承 |
-| mesh.cc | 未验证 | 保留任意数量有限分量，不能假定和 bp 一样为 32 |
+| mesh.cc | 未验证，正式求值拒绝 | 既有有限分量数组仅保留数据；C19左端/插值探针产生NaN，尚无有效布局/公式，见[调查](mesh-cc-investigation-2026-10-14.md) |
 | meshCombine / meshSyncChildMask | 代表 0/1/8 已验证 | 空白变形层与图像层嵌套；需单变量与组合输入实验 |
 | content.mask | 未验证 | 很多非零值对应内容属性存在位，不应直接当成 alpha 遮罩 ID |
 | inheritMask / transformOrder | 代表继承及单边界0x7fc已验证；嵌套/其他未验证位拒绝 | 正式公式与范围见[继承语义](inheritance-semantics.md)，不能直接全部继承父矩阵 |
