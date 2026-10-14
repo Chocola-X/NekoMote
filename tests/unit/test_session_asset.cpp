@@ -42,7 +42,7 @@ Json session_document()
                         {"zones", {"bust", "head"}},
                         {"action", action},
                         {"recovery", action},
-                        {"audio_path", "audio/test/voice.wav"},
+                        {"audio_path", "audio/voice.wav"},
                         {"duration_ticks", 60},
                         {"recovery_ticks", 12},
                         {"beats", {{{"author_tick", 10}, {"action", action}}}}};

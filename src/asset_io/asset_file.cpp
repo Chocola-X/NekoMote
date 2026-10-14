@@ -583,7 +583,7 @@ void write_json(const std::filesystem::path& path, const Json& j)
     std::ofstream stream(path, std::ios::binary);
     if (!stream)
         throw std::runtime_error("cannot create " + path.string());
-    stream << j.dump(2) << '\n';
+    stream << j.dump() << '\n';
     stream.close();
     if (!stream)
         throw std::runtime_error("write failed: " + path.string());

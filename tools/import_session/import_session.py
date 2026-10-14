@@ -135,7 +135,7 @@ process.stdout.write(vm.runInContext('JSON.stringify(getConfig())',context,{time
                     if voice.getcomptype() != 'NONE' or voice.getsampwidth() not in (1, 2, 3, 4):
                         raise ValueError(label + ': unsupported PCM wave format')
                     audio_ticks = math.ceil(voice.getnframes() * 60 / voice.getframerate())
-                audio_path = 'audio/' + label + '.wav'
+                audio_path = 'audio/' + label_path.name + '.wav'
                 destination = args.output.parent / audio_path
                 if not destination.resolve().is_relative_to(args.output.parent.resolve()):
                     raise ValueError(label + ': audio destination escapes session directory')
@@ -158,7 +158,7 @@ process.stdout.write(vm.runInContext('JSON.stringify(getConfig())',context,{time
                    session=dict(model=args.model, interaction=dict(eye=eye, regions=regions),
                                 idle_timeline='差分用_waiting_loop' if '差分用_waiting_loop' in timelines else '',
                                 talk_max=5, reactions=list(reactions.values())))
-    args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False)+'\n')
+    args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=None, allow_nan=False, separators=(',', ':'))+'\n')
     report = dict(model=args.model, source_hashes={str(p.relative_to(root)): sha(p) for p in
                   (catalog_path, source_path, presentation_path, library_path, config_path)},
                   audio_hashes=audio_hashes, reactions=len(reactions), warnings=warnings,
