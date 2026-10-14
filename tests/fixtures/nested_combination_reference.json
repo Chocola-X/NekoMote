@@ -1,0 +1,111 @@
+{
+  "scope": "Final submitted WebGL geometry of independently authored nested exclusions and same-domain meshCombine=1 helpers. Only SDK, GPU geometry/state and images observed. Reproduce synthetic_model.inheritance_model(combined=True, own_curve=..., root_angle=...).",
+  "cases": [
+    {
+      "name": "inherit-combined",
+      "own_curve": false,
+      "root_angle": 0,
+      "source_hashes": {
+        "psb": "82282faa53dac23179d7994f6a868faaefc8a0ca67a946fcbbdc4034ccf0d239",
+        "original_psb": "82282faa53dac23179d7994f6a868faaefc8a0ca67a946fcbbdc4034ccf0d239",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "samples": [
+        {
+          "atlas": [
+            0,
+            0
+          ],
+          "expected": [
+            20.781770706176758,
+            24.598440170288086
+          ]
+        },
+        {
+          "atlas": [
+            32,
+            0
+          ],
+          "expected": [
+            52.781768798828125,
+            22.298439025878906
+          ]
+        },
+        {
+          "atlas": [
+            0,
+            32
+          ],
+          "expected": [
+            20.781770706176758,
+            56.59844207763672
+          ]
+        },
+        {
+          "atlas": [
+            32,
+            32
+          ],
+          "expected": [
+            52.781768798828125,
+            54.298439025878906
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inherit-combined-rotated",
+      "own_curve": true,
+      "root_angle": 17.5,
+      "source_hashes": {
+        "psb": "4cc695f012d5b0101f4515fd07455d2491c9462c9756a1bd2b57f3f7c44ae25b",
+        "original_psb": "4cc695f012d5b0101f4515fd07455d2491c9462c9756a1bd2b57f3f7c44ae25b",
+        "FreeMoteDriver.js": "0e4d2711e15a9a9addcd0599543f8a5d952abffabfc6c3ba1c94ee51d8557dc7",
+        "emoteplayer.js": "2d6b0b146cdf190fba9cea3c0b759b88c713edf3786a51f6f7b11532ffbb6d4d"
+      },
+      "samples": [
+        {
+          "atlas": [
+            0,
+            0
+          ],
+          "expected": [
+            12.693266868591309,
+            29.828201293945312
+          ]
+        },
+        {
+          "atlas": [
+            32,
+            0
+          ],
+          "expected": [
+            41.35232162475586,
+            45.34960174560547
+          ]
+        },
+        {
+          "atlas": [
+            0,
+            32
+          ],
+          "expected": [
+            6.769866943359375,
+            62.08314514160156
+          ]
+        },
+        {
+          "atlas": [
+            32,
+            32
+          ],
+          "expected": [
+            35.06356430053711,
+            78.7633056640625
+          ]
+        }
+      ]
+    }
+  ]
+}

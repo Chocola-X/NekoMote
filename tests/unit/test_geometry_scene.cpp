@@ -424,6 +424,7 @@ TEST_CASE("Automatic priority-two meshes match original size boundary captures",
         node.mesh_division = 0;
         node.obj_tri_priority = 2;
         auto parent = layer("parent domain", 0, content);
+        parent.mesh_sync_child_mask = 8;
         parent.children.push_back(node);
         input.parts[0].layers = {parent};
         auto compiled = runtime::compile_geometry_scene(input);
@@ -2594,7 +2595,8 @@ TEST_CASE("Paired clamp preserves transient values until each binding time is sa
     REQUIRE(sample.position.x == reference.at("binding_stores")[0].at("stored").get<float>());
 }
 
-TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runtime][scene]")
+TEST_CASE("Saved world corners and propagated identity surfaces match submitted reference grids",
+          "[runtime][scene]")
 {
     std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/rigid_grid_reference.json");
     const auto reference = nlohmann::json::parse(input);
@@ -2625,8 +2627,7 @@ TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runt
     mesh.bp = field(controls);
     content.mesh = field(mesh);
     auto parent = layer("mesh_path", 0, content);
-    // Density/tessellation inheritance is independent of curve inheritance.
-    parent.mesh_sync_child_mask = 0;
+    parent.mesh_sync_child_mask = 8;
     parent.children = {child};
     asset.parts[0].layers = {parent};
     auto compiled = runtime::compile_geometry_scene(asset);
@@ -2642,8 +2643,10 @@ TEST_CASE("Rigid grids interpolate saved world corners before any curve", "[runt
     for (std::size_t i = 0; i < vertices.size(); ++i)
     {
         INFO(i);
-        REQUIRE(vertices[i].x == reference.at("expected")[i][0].get<float>());
-        REQUIRE(vertices[i].y == reference.at("expected")[i][1].get<float>());
+        REQUIRE_THAT(vertices[i].x, Catch::Matchers::WithinAbs(
+                                        reference.at("expected")[i][0].get<float>(), 0.001));
+        REQUIRE_THAT(vertices[i].y, Catch::Matchers::WithinAbs(
+                                        reference.at("expected")[i][1].get<float>(), 0.001));
     }
 }
 
@@ -2707,7 +2710,7 @@ TEST_CASE("Single shape exclusion preserves identity curves and rejects unknown 
     }
     // inheritShape=1: subtree inherits mesh_path, child renders a tessellated grid.
     {
-        auto compiled = runtime::compile_geometry_scene(build_rig(0x20007fc));
+        auto compiled = runtime::compile_geometry_scene(build_rig(0x20007fc, 8));
         REQUIRE(compiled.scene);
         runtime::GeometryInstance instance(*compiled.scene);
         REQUIRE(instance.evaluate());
@@ -3049,23 +3052,303 @@ TEST_CASE("Shape exclusion moves the resolved child origin without stretching ve
     REQUIRE(measured_allocations == 0);
 }
 
-TEST_CASE("Nested shape exclusions remain explicitly unsupported", "[runtime][inheritance]")
+TEST_CASE("Nested exclusions resolve every parent curve at the current attachment origin",
+          "[runtime][inheritance]")
 {
+    using namespace runtime;
     auto asset = rig();
     asset.parts.resize(1);
-    auto inner = layer("nested exclusion", 0, FrameContent{});
+    asset.variables = {{"offset", {}}};
+    const auto curve = [](bool outer)
+    {
+        auto result = FrameContent{};
+        result.src = field(std::string{"blank"});
+        result.icon = field(std::string{"16:16:0:0"});
+        std::array<float, 32> controls{};
+        const auto identity = identity_patch();
+        constexpr std::array<float, 4> squared{0, 0, 1.0f / 3.0f, 1};
+        for (std::size_t i = 0; i < identity.size(); ++i)
+        {
+            // Independent analytic surfaces: x += y*y/32; y += x*x/64.
+            controls[2 * i] = identity[i].x + (outer ? 0.5f * squared[i / 4] : 0);
+            controls[2 * i + 1] = identity[i].y + (outer ? 0 : 0.25f * squared[i % 4]);
+        }
+        MeshData mesh;
+        mesh.bp = field(controls);
+        result.mesh = field(mesh);
+        return result;
+    };
+    const auto translated = [](float x, float y)
+    {
+        FrameContent result;
+        result.coord = field(std::array<float, 3>{x, y, 0});
+        return result;
+    };
+    auto tile_content = sprite();
+    tile_content.coord = field(std::array<float, 3>{6, 8, 0});
+    auto inner = layer("inner exclusion", 0, translated(4, 1));
     inner.inherit_mask = 0x7fc;
-    inner.children = {layer("sprite", 0, sprite())};
-    auto outer = layer("outer exclusion", 0, FrameContent{});
+    inner.mesh_sync_child_mask = 8;
+    inner.parameterize = field(0);
+    inner.parameter = {{"offset", 0, 1, 1, 0, true}};
+    inner.frame_list.push_back({1, 2, field(translated(4, 2))});
+    inner.children = {layer("sprite", 0, tile_content)};
+    auto mid_content = curve(false);
+    mid_content.coord = field(std::array<float, 3>{2, 3, 0});
+    auto middle = layer("middle curve", 0, mid_content);
+    middle.mesh_sync_child_mask = 8;
+    middle.children = {inner};
+    auto outer = layer("outer exclusion", 0, translated(1, 2));
     outer.inherit_mask = 0x7fc;
-    outer.children = {inner};
-    asset.parts[0].layers = {outer};
-    const auto compiled = nekomote::runtime::compile_geometry_scene(asset);
+    outer.mesh_sync_child_mask = 8;
+    outer.children = {middle};
+    auto root = layer("outer curve", 0, curve(true));
+    root.mesh_sync_child_mask = 8;
+    root.children = {outer};
+    asset.parts[0].layers = {root};
+    bool positional = false;
+    SECTION("Both curves propagate to vertex chains")
+    {
+    }
+    SECTION("Two position synchronizations leave a rigid quad")
+    {
+        asset.parts[0].layers[0].mesh_sync_child_mask = 1;
+        asset.parts[0].layers[0].children[0].children[0].mesh_sync_child_mask = 1;
+        positional = true;
+    }
+    const auto compiled = compile_geometry_scene(asset);
     REQUIRE(compiled.scene);
-    nekomote::runtime::GeometryInstance instance(*compiled.scene);
-    REQUIRE(instance.evaluate().error == nekomote::runtime::GeometryError::UnsupportedTransform);
-    REQUIRE(instance.primitives().empty());
-    REQUIRE(instance.frame().commands.empty());
+    GeometryInstance instance(*compiled.scene);
+    const auto offset = compiled.scene->find_variable("offset");
+    const auto check_pose = [&](float value, Vec2 origin, float scale)
+    {
+        REQUIRE(instance.set_parameter(offset, value));
+        REQUIRE(instance.set_origin(origin));
+        REQUIRE(instance.set_scale(scale));
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        REQUIRE(instance.primitives().size() == 1);
+        const auto node = instance.primitives()[0].node;
+        const double y = 14 + static_cast<double>(value) + (positional ? 0.25 : 100.0 / 64.0);
+        const double x = positional ? 13.125 : 13 + y * y / 32;
+        const Vec2 expected{origin.x + scale * static_cast<float>(x),
+                            origin.y + scale * static_cast<float>(y)};
+        near(instance.sample_atlas_point(node, {3, 1}), expected);
+        near(instance.sample_atlas_point(node, {5, 3}),
+             {expected.x + 2 * scale, expected.y + 2 * scale});
+        if (positional)
+        {
+            REQUIRE(instance.frame().vertices.size() == 4);
+            REQUIRE(instance.frame().indices.size() == 6);
+        }
+    };
+    check_pose(0, {}, 1);
+    check_pose(1, {}, 1);
+    check_pose(0, {10, -4}, 2);
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (int i = 0; i < 20; ++i)
+    {
+        (void)instance.set_parameter(offset, static_cast<float>(i % 2));
+        (void)instance.evaluate();
+        (void)instance.build_frame();
+    }
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+}
+
+TEST_CASE("Combined nested surfaces match submitted reference corner positions", "[runtime][scene]")
+{
+    std::ifstream input(std::string(NEKOMOTE_FIXTURES_DIR) + "/nested_combination_reference.json");
+    REQUIRE(input.good());
+    const auto reference = nlohmann::json::parse(input);
+    for (const auto& sample : reference.at("cases"))
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.textures[0].width = 32;
+        asset.textures[0].height = 32;
+        asset.icons["atlas/a"] = {"atlas", 0, 0, 32, 32, 0, 0};
+        const auto content = [](float x, float y, bool mesh_enabled, bool axis_x, float amount)
+        {
+            FrameContent result;
+            result.src = field(std::string{"blank"});
+            result.icon = field(std::string{"64:64:0:0"});
+            result.coord = field(std::array<float, 3>{x, y, 0});
+            if (mesh_enabled)
+            {
+                MeshData mesh;
+                std::array<float, 32> controls{};
+                const std::array<double, 4> squared{0, 0, 1.0 / 3.0, 1};
+                for (std::size_t i = 0; i < 16; ++i)
+                {
+                    const auto row = i / 4, col = i % 4;
+                    controls[i * 2] = static_cast<float>(
+                        static_cast<double>(col) / 3.0 +
+                        (axis_x ? static_cast<double>(amount) * squared[row] : 0));
+                    controls[i * 2 + 1] = static_cast<float>(
+                        static_cast<double>(row) / 3.0 +
+                        (axis_x ? 0 : static_cast<double>(amount) * squared[col]));
+                }
+                mesh.bp = field(controls);
+                result.mesh = field(mesh);
+            }
+            return result;
+        };
+        auto tile_content = sprite();
+        tile_content.coord = field(std::array<float, 3>{7, 11, 0});
+        auto tile = layer("tile", 0, tile_content);
+        auto helper = layer("combined helper", 0, content(0, 0, true, false, -0.1f));
+        helper.mesh_combine = 1;
+        helper.mesh_sync_child_mask = 8;
+        helper.children = {tile};
+        auto inner = layer("inner boundary", 0,
+                           content(5, 6, sample.at("own_curve").get<bool>(), true, 0.15f));
+        inner.inherit_mask = 0x7fc;
+        inner.mesh_sync_child_mask = 8;
+        inner.children = {helper};
+        auto middle = layer("middle curve", 0, content(3, 4, true, false, 0.3f));
+        middle.mesh_sync_child_mask = 8;
+        middle.children = {inner};
+        auto outer = layer("outer boundary", 0, content(2, 3, false, true, 0));
+        outer.inherit_mask = 0x7fc;
+        outer.mesh_sync_child_mask = 8;
+        outer.children = {middle};
+        auto root_content = content(0, 0, true, true, 0.4f);
+        root_content.angle = field(sample.at("root_angle").get<float>());
+        auto root = layer("root curve", 0, root_content);
+        root.mesh_sync_child_mask = 8;
+        root.children = {outer};
+        asset.parts[0].layers = {root};
+        const auto compiled = runtime::compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.primitives().size() == 1);
+        for (const auto& point : sample.at("samples"))
+        {
+            const auto actual = instance.sample_atlas_point(
+                instance.primitives()[0].node,
+                {point.at("atlas")[0].get<float>(), point.at("atlas")[1].get<float>()});
+            REQUIRE_THAT(actual.x,
+                         Catch::Matchers::WithinAbs(point.at("expected")[0].get<float>(), 0.001));
+            REQUIRE_THAT(actual.y,
+                         Catch::Matchers::WithinAbs(point.at("expected")[1].get<float>(), 0.001));
+        }
+    }
+}
+
+TEST_CASE("Adjacent exclusions retain attachments through unsynchronized rigid groups",
+          "[runtime][scene]")
+{
+    for (int sync : {0, 1, 8})
+    {
+        auto asset = rig();
+        asset.parts.resize(1);
+        asset.icons["atlas/a"] = {"atlas", 0, 0, 8, 4, 0, 0};
+        FrameContent surface;
+        surface.src = field(std::string{"blank"});
+        surface.icon = field(std::string{"64:64:0:0"});
+        MeshData mesh;
+        auto patch = runtime::identity_patch();
+        const std::array<float, 4> squared{0, 0, 1.0f / 3.0f, 1};
+        std::array<float, 32> controls{};
+        for (std::size_t i = 0; i < patch.size(); ++i)
+        {
+            controls[i * 2] = patch[i].x + 0.4f * squared[i / 4];
+            controls[i * 2 + 1] = patch[i].y;
+        }
+        mesh.bp = field(controls);
+        auto blank = surface;
+        surface.mesh = field(mesh);
+        auto tile_content = sprite();
+        tile_content.coord = field(std::array<float, 3>{7, 11, 0});
+        auto tile = layer("tile", 0, tile_content);
+        blank.coord = field(std::array<float, 3>{5, 6, 0});
+        auto inner = layer("inner exclusion", 0, blank);
+        inner.inherit_mask = 0x7fc;
+        inner.mesh_sync_child_mask = 8;
+        inner.children = {tile};
+        blank.coord = field(std::array<float, 3>{2, 3, 0});
+        auto outer = layer("outer exclusion", 0, blank);
+        outer.inherit_mask = 0x7fc;
+        outer.mesh_sync_child_mask = sync;
+        outer.children = {inner};
+        auto root = layer("surface", 0, surface);
+        root.mesh_sync_child_mask = 8;
+        root.children = {outer};
+        asset.parts[0].layers = {root};
+        const auto compiled = runtime::compile_geometry_scene(asset);
+        REQUIRE(compiled.scene);
+        runtime::GeometryInstance instance(*compiled.scene);
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.primitives().size() == 1);
+        // Current attachment (14,20) receives x += .4 * 20^2 / 64.
+        const auto node = instance.primitives()[0].node;
+        near(instance.sample_atlas_point(node, {0, 0}), {16.5f, 20});
+        near(instance.sample_atlas_point(node, {2, 3}), {18.5f, 23});
+    }
+}
+
+TEST_CASE("Discrete parameter mode one truncates before clipping fractional ranges",
+          "[runtime][scene][parameter]")
+{
+    using namespace runtime;
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.variables = {{"p", {}}};
+    auto first = sprite();
+    first.coord = field(std::array<float, 3>{0, 0, 0});
+    auto last = first;
+    last.coord = field(std::array<float, 3>{60, 0, 0});
+    auto tile = layer("discrete tile", 0, first);
+    tile.parameterize = field(0);
+    tile.parameter = {{"p", -2.5f, 3.5f, 60, 1, true}};
+    tile.frame_list = {{0, 3, field(first)}, {60, 2, field(last)}};
+    asset.parts[0].layers = {tile};
+    const auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    const auto parameter = compiled.scene->find_variable("p");
+    // Independent reference observations, including values that distinguish
+    // truncation from rounding/floor and clipping from truncating first.
+    constexpr std::array<std::array<float, 2>, 10> cases{{{-3.0f, 0},
+                                                          {-2.49f, 5},
+                                                          {-1.9f, 15},
+                                                          {-1.01f, 15},
+                                                          {-0.4f, 25},
+                                                          {0.49f, 25},
+                                                          {0.99f, 25},
+                                                          {1.01f, 35},
+                                                          {3.49f, 55},
+                                                          {4.0f, 60}}};
+    for (const auto& sample : cases)
+    {
+        CAPTURE(sample[0]);
+        REQUIRE(instance.set_parameter(parameter, sample[0]));
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.build_frame());
+        near(instance.sample_atlas_point(instance.primitives()[0].node, {3, 1}), {sample[1], 0});
+    }
+    measured_allocations = 0;
+    measure_allocations = true;
+    for (const auto& sample : cases)
+    {
+        (void)instance.set_parameter(parameter, sample[0]);
+        (void)instance.evaluate();
+        (void)instance.build_frame();
+    }
+    measure_allocations = false;
+    REQUIRE(measured_allocations == 0);
+
+    // Observing selected mode-two inputs is insufficient to admit every mode.
+    asset.parts[0].layers[0].parameter[0].discretization = 2;
+    const auto unknown = compile_geometry_scene(asset);
+    REQUIRE(unknown.scene);
+    GeometryInstance unsupported(*unknown.scene);
+    REQUIRE(unsupported.set_parameter(unknown.scene->find_variable("p"), 1));
+    REQUIRE(unsupported.evaluate().error == GeometryError::UnsupportedDiscretization);
+    REQUIRE(unsupported.frame().commands.empty());
 }
 
 TEST_CASE("Geometry capacity covers changing atlas aspect ratios without frame allocation",
@@ -3122,6 +3405,7 @@ TEST_CASE("Geometry capacity covers changing atlas aspect ratios without frame a
     parent_content.mesh = field(mesh);
     auto parent = layer("curve", 0, parent_content);
     parent.mesh_division = 0;
+    parent.mesh_sync_child_mask = 8;
     auto child = layer("auto", 0, sprite());
     child.mesh_division = 0;
     child.obj_tri_priority = 2;

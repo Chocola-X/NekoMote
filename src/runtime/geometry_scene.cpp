@@ -75,7 +75,7 @@ struct Node
     float maximum_density{0};
     bool combine{false}, unsupported{false}, has_sprites{false}, mask_source{false};
     bool exported_locator{false}, partial_locator_origin{false}, neutral_locator_origin{false};
-    bool inherit_shape{true}, partial_shape_path{false};
+    bool inherit_shape{true};
 };
 struct Clamp
 {
@@ -280,8 +280,6 @@ struct Compiler
         n.combine = layer.mesh_combine == 1;
         n.child_sync = layer.mesh_sync_child_mask;
         n.inherit_shape = (layer.inherit_mask & 0x2000000) != 0;
-        const bool parent_partial_shape = data.nodes[parent.value].partial_shape_path;
-        n.partial_shape_path = parent_partial_shape || !n.inherit_shape;
         const bool unsupported_common =
             layer.coordinate != 0 || (layer.mesh_transform != 0 && layer.mesh_transform != 1) ||
             (layer.mesh_combine != 0 && layer.mesh_combine != 1) ||
@@ -291,12 +289,12 @@ struct Compiler
              layer.transform_order != std::vector<int>{0, 3, 2, 1});
         n.partial_locator_origin =
             !unsupported_common && n.exported_locator && layer.inherit_mask == 0x200020c;
-        // Single shape exclusion follows the resolved child origin, preserving
-        // its own curves; see docs/inheritance-semantics.md. Nested exclusions
-        // still lack reference evidence and remain explicitly unsupported.
-        n.unsupported = unsupported_common || (!n.inherit_shape && parent_partial_shape) ||
-                        (layer.inherit_mask != 0x20007fc && layer.inherit_mask != 0x7fc &&
-                         !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
+        // Shape exclusions follow the resolved child origin, preserving its own
+        // curves; nested boundaries are verified by procedural source fixtures.
+        // See docs/synthetic-semantics-2026-10-14.md.
+        n.unsupported =
+            unsupported_common || (layer.inherit_mask != 0x20007fc && layer.inherit_mask != 0x7fc &&
+                                   !(layer.type == 12 && layer.inherit_mask == 0x24007fc));
         const auto binding =
             layer.parameterize.has_value() ? layer.parameterize : part.parameterize;
         const auto& parameters = layer.parameter.empty() ? part.parameter : layer.parameter;
@@ -378,7 +376,7 @@ struct State
     Vec2 domain_corner{}, attachment_offset{};
     std::array<float, 4> domain_inverse{};
     float depth{0}, opacity{0};
-    bool mesh_path{false};
+    bool mesh_path{false}, inherited_mesh_path{false};
     bool branch_selected{false};
     float density{0};
 };
@@ -780,6 +778,18 @@ struct GeometryInstance::Impl
             p = p + states[start.value].attachment_offset;
         return p;
     }
+    Vec2 deform_attachment(NodeId start, Vec2 p) const noexcept
+    {
+        // Each exclusion ends one vertex-curve chain. For an attachment,
+        // evaluate the remaining chains at this resolved origin, rather than
+        // borrowing an ancestor's displacement cached at its own origin.
+        while (start.valid())
+        {
+            p = deform_curves(start, p);
+            start = states[start.value].excluded_curve;
+        }
+        return p;
+    }
     static Vec2 warp(const State& s, Vec2 p) noexcept
     {
         const double x = static_cast<double>(p.x) - static_cast<double>(s.domain_corner.x);
@@ -884,9 +894,14 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         float time = 0;
         if (n.binding.variable.valid() && n.binding.enabled)
         {
-            const double value = instance.parameters[n.binding.variable.value];
-            if (n.binding.discretization != 0 && value != std::floor(value))
+            double value = instance.parameters[n.binding.variable.value];
+            if (n.binding.discretization != 0 && n.binding.discretization != 1)
                 return {GeometryError::UnsupportedDiscretization, id, n.binding.variable};
+            // Mode one truncates the authored variable before range clipping,
+            // including negative values and fractional range endpoints.
+            // See docs/synthetic-semantics-2026-10-14.md.
+            if (n.binding.discretization == 1)
+                value = std::trunc(value);
             if (n.binding.end > n.binding.begin)
                 time = static_cast<float>(
                     (static_cast<double>(std::clamp(value, static_cast<double>(n.binding.begin),
@@ -920,12 +935,12 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         if (r.kind == ResourceKind::Sprite && r.rect.attr != 0 && r.rect.attr != 1 &&
             r.rect.attr != 2)
             return {GeometryError::UnsupportedTransform, id, {}};
-        state.mesh_path = state.pose.mesh || parent.mesh_path;
         state.density = parent.density;
         if (state.pose.mesh && r.rect.width > 0 && n.division > 0)
             state.density = std::max(state.density, static_cast<float>(n.division) /
                                                         (r.rect.width + r.rect.height));
         const auto& parent_domain = scene.resources[parent.transform.resource.value];
+        bool combined = false;
         if (n.combine && n.parent.valid() && same_domain(r, parent_domain))
         {
             if (state.pose.translation != Vec2{} || state.pose.angle_degrees != 0)
@@ -933,7 +948,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             // A position-synchronized parent has already changed the helper's
             // rigid origin. Its patch must not also be added to the helper.
             // Source captures: docs/validation/p6-child-synchronization.json.
-            if (parent.child_sync != 1)
+            if (parent.transform.mesh && parent.child_sync != 1)
             {
                 state.transform = parent.transform;
                 state.child_sync = parent.child_sync;
@@ -948,6 +963,7 @@ GeometryStatus GeometryInstance::evaluate() noexcept
                                            instance.states[ancestor.value].pose.patch);
                 state.transform.mesh = state.transform.mesh || state.pose.mesh;
                 state.transform_parent = parent.transform_parent;
+                combined = true;
             }
         }
         // Rigid parents accumulate before any curve. Curves are evaluated in
@@ -973,18 +989,32 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             local = {cosine, sine, -sine, cosine, state.transform.translation};
         }
         const auto& transform_parent = instance.states[state.transform_parent.value];
+        // Position synchronization consumes this parent's own curve at the
+        // child origin; it does not introduce a vertex curve or subdivision.
+        // Curves already inherited from earlier ancestors still propagate.
+        state.inherited_mesh_path =
+            transform_parent.inherited_mesh_path ||
+            (transform_parent.child_sync == 8 && transform_parent.transform.mesh);
+        state.mesh_path = state.transform.mesh || state.inherited_mesh_path;
         state.world = compose(transform_parent.world, local);
-        state.excluded_curve = parent.excluded_curve;
+        // A combined helper replaces its parent's surface and resolves its
+        // own inheritance against the parent's transform ancestor. A rigid
+        // parent without a surface cannot be combined away.
+        state.excluded_curve = combined ? transform_parent.excluded_curve : parent.excluded_curve;
+        const auto inherited_curve = transform_parent.child_sync == 8
+                                         ? state.transform_parent
+                                         : transform_parent.curve_parent;
         if (!n.inherit_shape)
         {
-            state.excluded_curve = transform_parent.child_sync == 8 ? state.transform_parent
-                                                                    : transform_parent.curve_parent;
+            // If no new vertex chain reaches this boundary, the earlier
+            // excluded attachment chain still applies (adjacent sync 0/1).
+            if (inherited_curve.valid())
+                state.excluded_curve = inherited_curve;
             state.curve_parent = NodeId{};
         }
         else
         {
-            state.curve_parent = transform_parent.child_sync == 8 ? state.transform_parent
-                                                                  : transform_parent.curve_parent;
+            state.curve_parent = inherited_curve;
         }
         // Mask one bends the direct child origin, leaving its geometry rigid.
         // Mask eight retains the curve in the descendant vertex chain.
@@ -1043,7 +1073,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             // Cache per evaluation, after controls are ready, to avoid extra per-vertex
             // traversals. Parameter/output changes rebuild this state each evaluation.
             const auto anchor = instance.deform_curves(id, state.world.translation);
-            state.attachment_offset = instance.deform(state.excluded_curve, anchor) - anchor;
+            state.attachment_offset =
+                instance.deform_attachment(state.excluded_curve, anchor) - anchor;
         }
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)

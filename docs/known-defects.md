@@ -4,7 +4,7 @@
 
 | 范围 | 当前缺口 | 负责人/任务 |
 | --- | --- | --- |
-| 求值/精度 | 3个bust_LR20仍FAIL待诊断；未验证嵌套/其他继承语义继续拒绝；两镜像外力标量反例和非零X快照对照未闭合 | Codex C8；[正式继承](inheritance-semantics.md)、标量原始记录（已归档） |
+| 求值/精度 | 3个bust_LR20仍FAIL待诊断；嵌套0x7fc与discretization1已由[C18](synthetic-semantics-2026-10-14.md)闭合；cc、其他离散/继承及frame.type1继续拒绝；两镜像外力标量反例和非零X快照对照未闭合 | Codex C8；[正式继承](inheritance-semantics.md)、标量原始记录（已归档） |
 | 资源/线程 | Controller 已有候选/就绪契约；高层 result ABI 异常与 GPU 替换已补修；CPU Controller 配置保存失败事务、意外上下文丢失与驱动故障仍待复核。未做 TSan 或驱动故障注入 | Codex抽核；后续TSan在确有需要时另做 |
 | 服务与时间 | ABI 已接入声音；面板静音只改配置、未联动当前设备；角色渐变使用墙钟，暂停/恢复与 reset/重入未闭合。Plasma 帧率选择和 60 FPS 默认值已接线，仍需真实桌面验收 | Codex复核；长期运行验收 |
 | 触摸/UI | player 与 WallpaperInstance 仍分别构建面板业务；本轮 Qt 输入/绘图通过不代表所有控件有效。触摸候选不应用，逐型号区域与动态姿态待验收 | Gemini按共享UI与有效证据观察；G28/V19后续结果待范围复核 |

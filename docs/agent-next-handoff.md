@@ -1,5 +1,7 @@
 # 当前独立任务交接
 
+C18（2026-10-14）当前交付见 [合成模型求值报告](synthetic-semantics-2026-10-14.md)：51 组程序生成模型、4 组真实回归及2份PsBuild产物通过；下一步优先 cc/其他离散与继承位，不重新推测已验证公式。
+
 2026-10-12，C12 基线 `cfed43e`。player、Vulkan ABI 0.6.0、Plasma 双后端已有源码与隔离验收；先读 [当前摘要](review-agents-current.md)、[Plasma 后端](plasma-dual-backend.md)。不要重新实现 G31/G32 或修改已通过的模型公式。
 
 ## GLM：G34 重复几何编译消除（当前优先）
@@ -28,7 +30,7 @@ C13 优化之后接手，输入与验收按 [优化建议](optimization-suggesti
 
 ## Codex 保留项
 
-复核基线包与跨模块改动；Qt 非 OpenGL 场景图、意外 device/context loss、角色渐变预算和 CPU 配置保存失败事务仍未闭合。面板/FPS/声音收拢另需明确契约后再分派；不让 GLM 重新猜测同步或模型语义。C8 的 3 bust_LR20、嵌套/2 标量继续保留，触摸候选不应用。
+复核基线包与跨模块改动；Qt 非 OpenGL 场景图、意外 device/context loss、角色渐变预算和 CPU 配置保存失败事务仍未闭合。面板/FPS/声音收拢另需明确契约后再分派；不让 GLM 重新猜测同步或模型语义。C18 已验证嵌套0x7fc和离散mode1，见[合成语义](synthetic-semantics-2026-10-14.md)；C8 的 3 bust_LR20、2 标量继续保留，触摸候选不应用。
 
 GPU 用 `build/gpu-validation.lock` 串行，冻结二进制/hash/输入；外部素材只读。每阶段验证后提交，填写真实 Agent/Model/Context；未执行、候选与 PASS 分开。
 

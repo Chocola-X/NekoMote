@@ -16,11 +16,14 @@ from psb_fixture import make_fixture
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--reference-root', type=pathlib.Path, required=True)
-    parser.add_argument('--model', required=True)
+    parser.add_argument('--model', help='model label in the external reference catalog')
+    parser.add_argument('--psb', type=pathlib.Path,
+                        help='explicit diagnostic PSB; bypasses the external model catalog')
     parser.add_argument('--browser', type=pathlib.Path, required=True)
     parser.add_argument('--output', type=pathlib.Path, required=True)
     parser.add_argument('--width', type=int, default=800)
     parser.add_argument('--height', type=int, default=1080)
+    parser.add_argument('--capture-timeout-ms', type=int, default=60000)
     parser.add_argument('--x', type=float, default=0)
     parser.add_argument('--y', type=float, default=400)
     parser.add_argument('--opacity', type=float, default=1)
@@ -28,6 +31,8 @@ def main():
     parser.add_argument('--variables', type=json.loads, default={})
     parser.add_argument('--isolate-icon', help='diagnostic filtering of original driver draw calls')
     parser.add_argument('--trace', action='store_true')
+    parser.add_argument('--trace-geometry', action='store_true',
+                        help='observe submitted GPU geometry/state without reading shader sources')
     parser.add_argument('--trace-atlas-hashes', action='store_true',
                         help='diagnostic SHA-256 of published RGBA8 texture upload bytes')
     parser.add_argument('--trace-mask-pixels', action='store_true', help='diagnostic mask readback; not for benchmarks')
@@ -101,6 +106,19 @@ def main():
     parser.add_argument('--sample-variables', action='store_true',
                         help='record all original variables before and after each fixed update')
     args = parser.parse_args()
+    if not 1000 <= args.capture_timeout_ms <= 600000:
+        parser.error('--capture-timeout-ms must be in 1000..600000')
+    if bool(args.model) == bool(args.psb):
+        parser.error('choose exactly one of --model or --psb')
+    if args.psb:
+        if args.isolate_icon:
+            parser.error('--isolate-icon requires a catalog model')
+        args.model = args.psb.stem
+    if args.trace_geometry:
+        if any((args.trace_math, args.trace_float_stores, args.trace_integer_stores,
+                args.trace_random, args.trace_clock)):
+            parser.error('--trace-geometry cannot be combined with internal execution observers')
+        args.trace = True
     if args.trace_integer_reads and not args.trace_integer_stores:
         parser.error('--trace-integer-reads requires --trace-integer-stores')
     if args.trace_integer_index and (not args.trace_integer_stores or
@@ -235,12 +253,15 @@ def main():
             not 0 < args.width <= 16384 or not 0 < args.height <= 16384:
         parser.error('invalid finite output dimensions, placement, scale or opacity')
     root = args.reference_root.resolve()
-    archive = root / 'data' / (args.model + '.pure.psb.zip')
-    with zipfile.ZipFile(archive) as z:
-        names = [n for n in z.namelist() if n.endswith('.psb')]
-        if len(names) != 1:
-            raise ValueError('expected exactly one PSB')
-        psb = z.read(names[0])
+    if args.psb:
+        psb = args.psb.read_bytes()
+    else:
+        archive = root / 'data' / (args.model + '.pure.psb.zip')
+        with zipfile.ZipFile(archive) as z:
+            names = [n for n in z.namelist() if n.endswith('.psb')]
+            if len(names) != 1:
+                raise ValueError('expected exactly one PSB')
+            psb = z.read(names[0])
     original_psb_hash = hashlib.sha256(psb).hexdigest()
     edits = []
     sizes = {}
@@ -257,6 +278,9 @@ def main():
                                  references=args.fixture_references)
     here = pathlib.Path(__file__).resolve().parent
     html = (here / 'reference.html').read_text()
+    if args.trace_geometry:
+        html = html.replace('window.traceAtlasHashes=false;',
+                            'window.omitShaderSources=true;\nwindow.traceAtlasHashes=false;')
     if args.trace_atlas_hashes:
         html = html.replace('window.traceAtlasHashes=false;', 'window.traceAtlasHashes=true;')
     if args.fixed_clock_ms is not None:
@@ -297,8 +321,10 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     options = dict(model=args.model, browser=str(args.browser.resolve()), output=str(args.output.resolve()),
+                   captureTimeoutMs=args.capture_timeout_ms,
                    width=args.width, height=args.height, x=args.x, y=args.y, scale=args.scale, opacity=args.opacity,
-                   variables=args.variables, trace=args.trace, traceAtlasHashes=args.trace_atlas_hashes,
+                   variables=args.variables, trace=args.trace, traceGeometry=args.trace_geometry,
+                   traceAtlasHashes=args.trace_atlas_hashes,
                    traceMaskPixels=args.trace_mask_pixels, traceMath=args.trace_math, steps=args.steps, stepFrames=args.step_frames,
                    traceMathStep=args.trace_math_step,
                    traceFloatStores=args.trace_float_stores, traceFloatStack=args.trace_float_stack,

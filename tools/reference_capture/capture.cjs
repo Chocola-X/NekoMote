@@ -7,11 +7,31 @@ const fs = require('node:fs');
     try {
         const page=await browser.newPage({viewport:{width:options.width,height:options.height},deviceScaleFactor:1});
         const errors=[];
+        const messages=[];
         page.on('pageerror',error=>errors.push(String(error)));
-        page.on('console',message=>{if(message.type()==='error') errors.push(message.text());});
+        page.on('console',message=>{
+            if(messages.length<100) messages.push(message.type()+': '+message.text());
+            if(message.type()==='error') errors.push(message.text());
+        });
         await page.goto(options.url,{waitUntil:'load',timeout:60000});
         await page.waitForFunction(()=>window.ready,{timeout:60000});
-        const result=await page.evaluate(options=>window.capture(options),options);
+        let result;
+        let captureTimer;
+        try {
+            result=await Promise.race([
+                page.evaluate(options=>window.capture(options),options),
+                new Promise((_,reject)=>{
+                    captureTimer=setTimeout(()=>reject(new Error('reference capture timed out')),
+                                            options.captureTimeoutMs||60000);
+                })
+            ]);
+        }
+        catch(error) {
+            fs.writeFileSync(options.output+'.failure.json',JSON.stringify({
+                ...options,error:String(error),console:messages,pageErrors:errors},null,2)+'\n');
+            throw new Error(String(error)+'\n'+messages.join('\n'));
+        }
+        finally {clearTimeout(captureTimer);}
         if (result.metadata.glError) throw new Error('WebGL error: '+result.metadata.glError);
         if (errors.length) throw new Error(errors.join('\n'));
         fs.writeFileSync(options.output+'.png',Buffer.from(result.png.split(',')[1],'base64'));

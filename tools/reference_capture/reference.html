@@ -162,7 +162,9 @@ window.capture = async function(options) {
     canvas.width = options.width; canvas.height = options.height;
     EmotePlayer.setRenderCanvas(canvas);
     const player = new EmotePlayer(canvas);
+    console.info('reference phase: load model');
     player.loadData(new Uint8Array(await (await fetch('/model.psb')).arrayBuffer()));
+    console.info('reference phase: model loaded');
     const device = EmotePlayer.device;
     const gl = device.gl;
     const id = player.playerId;
@@ -274,7 +276,9 @@ window.capture = async function(options) {
     window.traceEnabled=options.trace;
     window.traceMaskPixels=options.traceMaskPixels;
     window.isolateRect=options.isolateRect;
+    console.info('reference phase: draw');
     device.drawAnimation(0);
+    console.info('reference phase: draw complete');
     window.traceEnabled=false;
     window.traceMath=false;
     window.traceFloatStores=false;
