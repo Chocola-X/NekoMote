@@ -62,6 +62,12 @@ C18（2026-10-14）从 `693fd3f` 以程序生成模型和原 WebGL 输出补齐 
 
 ### 0.5 新 Agent 从哪里开始
 
+2026-10-15 L1 已从 `98d0075` 实现 `adapters/layer_shell/`：独立 Wayland/EGL/GL 壳，
+复用高层壁纸 C ABI，新增每实例配置路径能力，不调整模型求值或渲染公式。
+Release/LTO 与隔离 KWin 客户端验证见 [说明](docs/layer-shell.md)；目标合成器实机、
+最终合成像素、真实输入、热插拔与长期仍待验收，不把源码支持等同实际覆盖。
+该目标默认关闭，不加入现有五份 Release 包；不要为验证安装新桌面或修改用户会话。
+
 1. 先理解本节项目目标，再阅读其余规范和 [ROADMAP.md](ROADMAP.md)。
 2. 检查 Git 状态、实际源码、阶段交接记录和用户最新要求，确认当前阶段。
 3. 用户已确认 Plasma 初步接入正常；player 双栈已交付；当前 Plasma 双后端和分发状态先读 [接入与验收](docs/plasma-dual-backend.md)、[基线分发](docs/plasma-distribution.md)。G31/G32 已有实现，不重新抽取。GLM 后续承担明确契约的面板/服务收拢和批量验证，Gemini 检查固定条件画面，Codex 复核边界/线程/语义。有效任务见 [清单](docs/agent-workboard.md)，原 G31 专项交接保留为架构验收要求。

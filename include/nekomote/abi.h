@@ -455,6 +455,16 @@ extern "C"
                                                     nekomote_vk_target target);
 
     /* Setup */
+    /* Optional per-instance configuration storage. Copies path (resolved against
+     * the current directory) and does no I/O until set_assets_dir. NULL, empty
+     * paths and directory-only paths are invalid. May be replaced before the
+     * first set_assets_dir call; later calls return BUSY, even if asset setup
+     * failed. Explicit storage never falls back to assets/XDG storage. Asset
+     * setup creates missing parents when saving is enabled and returns IO for
+     * unusable storage. With no_save enabled, read-only/missing storage is
+     * allowed without creating directories. Re-enabling saves validates it.
+     * Omit this call to retain the default assets/XDG configuration location. */
+    nekomote_error nekomote_wallpaper_set_config_path(nekomote_wallpaper* wp, const char* path);
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
     nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
     nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted);

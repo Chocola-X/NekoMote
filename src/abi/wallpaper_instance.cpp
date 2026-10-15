@@ -90,8 +90,58 @@ WallpaperInstance::~WallpaperInstance()
     reset_gpu_resources();
 }
 
+nekomote_error WallpaperInstance::set_config_path(const std::filesystem::path& path)
+{
+    if (path.empty() || !path.has_filename() || path.filename() == "." || path.filename() == "..")
+    {
+        set_error(NEKOMOTE_ERROR_INVALID_INPUT, "config path must name a file");
+        return NEKOMOTE_ERROR_INVALID_INPUT;
+    }
+    if (config_path_locked_)
+    {
+        set_error(NEKOMOTE_ERROR_BUSY, "config path is locked after asset setup begins");
+        return NEKOMOTE_ERROR_BUSY;
+    }
+    std::error_code ec;
+    auto resolved = std::filesystem::absolute(path, ec);
+    if (ec)
+    {
+        set_error(NEKOMOTE_ERROR_IO, "cannot resolve config path");
+        return NEKOMOTE_ERROR_IO;
+    }
+    config_path_override_ = std::move(resolved);
+    return NEKOMOTE_OK;
+}
+
+nekomote_error WallpaperInstance::prepare_config_storage(bool saving)
+{
+    const auto fail = [&]
+    {
+        error_string_ = "unusable config storage: " + config_path_override_.string();
+        set_error(NEKOMOTE_ERROR_IO, error_string_.c_str());
+        return NEKOMOTE_ERROR_IO;
+    };
+    std::error_code ec;
+    const bool exists = std::filesystem::exists(config_path_override_, ec);
+    if (ec ||
+        (exists && (!std::filesystem::is_regular_file(config_path_override_, ec) || ec ||
+                    ::faccessat(AT_FDCWD, config_path_override_.c_str(), R_OK, AT_EACCESS) != 0)))
+        return fail();
+    if (!saving)
+        return NEKOMOTE_OK;
+    // Config persistence writes a sibling temporary and renames it atomically.
+    // Writable file permissions alone do not make the storage usable.
+    const auto parent = config_path_override_.parent_path();
+    std::filesystem::create_directories(parent, ec);
+    if (ec || ::faccessat(AT_FDCWD, parent.c_str(), W_OK | X_OK, AT_EACCESS) != 0 ||
+        (exists && ::faccessat(AT_FDCWD, config_path_override_.c_str(), W_OK, AT_EACCESS) != 0))
+        return fail();
+    return NEKOMOTE_OK;
+}
+
 nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& dir)
 {
+    config_path_locked_ = true;
     assets_dir_ = dir;
     if (!controller_.scan_assets(dir))
     {
@@ -101,6 +151,14 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     }
     assets_scanned_ = true;
     auto config_path = dir / "config.json";
+    if (!config_path_override_.empty())
+    {
+        const auto result = prepare_config_storage(!controller_.no_save());
+        if (result != NEKOMOTE_OK)
+            return result;
+        config_path = config_path_override_;
+    }
+    else
     {
         // Effective credentials include group/ACL permissions. Do not create a
         // config just to probe it; a read-only existing file also needs fallback.
@@ -132,7 +190,6 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
             config_path = user_dir / "config.json";
         }
     }
-    controller_.set_config_path(config_path);
     controller_.load_config(config_path);
     auto& config = controller_.config();
     if (!mute_forced_)
@@ -165,6 +222,12 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
 
 nekomote_error WallpaperInstance::set_no_save(bool value)
 {
+    if (!value && config_path_locked_ && !config_path_override_.empty())
+    {
+        const auto result = prepare_config_storage(true);
+        if (result != NEKOMOTE_OK)
+            return result;
+    }
     controller_.set_no_save(value);
     return NEKOMOTE_OK;
 }

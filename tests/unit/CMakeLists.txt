@@ -87,7 +87,8 @@ if(NEKOMOTE_BUILD_ABI)
 endif()
 
 if(NEKOMOTE_BUILD_ABI)
-    add_executable(nekomote_abi_boundary_tests test_abi_boundary.cpp)
+    add_executable(nekomote_abi_boundary_tests
+        test_abi_boundary.cpp test_abi_allocations.cpp test_wallpaper_config_path.cpp)
     target_link_libraries(nekomote_abi_boundary_tests PRIVATE nekomote::abi
         Catch2::Catch2WithMain nlohmann_json::nlohmann_json nekomote_warnings)
     target_compile_definitions(nekomote_abi_boundary_tests PRIVATE

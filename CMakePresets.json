@@ -67,6 +67,20 @@
             }
         },
         {
+            "name": "layer-shell",
+            "inherits": "release",
+            "displayName": "Standalone Wayland layer-shell OpenGL wallpaper",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_LAYER_SHELL": "ON",
+                "NEKOMOTE_BUILD_ABI": "ON",
+                "NEKOMOTE_BUILD_PREVIEW": "OFF",
+                "NEKOMOTE_BUILD_PLAYER": "OFF",
+                "NEKOMOTE_BUILD_QT_QUICK": "OFF",
+                "NEKOMOTE_BUILD_PLASMA": "OFF",
+                "NEKOMOTE_BUILD_VULKAN": "OFF"
+            }
+        },
+        {
             "name": "asan",
             "inherits": "base",
             "displayName": "Debug with AddressSanitizer + UBSan",
@@ -97,6 +111,7 @@
         { "name": "qt-quick", "configurePreset": "qt-quick" },
         { "name": "plasma",   "configurePreset": "plasma" },
         { "name": "plasma5",  "configurePreset": "plasma5" },
+        { "name": "layer-shell", "configurePreset": "layer-shell" },
         { "name": "vulkan",   "configurePreset": "vulkan" }
     ],
     "testPresets": [

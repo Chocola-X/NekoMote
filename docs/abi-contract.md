@@ -10,6 +10,13 @@
 
 `nekomote_wallpaper_fps_limit` 在求值线程读取已保存的帧率限制（0 表示不限帧，错误句柄返回 -1）；GUI 线程只能读取宿主发布的原子快照，不能直接并发查询 Controller。KDE 壁纸 item 依据该值调度更新。
 
+`nekomote_wallpaper_set_config_path` 复制并解析实例自己的配置文件路径，在首次
+`set_assets_dir` 开始后不可更换（含失败的扫描尝试）。省略时保留已有 Plasma 的
+assets/XDG 选择规则；指定后绝不自动回退。资产设置时验证存储：保存开启时创建父目录并
+检查文件/父目录权限，`no_save` 时不创建目录，允许文件不存在但拒绝已有不可读文件或
+非普通文件。重新允许保存会再次验证，失败时保持禁止保存。配置内容仍交共享 Controller
+加载/保存。layer-shell 为每个输出选择独立路径，不能由宿主维护第二份配置 schema。
+
 后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。GL/Vulkan 设备、输出和 native 同步分别在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
 
 ## 所有权与失败

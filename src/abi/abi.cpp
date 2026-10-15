@@ -1515,6 +1515,17 @@ extern "C"
 #endif
     }
 
+    nekomote_error nekomote_wallpaper_set_config_path(nekomote_wallpaper* wp, const char* path)
+    {
+        if (!wp || !wp->instance || !path || !*path)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper or empty config path");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wallpaper_call(
+            [&] { return wp->instance->set_config_path(std::filesystem::path(path)); });
+    }
+
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir)
     {
         if (!wp || !wp->instance || !dir)

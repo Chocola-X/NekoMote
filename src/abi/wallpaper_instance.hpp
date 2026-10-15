@@ -50,6 +50,7 @@ class WallpaperInstance
     WallpaperInstance(const WallpaperInstance&) = delete;
     WallpaperInstance& operator=(const WallpaperInstance&) = delete;
 
+    nekomote_error set_config_path(const std::filesystem::path& path);
     nekomote_error set_assets_dir(const std::filesystem::path& dir);
     nekomote_error set_no_save(bool value);
     nekomote_error set_muted(bool value);
@@ -111,6 +112,7 @@ class WallpaperInstance
     void handle_switch_poll();
     void handle_background_poll();
     nekomote_error check_session();
+    nekomote_error prepare_config_storage(bool saving);
 
     render_gl::GlLoader loader_;
     application::WallpaperController controller_;
@@ -139,6 +141,7 @@ class WallpaperInstance
     int current_background_width_{0}, current_background_height_{0};
     std::filesystem::path current_background_path_;
     std::filesystem::path assets_dir_;
+    std::filesystem::path config_path_override_;
     mutable std::string name_buffer_;
 
     int output_width_{0};
@@ -150,6 +153,7 @@ class WallpaperInstance
     bool minimized_{false};
     bool output_unavailable_{false};
     bool assets_scanned_{false};
+    bool config_path_locked_{false};
     bool initialized_{false};
     bool audio_failed_{false};
     bool mute_forced_{false};

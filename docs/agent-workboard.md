@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| L1 layer-shell 壳 | base `98d0075`，Codex 实现及独立源码复核；独立 Wayland/EGL/OpenGL 高层 C ABI 宿主；192 CPU CTest、18 隔离客户端检查通过 | Sway/Hyprland/niri 实机、最终合成像素、真实输入、热插拔/长期与独立打包待验收；见 [说明](layer-shell.md) 和 [记录](validation/layer-shell-results.json) |
 | C19 mesh.cc 调查 | base `94af01c`，Codex及独立只读复核；程序生成15格受控实验11正常捕获/4 NaN，PsBuild失败复现，114 Python用例（12 skipped） | 尚无在生效路径产生有限可辨识效果的非空布局，不放行公式；见[调查](mesh-cc-investigation-2026-10-14.md) |
 | C18 合成模型求值 | base `693fd3f`，Codex 实现与独立只读复核；discretization1、嵌套0x7fc、sync/combine传播；51/51合成图/几何、4真实/2PsBuild、197 CPU与76 ASan runtime通过 | cc、其他离散/继承位、frame.type1及既有标量仍待验证；见 [报告](synthetic-semantics-2026-10-14.md) 与 [记录](validation/synthetic-semantics-results.json) |
 | C17 Wayland/X11 兼容 | base `0c0f400`，Codex 实现及独立复核；GLFW 双平台、Qt GL/GLES、GPU 共享和 renderer 重建快照；189 CPU、3 GPU runner、8 对基线 / 10 对 GL/ES 画面、隔离 Qt/Plasma 通过 | 未安装用户桌面；真实桌面、原生 X11 登录及其他驱动仍待验收，GLES padding 显存代价见 [报告](wayland-compatibility-2026-10-13.md) 与 [记录](validation/wayland-compatibility-results.json) |

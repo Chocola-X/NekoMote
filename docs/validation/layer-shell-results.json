@@ -1,0 +1,488 @@
+{
+  "task": "L1 layer-shell adapter",
+  "date": "2026-10-15",
+  "base_commit": "98d0075435faf8ca98bd9f253dacf5c11dcd19e1",
+  "agent": "Codex",
+  "model": "GPT-6 family (exact variant not exposed)",
+  "build": {
+    "preset": "layer-shell",
+    "type": "Release",
+    "lto": true,
+    "warnings_as_errors": true,
+    "dependency_sources": "fixed versions from local FetchContent caches; fresh network configure not tested",
+    "compiler": "GCC 15.2.1",
+    "kwin": "6.3.6",
+    "wayland": "1.24.0",
+    "mesa": "25.2.3",
+    "installed_to": "/tmp/nekomote-layer-shell-release-install",
+    "system_desktop_modified": false
+  },
+  "cpu": {
+    "ctest": {
+      "selected": 192,
+      "passed": 192,
+      "failed": 0,
+      "excluded_labels": [
+        "integration",
+        "gpu"
+      ]
+    },
+    "unit": {
+      "cases": 188,
+      "assertions": 38765
+    },
+    "cli": {
+      "cases": 5,
+      "assertions": 44
+    },
+    "abi_boundary": {
+      "cases": 7,
+      "assertions": 88
+    },
+    "python_subsuite": {
+      "reported": 129,
+      "passed": 117,
+      "skipped": 12,
+      "note": "optional host tests not run; not counted as execution success"
+    }
+  },
+  "review": {
+    "independent_source_review": true,
+    "fixed_findings": [
+      "pending dispatch used stale poll timeout",
+      "cursor image dimensions must be divisible by buffer scale",
+      "corrected inaccurate fade-budget comment"
+    ],
+    "runtime_render_formulas_changed": false
+  },
+  "gpu_evidence_dir": "build/evidence/layer-shell-2026-10-15-final2",
+  "gpu": {
+    "scope": "KWin virtual output layer-shell protocol/GPU smoke",
+    "binary": "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+    "binary_sha256": "1ed957537d420ce095c76292c0dc32e2cc5ebe9b7baeabcff1825de34a6232e2",
+    "compositor": "/usr/bin/kwin_wayland",
+    "cases": [
+      {
+        "name": "missing-display",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--frames",
+          "1"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "missing-layer-shell",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--frames",
+          "1"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "outputs-base",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--list-outputs"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "unknown-output",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "NEKOMOTE-MISSING",
+          "--frames",
+          "1"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "base-passthrough",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--input",
+          "passthrough",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/base-passthrough.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 320,
+        "height": 240,
+        "material_pixels": 1024,
+        "pixels_sha256": "b34785da371066640096fad044edddeb9de9294eade6d1626758ecfbb8ff65e3"
+      },
+      {
+        "name": "base-interactive",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-1",
+          "--input",
+          "interactive",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/base-interactive.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 320,
+        "height": 240,
+        "material_pixels": 1024,
+        "pixels_sha256": "b34785da371066640096fad044edddeb9de9294eade6d1626758ecfbb8ff65e3"
+      },
+      {
+        "name": "existing-capture",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--frames",
+          "1",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/existing-capture.ppm"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "base-repeat",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/base-repeat.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "assets-catalog",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--assets",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/assets",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/assets-catalog.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 320,
+        "height": 240,
+        "material_pixels": 25600,
+        "pixels_sha256": "67adb19ce5f65f6db1dbc2cf13f8e7eed9665b11b7803c18e208597bd3d40924"
+      },
+      {
+        "name": "compositor-disconnect",
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "outputs-resized",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--list-outputs"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "resized-passthrough",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--input",
+          "passthrough",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/resized-passthrough.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 400,
+        "height": 300,
+        "material_pixels": 1024,
+        "pixels_sha256": "b582c4d7aeb627784c89268ec6167bcfb2d1ca66b3b99b803e1333f8fbe1d646"
+      },
+      {
+        "name": "outputs-desktop",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--list-outputs"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "desktop-passthrough",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--input",
+          "passthrough",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/desktop-passthrough.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 1280,
+        "height": 720,
+        "material_pixels": 1024,
+        "pixels_sha256": "7cc8098f1730e37f3c5294f3deea8c2a770600a0278bca56379efe3360f57ee2"
+      },
+      {
+        "name": "real-assets",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--assets",
+          "<repo>/assets",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/real-wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/real-assets.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 1280,
+        "height": 720,
+        "pixels_sha256": "c7e6c910eeccf7d32a54994625c2408f05a652ac30bf928f6d6839ad579d05d6"
+      },
+      {
+        "name": "outputs-scaled",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--list-outputs"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "scaled-passthrough",
+        "command": [
+          "<repo>/build/layer-shell/bin/nekomote_layer_shell",
+          "--model",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/synthetic-model/model.nkm.json",
+          "--session",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/session.nks.json",
+          "--config",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/wallpaper.json",
+          "--output",
+          "Virtual-0",
+          "--input",
+          "passthrough",
+          "--frames",
+          "4",
+          "--capture",
+          "<repo>/build/evidence/layer-shell-2026-10-15-final2/scaled-passthrough.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "width": 640,
+        "height": 480,
+        "material_pixels": 1024,
+        "pixels_sha256": "591b0e34650f479fef106c8f674557cdd0af6a1ee0a96a1eb265efd1e3c85492"
+      },
+      {
+        "name": "signal-cleanup",
+        "exit_code": 0,
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "environment": {
+      "LIBGL_ALWAYS_SOFTWARE": "1",
+      "__EGL_VENDOR_LIBRARY_FILENAMES": "/usr/share/glvnd/egl_vendor.d/50_mesa.json",
+      "KWIN_COMPOSE": "Q"
+    },
+    "not_covered": [
+      "Sway",
+      "Hyprland",
+      "niri",
+      "physical outputs",
+      "real input",
+      "hotplug/resize while running",
+      "real-model animation",
+      "performance",
+      "long-term",
+      "compositor final output pixels"
+    ],
+    "inputs_sha256": {
+      "synthetic-model/model.nkm.json": "926c5e52d2207452b830d2b773e3318edd7431b0a107536224fbcb3c9d5ea977",
+      "session.nks.json": "3c3a8363fc8c329906ea78ac05a4505ca980382ac6083a405826a834f9e6a01d",
+      "synthetic-source/model.json": "d0189c9d3bc2026f6c3ced13a01e5dbeb5ddad6c5f933bf955646a0d43c29d39",
+      "synthetic-source/model.resx.json": "a45c939ae1331c4a42e90272cb6de5e797ebde0c5494cc54db488303a5c48360",
+      "synthetic-source/texture.png": "e42fcb84792c9985b4d63869a481c422e187f92d8cba9a4f5615472c6e7319c4"
+    },
+    "compositor_runs": [
+      [
+        "/usr/bin/kwin_wayland",
+        "--virtual",
+        "--width",
+        "320",
+        "--height",
+        "240",
+        "--scale",
+        "1",
+        "--output-count",
+        "2",
+        "--socket",
+        "nekomote-base",
+        "--no-lockscreen",
+        "--no-global-shortcuts",
+        "--no-kactivities"
+      ],
+      [
+        "/usr/bin/kwin_wayland",
+        "--virtual",
+        "--width",
+        "400",
+        "--height",
+        "300",
+        "--scale",
+        "1",
+        "--output-count",
+        "2",
+        "--socket",
+        "nekomote-resized",
+        "--no-lockscreen",
+        "--no-global-shortcuts",
+        "--no-kactivities"
+      ],
+      [
+        "/usr/bin/kwin_wayland",
+        "--virtual",
+        "--width",
+        "1280",
+        "--height",
+        "720",
+        "--scale",
+        "1",
+        "--output-count",
+        "2",
+        "--socket",
+        "nekomote-desktop",
+        "--no-lockscreen",
+        "--no-global-shortcuts",
+        "--no-kactivities"
+      ],
+      [
+        "/usr/bin/kwin_wayland",
+        "--virtual",
+        "--width",
+        "320",
+        "--height",
+        "240",
+        "--scale",
+        "2",
+        "--output-count",
+        "2",
+        "--socket",
+        "nekomote-scaled",
+        "--no-lockscreen",
+        "--no-global-shortcuts",
+        "--no-kactivities"
+      ]
+    ]
+  },
+  "limitations": [
+    "client framebuffer captures do not establish compositor final output pixels",
+    "NVIDIA 580.82.09 virtual GL compositor produced EGLImage/target errors; Mesa/QPainter used for final protocol validation",
+    "Spectacle refused capture in this virtual environment",
+    "real asset check is a fixed-four-frame smoke check, not animation or original WebGL equivalence",
+    "configuration save transactions after real GPU input are not fully verified",
+    "no performance gain measured",
+    "virtual KWin has no usable seat v5 pointer; interactive startup tests do not exercise real pointer callbacks or cursor buffers"
+  ],
+  "source_sha256": {
+    "adapters/layer_shell/host.cpp": "fd0f63e54d0ad475ab7de2aee6ca3b0f92d6ea019a0bc19575eb54673b46ba3d",
+    "adapters/layer_shell/host.hpp": "437451482b40b31e6044c69f26a18517e50926fe0985eae7a0130dab25f01977",
+    "adapters/layer_shell/main.cpp": "a35cfd6a7ca0db1a603efa0563dfde518438754a6c29d4c35866351abe2d60df",
+    "adapters/layer_shell/options.cpp": "7f61de6b654e599ad863da829dcd2df256bc68110e6901e9bcdcd718c0421a16",
+    "adapters/layer_shell/options.hpp": "03e78b2e280b99f6678bb2535bf0939834df6d619d96effe1e57f5bcfd393f02",
+    "include/nekomote/abi.h": "82bc49a3992383df53e26d2181a9b02d50e62775c181b8bf785253619249f35d",
+    "src/abi/wallpaper_instance.cpp": "c0782655357ebf6d8aba9c643fe846a552a24e22c80ea28d72f4bf83c35a87d3",
+    "tools/testing/run_layer_shell_test.py": "322c770ecdce2c131b31809cc6377c67103a70e6f712205da19cb8ef7500800a"
+  }
+}
