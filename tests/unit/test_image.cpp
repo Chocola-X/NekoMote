@@ -104,7 +104,7 @@ TEST_CASE("Atlas crop preserves low alpha, transparent RGB and filtering gutters
 TEST_CASE("Empty and fully occupied atlases have defined crop storage", "[image][crop]")
 {
     TemporaryPng file;
-    for (const auto dimensions :
+    for (const auto& dimensions :
          {std::pair{1, 1}, std::pair{1, 8}, std::pair{13, 1}, std::pair{13, 9}})
     {
         const auto [w, h] = dimensions;

@@ -315,10 +315,10 @@ TEST_CASE("Controller reset no crash without instance", "[controller]")
     REQUIRE(c.switch_state() == SwitchState::Idle);
 }
 
-TEST_CASE("Controller repeat switch request ignored while pending", "[controller]")
+TEST_CASE("Controller repeat switch request ignored while pending", "[controller][integration]")
 {
     if (!assets_available())
-        return;
+        SKIP("coconut/casual assets are unavailable");
     WallpaperController c;
     REQUIRE(c.scan_assets("assets"));
     const int count = static_cast<int>(c.catalog().characters.size());
@@ -349,10 +349,10 @@ TEST_CASE("Controller repeat switch request ignored while pending", "[controller
     REQUIRE(c.current_character_index() == 0);
 }
 
-TEST_CASE("Controller reject candidate retains current", "[controller]")
+TEST_CASE("Controller reject candidate retains current", "[controller][integration]")
 {
     if (!assets_available())
-        return;
+        SKIP("coconut/casual assets are unavailable");
     WallpaperController c;
     REQUIRE(c.scan_assets("assets"));
     const int count = static_cast<int>(c.catalog().characters.size());
@@ -383,10 +383,10 @@ TEST_CASE("Controller reject candidate retains current", "[controller]")
     REQUIRE(c.current_character_index() == 0);
 }
 
-TEST_CASE("Controller confirm candidate switches", "[controller]")
+TEST_CASE("Controller confirm candidate switches", "[controller][integration]")
 {
     if (!assets_available())
-        return;
+        SKIP("coconut/casual assets are unavailable");
     WallpaperController c;
     REQUIRE(c.scan_assets("assets"));
     const int count = static_cast<int>(c.catalog().characters.size());
@@ -419,10 +419,10 @@ TEST_CASE("Controller confirm candidate switches", "[controller]")
     REQUIRE(c.fade_alpha() == 0.0f);
 }
 
-TEST_CASE("Controller update_fade progresses", "[controller]")
+TEST_CASE("Controller update_fade progresses", "[controller][integration]")
 {
     if (!assets_available())
-        return;
+        SKIP("coconut/casual assets are unavailable");
     WallpaperController c;
     REQUIRE(c.scan_assets("assets"));
     ControllerConfig cfg;
@@ -457,10 +457,10 @@ TEST_CASE("Controller update_fade progresses", "[controller]")
     REQUIRE(c.previous_instance() == nullptr);
 }
 
-TEST_CASE("Controller clear_previous", "[controller]")
+TEST_CASE("Controller clear_previous", "[controller][integration]")
 {
     if (!assets_available())
-        return;
+        SKIP("coconut/casual assets are unavailable");
     WallpaperController c;
     REQUIRE(c.scan_assets("assets"));
     ControllerConfig cfg;

@@ -131,13 +131,12 @@ TEST_CASE("Missing file fails gracefully", "[import]")
     REQUIRE_FALSE(result.report.errors.empty());
 }
 
-TEST_CASE("Real model chocola-date-a imports", "[import][real]")
+TEST_CASE("Real model chocola-date-a imports", "[import][real][integration]")
 {
     const char* root = std::getenv("NEKOMOTE_TEST_REAL_ASSET");
     if (root == nullptr)
     {
-        WARN("NEKOMOTE_TEST_REAL_ASSET not set; skipping real model import test");
-        return;
+        SKIP("NEKOMOTE_TEST_REAL_ASSET is not set");
     }
 
     fs::path p = fs::path{root} / "chocola" / "chocola-date-a";

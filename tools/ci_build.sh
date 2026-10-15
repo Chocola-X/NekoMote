@@ -15,9 +15,26 @@ mkdir -p "$WORK_DIR/src/build" "$WORK_DIR/runtime"
 chmod 700 "$WORK_DIR/runtime"
 export XDG_RUNTIME_DIR="$WORK_DIR/runtime"
 tar -C "$SOURCE_DIR" --exclude='./.git' --exclude='./build' --exclude='./assets' \
-    --exclude='./refer' -cf - . | tar -C "$WORK_DIR/src" -xf -
+    --exclude='./refer' --exclude='./experiments' --exclude='./node_modules' \
+    -cf - . | tar -C "$WORK_DIR/src" -xf -
 dpkg-query -W -f='${Package}\t${Version}\n' > "$OUTPUT_DIR/toolchain-packages.txt"
-{ cmake --version; "${CXX:-c++}" --version; python3 --version; } > "$OUTPUT_DIR/toolchain.txt"
+# GNU LTO invokes make even though Ninja drives the outer build. Check the
+# complete CPU/tool test environment before starting an expensive compilation.
+{
+    cmake --version
+    "${CC:-cc}" --version
+    "${CXX:-c++}" --version
+    make --version
+    python3 --version
+    node --version
+    python3 - <<'PY'
+import jinja2
+from PIL import Image
+print("Jinja2", jinja2.__version__, "Pillow", Image.__version__)
+print("Resampling", Image.Resampling.NEAREST)
+PY
+    node -e "require('node:vm'); require('node:assert/strict'); require('node:fs')"
+} > "$OUTPUT_DIR/toolchain.txt"
 
 OPTIONS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     -DNEKOMOTE_WERROR=ON -DNEKOMOTE_BUILD_TOOLS=OFF -DNEKOMOTE_BUILD_TESTS=ON

@@ -38,21 +38,34 @@ class MeshCcProbeTests(unittest.TestCase):
         script = pathlib.Path(__file__).resolve().parents[2] / 'tools/reference_capture/probe_mesh_cc.py'
         with tempfile.TemporaryDirectory() as root:
             output = pathlib.Path(root) / 'probe'
+            # Synthetic provenance also works in CI's source snapshot without .git.
+            source_commit = '0' * 40
             subprocess.run([sys.executable, str(script), '--output', str(output),
-                            '--generate-only', '--cc-json', '0'], check=True)
+                            '--generate-only', '--cc-json', '0',
+                            '--source-commit', source_commit], check=True, cwd=root)
             report = json.loads((output/'results.json').read_text())
             self.assertFalse(report['accepted_semantics'])
             self.assertEqual(report['candidate'], 0)
+            self.assertEqual(report['source_commit'], source_commit)
             self.assertTrue(all(c['status'] == 'not_captured' for c in report['cases']))
             self.assertTrue(all((output/c['name']/'model.psb').is_file()
                                 for c in report['cases']))
             repeat = subprocess.run([sys.executable, str(script), '--output', str(output),
-                                     '--generate-only'], capture_output=True)
+                                     '--generate-only', '--source-commit', source_commit],
+                                    capture_output=True, cwd=root)
             self.assertNotEqual(repeat.returncode, 0)
+            for index, invalid in enumerate(['', 'not-a-commit']):
+                destination = pathlib.Path(root) / f'invalid-commit-{index}'
+                rejected = subprocess.run([sys.executable, str(script), '--output',
+                    str(destination), '--generate-only', '--source-commit', invalid],
+                    capture_output=True)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertFalse(destination.exists())
             for index, invalid in enumerate(['NaN', '1e400', '[1e400]']):
                 destination = pathlib.Path(root) / f'invalid-{index}'
                 rejected = subprocess.run([sys.executable, str(script), '--output',
-                    str(destination), '--generate-only', '--cc-json', invalid],
+                    str(destination), '--generate-only', '--cc-json', invalid,
+                    '--source-commit', source_commit],
                     capture_output=True)
                 self.assertNotEqual(rejected.returncode, 0)
                 self.assertFalse(destination.exists())

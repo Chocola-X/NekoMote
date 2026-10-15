@@ -67,6 +67,7 @@ def main():
     parser.add_argument('--generate-only', action='store_true')
     parser.add_argument('--reference-root', type=pathlib.Path)
     parser.add_argument('--browser', type=pathlib.Path)
+    parser.add_argument('--source-commit', help='source Git commit for a source archive')
     args = parser.parse_args()
     if not args.generate_only and (args.reference_root is None or args.browser is None):
         parser.error('--reference-root and --browser are required for observation')
@@ -75,11 +76,19 @@ def main():
     candidate = json.loads(args.cc_json, parse_constant=reject_constant)
     json.dumps(candidate, allow_nan=False)  # Also reject exponent overflow before writing files.
     inputs = cases(candidate)
-    args.output.mkdir(parents=True, exist_ok=False)
     here = pathlib.Path(__file__).resolve().parent
+    source_commit = args.source_commit
+    if source_commit is None:
+        try:
+            source_commit = subprocess.check_output(
+                ['git', '-C', str(here.parents[1]), 'rev-parse', 'HEAD'], text=True).strip()
+        except subprocess.CalledProcessError:
+            parser.error('source Git metadata unavailable; provide --source-commit')
+    if len(source_commit) != 40 or any(c not in '0123456789abcdef' for c in source_commit):
+        parser.error('--source-commit requires a full 40-character Git commit')
+    args.output.mkdir(parents=True, exist_ok=False)
     report = dict(accepted_semantics=False, candidate=candidate, cases=[],
-                  source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'],
-                                                        text=True).strip(),
+                  source_commit=source_commit,
                   observation='public SDK / submitted GPU geometry / final image',
                   hashes={p.name: sha(p) for p in [here/'probe_mesh_cc.py',
                           here/'synthetic_model.py', here/'capture.py', here/'capture.cjs',

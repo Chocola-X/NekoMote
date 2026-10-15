@@ -1,7 +1,10 @@
 #include "vulkan_gl_bridge.hpp"
 
 #include <QtGui/qopengl.h>
-#include <QtGui/qopenglext.h>
+// Qt 5.12's bundled extension header predates EXT_memory_object/semaphore.
+// Use the system Khronos declarations; entry points still come from Qt's
+// current context and require the existing runtime extension checks.
+#include <GL/glext.h>
 #include <unistd.h>
 #include <vulkan/vulkan.h>
 
@@ -453,7 +456,7 @@ struct VulkanGlBridge::Impl
         create_semaphores(1, &gl_ready);
         create_semaphores(1, &gl_done);
         gl_check("Create GL semaphores");
-        for (const auto [vk_semaphore, gl_semaphore] :
+        for (const auto& [vk_semaphore, gl_semaphore] :
              {std::pair{ready, gl_ready}, std::pair{done, gl_done}})
         {
             VkSemaphoreGetFdInfoKHR get{};

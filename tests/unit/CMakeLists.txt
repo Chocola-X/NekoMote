@@ -41,7 +41,22 @@ target_compile_definitions(nekomote_unit_tests PRIVATE
     NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")
 
 include(Catch)
-catch_discover_tests(nekomote_unit_tests WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+# Catch 3.5.3 does not map tags to CTest labels. Discover the groups separately
+# so asset/font integration tests stay outside the mandatory headless CI set.
+# Match the all-skipped report instead of exit code 4: Catch also returns 4
+# for four failed assertions, which must remain a failure.
+set(NEKOMOTE_CATCH_SKIP_REPORT "test cases: 1 [|] 1 skipped")
+catch_discover_tests(nekomote_unit_tests
+    TEST_SPEC "~[integration]"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    EXTRA_ARGS --colour-mode none
+    PROPERTIES SKIP_REGULAR_EXPRESSION "${NEKOMOTE_CATCH_SKIP_REPORT}")
+catch_discover_tests(nekomote_unit_tests
+    TEST_SPEC "[integration]"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    EXTRA_ARGS --colour-mode none
+    PROPERTIES LABELS integration
+               SKIP_REGULAR_EXPRESSION "${NEKOMOTE_CATCH_SKIP_REPORT}")
 
 # C ABI tests (pure C, verifies the C boundary is usable without C++).
 if(NEKOMOTE_BUILD_ABI)

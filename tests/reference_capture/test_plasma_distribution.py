@@ -2,6 +2,8 @@
 
 import importlib.util
 import json
+import os
+import shlex
 import shutil
 import subprocess
 import tarfile
@@ -17,8 +19,15 @@ SPEC = importlib.util.spec_from_file_location(
 DIST = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(DIST)
 
+COMPILER = shlex.split(os.environ.get("CC", "cc"))
+MISSING_TOOLS = []
+if not COMPILER or not shutil.which(COMPILER[0]):
+    MISSING_TOOLS.append(f"C compiler from CC={os.environ.get('CC', 'cc')!r}")
+if not shutil.which("readelf"):
+    MISSING_TOOLS.append("readelf (binutils)")
 
-@unittest.skipUnless(shutil.which("cc") and shutil.which("readelf"), "cc/binutils required")
+
+@unittest.skipIf(MISSING_TOOLS, "required tools unavailable: " + ", ".join(MISSING_TOOLS))
 class PlasmaDistributionTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -29,7 +38,7 @@ class PlasmaDistributionTests(unittest.TestCase):
         for relative in DIST.ELFS:
             output = self.stage / relative
             output.parent.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["cc", "-shared", "-fPIC", str(self.source),
+            subprocess.run([*COMPILER, "-shared", "-fPIC", str(self.source),
                             "-Wl,-rpath,$ORIGIN/../../../lib", "-o", str(output)],
                            check=True, capture_output=True)
         for relative in set(DIST.REQUIRED) - set(DIST.ELFS):
@@ -98,7 +107,7 @@ class PlasmaDistributionTests(unittest.TestCase):
             DIST.audit(self.stage, "6.4.2")
 
     def test_absolute_rpath_rejected_after_valid_manifest(self):
-        subprocess.run(["cc", "-shared", "-fPIC", str(self.source),
+        subprocess.run([*COMPILER, "-shared", "-fPIC", str(self.source),
                         "-Wl,-rpath,/tmp/build/lib", "-o", str(self.stage / DIST.ELFS[0])],
                        check=True, capture_output=True)
         self.manifest()
@@ -123,13 +132,13 @@ class PlasmaDistributionTests(unittest.TestCase):
         script = self.directory / "symbols.map"
         script.write_text(f'Qt_{major}_PRIVATE_API {{ global: {symbol}; local: *; }};\n')
         soname = f"libQt{major}Quick.so.{major}"
-        subprocess.run(["cc", "-shared", "-fPIC", str(provider), f"-Wl,-soname,{soname}",
+        subprocess.run([*COMPILER, "-shared", "-fPIC", str(provider), f"-Wl,-soname,{soname}",
                         f"-Wl,--version-script={script}", "-o", str(self.directory / soname)],
                        check=True, capture_output=True)
         self.source.write_text(f'void provider(void) __asm__("{symbol}");\n'
                                'int fixture(void) { provider(); return 7; }\n')
         output = self.stage / DIST.ELFS[0]
-        subprocess.run(["cc", "-shared", "-fPIC", str(self.source), f"-L{self.directory}",
+        subprocess.run([*COMPILER, "-shared", "-fPIC", str(self.source), f"-L{self.directory}",
                         f"-l:{soname}", "-o", str(output)], check=True, capture_output=True)
         return output
 

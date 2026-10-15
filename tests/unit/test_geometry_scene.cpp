@@ -422,8 +422,8 @@ TEST_CASE("Geometry topology survives repeated builds and resource and visibilit
 TEST_CASE("Automatic priority-two meshes match original size boundary captures", "[runtime][scene]")
 {
     // Captured PSB grids at both sides of the 64 and 128 pixel boundaries.
-    for (const auto [size, points] : {std::pair{63, 20}, std::pair{64, 25}, std::pair{127, 56},
-                                      std::pair{128, 64}, std::pair{213, 144}})
+    for (const auto& [size, points] : {std::pair{63, 20}, std::pair{64, 25}, std::pair{127, 56},
+                                       std::pair{128, 64}, std::pair{213, 144}})
     {
         auto input = rig();
         input.parts.resize(1);
@@ -1949,7 +1949,7 @@ TEST_CASE("Child synchronization selects rigid origins or full curves through he
 {
     // The mask-one face UD/LR capture shifts the LR origin before evaluating its
     // child positions. Mask eight instead adds both normalized patch shapes.
-    for (const auto [mode, expected] :
+    for (const auto& [mode, expected] :
          {std::pair{0, Vec2{2, 3}}, std::pair{1, Vec2{6, 11}}, std::pair{8, Vec2{6, 14}}})
     {
         auto asset = rig();
@@ -1998,7 +1998,7 @@ TEST_CASE("Child synchronization selects rigid origins or full curves through he
 TEST_CASE("Automatic grids retain both axes for small and slender source sprites",
           "[runtime][scene]")
 {
-    for (const auto dimensions :
+    for (const auto& dimensions :
          {std::array{6, 7, 219, 160, 9, 0}, std::array{109, 219, 928, 929, 15, 0},
           std::array{78, 61, 928, 929, 9, 1}})
     {

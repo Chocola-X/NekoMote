@@ -105,9 +105,11 @@ docker run --rm --user "$(id -u):$(id -g)" \
 本地没有 Docker/Podman 时不能将普通本机构建当成基线容器验收；首次 Actions 成功后
 才有对应的基线产物可下载。
 
-## 本次本地验证（2026-10-15）
+## 首次交付的本机验证（2026-10-15）
 
-变更基于 `4d9afc8`，尚未提交。执行环境与结果如下：
+以下是 `bf91d0b` 提交前、基于 `4d9afc8` 的本机验证记录。首次 Actions 实际运行已失败，
+这组混合本机 SDK 的结果不足以验收基线构建；后续修复和隔离基线验证见下一节。
+当时执行环境与结果如下：
 
 | 检查 | 实际环境与结果 |
 | --- | --- |
@@ -142,5 +144,73 @@ build/ci-focal-toolchain/bin/nekomote_vk_tests \
 图形环境而失败，获准在沙箱外执行后上述三个用例通过。零分配只覆盖测试跟踪的渲染线程
 普通 C++ 分配，不含驱动 malloc、其他线程或整个壁纸应用，也未做帧时间性能比较。
 
-JUnit 与日志保存在对应本地构建目录。尚未执行 Docker 容器、GitHub Actions、
+JUnit 与日志保存在对应本地构建目录。当时尚未执行 Docker 容器、GitHub Actions、
 ARM64 构建及真实 Plasma5/6 插件安装验收；没有修改用户桌面配置。
+
+## 首轮 Actions 失败修复（2026-10-15）
+
+用户提供了 `bf91d0b` 的四个 job 日志，三个工作流均在编译/链接阶段失败：
+
+| Job | 首个实际错误 | 修复 |
+| --- | --- | --- |
+| Ubuntu20 native | `lto-wrapper: fatal error: execvp: No such file or directory` | 两个镜像显式安装 GNU make；Ninja 外层构建不能替代 GCC 并行 LTO 调用的 make |
+| Plasma5 | Qt5.12 缺少 `PFNGL*EXTPROC` 和外部内存/信号量常量 | Qt 桥使用系统 Khronos `GL/glext.h` 补齐声明，保留原运行期扩展检查、函数解析和同步 |
+| Plasma6 x86_64 / aarch64 | `test_image.cpp` 范围循环复制触发 `-Werror=range-loop-construct` | 测试循环绑定 `const auto&`，不降低警告门槛 |
+
+继续复核发现两个镜像缺少必选 Python 工具测试的 Pillow 和 Node。focal 的独立
+Python 安装固定 Pillow11.1.0，另安装带 SHA256 校验的 Node22.14.0；Debian12 使用
+快照中的 `python3-pil` / `nodejs`。这些仅为构建/测试工具，不捆绑到发行包。
+源码快照排除本地调查和实验输出，编译前检查并记录 make、Python/Pillow/Jinja2、Node
+及 C/C++ 编译器，缺失时提前失败。真实 ELF 工具测试遵循 `CC`，避免 focal 仅安装
+`gcc-10` 而没有 `cc` 时静默跳过整类测试。
+
+上轮本机 SDK 包含较新的 GL 扩展头、make、Pillow 和 Node，未暴露这些基线环境缺项。
+本轮保持 Release、LTO、Werror 和原版本下限，使用固定基础镜像内的完整工具链重新验证。
+
+完整 focal 构建还复现了单元测试链接 `pthread_create` 失败：application 的
+`std::async` 没有声明线程依赖，之前被本机环境掩盖。依赖补在实际使用它的
+`nekomote_application` 目标，采用 `Threads::Threads`，不向全部目标添加全局链接参数。
+
+后续实际编译/测试还修正了以下问题：
+
+- GCC12 对 Qt 桥的信号量配对循环及两个几何测试循环发出同类复制警告，均改为只读引用。
+- Qt5 的 `FileDialog` 依赖 Controls1、`Qt.labs.folderlistmodel` 和 `Qt.labs.settings`，
+  镜像补齐这些模块并保留 Controls2；没有删去配置页测试。
+- 合成 cc 探针提供 `--source-commit` 参数，归档测试显式传入合成提交标识，并从临时工作目录运行；
+  正式 Git 工作区仍读取工具所属仓库的真实 HEAD，不创建伪 Git 仓库或用未知版本冒充来源。
+- Catch3.5.3 的标签不会自动成为 CTest labels。按 `TEST_SPEC` 分别发现普通测试和
+  `integration` 测试，素材缺失统一 SKIP；消除五处 Controller 和一处真实导入的早退假 PASS。
+  CTest 用精确的单用例全跳过报告识别 Skipped，不直接把返回码4当跳过，避免掩盖四次断言失败。
+
+现在必选 CPU 检查与真实素材/字体集成检查分开统计；首次本机记录中的历史测试总数不能
+直接当作新版 CI 合成测试通过数。Python 集合内部的可选 GPU/宿主检查也保留其 Skipped 状态。
+
+### 修复后的隔离基线验证
+
+源码为 `bf91d0b` 加本轮修复，全部采用 Release + LTO + Werror。本机没有
+Docker/Podman；下载并校验 Containerfile 指定的官方 OCI 镜像，以完整的 subordinate
+UID/GID 映射和 bubblewrap 隔离执行配方、同一个 `tools/ci_build.sh`。编译器、头文件、
+链接器、Qt 和系统库均来自镜像，源码只读挂载，未混入本机 SDK；容器内为 root，
+没有显示服务，也没有安装或修改用户桌面。此验证不等于 Docker 引擎或 Actions runner 验收。
+
+| 模式 | 实际工具链 | 必选 CTest | 打包与审计 |
+| --- | --- | --- | --- |
+| native20 x86_64 | Ubuntu20 / GCC10.5 / glibc2.31 | 191/191 通过 | 三个程序归档、动态 libstdc++、`ldd -r` 和严格符号上限检查通过 |
+| plasma5 x86_64 | Ubuntu20 / GCC10.5 / Qt5.12.8 / glibc2.31 | 193/193 通过 | stage 模块、壁纸入口/配置页加载、manifest、许可、`--baseline-ubuntu20` 及归档通过 |
+| plasma6 x86_64 | Debian12 / GCC12.2 / Qt6.4.2 / glibc2.36 | 192/192 通过 | stage 模块加载、manifest、许可、`--baseline-debian12` 及归档通过 |
+
+CTest 的上述数量包含一个 Python 工具集合，不再累加集合内部的用例数；真实素材、字体和
+GPU 集成用例按 labels 排除并另存清单，不计为通过。原生三个程序实际符号需求的最大值为
+GLIBC2.29 / GLIBCXX3.4.28 / CXXABI1.3.11，KDE5 插件相同；KDE6 插件为 GLIBC2.34 /
+GLIBCXX3.4.29 / CXXABI1.3.13，均满足各自审计门槛。这些不证明跨发行版或 GPU 行为兼容。
+
+已完成归档的 SHA256（仅对应本次本地快照，不保证与后续 CI 字节一致）：
+
+```text
+2f13675fdf7cb2f6c4227a42a975c60dce877735223ce927bbbb0c8710c9bf5c  nekomote-native-ubuntu20-x86_64.tar.gz
+b214c68cf365490feb4e9ce289c112120efb4b0cf2b45ea6121bb6b6dd567be5  nekomote-plasma5-x86_64.tar.gz
+91271ff63bc1795eedc560b75e33320a93c8d3bad3e5b8cb200981be48f33151  nekomote-plasma6-x86_64.tar.gz
+```
+
+本轮未执行 ARM64、修复后的 GitHub Actions 或真实 Plasma 桌面运行，也没有运行帧时间、
+功耗或长期基准；未改变 GPU 算法和同步协议，不声称有运行性能收益。
