@@ -54,7 +54,7 @@ C17 从 `0c0f400` 修复 Wayland / X11 兼容：GLFW 双平台自动选择与日
 
 C18（2026-10-14）从 `693fd3f` 以程序生成模型和原 WebGL 输出补齐 discretization1、嵌套0x7fc与同步/组合曲面传播；51组合成、4真实回归及2份PsBuild产物对照通过，独立只读复核通过。未读、反编译或移植原核心；证据和剩余范围见 [报告](docs/synthetic-semantics-2026-10-14.md)。早期“嵌套未闭合”只描述当期状态，cc/其他继承及2标量仍未闭合。
 
-2026-10-15 CI 配置从 `4d9afc8` 拆为三个独立工作流：Ubuntu20 原生程序、独立 `adapters/plasma5/` 的 Qt5 插件，以及 Debian12 / Qt6.4.2 的 Plasma6 插件。共享 Qt 桥使用显式 `NEKOMOTE_QT_MAJOR=5/6`；KDE6 的 QML 包保持原有入口。首次 Actions 全部失败后，已修复 make/测试工具与 QML 依赖、Qt5 扩展声明、GCC 警告、application 线程链接及测试分组。三个 x86_64 模式在固定镜像的完整隔离环境中完成 Release/LTO/Werror 构建、必选测试和严格审计/归档；方法与范围见 [CI 说明](docs/github-actions.md)。修复后的 Actions、ARM64 和真实 Plasma5/6 桌面仍待验收，不能以本地隔离结果代替。
+2026-10-15 CI 配置从 `4d9afc8` 拆为三个独立工作流：Ubuntu20 原生程序、独立 `adapters/plasma5/` 的 Qt5 插件，以及 Debian12 / Qt6.4.2 的 Plasma6 插件。共享 Qt 桥使用显式 `NEKOMOTE_QT_MAJOR=5/6`；KDE6 的 QML 包保持原有入口。首次 Actions 全部失败后，已修复 make/测试工具与 QML 依赖、Qt5 扩展声明、GCC 警告、application 线程链接及测试分组。三个 x86_64 模式在固定镜像的完整隔离环境中完成 Release/LTO/Werror 构建、必选测试和严格审计/归档；方法与范围见 [CI 说明](docs/github-actions.md)。用户随后确认 GitHub CI 构建产物中的本体、KDE5、KDE6 实际使用正常，并授权自动发布；未提供逐项架构和长期覆盖。本体新增 x86_64 / aarch64 矩阵，`release.yml` 复用三套构建，在 `vX.Y.Z` 标签下汇总五份包并校验后发布；本体 ARM64 和标签发布本身待首次远端验证。
 
 最大的未知是 E-mote 的准确求值语义，尤其 `mesh.bp/cc`、parameterize、变形组合、继承位、遮罩和差分叠加顺序。可读 JSON 不等于已经理解其行为，不能只凭字段名选择公式，也不能把近似效果当作原素材还原成功。
 

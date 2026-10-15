@@ -1,12 +1,13 @@
 # GitHub 自动构建与测试
 
-三个工作流独立触发，不互相调用或依赖。任意分支的 push、pull request 和手动
+三个日常构建工作流独立触发：任意分支的 push、pull request 和手动
 `workflow_dispatch` 都会运行；同一工作流同一 ref 的新运行取消旧运行，不取消其他工作流。
-工作流仅上传 Actions artifacts，不发布 Release、不安装或修改桌面。
+它们也提供 `workflow_call`，供独立的标签发布工作流复用。分支 CI 只上传 Actions
+artifacts；版本标签统一由发布工作流触发构建，不额外重复运行三套 push CI。
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
-| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 | `nekomote_player`、`nekomote_import`、`nekomote_abi_host` |
+| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_abi_host` |
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 
@@ -14,6 +15,47 @@ GitHub 当前的 [托管 runner 列表](https://github.com/actions/runner-images
 不包含 Ubuntu 20.04，因此使用 `ubuntu-24.04` runner 的 Docker 运行 focal 构建。
 runner 的系统库不会被用于容器内编译。原生程序和两套插件都开启 Release、LTO、
 OpenGL 与 Vulkan，测试失败或依赖审计失败时不上传发行包。
+
+## 版本标签自动发布
+
+[release.yml](../.github/workflows/release.yml) 在推送 `vX.Y.Z` 格式的稳定版本标签时
+构建并发布，例如 `v0.5.0`。`v*` 事件会先校验完整版本格式；`v0.5`、`v01.5.0`、
+预发布标签等不符合当前规则的标签会失败，不进入构建和发布。
+
+先提交并推送需要发布的源码，再为该提交打标签并推送：
+
+```bash
+git push
+git tag -a v0.5.0 -m "NekoMote v0.5.0"
+git push origin v0.5.0
+```
+
+标签必须指向包含发布工作流的提交；标签本身是发布版本，不需要单独更新 CMake 中的
+内部工程版本。发布工作流使用该标签提交内的三个可复用工作流及构建脚本，等待全部
+矩阵任务成功，收集当前 run 的五份归档与各自的 `.sha256` 文件：
+
+| Release 附件 | 内容 |
+| --- | --- |
+| `nekomote-native-ubuntu20-x86_64.tar.gz` | Intel/AMD 64 位 Linux 的三个原生程序 |
+| `nekomote-native-ubuntu20-aarch64.tar.gz` | ARM64 Linux 的三个原生程序 |
+| `nekomote-plasma5-x86_64.tar.gz` | KDE5 插件 |
+| `nekomote-plasma6-x86_64.tar.gz` | KDE6 x86_64 插件 |
+| `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
+
+本体 ARM64 和 KDE6 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
+固定基线镜像中编译。focal 的 Python / Node 工具下载按架构选择固定 URL 与 SHA256；
+不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
+
+发布前检查附件齐全且 SHA256 一致；之后创建 draft、上传全部附件，上传成功后转为
+正式 Release 并设为 Latest，说明由 GitHub 自动生成。构建或校验失败不创建 Release；
+上传失败保留 draft，可从 Actions 重跑。已经公开的同版本不会被覆盖，应使用新标签。
+Release 页面可直接下载归档；Actions 中继续保留各平台测试、审计和失败日志。
+
+仅发布 job 获得 `contents: write`，构建 job 仍为只读。使用内置 `GITHUB_TOKEN`，
+无需配置额外 PAT，也不安装或修改桌面。工作流配置依据 GitHub 的
+[可复用工作流](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)
+及 CLI 的 [创建 Release](https://cli.github.com/manual/gh_release_create) /
+[发布 draft](https://cli.github.com/manual/gh_release_edit) 契约。
 
 ## 工具链与源码边界
 
@@ -47,7 +89,8 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 进入仓库 Actions，选中成功的运行，在 Artifacts 下载对应包：
 
-- `nekomote-native-ubuntu20-x86_64`：归档内 `nekomote-native/bin/` 仅包含三个请求的程序。
+- `nekomote-native-ubuntu20-x86_64` / `nekomote-native-ubuntu20-aarch64`：归档内
+  `nekomote-native/bin/` 仅包含三个请求的程序。
 - `nekomote-plasma5-x86_64`：Qt5 插件，不得装进 Plasma6。
 - `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
 - `evidence-*`：日志、JUnit `tests.xml`、兼容报告、包版本与未执行测试清单；失败也保存。
@@ -214,3 +257,18 @@ b214c68cf365490feb4e9ce289c112120efb4b0cf2b45ea6121bb6b6dd567be5  nekomote-plasm
 
 本轮未执行 ARM64、修复后的 GitHub Actions 或真实 Plasma 桌面运行，也没有运行帧时间、
 功耗或长期基准；未改变 GPU 算法和同步协议，不声称有运行性能收益。
+
+## 用户验收与标签发布配置（2026-10-15）
+
+用户随后反馈：已推送运行 GitHub CI，并验证构建产物中的本体、KDE6、KDE5 均正常，
+授权配置自动发布和提交。此为用户实际使用反馈；未提供 run 链接、逐项架构、驱动和
+长期覆盖，不扩展为全部设备验收。
+
+本次新增标签编排、发布脚本和本体 ARM64 矩阵，保持既有测试/严格审计入口。
+发布脚本的离线回归覆盖完整附件发布顺序、draft 重试、公开版本拒绝覆盖、上传失败、
+归档损坏、缺失/多余文件与非法版本；测试使用假的 `gh`，不会创建真实 Release。
+本地 `actionlint v1.7.12`、Shell 语法、Containerfile RUN 的 POSIX Shell 语法、
+`git diff --check` 及 7/7 离线发布测试通过，并完成独立只读复核。测试入口为
+`python3 -m unittest tests.reference_capture.test_ci_release -v`。
+发布工作流尚未触发，本体 ARM64 也未在本地执行编译；首次远端运行仍需检查结果。
+本次仅改构建/发布与文档，不影响运行时渲染或帧路径性能。

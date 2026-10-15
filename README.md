@@ -208,13 +208,15 @@ python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stag
 
 ### 分发包
 
-三个独立 GitHub Actions 工作流在 push、PR 或手动触发时分别构建：
+三个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 
-- Ubuntu 20.04：Release 的 `nekomote_player`、`nekomote_import`、`nekomote_abi_host`。
+- Ubuntu 20.04：x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_abi_host`。
 - KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 插件。
 - KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 aarch64 插件。
 
 构建、测试与依赖审计通过后上传 Actions artifacts；失败日志与测试报告单独保存。
+推送 `v0.5.0` 这样的 `vX.Y.Z` 稳定版本标签后，发布工作流会构建上述全部平台，
+校验五份归档及 SHA256，自动发布到 GitHub Releases。
 配置和兼容范围见 [自动构建说明](docs/github-actions.md)。目标机器安装前先检查：
 
 ```bash

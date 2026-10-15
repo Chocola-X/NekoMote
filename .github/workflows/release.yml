@@ -1,0 +1,68 @@
+name: Version release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require a stable version tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo 'Expected a stable version tag such as v0.5.0' >&2
+            exit 1
+          fi
+
+  native:
+    needs: validate-tag
+    uses: ./.github/workflows/native-linux.yml
+
+  plasma5:
+    needs: validate-tag
+    uses: ./.github/workflows/plasma5.yml
+
+  plasma6:
+    needs: validate-tag
+    uses: ./.github/workflows/plasma6.yml
+
+  publish:
+    needs: [native, plasma5, plasma6]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout tagged source
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Download packages from this run
+        # actions/download-artifact v4.3.0
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: nekomote-*
+          merge-multiple: true
+          path: release-assets
+      - name: Verify packages and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: bash tools/ci_publish_release.sh "$RELEASE_TAG" release-assets

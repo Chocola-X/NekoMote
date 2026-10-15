@@ -2,14 +2,16 @@ name: KDE Plasma 6 baseline plugin
 
 on:
   push:
+    branches: ["**"]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-plasma6-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -48,7 +50,7 @@ jobs:
           test -s build/ci-plasma6/compatibility.json
           test -s build/ci-plasma6/nekomote-plasma6-${{ matrix.arch }}.tar.gz
       - name: Upload release package
-        # actions/upload-artifact v4.6.2; no GitHub release is published.
+        # actions/upload-artifact v4.6.2; publication belongs to release.yml.
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: nekomote-plasma6-${{ matrix.arch }}

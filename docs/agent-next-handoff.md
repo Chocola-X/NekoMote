@@ -12,6 +12,8 @@ C13 优化之后接手，输入与验收按 [优化建议](optimization-suggesti
 
 ## GLM：G33 基线分发构建
 
+最新用户反馈（2026-10-15）：已验证 GitHub CI 产物中的本体、KDE5、KDE6 正常，授权自动发布。新增 `release.yml` 在稳定版本标签下复用三套构建，本体扩展原生 ARM64，发布五份包及其校验值。先按 [标签发布说明](github-actions.md#版本标签自动发布) 检查首次远端运行；本体 ARM64 和发布流程本身仍待实际执行。下文保留早期验收方法及证据来源，已获用户确认的使用结果不要重新列为完全未验证。
+
 2026-10-15 配方已调整为 `.github/workflows/native-linux.yml`、`plasma5.yml`、`plasma6.yml`，详见 [CI 说明与本地证据](github-actions.md)。旧 `plasma-distribution.yml` 和 `plasma_baseline_build.sh` 已由三个工作流与 `tools/ci_build.sh` 替代。接手先检查未提交改动与实际 base；后续验收范围为工作流、两个 Containerfile、打包/审计工具及对应文档，不同时修改 ABI、Qt/Vulkan 桥或模型求值。
 
 1. 在可用 Docker/Podman 环境运行 [三套分发配方](github-actions.md)。维持 Ubuntu20 / Debian12 镜像及工具版本；Debian apt 使用冻结快照，focal 记录实际包版本。不换成最新 Ubuntu 来绕过低版本编译问题。

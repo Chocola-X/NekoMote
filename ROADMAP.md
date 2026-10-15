@@ -1,6 +1,6 @@
 # NekoMote 开发路线图
 
-版本：执行中，2026-10-12。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；显示阶段起点 `7029eda`，当前 C12 基线 `cfed43e`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，player 的 Vulkan 1.0 双栈实现已由 C11 重写，见 [后端契约与验收](docs/vulkan-backend.md)；C12 已复核 Vulkan C ABI 并接入 Plasma 双后端，默认 OpenGL，见 [接入与验收](docs/plasma-dual-backend.md)。GitHub 基线配置首轮失败已修复；三个 x86_64 模式的完整镜像隔离构建、必选测试、严格审计与归档通过，修复后的 Actions / ARM64 / 跨发行版运行仍待验证，见 [CI 证据](docs/github-actions.md)。
+版本：执行中，2026-10-12。GLM 已交付共享 Controller/UI、GL 执行、高层 ABI 和 Plasma 接入；显示阶段起点 `7029eda`，当前 C12 基线 `cfed43e`。用户优先隔离用户桌面效果，Codex 完成显示补修及隔离包验证，用户已确认实际桌面初步接入正常。G31/G32 不再列为未实现，但完整边界与服务验收仍有缺口；见 [摘要](docs/review-agents-current.md)、[显示补修](docs/plasma-display-fix.md)。application/ui 保持图形 API 解耦，player 的 Vulkan 1.0 双栈实现已由 C11 重写，见 [后端契约与验收](docs/vulkan-backend.md)；C12 已复核 Vulkan C ABI 并接入 Plasma 双后端，默认 OpenGL，见 [接入与验收](docs/plasma-dual-backend.md)。GitHub 基线配置首轮失败已修复；三个 x86_64 模式的完整镜像隔离构建、必选测试、严格审计与归档通过，用户随后确认 Actions 产物本体/KDE5/KDE6 正常；新增本体 ARM64 与标签自动发布待首次远端执行，未提供的跨发行版/长期范围仍待验证，见 [CI 证据](docs/github-actions.md)。
 
 C13 优化复核基线 `3a56ce0`：明确撤销不安全建议，清理死接口并验证局部帧路径与候选加载；见 [审查](docs/optimization-audit-2026-10-12.md)。P7 继续按实测热点推进，下一批 G34 消除重复几何编译；本轮不替代跨发行版或全模型动态认证。
 

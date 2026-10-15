@@ -16,19 +16,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Python 3.8 in focal cannot run existing repository tools (Python >=3.10).
 # Pin a standalone build tool, not a runtime dependency of the native programs.
-RUN curl -fL --retry 3 \
-      'https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.11.14%2B20251014-x86_64-unknown-linux-gnu-install_only.tar.gz' \
+RUN case "$(dpkg --print-architecture)" in \
+      amd64) python_arch=x86_64; python_sha=d0623c777fb89b904b56cd5aba51af29cbb34b1f9d45f0672f90f6dce30fa93e ;; \
+      arm64) python_arch=aarch64; python_sha=8b033614f3a6969d86c20f9b823277ee8e1f72788307c082a44d2ad4cc856e2b ;; \
+      *) echo 'Unsupported Ubuntu20 build architecture' >&2; exit 1 ;; \
+    esac && curl -fL --retry 3 \
+      "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.11.14%2B20251014-${python_arch}-unknown-linux-gnu-install_only.tar.gz" \
       -o /tmp/python.tar.gz && \
-    echo 'd0623c777fb89b904b56cd5aba51af29cbb34b1f9d45f0672f90f6dce30fa93e  /tmp/python.tar.gz' | sha256sum -c - && \
+    echo "${python_sha}  /tmp/python.tar.gz" | sha256sum -c - && \
     tar -C /opt -xzf /tmp/python.tar.gz && rm /tmp/python.tar.gz
 ENV PATH="/opt/python/bin:${PATH}" CC=gcc-10 CXX=g++-10
 RUN python3 -m pip install --no-cache-dir cmake==3.28.4 Jinja2==3.1.6 MarkupSafe==3.0.3 Pillow==11.1.0
 
 # Offline session-import tests execute project-authored JavaScript. Focal's
 # Node 10 does not support the node: built-in imports used by those tools.
-RUN curl -fL --retry 3 https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.gz \
+RUN case "$(dpkg --print-architecture)" in \
+      amd64) node_arch=x64; node_sha=9d942932535988091034dc94cc5f42b6dc8784d6366df3a36c4c9ccb3996f0c2 ;; \
+      arm64) node_arch=arm64; node_sha=8cf30ff7250f9463b53c18f89c6c606dfda70378215b2c905d0a9a8b08bd45e0 ;; \
+      *) echo 'Unsupported Ubuntu20 build architecture' >&2; exit 1 ;; \
+    esac && curl -fL --retry 3 "https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-${node_arch}.tar.gz" \
       -o /tmp/node.tar.gz && \
-    echo '9d942932535988091034dc94cc5f42b6dc8784d6366df3a36c4c9ccb3996f0c2  /tmp/node.tar.gz' | sha256sum -c - && \
+    echo "${node_sha}  /tmp/node.tar.gz" | sha256sum -c - && \
     mkdir -p /opt/node && tar -C /opt/node --strip-components=1 -xzf /tmp/node.tar.gz && \
     rm /tmp/node.tar.gz
 ENV PATH="/opt/node/bin:${PATH}"
