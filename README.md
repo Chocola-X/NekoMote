@@ -1,5 +1,9 @@
 # NekoMote
 
+<div align="center">
+  <img src="./docs/branding/nekomote_logo.svg" alt="NekoMote" />
+</div>
+
 Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解包素材，独立实现模型求值、动画、物理、变形、遮罩、GPU 渲染与桌面接入，不依赖浏览器、JavaScript 或 asm.js 核心。
 
 支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经桌面插件或普通窗口运行。
