@@ -4,7 +4,7 @@ Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解
 
 支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经桌面插件或普通窗口运行。
 
-许可证：GNU AGPL-3.0-or-later（见 [LICENSE](LICENSE)）。
+许可证：GNU AGPL-3.0（见 [LICENSE](LICENSE)）。
 
 ## 功能
 
@@ -77,7 +77,9 @@ ctest --test-dir build/dev -LE gpu
 
 ## 资产准备
 
-运行时只接受当前 schema 6 模型与 version 1 会话，不自动回退旧格式。资产从已解包的 E-mote 模型导入，放在 `assets/` 目录。
+运行时只接受当前 schema 6 模型与 version 1 会话，不自动回退旧格式。资产放在 `assets/` 目录。
+
+可直接从资产仓库 [NekoMoteAssets](https://github.com/Chocola-X/NekoMoteAssets) 获取已导入的现成资产包（角色模型、背景与图标），放入 `assets/` 目录即可使用；或按以下步骤从原始素材自行导入。
 
 导入单个模型：
 
