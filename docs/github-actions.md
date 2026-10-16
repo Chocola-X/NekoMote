@@ -272,3 +272,15 @@ b214c68cf365490feb4e9ce289c112120efb4b0cf2b45ea6121bb6b6dd567be5  nekomote-plasm
 `python3 -m unittest tests.reference_capture.test_ci_release -v`。
 发布工作流尚未触发，本体 ARM64 也未在本地执行编译；首次远端运行仍需检查结果。
 本次仅改构建/发布与文档，不影响运行时渲染或帧路径性能。
+
+## 新增音频设备测试后的 CI 修复（2026-10-17）
+
+`4183c24` 新增了 `audio_device_contract`，但遗漏同步 `tools/ci_build.sh` 的显式
+`TARGETS` 清单。用户提供的 native20 x86_64 日志显示构建成功，197 项测试通过，
+唯一未运行项因缺少 `nekomote_audio_device_tests` 可执行文件而使 CTest 返回失败。
+JUnit 将此项记为 `notrun/skipped`，不能仅据其 `failures="0"` 宣称 CI 通过。
+
+修复将该可执行目标加入 native20、plasma5、plasma6 共用的构建清单，保留测试及
+原有失败门槛。后续新增独立必选测试可执行文件时，必须同时更新此清单。
+本地 Shell 语法检查、四个共同测试目标构建，以及音频设备/ABI 负例/ABI 合成边界
+三项 CTest 通过；本轮未重新执行基线容器、远端 Actions 或 ARM64 验证。
