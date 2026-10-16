@@ -24,7 +24,8 @@ add_executable(nekomote_unit_tests
     test_bend.cpp
     test_chain.cpp
     test_controller.cpp
-    test_ui_layout.cpp)
+    test_ui_layout.cpp
+    test_ui_menu.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE

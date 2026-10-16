@@ -125,9 +125,9 @@ python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest
 
 ```
 assets/
-├── config.json                       # 壁纸配置（角色、背景、变换、UI、静音等，自动读写）
+├── config.json                       # 壁纸配置（角色、背景、语言、变换、UI、静音等，自动读写）
 ├── characters/
-│   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"
+│   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"，值为多语言对象
 │   └── <角色组>/                     # 一级目录：角色组（如 chocola）
 │       └── <变体>/                   # 二级目录：型号变体（如 date-a）
 │           ├── model.nkm.json        # schema 6 模型（必需）
@@ -136,10 +136,10 @@ assets/
 │           ├── textures/             # PNG 图集
 │           └── report.json           # 导入结构报告
 ├── backgrounds/
-│   ├── background.json               # 可选，静态背景显示名字典
+│   ├── background.json               # 可选，静态背景显示名字典（多语言对象）
 │   ├── BG_07A.png                    # 静态背景（根目录，name 为文件 stem）
 │   └── dynamic/
-│       ├── background.json           # 可选，动态背景显示名字典
+│       ├── background.json           # 可选，动态背景显示名字典（多语言对象）
 │       └── <组名>/                   # 动态背景组（如 BG_01）
 │           ├── config.json           # phases 数组 + transition_seconds
 │           ├── A.png                 # 白天相
@@ -149,7 +149,9 @@ assets/
     └── toggle.png                    # UI 面板图标
 ```
 
-角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm.json` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供中文显示名，键为完整角色名。
+角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm.json` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
+
+显示名字典（`characters.json`、`background.json`、`dynamic/background.json`、`meta.json` 的 `display_name`）支持两种值格式：多语言对象按语言代码（`en` / `zh-CN` / `zh-TW` / `ja`）给出翻译；纯字符串则对所有语言生效。运行时按 `config.json` 的 `language` 字段选取，缺失的语言按 zh-CN → en → zh-TW → ja 顺序回退，最后回退到资产 ID。UI 面板语言在同一字段中切换，首次启动（无 `config.json`）默认英文。
 
 静态背景的 `name` 为 PNG 文件 stem（如 `BG_07A`）。动态背景的 `name` 为组目录名（如 `BG_01`），其 `config.json` 定义各相图片与切换时间：
 
@@ -188,9 +190,11 @@ build/release/bin/nekomote_player --assets assets --character <角色名> --mute
 - 鼠标移动：视线跟随；左键短按释放：触摸；左键长按 300ms 后：拖动角色；滚轮：围绕指针缩放
 - 空格：暂停/继续；F：适配完整模型；R：重置角色；Esc：关闭
 - Tab / 1–9：切换角色；B / N：切换背景；C：清除背景
-- 右上角图标：打开 UI 控制面板（角色、背景、关闭声音、FPS、锁定、重设位置）
+- 右上角图标：打开 UI 控制面板（角色、背景选择、语言、关闭声音、FPS、锁定、重设位置）
 
 声音开关统一由 UI 控制面板的"关闭声音"管理，状态写入 `config.json` 的 `mute` 字段，下次启动自动恢复。`--mute` 仅作启动时强制静音覆盖。
+
+界面与资产显示名支持英文、简体中文、繁体中文与日文，在 UI 控制面板的设置抽屉中切换并写入 `config.json` 的 `language` 字段。首次启动（资产目录无 `config.json`）默认英文，并自动选取列表中的第一张背景作为初始壁纸；已有配置中显式清空的背景保持无背景状态。
 
 ## KDE Plasma 壁纸部署
 

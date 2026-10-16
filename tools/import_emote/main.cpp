@@ -25,70 +25,153 @@ void print_usage()
     std::fprintf(stderr, "       nekomote_import migrate-layout --assets <assets_dir>\n");
 }
 
-const std::vector<std::pair<std::string, std::string>> kGroupDefs = {
-    {"chocola", "巧克力"}, {"vanilla", "香草"}, {"azuki", "红豆"}, {"coconut", "椰子"},
-    {"maple", "枫"},       {"cinnamon", "桂"},  {"milk", "牛奶"},  {"fraise", "草莓"}};
+// One display name per supported language. Keep the language keys and group
+// titles in sync with the runtime tables in src/application/catalog.cpp.
+struct LocalizedText
+{
+    const char* en;
+    const char* zh_cn;
+    const char* zh_tw;
+    const char* ja;
+};
 
-std::string parse_display_name(const std::string& char_id, const std::string& model_id)
+struct GroupDef
+{
+    const char* id;
+    LocalizedText title;
+};
+
+const std::vector<GroupDef> kGroupDefs = {
+    {"chocola", {"Chocola", "巧克力", "巧克力", "チョコラ"}},
+    {"vanilla", {"Vanilla", "香草", "香草", "バニラ"}},
+    {"azuki", {"Azuki", "红豆", "紅豆", "あずき"}},
+    {"coconut", {"Coconut", "椰子", "椰子", "ココナッツ"}},
+    {"maple", {"Maple", "枫", "楓", "メイプル"}},
+    {"cinnamon", {"Cinnamon", "桂", "桂", "シナモン"}},
+    {"milk", {"Milk", "牛奶", "牛奶", "ミルク"}},
+    {"fraise", {"Fraise", "草莓", "草莓", "フレーズ"}},
+};
+
+struct DisplayNameSet
+{
+    std::string en;
+    std::string zh_cn;
+    std::string zh_tw;
+    std::string ja;
+};
+
+Json make_name_json(const DisplayNameSet& names)
+{
+    return Json::object(
+        {{"en", names.en}, {"zh-CN", names.zh_cn}, {"zh-TW", names.zh_tw}, {"ja", names.ja}});
+}
+
+DisplayNameSet join_display_name(const DisplayNameSet& costume,
+                                 const std::vector<DisplayNameSet>& parts)
+{
+    if (parts.empty())
+        return {"Original", "原版", "原版", "オリジナル"};
+    const char* sep[4] = {" · ", "·", "·", "・"};
+    DisplayNameSet result = costume;
+    std::string* fields[4] = {&result.en, &result.zh_cn, &result.zh_tw, &result.ja};
+    for (std::size_t i = 0; i < 4; ++i)
+    {
+        for (const auto& part : parts)
+        {
+            const std::string* part_fields[4] = {&part.en, &part.zh_cn, &part.zh_tw, &part.ja};
+            *fields[i] += sep[i];
+            *fields[i] += *part_fields[i];
+        }
+    }
+    return result;
+}
+
+DisplayNameSet verbatim_name(const std::string& id)
+{
+    return {id, id, id, id};
+}
+
+DisplayNameSet parse_display_names(const std::string& char_id, const std::string& model_id)
 {
     std::string rem = model_id;
     if (rem.rfind(char_id + "-", 0) == 0)
         rem = rem.substr(char_id.size() + 1);
     else if (rem == char_id)
-        return "原版";
+        return {"Original", "原版", "原版", "オリジナル"};
 
-    const std::vector<std::pair<std::string, std::string>> costumes = {
-        {"france-maid", "法国女仆"}, {"wintermaid", "冬季女仆"}, {"casual", "日常"},
-        {"dress", "礼服"},           {"lolita", "洛丽塔"},       {"maid", "女仆"},
-        {"pajama", "睡衣"},          {"santa", "圣诞"},          {"winter", "冬季"},
-        {"yukata", "浴衣"},          {"teenage", "少女"},        {"koneko", "小猫"},
-        {"hawaii", "夏威夷"},        {"swimsuit", "泳装"},       {"date", "约会"},
-        {"shirt", "衬衫"},           {"summer", "夏装"}};
+    const std::vector<std::pair<std::string, LocalizedText>> costumes = {
+        {"france-maid", {"French maid", "法国女仆", "法國女僕", "フレンチメイド"}},
+        {"wintermaid", {"Winter maid", "冬季女仆", "冬季女僕", "ウィンターメイド"}},
+        {"casual", {"Casual", "日常", "日常", "私服"}},
+        {"dress", {"Dress", "礼服", "禮服", "ドレス"}},
+        {"lolita", {"Lolita", "洛丽塔", "洛麗塔", "ロリータ"}},
+        {"maid", {"Maid", "女仆", "女僕", "メイド"}},
+        {"pajama", {"Pajamas", "睡衣", "睡衣", "パジャマ"}},
+        {"santa", {"Santa", "圣诞", "聖誕", "サンタ"}},
+        {"winter", {"Winter", "冬季", "冬季", "ウインター"}},
+        {"yukata", {"Yukata", "浴衣", "浴衣", "浴衣"}},
+        {"teenage", {"Teenage", "少女", "少女", "ティーンエイジ"}},
+        {"koneko", {"Kitten", "小猫", "小貓", "子猫"}},
+        {"hawaii", {"Hawaii", "夏威夷", "夏威夷", "ハワイ"}},
+        {"swimsuit", {"Swimsuit", "泳装", "泳裝", "水着"}},
+        {"date", {"Date", "约会", "約會", "デート"}},
+        {"shirt", {"Shirt", "衬衫", "襯衫", "シャツ"}},
+        {"summer", {"Summer", "夏装", "夏裝", "夏服"}},
+    };
 
-    const std::vector<std::pair<std::string, std::string>> variants = {
-        {"no-bell-tail-pin", "无铃铛 / 尾部固定"},
-        {"no-bell", "无铃铛"},
-        {"with-bell", "有铃铛"},
-        {"ohtoro", "Ohtoro"},
-        {"custard", "卡仕达"},
-        {"4yo", "4yo 版本"},
-        {"v2", "版本 2"},
-        {"a", "站姿 A"},
-        {"b", "站姿 B"},
-        {"original", "原版"}};
+    const std::vector<std::pair<std::string, LocalizedText>> variants = {
+        {"no-bell-tail-pin",
+         {"No bell / tail pin", "无铃铛 / 尾部固定", "無鈴鐺 / 尾部固定", "鈴なし・尾部固定"}},
+        {"no-bell", {"No bell", "无铃铛", "無鈴鐺", "鈴なし"}},
+        {"with-bell", {"With bell", "有铃铛", "有鈴鐺", "鈴付き"}},
+        {"ohtoro", {"Ohtoro", "Ohtoro", "Ohtoro", "Ohtoro"}},
+        {"custard", {"Custard", "卡仕达", "卡仕達", "カスタード"}},
+        {"4yo", {"4yo", "4yo 版本", "4yo 版本", "4yo"}},
+        {"v2", {"Version 2", "版本 2", "版本 2", "バージョン2"}},
+        {"a", {"Pose A", "站姿 A", "站姿 A", "立ちポーズA"}},
+        {"b", {"Pose B", "站姿 B", "站姿 B", "立ちポーズB"}},
+        {"original", {"Original", "原版", "原版", "オリジナル"}},
+    };
 
-    std::string costume_name;
+    auto localized_to_set = [](const LocalizedText& text) -> DisplayNameSet
+    { return {text.en, text.zh_cn, text.zh_tw, text.ja}; };
+
+    DisplayNameSet costume;
+    bool costume_matched = false;
     for (const auto& [key, name] : costumes)
     {
         if (rem == key)
         {
-            costume_name = name;
+            costume = localized_to_set(name);
             rem.clear();
+            costume_matched = true;
             break;
         }
         if (rem.rfind(key + "-", 0) == 0)
         {
-            costume_name = name;
+            costume = localized_to_set(name);
             rem = rem.substr(key.size() + 1);
+            costume_matched = true;
             break;
         }
     }
-    if (costume_name.empty())
+    if (!costume_matched)
     {
-        auto dash = rem.find('-');
+        // Unknown costume ids are kept verbatim in every language.
+        const auto dash = rem.find('-');
         if (dash != std::string::npos)
         {
-            costume_name = rem.substr(0, dash);
+            costume = verbatim_name(rem.substr(0, dash));
             rem = rem.substr(dash + 1);
         }
         else
         {
-            costume_name = rem;
+            costume = verbatim_name(rem);
             rem.clear();
         }
     }
 
-    std::vector<std::string> var_names;
+    std::vector<DisplayNameSet> var_parts;
     while (!rem.empty())
     {
         bool matched = false;
@@ -96,14 +179,14 @@ std::string parse_display_name(const std::string& char_id, const std::string& mo
         {
             if (rem == key)
             {
-                var_names.push_back(name);
+                var_parts.push_back(localized_to_set(name));
                 rem.clear();
                 matched = true;
                 break;
             }
             if (rem.rfind(key + "-", 0) == 0)
             {
-                var_names.push_back(name);
+                var_parts.push_back(localized_to_set(name));
                 rem = rem.substr(key.size() + 1);
                 matched = true;
                 break;
@@ -111,34 +194,33 @@ std::string parse_display_name(const std::string& char_id, const std::string& mo
         }
         if (!matched)
         {
-            auto dash = rem.find('-');
+            const auto dash = rem.find('-');
             if (dash != std::string::npos)
             {
-                var_names.push_back(rem.substr(0, dash));
+                var_parts.push_back(verbatim_name(rem.substr(0, dash)));
                 rem = rem.substr(dash + 1);
             }
             else
             {
-                var_names.push_back(rem);
+                var_parts.push_back(verbatim_name(rem));
                 rem.clear();
             }
         }
     }
 
-    if (var_names.empty())
-        return costume_name + "·原版";
-
-    std::string result = costume_name;
-    for (const auto& v : var_names)
-        result += "·" + v;
-    return result;
+    if (var_parts.empty())
+    {
+        // A costume without variants is the "original" look of that costume.
+        var_parts.push_back({"Original", "原版", "原版", "オリジナル"});
+    }
+    return join_display_name(costume, var_parts);
 }
 
 std::string find_char_id(const std::string& flat_name)
 {
     for (const auto& [gid, _] : kGroupDefs)
     {
-        if (flat_name == gid || flat_name.rfind(gid + "-", 0) == 0)
+        if (flat_name == gid || flat_name.rfind(std::string(gid) + "-", 0) == 0)
             return gid;
     }
     const auto dash = flat_name.find('-');
@@ -181,7 +263,8 @@ int migrate_layout(const fs::path& assets_dir)
                         fs::rename(f.path(), dest);
                 }
                 const std::string two_layer = flat_name + "/default";
-                char_names_json[two_layer] = "原版";
+                char_names_json[two_layer] =
+                    make_name_json({"Original", "原版", "原版", "オリジナル"});
                 continue;
             }
             const std::string char_id = find_char_id(flat_name);
@@ -192,7 +275,7 @@ int migrate_layout(const fs::path& assets_dir)
             if (!fs::exists(new_dir))
                 fs::rename(flat_dir, new_dir);
             const std::string two_layer = char_id + "/" + variant_id;
-            char_names_json[two_layer] = parse_display_name(char_id, flat_name);
+            char_names_json[two_layer] = make_name_json(parse_display_names(char_id, flat_name));
         }
         {
             std::ofstream f(characters_dir / "characters.json");

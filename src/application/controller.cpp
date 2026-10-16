@@ -48,7 +48,32 @@ const AssetCatalog& WallpaperController::catalog() const noexcept
 void WallpaperController::load_config(const fs::path& path)
 {
     config_path_ = path;
+    // First launch means no config file exists yet. Pick the first background
+    // deterministically (catalog order) instead of leaving a black wallpaper;
+    // an existing config with an explicitly cleared background keeps the empty
+    // state. Hosts scan assets before loading the config, so the catalog is
+    // available here.
+    std::error_code ec;
+    const bool first_launch = !fs::exists(path, ec);
     config_ = WallpaperConfig::load(path);
+    if (first_launch && config_.background.empty() && !catalog_.backgrounds.empty())
+    {
+        config_.background = catalog_.backgrounds.front().name;
+        if (!no_save_ && !config_path_.empty())
+        {
+            try
+            {
+                config_.save(config_path_);
+            }
+            catch (const std::exception& error)
+            {
+                // The in-memory default still applies for this session; the
+                // same deterministic pick happens again on the next launch.
+                std::fprintf(stderr, "Cannot save initial background to %s: %s\n",
+                             config_path_.c_str(), error.what());
+            }
+        }
+    }
 }
 
 void WallpaperController::save_config(const fs::path& path) const

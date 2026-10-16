@@ -518,6 +518,7 @@ TEST_CASE("Controller config save load", "[controller]")
     const fs::path path = fs::temp_directory_path() / "nekomote_controller_test_config.json";
     c.config().character = "test_character";
     c.config().background = "test_background";
+    c.config().language = Language::Japanese;
     c.config().scale = 1.5f;
     c.config().fps = 60;
     c.config().transform_saved = true;
@@ -534,6 +535,7 @@ TEST_CASE("Controller config save load", "[controller]")
     c2.load_config(path);
     REQUIRE(c2.config().character == "test_character");
     REQUIRE(c2.config().background == "test_background");
+    REQUIRE(c2.config().language == Language::Japanese);
     REQUIRE(c2.config().scale == 1.5f);
     REQUIRE(c2.config().fps == 60);
     REQUIRE(c2.config().transform_saved);
@@ -544,6 +546,33 @@ TEST_CASE("Controller config save load", "[controller]")
     REQUIRE(c2.config().sidebar_x == 76.0f);
     REQUIRE(c2.config().sidebar_y == 89.0f);
     REQUIRE(c2.config().sidebar_free);
+    fs::remove(path);
+}
+
+TEST_CASE("Config language defaults to English and rejects unknown codes", "[controller][config]")
+{
+    REQUIRE(WallpaperConfig{}.language == Language::English);
+    const auto path = fs::temp_directory_path() / "nekomote_config_language_test.json";
+    {
+        std::ofstream f(path);
+        f << R"({"character":"a","language":"zh-CN"})";
+    }
+    auto config = WallpaperConfig::load(path);
+    REQUIRE(config.language == Language::ChineseSimplified);
+    fs::remove(path);
+    {
+        std::ofstream f(path);
+        f << R"({"character":"a","language":"klingon"})";
+    }
+    config = WallpaperConfig::load(path);
+    REQUIRE(config.language == Language::English);
+    fs::remove(path);
+    {
+        std::ofstream f(path);
+        f << R"({"character":"a"})";
+    }
+    config = WallpaperConfig::load(path);
+    REQUIRE(config.language == Language::English);
     fs::remove(path);
 }
 
@@ -620,12 +649,13 @@ TEST_CASE("Catalog scans static and dynamic backgrounds", "[catalog]")
     fs::remove_all(root);
 }
 
-TEST_CASE("Catalog reads background names from JSON", "[catalog]")
+TEST_CASE("Catalog reads localized background names from JSON", "[catalog]")
 {
     const auto root = fs::temp_directory_path() / "nekomote_bg_names_test";
     fs::remove_all(root);
     fs::create_directories(root / "backgrounds" / "dynamic" / "BG_22");
     std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
+    std::ofstream(root / "backgrounds" / "BG_13A.png").put('x');
     std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "A.png").put('x');
     std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "B.png").put('x');
     std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "C.png").put('x');
@@ -638,22 +668,166 @@ TEST_CASE("Catalog reads background names from JSON", "[catalog]")
     }
     {
         std::ofstream f(root / "backgrounds" / "background.json");
-        f << R"({"BG_07A.png":{"zh-CN":"海滨餐厅露台","en":"Seaside"}})";
+        f << R"({"BG_07A.png":{"zh-CN":"海滨餐厅露台","zh-TW":"海濱餐廳露台",)"
+          << R"("en":"Seaside","ja":"海辺のレストラン"},)"
+          << R"("BG_13A.png":"粉色瓷砖浴室"})";
         f << "}";
     }
     {
         std::ofstream f(root / "backgrounds" / "dynamic" / "background.json");
-        f << R"({"BG_22":"游乐园入口广场"})";
+        f << R"({"BG_22":{"zh-CN":"游乐园入口广场","en":"Park entrance",)"
+          << R"("zh-TW":"遊樂園入口廣場","ja":"遊園地入口広場"}})";
         f << "}";
     }
 
     const auto catalog = AssetCatalog::scan(root);
     const auto* bg07 = catalog.find_background("BG_07A");
     REQUIRE(bg07 != nullptr);
-    REQUIRE(bg07->display_name == "海滨餐厅露台");
+    REQUIRE(bg07->names.resolve(Language::English, bg07->name) == "Seaside");
+    REQUIRE(bg07->names.resolve(Language::ChineseSimplified, bg07->name) == "海滨餐厅露台");
+    REQUIRE(bg07->names.resolve(Language::ChineseTraditional, bg07->name) == "海濱餐廳露台");
+    REQUIRE(bg07->names.resolve(Language::Japanese, bg07->name) == "海辺のレストラン");
+
+    const auto* bg13 = catalog.find_background("BG_13A");
+    REQUIRE(bg13 != nullptr);
+    // A plain string value applies to every language.
+    REQUIRE(bg13->names.resolve(Language::English, bg13->name) == "粉色瓷砖浴室");
+    REQUIRE(bg13->names.resolve(Language::Japanese, bg13->name) == "粉色瓷砖浴室");
+
     const auto* bg22 = catalog.find_background("BG_22");
     REQUIRE(bg22 != nullptr);
-    REQUIRE(bg22->display_name == "游乐园入口广场");
+    REQUIRE(bg22->names.resolve(Language::English, bg22->name) == "Park entrance");
+    REQUIRE(bg22->names.resolve(Language::Japanese, bg22->name) == "遊園地入口広場");
+
+    // A missing dictionary entry falls back to the asset name.
+    const auto* missing = catalog.find_background("BG_29");
+    REQUIRE(missing == nullptr);
+
+    fs::remove_all(root);
+}
+
+TEST_CASE("LocalizedName fallback prefers zh-CN data then asset id", "[catalog]")
+{
+    LocalizedName name;
+    name.zh_cn = "中文";
+    REQUIRE(name.resolve(Language::English, "fallback") == "中文");
+    REQUIRE(name.resolve(Language::Japanese, "fallback") == "中文");
+    REQUIRE(name.resolve(Language::ChineseSimplified, "fallback") == "中文");
+
+    LocalizedName partial;
+    partial.ja = "日本語";
+    REQUIRE(partial.resolve(Language::English, "fallback") == "日本語");
+    REQUIRE(partial.resolve(Language::Japanese, "fallback") == "日本語");
+
+    LocalizedName none;
+    REQUIRE(none.resolve(Language::English, "fallback") == "fallback");
+    REQUIRE(none.empty());
+}
+
+TEST_CASE("Catalog reads localized character names and group titles", "[catalog]")
+{
+    const auto root = fs::temp_directory_path() / "nekomote_char_names_test";
+    fs::remove_all(root);
+    fs::create_directories(root / "characters" / "chocola" / "casual-a-with-bell");
+    fs::create_directories(root / "characters" / "unknownchar" / "variant-x");
+    std::ofstream(root / "characters" / "chocola" / "casual-a-with-bell" / "model.nkm.json")
+        .put('x');
+    std::ofstream(root / "characters" / "chocola" / "casual-a-with-bell" / "session.nks.json")
+        .put('x');
+    std::ofstream(root / "characters" / "unknownchar" / "variant-x" / "model.nkm.json").put('x');
+    std::ofstream(root / "characters" / "unknownchar" / "variant-x" / "session.nks.json").put('x');
+    {
+        std::ofstream f(root / "characters" / "characters.json");
+        f << R"({"chocola/casual-a-with-bell":{"en":"Casual · Pose A · With bell",)"
+          << R"("zh-CN":"日常·站姿 A·有铃铛","zh-TW":"日常·站姿 A·有鈴鐺",)"
+          << R"("ja":"私服・立ちポーズA・鈴付き"}})";
+        f << "}";
+    }
+
+    const auto catalog = AssetCatalog::scan(root);
+    REQUIRE(catalog.character_groups.size() == 2);
+
+    const auto* chocola = catalog.find_character("chocola/casual-a-with-bell");
+    REQUIRE(chocola != nullptr);
+    REQUIRE(chocola->names.resolve(Language::English, chocola->name) ==
+            "Casual · Pose A · With bell");
+    REQUIRE(chocola->names.resolve(Language::ChineseSimplified, chocola->name) ==
+            "日常·站姿 A·有铃铛");
+    REQUIRE(chocola->names.resolve(Language::ChineseTraditional, chocola->name) ==
+            "日常·站姿 A·有鈴鐺");
+    REQUIRE(chocola->names.resolve(Language::Japanese, chocola->name) ==
+            "私服・立ちポーズA・鈴付き");
+
+    const auto& group = catalog.character_groups.front();
+    REQUIRE(group.id == "chocola");
+    REQUIRE(group.title.resolve(Language::English, group.id) == "Chocola");
+    REQUIRE(group.title.resolve(Language::ChineseSimplified, group.id) == "巧克力");
+    REQUIRE(group.title.resolve(Language::Japanese, group.id) == "チョコラ");
+    const auto& item = group.items.front();
+    REQUIRE(item.names.resolve(Language::English, item.fallback_name) ==
+            "Casual · Pose A · With bell");
+    REQUIRE(item.fallback_name == "casual-a-with-bell");
+
+    // Unknown group ids and missing dictionary entries fall back to ids.
+    const auto& unknown_group = catalog.character_groups.back();
+    REQUIRE(unknown_group.id == "unknownchar");
+    REQUIRE(unknown_group.title.resolve(Language::English, unknown_group.id) == "unknownchar");
+    const auto& unknown_item = unknown_group.items.front();
+    REQUIRE(unknown_item.names.resolve(Language::English, unknown_item.fallback_name) ==
+            "variant-x");
+
+    fs::remove_all(root);
+}
+
+TEST_CASE("First launch without config picks the first background", "[controller][config]")
+{
+    const auto root = fs::temp_directory_path() / "nekomote_first_launch_bg_test";
+    fs::remove_all(root);
+    fs::create_directories(root / "backgrounds" / "dynamic" / "BG_22");
+    std::ofstream(root / "backgrounds" / "BG_07A.png").put('x');
+    std::ofstream(root / "backgrounds" / "BG_13A.png").put('x');
+    std::ofstream(root / "backgrounds" / "dynamic" / "BG_22" / "A.png").put('x');
+    {
+        std::ofstream f(root / "backgrounds" / "dynamic" / "BG_22" / "config.json");
+        f << R"({"phases":[{"image":"A.png","start":"06:00"}]})";
+        f << "}";
+    }
+    const fs::path config_path = root / "config.json";
+
+    SECTION("no config file selects the first background deterministically")
+    {
+        WallpaperController c;
+        c.scan_assets(root);
+        c.load_config(config_path);
+        REQUIRE(c.config().background == "BG_07A");
+        // The pick is persisted so the choice survives the next launch.
+        REQUIRE(fs::exists(config_path));
+        const auto saved = WallpaperConfig::load(config_path);
+        REQUIRE(saved.background == "BG_07A");
+        REQUIRE(saved.language == Language::English);
+    }
+
+    SECTION("existing config with cleared background keeps the empty state")
+    {
+        {
+            std::ofstream f(config_path);
+            f << R"({"character":"a","background":""})";
+        }
+        WallpaperController c;
+        c.scan_assets(root);
+        c.load_config(config_path);
+        REQUIRE(c.config().background.empty());
+    }
+
+    SECTION("no-save keeps the pick in memory without writing the file")
+    {
+        WallpaperController c;
+        c.set_no_save(true);
+        c.scan_assets(root);
+        c.load_config(config_path);
+        REQUIRE(c.config().background == "BG_07A");
+        REQUIRE_FALSE(fs::exists(config_path));
+    }
 
     fs::remove_all(root);
 }

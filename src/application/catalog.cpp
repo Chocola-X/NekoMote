@@ -10,21 +10,68 @@
 
 namespace nekomote::application
 {
+
+std::string_view language_code(Language lang) noexcept
+{
+    switch (lang)
+    {
+        case Language::English:
+            return "en";
+        case Language::ChineseSimplified:
+            return "zh-CN";
+        case Language::ChineseTraditional:
+            return "zh-TW";
+        case Language::Japanese:
+            return "ja";
+    }
+    return "en";
+}
+
+std::optional<Language> language_from_code(std::string_view code) noexcept
+{
+    if (code == "en")
+        return Language::English;
+    if (code == "zh-CN")
+        return Language::ChineseSimplified;
+    if (code == "zh-TW")
+        return Language::ChineseTraditional;
+    if (code == "ja")
+        return Language::Japanese;
+    return std::nullopt;
+}
+
 namespace
 {
 namespace fs = std::filesystem;
 using Json = nlohmann::json;
 
-const std::vector<std::pair<std::string, std::string>> kGroupTitles = {
-    {"chocola", "巧克力"}, {"vanilla", "香草"}, {"azuki", "红豆"}, {"coconut", "椰子"},
-    {"maple", "枫"},       {"cinnamon", "桂"},  {"milk", "牛奶"},  {"fraise", "草莓"}};
-
-std::string group_title(const std::string& id)
+// Keep in sync with the importer group table in tools/import_emote/main.cpp.
+struct GroupTitleEntry
 {
-    for (const auto& [gid, title] : kGroupTitles)
-        if (gid == id)
-            return title;
-    return id;
+    const char* id;
+    const char* en;
+    const char* zh_cn;
+    const char* zh_tw;
+    const char* ja;
+};
+
+const GroupTitleEntry kGroupTitles[] = {
+    {"chocola", "Chocola", "巧克力", "巧克力", "チョコラ"},
+    {"vanilla", "Vanilla", "香草", "香草", "バニラ"},
+    {"azuki", "Azuki", "红豆", "紅豆", "あずき"},
+    {"coconut", "Coconut", "椰子", "椰子", "ココナッツ"},
+    {"maple", "Maple", "枫", "楓", "メイプル"},
+    {"cinnamon", "Cinnamon", "桂", "桂", "シナモン"},
+    {"milk", "Milk", "牛奶", "牛奶", "ミルク"},
+    {"fraise", "Fraise", "草莓", "草莓", "フレーズ"},
+};
+
+LocalizedName group_title(const std::string& id)
+{
+    for (const auto& entry : kGroupTitles)
+        if (id == entry.id)
+            return LocalizedName{entry.en, entry.zh_cn, entry.zh_tw, entry.ja};
+    return {};
 }
 
 int parse_hhmm(const std::string& s)
@@ -44,33 +91,40 @@ int parse_hhmm(const std::string& s)
     }
 }
 
-std::unordered_map<std::string, std::string> load_name_dict(const fs::path& path)
+// Reads one localized name-dictionary value. A plain string names all
+// languages; an object maps language codes ("en"/"zh-CN"/"zh-TW"/"ja") to
+// translations. Unknown keys are ignored.
+LocalizedName parse_localized_name(const Json& value)
 {
-    std::unordered_map<std::string, std::string> dict;
-    if (!fs::exists(path))
-        return dict;
-    std::ifstream f(path);
-    if (!f)
-        return dict;
-    try
+    LocalizedName name;
+    if (value.is_string())
     {
-        Json j;
-        f >> j;
-        for (auto it = j.begin(); it != j.end(); ++it)
-        {
-            if (it.value().is_string())
-                dict.emplace(it.key(), it.value().get<std::string>());
-        }
+        const std::string text = value.get<std::string>();
+        name.en = name.zh_cn = name.zh_tw = name.ja = text;
+        return name;
     }
-    catch (...)
+    if (!value.is_object())
+        return name;
+    for (auto it = value.begin(); it != value.end(); ++it)
     {
+        if (!it.value().is_string())
+            continue;
+        const std::string text = it.value().get<std::string>();
+        if (it.key() == "en")
+            name.en = text;
+        else if (it.key() == "zh-CN")
+            name.zh_cn = text;
+        else if (it.key() == "zh-TW")
+            name.zh_tw = text;
+        else if (it.key() == "ja")
+            name.ja = text;
     }
-    return dict;
+    return name;
 }
 
-std::unordered_map<std::string, std::string> load_bg_name_dict(const fs::path& path)
+std::unordered_map<std::string, LocalizedName> load_localized_dict(const fs::path& path)
 {
-    std::unordered_map<std::string, std::string> dict;
+    std::unordered_map<std::string, LocalizedName> dict;
     if (!fs::exists(path))
         return dict;
     std::ifstream f(path);
@@ -82,10 +136,10 @@ std::unordered_map<std::string, std::string> load_bg_name_dict(const fs::path& p
         f >> j;
         for (auto it = j.begin(); it != j.end(); ++it)
         {
-            if (it.value().is_object() && it.value().contains("zh-CN"))
-                dict.emplace(it.key(), it.value()["zh-CN"].get<std::string>());
-            else if (it.value().is_string())
-                dict.emplace(it.key(), it.value().get<std::string>());
+            LocalizedName name = parse_localized_name(it.value());
+            if (name.empty())
+                continue;
+            dict.emplace(it.key(), std::move(name));
         }
     }
     catch (...)
@@ -129,7 +183,7 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
     catalog.assets_root = assets_dir;
     const fs::path characters_dir = assets_dir / "characters";
 
-    const auto char_names = load_name_dict(characters_dir / "characters.json");
+    const auto char_names = load_localized_dict(characters_dir / "characters.json");
 
     if (fs::exists(characters_dir))
         for (const auto& char_entry : fs::directory_iterator(characters_dir))
@@ -167,8 +221,8 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
                                 ch.cutoff_y = mj["cutoff_y"].get<float>();
                                 ch.has_cutoff = true;
                             }
-                            if (mj.contains("display_name") && mj["display_name"].is_string())
-                                ch.display_name = mj["display_name"].get<std::string>();
+                            if (mj.contains("display_name"))
+                                ch.names = parse_localized_name(mj["display_name"]);
                             if (mj.contains("hidden") && mj["hidden"].is_boolean())
                                 ch.hidden = mj["hidden"].get<bool>();
                             if (mj.contains("order") && mj["order"].is_number_integer())
@@ -180,13 +234,11 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
                     }
                 }
 
-                if (ch.display_name.empty())
+                if (ch.names.empty())
                 {
                     if (auto it = char_names.find(two_layer_path); it != char_names.end())
-                        ch.display_name = it->second;
+                        ch.names = it->second;
                 }
-                if (ch.display_name.empty())
-                    ch.display_name = variant_id;
             }
         }
 
@@ -220,20 +272,21 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
             catalog.character_groups.push_back(std::move(group));
         }
         auto& group = catalog.character_groups[group_index[group_id]];
-        group.items.push_back({static_cast<int>(i), ch.name, ch.display_name});
+        const std::string variant_id =
+            (slash != std::string::npos) ? ch.name.substr(slash + 1) : ch.name;
+        group.items.push_back({static_cast<int>(i), ch.name, ch.names, variant_id});
     }
 
     const fs::path backgrounds_dir = assets_dir / "backgrounds";
     if (!fs::exists(backgrounds_dir))
         return catalog;
 
-    const auto bg_names = load_bg_name_dict(backgrounds_dir / "background.json");
-    const auto lookup_name = [&](const std::string& filename,
-                                 const std::string& fallback) -> std::string
+    const auto bg_names = load_localized_dict(backgrounds_dir / "background.json");
+    const auto lookup_name = [&](const std::string& filename) -> LocalizedName
     {
         if (auto it = bg_names.find(filename); it != bg_names.end())
             return it->second;
-        return fallback;
+        return {};
     };
 
     for (const auto& entry : fs::directory_iterator(backgrounds_dir))
@@ -245,14 +298,13 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
         if (ext != ".png" && ext != ".PNG")
             continue;
         const auto stem = path.stem().string();
-        const auto disp = lookup_name(stem + ".png", stem);
-        catalog.backgrounds.push_back({stem, disp, path});
+        catalog.backgrounds.push_back({stem, lookup_name(stem + ".png"), path});
     }
 
     const auto dynamic_dir = backgrounds_dir / "dynamic";
     if (fs::exists(dynamic_dir))
     {
-        const auto dyn_names = load_name_dict(dynamic_dir / "background.json");
+        const auto dyn_names = load_localized_dict(dynamic_dir / "background.json");
         for (const auto& group_entry : fs::directory_iterator(dynamic_dir))
         {
             if (!group_entry.is_directory())
@@ -280,9 +332,7 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
             bg.name = group_id;
             bg.type = BackgroundType::Dynamic;
             if (auto it = dyn_names.find(group_id); it != dyn_names.end())
-                bg.display_name = it->second;
-            else
-                bg.display_name = group_id;
+                bg.names = it->second;
             if (cj.contains("transition_seconds") && cj["transition_seconds"].is_number())
                 bg.transition_seconds = cj["transition_seconds"].get<float>();
             for (const auto& phase : cj["phases"])
@@ -347,6 +397,11 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
         config.character = json["character"].get<std::string>();
     if (json.contains("background") && json["background"].is_string())
         config.background = json["background"].get<std::string>();
+    if (json.contains("language") && json["language"].is_string())
+    {
+        if (auto lang = language_from_code(json["language"].get<std::string>()))
+            config.language = *lang;
+    }
     if (json.contains("scale") && json["scale"].is_number())
         config.scale = json["scale"].get<float>();
     if (json.contains("origin_x") && json["origin_x"].is_number())
@@ -418,6 +473,7 @@ void WallpaperConfig::save(const fs::path& path) const
     Json json = Json::object();
     json["character"] = character;
     json["background"] = background;
+    json["language"] = std::string(language_code(language));
     json["scale"] = scale;
     json["origin_x"] = origin_x;
     json["origin_y"] = origin_y;
