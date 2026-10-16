@@ -244,7 +244,7 @@ nekomote_error WallpaperInstance::set_muted(bool value)
     else
     {
         audio_failed_ = false;
-        if (!audio_device_ && !audio_clips_.empty())
+        if (!audio_device_ && audio_clips_ && !audio_clips_->empty())
         {
             try
             {
@@ -473,12 +473,12 @@ void WallpaperInstance::create_audio_device(application::CandidateCpu& candidate
         return;
     if (candidate.audio_clips.empty())
         return;
-    audio_clips_ = candidate.audio_clips;
+    audio_clips_ = std::make_shared<const model::AudioBank>(std::move(candidate.audio_clips));
     if (audio_failed_)
         return;
     try
     {
-        auto device = std::make_unique<audio::Device>(std::move(candidate.audio_clips));
+        auto device = std::make_unique<audio::Device>(audio_clips_);
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
         while (device->snapshot().state == audio::DeviceState::Connecting &&
                std::chrono::steady_clock::now() < deadline)

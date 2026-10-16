@@ -24,6 +24,7 @@ assets/XDG 选择规则；指定后绝不自动回退。资产设置时验证存
 输入 gaze/touch 均为呈现方向的中心 framebuffer 像素，Y 向下。宿主转换逻辑窗口/DPI 并减去半个画幅，不再翻转 X；session 负责作者触摸区的缩放、放置与镜像逆变换。诊断及本轮验证见 C6 输入交接（已归档）。
 
 - CPU session由一个求值线程顺序调用，不能并发advance/prepare/输入；immutable program可供各自独立的session借用。
+- 解码语音完成后移动发布为 `shared_ptr<const model::AudioBank>`，内部宿主与音频 Device 共享同一份 PCM/RMS；不得保留可变别名。Device 工作线程退出并 join 后才释放其 bank，宿主可保留 bank 以重建设备；引用计数操作不进入音频命令/快照帧路径。此为内部 C++ 所有权约束，不向 C ABI 暴露 shared_ptr，验证见 [语音共享](audio-bank-sharing-2026-10-17.md)。
 - model/session_asset 可在 program 编译成功后销毁；program 必须比借用它的 session 活得更久。GPU renderer 与 CPU session 分别拥有资源；renderer 创建、调用和销毁都要求宿主提供同一有效上下文及图形线程。
 - C/C++ 帧逐字段复制到各自预分配的存储，不互转对象指针。session 创建时按 scene 容量预分配主帧，背景预留 8 顶点/12 索引/2 命令；renderer reserve 同时预留复制缓冲区和 GPU 容量。
 - `upload_texture` 输入为紧密排列的 RGBA8，新增 `pixel_bytes` 必须等于 width × height × 4；图像加载后的实际长度由 `nekomote_image_byte_count` 取得。宿主负责保证指针在声明的长度内可读，并保持到同步上传调用返回；后端不保留 CPU 像素指针。图像句柄拥有解码缓冲，销毁时释放映射；模型内部加载裁切不改变此完整 PNG 接口，详见 [C15](texture-cropping-2026-10-12.md)。

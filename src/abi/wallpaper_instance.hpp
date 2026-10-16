@@ -123,7 +123,7 @@ class WallpaperInstance
     std::unique_ptr<render_gl::Renderer> previous_renderer_;
     std::unique_ptr<render_gl::Renderer> background_renderer_;
     std::unique_ptr<audio::Device> audio_device_;
-    std::vector<model::AudioClip> audio_clips_;
+    std::shared_ptr<const model::AudioBank> audio_clips_;
     render_gl::UiRenderer ui_renderer_;
 #if defined(NEKOMOTE_HAS_VULKAN)
     render_vk::DeviceContext vk_ctx_{};

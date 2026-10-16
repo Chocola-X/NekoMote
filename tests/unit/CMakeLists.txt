@@ -47,6 +47,16 @@ include(Catch)
 # Match the all-skipped report instead of exit code 4: Catch also returns 4
 # for four failed assertions, which must remain a failure.
 set(NEKOMOTE_CATCH_SKIP_REPORT "test cases: 1 [|] 1 skipped")
+if(TARGET nekomote_audio)
+    add_executable(nekomote_audio_device_tests test_audio_device.cpp)
+    target_link_libraries(nekomote_audio_device_tests PRIVATE nekomote::audio
+        Catch2::Catch2WithMain nekomote_warnings)
+    add_test(NAME audio_device_contract COMMAND nekomote_audio_device_tests)
+    # Bank lifetime must be independent of an audio server, including teardown
+    # while connecting. Never send these synthetic clips to the user's device.
+    set_tests_properties(audio_device_contract PROPERTIES
+        ENVIRONMENT "PULSE_SERVER=unix:/nekomote-unit-tests/no-pulse-server" TIMEOUT 15)
+endif()
 catch_discover_tests(nekomote_unit_tests
     TEST_SPEC "~[integration]"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

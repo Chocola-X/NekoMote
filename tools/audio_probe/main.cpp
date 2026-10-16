@@ -30,16 +30,8 @@ void send(audio::Device& device, application::AudioCommandKind kind, AudioClipId
     if (!device.submit({kind, id}))
         throw std::runtime_error("command rejected");
 }
-int run(int argc, char** argv)
+void verify_playback(audio::Device& device, const std::string& csv_path)
 {
-    if (argc != 3)
-        throw std::runtime_error("usage: nekomote_audio_probe VOICE_WAV OUTPUT_CSV");
-    auto loaded = asset_io::load_wave(argv[1]);
-    if (!loaded.ok)
-        throw std::runtime_error(loaded.error);
-    std::vector<model::AudioClip> clips;
-    clips.push_back(std::move(loaded.clip));
-    audio::Device device(std::move(clips));
     wait_for(device, audio::DeviceState::Ready);
     if (device.submit({application::AudioCommandKind::Play, AudioClipId{2}}))
         throw std::runtime_error("invalid clip accepted");
@@ -52,7 +44,7 @@ int run(int argc, char** argv)
         throw std::runtime_error("paused RMS not zero");
     send(device, application::AudioCommandKind::Resume);
     wait_for(device, audio::DeviceState::Playing);
-    std::ofstream out(argv[2]);
+    std::ofstream out(csv_path);
     if (!out)
         throw std::runtime_error("cannot open CSV");
     out << "elapsed_ms,state,rms\n";
@@ -84,6 +76,27 @@ int run(int argc, char** argv)
     wait_for(device, audio::DeviceState::Ready);
     std::printf("Device playback/pause/resume/stop/replay passed, actual RMS max %.6f\n",
                 static_cast<double>(maximum));
+}
+int run(int argc, char** argv)
+{
+    if (argc != 3)
+        throw std::runtime_error("usage: nekomote_audio_probe VOICE_WAV OUTPUT_CSV");
+    auto loaded = asset_io::load_wave(argv[1]);
+    if (!loaded.ok)
+        throw std::runtime_error(loaded.error);
+    model::AudioBank clips;
+    clips.push_back(std::move(loaded.clip));
+    auto bank = std::make_shared<const model::AudioBank>(std::move(clips));
+    {
+        audio::Device device(bank);
+        verify_playback(device, argv[2]);
+    }
+    // Recreate from the host's retained bank, as after unmuting. Then drop
+    // the host owner: playback must retain PCM until the new worker joins.
+    audio::Device recreated(bank);
+    bank.reset();
+    verify_playback(recreated, std::string(argv[2]) + ".recreated.csv");
+    std::printf("Device recreation and playback without host bank owner passed\n");
     return 0;
 }
 } // namespace

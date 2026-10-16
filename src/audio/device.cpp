@@ -23,7 +23,7 @@ void release(pa_operation* operation) noexcept
 } // namespace
 struct Device::Impl
 {
-    std::vector<model::AudioClip> clips;
+    std::shared_ptr<const model::AudioBank> clips;
     std::array<application::AudioCommand, kCommands> commands{};
     std::atomic<std::size_t> read{0}, write{0};
     std::atomic<bool> quitting{false};
@@ -39,9 +39,11 @@ struct Device::Impl
     const model::AudioClip* clip{nullptr};
     std::size_t sample_offset{0};
     bool paused{false}, stream_paused{false};
-    explicit Impl(std::vector<model::AudioClip> data) : clips(std::move(data))
+    explicit Impl(std::shared_ptr<const model::AudioBank> data) : clips(std::move(data))
     {
-        for (const auto& value : clips)
+        if (!clips)
+            throw std::invalid_argument("null decoded audio bank");
+        for (const auto& value : *clips)
         {
             if (value.sample_rate < 8000 || value.sample_rate > 192000 || value.channels < 1 ||
                 value.channels > 2 || value.samples.empty() ||
@@ -104,8 +106,7 @@ struct Device::Impl
     }
     static void underflow(pa_stream*, void* userdata) noexcept
     {
-        static_cast<Impl*>(userdata)->underruns
-            .fetch_add(1, std::memory_order_relaxed);
+        static_cast<Impl*>(userdata)->underruns.fetch_add(1, std::memory_order_relaxed);
     }
     void command(application::AudioCommand value) noexcept
     {
@@ -118,7 +119,7 @@ struct Device::Impl
         else if (value.kind == AudioCommandKind::Play)
         {
             close_stream();
-            clip = &clips[value.clip.value - 1];
+            clip = &(*clips)[value.clip.value - 1];
             const pa_sample_spec spec{PA_SAMPLE_FLOAT32NE, clip->sample_rate,
                                       static_cast<std::uint8_t>(clip->channels)};
             stream = pa_stream_new(context, "NekoMote voice", &spec, nullptr);
@@ -273,7 +274,7 @@ struct Device::Impl
             pa_mainloop_free(loop);
     }
 };
-Device::Device(std::vector<model::AudioClip> clips)
+Device::Device(std::shared_ptr<const model::AudioBank> clips)
     : impl_(std::make_unique<Impl>(std::move(clips)))
 {
 }
@@ -287,7 +288,7 @@ bool Device::submit(application::AudioCommand command) noexcept
         kind != application::AudioCommandKind::Resume)
         return false;
     if (kind == application::AudioCommandKind::Play &&
-        (!command.clip.valid() || command.clip.value > impl_->clips.size()))
+        (!command.clip.valid() || command.clip.value > impl_->clips->size()))
         return false;
     if (impl_->state.load(std::memory_order_acquire) == DeviceState::Failed)
         return false;
