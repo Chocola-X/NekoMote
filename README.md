@@ -4,7 +4,7 @@
   <img src="./docs/branding/nekomote_logo.svg" alt="NekoMote" />
 </div>
 
-Linux 原生二维角色模型运行时与动态壁纸。复用已有 E-mote 解包素材，独立实现模型求值、动画、物理、变形、遮罩、GPU 渲染与桌面接入，不依赖浏览器、JavaScript 或 asm.js 核心。
+NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面动态壁纸：模型求值、时间线动画、变形、遮罩、物理与 GPU 渲染均为从零实现的完整原生播放链条，不依赖浏览器、JavaScript、asm.js 或任何专有核心。目前可完美对接《猫娘乐园》（NEKOPARA）的角色解包素材（FreeMote 解包后经本项目导入器规范化），在真实桌面上长期稳定运行。
 
 支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经桌面插件或普通窗口运行。
 
@@ -80,6 +80,8 @@ ctest --test-dir build/dev -LE gpu
 ```
 
 ## 资产准备
+
+资产分两类来源：角色模型与背景图片来自《猫娘乐园》（NEKOPARA）Steam 版游戏解包，经 FreeMote 解包后由本项目导入器规范化；动作反应会话（视线、触摸与动作规则）为用户自行配置，不属于游戏原始数据。
 
 运行时只接受当前 schema 6 模型与 version 1 会话，不自动回退旧格式。资产放在 `assets/` 目录。
 
@@ -259,6 +261,16 @@ python3 tools/plasma_deploy.py install --stage stage
 | `background_fade_seconds` | 背景切换渐变时长 |
 
 `--no-save` 保留原配置不写回。
+
+## 性能
+
+面向 Linux 桌面长期运行设计，运行占用较低。实测稳态占用（1920×1080、60 FPS、OpenGL 后端，完整角色 + 背景 + UI）：
+
+- 内存占用：约 140 MB
+- 显存占用：约 60 MB
+- 核心求值（参数推进、物理与几何构建）单帧 P50 约 0.45 ms，60 FPS 下约占 3% 单核
+
+多后端对照、多角色连续切换的内存表现与详细测量方法见 [内存占用报告](docs/memory-footprint-2026-10-12.md) 与 [长期运行核查](docs/performance-audit-2026-10-16.md)。
 
 ## 诊断工具
 
