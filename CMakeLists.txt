@@ -17,6 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(NEKOMOTE_USE_SYSTEM_DEPS "Use installed dependencies; never download vendored sources" OFF)
 option(NEKOMOTE_BUILD_ABI     "Build the C ABI (no window or display required)" ON)
 option(NEKOMOTE_BUILD_PREVIEW "Build the GLFW preview application" ON)
 option(NEKOMOTE_BUILD_PLAYER  "Build interactive native player and PulseAudio device service" ${NEKOMOTE_BUILD_PREVIEW})
@@ -67,6 +68,14 @@ target_compile_options(nekomote_warnings INTERFACE
 if(NEKOMOTE_WERROR)
     target_compile_options(nekomote_warnings INTERFACE -Werror)
 endif()
+
+# Keep the archive layout by default. Distribution packages can use the Qt import directory.
+set(NEKOMOTE_INSTALL_QMLDIR "qml" CACHE STRING "QML install directory relative to prefix")
+if(IS_ABSOLUTE "${NEKOMOTE_INSTALL_QMLDIR}")
+    message(FATAL_ERROR "NEKOMOTE_INSTALL_QMLDIR must be relative to CMAKE_INSTALL_PREFIX")
+endif()
+file(RELATIVE_PATH NEKOMOTE_QML_LIBRARY_RPATH
+    "/${NEKOMOTE_INSTALL_QMLDIR}/NekoMote/Wallpaper" "/lib")
 
 include(cmake/Dependencies.cmake)
 if(NEKOMOTE_BUILD_QT_QUICK)
@@ -142,7 +151,8 @@ if(NEKOMOTE_BUILD_TESTS)
         target_link_libraries(nekomote_plasma_module_test PRIVATE
             Qt${NEKOMOTE_QT_MAJOR}::Qml Qt${NEKOMOTE_QT_MAJOR}::Quick nekomote_warnings)
         add_dependencies(nekomote_plasma_module_test nekomote_plasma_stage)
-        add_test(NAME plasma_module_import COMMAND nekomote_plasma_module_test ${NEKOMOTE_STAGE_DIR})
+        add_test(NAME plasma_module_import COMMAND nekomote_plasma_module_test ${NEKOMOTE_STAGE_DIR}
+                ${NEKOMOTE_STAGE_DIR}/${NEKOMOTE_INSTALL_QMLDIR})
         set_tests_properties(plasma_module_import PROPERTIES LABELS "qt" TIMEOUT 30
             ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software")
     endif()

@@ -29,5 +29,5 @@ target_link_libraries(nekomote_asset_io
         nlohmann_json::nlohmann_json PNG::PNG)
 
 add_library(nekomote_stb STATIC stb.cpp)
-target_include_directories(nekomote_stb SYSTEM PUBLIC ${stb_SOURCE_DIR})
+target_link_libraries(nekomote_stb PUBLIC nekomote_stb_headers)
 target_link_libraries(nekomote_asset_io PRIVATE nekomote_stb)

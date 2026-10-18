@@ -8,10 +8,10 @@
 int main(int argc, char** argv)
 {
     QGuiApplication application(argc, argv);
-    if (argc != 2)
+    if (argc != 3)
         return 1;
     QQmlEngine engine;
-    engine.addImportPath(QString::fromLocal8Bit(argv[1]) + "/qml");
+    engine.addImportPath(QString::fromLocal8Bit(argv[2]));
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.12\nimport NekoMote.Wallpaper 1.0\n"
                       "NekoWallpaperItem { width: 64; height: 64; }",

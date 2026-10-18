@@ -24,7 +24,7 @@ target_link_libraries(nekomote_plasma_qml PUBLIC nekomote::host_qt_quick
 add_library(nekomote_plasma_qmlplugin MODULE plugin.cpp)
 set_target_properties(nekomote_plasma_qmlplugin PROPERTIES AUTOMOC ON
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper
-    INSTALL_RPATH "$ORIGIN/../../../lib")
+    INSTALL_RPATH "$ORIGIN/${NEKOMOTE_QML_LIBRARY_RPATH}")
 target_link_libraries(nekomote_plasma_qmlplugin PRIVATE nekomote::plasma_qml Qt5::Qml
     nekomote_warnings)
 configure_file(qmldir ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir COPYONLY)
@@ -35,9 +35,9 @@ add_custom_target(nekomote_plasma_package ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/package
         ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote)
 install(TARGETS nekomote_plasma_qml LIBRARY DESTINATION lib COMPONENT plasma)
-install(TARGETS nekomote_plasma_qmlplugin LIBRARY DESTINATION qml/NekoMote/Wallpaper COMPONENT plasma)
+install(TARGETS nekomote_plasma_qmlplugin LIBRARY DESTINATION ${NEKOMOTE_INSTALL_QMLDIR}/NekoMote/Wallpaper COMPONENT plasma)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir
-    DESTINATION qml/NekoMote/Wallpaper COMPONENT plasma)
+    DESTINATION ${NEKOMOTE_INSTALL_QMLDIR}/NekoMote/Wallpaper COMPONENT plasma)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote
     DESTINATION share/plasma/wallpapers COMPONENT plasma)
 set(NEKOMOTE_STAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/stage)
@@ -55,7 +55,7 @@ if(NEKOMOTE_BUILD_TESTS)
     target_link_libraries(nekomote_plasma5_package_test PRIVATE Qt5::Qml Qt5::Quick nekomote_warnings)
     add_dependencies(nekomote_plasma5_package_test nekomote_plasma_stage)
     add_test(NAME plasma5_package_import COMMAND nekomote_plasma5_package_test
-        ${NEKOMOTE_STAGE_DIR})
+        ${NEKOMOTE_STAGE_DIR} ${NEKOMOTE_STAGE_DIR}/${NEKOMOTE_INSTALL_QMLDIR})
     set_tests_properties(plasma5_package_import PROPERTIES LABELS "qt" TIMEOUT 30
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software")
 endif()

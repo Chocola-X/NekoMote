@@ -14,11 +14,11 @@
 int main(int argc, char** argv)
 {
     QGuiApplication application(argc, argv);
-    if (argc != 2)
+    if (argc != 3)
         return 1;
     QQmlEngine engine;
     const QString stage = QString::fromLocal8Bit(argv[1]);
-    engine.addImportPath(stage + "/qml");
+    engine.addImportPath(QString::fromLocal8Bit(argv[2]));
     QQmlPropertyMap configuration;
     configuration.insert(QStringLiteral("assetsDir"), QString{});
     configuration.insert(QStringLiteral("renderBackend"), QStringLiteral("opengl"));

@@ -890,9 +890,11 @@ int run(int argc, char** argv)
             throw std::runtime_error("wallpaper UI initialization failed");
         if (!ui_renderer.init_font("", 36))
         {
-            const auto& detail = ui_renderer.font()->last_error();
-            throw std::runtime_error("wallpaper UI font initialization failed: " +
-                                     (detail.empty() ? "GPU font atlas creation failed" : detail));
+            const auto* font = ui_renderer.font();
+            const auto detail = font && !font->last_error().empty()
+                                    ? font->last_error()
+                                    : "GPU font atlas creation failed";
+            throw std::runtime_error("wallpaper UI font initialization failed: " + detail);
         }
         if (!ui::prepare_menu_text(*ui_renderer.font(), controller.catalog()))
             throw std::runtime_error("wallpaper UI text preparation failed: " +

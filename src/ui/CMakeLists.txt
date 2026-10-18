@@ -9,4 +9,4 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(FONTCONFIG_UI REQUIRED IMPORTED_TARGET fontconfig)
 target_link_libraries(nekomote_ui PRIVATE PkgConfig::FONTCONFIG_UI)
 
-target_include_directories(nekomote_ui PRIVATE ${stb_SOURCE_DIR})
+target_link_libraries(nekomote_ui PRIVATE nekomote_stb_headers)

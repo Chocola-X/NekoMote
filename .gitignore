@@ -28,3 +28,9 @@ assets/icons/*
 
 # Isolated experiment worktrees (G20/G23 inheritance candidates etc.)
 experiments/
+
+# Local Arch makepkg outputs and VCS checkout
+/packaging/arch/src/
+/packaging/arch/pkg/
+/packaging/arch/nekomote/
+/packaging/arch/*.pkg.tar.*

@@ -1,0 +1,113 @@
+# Development/VCS packages. Build with makepkg; do not install build dependencies from CMake.
+pkgbase=nekomote-git
+pkgname=(nekomote-git nekomote-layer-shell-git nekomote-plasma6-git)
+pkgver=0.5.1.r2.gcffc7e4
+pkgrel=1
+pkgdesc='Native 2D character runtime and live wallpaper for Linux'
+arch=(x86_64 aarch64)
+url='https://github.com/Chocola-X/NekoMote'
+license=(AGPL-3.0-only)
+depends=(gcc-libs glibc fontconfig libpng libpulse zlib)
+makedepends=(git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
+             libglvnd wayland qt6-base qt6-declarative vulkan-headers vulkan-icd-loader glslang)
+checkdepends=(catch2 python-pillow nodejs)
+source=('nekomote::git+https://github.com/Chocola-X/NekoMote.git')
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/nekomote"
+    git describe --long --tags --match 'v[0-9]*' | sed 's/^v//;s/-/\.r/;s/-/./g'
+}
+
+build() {
+    # Preserve makepkg's optimization/hardening flags and release assertions policy.
+    export CFLAGS+=" -DNDEBUG -ffile-prefix-map=$srcdir=/usr/src/debug/$pkgbase"
+    export CXXFLAGS+=" -DNDEBUG -ffile-prefix-map=$srcdir=/usr/src/debug/$pkgbase"
+    cmake --fresh -S "$srcdir/nekomote" -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=None \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DNEKOMOTE_USE_SYSTEM_DEPS=ON \
+        -DNEKOMOTE_INSTALL_QMLDIR=lib/qt6/qml \
+        -DNEKOMOTE_BUILD_TOOLS=OFF \
+        -DNEKOMOTE_BUILD_TESTS=OFF \
+        -DNEKOMOTE_BUILD_PREVIEW=ON \
+        -DNEKOMOTE_BUILD_PLAYER=ON \
+        -DNEKOMOTE_BUILD_ABI=ON \
+        -DNEKOMOTE_BUILD_LAYER_SHELL=ON \
+        -DNEKOMOTE_BUILD_QT_QUICK=ON \
+        -DNEKOMOTE_QT_MAJOR=6 \
+        -DNEKOMOTE_BUILD_PLASMA=ON \
+        -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF \
+        -DNEKOMOTE_BUILD_VULKAN=ON \
+        -DNEKOMOTE_WERROR=OFF
+    cmake --build build
+}
+
+check() {
+    # Synthetic CPU/ABI/QML checks only. No display, audio server or external model assets.
+    cmake -S "$srcdir/nekomote" -B build -DNEKOMOTE_BUILD_TESTS=ON
+    cmake --build build
+    ctest --test-dir build -LE 'gpu|integration' --no-tests=error --output-on-failure
+}
+
+_install_licenses() {
+    local source_root="$srcdir/nekomote"
+    local notice="$pkgdir/usr/share/licenses/$pkgname/THIRD_PARTY_NOTICES"
+    local entry
+    install -Dm644 "$source_root/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    {
+        for entry in nlohmann-json/LICENSE.MIT fast_float/LICENSE-MIT stb/LICENSE glad/LICENSE; do
+            printf '\n=== %s ===\n\n' "$entry"
+            cat "/usr/share/licenses/$entry"
+        done
+        cat "$source_root/tools/licenses/Apache-2.0.txt" "$source_root/tools/licenses/CC0-1.0.txt"
+        if [[ "$pkgname" == nekomote-git ]]; then
+            printf '\n=== GLFW ===\n\n'
+            cat /usr/share/licenses/glfw/LICENSE.md
+        elif [[ "$pkgname" == nekomote-layer-shell-git ]]; then
+            python - "$source_root" <<'PY'
+from pathlib import Path
+import sys
+import textwrap
+import xml.etree.ElementTree as ET
+for path in sorted((Path(sys.argv[1]) / 'adapters/layer_shell/protocols').glob('*.xml')):
+    notice = ET.parse(path).getroot().findtext('copyright')
+    if not notice or not notice.strip():
+        raise SystemExit(f'Missing protocol copyright: {path}')
+    print(f'\n=== {path.stem} ===\n\n{textwrap.dedent(notice).strip()}')
+PY
+        fi
+    } > "$notice"
+}
+
+package_nekomote-git() {
+    pkgdesc='NekoMote native player, model importer and C ABI diagnostic host'
+    depends+=(glfw libglvnd vulkan-icd-loader)
+    optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
+    provides=(nekomote)
+    conflicts=(nekomote)
+    DESTDIR="$pkgdir" cmake --install build --component runtime
+    _install_licenses
+}
+
+package_nekomote-layer-shell-git() {
+    pkgdesc='NekoMote Wayland layer-shell live wallpaper (OpenGL/EGL)'
+    depends+=(wayland libglvnd vulkan-icd-loader)
+    optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
+    provides=(nekomote-layer-shell)
+    conflicts=(nekomote-layer-shell)
+    # The component also contains protocol source documents; ship their notices above.
+    install -Dm755 build/bin/nekomote_layer_shell "$pkgdir/usr/bin/nekomote_layer_shell"
+    _install_licenses
+}
+
+package_nekomote-plasma6-git() {
+    pkgdesc='NekoMote Plasma 6 live wallpaper plugin'
+    depends+=(qt6-base qt6-declarative plasma-workspace libglvnd vulkan-icd-loader)
+    optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
+    provides=(nekomote-plasma6)
+    conflicts=(nekomote-plasma6)
+    DESTDIR="$pkgdir" cmake --install build --component plasma
+    rm -r "$pkgdir/usr/share/plasma/plasmoids/org.nekomote.validation"
+    _install_licenses
+}

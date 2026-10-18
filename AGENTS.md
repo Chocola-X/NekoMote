@@ -76,6 +76,11 @@ Release/LTO 与隔离 KWin 客户端验证见 [说明](docs/layer-shell.md)；�
 4. 用 `chocola-date-a` 等真实复杂模型逐步验证参数、变形和遮罩，再扩展完整动画和物理。
 5. 一个复杂模型正确播放后扩展型号与桌面接入，持续测量资源消耗。不要一开始开发所有桌面、全部后端或复杂插件体系。
 
+2026-10-18 S1：新增 `NEKOMOTE_USE_SYSTEM_DEPS=ON` 显式系统依赖构建及
+`packaging/arch/PKGBUILD`；默认固定依赖和 GitHub 构建不变。系统模式缺失依赖应直接失败，
+禁止回退下载固定源码；新增依赖同时维护两种发现方式，见 [说明](docs/dependencies.md)。
+验证范围与未覆盖项目见 [Arch 说明](packaging/arch/README.md)。
+
 ## 1. 开发目标与决策优先级
 
 NekoMote 是独立的原生二维模型运行时与动态壁纸项目。核心目标是使用已有解包素材，在 Linux 长期稳定运行，并通过独立适配器接入桌面环境。

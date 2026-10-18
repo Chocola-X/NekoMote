@@ -63,6 +63,7 @@ cmake --build --preset release
 | Preset | 类型 | 特性 |
 | --- | --- | --- |
 | `dev` | Debug | 警告即错误，开发主力 |
+| `system` | Release | 使用发行版系统依赖，无 FetchContent 下载；其他选项同 release |
 | `release` | Release | LTO、OpenGL + Vulkan，不含测试/探针（发布构建） |
 | `asan` | Debug | ASan/UBSan，不构建预览/播放器（无窗口语义检查） |
 | `plasma` | Release | LTO、Qt6 + Plasma6 QML 模块；分发时关闭 KF6 探针 |
@@ -222,6 +223,11 @@ python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stag
 安装后在 Plasma 桌面右键 → 配置壁纸 → 选择 NekoMote，在壁纸配置中设置 assets 目录路径。
 
 ### 分发包
+
+发行版维护者可用 `-DNEKOMOTE_USE_SYSTEM_DEPS=ON`（或 `cmake --preset system`），
+使用系统安装的依赖版本；缺少依赖直接报错，不下载固定版本。
+默认构建与 GitHub Actions 继续使用原有固定依赖。
+Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 
 四个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 

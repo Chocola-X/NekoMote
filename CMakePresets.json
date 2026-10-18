@@ -37,6 +37,14 @@
             }
         },
         {
+            "name": "system",
+            "inherits": "release",
+            "displayName": "Release using distribution-managed dependencies",
+            "cacheVariables": {
+                "NEKOMOTE_USE_SYSTEM_DEPS": "ON"
+            }
+        },
+        {
             "name": "qt-quick",
             "inherits": "release",
             "displayName": "Isolated Qt Quick OpenGL host",
@@ -107,6 +115,7 @@
     "buildPresets": [
         { "name": "dev",     "configurePreset": "dev" },
         { "name": "release", "configurePreset": "release" },
+        { "name": "system",  "configurePreset": "system" },
         { "name": "asan",    "configurePreset": "asan" },
         { "name": "qt-quick", "configurePreset": "qt-quick" },
         { "name": "plasma",   "configurePreset": "plasma" },
