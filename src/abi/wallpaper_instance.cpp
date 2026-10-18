@@ -150,6 +150,7 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
         return NEKOMOTE_ERROR_NOT_FOUND;
     }
     assets_scanned_ = true;
+    panel_.text_ready = false;
     auto config_path = dir / "config.json";
     if (!config_path_override_.empty())
     {
@@ -872,6 +873,7 @@ nekomote_error WallpaperInstance::render_ui(float dt)
     // first drawable frame, including after explicit graphics-resource reset.
     if (!panel_.ui_ready)
     {
+        panel_.text_ready = false;
         const auto icon_path = assets_dir_ / "icons" / "toggle.png";
         auto icon_image = std::filesystem::exists(icon_path) ? asset_io::load_png(icon_path)
                                                              : asset_io::ImageResult{};
@@ -882,12 +884,20 @@ nekomote_error WallpaperInstance::render_ui(float dt)
         if (backend_ == WallpaperBackend::OpenGL)
         {
             ui_renderer_.reset();
-            if (!ui_renderer_.init(output_width_, output_height_) ||
-                !ui_renderer_.init_font("", 36))
+            if (!ui_renderer_.init(output_width_, output_height_))
             {
                 ui_renderer_.reset();
+                set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI renderer initialization failed");
+                return NEKOMOTE_ERROR_RENDERER;
+            }
+            if (!ui_renderer_.init_font("", 36))
+            {
+                auto detail = ui_renderer_.font()->last_error();
+                if (detail.empty())
+                    detail = "GPU font atlas creation failed";
+                ui_renderer_.reset();
                 set_error(NEKOMOTE_ERROR_RENDERER,
-                          "wallpaper UI shader or font initialization failed");
+                          ("wallpaper UI font/atlas initialization failed: " + detail).c_str());
                 return NEKOMOTE_ERROR_RENDERER;
             }
             ui_context_.init(&ui_renderer_);
@@ -905,12 +915,20 @@ nekomote_error WallpaperInstance::render_ui(float dt)
         else
         {
             vk_ui_renderer_.reset();
-            if (!vk_ui_renderer_.init(vk_ctx_, output_width_, output_height_) ||
-                !vk_ui_renderer_.init_font("", 36))
+            if (!vk_ui_renderer_.init(vk_ctx_, output_width_, output_height_))
             {
                 vk_ui_renderer_.reset();
+                set_error(NEKOMOTE_ERROR_RENDERER, "wallpaper UI renderer initialization failed");
+                return NEKOMOTE_ERROR_RENDERER;
+            }
+            if (!vk_ui_renderer_.init_font("", 36))
+            {
+                auto detail = vk_ui_renderer_.font()->last_error();
+                if (detail.empty())
+                    detail = "GPU font atlas creation failed";
+                vk_ui_renderer_.reset();
                 set_error(NEKOMOTE_ERROR_RENDERER,
-                          "wallpaper UI shader or font initialization failed");
+                          ("wallpaper UI font/atlas initialization failed: " + detail).c_str());
                 return NEKOMOTE_ERROR_RENDERER;
             }
             ui_context_.init(&vk_ui_renderer_);
@@ -949,6 +967,17 @@ nekomote_error WallpaperInstance::render_ui(float dt)
         vk_ui_renderer_.set_render_target(vk_target_);
     }
 #endif
+    if (!panel_.text_ready)
+    {
+        auto* font = painter()->font();
+        if (!ui::prepare_menu_text(*font, controller_.catalog()))
+        {
+            set_error(NEKOMOTE_ERROR_RENDERER,
+                      ("wallpaper UI text preparation failed: " + font->last_error()).c_str());
+            return NEKOMOTE_ERROR_RENDERER;
+        }
+        panel_.text_ready = true;
+    }
     draw_ui(paused_ ? 0.0f : std::min(dt, .25f));
     return NEKOMOTE_OK;
 }

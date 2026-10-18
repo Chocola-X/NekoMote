@@ -889,7 +889,14 @@ int run(int argc, char** argv)
                               ))
             throw std::runtime_error("wallpaper UI initialization failed");
         if (!ui_renderer.init_font("", 36))
-            throw std::runtime_error("wallpaper UI font initialization failed");
+        {
+            const auto& detail = ui_renderer.font()->last_error();
+            throw std::runtime_error("wallpaper UI font initialization failed: " +
+                                     (detail.empty() ? "GPU font atlas creation failed" : detail));
+        }
+        if (!ui::prepare_menu_text(*ui_renderer.font(), controller.catalog()))
+            throw std::runtime_error("wallpaper UI text preparation failed: " +
+                                     ui_renderer.font()->last_error());
         ui_context.init(ui_renderer.painter());
         const auto icon_path = o.assets / "icons" / "toggle.png";
         if (std::filesystem::exists(icon_path))

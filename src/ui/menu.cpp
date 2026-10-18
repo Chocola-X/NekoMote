@@ -112,6 +112,38 @@ const UiStrings& ui_strings(application::Language lang) noexcept
 }
 } // namespace
 
+bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catalog)
+{
+    std::string text =
+        "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ 30 FPS 60 FPS 120 FPS ";
+    const auto append = [&text](const auto& value)
+    {
+        text += value;
+        text += ' ';
+    };
+    for (const auto* strings : {&kStringsEn, &kStringsZhCn, &kStringsZhTw, &kStringsJa})
+        for (const auto* label :
+             {strings->background_drawer, strings->settings_drawer, strings->language_section,
+              strings->fps_section, strings->unlimited, strings->recommended,
+              strings->character_section, strings->lock_transform, strings->mute,
+              strings->reset_position, strings->static_bg, strings->dynamic_bg,
+              strings->author_line, strings->github_line})
+            append(label);
+    for (std::size_t i = 0; i < application::kLanguageCount; ++i)
+    {
+        const auto lang = static_cast<application::Language>(i);
+        for (const auto& group : catalog.character_groups)
+        {
+            append(group.title.resolve(lang, group.id));
+            for (const auto& item : group.items)
+                append(item.names.resolve(lang, item.fallback_name));
+        }
+        for (const auto& background : catalog.backgrounds)
+            append(background.names.resolve(lang, background.name));
+    }
+    return font.prepare_text(text.c_str());
+}
+
 void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatalog& catalog,
                    application::WallpaperController& controller, MenuState& menu, int output_height)
 {

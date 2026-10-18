@@ -36,6 +36,7 @@ struct WallpaperPanelState
     bool muted{false};
     std::uint32_t icon_texture{0};
     bool ui_ready{false};
+    bool text_ready{false};
 };
 
 class WallpaperInstance

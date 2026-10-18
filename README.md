@@ -37,7 +37,7 @@ NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面
 - OpenGL 3.3 core 驱动；Vulkan 后端另需 libvulkan（ICD loader）
 - X11 或 Wayland 会话 + xkbcommon
 - PulseAudio（音频；不可用时静音运行）
-- 可用字体（建议安装 Fontconfig；缺失时回退源码内置字体路径）
+- Fontconfig 开发包（构建必需）及运行时可用的 TrueType/OpenType 字体；中文/日文界面建议安装 Noto CJK
 
 可选：
 

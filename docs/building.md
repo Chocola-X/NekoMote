@@ -104,7 +104,7 @@ ctest --test-dir build/dev -L gpu            # 仅GPU测试（player_ui、render
 
 缺 `assets/` 时 `python_abi_host` 显式 Skipped（`@unittest.skipUnless`），合成项仍执行。
 
-Fontconfig为UI的可选字体发现入口，未安装时使用源码中的字体路径候选；无可用字体不能宣称UI成功。
+UI 必须链接 Fontconfig，通过系统/用户字体配置发现字体，不依赖固定字体安装路径。构建需要 Fontconfig 开发包（Debian/Ubuntu：`libfontconfig1-dev`），运行需要 Fontconfig 和可用的 TrueType/OpenType 字体；中文/日文界面建议安装 Noto CJK（Debian/Ubuntu：`fonts-noto-cjk`）。优先匹配覆盖中日英的 `Noto Sans CJK SC/TC/JP`、思源黑体 `Source Han Sans SC/TC/JP`；其后为 `Noto Sans`、`DejaVu Sans`、`Liberation Sans`、`Ubuntu`、`Cantarell`、系统 `sans-serif`，不要求某个特定字体必须存在。主字体查询带英文、简繁汉字及假名字形覆盖提示，实际四语 UI 和目录名称通过 `ui::prepare_menu_text` 在初始化/目录变更时准备。若首个匹配不能加载，会继续尝试其他候选；缺字时按字形回落到补充字体，度量与位图使用同一字体。全部失败时报告具体字体文件和原因。正常初始化只匹配和加载一个主字体；加载失败才查询候选列表。缺字时仅加载当前文本需要的补充字体。字体匹配、字形准备和上传发生在初始化/显式内容变更阶段，不进入稳态帧路径。
 
 ## 构建边界
 

@@ -461,6 +461,8 @@ TEST_CASE("Vulkan UI preserves painter order glyphs icon UVs and nested clips ac
         REQUIRE(vk_ui.init(f.host.context(), 96, 96));
         REQUIRE(gl_ui.init_font("", 16));
         REQUIRE(vk_ui.init_font("", 16));
+        REQUIRE(gl_ui.font()->prepare_text("UI 123"));
+        REQUIRE(vk_ui.font()->prepare_text("UI 123"));
         const auto gl_icon = gl_ui.upload_icon(icon), vk_icon = vk_ui.upload_icon(icon);
         REQUIRE(gl_icon != 0);
         REQUIRE(vk_icon != 0);
@@ -533,6 +535,7 @@ TEST_CASE("Vulkan warmed model and UI frame paths reuse CPU allocations", "[gpu]
     } completion{f.host};
     REQUIRE(ui.init(f.host.context(), 64, 64));
     REQUIRE(ui.init_font("", 24));
+    REQUIRE(ui.font()->prepare_text("Frame 123"));
     const auto paint = [&]
     {
         f.host.wait_ready();

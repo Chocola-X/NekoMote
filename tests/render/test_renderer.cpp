@@ -782,6 +782,7 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
     {
         REQUIRE(ui.init(64, 64));
         REQUIRE(ui.init_font("", 36));
+        REQUIRE(ui.font()->prepare_text("菜单 UI"));
         ui.set_render_target(output.framebuffer);
         // A host or resource upload may leave another FBO bound.
         glBindFramebuffer(GL_FRAMEBUFFER, sentinel.framebuffer);

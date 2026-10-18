@@ -106,3 +106,20 @@ if(NEKOMOTE_BUILD_ABI)
         NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")
     add_test(NAME abi_synthetic_boundary COMMAND nekomote_abi_boundary_tests)
 endif()
+
+find_package(Python3 COMPONENTS Interpreter QUIET)
+# Separate processes keep FONTCONFIG_FILE and font caches isolated from the suite.
+if(Python3_Interpreter_FOUND)
+    add_executable(nekomote_font_probe font_probe.cpp)
+    target_link_libraries(nekomote_font_probe PRIVATE nekomote::ui nekomote_warnings)
+    foreach(font_case empty custom retry glyph cjk)
+        add_test(NAME ui_font_${font_case}
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/ui/check_font_discovery.py
+                $<TARGET_FILE:nekomote_font_probe> ${font_case})
+        set_tests_properties(ui_font_${font_case} PROPERTIES TIMEOUT 30)
+        if(NOT font_case STREQUAL "empty")
+            set_tests_properties(ui_font_${font_case} PROPERTIES
+                LABELS integration SKIP_RETURN_CODE 77)
+        endif()
+    endforeach()
+endif()

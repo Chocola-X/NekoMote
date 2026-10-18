@@ -39,7 +39,7 @@ PY
 OPTIONS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     -DNEKOMOTE_WERROR=ON -DNEKOMOTE_BUILD_TOOLS=OFF -DNEKOMOTE_BUILD_TESTS=ON
     -DNEKOMOTE_BUILD_ABI=ON -DNEKOMOTE_BUILD_VULKAN=ON)
-TARGETS=(nekomote_unit_tests nekomote_audio_device_tests
+TARGETS=(nekomote_unit_tests nekomote_audio_device_tests nekomote_font_probe
     nekomote_abi_negative_test nekomote_abi_boundary_tests)
 if [[ "$MODE" == native20 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=ON -DNEKOMOTE_BUILD_PLAYER=ON

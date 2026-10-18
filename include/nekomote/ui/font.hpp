@@ -28,7 +28,18 @@ class FontMetrics
     FontMetrics(const FontMetrics&) = delete;
     FontMetrics& operator=(const FontMetrics&) = delete;
 
+    // An empty path uses Fontconfig's system/user configuration and tries each
+    // outline font candidate until stb_truetype accepts the primary face.
     bool init(const std::string& font_path, float pixel_height);
+    // Call at initialization or when text content changes, with a valid backend
+    // upload context if callbacks are attached. Resolves only missing characters
+    // and prepares their glyphs. draw_text/text_width never discover/load fonts.
+    // All labels to be drawn must pass through this content boundary first.
+    bool prepare_text(const char* text);
+    const std::string& last_error() const noexcept
+    {
+        return last_error_;
+    }
     void ensure_char(unsigned int codepoint);
     float text_width(const char* text, float size);
     void draw_text(std::vector<float>& vertices, std::vector<float>& uvs, float x, float y,
@@ -51,11 +62,20 @@ class FontMetrics
 
   private:
     bool initialized_{false};
+    bool system_fallback_{true};
+    std::string last_error_;
     struct FontInfo;
-    std::unique_ptr<FontInfo> font_info_;
+    std::vector<std::unique_ptr<FontInfo>> font_faces_;
+    bool load_face(const std::string& path, int index);
+    const FontInfo& font_for_codepoint(unsigned int codepoint) const;
     int ascent_{0};
     float pixel_height_{16.0f};
-    std::unordered_map<unsigned int, Glyph> glyphs_;
+    struct PreparedGlyph
+    {
+        Glyph value;
+        const FontInfo* face;
+    };
+    std::unordered_map<unsigned int, PreparedGlyph> glyphs_;
     int texture_width_{1024};
     int texture_height_{1024};
     int pack_x_{0};

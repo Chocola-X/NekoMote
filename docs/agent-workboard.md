@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| F1 共享 UI 字体回落 | base `842f7cc`；完整 CJK 字体优先、四语文本按需准备、候选重试/缺字回落与详细诊断；199 CPU、6 字体检查、GL/Vulkan 各2 GPU 用例及 player/layer-shell 构建通过；本机映射206→1 | 朋友 Arch / Hyprland 重测；限定内存/字符覆盖与 GPU 范围见 [记录](ui-font-fallback.md) |
 | L1 layer-shell 壳 | base `98d0075`，Codex 实现及独立源码复核；独立 Wayland/EGL/OpenGL 高层 C ABI 宿主；192 CPU CTest、18 隔离客户端检查通过 | Sway/Hyprland/niri 实机、最终合成像素、真实输入、热插拔/长期与独立打包待验收；见 [说明](layer-shell.md) 和 [记录](validation/layer-shell-results.json) |
 | C19 mesh.cc 调查 | base `94af01c`，Codex及独立只读复核；程序生成15格受控实验11正常捕获/4 NaN，PsBuild失败复现，114 Python用例（12 skipped） | 尚无在生效路径产生有限可辨识效果的非空布局，不放行公式；见[调查](mesh-cc-investigation-2026-10-14.md) |
 | C18 合成模型求值 | base `693fd3f`，Codex 实现与独立只读复核；discretization1、嵌套0x7fc、sync/combine传播；51/51合成图/几何、4真实/2PsBuild、197 CPU与76 ASan runtime通过 | cc、其他离散/继承位、frame.type1及既有标量仍待验证；见 [报告](synthetic-semantics-2026-10-14.md) 与 [记录](validation/synthetic-semantics-results.json) |
