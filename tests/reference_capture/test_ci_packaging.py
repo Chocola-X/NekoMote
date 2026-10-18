@@ -1,0 +1,103 @@
+"""Package notices and standalone ELF gates, without a desktop or GitHub writes."""
+
+import importlib.util
+import os
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from tools.ci_package_licenses import write_licenses
+
+REPO = Path(__file__).resolve().parents[2]
+with patch.object(sys, "path", [str(REPO / "tools"), *sys.path]):
+    SPEC = importlib.util.spec_from_file_location("ci_native_audit", REPO / "tools/ci_native_audit.py")
+    AUDIT = importlib.util.module_from_spec(SPEC)
+    SPEC.loader.exec_module(AUDIT)
+
+
+class NoticeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.build = self.root / "build"
+        self.stage = self.root / "stage"
+        for name, filename in (("nlohmann_json", "LICENSE.MIT"), ("fast_float", "LICENSE-MIT"),
+                               ("stb", "LICENSE"), ("glad", "LICENSE"), ("glfw", "LICENSE.md")):
+            path = self.build / f"_deps/{name}-src/{filename}"
+            path.parent.mkdir(parents=True)
+            path.write_text(f"Copyright and permission for fixture {name}\n")
+
+    def test_layer_shell_preserves_dependency_and_protocol_notices_without_readme(self):
+        write_licenses(REPO, self.build, self.stage, "layer-shell")
+        self.assertEqual((self.stage / "LICENSE").read_bytes(), (REPO / "LICENSE").read_bytes())
+        notices = (self.stage / "THIRD_PARTY_NOTICES").read_text()
+        for text in ("fixture nlohmann_json", "fixture fast_float", "fixture stb", "fixture glad",
+                     "Apache License", "CC0 1.0 Universal", "Drew DeVault", "Kristian Høgsberg"):
+            self.assertIn(text, notices)
+        self.assertNotIn("fixture glfw", notices)
+        self.assertEqual({path.name for path in self.stage.iterdir()},
+                         {"LICENSE", "THIRD_PARTY_NOTICES"})
+
+    def test_only_native_package_includes_glfw(self):
+        for mode in ("native20", "plasma5", "plasma6"):
+            with self.subTest(mode=mode):
+                write_licenses(REPO, self.build, self.stage, mode)
+                self.assertEqual("fixture glfw" in (self.stage / "THIRD_PARTY_NOTICES").read_text(),
+                                 mode == "native20")
+
+    def test_missing_required_notice_fails_before_creating_package(self):
+        (self.build / "_deps/glad-src/LICENSE").unlink()
+        with self.assertRaises(FileNotFoundError):
+            write_licenses(REPO, self.build, self.stage, "layer-shell")
+        self.assertFalse(self.stage.exists())
+
+
+COMPILER = shlex.split(os.environ.get("CXX", "c++"))
+AVAILABLE = COMPILER and shutil.which(COMPILER[0]) and shutil.which("readelf") and shutil.which("ldd")
+
+
+@unittest.skipUnless(AVAILABLE, "C++ compiler, readelf and ldd required")
+class StandaloneAuditTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.stage = self.root / "stage"
+        (self.stage / "bin").mkdir(parents=True)
+        source = self.root / "fixture.cpp"
+        source.write_text("#include <exception>\nint main() { std::terminate(); }\n")
+        subprocess.run([*COMPILER, str(source), "-o", str(self.stage / "bin/nekomote_layer_shell")],
+                       check=True, capture_output=True)
+
+    def test_real_layer_shell_elf_uses_debian12_limits(self):
+        report = AUDIT.audit(self.stage, "layer-shell")
+        self.assertEqual(report["baseline"], "debian12")
+        self.assertEqual(report["limits"]["GLIBC"], "2.36")
+        self.assertEqual(set(report["binaries"]), {"nekomote_layer_shell"})
+
+    def test_newer_symbols_and_qt_dependencies_are_rejected(self):
+        actual = AUDIT.elf_info(self.stage / "bin/nekomote_layer_shell")
+        actual["versions"]["GLIBC"] = "2.37"
+        with patch.object(AUDIT, "elf_info", return_value=actual):
+            with self.assertRaisesRegex(ValueError, "exceeds debian12"):
+                AUDIT.audit(self.stage, "layer-shell")
+        actual["versions"]["GLIBC"] = "2.36"
+        actual["needed"].append("libQt6Core.so.6")
+        with patch.object(AUDIT, "elf_info", return_value=actual):
+            with self.assertRaisesRegex(ValueError, "unexpected desktop/Qt"):
+                AUDIT.audit(self.stage, "layer-shell")
+
+    def test_unexpected_program_rejected(self):
+        (self.stage / "bin/unexpected").write_text("extra")
+        with self.assertRaisesRegex(ValueError, "exactly"):
+            AUDIT.audit(self.stage, "layer-shell")
+
+
+if __name__ == "__main__":
+    unittest.main()

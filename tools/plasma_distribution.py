@@ -237,7 +237,6 @@ def package(stage, qt_version, output, baseline, ubuntu20=False):
                if path.name != "compatibility.json"}
     for name in ("plasma_distribution.py", "plasma_deploy.py"):
         sources[f"tools/{name}"] = Path(__file__).parent / name
-    sources["README.md"] = Path(__file__).parent.parent / "docs/plasma-distribution.md"
     with output.open("wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0, filename="") as compressed:
         with tarfile.open(fileobj=compressed, mode="w") as archive:
             for name in sorted(set(sources) | set(extras)):

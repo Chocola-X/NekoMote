@@ -17,6 +17,8 @@ PACKAGES = (
     "nekomote-plasma5-x86_64",
     "nekomote-plasma6-x86_64",
     "nekomote-plasma6-aarch64",
+    "nekomote-layer-shell-debian12-x86_64",
+    "nekomote-layer-shell-debian12-aarch64",
 )
 
 

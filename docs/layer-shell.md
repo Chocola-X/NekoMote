@@ -44,8 +44,13 @@ cmake --build --preset layer-shell -j 4
 cmake --install build/layer-shell --prefix "$HOME/.local" --component layer_shell
 ```
 
-现有 GitHub 五份发布包没有加入此适配器。此安装入口不是已完成跨发行版依赖打包的
-便携归档；运行时仍需系统的 Wayland、EGL、OpenGL 和声音等库。
+GitHub Actions 新增 Debian 12 / GCC12 / Wayland1.21 基线构建，提供
+`nekomote-layer-shell-debian12-x86_64.tar.gz` 与
+`nekomote-layer-shell-debian12-aarch64.tar.gz`，并纳入版本标签发布。
+解压后执行 `nekomote-layer-shell/bin/nekomote_layer_shell`；包中不附带 README、
+模型或系统库，项目 AGPL-v3 许可证为 `LICENSE`，依赖及协议声明为 `THIRD_PARTY_NOTICES`。
+运行时仍需系统的 Wayland、EGL、OpenGL、PulseAudio、PNG/zlib 与 Fontconfig。
+基线符号审计和本地验证范围见 [CI 说明](github-actions.md#layer-shell-分发与归档精简2026-10-18)。
 
 ## 使用
 

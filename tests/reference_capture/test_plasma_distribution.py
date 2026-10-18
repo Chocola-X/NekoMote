@@ -122,6 +122,7 @@ class PlasmaDistributionTests(unittest.TestCase):
         self.assertEqual(DIST.digest(first), DIST.digest(second))
         with tarfile.open(first) as archive:
             names = archive.getnames()
+            self.assertFalse(any(Path(name).name.lower() == "readme.md" for name in names))
             self.assertIn("nekomote-plasma/stage/compatibility.json", names)
             self.assertIn("nekomote-plasma/tools/plasma_distribution.py", names)
             self.assertIn("nekomote-plasma/tools/plasma_deploy.py", names)

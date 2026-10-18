@@ -26,15 +26,22 @@ class PlatformDeployTests(unittest.TestCase):
                 path = stage / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("fixture")
+            for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+                (stage / name).write_text(f"fixture {name}\n")
             (stage / "manifest.json").write_text(json.dumps({"files": {}}))
             prefix = root / "data"
             with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(root / "config")}):
                 self.assertEqual(DEPLOY.do_install(stage, prefix), 0)
                 env = DEPLOY.environment_file()
                 self.assertEqual(env.read_text(), f'QML2_IMPORT_PATH="{prefix}/nekomote/qml"\n')
+                for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+                    self.assertEqual((prefix / "nekomote" / name).read_bytes(),
+                                     (stage / name).read_bytes())
                 self.assertEqual(DEPLOY.do_verify(prefix), 0)
                 self.assertEqual(DEPLOY.do_uninstall(prefix), 0)
                 self.assertFalse(env.exists())
+                self.assertFalse((prefix / "nekomote/LICENSE").exists())
+                self.assertFalse((prefix / "nekomote/THIRD_PARTY_NOTICES").exists())
 
     def test_qt6_environment_retains_its_contract(self):
         self.assertEqual(DEPLOY.environment_content(Path("/home/test/.local/share"), 6),

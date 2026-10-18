@@ -6,8 +6,9 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| R1 Release / layer-shell 分发 | base `8ef8309`；新增 Debian12 layer-shell x86_64/aarch64，七份包完整校验；移除 README、合并依赖声明并迁移 Plasma 安装；200 CPU CTest、29 定向 Python 及三套旧基线打包回归通过，见 [CI 说明](github-actions.md#layer-shell-分发与归档精简2026-10-18) | ARM64、远端 Actions/标签发布及目标桌面待实际运行；未做性能测量 |
 | F1 共享 UI 字体回落 | base `842f7cc`；完整 CJK 字体优先、四语文本按需准备、候选重试/缺字回落与详细诊断；199 CPU、6 字体检查、GL/Vulkan 各2 GPU 用例及 player/layer-shell 构建通过；本机映射206→1 | 朋友 Arch / Hyprland 重测；限定内存/字符覆盖与 GPU 范围见 [记录](ui-font-fallback.md) |
-| L1 layer-shell 壳 | base `98d0075`，Codex 实现及独立源码复核；独立 Wayland/EGL/OpenGL 高层 C ABI 宿主；192 CPU CTest、18 隔离客户端检查通过 | Sway/Hyprland/niri 实机、最终合成像素、真实输入、热插拔/长期与独立打包待验收；见 [说明](layer-shell.md) 和 [记录](validation/layer-shell-results.json) |
+| L1 layer-shell 壳 | base `98d0075`，Codex 实现及独立源码复核；独立 Wayland/EGL/OpenGL 高层 C ABI 宿主；192 CPU CTest、18 隔离客户端检查通过 | Sway/Hyprland/niri 实机、最终合成像素、真实输入、热插拔/长期待验收；独立分发见 R1；见 [说明](layer-shell.md) 和 [记录](validation/layer-shell-results.json) |
 | C19 mesh.cc 调查 | base `94af01c`，Codex及独立只读复核；程序生成15格受控实验11正常捕获/4 NaN，PsBuild失败复现，114 Python用例（12 skipped） | 尚无在生效路径产生有限可辨识效果的非空布局，不放行公式；见[调查](mesh-cc-investigation-2026-10-14.md) |
 | C18 合成模型求值 | base `693fd3f`，Codex 实现与独立只读复核；discretization1、嵌套0x7fc、sync/combine传播；51/51合成图/几何、4真实/2PsBuild、197 CPU与76 ASan runtime通过 | cc、其他离散/继承位、frame.type1及既有标量仍待验证；见 [报告](synthetic-semantics-2026-10-14.md) 与 [记录](validation/synthetic-semantics-results.json) |
 | C17 Wayland/X11 兼容 | base `0c0f400`，Codex 实现及独立复核；GLFW 双平台、Qt GL/GLES、GPU 共享和 renderer 重建快照；189 CPU、3 GPU runner、8 对基线 / 10 对 GL/ES 画面、隔离 Qt/Plasma 通过 | 未安装用户桌面；真实桌面、原生 X11 登录及其他驱动仍待验收，GLES padding 显存代价见 [报告](wayland-compatibility-2026-10-13.md) 与 [记录](validation/wayland-compatibility-results.json) |
@@ -15,7 +16,7 @@
 | C15 纹理裁切 | 基线 `a17b5ad`，Codex；加载时 RGBA 精确边界 + 过滤边缘，GL/VK texel 采样，映射像素所有权；202 图集复原、12 对画面、异步切换及隔离 Plasma 通过 | 已构建验证，未安装桌面；首次驱动编译/其他驱动/长期范围见 [说明](texture-cropping-2026-10-12.md) 与 [记录](validation/texture-cropping-results.json) |
 | C14 内存优化 | `a17b5ad` 已交付，流式模型加载、libpng、字体映射与生命周期测量 | 本轮 C15 接续，原范围见 [报告](memory-footprint-2026-10-12.md) |
 | C12 Plasma / ABI | ABI 0.6.0；GPU 共享图像、设置选择、GL/VK 画面与隔离正常生命周期通过；帧率 ABI 查询已补入 | 真实 miku Vulkan、其他驱动与 Wayland 未验收，见 [说明](plasma-dual-backend.md) |
-| G33 基线分发 | 用户确认 Actions 产物本体/KDE5/KDE6 正常；新增本体 ARM64 与 `vX.Y.Z` 自动发布，见 [CI 说明](github-actions.md) | 首次标签运行核查五份包、SHA256 和 Release；本体 ARM64 尚未实际编译，用户反馈不扩展为未提供的架构/长期覆盖 |
+| G33 基线分发 | 用户确认 Actions 产物本体/KDE5/KDE6 正常；新增本体 ARM64 与 `vX.Y.Z` 自动发布，见 [CI 说明](github-actions.md) | 首次标签运行核查七份包、SHA256 和 Release；本体 ARM64 尚未实际编译，用户反馈不扩展为未提供的架构/长期覆盖 |
 | V21 双后端桌面 | 隔离窗口/包证据通过；真实 miku 的 Vulkan 待用户测试 | Gemini 按受控条件核对角色/背景/UI，记录桌面/驱动与未覆盖项 |
 | C11 Vulkan player | 从 `b733626` 重写；核心/双后端 GPU/真实图像/实际窗口与同步验证通过；GL 保留，同一二进制选择后端 | 当前 player 修复已交付；GLM 可补充其他设备构建与明确契约的批量测试，Gemini 做受控视觉抽核，Codex 复核差异；见 [后端说明](vulkan-backend.md)，C11 数量不替代 C12 的独立 Plasma 验收 |
 | C9 Plasma 显示补修 | Codex 修复 UI 首帧/目标/输入/资源重建及重装偏好；隔离截图与 KPackage 检查通过 | 用户已确认实际桌面初步接入正常；后续完善服务与完整验收 |

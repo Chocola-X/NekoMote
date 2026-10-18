@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build/test/package inside an explicit baseline container. Never install a desktop.
 set -euo pipefail
-MODE="${1:?native20, plasma5 or plasma6 required}"
+MODE="${1:?native20, plasma5, plasma6 or layer-shell required}"
 SOURCE_DIR="${2:-/source}"
 OUTPUT_DIR="${3:-/output}"
 JOBS="${NEKOMOTE_BUILD_JOBS:-4}"
 ARCH_NAME="$(uname -m)"
-case "$MODE" in native20|plasma5|plasma6) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
+case "$MODE" in native20|plasma5|plasma6|layer-shell) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
 test -f "$SOURCE_DIR/CMakeLists.txt"
 test -d "$OUTPUT_DIR"
 WORK_DIR="$(mktemp -d /tmp/nekomote-ci.XXXXXX)"
@@ -45,6 +45,11 @@ if [[ "$MODE" == native20 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=ON -DNEKOMOTE_BUILD_PLAYER=ON
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF)
     TARGETS+=(nekomote_player nekomote_import nekomote_abi_host)
+elif [[ "$MODE" == layer-shell ]]; then
+    OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
+        -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
+        -DNEKOMOTE_BUILD_LAYER_SHELL=ON -DNEKOMOTE_BUILD_VULKAN=OFF)
+    TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests)
 else
     QT_MAJOR=6
     [[ "$MODE" != plasma5 ]] || QT_MAJOR=5
@@ -59,7 +64,7 @@ cmake --build "$WORK_DIR/build" --target "${TARGETS[@]}" -j "$JOBS"
 
 # In-process Qt plugins must use the host C++ runtime, not accidentally fold an
 # extra static libstdc++ into plasmashell. Verify the real ELF, not just flags.
-if [[ "$MODE" != native20 ]]; then
+if [[ "$MODE" == plasma5 || "$MODE" == plasma6 ]]; then
     readelf -d "$WORK_DIR/build/lib/libnekomote_plasma_qml.so" \
         > "$OUTPUT_DIR/plugin-dynamic-dependencies.txt"
     grep -Fq 'Shared library: [libstdc++.so.6]' "$OUTPUT_DIR/plugin-dynamic-dependencies.txt"
@@ -76,6 +81,11 @@ if [[ "$MODE" == native20 ]]; then
     STAGE_DIR="$WORK_DIR/package/nekomote-native"
     cmake --install "$WORK_DIR/build" --prefix "$STAGE_DIR" --component runtime
     NAME="nekomote-native-ubuntu20-$ARCH_NAME"
+elif [[ "$MODE" == layer-shell ]]; then
+    STAGE_DIR="$WORK_DIR/package/nekomote-layer-shell"
+    # Protocol notices are consolidated below; XML source and README stay in the repository.
+    install -D "$WORK_DIR/build/bin/nekomote_layer_shell" "$STAGE_DIR/bin/nekomote_layer_shell"
+    NAME="nekomote-layer-shell-debian12-$ARCH_NAME"
 else
     STAGE_DIR="$WORK_DIR/build/adapters/plasma/stage"
     if [[ "$MODE" == plasma5 ]]; then
@@ -84,24 +94,12 @@ else
     NAME="nekomote-$MODE-$ARCH_NAME"
 fi
 
-mkdir -p "$STAGE_DIR/licenses"
-for dependency in nlohmann_json stb glad; do
-    LICENSE_NAME=LICENSE
-    [[ "$dependency" != nlohmann_json ]] || LICENSE_NAME=LICENSE.MIT
-    cp "$WORK_DIR/build/_deps/$dependency-src/$LICENSE_NAME" "$STAGE_DIR/licenses/$dependency.txt"
-done
-if [[ "$MODE" == native20 ]]; then
-    cp "$WORK_DIR/build/_deps/glfw-src/LICENSE.md" "$STAGE_DIR/licenses/glfw.txt"
-fi
-cp "$WORK_DIR/src/LICENSE" "$STAGE_DIR/licenses/NekoMote.txt"
-cp "$WORK_DIR/build/_deps/fast_float-src/LICENSE-MIT" "$STAGE_DIR/licenses/fast_float-MIT.txt"
-cp "$WORK_DIR/src/tools/licenses/"*.txt "$STAGE_DIR/licenses/"
-if [[ "$MODE" == native20 ]]; then
-    python3 "$WORK_DIR/src/tools/ci_native_audit.py" "$STAGE_DIR" \
+python3 "$WORK_DIR/src/tools/ci_package_licenses.py" "$WORK_DIR/src" \
+    "$WORK_DIR/build" "$STAGE_DIR" "$MODE"
+if [[ "$MODE" == native20 || "$MODE" == layer-shell ]]; then
+    python3 "$WORK_DIR/src/tools/ci_native_audit.py" "$STAGE_DIR" --mode "$MODE" \
         > "$OUTPUT_DIR/compatibility.json"
-    cp "$OUTPUT_DIR/compatibility.json" "$STAGE_DIR/compatibility.json"
-    cp "$WORK_DIR/src/docs/github-actions.md" "$STAGE_DIR/README.md"
-    tar -C "$WORK_DIR/package" -czf "$OUTPUT_DIR/$NAME.tar.gz" nekomote-native
+    tar -C "$WORK_DIR/package" -czf "$OUTPUT_DIR/$NAME.tar.gz" "$(basename "$STAGE_DIR")"
 else
     python3 "$WORK_DIR/src/tools/plasma_stage_manifest.py" "$STAGE_DIR"
     if [[ "$MODE" == plasma5 ]]; then

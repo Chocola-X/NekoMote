@@ -1,20 +1,21 @@
 # GitHub 自动构建与测试
 
-三个日常构建工作流独立触发：任意分支的 push、pull request 和手动
+四个日常构建工作流独立触发：任意分支的 push、pull request 和手动
 `workflow_dispatch` 都会运行；同一工作流同一 ref 的新运行取消旧运行，不取消其他工作流。
 它们也提供 `workflow_call`，供独立的标签发布工作流复用。分支 CI 只上传 Actions
-artifacts；版本标签统一由发布工作流触发构建，不额外重复运行三套 push CI。
+artifacts；版本标签统一由发布工作流触发构建，不额外重复运行四套 push CI。
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
 | [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_abi_host` |
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
+| [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
 
 GitHub 当前的 [托管 runner 列表](https://github.com/actions/runner-images#available-images)
 不包含 Ubuntu 20.04，因此使用 `ubuntu-24.04` runner 的 Docker 运行 focal 构建。
-runner 的系统库不会被用于容器内编译。原生程序和两套插件都开启 Release、LTO、
-OpenGL 与 Vulkan，测试失败或依赖审计失败时不上传发行包。
+runner 的系统库不会被用于容器内编译。全部模式开启 Release、LTO、Werror；原生程序和两套插件启用 OpenGL 与 Vulkan，
+layer-shell 仅启用 OpenGL/EGL，测试失败或依赖审计失败时不上传发行包。
 
 ## 版本标签自动发布
 
@@ -31,8 +32,8 @@ git push origin v0.5.0
 ```
 
 标签必须指向包含发布工作流的提交；标签本身是发布版本，不需要单独更新 CMake 中的
-内部工程版本。发布工作流使用该标签提交内的三个可复用工作流及构建脚本，等待全部
-矩阵任务成功，收集当前 run 的五份归档与各自的 `.sha256` 文件：
+内部工程版本。发布工作流使用该标签提交内的四个可复用工作流及构建脚本，等待全部
+矩阵任务成功，收集当前 run 的七份归档与各自的 `.sha256` 文件：
 
 | Release 附件 | 内容 |
 | --- | --- |
@@ -41,8 +42,10 @@ git push origin v0.5.0
 | `nekomote-plasma5-x86_64.tar.gz` | KDE5 插件 |
 | `nekomote-plasma6-x86_64.tar.gz` | KDE6 x86_64 插件 |
 | `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
+| `nekomote-layer-shell-debian12-x86_64.tar.gz` | Layer-shell x86_64 独立程序 |
+| `nekomote-layer-shell-debian12-aarch64.tar.gz` | Layer-shell ARM64 独立程序 |
 
-本体 ARM64 和 KDE6 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
+本体、KDE6 和 layer-shell ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
 固定基线镜像中编译。focal 的 Python / Node 工具下载按架构选择固定 URL 与 SHA256；
 不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
 
@@ -93,6 +96,8 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
   `nekomote-native/bin/` 仅包含三个请求的程序。
 - `nekomote-plasma5-x86_64`：Qt5 插件，不得装进 Plasma6。
 - `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
+- `nekomote-layer-shell-debian12-x86_64` / `nekomote-layer-shell-debian12-aarch64`：
+  独立背景进程，归档内 `nekomote-layer-shell/bin/nekomote_layer_shell`。
 - `evidence-*`：日志、JUnit `tests.xml`、兼容报告、包版本与未执行测试清单；失败也保存。
 
 每个工作流运行合成模型的 CPU/runtime/application/UI、C ABI 正负边界以及 Python
@@ -111,6 +116,8 @@ CXXABI1.3.12；KDE5 构建 Qt 不超过5.12.8。原生程序另在容器内执�
 检查传递的系统依赖能够解析。归档不捆绑系统库，目标仍需安装 OpenGL、Vulkan loader、
 PulseAudio、PNG/zlib、Fontconfig 及相关窗口依赖，可从兼容报告查看实际依赖。
 
+Layer-shell 基线为 Debian12：GLIBC2.36、GLIBCXX3.4.30、CXXABI1.3.13；
+独立检查动态 libstdc++、`ldd -r`，拒绝 Qt/KF/Plasma 依赖，不捆绑系统库。
 KDE6 基线为 Qt6.4.2、GLIBC2.36、GLIBCXX3.4.30、CXXABI1.3.13。
 这比当前开发机的 Qt6.9 降低了构建下限，但不覆盖旧 glibc 或所有驱动。
 Qt 插件必须由相同 major、不低于构建 minor 的 Qt 加载，见
@@ -134,7 +141,7 @@ Ubuntu20 分发包，不用于冻结基线符号需求。
 ## 本地复现容器构建
 
 ```bash
-mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6
+mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell
 docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" nekomote-focal native20
@@ -143,6 +150,9 @@ docker run --rm --user "$(id -u):$(id -g)" \
 docker build -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma6:/output:rw" nekomote-bookworm plasma6
+docker build -f tools/ci_layer_shell.Containerfile -t nekomote-layer-shell tools
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD:/source:ro" -v "$PWD/build/ci-layer-shell:/output:rw" nekomote-layer-shell layer-shell
 ```
 
 本地没有 Docker/Podman 时不能将普通本机构建当成基线容器验收；首次 Actions 成功后
@@ -284,3 +294,48 @@ JUnit 将此项记为 `notrun/skipped`，不能仅据其 `failures="0"` 宣称 C
 原有失败门槛。后续新增独立必选测试可执行文件时，必须同时更新此清单。
 本地 Shell 语法检查、四个共同测试目标构建，以及音频设备/ABI 负例/ABI 合成边界
 三项 CTest 通过；本轮未重新执行基线容器、远端 Actions 或 ARM64 验证。
+
+## Layer-shell 分发与归档精简（2026-10-18）
+
+R1，base `8ef8309`；按用户要求新增独立 Debian12 layer-shell 工作流及标签发布依赖，
+x86_64 / aarch64 使用各自原生 runner。发布前必须齐全的附件从五份包增为七份包，
+每份各带 SHA256；缺失、损坏或多余附件均拒绝发布。
+
+`ci_layer_shell.Containerfile` 固定已有 Debian12 镜像 digest 和 2025-09-01 apt 快照，
+安装 Wayland1.21 / EGL / GL / 字体 / 声音等开发依赖及必选 CPU 测试工具。
+此模式关闭 Qt、Plasma、GLFW 和 Vulkan；共用 `ci_build.sh` 执行 Release/LTO/Werror、
+CPU/ABI/选项/工具测试、ELF 符号上限和 `ldd -r` 审计，失败不产出发布包。
+
+所有归档停止添加 README。native / layer-shell 包仅含可执行程序、项目 `LICENSE`
+和单个 `THIRD_PARTY_NOTICES`；兼容报告留在 evidence。Plasma 保留运行文件、部署工具
+及安装必需的 manifest/兼容元数据，项目许可证和第三方声明放在 stage 根目录，
+部署工具同步将两者安装到 `nekomote/` 并纳入卸载记录。
+
+项目的 LICENSE 保持 AGPL-v3 原文；不将第三方组件的声明换成 AGPL。
+MIT 要求在副本中保留版权及许可声明；GLAD 生成代码涉及的
+[Apache-2.0 第4节](https://www.apache.org/licenses/LICENSE-2.0.txt) 同样要求随附许可。
+`ci_package_licenses.py` 将原有依赖许可文本及 layer-shell 两份协议中的完整 copyright
+节点合并到 `THIRD_PARTY_NOTICES`，不附带协议 XML 源码、README 或独立的多份许可文件。
+缺失所需许可输入会使打包失败。
+
+本地验证：
+
+- 在已有完整 Debian12 镜像目录中，通过 subordinate UID/GID + bubblewrap 执行新增
+  Containerfile 的 RUN 安装配方和同一个 `ci_build.sh layer-shell`，源码只读挂载；
+  依赖从已有固定版本 Git 缓存克隆，没有混用宿主编译器/头文件/系统库。
+  该目录已有前轮 Qt6 SDK，但本次目标关闭 Qt，产物 ELF 也没有 Qt/KF/Plasma 依赖。
+  没有 Docker/Podman；此项不等于 Docker 引擎或 GitHub runner 验收。
+- x86_64 Release/LTO/Werror 构建、200/200 必选 CTest、归档和严格审计通过。
+  实际需求 GLIBC2.34 / GLIBCXX3.4.29 / CXXABI1.3.13，满足 Debian12 门槛；
+  动态链接系统 libstdc++、Wayland/EGL、PulseAudio、PNG、Fontconfig 等库。
+- layer-shell 真实归档内容检查通过，仅一个程序和两份法律文本；SHA256 校验通过。
+- 用前轮已验收的 native20 / plasma5 / plasma6 x86_64 基线二进制重新生成三份归档，
+  在各自完整镜像中检查新许可布局、无 README、manifest 和严格基线审计，均通过。
+  这是打包回归，没有重新编译这三套程序。
+- 发布、依赖声明、ELF 门槛、Plasma 打包/安装/卸载的定向 Python 测试：29/29。
+  完整 Python 集合：135 项，123 执行通过、12 明确 skipped；不将 skipped 计为通过。
+- actionlint1.7.12、Shell 语法、Containerfile RUN 的 POSIX Shell 语法和 diff 检查通过。
+
+证据在 `build/ci-layer-shell/`、`build/ci-package-refresh/`；均为本地输出，不随软件分发。
+未执行 ARM64、远端 Actions/标签发布、GPU/目标合成器或长期测试；没有修改桌面。
+本轮调整仅影响构建、归档和部署声明，未修改运行时/帧路径，也未做性能收益测量。

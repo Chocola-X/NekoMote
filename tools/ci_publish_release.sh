@@ -10,10 +10,11 @@ fi
 
 cd "$PACKAGES_DIR"
 PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64 nekomote-plasma5-x86_64
-    nekomote-plasma6-x86_64 nekomote-plasma6-aarch64)
+    nekomote-plasma6-x86_64 nekomote-plasma6-aarch64
+    nekomote-layer-shell-debian12-x86_64 nekomote-layer-shell-debian12-aarch64)
 FILES=(*)
-if [[ "${#FILES[@]}" != 10 ]]; then
-    echo 'Expected exactly five packages and five SHA256 files' >&2
+if [[ "${#FILES[@]}" != 14 ]]; then
+    echo 'Expected exactly seven packages and seven SHA256 files' >&2
     exit 1
 fi
 ASSETS=()

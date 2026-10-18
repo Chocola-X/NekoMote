@@ -98,9 +98,10 @@ def stage_to_prefix_map(stage: Path) -> list[tuple[Path, Path]]:
         if p.is_file():
             rel = p.relative_to(stage / "share")
             mapping.append((p, str(rel)))
-    for p in sorted((stage / "licenses").rglob("*")):
-        if p.is_file():
-            mapping.append((p, str(Path("nekomote/licenses") / p.relative_to(stage / "licenses"))))
+    for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+        path = stage / name
+        if path.is_file():
+            mapping.append((path, str(Path("nekomote") / name)))
     return mapping
 
 
