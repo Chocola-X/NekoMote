@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| D1 真实 Wayland / KDE6 桌面资源测量 | base `88ea8fe`；Debian12 当前构建 200 必选检查/重装校验通过；真实 KDE6/Wayland 双后端各 2×120 秒，静态前后/驻留另测，见 [报告](plasma-desktop-2026-10-18.md)；原图片背景和资产配置已恢复，保留新安装 | Vulkan 第二轮 RSS 较第一轮高约 69 MiB、切回静态后驻留未归因；实际 present/多屏/其他模型/长期仍未验证 |
 | S1 系统依赖 / Arch 打包 | base `cffc7e4`；新增显式系统依赖模式和三包 PKGBUILD，固定模式/GitHub 默认保留；201 系统依赖 CPU/QML、199 固定依赖 CPU 通过，见 [说明](../packaging/arch/README.md) | 三份实际包审计通过，ARM64/干净 chroot 和其他发行版未验证 |
 | R1 Release / layer-shell 分发 | base `8ef8309`；新增 Debian12 layer-shell x86_64/aarch64，七份包完整校验；移除 README、合并依赖声明并迁移 Plasma 安装；200 CPU CTest、29 定向 Python 及三套旧基线打包回归通过，见 [CI 说明](github-actions.md#layer-shell-分发与归档精简2026-10-18) | ARM64、远端 Actions/标签发布及目标桌面待实际运行；未做性能测量 |
 | F1 共享 UI 字体回落 | base `842f7cc`；完整 CJK 字体优先、四语文本按需准备、候选重试/缺字回落与详细诊断；199 CPU、6 字体检查、GL/Vulkan 各2 GPU 用例及 player/layer-shell 构建通过；本机映射206→1 | 朋友 Arch / Hyprland 重测；限定内存/字符覆盖与 GPU 范围见 [记录](ui-font-fallback.md) |

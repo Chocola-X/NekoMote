@@ -1,0 +1,458 @@
+{
+  "task": "D1 real KDE6/Wayland desktop measurement",
+  "runtime_commit": "88ea8fe00017e776a25e72d7024a0017300c66cb",
+  "package_sha256": "238a4b9e31f3ed814c33c5ee97bc6260e6f5edff2367cf421ac6115dd421f24c",
+  "installed_library_sha256": "6d6c34690c089bea764682efd27b1fb1b6e812db495239562429a2f455b7dbf2",
+  "build": "Debian 12, GCC 12.2.0, Qt 6.4.2; Release + LTO + Werror; fixed source dependencies",
+  "mandatory_ctest": {
+    "passed": 200,
+    "failed": 0,
+    "excluded_labels": [
+      "gpu",
+      "integration"
+    ]
+  },
+  "host": {
+    "distribution": "Manjaro Linux",
+    "kernel": "6.6.107-1-MANJARO",
+    "cpu": "Intel Xeon E5-1680 v4 @ 3.40GHz",
+    "physical_cores": 8,
+    "logical_cpus": 16,
+    "governor": "schedutil",
+    "ram_mib": 32011,
+    "plasma": "6.3.6",
+    "qt": "6.9.2",
+    "kwin": "6.3.6",
+    "session": "Wayland",
+    "display": {
+      "connector": "DP-2",
+      "width": 2560,
+      "height": 1440,
+      "refresh_hz": 179.999,
+      "scale": 1
+    },
+    "gpu": "NVIDIA RTX 3080 Ti 12 GiB",
+    "driver": "580.82.09"
+  },
+  "workload": {
+    "character": "chocola/casual-b-no-bell",
+    "background": "dynamic/BG_47",
+    "fps_requested": 60,
+    "fps_presented": "not measured",
+    "language": "zh-CN",
+    "mute": false,
+    "control_panel": "closed; launcher icon visible",
+    "input": "stationary pointer; no touch or injected input",
+    "timing": "real monotonic clock; no fixed-step diagnostic mode"
+  },
+  "scope": "One real machine, two short runs per backend; not long-term or other-compositor validation",
+  "asset_fingerprints": {
+    "config.json": {
+      "sha256": "4e68c73dee982c8ac8503ddfee02b071cee8add0f2254baf82f380e4110fff5f",
+      "bytes": 496
+    },
+    "characters/chocola/casual-b-no-bell/model.nkm.json": {
+      "sha256": "b0187d00c4a942772a17a8ef75b25a0937bce6353075fd40aaf7d8a60faf8ba3",
+      "bytes": 1808464
+    },
+    "characters/chocola/casual-b-no-bell/session.nks.json": {
+      "sha256": "7f1cdcfd110cbc46054fa8beeedde462158ad503ae42fa05c954ea10759a7716",
+      "bytes": 16972
+    }
+  },
+  "screenshot_checks": {
+    "opengl-1": {
+      "size": [
+        2560,
+        1440
+      ],
+      "roi": [
+        350,
+        140,
+        1500,
+        1350
+      ],
+      "changed_pixels": 592859,
+      "pixels": 1391500,
+      "changed_fraction": 0.4260574919151994,
+      "mean_abs_rgb": [
+        5.341340280273086,
+        5.905608336327704,
+        5.391703197987783
+      ]
+    },
+    "opengl-2": {
+      "size": [
+        2560,
+        1440
+      ],
+      "roi": [
+        350,
+        140,
+        1500,
+        1350
+      ],
+      "changed_pixels": 699807,
+      "pixels": 1391500,
+      "changed_fraction": 0.5029155587495509,
+      "mean_abs_rgb": [
+        9.757857707509881,
+        11.349157743442328,
+        10.376181818181818
+      ]
+    },
+    "vulkan-1": {
+      "size": [
+        2560,
+        1440
+      ],
+      "roi": [
+        350,
+        140,
+        1500,
+        1350
+      ],
+      "changed_pixels": 731217,
+      "pixels": 1391500,
+      "changed_fraction": 0.5254883219547252,
+      "mean_abs_rgb": [
+        11.29301976284585,
+        12.982237872799137,
+        11.738403880704276
+      ]
+    },
+    "vulkan-2": {
+      "size": [
+        2560,
+        1440
+      ],
+      "roi": [
+        350,
+        140,
+        1500,
+        1350
+      ],
+      "changed_pixels": 677122,
+      "pixels": 1391500,
+      "changed_fraction": 0.4866130075458139,
+      "mean_abs_rgb": [
+        8.512669780812073,
+        9.635747035573123,
+        8.764531800215595
+      ]
+    }
+  },
+  "snapshot_policy": "Screenshots captured after sampling; game art retained only in ignored build evidence",
+  "restored": {
+    "plugin": "org.kde.image",
+    "original_image": true,
+    "assets_config_unchanged": true,
+    "render_backend_default": "opengl",
+    "new_install_retained": true,
+    "inhibitors_released": true,
+    "background_pixels_identical_roi": [
+      0,
+      0,
+      2560,
+      1350
+    ]
+  },
+  "figure_tool": "gnuplot 6.0 patchlevel 3",
+  "events": [
+    {
+      "time": "2026-10-18T14:43:00.695203+08:00",
+      "action": "switch",
+      "plugin": "uk.nekopara.nekomote",
+      "backend": "opengl",
+      "result": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:43:00.719967+08:00",
+      "action": "sample_start",
+      "name": "opengl-1",
+      "pid": 64431,
+      "warmup": 45,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:45:45.807870+08:00",
+      "action": "sample_done",
+      "name": "opengl-1"
+    },
+    {
+      "time": "2026-10-18T14:45:47.243633+08:00",
+      "action": "screenshot",
+      "name": "opengl-1-a"
+    },
+    {
+      "time": "2026-10-18T14:45:51.616452+08:00",
+      "action": "screenshot",
+      "name": "opengl-1-b"
+    },
+    {
+      "time": "2026-10-18T14:45:51.637662+08:00",
+      "action": "switch",
+      "plugin": "uk.nekopara.nekomote",
+      "backend": "vulkan",
+      "result": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:45:54.453600+08:00",
+      "action": "restart",
+      "pid": 66758,
+      "plugin": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:45:54.472522+08:00",
+      "action": "sample_start",
+      "name": "vulkan-1",
+      "pid": 66758,
+      "warmup": 45,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:48:39.567820+08:00",
+      "action": "sample_done",
+      "name": "vulkan-1"
+    },
+    {
+      "time": "2026-10-18T14:48:40.933096+08:00",
+      "action": "screenshot",
+      "name": "vulkan-1-a"
+    },
+    {
+      "time": "2026-10-18T14:48:45.331592+08:00",
+      "action": "screenshot",
+      "name": "vulkan-1-b"
+    },
+    {
+      "time": "2026-10-18T14:48:45.353346+08:00",
+      "action": "switch",
+      "plugin": "uk.nekopara.nekomote",
+      "backend": "opengl",
+      "result": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:48:47.094751+08:00",
+      "action": "restart",
+      "pid": 68079,
+      "plugin": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:48:47.115093+08:00",
+      "action": "sample_start",
+      "name": "opengl-2",
+      "pid": 68079,
+      "warmup": 45,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:51:32.194063+08:00",
+      "action": "sample_done",
+      "name": "opengl-2"
+    },
+    {
+      "time": "2026-10-18T14:51:33.592671+08:00",
+      "action": "screenshot",
+      "name": "opengl-2-a"
+    },
+    {
+      "time": "2026-10-18T14:51:37.918101+08:00",
+      "action": "screenshot",
+      "name": "opengl-2-b"
+    },
+    {
+      "time": "2026-10-18T14:51:37.940264+08:00",
+      "action": "switch",
+      "plugin": "uk.nekopara.nekomote",
+      "backend": "vulkan",
+      "result": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:51:40.137631+08:00",
+      "action": "restart",
+      "pid": 69356,
+      "plugin": "uk.nekopara.nekomote"
+    },
+    {
+      "time": "2026-10-18T14:51:40.160218+08:00",
+      "action": "sample_start",
+      "name": "vulkan-2",
+      "pid": 69356,
+      "warmup": 45,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:54:25.253400+08:00",
+      "action": "sample_done",
+      "name": "vulkan-2"
+    },
+    {
+      "time": "2026-10-18T14:54:26.642317+08:00",
+      "action": "screenshot",
+      "name": "vulkan-2-a"
+    },
+    {
+      "time": "2026-10-18T14:54:30.981861+08:00",
+      "action": "screenshot",
+      "name": "vulkan-2-b"
+    },
+    {
+      "time": "2026-10-18T14:54:31.002784+08:00",
+      "action": "switch",
+      "plugin": "org.kde.image",
+      "backend": "opengl",
+      "result": "org.kde.image"
+    },
+    {
+      "time": "2026-10-18T14:54:31.022015+08:00",
+      "action": "sample_start",
+      "name": "static-retained",
+      "pid": 69356,
+      "warmup": 30,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:57:01.119026+08:00",
+      "action": "sample_done",
+      "name": "static-retained"
+    },
+    {
+      "time": "2026-10-18T14:57:02.018532+08:00",
+      "action": "restart",
+      "pid": 71836,
+      "plugin": "org.kde.image"
+    },
+    {
+      "time": "2026-10-18T14:57:02.038498+08:00",
+      "action": "sample_start",
+      "name": "static-final",
+      "pid": 71836,
+      "warmup": 45,
+      "seconds": 120
+    },
+    {
+      "time": "2026-10-18T14:59:47.113506+08:00",
+      "action": "sample_done",
+      "name": "static-final"
+    },
+    {
+      "time": "2026-10-18T14:59:48.223438+08:00",
+      "action": "screenshot",
+      "name": "static-final"
+    },
+    {
+      "time": "2026-10-18T14:59:48.223565+08:00",
+      "action": "experiment_complete"
+    },
+    {
+      "time": "2026-10-18T14:59:48.245080+08:00",
+      "action": "switch",
+      "plugin": "org.kde.image",
+      "backend": "opengl",
+      "result": "org.kde.image"
+    },
+    {
+      "time": "2026-10-18T14:59:48.245274+08:00",
+      "action": "finished"
+    }
+  ],
+  "sampler_sha256": "f7381d1eed7b8d481e839cf8e9766cc0b767b6fa057d4dd912400abe8d2cc956",
+  "archive_build_log_sha256": "0da3fb704c26d0fe90e1af250c12223d0e70cfee9135333edf39530dd0af2136",
+  "compatibility_audit": {
+    "architecture": "x86_64",
+    "baseline": {
+      "failures": [],
+      "limits": {
+        "CXXABI": "1.3.13",
+        "GLIBC": "2.36",
+        "GLIBCXX": "3.4.30"
+      },
+      "name": "debian12",
+      "passed": true
+    },
+    "binaries": {
+      "lib/libnekomote_plasma_qml.so": {
+        "architecture": "x86_64",
+        "needed": [
+          "libQt6Quick.so.6",
+          "libQt6Qml.so.6",
+          "libQt6OpenGL.so.6",
+          "libQt6Gui.so.6",
+          "libQt6Core.so.6",
+          "libpulse.so.0",
+          "libpng16.so.16",
+          "libfontconfig.so.1",
+          "libvulkan.so.1",
+          "libstdc++.so.6",
+          "libm.so.6",
+          "libgcc_s.so.1",
+          "libc.so.6",
+          "ld-linux-x86-64.so.2"
+        ],
+        "public_qt5_renderer_exports": [],
+        "qt_symbol_minimum": "6.4",
+        "runpath": [],
+        "sha256": "6d6c34690c089bea764682efd27b1fb1b6e812db495239562429a2f455b7dbf2",
+        "versions": {
+          "CXXABI": "1.3.13",
+          "GLIBC": "2.34",
+          "GLIBCXX": "3.4.29"
+        }
+      },
+      "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so": {
+        "architecture": "x86_64",
+        "needed": [
+          "libnekomote_plasma_qml.so",
+          "libQt6Qml.so.6",
+          "libQt6Core.so.6",
+          "libstdc++.so.6",
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "public_qt5_renderer_exports": [],
+        "qt_symbol_minimum": "6.4",
+        "runpath": [
+          "$ORIGIN/../../../lib"
+        ],
+        "sha256": "2417c208ee97c8164dda40c215751c877b9b2ebef52ca6cbbcb88b37117b7eeb",
+        "versions": {
+          "CXXABI": "1.3.9",
+          "GLIBC": "2.2.5",
+          "GLIBCXX": "3.4"
+        }
+      }
+    },
+    "plasma_major": 6,
+    "qt_build_version": "6.4.2",
+    "requirements": {
+      "CXXABI": "1.3.13",
+      "GLIBC": "2.34",
+      "GLIBCXX": "3.4.29"
+    },
+    "schema": 1,
+    "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"
+  },
+  "resource_fingerprints": {
+    "characters/chocola/casual-b-no-bell/textures/0.png": {
+      "sha256": "c205bb2d07d52b20b48da0e87ae5cb370609713868fcd5c9b49f1e45068e86a4",
+      "bytes": 4246645
+    },
+    "backgrounds/dynamic/BG_47/C.png": {
+      "sha256": "c510c0b73ea6d40dad15de1cec2625abf7787c6a43c6fb9559e29fd9c8b6eea4",
+      "bytes": 5684150
+    },
+    "backgrounds/dynamic/BG_47/A.png": {
+      "sha256": "42a014cbf718226faa2de4e42dfb40643a371be1508c3597140a62b02ad4feea",
+      "bytes": 5732938
+    },
+    "backgrounds/dynamic/BG_47/config.json": {
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538",
+      "bytes": 230
+    },
+    "backgrounds/dynamic/BG_47/B.png": {
+      "sha256": "60694bdb0a869879f166733078ae7abe45a48004f0b6277311c8110a319f7e0d",
+      "bytes": 5888538
+    }
+  }
+}
