@@ -1,0 +1,1349 @@
+{
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant unknown)",
+  "context": "User-observed bounded history-dependent player VRAM/RSS growth after model switches; visible OpenGL and Vulkan investigation",
+  "raw_evidence_directory": "build/evidence/player-switch-memory-20261019",
+  "units": {
+    "memory": "MiB (1048576 bytes)",
+    "resource_sizes": "bytes"
+  },
+  "environment": {
+    "commit": "bc2a386550ec6c02d655025d0ba40a1d170f4f1a",
+    "kernel": "6.6.107-1-MANJARO",
+    "platform": "Linux-6.6.107-1-MANJARO-x86_64-with-glibc2.42",
+    "cpu": "Intel(R) Xeon(R) CPU E5-1680 v4 @ 3.40GHz",
+    "libc": [
+      "glibc",
+      "2.42"
+    ],
+    "config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti",
+    "vram_total_mib": 12288,
+    "driver": "580.82.09",
+    "desktop": "KDE/X11",
+    "framebuffer": [
+      1920,
+      1080
+    ],
+    "target_fps": 60,
+    "audio": "device",
+    "background": "BG_22A",
+    "assets": "experiments/NekoMoteAssets/assets/",
+    "asset_commit": "faa78f61e00df31077016a45289a529ffb6a8c50"
+  },
+  "method": {
+    "visible": true,
+    "headless": false,
+    "capture": false,
+    "measure_frames": false,
+    "os_input_injection": false,
+    "save_user_config": false,
+    "external_sample_interval_seconds": 1,
+    "pss_interval_seconds": 5,
+    "gpu_runs_serialized": true,
+    "steady_summary": "median of last five samples, last two for each switch; exclude non-Idle/previous-resource samples"
+  },
+  "runs": {
+    "opengl-audit": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/nekomote_player_audit",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "binary_sha256": "e4c0557708c2a6e879d655403d2f25ff4504efe8a6231683cceb1bc04b6f2956",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 252.13902927400022,
+      "exit": {
+        "code": 0,
+        "pid": 37103,
+        "seconds": 253.40396531999977
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 249.953125,
+          "vram_mib": 71.25390625,
+          "last": {
+            "seconds": 17.07936384100003,
+            "rss_mib": 249.953125,
+            "vram_mib": 71.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47104576,
+            "heap_free": 9076160,
+            "heap_arena": 56180736,
+            "heap_mmap": 23494656,
+            "gpu": {
+              "gl_allocated": 48701440,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 0,
+              "gl_programs": 8,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0
+            }
+          }
+        },
+        "returned-target": {
+          "samples": 5,
+          "rss_mib": 291.18359375,
+          "vram_mib": 105.25390625,
+          "last": {
+            "seconds": 228.0248141070001,
+            "rss_mib": 291.18359375,
+            "vram_mib": 105.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47889376,
+            "heap_free": 54948896,
+            "heap_arena": 102838272,
+            "heap_mmap": 22863872,
+            "gpu": {
+              "gl_allocated": 1325358468,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 1276657028,
+              "gl_programs": 8,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0
+            }
+          }
+        },
+        "gpu-finish": {
+          "samples": 5,
+          "rss_mib": 283.18359375,
+          "vram_mib": 75.25390625,
+          "last": {
+            "seconds": 240.08012302499992,
+            "rss_mib": 283.18359375,
+            "vram_mib": 75.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47886256,
+            "heap_free": 54952016,
+            "heap_arena": 102838272,
+            "heap_mmap": 22863872,
+            "gpu": {
+              "gl_allocated": 1325358468,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 1276657028,
+              "gl_programs": 8,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0
+            }
+          }
+        },
+        "heap-trim": {
+          "samples": 5,
+          "rss_mib": 246.77734375,
+          "vram_mib": 75.25390625,
+          "last": {
+            "seconds": 252.13902927400022,
+            "rss_mib": 246.77734375,
+            "vram_mib": 75.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47886256,
+            "heap_free": 21885008,
+            "heap_arena": 69771264,
+            "heap_mmap": 22863872,
+            "gpu": {
+              "gl_allocated": 1325358468,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 1276657028,
+              "gl_programs": 8,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0
+            }
+          }
+        }
+      },
+      "observed_stable_switch_phases": 36,
+      "stable_switch_vram_range_mib": [
+        71.25390625,
+        135.25390625
+      ],
+      "all_recorded_windows_visible_1920x1080": true
+    },
+    "opengl-audit-control": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/nekomote_player_control",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+        "binary_sha256": "bc693f4a61a1886683db76cfeabfdd0a8de3f91843becc7ca5fe9f4ce698db40",
+        "sequence": [
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 146.630649662,
+      "exit": {
+        "code": 0,
+        "pid": 41826,
+        "seconds": 147.7566906459997
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 278.52734375,
+          "vram_mib": 71.25390625,
+          "last": {
+            "seconds": 17.074964588000057,
+            "rss_mib": 278.52734375,
+            "vram_mib": 71.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47121056,
+            "heap_free": 9039200,
+            "heap_arena": 56160256,
+            "heap_mmap": 23494656,
+            "gpu": {}
+          }
+        },
+        "returned-target": {
+          "samples": 5,
+          "rss_mib": 309.73828125,
+          "vram_mib": 109.25390625,
+          "last": {
+            "seconds": 122.49004801799992,
+            "rss_mib": 309.73828125,
+            "vram_mib": 109.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47964656,
+            "heap_free": 52194832,
+            "heap_arena": 100159488,
+            "heap_mmap": 22863872,
+            "gpu": {}
+          }
+        },
+        "gpu-finish": {
+          "samples": 5,
+          "rss_mib": 297.73828125,
+          "vram_mib": 85.25390625,
+          "last": {
+            "seconds": 134.5853162809999,
+            "rss_mib": 297.73828125,
+            "vram_mib": 85.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47960912,
+            "heap_free": 52198576,
+            "heap_arena": 100159488,
+            "heap_mmap": 22863872,
+            "gpu": {}
+          }
+        },
+        "heap-trim": {
+          "samples": 5,
+          "rss_mib": 271.8828125,
+          "vram_mib": 85.25390625,
+          "last": {
+            "seconds": 146.630649662,
+            "rss_mib": 271.8828125,
+            "vram_mib": 85.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 47960912,
+            "heap_free": 20270256,
+            "heap_arena": 68231168,
+            "heap_mmap": 22863872,
+            "gpu": {}
+          }
+        }
+      },
+      "observed_stable_switch_phases": 15,
+      "stable_switch_vram_range_mib": [
+        71.25390625,
+        123.25390625
+      ],
+      "all_recorded_windows_visible_1920x1080": true,
+      "stable_loop_fps": 59.61602121379361,
+      "command_timings": [
+        {
+          "command": "switch",
+          "milliseconds": 0.147009,
+          "serial": 1
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.09734,
+          "serial": 2
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.044917,
+          "serial": 3
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.058607,
+          "serial": 4
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.096794,
+          "serial": 5
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.093521,
+          "serial": 6
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.048503,
+          "serial": 7
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.098368,
+          "serial": 8
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.09989,
+          "serial": 9
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.089418,
+          "serial": 10
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.10892,
+          "serial": 11
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.095041,
+          "serial": 12
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.042717,
+          "serial": 13
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.083869,
+          "serial": 14
+        },
+        {
+          "command": "switch",
+          "milliseconds": 0.049425,
+          "serial": 15
+        },
+        {
+          "command": "finish",
+          "milliseconds": 7.858308,
+          "serial": 16
+        },
+        {
+          "command": "trim",
+          "milliseconds": 3.324155,
+          "serial": 17
+        },
+        {
+          "command": "close",
+          "milliseconds": 0.021792,
+          "serial": 18
+        }
+      ]
+    },
+    "opengl-plain": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/png-flac-config-check/bin/nekomote_player",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "binary_sha256": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 17.05687944600004,
+      "exit": {
+        "code": -15,
+        "pid": 36106,
+        "seconds": 18.12087207400009
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 147.78515625,
+          "vram_mib": 71.25390625,
+          "last": {
+            "seconds": 17.05687944600004,
+            "rss_mib": 147.78515625,
+            "vram_mib": 71.25390625
+          }
+        }
+      },
+      "observed_stable_switch_phases": 0
+    },
+    "opengl-plain-probe-warm": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/nekomote_player_audit",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+        "binary_sha256": "e4c0557708c2a6e879d655403d2f25ff4504efe8a6231683cceb1bc04b6f2956",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 17.074174385999868,
+      "exit": {
+        "code": -15,
+        "pid": 39369,
+        "seconds": 18.148735075999866
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 222.953125,
+          "vram_mib": 71.25390625,
+          "last": {
+            "seconds": 17.074174385999868,
+            "rss_mib": 222.953125,
+            "vram_mib": 71.25390625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 12826832,
+            "heap_free": 9041712,
+            "heap_arena": 21868544,
+            "heap_mmap": 4300800,
+            "gpu": {
+              "gl_allocated": 48701440,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 0,
+              "gl_programs": 8,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0
+            }
+          }
+        }
+      },
+      "observed_stable_switch_phases": 0,
+      "all_recorded_windows_visible_1920x1080": true
+    },
+    "opengl-plain-repeat": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/png-flac-config-check/bin/nekomote_player",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+        "binary_sha256": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 17.059171673000037,
+      "exit": {
+        "code": -15,
+        "pid": 43319,
+        "seconds": 18.13129968799967
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 217.98046875,
+          "vram_mib": 71.25390625,
+          "last": {
+            "seconds": 17.059171673000037,
+            "rss_mib": 217.98046875,
+            "vram_mib": 71.25390625
+          }
+        }
+      },
+      "observed_stable_switch_phases": 0
+    },
+    "vulkan-audit": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/nekomote_player_audit",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "vulkan",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+        "binary_sha256": "e4c0557708c2a6e879d655403d2f25ff4504efe8a6231683cceb1bc04b6f2956",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "vulkan",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 252.06316405200005,
+      "exit": {
+        "code": 0,
+        "pid": 39511,
+        "seconds": 253.33116179699982
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 176.74609375,
+          "vram_mib": 64.47265625,
+          "last": {
+            "seconds": 17.069723839999824,
+            "rss_mib": 176.74609375,
+            "vram_mib": 64.47265625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 22531168,
+            "heap_free": 1029024,
+            "heap_arena": 23560192,
+            "heap_mmap": 14725120,
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_programs": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 98943848,
+              "vk_allocations": 14,
+              "vk_freed": 38309920,
+              "vk_memory_bytes": 60633928
+            }
+          }
+        },
+        "returned-target": {
+          "samples": 5,
+          "rss_mib": 196.19140625,
+          "vram_mib": 64.47265625,
+          "last": {
+            "seconds": 227.9699354889999,
+            "rss_mib": 196.19140625,
+            "vram_mib": 64.47265625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 22687936,
+            "heap_free": 23400256,
+            "heap_arena": 46088192,
+            "heap_mmap": 14725120,
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_programs": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 2345256032,
+              "vk_allocations": 14,
+              "vk_freed": 2284622104,
+              "vk_memory_bytes": 60633928
+            }
+          }
+        },
+        "gpu-finish": {
+          "samples": 5,
+          "rss_mib": 196.19140625,
+          "vram_mib": 64.47265625,
+          "last": {
+            "seconds": 240.02223667999988,
+            "rss_mib": 196.19140625,
+            "vram_mib": 64.47265625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 22687920,
+            "heap_free": 23400272,
+            "heap_arena": 46088192,
+            "heap_mmap": 14725120,
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_programs": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 2345256032,
+              "vk_allocations": 14,
+              "vk_freed": 2284622104,
+              "vk_memory_bytes": 60633928
+            }
+          }
+        },
+        "heap-trim": {
+          "samples": 5,
+          "rss_mib": 178.2109375,
+          "vram_mib": 64.47265625,
+          "last": {
+            "seconds": 252.06316405200005,
+            "rss_mib": 178.2109375,
+            "vram_mib": 64.47265625,
+            "model": "chocola/casual-a-no-bell",
+            "visible": 1,
+            "iconified": 0,
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "heap_live": 22687936,
+            "heap_free": 23203648,
+            "heap_arena": 45891584,
+            "heap_mmap": 14725120,
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_programs": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 2345256032,
+              "vk_allocations": 14,
+              "vk_freed": 2284622104,
+              "vk_memory_bytes": 60633928
+            }
+          }
+        }
+      },
+      "observed_stable_switch_phases": 36,
+      "stable_switch_vram_range_mib": [
+        48.47265625,
+        70.47265625
+      ],
+      "all_recorded_windows_visible_1920x1080": true
+    },
+    "vulkan-plain": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/png-flac-config-check/bin/nekomote_player",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/player-switch-memory-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "vulkan",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "3fb23cb5465d9fe482b103360d0e5a5cf7c2e944c3b5b40e4b14294ed3fd654f",
+        "binary_sha256": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+        "sequence": [
+          "chocola/casual",
+          "chocola/casual-a-with-bell",
+          "chocola/casual-b-no-bell",
+          "chocola/casual-b-with-bell",
+          "chocola/date-a",
+          "chocola/date-b",
+          "chocola/dress",
+          "chocola/dress-a",
+          "chocola/hawaii-a",
+          "chocola/hawaii-b",
+          "chocola/koneko",
+          "chocola/koneko-a",
+          "chocola/koneko-b",
+          "chocola/lolita",
+          "chocola/maid",
+          "chocola/maid-a-no-bell",
+          "chocola/maid-a-with-bell",
+          "chocola/maid-b-no-bell",
+          "chocola/maid-b-with-bell",
+          "chocola/pajama",
+          "chocola/pajama-a",
+          "chocola/pajama-b",
+          "chocola/santa",
+          "chocola/santa-b",
+          "chocola/swimsuit-a",
+          "chocola/swimsuit-b",
+          "chocola/teenage",
+          "chocola/teenage-a",
+          "chocola/teenage-b",
+          "chocola/winter",
+          "chocola/winter-b",
+          "chocola/wintermaid",
+          "chocola/wintermaid-b",
+          "chocola/yukata",
+          "chocola/yukata-b",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "vulkan",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -39.04273223876953,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "duration_seconds": 17.06864608600017,
+      "exit": {
+        "code": -15,
+        "pid": 39219,
+        "seconds": 18.192542420000336
+      },
+      "phases": {
+        "cold": {
+          "samples": 5,
+          "rss_mib": 172.22265625,
+          "vram_mib": 64.47265625,
+          "last": {
+            "seconds": 17.06864608600017,
+            "rss_mib": 172.22265625,
+            "vram_mib": 64.47265625
+          }
+        }
+      },
+      "observed_stable_switch_phases": 0
+    }
+  },
+  "checks": {
+    "opengl_same_target_live_resources_equal": true,
+    "vulkan_same_target_live_resources_equal": true,
+    "original_config_sha256_unchanged": true
+  },
+  "raw_file_sha256": {
+    "analyze.py": "9f96be5487ee15ea06ca0ca5d11feda1ebd933b4fb31a1edb060c5274c53e861",
+    "build_control.py": "647aa1238ff9d7c05fdcc7ce739bd7304249cce1021d405ff43561d108945d56",
+    "build_probe.py": "37cb813ae4f9b4703e4e0c717d676819a75d167d68738fd40a96f502566745e9",
+    "compile-command.json": "766b938f9f3782fa42d253046b0e865b4cffaadbad97b570ed8f043613bcffed",
+    "control-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control_probe.hpp": "4ca3d1a099308e01c872d58651dbf2f8f7455fbd7fe595fdfa3cb301f563c8c9",
+    "control_stub.cpp": "205da318fc232fcf071ef869aeb62e8c02a7ed38331557a5967c30863d2cfca4",
+    "environment.json": "014ef6ff259ff99e6327f16e246f97a4cc2a1bccaac576bf9bddc6ce33f892db",
+    "link-command.txt": "0fbdd3758381556984d5004cb5027c3061ed919dfe56c47d9a9038c42b4af9d5",
+    "opengl-audit/command.json": "895b7639e356b51a9c63597d70c9f0021950025effc8580e1588bb694a183072",
+    "opengl-audit/exit.json": "7f55748a54e2faeabfcc5d99337fa17d00b52fd07c7ce644fcd948b43b29fc8f",
+    "opengl-audit/inside.jsonl": "8a1f92d5c2e39a1b0c758d1e8c91aac0b7c7ea8b6033df2fa333c4044802a1ec",
+    "opengl-audit/manifest.json": "529cdc0ce53b9249ee1ace2e2553aa4058618dbd3cc0d42f52c0d51be30cb8f8",
+    "opengl-audit/player.log": "c68df8ab706dfb14b996f28e6075db5df9d20653e093f72afcada77e68dc6a53",
+    "opengl-audit/samples.jsonl": "496f1c1540498fab602afbcb13426e3591f2060333ccca741a27123ceec56389",
+    "opengl-audit/smaps-mid.txt": "0545182ee99c39b5cf92e546f791cca46c4442d633d28399f79aa9b4d884006b",
+    "opengl-audit-control/command.json": "487629ec2764ae9b64723be5c05794e2562237073fca29f632b6204bb09a0b48",
+    "opengl-audit-control/commands.jsonl": "c72aff0e04a9e136bf6a2a896969e9704a06c2e46ab9891e41d13d9e5b23c1e6",
+    "opengl-audit-control/exit.json": "d9c96e468adfcc0aa6053ef45d9518576be83a544d99cdc20c188a29b648c3c1",
+    "opengl-audit-control/inside.jsonl": "31a8ef528bf03f6403e3d5fb34f185aef5904dddd0512bf9803689d9029c98d8",
+    "opengl-audit-control/manifest.json": "2ba2523accb8cb518dc7e9e709a40407c8c8d693101045f5f640b5c2c11d0ea6",
+    "opengl-audit-control/player.log": "41cf413d634f1b2f305dc7a2e76bb49bffa6e2cd02d245230fdd560a2f46f3cb",
+    "opengl-audit-control/samples.jsonl": "ac13d3a636ffb7ffdd5d6d70c9bdca6d725771c420310105a2706417fd6106fd",
+    "opengl-audit-control/smaps-end.txt": "509e2e4cdc77c6b79ff8dcb5bd90cd70082ddffb181ee37b3be442e4fff7cd1a",
+    "opengl-audit-progress.log": "df08b432c0483b54075c308ed757a2097cd8ba90e92da2b85966094511ae05ac",
+    "opengl-control-progress.log": "50ee73a40413063393ecb509a863f003531af284a97e529141359f6c76b6be39",
+    "opengl-plain/exit.json": "045bdc23261b2e85a1220c40b3e0560245463c0bbb300db8a943816f5da3c47e",
+    "opengl-plain/manifest.json": "6c3873077658f75869206978ae864d3d0bf3f15aab09a71f8c77b7cc58876c65",
+    "opengl-plain/player.log": "026070f13cc66c405bfabbbdb374a57836d03c7462df888cccbeac33dc92841a",
+    "opengl-plain/samples.jsonl": "956f1fbd04b29d3450774a86f5af2e9cff8a8c361516ed0635509a4608e6d0a2",
+    "opengl-plain-probe-warm/exit.json": "a1631b74741f7220ceae71b2353cefccc15c2ba99277cd4b9b50c327eae25d55",
+    "opengl-plain-probe-warm/inside.jsonl": "7d024c3ac69afc73b107ab93f919a0236cadb15d4236a19aacd18405a9d59027",
+    "opengl-plain-probe-warm/manifest.json": "c99e2a5b4258381989823cea2024b144fa223500172fbf60a26c109121e7d422",
+    "opengl-plain-probe-warm/player.log": "026070f13cc66c405bfabbbdb374a57836d03c7462df888cccbeac33dc92841a",
+    "opengl-plain-probe-warm/samples.jsonl": "b2dc9f7b9af472eaffbe1590eb13b8cdfe58452264332444b9ccb4632e99cf6e",
+    "opengl-plain-probe-warm/smaps-end.txt": "23cfd3f4acff5d85e8f497459adf79d3632cb87e7e93b0500a412a4ceb4e1255",
+    "opengl-plain-progress.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "opengl-plain-repeat/exit.json": "706de12f6da322f62754ecdccb3531cce9df991e72a9ccc18cc278ace43060c6",
+    "opengl-plain-repeat/manifest.json": "2e65bfe447b9cdcef9b1e673691280d786fc1b4a90b6b25e12eaffb8242f5232",
+    "opengl-plain-repeat/player.log": "026070f13cc66c405bfabbbdb374a57836d03c7462df888cccbeac33dc92841a",
+    "opengl-plain-repeat/samples.jsonl": "60b448835cc895c3a548da6c134c0508b64b7efd33778781a2b0e27ef39ffb01",
+    "opengl-plain-repeat/smaps-end.txt": "4a1adeb0ad53caf858d2de0108269b21f0ae382316f5271d15d0bed1c2d78849",
+    "opengl-plain-repeat-progress.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "opengl-probe-warm-progress.log": "c53e049ae44a88630f851014d7347c3d33d5ed40da668aac05d893a858215441",
+    "player_audit_main.cpp": "a5686273d60ce14d5d4dbcbca4c6962d01e7919b645c2cb3096ea8e6b8eb2a91",
+    "player_control_main.cpp": "7de8b8ada285d88cd1172f39bbd3e68b635c03c5953fe6b341d784eab8fb8e30",
+    "probe-build.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "resource_trace.cpp": "a20f47e776f7a6d716e0f6082ee6f892cad2d8b5a02a8c39b396903726321b10",
+    "resource_trace.hpp": "fcc65238e70d20d0821fea6a17582ef94d6ba437aae6bd6c78b112f83828ddfd",
+    "run_visible.py": "1f423698170c14e9e0b59392b2fd4256a56c5ddb826c18eb1b8c099b416582d5",
+    "vulkan-audit/command.json": "895b7639e356b51a9c63597d70c9f0021950025effc8580e1588bb694a183072",
+    "vulkan-audit/exit.json": "6f23f781716d3db427567f5bf91e17c0870530d71b0822850d289989f0a8c1c2",
+    "vulkan-audit/inside.jsonl": "9c4a4f8395ce28da1466149d08584d579d159e083da0ed5ec24182c4da601f90",
+    "vulkan-audit/manifest.json": "0a9b83f5967ea2b380050b7728169848cb9dbbb4321dc1649367e0834dfb993c",
+    "vulkan-audit/player.log": "387940bb224d50ab2caed0bbfec215d19c1ef48199e1e7f1ccad153769dccd59",
+    "vulkan-audit/samples.jsonl": "0bb05723bf5e20c09b9a95fef9daebd4114c1bf0b47fc65064069b2d1f74dd6d",
+    "vulkan-audit/smaps-end.txt": "bd5613f1640c0ccf91167850490f0811d4e8e35e2df079d3b86ca127249fee00",
+    "vulkan-audit-progress.log": "7476bf3f39fefa2b7e4c380d656d5ead662a37c66c03d99139456411be196fa3",
+    "vulkan-plain/exit.json": "3fbe6b93a1a4edecc789eac1ec5b2439b900333d0a4d41be881e1323bb27f5ed",
+    "vulkan-plain/manifest.json": "7362c084d54fd52a77dc62bd35694cbc7276f4890723d3252049f8527127649f",
+    "vulkan-plain/player.log": "026070f13cc66c405bfabbbdb374a57836d03c7462df888cccbeac33dc92841a",
+    "vulkan-plain/samples.jsonl": "b7b7cb7d2d99e9a3611e35a293be927f9814a42e394024a41706084c64d422f4",
+    "vulkan-plain/smaps-end.txt": "f9d92d9a94c8b620cb48979377e0677d2d0523593ac099c3d21cc2c57e57d211",
+    "vulkan-plain-progress.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "limitations": [
+    "Finite runs do not certify absence of every leak or long-term behavior.",
+    "OpenGL glFinish sensitivity supports driver submission/reclamation attribution; internal pools and exact backing allocation types are not identified.",
+    "Original OpenGL cold-start RSS varied across processes; driver library mapping trigger is unresolved. Compare within-process deltas.",
+    "Vulkan returned-target steady VRAM increase was not reproduced by this sequence.",
+    "GL counters track nominal live API object storage; Vulkan counters include explicit application host/device VkDeviceMemory and exclude opaque driver/swapchain allocation.",
+    "No product allocator tuning, per-frame synchronization, CPU/GPU performance claim, or desktop installation."
+  ]
+}
