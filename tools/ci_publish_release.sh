@@ -9,13 +9,14 @@ if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
 fi
 
 cd "$PACKAGES_DIR"
-PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64 nekomote-plasma5-x86_64
+PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64
+    nekomote-plasma5-x86_64 nekomote-plasma5-aarch64
     nekomote-plasma6-x86_64 nekomote-plasma6-aarch64
     nekomote-layer-shell-debian12-x86_64 nekomote-layer-shell-debian12-aarch64
     nekomote-x11-ubuntu20-x86_64 nekomote-x11-ubuntu20-aarch64)
 FILES=(*)
-if [[ "${#FILES[@]}" != 18 ]]; then
-    echo 'Expected exactly nine packages and nine SHA256 files' >&2
+if [[ "${#FILES[@]}" != 20 ]]; then
+    echo 'Expected exactly ten packages and ten SHA256 files' >&2
     exit 1
 fi
 ASSETS=()

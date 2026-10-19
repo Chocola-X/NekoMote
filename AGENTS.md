@@ -96,6 +96,12 @@ main/little 相对链接共享、`model.nkm`（MessagePack + zlib）和背景渐
 原树备份与测试、加载内存和未覆盖范围见 [报告](docs/asset-storage-and-memory-2026-10-19.md)。
 没有恢复 WebP，没有安装真实桌面；现有 PNG 已逐行裁切，不把磁盘压缩收益说成稳态内存收益。
 
+2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
+`ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像；发布清单 9→10 包，
+publish 脚本同步强制 20 个附件。Qt5.12.8 / GCC10.5 基线与符号上限不变；ARM64
+插件远端首跑、真实 arm64 Plasma5 桌面及跨发行版加载仍待验收，见
+[CI 说明](docs/github-actions.md)。
+
 NekoMote 是独立的原生二维模型运行时与动态壁纸项目。核心目标是使用已有解包素材，在 Linux 长期稳定运行，并通过独立适配器接入桌面环境。
 
 所有实现须满足画面和行为的正确性要求。在正确性成立的前提下，以性能和代码规范性为优先约束，保持低耦合、高内聚和清晰的生命周期。

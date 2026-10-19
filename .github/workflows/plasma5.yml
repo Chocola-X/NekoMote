@@ -20,7 +20,15 @@ defaults:
 
 jobs:
   build-test-package:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     steps:
       - name: Checkout
@@ -40,12 +48,12 @@ jobs:
             nekomote-plasma5 plasma5 2>&1 | tee build/ci-plasma5/build-test.log
           test -s build/ci-plasma5/tests.xml
           test -s build/ci-plasma5/compatibility.json
-          test -s build/ci-plasma5/nekomote-plasma5-x86_64.tar.gz
+          test -s build/ci-plasma5/nekomote-plasma5-${{ matrix.arch }}.tar.gz
       - name: Upload release package
         # actions/upload-artifact v4.6.2; publication belongs to release.yml.
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: nekomote-plasma5-x86_64
+          name: nekomote-plasma5-${{ matrix.arch }}
           path: |
             build/ci-plasma5/*.tar.gz
             build/ci-plasma5/*.sha256
@@ -55,7 +63,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: evidence-plasma5-x86_64
+          name: evidence-plasma5-${{ matrix.arch }}
           path: |
             build/ci-plasma5/*.log
             build/ci-plasma5/*.xml

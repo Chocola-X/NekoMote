@@ -237,16 +237,17 @@ python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stag
 默认构建与 GitHub Actions 继续使用原有固定依赖。
 Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 
-四个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
+五个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 
 - Ubuntu 20.04：x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_abi_host`。
-- KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 插件。
-- KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 aarch64 插件。
-- Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 aarch64 独立程序。
+- KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 与 ARM64 插件。
+- KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 ARM64 插件。
+- Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 ARM64 独立程序。
+- X11：Ubuntu 20.04 / EWMH/GLX 的 x86_64 与 ARM64 独立程序。
 
 构建、测试与依赖审计通过后上传 Actions artifacts；失败日志与测试报告单独保存。
 推送 `v0.5.0` 这样的 `vX.Y.Z` 稳定版本标签后，发布工作流会构建上述全部平台，
-校验七份归档及 SHA256，自动发布到 GitHub Releases。
+校验十份归档及 SHA256，自动发布到 GitHub Releases。
 归档不附带 README；项目许可证为 AGPL-v3，依赖必须保留的声明合并在
 `THIRD_PARTY_NOTICES`。配置和兼容范围见 [自动构建说明](docs/github-actions.md)。目标机器安装前先检查：
 

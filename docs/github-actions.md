@@ -1,5 +1,11 @@
 # GitHub 自动构建与测试
 
+2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
+`ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像（Python / Node 下载
+按架构选择固定 URL 与 SHA256）。Qt5.12.8 / GCC10.5 基线与符号上限不变；发布清单
+扩为十包/二十个附件，publish 脚本同步强制校验。ARM64 插件远端首跑、真实 arm64
+Plasma5 桌面加载及跨发行版兼容仍待独立验收。
+
 2026-10-19 X11-L1：新增 Ubuntu20 双架构 X11 工作流，发布清单扩为九包/十八个附件。
 本地项目内 focal 隔离根执行完整 `ci_build.sh x11`：Release/LTO/Werror、213个必选
 CTest、许可归档、`ldd -r` 与 ELF 上限检查通过。实际需要 GLIBC2.29、GLIBCXX3.4.28、
@@ -19,7 +25,7 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
 | [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
-| [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
+| [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 与 aarch64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
 | [x11.yml](../.github/workflows/x11.yml) | Ubuntu 20.04 / GCC10.5，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH/GLX 程序 |
@@ -45,13 +51,14 @@ git push origin v0.5.0
 
 标签必须指向包含发布工作流的提交；标签本身是发布版本，不需要单独更新 CMake 中的
 内部工程版本。发布工作流使用该标签提交内的五个可复用工作流及构建脚本，等待全部
-矩阵任务成功，收集当前 run 的九份归档与各自的 `.sha256` 文件：
+矩阵任务成功，收集当前 run 的十份归档与各自的 `.sha256` 文件：
 
 | Release 附件 | 内容 |
 | --- | --- |
 | `nekomote-native-ubuntu20-x86_64.tar.gz` | Intel/AMD 64 位 Linux 的三个原生程序 |
 | `nekomote-native-ubuntu20-aarch64.tar.gz` | ARM64 Linux 的三个原生程序 |
-| `nekomote-plasma5-x86_64.tar.gz` | KDE5 插件 |
+| `nekomote-plasma5-x86_64.tar.gz` | KDE5 x86_64 插件 |
+| `nekomote-plasma5-aarch64.tar.gz` | KDE5 ARM64 插件 |
 | `nekomote-plasma6-x86_64.tar.gz` | KDE6 x86_64 插件 |
 | `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
 | `nekomote-layer-shell-debian12-x86_64.tar.gz` | Layer-shell x86_64 独立程序 |
@@ -59,7 +66,7 @@ git push origin v0.5.0
 | `nekomote-x11-ubuntu20-x86_64.tar.gz` | X11 x86_64 独立程序 |
 | `nekomote-x11-ubuntu20-aarch64.tar.gz` | X11 ARM64 独立程序 |
 
-本体、KDE6、layer-shell 和 X11 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
+本体、KDE5、KDE6、layer-shell 和 X11 的 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
 固定基线镜像中编译。focal 的 Python / Node 工具下载按架构选择固定 URL 与 SHA256；
 不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
 
@@ -108,7 +115,7 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 - `nekomote-native-ubuntu20-x86_64` / `nekomote-native-ubuntu20-aarch64`：归档内
   `nekomote-native/bin/` 仅包含三个请求的程序。
-- `nekomote-plasma5-x86_64`：Qt5 插件，不得装进 Plasma6。
+- `nekomote-plasma5-x86_64` / `nekomote-plasma5-aarch64`：Qt5 插件，不得装进 Plasma6。
 - `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
 - `nekomote-layer-shell-debian12-x86_64` / `nekomote-layer-shell-debian12-aarch64`：
   独立背景进程，归档内 `nekomote-layer-shell/bin/nekomote_layer_shell`。
