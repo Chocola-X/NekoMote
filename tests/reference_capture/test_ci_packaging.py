@@ -46,8 +46,20 @@ class NoticeTests(unittest.TestCase):
         self.assertEqual({path.name for path in self.stage.iterdir()},
                          {"LICENSE", "THIRD_PARTY_NOTICES"})
 
+    def test_x11_notices_keep_static_dependencies_without_glfw_or_wayland(self):
+        write_licenses(REPO, self.build, self.stage, "x11")
+        notices = (self.stage / "THIRD_PARTY_NOTICES").read_text()
+        for text in ("fixture nlohmann_json", "fixture fast_float", "fixture stb", "fixture glad",
+                     "fixture flac", "Apache License", "CC0 1.0 Universal"):
+            self.assertIn(text, notices)
+        self.assertNotIn("fixture glfw", notices)
+        self.assertNotIn("Drew DeVault", notices)
+        self.assertNotIn("Kristian Høgsberg", notices)
+        self.assertEqual({path.name for path in self.stage.iterdir()},
+                         {"LICENSE", "THIRD_PARTY_NOTICES"})
+
     def test_only_native_package_includes_glfw(self):
-        for mode in ("native20", "plasma5", "plasma6"):
+        for mode in ("native20", "plasma5", "plasma6", "x11"):
             with self.subTest(mode=mode):
                 write_licenses(REPO, self.build, self.stage, mode)
                 self.assertEqual("fixture glfw" in (self.stage / "THIRD_PARTY_NOTICES").read_text(),
@@ -99,6 +111,28 @@ class StandaloneAuditTests(unittest.TestCase):
         (self.stage / "bin/unexpected").write_text("extra")
         with self.assertRaisesRegex(ValueError, "exactly"):
             AUDIT.audit(self.stage, "layer-shell")
+
+    def test_x11_package_uses_ubuntu20_limits_and_single_program(self):
+        fixture = self.stage / "bin/nekomote_layer_shell"
+        shutil.copyfile(fixture, self.stage / "bin/nekomote_x11")
+        (self.stage / "bin/nekomote_x11").chmod(0o755)
+        fixture.unlink()
+        # The host compiler may target a newer glibc; freeze versions at the
+        # declared x11 baseline while keeping real ELF parsing and ldd checks.
+        info = AUDIT.elf_info(self.stage / "bin/nekomote_x11")
+        info["versions"] = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.11"}
+        with patch.object(AUDIT, "elf_info", return_value=info):
+            report = AUDIT.audit(self.stage, "x11")
+            self.assertEqual(report["baseline"], "ubuntu20")
+            self.assertEqual(report["limits"]["GLIBC"], "2.31")
+            self.assertEqual(report["limits"]["GLIBCXX"], "3.4.28")
+            self.assertEqual(set(report["binaries"]), {"nekomote_x11"})
+            info["versions"]["GLIBC"] = "2.32"
+            with self.assertRaisesRegex(ValueError, "exceeds ubuntu20"):
+                AUDIT.audit(self.stage, "x11")
+        (self.stage / "bin/unexpected").write_text("extra")
+        with self.assertRaisesRegex(ValueError, "exactly"):
+            AUDIT.audit(self.stage, "x11")
 
     def test_native_package_requires_png_converter_and_keeps_elf_gates(self):
         fixture = self.stage / "bin/nekomote_layer_shell"

@@ -299,6 +299,13 @@ nekomote_error WallpaperInstance::set_paused(bool paused)
     return NEKOMOTE_OK;
 }
 
+nekomote_error WallpaperInstance::set_output_available(bool available)
+{
+    output_unavailable_ = !available;
+    controller_.set_output_unavailable(output_unavailable_);
+    return NEKOMOTE_OK;
+}
+
 nekomote_error WallpaperInstance::set_ui_open(bool open)
 {
     panel_.sidebar.open = open;
@@ -674,7 +681,6 @@ nekomote_error WallpaperInstance::advance(double dt)
     if (!initialized_)
         return NEKOMOTE_OK;
     handle_switch_poll();
-    controller_.update_fade();
     if (controller_.switch_state() == application::SwitchState::Idle && previous_renderer_)
         previous_renderer_.reset();
 #if defined(NEKOMOTE_HAS_VULKAN)

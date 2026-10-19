@@ -45,8 +45,12 @@ jobs:
     needs: validate-tag
     uses: ./.github/workflows/layer-shell.yml
 
+  x11:
+    needs: validate-tag
+    uses: ./.github/workflows/x11.yml
+
   publish:
-    needs: [native, plasma5, plasma6, layer-shell]
+    needs: [native, plasma5, plasma6, layer-shell, x11]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

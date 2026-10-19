@@ -1,13 +1,20 @@
 # GitHub 自动构建与测试
 
+2026-10-19 X11-L1：新增 Ubuntu20 双架构 X11 工作流，发布清单扩为九包/十八个附件。
+本地项目内 focal 隔离根执行完整 `ci_build.sh x11`：Release/LTO/Werror、213个必选
+CTest、许可归档、`ldd -r` 与 ELF 上限检查通过。实际需要 GLIBC2.29、GLIBCXX3.4.28、
+CXXABI1.3.11，低于声明上限；归档仅含独立程序、LICENSE 和 THIRD_PARTY_NOTICES。
+16项离线打包/发布门禁测试通过；未执行真实发布，远端 Actions/ARM64 首次实跑仍待验收。
+可见 XFCE 验证与图标共存限制见 [说明](x11.md)。
+
 2026-10-19 PNG 工具补修：native20 构建与严格包清单补齐 `nekomote_png_recompress`，
 Ubuntu20 x86_64 完整构建、210 检查、安装/审计/归档和工具实跑通过；用户提供的
 两架构原始失败日志及异机资产问题见 [复核记录](png-ci-assets-audit-2026-10-19.md)。
 
-四个日常构建工作流独立触发：任意分支的 push、pull request 和手动
+五个日常构建工作流独立触发：任意分支的 push、pull request 和手动
 `workflow_dispatch` 都会运行；同一工作流同一 ref 的新运行取消旧运行，不取消其他工作流。
 它们也提供 `workflow_call`，供独立的标签发布工作流复用。分支 CI 只上传 Actions
-artifacts；版本标签统一由发布工作流触发构建，不额外重复运行四套 push CI。
+artifacts；版本标签统一由发布工作流触发构建，不额外重复运行五套 push CI。
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
@@ -15,11 +22,12 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
+| [x11.yml](../.github/workflows/x11.yml) | Ubuntu 20.04 / GCC10.5，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH/GLX 程序 |
 
 GitHub 当前的 [托管 runner 列表](https://github.com/actions/runner-images#available-images)
 不包含 Ubuntu 20.04，因此使用 `ubuntu-24.04` runner 的 Docker 运行 focal 构建。
 runner 的系统库不会被用于容器内编译。全部模式开启 Release、LTO、Werror；原生程序和两套插件启用 OpenGL 与 Vulkan，
-layer-shell 仅启用 OpenGL/EGL，测试失败或依赖审计失败时不上传发行包。
+layer-shell 仅启用 OpenGL/EGL，X11 仅启用 OpenGL/GLX，测试失败或依赖审计失败时不上传发行包。
 
 ## 版本标签自动发布
 
@@ -36,8 +44,8 @@ git push origin v0.5.0
 ```
 
 标签必须指向包含发布工作流的提交；标签本身是发布版本，不需要单独更新 CMake 中的
-内部工程版本。发布工作流使用该标签提交内的四个可复用工作流及构建脚本，等待全部
-矩阵任务成功，收集当前 run 的七份归档与各自的 `.sha256` 文件：
+内部工程版本。发布工作流使用该标签提交内的五个可复用工作流及构建脚本，等待全部
+矩阵任务成功，收集当前 run 的九份归档与各自的 `.sha256` 文件：
 
 | Release 附件 | 内容 |
 | --- | --- |
@@ -48,8 +56,10 @@ git push origin v0.5.0
 | `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
 | `nekomote-layer-shell-debian12-x86_64.tar.gz` | Layer-shell x86_64 独立程序 |
 | `nekomote-layer-shell-debian12-aarch64.tar.gz` | Layer-shell ARM64 独立程序 |
+| `nekomote-x11-ubuntu20-x86_64.tar.gz` | X11 x86_64 独立程序 |
+| `nekomote-x11-ubuntu20-aarch64.tar.gz` | X11 ARM64 独立程序 |
 
-本体、KDE6 和 layer-shell ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
+本体、KDE6、layer-shell 和 X11 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
 固定基线镜像中编译。focal 的 Python / Node 工具下载按架构选择固定 URL 与 SHA256；
 不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
 
@@ -102,6 +112,8 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 - `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
 - `nekomote-layer-shell-debian12-x86_64` / `nekomote-layer-shell-debian12-aarch64`：
   独立背景进程，归档内 `nekomote-layer-shell/bin/nekomote_layer_shell`。
+- `nekomote-x11-ubuntu20-x86_64` / `nekomote-x11-ubuntu20-aarch64`：
+  独立背景进程，归档内 `nekomote-x11/bin/nekomote_x11`，桌面共存限制见 [说明](x11.md)。
 - `evidence-*`：日志、JUnit `tests.xml`、兼容报告、包版本与未执行测试清单；失败也保存。
 
 每个工作流运行合成模型的 CPU/runtime/application/UI、C ABI 正负边界以及 Python
@@ -145,12 +157,14 @@ Ubuntu20 分发包，不用于冻结基线符号需求。
 ## 本地复现容器构建
 
 ```bash
-mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell
+mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell build/ci-x11
 docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" nekomote-focal native20
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" nekomote-focal plasma5
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" nekomote-focal x11
 docker build -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma6:/output:rw" nekomote-bookworm plasma6

@@ -146,9 +146,6 @@ class WallpaperController
     bool has_background() const noexcept;
     std::filesystem::path background_path(int index) const noexcept;
 
-    // === Fade update ===
-    void update_fade();
-
     // === Session advance ===
     void advance(double elapsed_seconds);
     void prepare_frame();
@@ -209,6 +206,8 @@ class WallpaperController
                                            const ControllerConfig& cfg);
     void apply_controller_config(const ControllerConfig& cfg);
     void synchronize_pause();
+    void advance_fade(double elapsed_seconds);
+    void discard_previous_audio() noexcept;
     void accept(SessionStatus status);
     void update_background_phase();
     void persist_character_transform();
@@ -239,7 +238,7 @@ class WallpaperController
     float fade_alpha_{1};
     int fade_target_character_{-1};
     std::future<CandidateCpu> candidate_future_;
-    std::chrono::steady_clock::time_point fade_start_;
+    double fade_elapsed_seconds_{0};
 
     bool need_bg_switch_{false};
     int target_background_index_{-1};

@@ -10,6 +10,13 @@
 
 `nekomote_wallpaper_fps_limit` 在求值线程读取已保存的帧率限制（0 表示不限帧，错误句柄返回 -1）；GUI 线程只能读取宿主发布的原子快照，不能直接并发查询 Controller。KDE 壁纸 item 依据该值调度更新。
 
+`nekomote_wallpaper_set_output_available(wp, 0/1)` 独立通知宿主输出可用性，
+不修改用户暂停状态；非法整数返回 INVALID_INPUT。隐藏时先通知不可用，再调用
+`advance(wp, 0)` 排出暂停音频命令，然后停止帧调度。恢复时通知可用并重置宿主的
+单调时间基线，避免追赶隐藏时的时间。角色渐变也在 `advance` 中按最多250ms预算
+推进，暂停、最小化和输出不可用时冻结；不再由墙钟独立推进。渐变旧实例仅提供画面，
+其音频事件不会进入当前实例的设备队列。该通知在同一求值线程调用，GPU销毁顺序不变。
+
 `nekomote_wallpaper_set_config_path` 复制并解析实例自己的配置文件路径，在首次
 `set_assets_dir` 开始后不可更换（含失败的扫描尝试）。省略时保留已有 Plasma 的
 assets/XDG 选择规则；指定后绝不自动回退。资产设置时验证存储：保存开启时创建父目录并

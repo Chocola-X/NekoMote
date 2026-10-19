@@ -42,6 +42,6 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path)
     parser.add_argument("build", type=Path)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("mode", choices=("native20", "plasma5", "plasma6", "layer-shell"))
+    parser.add_argument("mode", choices=("native20", "plasma5", "plasma6", "layer-shell", "x11"))
     args = parser.parse_args()
     write_licenses(args.source, args.build, args.stage, args.mode)

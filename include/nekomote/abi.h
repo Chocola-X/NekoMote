@@ -472,6 +472,11 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
                                                       int height);
     nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
+    /* Host output availability (0/1), separate from user pause. When unavailable,
+     * the shared controller pauses playback/audio without replacing user policy.
+     * Advance once with dt=0 to flush audio commands before suspending dispatch;
+     * on resume notify availability before advancing with a bounded delta. */
+    nekomote_error nekomote_wallpaper_set_output_available(nekomote_wallpaper* wp, int available);
     /* Open/close the shared control panel; works before lazy GPU UI initialization. */
     nekomote_error nekomote_wallpaper_set_ui_open(nekomote_wallpaper* wp, int open);
     void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo);

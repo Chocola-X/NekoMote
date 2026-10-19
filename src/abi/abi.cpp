@@ -1587,6 +1587,16 @@ extern "C"
         return wallpaper_call([&] { return wp->instance->set_paused(paused != 0); });
     }
 
+    nekomote_error nekomote_wallpaper_set_output_available(nekomote_wallpaper* wp, int available)
+    {
+        if (!wp || !wp->instance || (available != 0 && available != 1))
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid wallpaper or output availability");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wallpaper_call([&] { return wp->instance->set_output_available(available != 0); });
+    }
+
     nekomote_error nekomote_wallpaper_set_ui_open(nekomote_wallpaper* wp, int open)
     {
         if (!wp || !wp->instance || (open != 0 && open != 1))

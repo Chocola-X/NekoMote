@@ -58,6 +58,7 @@ class WallpaperInstance
     nekomote_error set_seed(std::uint32_t seed);
     nekomote_error set_output_size(int width, int height);
     nekomote_error set_paused(bool paused);
+    nekomote_error set_output_available(bool available);
     nekomote_error set_ui_open(bool open);
     void set_render_target_fbo(std::uint32_t fbo);
     void reset_gpu_resources();

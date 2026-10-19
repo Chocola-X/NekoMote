@@ -1,0 +1,73 @@
+name: X11 wallpaper Ubuntu 20.04 baseline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-x11-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-test-package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build baseline toolchain image
+        run: |
+          mkdir -p build/ci-x11
+          docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-x11-ubuntu20 tools \
+            2>&1 | tee build/ci-x11/toolchain-build.log
+      - name: Release build, tests and dependency audit
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" \
+            -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" \
+            nekomote-x11-ubuntu20 x11 2>&1 | tee build/ci-x11/build-test.log
+          test -s build/ci-x11/tests.xml
+          test -s build/ci-x11/compatibility.json
+          test -s build/ci-x11/nekomote-x11-ubuntu20-${{ matrix.arch }}.tar.gz
+      - name: Upload release package
+        # actions/upload-artifact v4.6.2; publication belongs to release.yml.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nekomote-x11-ubuntu20-${{ matrix.arch }}
+          path: |
+            build/ci-x11/*.tar.gz
+            build/ci-x11/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload tests and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: evidence-x11-${{ matrix.arch }}
+          path: |
+            build/ci-x11/*.log
+            build/ci-x11/*.xml
+            build/ci-x11/*.json
+            build/ci-x11/*.txt
+          if-no-files-found: warn
+          retention-days: 14

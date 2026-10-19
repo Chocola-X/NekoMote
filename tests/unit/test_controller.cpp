@@ -420,7 +420,87 @@ TEST_CASE("Controller confirm candidate switches", "[controller][integration]")
     REQUIRE(c.fade_alpha() == 0.0f);
 }
 
-TEST_CASE("Controller update_fade progresses", "[controller][integration]")
+TEST_CASE("Controller character fade freezes with playback policy and bounds recovery time",
+          "[controller][lifecycle]")
+{
+    LayoutFixture fixture;
+    WallpaperController c;
+    fixture.install(c);
+    ControllerConfig cfg;
+    cfg.audio = AudioMode::Disabled;
+    auto next = c.load_initial(fixture.entry, cfg);
+    REQUIRE(next.ok);
+    c.confirm_candidate(std::move(next));
+    REQUIRE(c.previous_instance());
+    REQUIRE(c.fade_alpha() == 0.0f);
+    SECTION("user pause survives host hide and show")
+    {
+        c.set_paused(true);
+        c.set_output_unavailable(true);
+        c.set_output_unavailable(false);
+        REQUIRE(c.paused());
+        c.advance(0.2);
+        REQUIRE(c.fade_alpha() == 0.0f);
+        c.set_paused(false);
+    }
+    SECTION("host unavailable")
+    {
+        c.set_output_unavailable(true);
+        c.advance(10);
+        REQUIRE(c.fade_alpha() == 0.0f);
+        c.set_output_unavailable(false);
+    }
+    SECTION("minimized")
+    {
+        c.set_minimized(true);
+        c.advance(10);
+        REQUIRE(c.fade_alpha() == 0.0f);
+        c.set_minimized(false);
+    }
+    c.advance(10);
+    REQUIRE(c.fade_alpha() == Catch::Approx(0.625f));
+    REQUIRE(c.previous_instance());
+    c.advance(0.15);
+    REQUIRE(c.fade_alpha() == 1.0f);
+    REQUIRE(c.switch_state() == SwitchState::Idle);
+    REQUIRE(c.previous_instance() == nullptr);
+}
+
+TEST_CASE("Controller fading session audio cannot fill an unconsumed queue",
+          "[controller][lifecycle][audio]")
+{
+    LayoutFixture fixture;
+    WallpaperController c;
+    ControllerConfig cfg;
+    cfg.audio = AudioMode::Device;
+    auto initial = c.load_initial(fixture.entry, cfg);
+    REQUIRE(initial.ok);
+    c.install_initial(std::move(initial));
+    auto next = c.load_initial(fixture.entry, cfg);
+    REQUIRE(next.ok);
+    c.confirm_candidate(std::move(next));
+    for (int i = 0; i < 20; ++i)
+    {
+        c.set_output_unavailable(true);
+        c.advance(0);
+        while (c.pop_audio_command())
+        {
+        }
+        c.set_output_unavailable(false);
+        c.advance(0);
+        while (c.pop_audio_command())
+        {
+        }
+        REQUIRE(c.last_error());
+    }
+    c.advance(0.2);
+    c.advance(0.2);
+    REQUIRE(c.last_error());
+    REQUIRE(c.switch_state() == SwitchState::Idle);
+    REQUIRE(c.previous_instance() == nullptr);
+}
+
+TEST_CASE("Controller character fade advances with playback time", "[controller][integration]")
 {
     if (!assets_available())
         SKIP("coconut/casual assets are unavailable");
@@ -446,13 +526,11 @@ TEST_CASE("Controller update_fade progresses", "[controller][integration]")
     }
     REQUIRE(c.switch_state() == SwitchState::CrossFade);
     REQUIRE(c.fade_alpha() == 0.0f);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    c.update_fade();
+    c.advance(0.1);
     REQUIRE(c.fade_alpha() > 0.0f);
     REQUIRE(c.fade_alpha() < 1.0f);
-    std::this_thread::sleep_for(
-        std::chrono::milliseconds(static_cast<int>(kCharacterFadeSeconds * 1000) + 100));
-    c.update_fade();
+    c.advance(0.2);
+    c.advance(0.2);
     REQUIRE(c.fade_alpha() == 1.0f);
     REQUIRE(c.switch_state() == SwitchState::Idle);
     REQUIRE(c.previous_instance() == nullptr);

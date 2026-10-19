@@ -1,6 +1,6 @@
 # Development/VCS packages. Build with makepkg; do not install build dependencies from CMake.
 pkgbase=nekomote-git
-pkgname=(nekomote-git nekomote-layer-shell-git nekomote-plasma6-git)
+pkgname=(nekomote-git nekomote-layer-shell-git nekomote-x11-git nekomote-plasma6-git)
 pkgver=0.5.1.r2.gcffc7e4
 pkgrel=1
 pkgdesc='Native 2D character runtime and live wallpaper for Linux'
@@ -9,7 +9,8 @@ url='https://github.com/Chocola-X/NekoMote'
 license=(AGPL-3.0-only)
 depends=(gcc-libs glibc fontconfig libpng libpulse zlib 'flac>=1.4')
 makedepends=(git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
-             libglvnd wayland qt6-base qt6-declarative vulkan-headers vulkan-icd-loader glslang)
+             libglvnd libx11 libxrandr libxext wayland qt6-base qt6-declarative
+             vulkan-headers vulkan-icd-loader glslang)
 checkdepends=(catch2 python-pillow nodejs)
 source=('nekomote::git+https://github.com/Chocola-X/NekoMote.git')
 sha256sums=('SKIP')
@@ -34,6 +35,7 @@ build() {
         -DNEKOMOTE_BUILD_PLAYER=ON \
         -DNEKOMOTE_BUILD_ABI=ON \
         -DNEKOMOTE_BUILD_LAYER_SHELL=ON \
+        -DNEKOMOTE_BUILD_X11=ON \
         -DNEKOMOTE_BUILD_QT_QUICK=ON \
         -DNEKOMOTE_QT_MAJOR=6 \
         -DNEKOMOTE_BUILD_PLASMA=ON \
@@ -98,6 +100,16 @@ package_nekomote-layer-shell-git() {
     conflicts=(nekomote-layer-shell)
     # The component also contains protocol source documents; ship their notices above.
     install -Dm755 build/bin/nekomote_layer_shell "$pkgdir/usr/bin/nekomote_layer_shell"
+    _install_licenses
+}
+
+package_nekomote-x11-git() {
+    pkgdesc='NekoMote X11/EWMH live wallpaper (OpenGL/GLX)'
+    depends+=(libx11 libxrandr libxext libglvnd vulkan-icd-loader)
+    optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
+    provides=(nekomote-x11)
+    conflicts=(nekomote-x11)
+    install -Dm755 build/bin/nekomote_x11 "$pkgdir/usr/bin/nekomote_x11"
     _install_licenses
 }
 

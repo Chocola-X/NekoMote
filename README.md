@@ -16,6 +16,7 @@ NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面
 - OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
 - KDE Plasma 6 壁纸插件；独立 Plasma 5 适配器（Qt5）
 - 独立 Wayland layer-shell 壁纸壳（OpenGL，面向支持该协议的合成器），见 [使用与验收范围](docs/layer-shell.md)
+- 独立 X11/EWMH 壁纸壳（OpenGL/GLX，Ubuntu 20.04 基线），见 [使用与桌面共存限制](docs/x11.md)
 - 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
 - 声音与口型（PulseAudio），可静音
 - PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
@@ -69,6 +70,7 @@ cmake --build --preset release
 | `plasma` | Release | LTO、Qt6 + Plasma6 QML 模块；分发时关闭 KF6 探针 |
 | `plasma5` | Release | LTO、Qt5 + Plasma5 QML 模块，不构建 KF6 探针/普通窗口 |
 | `layer-shell` | Release | LTO、独立 Wayland 背景进程，仅 OpenGL，不依赖 Qt/GLFW |
+| `x11` | Release | LTO、独立 X11/EWMH 背景进程，仅 OpenGL/GLX，不依赖 Qt/GLFW |
 | `qt-quick` | Release | LTO、Qt Quick 隔离宿主（不需 Plasma 依赖） |
 | `vulkan` | Debug | Vulkan + 验证层调试 |
 

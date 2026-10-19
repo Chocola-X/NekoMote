@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build/test/package inside an explicit baseline container. Never install a desktop.
 set -euo pipefail
-MODE="${1:?native20, plasma5, plasma6 or layer-shell required}"
+MODE="${1:?native20, plasma5, plasma6, layer-shell or x11 required}"
 SOURCE_DIR="${2:-/source}"
 OUTPUT_DIR="${3:-/output}"
 JOBS="${NEKOMOTE_BUILD_JOBS:-4}"
 ARCH_NAME="$(uname -m)"
-case "$MODE" in native20|plasma5|plasma6|layer-shell) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
+case "$MODE" in native20|plasma5|plasma6|layer-shell|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
 test -f "$SOURCE_DIR/CMakeLists.txt"
 test -d "$OUTPUT_DIR"
 WORK_DIR="$(mktemp -d /tmp/nekomote-ci.XXXXXX)"
@@ -51,6 +51,11 @@ elif [[ "$MODE" == layer-shell ]]; then
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
         -DNEKOMOTE_BUILD_LAYER_SHELL=ON -DNEKOMOTE_BUILD_VULKAN=OFF)
     TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests)
+elif [[ "$MODE" == x11 ]]; then
+    OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
+        -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
+        -DNEKOMOTE_BUILD_X11=ON -DNEKOMOTE_BUILD_VULKAN=OFF)
+    TARGETS+=(nekomote_x11 nekomote_x11_option_tests)
 else
     QT_MAJOR=6
     [[ "$MODE" != plasma5 ]] || QT_MAJOR=5
@@ -87,6 +92,11 @@ elif [[ "$MODE" == layer-shell ]]; then
     # Protocol notices are consolidated below; XML source and README stay in the repository.
     install -D "$WORK_DIR/build/bin/nekomote_layer_shell" "$STAGE_DIR/bin/nekomote_layer_shell"
     NAME="nekomote-layer-shell-debian12-$ARCH_NAME"
+elif [[ "$MODE" == x11 ]]; then
+    STAGE_DIR="$WORK_DIR/package/nekomote-x11"
+    # Xlib protocols belong to the system; ship only the program and notices below.
+    install -D "$WORK_DIR/build/bin/nekomote_x11" "$STAGE_DIR/bin/nekomote_x11"
+    NAME="nekomote-x11-ubuntu20-$ARCH_NAME"
 else
     STAGE_DIR="$WORK_DIR/build/adapters/plasma/stage"
     if [[ "$MODE" == plasma5 ]]; then
@@ -97,7 +107,7 @@ fi
 
 python3 "$WORK_DIR/src/tools/ci_package_licenses.py" "$WORK_DIR/src" \
     "$WORK_DIR/build" "$STAGE_DIR" "$MODE"
-if [[ "$MODE" == native20 || "$MODE" == layer-shell ]]; then
+if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
     python3 "$WORK_DIR/src/tools/ci_native_audit.py" "$STAGE_DIR" --mode "$MODE" \
         > "$OUTPUT_DIR/compatibility.json"
     tar -C "$WORK_DIR/package" -czf "$OUTPUT_DIR/$NAME.tar.gz" "$(basename "$STAGE_DIR")"

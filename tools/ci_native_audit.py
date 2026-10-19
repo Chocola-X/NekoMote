@@ -19,6 +19,9 @@ def audit(stage, mode):
     elif mode == "layer-shell":
         names = {"nekomote_layer_shell"}
         baseline, limits = "debian12", BASELINE
+    elif mode == "x11":
+        names = {"nekomote_x11"}
+        baseline, limits = "ubuntu20", UBUNTU20_BASELINE
     else:
         raise ValueError(f"unknown standalone package mode: {mode}")
     if {path.name for path in (stage / "bin").iterdir()} != names:
@@ -48,7 +51,7 @@ def audit(stage, mode):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("--mode", choices=("native20", "layer-shell"), required=True)
+    parser.add_argument("--mode", choices=("native20", "layer-shell", "x11"), required=True)
     args = parser.parse_args()
     try:
         print(json.dumps(audit(args.stage, args.mode), indent=2, sort_keys=True))

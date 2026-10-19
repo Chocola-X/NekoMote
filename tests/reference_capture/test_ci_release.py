@@ -19,6 +19,8 @@ PACKAGES = (
     "nekomote-plasma6-aarch64",
     "nekomote-layer-shell-debian12-x86_64",
     "nekomote-layer-shell-debian12-aarch64",
+    "nekomote-x11-ubuntu20-x86_64",
+    "nekomote-x11-ubuntu20-aarch64",
 )
 
 
@@ -99,14 +101,21 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         self.assertEqual(self.calls(), [])
 
     def test_missing_or_unexpected_files_are_rejected_before_github_access(self):
+        # Every package in the nine-package set is mandatory: dropping any one
+        # of them (for example after adding a new adapter) must fail the gate.
+        for package in PACKAGES:
+            archive = self.assets / f"{package}.tar.gz"
+            saved = archive.read_bytes()
+            archive.unlink()
+            with self.subTest(missing=package):
+                self.assertNotEqual(self.run_release().returncode, 0)
+            archive.write_bytes(saved)
         unexpected = self.assets / "unexpected.tar.gz"
         unexpected.write_bytes(b"unexpected")
         self.assertNotEqual(self.run_release().returncode, 0)
         unexpected.unlink()
-        archive = self.assets / f"{PACKAGES[0]}.tar.gz"
-        archive.unlink()
-        self.assertNotEqual(self.run_release().returncode, 0)
-        unexpected.write_bytes(b"unexpected")
+        digest = hashlib.sha256((self.assets / f"{PACKAGES[0]}.tar.gz").read_bytes()).hexdigest()
+        (self.assets / f"{PACKAGES[0]}.tar.gz.sha256").write_text(f"{digest}  stale-name.tar.gz\n")
         self.assertNotEqual(self.run_release().returncode, 0)
         self.assertEqual(self.calls(), [])
 

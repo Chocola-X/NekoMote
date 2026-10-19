@@ -89,6 +89,20 @@
             }
         },
         {
+            "name": "x11",
+            "inherits": "release",
+            "displayName": "Standalone X11/EWMH OpenGL wallpaper (Ubuntu 20.04 baseline)",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_X11": "ON",
+                "NEKOMOTE_BUILD_ABI": "ON",
+                "NEKOMOTE_BUILD_PREVIEW": "OFF",
+                "NEKOMOTE_BUILD_PLAYER": "OFF",
+                "NEKOMOTE_BUILD_QT_QUICK": "OFF",
+                "NEKOMOTE_BUILD_PLASMA": "OFF",
+                "NEKOMOTE_BUILD_VULKAN": "OFF"
+            }
+        },
+        {
             "name": "asan",
             "inherits": "base",
             "displayName": "Debug with AddressSanitizer + UBSan",
@@ -121,6 +135,7 @@
         { "name": "plasma",   "configurePreset": "plasma" },
         { "name": "plasma5",  "configurePreset": "plasma5" },
         { "name": "layer-shell", "configurePreset": "layer-shell" },
+        { "name": "x11",     "configurePreset": "x11" },
         { "name": "vulkan",   "configurePreset": "vulkan" }
     ],
     "testPresets": [

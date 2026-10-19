@@ -14,7 +14,6 @@ namespace nekomote::application
 {
 namespace
 {
-using Clock = std::chrono::steady_clock;
 
 fs::path resolve_audio_path(const fs::path& session_dir, const fs::path& role_dir,
                             const std::string& value)
@@ -203,6 +202,24 @@ void WallpaperController::synchronize_pause()
         accept(current_instance_->set_playback_state(paused_ || minimized_ || output_unavailable_
                                                          ? runtime::PlaybackState::Paused
                                                          : runtime::PlaybackState::Running));
+    if (previous_instance_)
+    {
+        discard_previous_audio();
+        accept(previous_instance_->set_playback_state(paused_ || minimized_ || output_unavailable_
+                                                          ? runtime::PlaybackState::Paused
+                                                          : runtime::PlaybackState::Running));
+        discard_previous_audio();
+    }
+}
+
+void WallpaperController::discard_previous_audio() noexcept
+{
+    // A fading-out session supplies only pixels. Its bounded audio queue has no
+    // device consumer; discard events at each lifecycle/advance boundary.
+    if (previous_instance_)
+        while (previous_instance_->pop_audio_command())
+        {
+        }
 }
 
 CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry,
@@ -425,7 +442,8 @@ void WallpaperController::confirm_candidate(CandidateCpu candidate)
         config_.save(config_path_);
     switch_state_ = SwitchState::CrossFade;
     fade_alpha_ = 0.0f;
-    fade_start_ = Clock::now();
+    fade_elapsed_seconds_ = 0;
+    synchronize_pause();
 }
 
 void WallpaperController::reject_candidate(std::string error)
@@ -567,12 +585,13 @@ void WallpaperController::update_background_phase()
     need_bg_switch_ = true;
 }
 
-void WallpaperController::update_fade()
+void WallpaperController::advance_fade(double elapsed_seconds)
 {
-    if (switch_state_ != SwitchState::CrossFade)
+    if (switch_state_ != SwitchState::CrossFade || paused_ || minimized_ || output_unavailable_ ||
+        !std::isfinite(elapsed_seconds) || elapsed_seconds < 0 || !last_error_)
         return;
-    const auto elapsed = std::chrono::duration<double>(Clock::now() - fade_start_).count();
-    fade_alpha_ = static_cast<float>(elapsed / kCharacterFadeSeconds);
+    fade_elapsed_seconds_ += std::min(elapsed_seconds, runtime::kMaximumAdvanceSeconds);
+    fade_alpha_ = static_cast<float>(fade_elapsed_seconds_ / kCharacterFadeSeconds);
     if (fade_alpha_ >= 1.0f)
     {
         fade_alpha_ = 1.0f;
@@ -587,7 +606,13 @@ void WallpaperController::advance(double elapsed_seconds)
     if (current_instance_)
         accept(current_instance_->advance(elapsed_seconds));
     if (switch_state_ == SwitchState::CrossFade && previous_instance_)
+    {
         accept(previous_instance_->advance(elapsed_seconds));
+        discard_previous_audio();
+    }
+    // Character and background transitions share the runtime's bounded budget.
+    // Host unavailability and user pause freeze both models and the transition.
+    advance_fade(elapsed_seconds);
 }
 
 void WallpaperController::prepare_frame()

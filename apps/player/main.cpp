@@ -1102,7 +1102,6 @@ int run(int argc, char** argv)
                 }
             }
         }
-        controller.update_fade();
         if (controller.switch_state() == application::SwitchState::Idle && gpu.previous_renderer)
             gpu.previous_renderer.reset();
         auto bg_req = controller.poll_background();

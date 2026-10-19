@@ -1,17 +1,23 @@
 # Arch Linux 系统依赖打包
 
 [PKGBUILD](PKGBUILD) 是 VCS split package 配方，由系统管理依赖版本，不复制 FetchContent
-源码。它从项目 Git 仓库构建以下三个包，支持声明为 x86_64 / aarch64：
+源码。它从项目 Git 仓库构建以下四个包，支持声明为 x86_64 / aarch64：
 
 | 包 | 安装内容 |
 | --- | --- |
 | `nekomote-git` | `/usr/bin/nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
 | `nekomote-layer-shell-git` | `/usr/bin/nekomote_layer_shell` |
+| `nekomote-x11-git` | `/usr/bin/nekomote_x11` |
 | `nekomote-plasma6-git` | 原生库、`/usr/lib/qt6/qml/NekoMote/Wallpaper` 模块及 Plasma6 壁纸包 |
 
-Qt5 不在本配方中；项目 CMake 仍支持 `NEKOMOTE_QT_MAJOR=5`。三个包均可单独安装，
+Qt5 不在本配方中；项目 CMake 仍支持 `NEKOMOTE_QT_MAJOR=5`。四个包均可单独安装，
 不携带模型、README、测试程序、参考材料、系统动态库或验证 plasmoid。
 中文/日文界面可选安装 `noto-fonts-cjk`。
+
+X11 包使用系统 libx11/libxrandr/libxext/GLX，与 layer-shell 一样，此合并构建的 ABI
+包含 Vulkan，故声明 Vulkan loader 依赖；独立 `x11` preset 和 GitHub 包不启用 Vulkan。
+X11 系统依赖模式 Release/LTO/Werror 已构建，本轮未重跑完整 makepkg；桌面共存限制见
+[X11 说明](../../docs/x11.md)，不把 S1 历史打包验证扩展到新增包。
 
 ## 构建
 

@@ -5,7 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git gcc-10 g++-10 make ninja-build pkg-config binutils \
       libpng-dev zlib1g-dev libpulse-dev libfontconfig1-dev libgl1-mesa-dev \
-      libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+      libx11-dev libxrandr-dev libxext-dev libxinerama-dev libxcursor-dev libxi-dev \
       libwayland-dev libxkbcommon-dev libvulkan-dev glslang-tools \
       qtbase5-dev qtdeclarative5-dev libqt5opengl5-dev \
       qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtquick-controls \

@@ -11,6 +11,8 @@
 - 普通 GLFW 宿主需要 OpenGL 3.3 core 驱动、X11 和 Wayland/xkbcommon 开发包；构建同时启用两种窗口平台，启动自动选择当前会话。Qt/Plasma OpenGL 场景图接受 desktop GL 3.3 或 GLES 3.0，见 [Wayland 兼容](wayland-compatibility-2026-10-13.md)。
 - ABI/普通播放器需要：pkg-config 和 libpulse ≥13.99 开发包（当前声音服务共享，不依赖显示服务器）
 - 可选 Qt 宿主需要 Qt ≥6.4 Quick/OpenGL 开发组件；默认关闭。Plasma 的 KF6/Plasma 开发包仅诊断探针需要，分发构建可关闭 `NEKOMOTE_BUILD_PLASMA_PROBE`，见 [分发](plasma-distribution.md)。
+- 独立 X11 壳使用 Xlib/Xrandr/Xext 与 OpenGL/GLX，要求 EWMH WM、RandR≥1.3，
+  不需要 Qt/GTK/XFCE 开发库；Ubuntu20 基线、隔离验证与桌面图标限制见 [说明](x11.md)。
 
 ## 使用发行版系统依赖
 
@@ -53,6 +55,7 @@ Arch 使用 [PKGBUILD](../packaging/arch/PKGBUILD)，构建方式和实际验证
 | `asan` | Debug | ASan + UBSan、警告即错误 | ✗ | ✓ |
 | `qt-quick` | Release | LTO、OpenGL + Vulkan、可选Qt Quick OpenGL宿主 | ✓ | ✗ |
 | `plasma` | Release | LTO、Plasma OpenGL/Vulkan 双栈及隔离探针 | ✓ | ✗ |
+| `x11` | Release | LTO、独立 EWMH/GLX 壳，关闭普通窗口/Qt/Vulkan | ✗ | ✗ |
 | `vulkan` | Debug | OpenGL + Vulkan 1.0、可用验证层 | ✓ | ✓ |
 
 `asan` 不构建预览：GLFW + 图形驱动与 ASan 混用会产生大量非项目噪声，核心与测试路径已覆盖语义。
