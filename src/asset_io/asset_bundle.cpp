@@ -1,5 +1,6 @@
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/asset_migration.hpp>
+#include <nekomote/asset_io/image.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -70,7 +71,12 @@ std::vector<std::string> write_bundle(const ImportResult& result,
         {
             auto& texture = textures[i];
             const auto path = "textures/" + std::to_string(i) + ".png";
-            std::filesystem::copy_file(resource_root / texture.path, temporary / path);
+            // Re-encode at import time so rebuilt trees keep optimal PNG
+            // encoding; the source tooling's default zlib level never enters
+            // the asset tree. Pixels are verified byte-exact before publish.
+            if (const auto error = recompress_png(resource_root / texture.path, temporary / path);
+                !error.empty())
+                throw std::runtime_error(error);
             texture.path = path;
         }
         {

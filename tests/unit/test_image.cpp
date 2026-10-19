@@ -3,12 +3,15 @@
 #include <nekomote/asset_io/read_only_file.hpp>
 
 #include <sys/mman.h>
+#include <zlib.h>
 
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -229,4 +232,143 @@ TEST_CASE("Read-only file views own their mapping and reject invalid files", "[a
     REQUIRE_THROWS_AS(ReadOnlyFile(source / "missing"), std::system_error);
     REQUIRE_THROWS_AS(ReadOnlyFile(source.parent_path()), std::runtime_error);
     REQUIRE_THROWS_AS(ReadOnlyFile(source.parent_path() / "empty.bin"), std::runtime_error);
+}
+namespace
+{
+struct TemporaryDirectory
+{
+    std::filesystem::path path =
+        std::filesystem::temp_directory_path() /
+        ("nekomote-recompress-" +
+         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    TemporaryDirectory()
+    {
+        std::filesystem::create_directory(path);
+    }
+    ~TemporaryDirectory()
+    {
+        std::error_code error;
+        std::filesystem::remove_all(path, error);
+    }
+};
+std::vector<std::uint8_t> gradient_rgba(int width, int height)
+{
+    std::vector<std::uint8_t> pixels(static_cast<std::size_t>(width) * height * 4);
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+        {
+            auto* p = pixels.data() + (static_cast<std::size_t>(y) * width + x) * 4;
+            p[0] = static_cast<std::uint8_t>(x * 7);
+            p[1] = static_cast<std::uint8_t>(y * 11);
+            p[2] = static_cast<std::uint8_t>((x + y) * 3);
+            p[3] = static_cast<std::uint8_t>(x < width / 2 ? 255 : 128);
+        }
+    return pixels;
+}
+} // namespace
+
+TEST_CASE("Recompression is lossless and produces a leaner non-interlaced file", "[image]")
+{
+    TemporaryDirectory directory;
+    const auto source = directory.path / "source.png";
+    const auto output = directory.path / "recompressed.png";
+    const auto pixels = gradient_rgba(64, 48);
+    REQUIRE(nekomote::asset_io::write_png(source, {64, 48, pixels}).empty());
+    REQUIRE(nekomote::asset_io::recompress_png(source, output).empty());
+    const auto original = nekomote::asset_io::load_png(source);
+    const auto recompressed = nekomote::asset_io::load_png(output);
+    REQUIRE(original.ok);
+    REQUIRE(recompressed.ok);
+    REQUIRE(recompressed.image.width == 64);
+    REQUIRE(recompressed.image.height == 48);
+    REQUIRE(recompressed.image.pixels == original.image.pixels);
+    REQUIRE(recompressed.region.source_width == original.region.source_width);
+    // A smooth gradient compresses far better with Paeth/adaptive rows than the
+    // default encoding; the re-encode must not grow the file.
+    REQUIRE(std::filesystem::file_size(output) <= std::filesystem::file_size(source));
+}
+
+TEST_CASE("Recompression rejects unsupported layouts and keeps failures clean", "[image]")
+{
+    TemporaryDirectory directory;
+    const auto source = directory.path / "palette.png";
+    const auto output = directory.path / "output.png";
+    const std::filesystem::path root{NEKOMOTE_FIXTURES_DIR};
+    REQUIRE(std::filesystem::copy_file(root / "png_normalization/palette2.png", source));
+    const auto error = nekomote::asset_io::recompress_png(source, output);
+    REQUIRE(!error.empty());
+    REQUIRE_FALSE(std::filesystem::exists(output));
+    // A missing source must fail without creating the destination either.
+    const auto missing = nekomote::asset_io::recompress_png(directory.path / "missing.png", output);
+    REQUIRE(!missing.empty());
+    REQUIRE_FALSE(std::filesystem::exists(output));
+}
+
+TEST_CASE("Metadata stripping drops auxiliary chunks and keeps pixels identical", "[image]")
+{
+    TemporaryDirectory directory;
+    const auto source = directory.path / "with-metadata.png";
+    const auto output = directory.path / "stripped.png";
+    const auto pixels = gradient_rgba(32, 20);
+    REQUIRE(nekomote::asset_io::write_png(source, {32, 20, pixels}).empty());
+    std::vector<std::uint8_t> raw;
+    {
+        std::ifstream stream(source, std::ios::binary);
+        raw.assign(std::istreambuf_iterator<char>(stream), {});
+    }
+    const auto make_text_chunk = [](const std::string& body)
+    {
+        static const char type[] = "tEXt";
+        std::vector<std::uint8_t> chunk;
+        chunk.push_back(static_cast<std::uint8_t>(body.size() >> 24));
+        chunk.push_back(static_cast<std::uint8_t>(body.size() >> 16));
+        chunk.push_back(static_cast<std::uint8_t>(body.size() >> 8));
+        chunk.push_back(static_cast<std::uint8_t>(body.size()));
+        chunk.insert(chunk.end(), type, type + 4);
+        chunk.insert(chunk.end(), body.begin(), body.end());
+        auto crc = crc32(crc32(0L, Z_NULL, 0), reinterpret_cast<const Bytef*>(type), 4);
+        crc =
+            crc32(crc, reinterpret_cast<const Bytef*>(body.data()), static_cast<uInt>(body.size()));
+        chunk.push_back(static_cast<std::uint8_t>(crc >> 24));
+        chunk.push_back(static_cast<std::uint8_t>(crc >> 16));
+        chunk.push_back(static_cast<std::uint8_t>(crc >> 8));
+        chunk.push_back(static_cast<std::uint8_t>(crc));
+        return chunk;
+    };
+    const auto append =
+        [&](const std::vector<std::uint8_t>& prefix, const std::vector<std::uint8_t>& extra)
+    {
+        std::vector<std::uint8_t> combined = prefix;
+        combined.insert(combined.end(), extra.begin(), extra.end());
+        return combined;
+    };
+    // Graft a valid tEXt chunk right after IHDR (8 + 25 bytes).
+    const auto valid = append(std::vector<std::uint8_t>(raw.begin(), raw.begin() + 8 + 25),
+                              append(make_text_chunk(std::string("note\0provenance", 15)),
+                                     std::vector<std::uint8_t>(raw.begin() + 8 + 25, raw.end())));
+    {
+        std::ofstream stream(source, std::ios::binary | std::ios::trunc);
+        stream.write(reinterpret_cast<const char*>(valid.data()),
+                     static_cast<std::streamsize>(valid.size()));
+    }
+    REQUIRE(nekomote::asset_io::strip_png_metadata(source, output).empty());
+    const auto before = nekomote::asset_io::load_png(source);
+    const auto after = nekomote::asset_io::load_png(output);
+    REQUIRE(before.ok);
+    REQUIRE(after.ok);
+    REQUIRE(after.image.pixels == before.image.pixels);
+    REQUIRE(after.region.source_width == before.region.source_width);
+    REQUIRE(std::filesystem::file_size(output) < std::filesystem::file_size(source));
+
+    // A corrupted chunk CRC must be rejected, not silently rewritten.
+    auto corrupted = valid;
+    corrupted[8 + 25 + 4 + 12] ^= 0xFF;
+    {
+        std::ofstream stream(source, std::ios::binary | std::ios::trunc);
+        stream.write(reinterpret_cast<const char*>(corrupted.data()),
+                     static_cast<std::streamsize>(corrupted.size()));
+    }
+    const auto output2 = directory.path / "stripped2.png";
+    REQUIRE_FALSE(nekomote::asset_io::strip_png_metadata(source, output2).empty());
+    REQUIRE_FALSE(std::filesystem::exists(output2));
 }

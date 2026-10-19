@@ -42,4 +42,17 @@ ImageResult load_png(const std::filesystem::path& path);
 ImageResult load_cropped_png(const std::filesystem::path& path);
 // Diagnostic/export only. Returns an empty error string on success.
 std::string write_png(const std::filesystem::path& path, ImageViewRgba8 image);
+// Offline import/migration only. Losslessly re-encodes the source PNG with
+// per-row greedy filter selection and zlib level 9, dropping every non-pixel
+// chunk. Accepts 8-bit RGB/RGBA, interlaced or not; the output is always
+// non-interlaced. Decodes the result and compares every pixel byte before
+// publishing. Returns an empty error string on success.
+std::string recompress_png(const std::filesystem::path& source,
+                           const std::filesystem::path& destination);
+// Offline import/migration only. Strips metadata chunks (iTXt/tEXt/zTXt/iCCP/
+// gAMA/sRGB/pHYs and similar); IHDR/PLTE/tRNS/IDAT/IEND bytes are copied
+// verbatim, so pixel data is untouched. Validates chunk CRCs and re-reads the
+// output before publishing. Returns an empty error string on success.
+std::string strip_png_metadata(const std::filesystem::path& source,
+                               const std::filesystem::path& destination);
 } // namespace nekomote::asset_io

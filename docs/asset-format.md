@@ -22,6 +22,10 @@ build/release/bin/nekomote_import model.json model.resx.json --output assets/new
 容器头为 8 字节 `NKMMPK01`，随后是 uint64 小端编码的未压缩 MessagePack 长度，
 余下为 zlib 数据流。内部保留 schema 6 的字段和值语义；更换容器无需改变模型求值公式。
 PNG 保留编码色值与 straight alpha，不做 gamma/ICC 变换；解码直接写入最终 RGBA 缓冲。
+资产树中的 PNG 由导入与迁移工具统一编码：模型纹理与图标为逐行最优滤波 + zlib level 9
+的无损重编码，背景图剥离全部辅助元数据块（XMP/iCCP/gAMA 等），像素字节保持原样。
+两种编码都在发布前解码回读并逐字节比较；`nekomote_png_recompress recompress|strip`
+提供同样的两个子命令。优化只影响磁盘占用，解码后显存与稳态内存不变。
 
 模型 PNG 在加载边界按非零 RGBA 包围盒裁切，并保留一像素过滤边距；alpha=0 的 RGB 也参与包围盒，避免改变 straight-alpha 线性过滤。原始 texture/icon 尺寸、原点、几何和帧 UV 不变，`TextureRegion` 记录原图尺寸及裁切偏移；GL/Vulkan 后端在像素坐标中采样裁切纹理。普通非交错 PNG 从同一打开的文件按行扫描后再解码，仅保留裁切区域和一行工作缓冲；Adam7 合并完整行后裁切。全零纹理存为 1×1。PNG 文件及裁切坐标约定保持不变；模型容器需要显式转换。具体收益与验收见 [纹理裁切优化](texture-cropping-2026-10-12.md)。
 
@@ -55,6 +59,17 @@ python3 tools/migrate_model_assets.py --source assets-audio --output assets-new 
 迁移验证来源树未发生修改，PNG、来源归档和其他配置保留原字节；失败不发布残缺目录，
 发布不覆盖已有目标。确认新树可加载后，再保留原树作为备份并将新树移到正式位置。
 冻结的历史证据不改写；旧容器不会自动回退加载。
+
+现有资产 PNG 编码优化的一次性迁移：
+
+```bash
+python3 tools/migrate_png_assets.py --source assets --output assets-png \
+  --tool build/release/bin/nekomote_png_recompress
+```
+
+纹理与图标重编码为逐行最优滤波 + zlib level 9；背景先剥离元数据块，仅当完整重编码
+更小时才采用。重编码不小于源的文件保留源字节。新导入的模型纹理由 `nekomote_import`
+自动重编码，不再原样复制。
 
 ## 角色音频
 
@@ -99,5 +114,9 @@ assets/backgrounds/
 导入工具：
 
 ```bash
-python3 tools/import_backgrounds.py --reference-root ../NekoWebShow --dest assets
+python3 tools/import_backgrounds.py --reference-root ../NekoWebShow --dest assets \
+  --recompress build/release/bin/nekomote_png_recompress
 ```
+
+`--recompress` 传入工具路径时按迁移同策略优化：先剥离元数据块，再尝试逐行最优
+滤波重压缩，仅在结果更小时采用；负收益保持剥离后的原样。不传则原样复制。

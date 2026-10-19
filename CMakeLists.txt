@@ -95,6 +95,7 @@ add_subdirectory(src/ui)
 add_subdirectory(tools/import_emote)
 add_subdirectory(tools/audio_convert)
 add_subdirectory(tools/model_convert)
+add_subdirectory(tools/png_recompress)
 
 if(NEKOMOTE_BUILD_TOOLS)
     add_subdirectory(tools/pose_probe)
