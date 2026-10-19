@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "shader_source.hpp"
@@ -274,14 +275,32 @@ Clip intersect(Clip a, Clip b) noexcept
 } // namespace
 struct Renderer::Impl
 {
-    GLenum atlas_target{GL_TEXTURE_RECTANGLE};
-    bool srgb_control{true};
-    GLuint program{0}, blit_program{0}, vao{0}, vbo{0}, ebo{0};
-    GLint premultiply{-1}, protection_pass{-1}, mask_write{-1}, use_mask{-1}, mask_output_size{-1};
-    GLint global_alpha{-1}, blit_global_alpha{-1};
+    struct Programs
+    {
+        GLenum atlas_target{GL_TEXTURE_RECTANGLE};
+        bool srgb_control{true};
+        GLuint program{0}, blit_program{0};
+        GLint premultiply{-1}, protection_pass{-1}, mask_write{-1}, use_mask{-1},
+            mask_output_size{-1};
+        GLint global_alpha{-1}, blit_global_alpha{-1};
+        GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1}, atlas_texels{-1},
+            atlas_extent{-1};
+        ~Programs()
+        {
+            if (program)
+                glDeleteProgram(program);
+            if (blit_program)
+                glDeleteProgram(blit_program);
+        }
+    };
+    // Destroyed after all per-model GPU resources, even when the source dies first.
+    std::shared_ptr<Programs> shared;
+    explicit Impl(std::shared_ptr<Programs> programs) : shared(std::move(programs))
+    {
+    }
+    GLuint vao{0}, vbo{0}, ebo{0};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
-    GLint output_size{-1}, view{-1}, projection{-1}, flip_x{-1}, atlas_texels{-1}, atlas_extent{-1};
     struct Texture
     {
         TextureId id;
@@ -305,10 +324,23 @@ struct Renderer::Impl
             glDeleteBuffers(1, &vbo);
         if (vao)
             glDeleteVertexArrays(1, &vao);
-        if (program)
-            glDeleteProgram(program);
-        if (blit_program)
-            glDeleteProgram(blit_program);
+    }
+    void initialize_geometry()
+    {
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(RenderVertex), nullptr);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(RenderVertex),
+                              reinterpret_cast<const void*>(offsetof(RenderVertex, u)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(RenderVertex),
+                              reinterpret_cast<const void*>(offsetof(RenderVertex, color)));
     }
     void bind_texture(TextureId id, TextureId& uv_texture) const
     {
@@ -316,10 +348,10 @@ struct Renderer::Impl
             return;
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
-        glBindTexture(atlas_target, it->handle);
-        glUniform4fv(atlas_texels, 1, it->texel_transform.data());
-        if (atlas_target == GL_TEXTURE_2D)
-            glUniform2fv(atlas_extent, 1, it->extent.data());
+        glBindTexture(shared->atlas_target, it->handle);
+        glUniform4fv(shared->atlas_texels, 1, it->texel_transform.data());
+        if (shared->atlas_target == GL_TEXTURE_2D)
+            glUniform2fv(shared->atlas_extent, 1, it->extent.data());
         uv_texture = id;
     }
     GLuint texture(TextureId id) const
@@ -329,7 +361,8 @@ struct Renderer::Impl
         return it == textures.end() ? 0 : it->handle;
     }
 };
-Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
+Renderer::Renderer(GlLoader loader)
+    : impl_(std::make_unique<Impl>(std::make_shared<Impl::Programs>()))
 {
     if (!loader)
         throw std::runtime_error("missing OpenGL function loader");
@@ -343,45 +376,44 @@ Renderer::Renderer(GlLoader loader) : impl_(std::make_unique<Impl>())
              : (!gladLoadGL(loader) || !GLAD_GL_VERSION_3_3))
         throw std::runtime_error("OpenGL 3.3 core or OpenGL ES 3.0 required");
     auto& p = *impl_;
-    p.atlas_target = gles ? GL_TEXTURE_2D : GL_TEXTURE_RECTANGLE;
-    p.srgb_control = !gles || GLAD_GL_EXT_sRGB_write_control;
-    p.program = link_program(kVertexShader, kFragmentShader);
-    p.blit_program = link_program(kBlitVertex, kBlitFragment);
-    glUseProgram(p.blit_program);
-    glUniform1i(glGetUniformLocation(p.blit_program, "scene"), 0);
-    p.blit_global_alpha = glGetUniformLocation(p.blit_program, "global_alpha");
-    p.premultiply = glGetUniformLocation(p.program, "premultiply");
-    p.protection_pass = glGetUniformLocation(p.program, "protection_pass");
-    p.mask_write = glGetUniformLocation(p.program, "mask_write");
-    p.use_mask = glGetUniformLocation(p.program, "use_mask");
-    p.mask_output_size = glGetUniformLocation(p.program, "mask_output_size");
-    p.global_alpha = glGetUniformLocation(p.program, "global_alpha");
-    p.output_size = glGetUniformLocation(p.program, "output_size");
-    p.view = glGetUniformLocation(p.program, "view");
-    p.projection = glGetUniformLocation(p.program, "projection");
-    p.flip_x = glGetUniformLocation(p.program, "flip_x");
-    p.atlas_texels = glGetUniformLocation(p.program, "atlas_texels");
-    p.atlas_extent = glGetUniformLocation(p.program, "atlas_extent");
-    glUseProgram(p.program);
-    glUniform1i(glGetUniformLocation(p.program, "atlas"), 0);
-    glUniform1i(glGetUniformLocation(p.program, "alpha_mask"), 1);
-    glGenVertexArrays(1, &p.vao);
-    glGenBuffers(1, &p.vbo);
-    glGenBuffers(1, &p.ebo);
-    glBindVertexArray(p.vao);
-    glBindBuffer(GL_ARRAY_BUFFER, p.vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ebo);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(RenderVertex), nullptr);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(RenderVertex),
-                          reinterpret_cast<const void*>(offsetof(RenderVertex, u)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(RenderVertex),
-                          reinterpret_cast<const void*>(offsetof(RenderVertex, color)));
+    p.shared->atlas_target = gles ? GL_TEXTURE_2D : GL_TEXTURE_RECTANGLE;
+    p.shared->srgb_control = !gles || GLAD_GL_EXT_sRGB_write_control;
+    p.shared->program = link_program(kVertexShader, kFragmentShader);
+    p.shared->blit_program = link_program(kBlitVertex, kBlitFragment);
+    glUseProgram(p.shared->blit_program);
+    glUniform1i(glGetUniformLocation(p.shared->blit_program, "scene"), 0);
+    p.shared->blit_global_alpha = glGetUniformLocation(p.shared->blit_program, "global_alpha");
+    p.shared->premultiply = glGetUniformLocation(p.shared->program, "premultiply");
+    p.shared->protection_pass = glGetUniformLocation(p.shared->program, "protection_pass");
+    p.shared->mask_write = glGetUniformLocation(p.shared->program, "mask_write");
+    p.shared->use_mask = glGetUniformLocation(p.shared->program, "use_mask");
+    p.shared->mask_output_size = glGetUniformLocation(p.shared->program, "mask_output_size");
+    p.shared->global_alpha = glGetUniformLocation(p.shared->program, "global_alpha");
+    p.shared->output_size = glGetUniformLocation(p.shared->program, "output_size");
+    p.shared->view = glGetUniformLocation(p.shared->program, "view");
+    p.shared->projection = glGetUniformLocation(p.shared->program, "projection");
+    p.shared->flip_x = glGetUniformLocation(p.shared->program, "flip_x");
+    p.shared->atlas_texels = glGetUniformLocation(p.shared->program, "atlas_texels");
+    p.shared->atlas_extent = glGetUniformLocation(p.shared->program, "atlas_extent");
+    glUseProgram(p.shared->program);
+    glUniform1i(glGetUniformLocation(p.shared->program, "atlas"), 0);
+    glUniform1i(glGetUniformLocation(p.shared->program, "alpha_mask"), 1);
+    p.initialize_geometry();
     check_gl("renderer initialize");
 }
 Renderer::~Renderer() = default;
+Renderer::Renderer(Renderer&&) noexcept = default;
+Renderer& Renderer::operator=(Renderer&&) noexcept = default;
+Renderer::Renderer(std::unique_ptr<Impl> impl) : impl_(std::move(impl))
+{
+}
+Renderer Renderer::create_peer() const
+{
+    auto peer = std::make_unique<Impl>(impl_->shared);
+    peer->initialize_geometry();
+    check_gl("initialize peer geometry");
+    return Renderer(std::move(peer));
+}
 void Renderer::reserve(Capacity capacity)
 {
     const auto [vertices, indices, commands, textures, mask_commands, masks] = capacity;
@@ -412,8 +444,8 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
     if (!id.valid() || p.texture(id) || p.textures.size() >= p.texture_capacity)
         throw std::runtime_error("invalid, duplicate or excessive texture ID");
     GLint max_size = 0;
-    glGetIntegerv(p.atlas_target == GL_TEXTURE_RECTANGLE ? GL_MAX_RECTANGLE_TEXTURE_SIZE
-                                                         : GL_MAX_TEXTURE_SIZE,
+    glGetIntegerv(p.shared->atlas_target == GL_TEXTURE_RECTANGLE ? GL_MAX_RECTANGLE_TEXTURE_SIZE
+                                                                 : GL_MAX_TEXTURE_SIZE,
                   &max_size);
     if (image.width <= 0 || image.height <= 0 || image.width > max_size ||
         image.height > max_size ||
@@ -422,7 +454,7 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
         throw std::runtime_error("invalid or unsupported texture dimensions");
     if (!region.valid_for(image.width, image.height))
         throw std::runtime_error("invalid texture crop region");
-    const RectangleBinding rectangle_binding(p.atlas_target);
+    const RectangleBinding rectangle_binding(p.shared->atlas_target);
     GLuint handle = 0;
     glGenTextures(1, &handle);
     // Register ownership before any subsequent operation can fail.
@@ -431,13 +463,13 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
                           region.texel_transform(image.width, image.height),
                           {static_cast<float>(image.width), static_cast<float>(image.height)}});
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(p.atlas_target, handle);
+    glBindTexture(p.shared->atlas_target, handle);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
     glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    if (p.atlas_target == GL_TEXTURE_2D)
+    if (p.shared->atlas_target == GL_TEXTURE_2D)
     {
         // GLES has only normalized samplers. Power-of-two storage gives exact
         // binary scaling; arbitrary crop dimensions caused mask-amplified errors.
@@ -458,12 +490,12 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
                         GL_UNSIGNED_BYTE, image.pixels.data());
     }
     else
-        glTexImage2D(p.atlas_target, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
+        glTexImage2D(p.shared->atlas_target, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
                      GL_UNSIGNED_BYTE, image.pixels.data());
-    glTexParameteri(p.atlas_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(p.atlas_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(p.atlas_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(p.atlas_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(p.shared->atlas_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(p.shared->atlas_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(p.shared->atlas_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(p.shared->atlas_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     check_gl("upload texture");
 }
 void Renderer::prepare(RenderFrame frame)
@@ -629,14 +661,14 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     if (straight && (!p.color_target || p.color_target->width != target.width ||
                      p.color_target->height != target.height))
         throw std::runtime_error("protected composition requires explicit output resize");
-    const RectangleBinding rectangle_binding(p.atlas_target);
+    const RectangleBinding rectangle_binding(p.shared->atlas_target);
     glBindFramebuffer(GL_FRAMEBUFFER, straight ? p.color_target->framebuffer : target.framebuffer);
     glViewport(0, 0, target.width, target.height);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_CULL_FACE);
-    if (p.srgb_control)
+    if (p.shared->srgb_control)
         glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DITHER);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -646,24 +678,25 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
     if (straight || contents == TargetContents::Clear)
         glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(p.program);
+    glUseProgram(p.shared->program);
     glBindVertexArray(p.vao);
     glActiveTexture(GL_TEXTURE0);
     glBindSampler(0, 0);
     glBindSampler(1, 0);
-    glUniform2f(p.output_size, static_cast<float>(target.width), static_cast<float>(target.height));
-    glUniform3f(p.view, view.origin_x, view.origin_y, view.scale);
-    glUniform1i(p.flip_x, view.flip_x ? 1 : 0);
-    glUniform2f(p.projection, 2.0f / static_cast<float>(target.width),
+    glUniform2f(p.shared->output_size, static_cast<float>(target.width),
+                static_cast<float>(target.height));
+    glUniform3f(p.shared->view, view.origin_x, view.origin_y, view.scale);
+    glUniform1i(p.shared->flip_x, view.flip_x ? 1 : 0);
+    glUniform2f(p.shared->projection, 2.0f / static_cast<float>(target.width),
                 -2.0f / static_cast<float>(target.height));
     int premultiply = straight ? 0 : 1;
-    glUniform1i(p.premultiply, premultiply);
-    glUniform1i(p.protection_pass, 0);
-    glUniform1i(p.mask_write, 0);
-    glUniform1i(p.use_mask, 0);
-    glUniform2f(p.mask_output_size, static_cast<float>(target.width),
+    glUniform1i(p.shared->premultiply, premultiply);
+    glUniform1i(p.shared->protection_pass, 0);
+    glUniform1i(p.shared->mask_write, 0);
+    glUniform1i(p.shared->use_mask, 0);
+    glUniform2f(p.shared->mask_output_size, static_cast<float>(target.width),
                 static_cast<float>(target.height));
-    glUniform1f(p.global_alpha, straight ? 1.0f : view.alpha);
+    glUniform1f(p.shared->global_alpha, straight ? 1.0f : view.alpha);
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -699,8 +732,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                           scaled(scratch_clip.y, p.mask_target->height, target.height),
                           scaled(scratch_clip.width, p.mask_target->width, target.width),
                           scaled(scratch_clip.height, p.mask_target->height, target.height));
-                glUniform1i(p.mask_write, 1);
-                glUniform1i(p.use_mask, 0);
+                glUniform1i(p.shared->mask_write, 1);
+                glUniform1i(p.shared->use_mask, 0);
                 glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE);
                 const auto& definition = p.masks[command.mask.value - 1];
                 for (std::uint32_t i = 0; i < definition.command_count; ++i)
@@ -717,34 +750,34 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                 glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, p.mask_target->texture);
                 glActiveTexture(GL_TEXTURE0);
-                glUniform1i(p.mask_write, 0);
+                glUniform1i(p.shared->mask_write, 0);
                 scratch_mask = command.mask;
             }
             glEnable(GL_SCISSOR_TEST);
             glScissor(scratch_clip.x, scratch_clip.y, scratch_clip.width, scratch_clip.height);
-            glUniform1i(p.use_mask, 1);
+            glUniform1i(p.shared->use_mask, 1);
         }
         else
         {
             glDisable(GL_SCISSOR_TEST);
-            glUniform1i(p.use_mask, 0);
+            glUniform1i(p.shared->use_mask, 0);
         }
         p.bind_texture(command.texture, uv_texture);
         const int command_premultiply = command.blend == BlendMode::Multiply || !straight ? 1 : 0;
         if (command_premultiply != premultiply)
         {
             premultiply = command_premultiply;
-            glUniform1i(p.premultiply, premultiply);
+            glUniform1i(p.shared->premultiply, premultiply);
         }
         if (straight && command.protection == ColorProtection::PreserveTranslucent)
         {
-            glUniform1i(p.protection_pass, 1);
+            glUniform1i(p.shared->protection_pass, 1);
             glBlendFuncSeparate(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA, GL_ZERO, GL_ONE);
             glDrawElements(
                 GL_TRIANGLES, static_cast<GLsizei>(command.index_count), GL_UNSIGNED_INT,
                 reinterpret_cast<const void*>(static_cast<std::uintptr_t>(command.first_index) *
                                               sizeof(std::uint32_t)));
-            glUniform1i(p.protection_pass, 0);
+            glUniform1i(p.shared->protection_pass, 0);
         }
         if (command.blend == BlendMode::Multiply)
             // Source V6: opacity-weighted multiply changes RGB only; global alpha
@@ -767,9 +800,9 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        glUseProgram(p.blit_program);
+        glUseProgram(p.shared->blit_program);
         glBindTexture(GL_TEXTURE_2D, p.color_target->texture);
-        glUniform1f(p.blit_global_alpha, view.alpha);
+        glUniform1f(p.shared->blit_global_alpha, view.alpha);
         glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }

@@ -293,6 +293,7 @@ struct GpuHolder
 };
 
 void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candidate,
+                          const player::BackendRenderer* resource_source,
                           player::BackendKind backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                           ,
@@ -300,12 +301,17 @@ void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candi
 #endif
 )
 {
-    gpu.renderer = std::make_unique<player::BackendRenderer>(backend
+    if (resource_source)
+        gpu.renderer = std::make_unique<player::BackendRenderer>(resource_source->create_peer());
+    else
+    {
+        gpu.renderer = std::make_unique<player::BackendRenderer>(backend
 #if defined(NEKOMOTE_HAS_VULKAN)
-                                                             ,
-                                                             vk_ctx
+                                                                 ,
+                                                                 vk_ctx
 #endif
-    );
+        );
+    }
     std::printf("%s\n", gpu.renderer->diagnostics().c_str());
     const auto& scene = candidate.program->playback().scene();
     const auto capacity = scene.frame_capacity();
@@ -353,7 +359,7 @@ GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const G
 )
 {
     GpuCandidate result;
-    finish_candidate_gpu(result.gpu, candidate, backend
+    finish_candidate_gpu(result.gpu, candidate, current.renderer.get(), backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                          ,
                          vk_ctx
@@ -375,12 +381,8 @@ GpuCandidate prepare_candidate_gpu(application::CandidateCpu& candidate, const G
             auto loaded = asset_io::load_png(background);
             if (!loaded.ok)
                 throw std::runtime_error(loaded.error);
-            result.gpu.background_renderer = std::make_unique<player::BackendRenderer>(backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                                                                       ,
-                                                                                       vk_ctx
-#endif
-            );
+            result.gpu.background_renderer =
+                std::make_unique<player::BackendRenderer>(result.gpu.renderer->create_peer());
             result.gpu.background_renderer->reserve({8, 12, 2, 2});
             id = TextureId{1};
             result.gpu.background_renderer->upload_texture(id, loaded.image);
@@ -417,13 +419,7 @@ void commit_candidate_gpu(GpuHolder& current, GpuCandidate ready) noexcept
 }
 
 void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_duration,
-                          int bg_index, application::WallpaperController& controller,
-                          player::BackendKind backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                          ,
-                          const nekomote::render_vk::DeviceContext* vk_ctx = nullptr
-#endif
-)
+                          int bg_index, application::WallpaperController& controller)
 {
     auto new_image = asset_io::load_png(bg_path);
     if (!new_image.ok)
@@ -438,12 +434,7 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
         old_image = std::move(loaded.image);
     }
     auto ready_path = bg_path;
-    auto renderer = std::make_unique<player::BackendRenderer>(backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                                              ,
-                                                              vk_ctx
-#endif
-    );
+    auto renderer = std::make_unique<player::BackendRenderer>(gpu.renderer->create_peer());
     renderer->reserve({8, 12, 2, 2});
     const TextureId old_id{1}, new_id{fade ? 2U : 1U};
     if (old_image)
@@ -807,7 +798,7 @@ int run(int argc, char** argv)
     }
     if (!candidate.ok)
         throw std::runtime_error(candidate.error);
-    finish_candidate_gpu(gpu, candidate, o.backend
+    finish_candidate_gpu(gpu, candidate, nullptr, o.backend
 #if defined(NEKOMOTE_HAS_VULKAN)
                          ,
                          vk_ctx_ptr
@@ -833,12 +824,8 @@ int run(int argc, char** argv)
         auto new_image = asset_io::load_png(o.background);
         if (!new_image.ok)
             throw std::runtime_error(new_image.error);
-        gpu.background_renderer = std::make_unique<player::BackendRenderer>(o.backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                                                            ,
-                                                                            vk_ctx_ptr
-#endif
-        );
+        gpu.background_renderer =
+            std::make_unique<player::BackendRenderer>(gpu.renderer->create_peer());
         gpu.background_renderer->reserve({8, 12, 2, 2});
         const TextureId id{1};
         gpu.background_renderer->upload_texture(id, new_image.image);
@@ -855,13 +842,8 @@ int run(int argc, char** argv)
         if (bg)
         {
             int bg_index = static_cast<int>(bg - catalog.backgrounds.data());
-            apply_background_gpu(gpu, controller.background_path(bg_index), 0, bg_index, controller,
-                                 o.backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                 ,
-                                 vk_ctx_ptr
-#endif
-            );
+            apply_background_gpu(gpu, controller.background_path(bg_index), 0, bg_index,
+                                 controller);
         }
     }
     Surface surface{&controller, window.get()};
@@ -1132,12 +1114,7 @@ int run(int argc, char** argv)
                     "Switching to background: %s\n",
                     controller.catalog().backgrounds[bg_req->background_index].name.c_str());
                 apply_background_gpu(gpu, bg_req->path, bg_req->fade_duration,
-                                     bg_req->background_index, controller, o.backend
-#if defined(NEKOMOTE_HAS_VULKAN)
-                                     ,
-                                     vk_ctx_ptr
-#endif
-                );
+                                     bg_req->background_index, controller);
                 std::printf("Character: %s | Background: %s\n",
                             controller.current_character_name().c_str(),
                             controller.config().background.c_str());

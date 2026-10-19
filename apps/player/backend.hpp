@@ -78,6 +78,17 @@ class BackendRenderer
 #endif
         }
     }
+    BackendRenderer create_peer() const
+    {
+        BackendRenderer peer;
+        if (gl_)
+            peer.gl_ = std::make_unique<render_gl::Renderer>(gl_->create_peer());
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            peer.vk_ = std::make_unique<render_vk::Renderer>(vk_->create_peer());
+#endif
+        return peer;
+    }
     void reserve(BackendCapacity c)
     {
         if (gl_)
@@ -170,6 +181,7 @@ class BackendRenderer
     }
 
   private:
+    BackendRenderer() = default;
     std::unique_ptr<render_gl::Renderer> gl_;
 #if defined(NEKOMOTE_HAS_VULKAN)
     std::unique_ptr<render_vk::Renderer> vk_;

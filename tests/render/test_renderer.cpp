@@ -1078,3 +1078,45 @@ TEST_CASE("Texture retirement retains textures used only by mask sources",
     renderer.prepare({});
     REQUIRE(renderer.release_unused_textures() == 2);
 }
+
+TEST_CASE("Renderer peers isolate frame state and outlive their program source", "[gpu][peer]")
+{
+    Context context;
+    auto source = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    source->reserve({4, 6, 1, 1});
+    source->upload_texture(TextureId{1}, kAtlas);
+    auto peer = source->create_peer();
+    peer.reserve({4, 6, 1, 1});
+    const ImageRgba8 wide{3, 1, {255, 40, 0, 128, 0, 255, 90, 255, 30, 0, 255, 200}};
+    peer.upload_texture(TextureId{1}, wide);
+    const auto a_vertices = quad(.5f, .5f, 1.5f, 1.5f, .8f);
+    const auto b_vertices = quad(.5f, .5f, 2.5f, .5f, .6f);
+    const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    const RenderFrame a{a_vertices, std::span(kIndices).first(6), commands,
+                        ColorComposition::ProtectedStraight};
+    const RenderFrame b{b_vertices, std::span(kIndices).first(6), commands};
+    const render_gl::View a_view{3, -2, .9f, {.1f, .2f, .3f, 1}, .7f, false};
+    const render_gl::View b_view{-4, 2, .8f, {.3f, .1f, .2f, 1}, .4f, true};
+    Output output;
+    const auto draw = [&](render_gl::Renderer& renderer, RenderFrame frame,
+                          const render_gl::View& view, int width, int height)
+    {
+        output.resize(width, height);
+        renderer.prepare(frame);
+        renderer.resize_output(width, height);
+        renderer.render({output.framebuffer, width, height}, view);
+        return renderer.capture({output.framebuffer, width, height});
+    };
+    const auto expected_a = draw(*source, a, a_view, 64, 64);
+    const auto expected_b = draw(peer, b, b_view, 48, 32);
+    REQUIRE(draw(*source, a, a_view, 64, 64).pixels == expected_a.pixels);
+    {
+        auto failed = source->create_peer();
+        failed.reserve({4, 6, 1, 1});
+        REQUIRE_THROWS(failed.upload_texture(TextureId{1}, ImageRgba8{0, 1, {}}));
+    }
+    REQUIRE(draw(*source, a, a_view, 64, 64).pixels == expected_a.pixels);
+    source.reset();
+    REQUIRE(draw(peer, b, b_view, 48, 32).pixels == expected_b.pixels);
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}

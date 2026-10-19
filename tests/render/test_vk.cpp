@@ -904,3 +904,57 @@ TEST_CASE("Vulkan texture retirement retains textures referenced only by masks",
     REQUIRE(f.vk->release_unused_textures() == 2);
     REQUIRE(f.host.validation_errors == 0);
 }
+
+TEST_CASE("Vulkan peers isolate frame state and outlive their pipeline source",
+          "[gpu][vulkan][peer]")
+{
+    Fixture f;
+    f.upload(TextureId{1},
+             {2, 2, {255, 0, 0, 128, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 0}});
+    auto gl_peer = std::make_unique<render_gl::Renderer>(f.gl->create_peer());
+    auto vk_peer = std::make_unique<render_vk::Renderer>(f.vk->create_peer());
+    player::VkCompletionGuard completion{&f.host};
+    gl_peer->reserve({4, 6, 1, 1});
+    vk_peer->reserve({4, 6, 1, 1});
+    const ImageRgba8 wide{3, 1, {255, 40, 0, 128, 0, 255, 90, 255, 30, 0, 255, 200}};
+    gl_peer->upload_texture(TextureId{1}, wide);
+    vk_peer->upload_texture(TextureId{1}, wide);
+    const auto a_vertices = quad(0, 0, 64, 64, .5f, .5f, 1.5f, 1.5f, .8f);
+    const auto b_vertices = quad(0, 0, 64, 64, .5f, .5f, 2.5f, .5f, .6f);
+    const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    const RenderFrame a{a_vertices, std::span(kIndices).first(6), commands,
+                        ColorComposition::ProtectedStraight};
+    const RenderFrame b{b_vertices, std::span(kIndices).first(6), commands};
+    const render_vk::View a_view{3, -2, .9f, {.1f, .2f, .3f, 1}, .7f, false};
+    const render_vk::View b_view{-4, 2, .8f, {.3f, .1f, .2f, 1}, .4f, true};
+    f.draw(a, a_view);
+    const auto expected_a = f.capture();
+    require_same_picture(expected_a);
+    std::swap(f.gl, gl_peer);
+    std::swap(f.vk, vk_peer);
+    f.draw(b, b_view, 48, 32);
+    const auto expected_b = f.capture();
+    require_same_picture(expected_b);
+    std::swap(f.gl, gl_peer);
+    std::swap(f.vk, vk_peer);
+    f.draw(a, a_view);
+    auto actual = f.capture();
+    REQUIRE(actual.first.pixels == expected_a.first.pixels);
+    REQUIRE(actual.second.pixels == expected_a.second.pixels);
+    {
+        auto failed = f.vk->create_peer();
+        failed.reserve({4, 6, 1, 1});
+        REQUIRE_THROWS(failed.upload_texture(TextureId{1}, ImageRgba8{0, 1, {}}));
+    }
+    f.draw(a, a_view);
+    actual = f.capture();
+    REQUIRE(actual.second.pixels == expected_a.second.pixels);
+    std::swap(f.gl, gl_peer);
+    std::swap(f.vk, vk_peer);
+    gl_peer.reset();
+    vk_peer.reset();
+    f.draw(b, b_view, 48, 32);
+    actual = f.capture();
+    REQUIRE(actual.first.pixels == expected_b.first.pixels);
+    REQUIRE(actual.second.pixels == expected_b.second.pixels);
+}

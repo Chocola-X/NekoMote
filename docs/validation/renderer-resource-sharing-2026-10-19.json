@@ -1,0 +1,1278 @@
+{
+  "base": {
+    "commit": "ae17f206cbb7ad8b266521ec1c09bbc0c5b21874"
+  },
+  "runs": {
+    "opengl-audit-baseline": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/baseline/nekomote_player_probe",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "0fb78a249725c7a19f381509af9d1268ea65c0cbe862e2b95268bbed1ec4f003",
+        "binary_sha256": "7921e949325af364de0e2042ff148a4085087e20f3025a82b37ee252264c56e9",
+        "sequence": [
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -6.673971176147461,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "phases": {
+        "cold": {
+          "rss_mib": 280.15234375,
+          "vram_mib": 71.25390625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 48701440,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 0,
+              "gl_program_created": 8,
+              "gl_programs": 8,
+              "gl_shader_created": 16,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0,
+              "vk_pipeline_created": 0,
+              "vk_pipelines": 0
+            },
+            "heap_arena": 56193024,
+            "heap_free": 9093328,
+            "heap_live": 47099696,
+            "heap_mmap": 23494656,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 58410,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 8.052511364,
+            "serial": 0,
+            "switch_state": 0,
+            "visible": 1
+          }
+        },
+        "returned-target": {
+          "rss_mib": 311.234375,
+          "vram_mib": 109.25390625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 554748480,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 506047040,
+              "gl_program_created": 38,
+              "gl_programs": 8,
+              "gl_shader_created": 76,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0,
+              "vk_pipeline_created": 0,
+              "vk_pipelines": 0
+            },
+            "heap_arena": 100470784,
+            "heap_free": 52534944,
+            "heap_live": 47935840,
+            "heap_mmap": 22863872,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 58410,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 102.78519494,
+            "serial": 15,
+            "switch_state": 0,
+            "visible": 1
+          }
+        }
+      },
+      "loads": [
+        {
+          "gpu_prepare_ms": 76.428486,
+          "initialize_ms": 42.286526,
+          "model": "chocola/casual-a-no-bell"
+        },
+        {
+          "gpu_prepare_ms": 15.29918,
+          "initialize_ms": 1.54861,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 12.430131,
+          "initialize_ms": 0.686771,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 13.896658,
+          "initialize_ms": 0.672829,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 6.427446,
+          "initialize_ms": 1.606889,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 3.272064,
+          "initialize_ms": 0.773013,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 9.839863,
+          "initialize_ms": 1.616474,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 9.171742,
+          "initialize_ms": 1.52472,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 6.728916,
+          "initialize_ms": 1.591364,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 8.095937,
+          "initialize_ms": 0.626874,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 8.956281,
+          "initialize_ms": 1.17922,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 3.209147,
+          "initialize_ms": 0.66846,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 5.0511,
+          "initialize_ms": 1.567272,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 9.953558,
+          "initialize_ms": 1.583652,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 5.081336,
+          "initialize_ms": 0.679839,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 9.585467,
+          "initialize_ms": 1.901956,
+          "model": "chocola/casual-a-no-bell"
+        }
+      ],
+      "warm_load_count": 15,
+      "all_visible": true,
+      "initialize_median_ms": 1.52472,
+      "gpu_prepare_median_ms": 8.956281,
+      "peak_live_programs": 10,
+      "peak_live_pipelines": 0,
+      "exit": {
+        "code": 0,
+        "pid": 58410,
+        "seconds": 105.64937707599984
+      }
+    },
+    "opengl-audit-candidate": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/candidate/nekomote_player_probe",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "opengl",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "0fb78a249725c7a19f381509af9d1268ea65c0cbe862e2b95268bbed1ec4f003",
+        "binary_sha256": "5d9a46f0c7ea1fa979488a46b80928c2eec764dcf1586daeee7e18ef9c7eac64",
+        "sequence": [
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "opengl",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -6.673971176147461,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "phases": {
+        "cold": {
+          "rss_mib": 218.79296875,
+          "vram_mib": 71.25390625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 48701440,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 0,
+              "gl_program_created": 6,
+              "gl_programs": 6,
+              "gl_shader_created": 12,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0,
+              "vk_pipeline_created": 0,
+              "vk_pipelines": 0
+            },
+            "heap_arena": 22183936,
+            "heap_free": 8955200,
+            "heap_live": 13228736,
+            "heap_mmap": 3842048,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 59245,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 8.05416403,
+            "serial": 0,
+            "switch_state": 0,
+            "visible": 1
+          }
+        },
+        "returned-target": {
+          "rss_mib": 252.25390625,
+          "vram_mib": 109.25390625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 554748480,
+              "gl_buffer_bytes": 274344,
+              "gl_buffers": 6,
+              "gl_fbos": 2,
+              "gl_freed": 506047040,
+              "gl_program_created": 6,
+              "gl_programs": 6,
+              "gl_shader_created": 12,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 48701440,
+              "gl_textures": 6,
+              "gl_vaos": 3,
+              "vk_allocated": 0,
+              "vk_allocations": 0,
+              "vk_freed": 0,
+              "vk_memory_bytes": 0,
+              "vk_pipeline_created": 0,
+              "vk_pipelines": 0
+            },
+            "heap_arena": 65847296,
+            "heap_free": 52294272,
+            "heap_live": 13553024,
+            "heap_mmap": 3670016,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 59245,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 102.733155836,
+            "serial": 15,
+            "switch_state": 0,
+            "visible": 1
+          }
+        }
+      },
+      "loads": [
+        {
+          "gpu_prepare_ms": 34.598603,
+          "initialize_ms": 0.794221,
+          "model": "chocola/casual-a-no-bell"
+        },
+        {
+          "gpu_prepare_ms": 10.692587,
+          "initialize_ms": 0.014032,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 8.525544,
+          "initialize_ms": 0.084526,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 15.684435,
+          "initialize_ms": 0.021785,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 4.753541,
+          "initialize_ms": 0.029474,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 2.446503,
+          "initialize_ms": 0.018803,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 8.996553,
+          "initialize_ms": 0.032134,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 12.452992,
+          "initialize_ms": 0.020373,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 5.040927,
+          "initialize_ms": 0.025838,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 17.734334,
+          "initialize_ms": 0.023445,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 13.278716,
+          "initialize_ms": 0.025221,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 2.878794,
+          "initialize_ms": 0.023314,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 3.670566,
+          "initialize_ms": 0.024721,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 11.740489,
+          "initialize_ms": 0.024824,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 9.637508,
+          "initialize_ms": 0.014084,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 4.982236,
+          "initialize_ms": 0.015609,
+          "model": "chocola/casual-a-no-bell"
+        }
+      ],
+      "warm_load_count": 15,
+      "all_visible": true,
+      "initialize_median_ms": 0.023445,
+      "gpu_prepare_median_ms": 8.996553,
+      "peak_live_programs": 6,
+      "peak_live_pipelines": 0,
+      "exit": {
+        "code": 0,
+        "pid": 59245,
+        "seconds": 105.4936857319999
+      }
+    },
+    "vulkan-audit-baseline": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/baseline/nekomote_player_probe",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "vulkan",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "0fb78a249725c7a19f381509af9d1268ea65c0cbe862e2b95268bbed1ec4f003",
+        "binary_sha256": "7921e949325af364de0e2042ff148a4085087e20f3025a82b37ee252264c56e9",
+        "sequence": [
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "vulkan",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -6.673971176147461,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "phases": {
+        "cold": {
+          "rss_mib": 172.68359375,
+          "vram_mib": 64.47265625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_program_created": 0,
+              "gl_programs": 0,
+              "gl_shader_created": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 98943848,
+              "vk_allocations": 14,
+              "vk_freed": 38309920,
+              "vk_memory_bytes": 60633928,
+              "vk_pipeline_created": 16,
+              "vk_pipelines": 16
+            },
+            "heap_arena": 23560192,
+            "heap_free": 1025184,
+            "heap_live": 22535008,
+            "heap_mmap": 14725120,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 60154,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 8.060655892,
+            "serial": 0,
+            "switch_state": 0,
+            "visible": 1
+          }
+        },
+        "returned-target": {
+          "rss_mib": 193.82421875,
+          "vram_mib": 64.47265625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_program_created": 0,
+              "gl_programs": 0,
+              "gl_shader_created": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 984199072,
+              "vk_allocations": 14,
+              "vk_freed": 923565144,
+              "vk_memory_bytes": 60633928,
+              "vk_pipeline_created": 106,
+              "vk_pipelines": 16
+            },
+            "heap_arena": 45686784,
+            "heap_free": 22999504,
+            "heap_live": 22687280,
+            "heap_mmap": 14725120,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 60154,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 102.736379364,
+            "serial": 15,
+            "switch_state": 0,
+            "visible": 1
+          }
+        }
+      },
+      "loads": [
+        {
+          "gpu_prepare_ms": 74.861209,
+          "initialize_ms": 39.056381,
+          "model": "chocola/casual-a-no-bell"
+        },
+        {
+          "gpu_prepare_ms": 37.082159,
+          "initialize_ms": 3.7972,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 57.862353,
+          "initialize_ms": 8.618035,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 49.554579,
+          "initialize_ms": 3.179608,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 48.696922,
+          "initialize_ms": 7.58138,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 28.123582,
+          "initialize_ms": 3.495734,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 37.990132,
+          "initialize_ms": 2.927907,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 36.749743,
+          "initialize_ms": 3.537812,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 35.920093,
+          "initialize_ms": 2.595248,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 44.897574,
+          "initialize_ms": 4.473016,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 77.488388,
+          "initialize_ms": 6.381841,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 39.188746,
+          "initialize_ms": 5.707902,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 45.23662,
+          "initialize_ms": 8.063178,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 43.485266,
+          "initialize_ms": 2.90298,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 83.814118,
+          "initialize_ms": 6.54492,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 55.014624,
+          "initialize_ms": 4.296635,
+          "model": "chocola/casual-a-no-bell"
+        }
+      ],
+      "warm_load_count": 15,
+      "all_visible": true,
+      "initialize_median_ms": 4.296635,
+      "gpu_prepare_median_ms": 44.897574,
+      "peak_live_programs": 0,
+      "peak_live_pipelines": 22,
+      "exit": {
+        "code": 0,
+        "pid": 60154,
+        "seconds": 105.58051846299986
+      }
+    },
+    "vulkan-audit-candidate": {
+      "manifest": {
+        "command": [
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/candidate/nekomote_player_probe",
+          "--assets",
+          "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+          "--character",
+          "chocola/casual-a-no-bell",
+          "--backend",
+          "vulkan",
+          "--fps",
+          "60",
+          "--width",
+          "1920",
+          "--height",
+          "1080",
+          "--no-save"
+        ],
+        "environment": {
+          "XDG_SESSION_TYPE": "x11",
+          "DISPLAY": ":0"
+        },
+        "original_config_sha256": "0fb78a249725c7a19f381509af9d1268ea65c0cbe862e2b95268bbed1ec4f003",
+        "binary_sha256": "5d9a46f0c7ea1fa979488a46b80928c2eec764dcf1586daeee7e18ef9c7eac64",
+        "sequence": [
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/dress-a",
+          "chocola/maid-b-with-bell",
+          "chocola/winter-b",
+          "chocola/swimsuit-a",
+          "chocola/koneko-a",
+          "chocola/casual-a-with-bell",
+          "chocola/date-a",
+          "chocola/casual-a-no-bell"
+        ],
+        "backend": "vulkan",
+        "config": {
+          "background": "BG_22A",
+          "background_fade_seconds": 1.0,
+          "character": "chocola/casual-a-no-bell",
+          "fit": true,
+          "fps": 60,
+          "height": 1080,
+          "icon_position_saved": true,
+          "icon_x": 1868.0,
+          "icon_y": 8.0,
+          "language": "zh-CN",
+          "mute": false,
+          "origin_x": -6.673971176147461,
+          "origin_y": -22.809906005859375,
+          "scale": 0.667397141456604,
+          "sidebar_free": false,
+          "sidebar_position_saved": false,
+          "sidebar_x": 8.0,
+          "sidebar_y": 8.0,
+          "transform_saved": false,
+          "width": 1920
+        },
+        "visible": true,
+        "capturing": false,
+        "measuring": false
+      },
+      "phases": {
+        "cold": {
+          "rss_mib": 146.91015625,
+          "vram_mib": 64.47265625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_program_created": 0,
+              "gl_programs": 0,
+              "gl_shader_created": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 98943848,
+              "vk_allocations": 14,
+              "vk_freed": 38309920,
+              "vk_memory_bytes": 60633928,
+              "vk_pipeline_created": 10,
+              "vk_pipelines": 10
+            },
+            "heap_arena": 22757376,
+            "heap_free": 1205456,
+            "heap_live": 21551920,
+            "heap_mmap": 0,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 61004,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 8.054794886,
+            "serial": 0,
+            "switch_state": 0,
+            "visible": 1
+          }
+        },
+        "returned-target": {
+          "rss_mib": 165.1328125,
+          "vram_mib": 64.47265625,
+          "last": {
+            "framebuffer": [
+              1920,
+              1080
+            ],
+            "gpu": {
+              "gl_allocated": 0,
+              "gl_buffer_bytes": 0,
+              "gl_buffers": 0,
+              "gl_fbos": 0,
+              "gl_freed": 0,
+              "gl_program_created": 0,
+              "gl_programs": 0,
+              "gl_shader_created": 0,
+              "gl_shaders": 0,
+              "gl_texture_bytes": 0,
+              "gl_textures": 0,
+              "gl_vaos": 0,
+              "vk_allocated": 984199072,
+              "vk_allocations": 14,
+              "vk_freed": 923565144,
+              "vk_memory_bytes": 60633928,
+              "vk_pipeline_created": 10,
+              "vk_pipelines": 10
+            },
+            "heap_arena": 43843584,
+            "heap_free": 22124976,
+            "heap_live": 21718608,
+            "heap_mmap": 0,
+            "iconified": 0,
+            "model": "chocola/casual-a-no-bell",
+            "pid": 61004,
+            "previous_cpu": false,
+            "previous_gpu": false,
+            "seconds": 102.766563667,
+            "serial": 15,
+            "switch_state": 0,
+            "visible": 1
+          }
+        }
+      },
+      "loads": [
+        {
+          "gpu_prepare_ms": 43.684838,
+          "initialize_ms": 3.030392,
+          "model": "chocola/casual-a-no-bell"
+        },
+        {
+          "gpu_prepare_ms": 55.486947,
+          "initialize_ms": 6.083129,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 50.070046,
+          "initialize_ms": 4.950298,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 44.32608,
+          "initialize_ms": 2.817337,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 25.824553,
+          "initialize_ms": 4.287387,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 42.344798,
+          "initialize_ms": 7.402499,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 68.534849,
+          "initialize_ms": 5.28575,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 50.251186,
+          "initialize_ms": 5.871807,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 51.174437,
+          "initialize_ms": 6.208912,
+          "model": "chocola/dress-a"
+        },
+        {
+          "gpu_prepare_ms": 61.052839,
+          "initialize_ms": 3.377826,
+          "model": "chocola/maid-b-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 54.120831,
+          "initialize_ms": 3.951192,
+          "model": "chocola/winter-b"
+        },
+        {
+          "gpu_prepare_ms": 25.753085,
+          "initialize_ms": 2.734065,
+          "model": "chocola/swimsuit-a"
+        },
+        {
+          "gpu_prepare_ms": 42.334267,
+          "initialize_ms": 5.406073,
+          "model": "chocola/koneko-a"
+        },
+        {
+          "gpu_prepare_ms": 49.049586,
+          "initialize_ms": 7.014156,
+          "model": "chocola/casual-a-with-bell"
+        },
+        {
+          "gpu_prepare_ms": 36.327126,
+          "initialize_ms": 3.151178,
+          "model": "chocola/date-a"
+        },
+        {
+          "gpu_prepare_ms": 46.351343,
+          "initialize_ms": 2.690918,
+          "model": "chocola/casual-a-no-bell"
+        }
+      ],
+      "warm_load_count": 15,
+      "all_visible": true,
+      "initialize_median_ms": 4.950298,
+      "gpu_prepare_median_ms": 49.049586,
+      "peak_live_programs": 0,
+      "peak_live_pipelines": 10,
+      "exit": {
+        "code": 0,
+        "pid": 61004,
+        "seconds": 105.64807181100059
+      }
+    }
+  },
+  "sha256": {
+    "gl-baseline-progress.log": "8725c7d4bf8d0ffa61ee7d0c56edf04b02bda5108db4bc9699606c8760985a58",
+    "baseline-main.cpp": "fa78a6a98598d7f83412658bf3cbb8d8f8ad7c52c1f176f1317cf578e8ab0d1c",
+    "framebench-opengl-baseline.log": "9940f577a9c0bd6230138256a418a2c846d739b8f00aaaf3725ea46ee23701c3",
+    "vk-peer-validation.log": "bdc29168c98b2afd2f4dafcee86f3c5af93d5f4af37ff7dc5cf19016f0e89aec",
+    "run_visible.py": "831397f780e5363fee6b8bfd39215168db7f1afe168457b172d987955b6ab328",
+    "framebench-vulkan-baseline.log": "68d45ad271b42cfa6eaa4ba9b7539935d769206f01dc765a8b1cc304d996c757",
+    "vk-candidate-progress.log": "a3934572aac2460a3e508ecc411413d90ddd43d87f3e71178a834129e8bb474f",
+    "resource_trace.hpp": "fcc65238e70d20d0821fea6a17582ef94d6ba437aae6bd6c78b112f83828ddfd",
+    "cpu-build.log": "580f2bc2e3f8bd42a6f438525ebe416f434719a1ec59d1596eea4b72ebe67542",
+    "vk-baseline-progress.log": "f4c2c893ca9967308d6189d3003b8623ce5216286c5dfe96cc46d69360f0a4f0",
+    "test-vk-peer.log": "c73919bf2985fd619b432f39cc2e38fe22783cb7b2d0a0105a2892676a6d40d4",
+    "framebench-vulkan-candidate.log": "45801ea77f7bf897fcbc5dceee5c14daab9fcc91696be123bb85185909b6db28",
+    "gpu-tests.log": "01c1d85a47dd5532da768a87ecdc8752a7fa193381c205b549eded73722b2a1a",
+    "baseline-backend.hpp": "abf50cd9a9fdebea2a962d314e3ef7961f0b3d4b85700e7ae5c5b0ec1e94257f",
+    "build.log": "e7668e325d7722af2da9a46237944181f6108cb175bc2bf32c6dbfb069101b8d",
+    "build_probes.py": "78d58036b431c9c4a3a264fd0c96addc6765079996d8d14fff708fd106db3740",
+    "run_framebench.py": "273a9f6e1bdfc5828a0cec01e00b8509e20060abd7ca6f96e9a80b0ce45df1b6",
+    "probe-build.log": "fb17eeba87cc8609de013bdcc197e6b59bced1e01b164222f16edbe7fc7e31ad",
+    "framebench-opengl-candidate.log": "f36d51d754669b4273c9e48a7b0335c51d9123f84ae330edb062d32c9504f3a3",
+    "cpu-tests.log": "8bc46dc8d05a5a9b12b2bf603053c43ea904f74f5de38b06ad2fc9a357aa3733",
+    "analyze.py": "9742c7fbebecc3b702c76a8ab9e104571e83a21d203c3157831d540504e5644d",
+    "test-gl-peer.log": "546424c5b21ad8d6f2c50e39247246bef6efe60c20928661909929af946a68de",
+    "resource_trace.cpp": "f2d4c4fa251eb800e0dd13cf147dc62efa9eaa5a040d0ed0c66ca029ed359cc1",
+    "gl-candidate-progress.log": "cd7e080563dd8578c317d22f1bf3e4533aecb84aa56976d6b8038c6d1620ae89",
+    "base.json": "78707e718022db523677b560f17b1b8807ff31b90b778fc4313d521d26995b9c",
+    "build-tests.log": "91f18bf254ac599fa56c375aab60898218a849a71f515450678ad534f71e1b5a",
+    "framebench-progress.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "compile-command.json": "766b938f9f3782fa42d253046b0e865b4cffaadbad97b570ed8f043613bcffed",
+    "framebench-manifest.json": "3fd97581a757bee4794338765559606c6a46353cadb02b6c675eec1ce60db856",
+    "vulkan-audit-baseline/manifest.json": "e6fd6e39d2f14ce9e1d652cbec7ad792456af4a3bf3e7ce19f08a9a8cd0a56d8",
+    "vulkan-audit-baseline/samples.jsonl": "cba22215589760902f24f37ce480758863b0ce7deb49d6074c77230df79fa777",
+    "vulkan-audit-baseline/loads.jsonl": "d1da04dadc17effe908c1dfe49a5dcab5b93b6c6e551c0a08fa69bb01fdb130b",
+    "vulkan-audit-baseline/player.log": "849931f67c54a253750ad7e3ba61e012f46f92681b137e73bc9c6847102f064f",
+    "vulkan-audit-baseline/command.json": "59b4d154f0e471265a1ae6dfa6976b841d8b9c0fe2845f11c1db438908078602",
+    "vulkan-audit-baseline/inside.jsonl": "759631af5a303c6296253e44eae12f7b383bdd3c4a37a7c64d30a60fe639dbc9",
+    "vulkan-audit-baseline/exit.json": "556882cf2eb74b66a3d6c4b9bee5d70d8f17dd6a7a4290ea3c5bc6832915e729",
+    "opengl-audit-candidate/manifest.json": "15619218b07aa3d4ea31934d3a752a36399decfdae0419b09efaa3a838624fc5",
+    "opengl-audit-candidate/samples.jsonl": "a0824e3621506b6b3de20396faa2e5ad41efa1c41ab9247ca328e82bb7231433",
+    "opengl-audit-candidate/loads.jsonl": "26cac59ce6f0dde5ba3e615f7a9cc36a02f4120ab0c479835fc78510e0818d95",
+    "opengl-audit-candidate/player.log": "41cf413d634f1b2f305dc7a2e76bb49bffa6e2cd02d245230fdd560a2f46f3cb",
+    "opengl-audit-candidate/command.json": "59b4d154f0e471265a1ae6dfa6976b841d8b9c0fe2845f11c1db438908078602",
+    "opengl-audit-candidate/inside.jsonl": "46de9f8112f6bcb09dd0d86587088aed253166f072c9574dfbc7fa2691306aa6",
+    "opengl-audit-candidate/exit.json": "2c13430f67c7eaad9d829622d004a8ca7c9f53e6de70a03b277c85357b4b2264",
+    "opengl-audit-baseline/manifest.json": "0e8390df7ff7c8f409c3474f4ea2bf7ffd6eab4870474178397a0b81528ad893",
+    "opengl-audit-baseline/samples.jsonl": "5f151d922cb30867ae1bfa39b00db1956316e1be3e61a272f1314ad2186d310d",
+    "opengl-audit-baseline/loads.jsonl": "a21dac4e8eadccd3dc1f184fecd15d206b6062e7208bf80c57e5056b6d0e43e1",
+    "opengl-audit-baseline/player.log": "41cf413d634f1b2f305dc7a2e76bb49bffa6e2cd02d245230fdd560a2f46f3cb",
+    "opengl-audit-baseline/command.json": "59b4d154f0e471265a1ae6dfa6976b841d8b9c0fe2845f11c1db438908078602",
+    "opengl-audit-baseline/inside.jsonl": "da667cd75f677f89670a98a9b078cec871ec03d2e9a118e7b3b89213e155ad20",
+    "opengl-audit-baseline/exit.json": "8522d5a842805f84beeb8af3b8b76229882d59f8fc702ab5b5e7f444515b61cb",
+    "vulkan-audit-candidate/manifest.json": "00188d0e77056f22b5d2bc8fb2b3d9432055cc16028186117c256101424a19ae",
+    "vulkan-audit-candidate/samples.jsonl": "e8ccd2a02147dda62864b765884544304af174b96e965fe5f7cdfceffe2d87fd",
+    "vulkan-audit-candidate/loads.jsonl": "12de1557e68c8b58fd87f531ec393033871965bac86d646d75e9d845fd010b1f",
+    "vulkan-audit-candidate/player.log": "849931f67c54a253750ad7e3ba61e012f46f92681b137e73bc9c6847102f064f",
+    "vulkan-audit-candidate/command.json": "59b4d154f0e471265a1ae6dfa6976b841d8b9c0fe2845f11c1db438908078602",
+    "vulkan-audit-candidate/inside.jsonl": "13f1ad5f775eff22ac18601c5b42b28c48e5c492fe9f38d7b5606ab864f28db8",
+    "vulkan-audit-candidate/exit.json": "f3eb008a4fae19209f410bd948587b1efaef060c97e460b0a5f42eed4ba695c8",
+    "candidate/main.cpp": "3878a71c673bfe1b51854209d3e41126d50bc286f3fa26b1921ff8227643c0c5",
+    "candidate/touch_overlay.hpp": "b5363e59b70035d4e68f51c3683d6a81a9b2c5cd3f09a577e2d3b78cf14b8ce2",
+    "candidate/backend.hpp": "a36b515a0537bc73ea1bcb7ab179e5541556e507548e45c6ec8afa245a6ee1bf",
+    "baseline/main.cpp": "f8a09c3ed680cf730b8fb5f4796510ddfba528709537d7b365a50fd1a31107b7",
+    "baseline/touch_overlay.hpp": "b5363e59b70035d4e68f51c3683d6a81a9b2c5cd3f09a577e2d3b78cf14b8ce2",
+    "baseline/backend.hpp": "abf50cd9a9fdebea2a962d314e3ef7961f0b3d4b85700e7ae5c5b0ec1e94257f"
+  },
+  "measurement": {
+    "date": "2026-10-19",
+    "agent": "Codex",
+    "model": "GPT-6 (exact variant unknown)",
+    "build": "Release/O3/LTO/Werror",
+    "cpu": "Intel Xeon E5-1680 v4",
+    "gpu": "NVIDIA RTX 3080 Ti",
+    "driver": "580.82.09",
+    "desktop": "KDE/X11",
+    "kernel": "6.6.107",
+    "glibc": "2.42",
+    "normal_runs": "Visible 1920x1080, target 60 FPS, UI and audio service enabled, BG_22A, 15 switches; no capture/measure/window-check/forced completion/heap trimming",
+    "phases": "Median of last five stable samples per phase; window attributes checked throughout; final target equals cold target",
+    "timings": "15 constructor/GPU-prepare samples excluding initial cold model; GPU prepare excludes CPU decoding/audio/full async load",
+    "limitations": [
+      "No demonstrated steady VRAM reduction",
+      "Cross-process RSS includes variable driver/compiler residency; no claimed RAM reduction",
+      "Vulkan constructor/upload time did not improve in this single comparison",
+      "No CPU/GPU utilization or power reduction established",
+      "Other drivers, full catalog dynamics, real desktop plugins and hours-long execution untested"
+    ]
+  },
+  "framebench": {
+    "opengl-baseline": {
+      "backend": "opengl",
+      "variant": "baseline",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/nekomote_player_baseline",
+        "--assets",
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+        "--character",
+        "chocola/casual-a-no-bell",
+        "--backend",
+        "opengl",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--measure-frames",
+        "600",
+        "--no-save"
+      ],
+      "binary_sha256": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+      "warmup_frames": 120,
+      "frames": 600,
+      "cpu_ms": {
+        "p50": 2.207265,
+        "p95": 2.475335,
+        "p99": 2.859328
+      },
+      "cadence_fps": 59.635,
+      "cadence_ms": {
+        "p50": 16.760901,
+        "p95": 16.779503,
+        "p99": 16.793263
+      }
+    },
+    "opengl-candidate": {
+      "backend": "opengl",
+      "variant": "candidate",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/png-flac-config-check/bin/nekomote_player",
+        "--assets",
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+        "--character",
+        "chocola/casual-a-no-bell",
+        "--backend",
+        "opengl",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--measure-frames",
+        "600",
+        "--no-save"
+      ],
+      "binary_sha256": "419cc99bb85cc9e490b1d10ce76ee955c631fd912ddd9893eff82313953504b8",
+      "warmup_frames": 120,
+      "frames": 600,
+      "cpu_ms": {
+        "p50": 2.159946,
+        "p95": 2.421653,
+        "p99": 2.691666
+      },
+      "cadence_fps": 59.658,
+      "cadence_ms": {
+        "p50": 16.756499,
+        "p95": 16.773698,
+        "p99": 16.790556
+      }
+    },
+    "vulkan-baseline": {
+      "backend": "vulkan",
+      "variant": "baseline",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/nekomote_player_baseline",
+        "--assets",
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+        "--character",
+        "chocola/casual-a-no-bell",
+        "--backend",
+        "vulkan",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--measure-frames",
+        "600",
+        "--no-save"
+      ],
+      "binary_sha256": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+      "warmup_frames": 120,
+      "frames": 600,
+      "cpu_ms": {
+        "p50": 1.721177,
+        "p95": 1.836631,
+        "p99": 2.053405
+      },
+      "cadence_fps": 59.632,
+      "cadence_ms": {
+        "p50": 16.75795,
+        "p95": 16.768228,
+        "p99": 16.780727
+      }
+    },
+    "vulkan-candidate": {
+      "backend": "vulkan",
+      "variant": "candidate",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/png-flac-config-check/bin/nekomote_player",
+        "--assets",
+        "/run/media/chocola/MIKU/NekoMote/build/evidence/renderer-sharing-20261019/assets",
+        "--character",
+        "chocola/casual-a-no-bell",
+        "--backend",
+        "vulkan",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--measure-frames",
+        "600",
+        "--no-save"
+      ],
+      "binary_sha256": "419cc99bb85cc9e490b1d10ce76ee955c631fd912ddd9893eff82313953504b8",
+      "warmup_frames": 120,
+      "frames": 600,
+      "cpu_ms": {
+        "p50": 1.718071,
+        "p95": 1.84441,
+        "p99": 2.165302
+      },
+      "cadence_fps": 59.628,
+      "cadence_ms": {
+        "p50": 16.757766,
+        "p95": 16.769978,
+        "p99": 16.779198
+      }
+    }
+  },
+  "framebench_caveat": "Uninstrumented visible player, --measure-frames changes presentation strategy. Separate short regression check, not normal playback memory/power measurement. CPU advance+prepare+GL submission / VK recording; GPU execution excluded.",
+  "verification": {
+    "cpu_ctest": {
+      "command": "ctest --test-dir build/png-flac-config-check -LE 'gpu|integration' --output-on-failure -j4",
+      "passed": 210,
+      "failed": 0
+    },
+    "gpu_ctest": {
+      "runners": [
+        "renderer_gpu",
+        "renderer_gles_gpu",
+        "renderer_vulkan_gpu"
+      ],
+      "passed": 3,
+      "failed": 0
+    },
+    "peer_validation": {
+      "command": "env VK_LAYER_PATH=<isolated>/usr/share/vulkan/explicit_layer.d LD_LIBRARY_PATH=<isolated>/usr/lib/x86_64-linux-gnu VK_LOADER_DEBUG=layer VK_LAYER_ENABLES=VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT flock build/gpu-validation.lock build/png-flac-config-check/bin/nekomote_vk_tests '[peer]'",
+      "layer_loaded": true,
+      "assertions": 28,
+      "cases": 1
+    },
+    "format": "clang-format --dry-run --Werror passed",
+    "diff": "git diff --check passed",
+    "architecture_review": "Independent read-only executor reviewed lifetime, GL uniform reset, VK compatibility, failed candidates, and context reset; no blocking issue; no parallel GPU execution"
+  },
+  "product_source_sha256": {
+    "apps/player/backend.hpp": "a36b515a0537bc73ea1bcb7ab179e5541556e507548e45c6ec8afa245a6ee1bf",
+    "apps/player/main.cpp": "050265e1bf4c9acbfba8c43f3432df57bbc9abe292995bf8fbfe60d929eb6b0f",
+    "include/nekomote/render_gl/renderer.hpp": "7a2ffd3d3ed2f7d84150b26a9ef6640aa142ca2c193cf6bd9c1f1b57ccdeb08c",
+    "include/nekomote/render_vk/renderer.hpp": "48583f449cfe68b3fa985e12727998e4b0ff3bcde75671a290b169d5f0fbcf7d",
+    "src/abi/wallpaper_instance.cpp": "926e0133a865039ce8a4a7d10fd9d0cadb753d63a8a36075da818aef9e6c3a80",
+    "src/render_gl/renderer.cpp": "49c4203dc297bae7cd7cf567a237297580d034361b3994c4b7c4ddd0776bed19",
+    "src/render_vk/renderer.cpp": "9d24e454f7432892b7144164093663742a751073f2a57bf3c33a661c79cd085a",
+    "tests/render/test_renderer.cpp": "8c83a679d7ec2bc7ea8832fbc5c4836bc99aca2a47bb6ca1ef9e6e6250445984",
+    "tests/render/test_vk.cpp": "dacda9e4651bd47edb2883510ec3e66e2d998515934893657f09e524ce378356"
+  },
+  "product_diff_sha256": "c4c46fae2e04c41c184ba916652486a3e1a6749aca907e83d7e3f76da9fcf19e"
+}

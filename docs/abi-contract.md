@@ -26,6 +26,11 @@ assets/XDG 选择规则；指定后绝不自动回退。资产设置时验证存
 - CPU session由一个求值线程顺序调用，不能并发advance/prepare/输入；immutable program可供各自独立的session借用。
 - 解码语音完成后移动发布为 `shared_ptr<const model::AudioBank>`，内部宿主与音频 Device 共享同一份 PCM/RMS；不得保留可变别名。Device 工作线程退出并 join 后才释放其 bank，宿主可保留 bank 以重建设备；引用计数操作不进入音频命令/快照帧路径。此为内部 C++ 所有权约束，不向 C ABI 暴露 shared_ptr，验证见 [语音共享](audio-bank-sharing-2026-10-17.md)。
 - model/session_asset 可在 program 编译成功后销毁；program 必须比借用它的 session 活得更久。GPU renderer 与 CPU session 分别拥有资源；renderer 创建、调用和销毁都要求宿主提供同一有效上下文及图形线程。
+- 同一壁纸实例的当前/候选/渐变旧模型和背景 renderer 显式共享 GL program 或 VK
+  pipeline、layout、renderpass、sampler 等固定资源；图集、几何、descriptor pool/set、
+  上传池和中间目标仍由各 renderer 独立拥有。共享仅限同一 context/device 与串行图形线程，
+  原始 renderer 可先销毁，最后一个 peer 必须在有效 context/device 内释放；重建 GPU
+  上下文先清空全部 peers。没有全局缓存或跨设备句柄共享，C ABI 的调用与完成边界不变。
 - C/C++ 帧逐字段复制到各自预分配的存储，不互转对象指针。session 创建时按 scene 容量预分配主帧，背景预留 8 顶点/12 索引/2 命令；renderer reserve 同时预留复制缓冲区和 GPU 容量。
 - `upload_texture` 输入为紧密排列的 RGBA8，新增 `pixel_bytes` 必须等于 width × height × 4；图像加载后的实际长度由 `nekomote_image_byte_count` 取得。宿主负责保证指针在声明的长度内可读，并保持到同步上传调用返回；后端不保留 CPU 像素指针。图像句柄拥有解码缓冲，销毁时释放映射；模型内部加载裁切不改变此完整 PNG 接口，详见 [C15](texture-cropping-2026-10-12.md)。
 - renderer `prepare` 失败后，`render` 明确失败且不绘制旧帧；下一次成功 prepare 恢复。此策略与 resize/upload 的资源操作失败分开：未成功修改的资源不会自动使整个 renderer 永久 fault。

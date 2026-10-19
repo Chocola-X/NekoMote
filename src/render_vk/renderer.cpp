@@ -295,17 +295,31 @@ int floor_power_two(int value) noexcept
 
 struct Renderer::Impl
 {
+    struct Pipelines
+    {
+        DeviceContext ctx;
+        VkRenderPass target_pass{VK_NULL_HANDLE}, color_pass{VK_NULL_HANDLE},
+            mask_pass{VK_NULL_HANDLE};
+        VkFormat mask_format{VK_FORMAT_UNDEFINED};
+        VkDescriptorSetLayout set_layout{VK_NULL_HANDLE};
+        VkPipelineLayout pipeline_layout{VK_NULL_HANDLE}, blit_pipeline_layout{VK_NULL_HANDLE};
+        VkPipeline pipelines[kPipelineCount]{};
+        VkShaderModule model_vert{VK_NULL_HANDLE}, model_frag{VK_NULL_HANDLE};
+        VkShaderModule blit_vert{VK_NULL_HANDLE}, blit_frag{VK_NULL_HANDLE};
+        VkSampler sampler{VK_NULL_HANDLE}, atlas_sampler{VK_NULL_HANDLE};
+        std::uint32_t max_texture_size{0};
+        std::string device_name;
+        ~Pipelines();
+    };
     DeviceContext ctx;
+    // Last peer destroys pipelines only after its private images/descriptors.
+    std::shared_ptr<Pipelines> shared;
+    Impl(const DeviceContext& context, std::shared_ptr<Pipelines> pipelines)
+        : ctx(context), shared(std::move(pipelines))
+    {
+    }
     VkCommandPool upload_pool{VK_NULL_HANDLE};
-    VkRenderPass target_pass{VK_NULL_HANDLE}, color_pass{VK_NULL_HANDLE}, mask_pass{VK_NULL_HANDLE};
-    VkFormat mask_format{VK_FORMAT_UNDEFINED};
-    VkDescriptorSetLayout set_layout{VK_NULL_HANDLE};
     VkDescriptorPool descriptor_pool{VK_NULL_HANDLE};
-    VkPipelineLayout pipeline_layout{VK_NULL_HANDLE}, blit_pipeline_layout{VK_NULL_HANDLE};
-    VkPipeline pipelines[kPipelineCount]{};
-    VkShaderModule model_vert{VK_NULL_HANDLE}, model_frag{VK_NULL_HANDLE};
-    VkShaderModule blit_vert{VK_NULL_HANDLE}, blit_frag{VK_NULL_HANDLE};
-    VkSampler sampler{VK_NULL_HANDLE}, atlas_sampler{VK_NULL_HANDLE};
     Buffer vbo, ebo;
     Image dummy;
     struct Texture
@@ -327,8 +341,6 @@ struct Renderer::Impl
     VkDescriptorSet blit_set{VK_NULL_HANDLE};
     VkImageLayout color_layout{VK_IMAGE_LAYOUT_UNDEFINED}, mask_layout{VK_IMAGE_LAYOUT_UNDEFINED};
     int output_width{0}, output_height{0};
-    std::uint32_t max_texture_size{0};
-    std::string device_name;
 
     // The host has completed the preceding submission before destruction or
     // resource mutation. The backend neither owns nor waits on host fences.
@@ -339,37 +351,24 @@ struct Renderer::Impl
             vkDestroyFramebuffer(dev, color_framebuffer, nullptr);
         if (mask_framebuffer)
             vkDestroyFramebuffer(dev, mask_framebuffer, nullptr);
-        for (auto pipeline : pipelines)
-            if (pipeline)
-                vkDestroyPipeline(dev, pipeline, nullptr);
-        if (blit_pipeline_layout)
-            vkDestroyPipelineLayout(dev, blit_pipeline_layout, nullptr);
-        if (pipeline_layout)
-            vkDestroyPipelineLayout(dev, pipeline_layout, nullptr);
         if (descriptor_pool)
             vkDestroyDescriptorPool(dev, descriptor_pool, nullptr);
-        if (set_layout)
-            vkDestroyDescriptorSetLayout(dev, set_layout, nullptr);
-        if (atlas_sampler)
-            vkDestroySampler(dev, atlas_sampler, nullptr);
-        if (sampler)
-            vkDestroySampler(dev, sampler, nullptr);
-        if (model_vert)
-            vkDestroyShaderModule(dev, model_vert, nullptr);
-        if (model_frag)
-            vkDestroyShaderModule(dev, model_frag, nullptr);
-        if (blit_vert)
-            vkDestroyShaderModule(dev, blit_vert, nullptr);
-        if (blit_frag)
-            vkDestroyShaderModule(dev, blit_frag, nullptr);
-        if (target_pass)
-            vkDestroyRenderPass(dev, target_pass, nullptr);
-        if (color_pass)
-            vkDestroyRenderPass(dev, color_pass, nullptr);
-        if (mask_pass)
-            vkDestroyRenderPass(dev, mask_pass, nullptr);
         if (upload_pool)
             vkDestroyCommandPool(dev, upload_pool, nullptr);
+    }
+
+    void initialize_uploads()
+    {
+        VkCommandPoolCreateInfo pool_info{};
+        pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        pool_info.queueFamilyIndex = ctx.graphics_queue_family;
+        pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        check_vk(vkCreateCommandPool(ctx.device, &pool_info, nullptr, &upload_pool),
+                 "create upload pool");
+        ImageRgba8 white;
+        white.width = white.height = 1;
+        white.pixels = {255, 255, 255, 255};
+        dummy = upload_image(white);
     }
 
     VkDescriptorSet allocate_descriptor_set()
@@ -378,7 +377,7 @@ struct Renderer::Impl
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         info.descriptorPool = descriptor_pool;
         info.descriptorSetCount = 1;
-        info.pSetLayouts = &set_layout;
+        info.pSetLayouts = &shared->set_layout;
         VkDescriptorSet result{VK_NULL_HANDLE};
         check_vk(vkAllocateDescriptorSets(ctx.device, &info, &result), "allocate model descriptor");
         return result;
@@ -391,7 +390,7 @@ struct Renderer::Impl
         std::array<VkDescriptorImageInfo, 2> images{};
         for (std::size_t i = 0; i < images.size(); ++i)
         {
-            images[i].sampler = i == 0 ? image_sampler : sampler;
+            images[i].sampler = i == 0 ? image_sampler : shared->sampler;
             images[i].imageView = i == 0 ? atlas : mask;
             images[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -415,8 +414,8 @@ struct Renderer::Impl
     Image upload_image(ImageViewRgba8 image)
     {
         if (image.width <= 0 || image.height <= 0 ||
-            static_cast<std::uint32_t>(image.width) > max_texture_size ||
-            static_cast<std::uint32_t>(image.height) > max_texture_size ||
+            static_cast<std::uint32_t>(image.width) > shared->max_texture_size ||
+            static_cast<std::uint32_t>(image.height) > shared->max_texture_size ||
             static_cast<std::size_t>(image.width) > std::numeric_limits<std::size_t>::max() / 4 /
                                                         static_cast<std::size_t>(image.height) ||
             image.pixels.size() !=
@@ -444,16 +443,49 @@ struct Renderer::Impl
     }
 };
 
-Renderer::Renderer(const DeviceContext& ctx) : impl_(std::make_unique<Impl>())
+Renderer::Impl::Pipelines::~Pipelines()
+{
+    const auto dev = ctx.device;
+    for (auto pipeline : pipelines)
+        if (pipeline)
+            vkDestroyPipeline(dev, pipeline, nullptr);
+    if (blit_pipeline_layout)
+        vkDestroyPipelineLayout(dev, blit_pipeline_layout, nullptr);
+    if (pipeline_layout)
+        vkDestroyPipelineLayout(dev, pipeline_layout, nullptr);
+    if (set_layout)
+        vkDestroyDescriptorSetLayout(dev, set_layout, nullptr);
+    if (atlas_sampler)
+        vkDestroySampler(dev, atlas_sampler, nullptr);
+    if (sampler)
+        vkDestroySampler(dev, sampler, nullptr);
+    if (model_vert)
+        vkDestroyShaderModule(dev, model_vert, nullptr);
+    if (model_frag)
+        vkDestroyShaderModule(dev, model_frag, nullptr);
+    if (blit_vert)
+        vkDestroyShaderModule(dev, blit_vert, nullptr);
+    if (blit_frag)
+        vkDestroyShaderModule(dev, blit_frag, nullptr);
+    if (target_pass)
+        vkDestroyRenderPass(dev, target_pass, nullptr);
+    if (color_pass)
+        vkDestroyRenderPass(dev, color_pass, nullptr);
+    if (mask_pass)
+        vkDestroyRenderPass(dev, mask_pass, nullptr);
+}
+
+Renderer::Renderer(const DeviceContext& ctx)
+    : impl_(std::make_unique<Impl>(ctx, std::make_shared<Impl::Pipelines>()))
 {
     auto& p = *impl_;
-    p.ctx = ctx;
+    p.shared->ctx = ctx;
     if (!ctx.device || !ctx.physical_device || !ctx.graphics_queue)
         throw std::runtime_error("invalid Vulkan device context");
     VkPhysicalDeviceProperties props{};
     vkGetPhysicalDeviceProperties(ctx.physical_device, &props);
-    p.device_name = props.deviceName;
-    p.max_texture_size = props.limits.maxImageDimension2D;
+    p.shared->device_name = props.deviceName;
+    p.shared->max_texture_size = props.limits.maxImageDimension2D;
     const VkFormatFeatureFlags mask_features =
         VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT |
         VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
@@ -466,60 +498,63 @@ Renderer::Renderer(const DeviceContext& ctx) : impl_(std::make_unique<Impl>())
         vkGetPhysicalDeviceFormatProperties(ctx.physical_device, format, &support);
         if ((support.optimalTilingFeatures & mask_features) == mask_features)
         {
-            p.mask_format = format;
+            p.shared->mask_format = format;
             break;
         }
     }
-    if (p.mask_format == VK_FORMAT_UNDEFINED)
+    if (p.shared->mask_format == VK_FORMAT_UNDEFINED)
         throw std::runtime_error("five-bit linearly filtered mask coverage unsupported");
-    VkCommandPoolCreateInfo pool_info{};
-    pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    pool_info.queueFamilyIndex = ctx.graphics_queue_family;
-    pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-    check_vk(vkCreateCommandPool(ctx.device, &pool_info, nullptr, &p.upload_pool),
-             "create upload pool");
-    p.target_pass = create_color_render_pass(ctx.device, ctx.color_format);
-    p.color_pass = create_color_render_pass(ctx.device, VK_FORMAT_R8G8B8A8_UNORM);
-    p.mask_pass = create_color_render_pass(ctx.device, p.mask_format);
-    p.set_layout = create_descriptor_set_layout(ctx.device);
-    p.sampler = create_sampler(ctx.device);
-    p.atlas_sampler = create_sampler(ctx.device, SamplerCoordinates::Texels);
-    p.model_vert = create_shader_module(ctx.device, model_vert_spv, model_vert_size);
-    p.model_frag = create_shader_module(ctx.device, model_frag_spv, model_frag_size);
-    p.blit_vert = create_shader_module(ctx.device, blit_vert_spv, blit_vert_size);
-    p.blit_frag = create_shader_module(ctx.device, blit_frag_spv, blit_frag_size);
-    p.pipeline_layout = create_pipeline_layout(ctx.device, p.set_layout);
-    p.blit_pipeline_layout = create_blit_pipeline_layout(ctx.device, p.set_layout);
-    p.pipelines[kPremultipliedOver] =
-        create_pipeline(ctx.device, p.target_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
-    p.pipelines[kStraightOver] =
-        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-                        VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
-    p.pipelines[kProtectionPass] =
-        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-                        VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA,
-                        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
-    p.pipelines[kMultiply] =
-        create_pipeline(ctx.device, p.color_pass, p.pipeline_layout, p.model_vert, p.model_frag,
-                        VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-                        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
-    p.pipelines[kMaskWrite] = create_pipeline(
-        ctx.device, p.mask_pass, p.pipeline_layout, p.model_vert, p.model_frag, VK_BLEND_FACTOR_ONE,
-        VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
-    p.pipelines[kBlit] =
-        create_pipeline(ctx.device, p.target_pass, p.blit_pipeline_layout, p.blit_vert, p.blit_frag,
-                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-                        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, true);
-    ImageRgba8 white;
-    white.width = white.height = 1;
-    white.pixels = {255, 255, 255, 255};
-    p.dummy = p.upload_image(white);
+    p.shared->target_pass = create_color_render_pass(ctx.device, ctx.color_format);
+    p.shared->color_pass = create_color_render_pass(ctx.device, VK_FORMAT_R8G8B8A8_UNORM);
+    p.shared->mask_pass = create_color_render_pass(ctx.device, p.shared->mask_format);
+    p.shared->set_layout = create_descriptor_set_layout(ctx.device);
+    p.shared->sampler = create_sampler(ctx.device);
+    p.shared->atlas_sampler = create_sampler(ctx.device, SamplerCoordinates::Texels);
+    p.shared->model_vert = create_shader_module(ctx.device, model_vert_spv, model_vert_size);
+    p.shared->model_frag = create_shader_module(ctx.device, model_frag_spv, model_frag_size);
+    p.shared->blit_vert = create_shader_module(ctx.device, blit_vert_spv, blit_vert_size);
+    p.shared->blit_frag = create_shader_module(ctx.device, blit_frag_spv, blit_frag_size);
+    p.shared->pipeline_layout = create_pipeline_layout(ctx.device, p.shared->set_layout);
+    p.shared->blit_pipeline_layout = create_blit_pipeline_layout(ctx.device, p.shared->set_layout);
+    p.shared->pipelines[kPremultipliedOver] = create_pipeline(
+        ctx.device, p.shared->target_pass, p.shared->pipeline_layout, p.shared->model_vert,
+        p.shared->model_frag, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
+    p.shared->pipelines[kStraightOver] = create_pipeline(
+        ctx.device, p.shared->color_pass, p.shared->pipeline_layout, p.shared->model_vert,
+        p.shared->model_frag, VK_BLEND_FACTOR_SRC_ALPHA, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, false);
+    p.shared->pipelines[kProtectionPass] = create_pipeline(
+        ctx.device, p.shared->color_pass, p.shared->pipeline_layout, p.shared->model_vert,
+        p.shared->model_frag, VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_DST_ALPHA,
+        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
+    p.shared->pipelines[kMultiply] = create_pipeline(
+        ctx.device, p.shared->color_pass, p.shared->pipeline_layout, p.shared->model_vert,
+        p.shared->model_frag, VK_BLEND_FACTOR_DST_COLOR, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
+    p.shared->pipelines[kMaskWrite] = create_pipeline(
+        ctx.device, p.shared->mask_pass, p.shared->pipeline_layout, p.shared->model_vert,
+        p.shared->model_frag, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+        VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_ONE, false);
+    p.shared->pipelines[kBlit] = create_pipeline(
+        ctx.device, p.shared->target_pass, p.shared->blit_pipeline_layout, p.shared->blit_vert,
+        p.shared->blit_frag, VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, true);
+    p.initialize_uploads();
 }
 
 Renderer::~Renderer() = default;
+Renderer::Renderer(Renderer&&) noexcept = default;
+Renderer& Renderer::operator=(Renderer&&) noexcept = default;
+Renderer::Renderer(std::unique_ptr<Impl> impl) : impl_(std::move(impl))
+{
+}
+Renderer Renderer::create_peer() const
+{
+    auto peer = std::make_unique<Impl>(impl_->ctx, impl_->shared);
+    peer->initialize_uploads();
+    return Renderer(std::move(peer));
+}
 
 void Renderer::reserve(Capacity capacity)
 {
@@ -542,7 +577,7 @@ void Renderer::reserve(Capacity capacity)
                  "create model descriptor pool");
         p.descriptor_texture_capacity = capacity.textures;
         p.blit_set = p.allocate_descriptor_set();
-        p.write_descriptor_set(p.blit_set, p.dummy.view, p.dummy.view, p.sampler);
+        p.write_descriptor_set(p.blit_set, p.dummy.view, p.dummy.view, p.shared->sampler);
     }
     else if (capacity.textures > p.descriptor_texture_capacity)
         throw std::runtime_error("texture reserve exceeds established descriptor capacity");
@@ -582,9 +617,11 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
     texture.image = p.upload_image(image);
     texture.unmasked = p.allocate_descriptor_set();
     texture.masked = p.allocate_descriptor_set();
-    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view, p.atlas_sampler);
+    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view,
+                           p.shared->atlas_sampler);
     p.write_descriptor_set(texture.masked, texture.image.view,
-                           p.mask_target.view ? p.mask_target.view : p.dummy.view, p.atlas_sampler);
+                           p.mask_target.view ? p.mask_target.view : p.dummy.view,
+                           p.shared->atlas_sampler);
     p.textures.push_back(std::move(texture));
 }
 
@@ -723,14 +760,14 @@ void Renderer::resize_output(int width, int height)
         return;
     if (!p.blit_set)
         throw std::runtime_error("reserve resources before protected output resize");
-    if (static_cast<std::uint32_t>(width) > p.max_texture_size ||
-        static_cast<std::uint32_t>(height) > p.max_texture_size)
+    if (static_cast<std::uint32_t>(width) > p.shared->max_texture_size ||
+        static_cast<std::uint32_t>(height) > p.shared->max_texture_size)
         throw std::runtime_error("output exceeds GPU texture dimensions");
     auto color =
         create_image(p.ctx.device, p.ctx.physical_device, width, height, VK_FORMAT_R8G8B8A8_UNORM,
                      VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     auto mask = create_image(p.ctx.device, p.ctx.physical_device, floor_power_two(width),
-                             floor_power_two(height), p.mask_format,
+                             floor_power_two(height), p.shared->mask_format,
                              VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     const auto make_fb = [&p](const Image& image, VkRenderPass pass, VkFramebuffer* result)
     {
@@ -746,10 +783,10 @@ void Renderer::resize_output(int width, int height)
                  "create intermediate framebuffer");
     };
     VkFramebuffer new_color{VK_NULL_HANDLE}, new_mask{VK_NULL_HANDLE};
-    make_fb(color, p.color_pass, &new_color);
+    make_fb(color, p.shared->color_pass, &new_color);
     try
     {
-        make_fb(mask, p.mask_pass, &new_mask);
+        make_fb(mask, p.shared->mask_pass, &new_mask);
     }
     catch (...)
     {
@@ -767,10 +804,10 @@ void Renderer::resize_output(int width, int height)
     p.color_layout = p.mask_layout = VK_IMAGE_LAYOUT_UNDEFINED;
     p.output_width = width;
     p.output_height = height;
-    p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view, p.sampler);
+    p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view, p.shared->sampler);
     for (const auto& texture : p.textures)
         p.write_descriptor_set(texture.masked, texture.image.view, p.mask_target.view,
-                               p.atlas_sampler);
+                               p.shared->atlas_sampler);
 }
 
 void Renderer::render(Target target, const View& view, TargetContents contents)
@@ -835,10 +872,10 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         record_image_barrier(cmd, p.color_target.handle, p.color_layout,
                              VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
         p.color_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        begin(p.color_pass, p.color_framebuffer, target.width, target.height, true, {});
+        begin(p.shared->color_pass, p.color_framebuffer, target.width, target.height, true, {});
     }
     else
-        begin(p.target_pass, target.framebuffer, target.width, target.height,
+        begin(p.shared->target_pass, target.framebuffer, target.width, target.height,
               contents == TargetContents::Clear, view.clear);
 
     if (p.vbo.handle && p.ebo.handle)
@@ -861,7 +898,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     pc.global_alpha = straight ? 1 : view.alpha;
     const auto push = [&]()
     {
-        vkCmdPushConstants(cmd, p.pipeline_layout,
+        vkCmdPushConstants(cmd, p.shared->pipeline_layout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pc),
                            &pc);
     };
@@ -881,8 +918,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                 record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
                 p.mask_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-                begin(p.mask_pass, p.mask_framebuffer, p.mask_target.width, p.mask_target.height,
-                      true, {});
+                begin(p.shared->mask_pass, p.mask_framebuffer, p.mask_target.width,
+                      p.mask_target.height, true, {});
                 const auto& bounds = p.mask_bounds[command.mask.value - 1];
                 scratch_clip = intersect(intersect(clip(bounds.source, target, view),
                                                    clip(bounds.content, target, view)),
@@ -894,7 +931,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                              scaled(scratch_clip.y, p.mask_target.height, target.height),
                              scaled(scratch_clip.width, p.mask_target.width, target.width),
                              scaled(scratch_clip.height, p.mask_target.height, target.height)});
-                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kMaskWrite]);
+                vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  p.shared->pipelines[kMaskWrite]);
                 pc.mask_write = 1;
                 pc.use_mask = 0;
                 const auto& definition = p.masks[command.mask.value - 1];
@@ -909,15 +947,17 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                     pc.atlas_texels = texture->texel_transform;
                     push();
                     // Dummy mask prevents sampling an attachment currently being written.
-                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout,
-                                            0, 1, &texture->unmasked, 0, nullptr);
+                    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            p.shared->pipeline_layout, 0, 1, &texture->unmasked, 0,
+                                            nullptr);
                     vkCmdDrawIndexed(cmd, draw.index_count, 1, draw.first_index, 0, 0);
                 }
                 vkCmdEndRenderPass(cmd);
                 record_image_barrier(cmd, p.mask_target.handle, p.mask_layout,
                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 p.mask_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                begin(p.color_pass, p.color_framebuffer, target.width, target.height, false, {});
+                begin(p.shared->color_pass, p.color_framebuffer, target.width, target.height, false,
+                      {});
                 scratch_mask = command.mask;
             }
             set_scissor(scratch_clip);
@@ -934,11 +974,12 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
             throw std::runtime_error("prepared draw texture is unavailable");
         pc.atlas_texels = texture->texel_transform;
         const auto set = command.mask.valid() ? texture->masked : texture->unmasked;
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipeline_layout, 0, 1, &set,
-                                0, nullptr);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.shared->pipeline_layout, 0,
+                                1, &set, 0, nullptr);
         if (straight && command.protection == ColorProtection::PreserveTranslucent)
         {
-            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kProtectionPass]);
+            vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              p.shared->pipelines[kProtectionPass]);
             pc.protection_pass = 1;
             pc.premultiply = 0;
             push();
@@ -949,7 +990,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
                               ? kMultiply
                               : (straight ? kStraightOver : kPremultipliedOver);
         pc.premultiply = command.blend == BlendMode::Multiply || !straight ? 1 : 0;
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[pipe]);
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.shared->pipelines[pipe]);
         push();
         vkCmdDrawIndexed(cmd, command.index_count, 1, command.first_index, 0, 0);
     }
@@ -959,12 +1000,12 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
         record_image_barrier(cmd, p.color_target.handle, p.color_layout,
                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         p.color_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        begin(p.target_pass, target.framebuffer, target.width, target.height,
+        begin(p.shared->target_pass, target.framebuffer, target.width, target.height,
               contents == TargetContents::Clear, view.clear);
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.pipelines[kBlit]);
-        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.blit_pipeline_layout, 0, 1,
-                                &p.blit_set, 0, nullptr);
-        vkCmdPushConstants(cmd, p.blit_pipeline_layout,
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.shared->pipelines[kBlit]);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                p.shared->blit_pipeline_layout, 0, 1, &p.blit_set, 0, nullptr);
+        vkCmdPushConstants(cmd, p.shared->blit_pipeline_layout,
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
                            sizeof(float), &view.alpha);
         vkCmdDraw(cmd, 3, 1, 0, 0);
@@ -974,7 +1015,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
 
 std::string Renderer::diagnostics() const
 {
-    return "Vulkan 1.0 | " + impl_->device_name;
+    return "Vulkan 1.0 | " + impl_->shared->device_name;
 }
 
 } // namespace nekomote::render_vk

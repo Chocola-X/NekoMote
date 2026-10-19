@@ -416,7 +416,8 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
     const bool switching = controller_.switch_state() == application::SwitchState::Pending;
     if (backend_ == WallpaperBackend::OpenGL)
     {
-        auto next = std::make_unique<render_gl::Renderer>(loader_);
+        auto next = renderer_ ? std::make_unique<render_gl::Renderer>(renderer_->create_peer())
+                              : std::make_unique<render_gl::Renderer>(loader_);
         next->reserve({capacity.vertices, capacity.indices, capacity.commands,
                        scene.textures().size(), capacity.mask_commands, capacity.masks});
         for (const auto& [id, image, region] : candidate.textures)
@@ -429,7 +430,7 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
         std::unique_ptr<render_gl::Renderer> empty_background;
         if (!background_renderer_)
         {
-            empty_background = std::make_unique<render_gl::Renderer>(loader_);
+            empty_background = std::make_unique<render_gl::Renderer>(next->create_peer());
             empty_background->reserve({8, 12, 2, 2});
         }
         if (switching)
@@ -441,7 +442,9 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
 #if defined(NEKOMOTE_HAS_VULKAN)
     else
     {
-        auto next = std::make_unique<render_vk::Renderer>(vk_ctx_);
+        auto next = vk_renderer_
+                        ? std::make_unique<render_vk::Renderer>(vk_renderer_->create_peer())
+                        : std::make_unique<render_vk::Renderer>(vk_ctx_);
         next->reserve({capacity.vertices, capacity.indices, capacity.commands,
                        scene.textures().size(), capacity.mask_commands, capacity.masks});
         for (const auto& [id, image, region] : candidate.textures)
@@ -454,7 +457,7 @@ void WallpaperInstance::finish_candidate_gpu(const application::CandidateCpu& ca
         std::unique_ptr<render_vk::Renderer> empty_background;
         if (!vk_background_renderer_)
         {
-            empty_background = std::make_unique<render_vk::Renderer>(vk_ctx_);
+            empty_background = std::make_unique<render_vk::Renderer>(next->create_peer());
             empty_background->reserve({8, 12, 2, 2});
         }
         if (switching)
@@ -516,7 +519,7 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
         const TextureId id{1};
         if (backend_ == WallpaperBackend::OpenGL)
         {
-            auto next = std::make_unique<render_gl::Renderer>(loader_);
+            auto next = std::make_unique<render_gl::Renderer>(renderer_->create_peer());
             next->reserve({8, 12, 2, 2});
             next->upload_texture(id, new_image.image);
             background_renderer_ = std::move(next);
@@ -524,7 +527,7 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
 #if defined(NEKOMOTE_HAS_VULKAN)
         else
         {
-            auto next = std::make_unique<render_vk::Renderer>(vk_ctx_);
+            auto next = std::make_unique<render_vk::Renderer>(vk_renderer_->create_peer());
             next->reserve({8, 12, 2, 2});
             next->upload_texture(id, new_image.image);
             vk_background_renderer_ = std::move(next);
@@ -547,7 +550,7 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
     const TextureId old_id{1}, new_id{2};
     if (backend_ == WallpaperBackend::OpenGL)
     {
-        auto next = std::make_unique<render_gl::Renderer>(loader_);
+        auto next = std::make_unique<render_gl::Renderer>(renderer_->create_peer());
         next->reserve({8, 12, 2, 2});
         next->upload_texture(old_id, old_image.image);
         next->upload_texture(new_id, new_image.image);
@@ -556,7 +559,7 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
 #if defined(NEKOMOTE_HAS_VULKAN)
     else
     {
-        auto next = std::make_unique<render_vk::Renderer>(vk_ctx_);
+        auto next = std::make_unique<render_vk::Renderer>(vk_renderer_->create_peer());
         next->reserve({8, 12, 2, 2});
         next->upload_texture(old_id, old_image.image);
         next->upload_texture(new_id, new_image.image);

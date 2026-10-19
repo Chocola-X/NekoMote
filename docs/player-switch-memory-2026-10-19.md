@@ -116,6 +116,8 @@ VK renderer 释放 pipeline、descriptor、image/buffer 及对应 memory。
    再验证后续切换的缺页、CPU 与延迟。
 
 本轮仅完成调查与归因，没有将强制同步、进程级 allocator 调参或定时 trim 加入产品。
+后续已落实 GL program/VK pipeline 的固定资源复用，见[实现与对照测量](renderer-resource-sharing-2026-10-19.md)。
+该轮减少了重复创建，但未测得稳态显存下降；本报告中的原始基线结论仍独立保留。
 PNG 极限压缩改变磁盘字节，解码后的图集像素与容量未变；本次额外显存不能用 PNG
 压缩率解释。这里也没有做 CPU/GPU 提速、功耗或长时间运行的认证。
 

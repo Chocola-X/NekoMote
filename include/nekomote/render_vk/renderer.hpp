@@ -67,6 +67,14 @@ class Renderer
   public:
     explicit Renderer(const DeviceContext& ctx);
     ~Renderer();
+    Renderer(Renderer&&) noexcept;
+    Renderer& operator=(Renderer&&) noexcept;
+    // Creates an empty renderer sharing only this context/device's programs and
+    // fixed pipeline state. Textures, geometry, descriptors and intermediates
+    // remain independent. All peers use the same serial graphics thread and
+    // completion contract; the source may die first. The final peer must be
+    // destroyed before its context/device. No global or cross-context cache.
+    Renderer create_peer() const;
     Renderer(const Renderer&) = delete;
     Renderer& operator=(const Renderer&) = delete;
 
@@ -85,6 +93,7 @@ class Renderer
 
   private:
     struct Impl;
+    explicit Renderer(std::unique_ptr<Impl> impl);
     std::unique_ptr<Impl> impl_;
 };
 
