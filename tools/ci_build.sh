@@ -44,7 +44,8 @@ TARGETS=(nekomote_unit_tests nekomote_audio_device_tests nekomote_font_probe
 if [[ "$MODE" == native20 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=ON -DNEKOMOTE_BUILD_PLAYER=ON
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF)
-    TARGETS+=(nekomote_player nekomote_import nekomote_abi_host)
+    TARGETS+=(nekomote_player nekomote_import nekomote_audio_convert nekomote_model_convert
+        nekomote_abi_host)
 elif [[ "$MODE" == layer-shell ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF

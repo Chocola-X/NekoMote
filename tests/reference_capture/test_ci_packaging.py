@@ -28,7 +28,8 @@ class NoticeTests(unittest.TestCase):
         self.build = self.root / "build"
         self.stage = self.root / "stage"
         for name, filename in (("nlohmann_json", "LICENSE.MIT"), ("fast_float", "LICENSE-MIT"),
-                               ("stb", "LICENSE"), ("glad", "LICENSE"), ("glfw", "LICENSE.md")):
+                               ("stb", "LICENSE"), ("glad", "LICENSE"), ("glfw", "LICENSE.md"),
+                               ("flac", "COPYING.Xiph")):
             path = self.build / f"_deps/{name}-src/{filename}"
             path.parent.mkdir(parents=True)
             path.write_text(f"Copyright and permission for fixture {name}\n")
@@ -38,7 +39,8 @@ class NoticeTests(unittest.TestCase):
         self.assertEqual((self.stage / "LICENSE").read_bytes(), (REPO / "LICENSE").read_bytes())
         notices = (self.stage / "THIRD_PARTY_NOTICES").read_text()
         for text in ("fixture nlohmann_json", "fixture fast_float", "fixture stb", "fixture glad",
-                     "Apache License", "CC0 1.0 Universal", "Drew DeVault", "Kristian Høgsberg"):
+                     "fixture flac", "Apache License", "CC0 1.0 Universal", "Drew DeVault",
+                     "Kristian Høgsberg"):
             self.assertIn(text, notices)
         self.assertNotIn("fixture glfw", notices)
         self.assertEqual({path.name for path in self.stage.iterdir()},

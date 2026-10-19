@@ -198,7 +198,9 @@ AssetCatalog AssetCatalog::scan(const fs::path& assets_dir)
                     continue;
                 const auto variant_dir = variant_entry.path();
                 const std::string variant_id = variant_dir.filename().string();
-                const auto model = variant_dir / "model.nkm.json";
+                if (variant_id == "audio")
+                    continue;
+                const auto model = variant_dir / "model.nkm";
                 const auto session = variant_dir / "session.nks.json";
                 if (!fs::exists(model) || !fs::exists(session))
                     continue;

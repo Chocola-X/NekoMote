@@ -12,8 +12,8 @@ Qt只进入宿主目标；默认构建和无窗口ASan不需要Qt。使用现有
 cmake --preset qt-quick
 cmake --build --preset qt-quick --target nekomote_qt_quick_host
 build/qt-quick/bin/nekomote_qt_quick_host \
-  --model assets/characters/chocola-date-a/model.nkm.json \
-  --session assets/characters/chocola-date-a/session.nks.json
+  --model assets/characters/chocola/date-a/model.nkm \
+  --session assets/characters/chocola/date-a/session.nks.json
 ```
 
 正常播放使用约17ms更新请求（约60FPS）。`--run-seconds 12`提供自动退出的连续播放检查；
@@ -24,8 +24,8 @@ build/qt-quick/bin/nekomote_qt_quick_host \
 # GPU检查串行；输出必须不存在。
 QSG_RENDER_LOOP=threaded QT_SCALE_FACTOR=1 flock build/gpu-validation.lock \
   build/qt-quick/bin/nekomote_qt_quick_host \
-  --model assets/characters/chocola-date-a/model.nkm.json \
-  --session assets/characters/chocola-date-a/session.nks.json \
+  --model assets/characters/chocola/date-a/model.nkm \
+  --session assets/characters/chocola/date-a/session.nks.json \
   --steps 30 --check-lifecycle build/qt-lifecycle-new
 ```
 

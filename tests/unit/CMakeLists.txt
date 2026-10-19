@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
+find_package(ZLIB 1.2.11 REQUIRED)
 
 # The dependency provider supplies Catch2 targets and its CTest discovery module.
 add_executable(nekomote_unit_tests
@@ -24,14 +25,17 @@ add_executable(nekomote_unit_tests
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
-        nekomote::asset_io
+        nekomote::importer
         nekomote::runtime
         nekomote::application
         nekomote::ui
         Catch2::Catch2WithMain
+        ${NEKOMOTE_FLAC_TARGET}
         nlohmann_json::nlohmann_json)
 
 target_compile_features(nekomote_unit_tests PRIVATE cxx_std_20)
+target_include_directories(nekomote_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/asset_io)
+target_link_libraries(nekomote_unit_tests PRIVATE ZLIB::ZLIB)
 
 target_compile_definitions(nekomote_unit_tests PRIVATE
     NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")
@@ -84,7 +88,7 @@ if(NEKOMOTE_BUILD_ABI)
     target_compile_features(nekomote_abi_test PRIVATE c_std_11)
     target_compile_options(nekomote_abi_test PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wformat=2)
-    set(NEKOMOTE_ABI_TEST_MODEL "${CMAKE_SOURCE_DIR}/assets/characters/chocola/date-a/model.nkm.json")
+    set(NEKOMOTE_ABI_TEST_MODEL "${CMAKE_SOURCE_DIR}/assets/characters/chocola/date-a/model.nkm")
     set(NEKOMOTE_ABI_TEST_SESSION "${CMAKE_SOURCE_DIR}/assets/characters/chocola/date-a/session.nks.json")
     add_test(NAME abi_test
         COMMAND nekomote_abi_test "${NEKOMOTE_ABI_TEST_MODEL}" "${NEKOMOTE_ABI_TEST_SESSION}"
@@ -95,7 +99,7 @@ endif()
 if(NEKOMOTE_BUILD_ABI)
     add_executable(nekomote_abi_boundary_tests
         test_abi_boundary.cpp test_abi_allocations.cpp test_wallpaper_config_path.cpp)
-    target_link_libraries(nekomote_abi_boundary_tests PRIVATE nekomote::abi
+    target_link_libraries(nekomote_abi_boundary_tests PRIVATE nekomote::abi nekomote::importer
         Catch2::Catch2WithMain nlohmann_json::nlohmann_json nekomote_warnings)
     target_compile_definitions(nekomote_abi_boundary_tests PRIVATE
         NEKOMOTE_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/tests/fixtures")

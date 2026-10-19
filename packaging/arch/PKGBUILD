@@ -7,7 +7,7 @@ pkgdesc='Native 2D character runtime and live wallpaper for Linux'
 arch=(x86_64 aarch64)
 url='https://github.com/Chocola-X/NekoMote'
 license=(AGPL-3.0-only)
-depends=(gcc-libs glibc fontconfig libpng libpulse zlib)
+depends=(gcc-libs glibc fontconfig libpng libpulse zlib 'flac>=1.4')
 makedepends=(git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
              libglvnd wayland qt6-base qt6-declarative vulkan-headers vulkan-icd-loader glslang)
 checkdepends=(catch2 python-pillow nodejs)
@@ -81,7 +81,7 @@ PY
 }
 
 package_nekomote-git() {
-    pkgdesc='NekoMote native player, model importer and C ABI diagnostic host'
+    pkgdesc='NekoMote native player, model/audio converters and C ABI diagnostic host'
     depends+=(glfw libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote)

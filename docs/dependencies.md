@@ -12,6 +12,7 @@ GitHub Actions 保持默认固定版本模式，系统模式的查找规则见 [
 | [nlohmann/json](https://github.com/nlohmann/json) | v3.11.3 | MIT | JSON 解析 | asset_io / importer（P1 起） |
 | [fast_float](https://github.com/fastfloat/fast_float) | v6.1.6 | MIT（多重许可中选用） | 严格浮点解析 | runtime 私有场景编译 |
 | [stb](https://github.com/nothings/stb) | 见 `cmake/Dependencies.cmake` 中 GIT_TAG | Public Domain（MIT fallback） | 诊断 PNG 写出、CPU 字体栅格化 | asset_io / ui |
+| [FLAC](https://github.com/xiph/flac) | 1.4.3 | BSD-3-Clause（libFLAC，COPYING.Xiph） | 无损语音解码及离线编码 | asset_io / importer 私有 |
 | [Catch2](https://github.com/catchorg/Catch2) | v3.5.3 | BSL-1.0 | 测试框架 | unit / renderer / layer-shell tests |
 | [GLFW](https://github.com/glfw/glfw) | 3.4 | zlib/libpng | 窗口与 GL 上下文 | apps/preview、apps/player |
 | [glad](https://github.com/Dav1dde/glad) | v2.0.8 (`73db193f…`) | MIT / Khronos 注册表许可 | OpenGL 3.3 函数加载，使用自带注册表生成 | render_gl |
@@ -24,6 +25,11 @@ GitHub Actions 保持默认固定版本模式，系统模式的查找规则见 [
 - GLFW 仅窗口宿主 `apps/preview` / `apps/player` 使用；后续桌面适配器各自引入窗口/宿主库，不放进核心。
 - Catch2 仅测试目标使用。
 - JSON 用于资产/导入及应用配置；stb 用于诊断图片写出与 UI 字体准备，不在 runtime/render_gl 中解析资产或发现字体。
+- FLAC 的 C API 不进入公共头。固定依赖模式仅构建静态 PIC 的 libFLAC，关闭其程序、
+  测试、文档、示例、Ogg 和 C++ 库；未链接的上游辅助目标不参与默认构建或安装。
+  FLAC 1.4.3 在 GCC15 的跨单元 inline 提示会触发 LTO 链接警告，因此仅 libFLAC
+  关闭 IPO，项目自己的 LTO 和警告保持不变。不引入 FFmpeg、Ogg 或守护进程。
+  WAVE 读取和 FLAC 编码位于离线 `nekomote::importer`，运行时只解码 FLAC。
 
 ## 系统依赖
 
@@ -33,9 +39,20 @@ GitHub Actions 保持默认固定版本模式，系统模式的查找规则见 [
 
 ABI/播放器的声音设备服务使用系统 libpulse≥13.99，由 `src/audio` 私有链接；
 不进入模型或运行时的公共头。PulseAudio/PipeWire 服务由系统提供，本项目不安装或
-启动守护进程；WAVE 解码独立实现。PNG 使用系统 libpng≥1.6；UI 必需 Fontconfig，
+启动守护进程；语音使用无损 FLAC，离线工具读取 WAVE。PNG 使用系统 libpng≥1.6；UI 必需 Fontconfig，
 stb 提供字体栅格化及诊断 PNG 写出。`NEKOMOTE_BUILD_ABI=ON` 即可能需要声音依赖，
 不以播放器是否启用推断整个构建没有 libpulse。
+
+`NEKOMOTE_USE_SYSTEM_DEPS=ON` 严格要求 pkg-config 的 `flac>=1.4`，缺失直接失败，
+不下载固定源码。Arch 运行包声明 `flac>=1.4`，系统库许可由依赖包提供。
+默认 GitHub 基线归档静态链接固定 libFLAC，新增 `COPYING.Xiph` 声明，基线镜像
+不需要安装系统 FLAC 开发包，也不增加目标机器的 FLAC 运行库要求。
+图片继续使用 PNG；这里未引入 WebP 或改变 PNG 的运行依赖。
+
+模型二进制容器的压缩/解压显式私有链接系统 `ZLIB::ZLIB`，要求 zlib≥1.2.11。
+PNG 已经通过 `PNG::PNG` 传递使用同一系统 zlib；此处登记模型自身的使用边界，
+默认固定依赖和系统模式均不下载另一份 zlib。`nekomote_model_convert` 随本体包分发，
+用于离线转换已有模型；不会给播放器引入来源 JSON 导入逻辑。
 
 ## 添加依赖的流程
 

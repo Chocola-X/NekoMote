@@ -36,6 +36,36 @@ else()
         GIT_TAG        2c980bb59875b0d32144a71867fbdebb2f77cd20)
     FetchContent_MakeAvailable(stb)
 
+    # FLAC uses generic BUILD_* options; keep them local to the dependency.
+    # Only the linked C library builds, with PIC for external plugin hosts.
+    function(nekomote_fetch_flac)
+        set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+        set(BUILD_SHARED_LIBS OFF)
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+        set(BUILD_CXXLIBS OFF)
+        set(BUILD_PROGRAMS OFF)
+        set(BUILD_EXAMPLES OFF)
+        set(BUILD_TESTING OFF)
+        set(BUILD_DOCS OFF)
+        set(BUILD_UTILS OFF)
+        set(WITH_OGG OFF)
+        set(INSTALL_MANPAGES OFF)
+        set(INSTALL_PKGCONFIG_MODULES OFF)
+        set(INSTALL_CMAKE_CONFIG_MODULE OFF)
+        # Upstream's cross-unit inline hints warn at GCC 15 LTO links. Keep
+        # warnings and project IPO; disable IPO locally for this dependency.
+        # This also avoids CMP0069 warnings on its unbuilt helper targets.
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+        FetchContent_Declare(flac SYSTEM
+            GIT_REPOSITORY https://github.com/xiph/flac.git
+            GIT_TAG 1.4.3
+            GIT_SHALLOW TRUE)
+        FetchContent_MakeAvailable(flac)
+        set_property(DIRECTORY "${flac_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL TRUE)
+        set(NEKOMOTE_FLAC_TARGET FLAC PARENT_SCOPE)
+    endfunction()
+    nekomote_fetch_flac()
+
     # --- Catch2 (test framework) -----------------------------------------------------
     FetchContent_Declare(
         Catch2

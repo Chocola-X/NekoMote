@@ -22,8 +22,8 @@ import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 HOST = pathlib.Path(os.environ.get('NEKOMOTE_ABI_HOST', REPO / 'build/release/bin/nekomote_abi_host'))
-MODEL = pathlib.Path(os.environ.get('NEKOMOTE_MODEL', REPO / 'assets/characters/chocola-date-a/model.nkm.json'))
-SESSION = pathlib.Path(os.environ.get('NEKOMOTE_SESSION', REPO / 'assets/characters/chocola-date-a/session.nks.json'))
+MODEL = pathlib.Path(os.environ.get('NEKOMOTE_MODEL', REPO / 'assets/characters/chocola/date-a/model.nkm'))
+SESSION = pathlib.Path(os.environ.get('NEKOMOTE_SESSION', REPO / 'assets/characters/chocola/date-a/session.nks.json'))
 
 
 def read_png_pixels(path):
@@ -135,7 +135,7 @@ class AbiHostDeterminismTest(unittest.TestCase):
             dst = pathlib.Path(tmp) / 'model'
             shutil.copytree(MODEL.parent, dst)
             shutil.rmtree(dst / 'textures')
-            r = self._run('--model', str(dst / 'model.nkm.json'),
+            r = self._run('--model', str(dst / 'model.nkm'),
                           '--session', str(dst / 'session.nks.json'),
                           '--steps', '1', '--seed', '42', timeout=15)
             self.assertNotEqual(r.returncode, 0)

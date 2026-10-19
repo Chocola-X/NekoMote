@@ -105,6 +105,15 @@ class BackendRenderer
             vk_->prepare(frame);
 #endif
     }
+    void release_unused_textures()
+    {
+        if (gl_)
+            gl_->release_unused_textures();
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_)
+            vk_->release_unused_textures();
+#endif
+    }
     void resize_output(int width, int height)
     {
         if (gl_)

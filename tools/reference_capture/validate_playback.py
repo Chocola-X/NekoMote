@@ -38,7 +38,7 @@ def main():
             passed=all(c['passed'] for c in results), cases=results), indent=2) + '\n')
     for case in baseline['cases']:
         name, model = case['case'], case['model']
-        asset = (args.asset_root or args.output) / model / 'model.nkm.json'
+        asset = (args.asset_root or args.output) / model / 'model.nkm'
         if model not in imported:
             if args.importer:
                 source = resolve_source(source_index, model)

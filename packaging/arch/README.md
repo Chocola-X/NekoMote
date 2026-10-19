@@ -5,7 +5,7 @@
 
 | 包 | 安装内容 |
 | --- | --- |
-| `nekomote-git` | `/usr/bin/nekomote_player`、`nekomote_import`、`nekomote_abi_host` |
+| `nekomote-git` | `/usr/bin/nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_abi_host` |
 | `nekomote-layer-shell-git` | `/usr/bin/nekomote_layer_shell` |
 | `nekomote-plasma6-git` | 原生库、`/usr/lib/qt6/qml/NekoMote/Wallpaper` 模块及 Plasma6 壁纸包 |
 
@@ -56,6 +56,11 @@ Plasma 使用 Qt6 的系统 QML 搜索目录，RPATH 自动计算到 `/usr/lib/`
 的依赖许可合并到同目录的 `THIRD_PARTY_NOTICES`。声明从 Arch 已安装的
 nlohmann-json、fast_float、stb、glad 等包读取，layer-shell 另包含协议版权文本。
 系统共享库通过运行时 depends 提供，依赖包各自维护其许可。
+
+FLAC 音频支持增加系统运行依赖 `flac>=1.4`；CMake 通过 pkg-config 严格查找，缺失
+直接失败。默认固定依赖模式使用私有静态 libFLAC1.4.3，本配方保持系统动态库方式。
+PNG 仍是正式图片格式，`libpng`/`zlib` 依赖保留；未引入 WebP。
+下面 S1 验证记录早于 FLAC 变更，不作为新增依赖及音频转换工具的打包验收。
 
 ## 本地验证（2026-10-18）
 

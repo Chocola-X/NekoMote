@@ -122,7 +122,7 @@ def main():
                                         for suffix in ['.json', '.png', '.trace.json', '.state.json']}
             run([args.importer, directory/'model.json', directory/'model.resx.json',
                  '--output', directory/'native'], 'import')
-            run([args.evaluator, '--asset', directory/'native/model.nkm.json',
+            run([args.evaluator, '--asset', directory/'native/model.nkm',
                  '--sample-trace', directory/'reference.trace.json',
                  '--variables', json.dumps(variables), '--output', directory/'geometry.json',
                  '--dump-frame'], 'geometry')
@@ -141,7 +141,7 @@ def main():
                                all(geometry[k] == 0 for k in [
                                    'unmatched_reference_vertices', 'unused_native_vertices',
                                    'missing_reference_triangles', 'unused_native_triangles']))
-            command = [args.preview, '--asset', directory/'native/model.nkm.json',
+            command = [args.preview, '--asset', directory/'native/model.nkm',
                        '--geometry-diagnostic', '--hidden', '--width', '256', '--height', '256',
                        '--origin', 128+x, 128+y, '--scale', scale,
                        '--screenshot', directory/'native.png']

@@ -121,7 +121,7 @@ struct MenuFixture
                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         fs::create_directories(root / "characters" / "chocola" / "casual");
         fs::create_directories(root / "backgrounds");
-        std::ofstream(root / "characters" / "chocola" / "casual" / "model.nkm.json").put('x');
+        std::ofstream(root / "characters" / "chocola" / "casual" / "model.nkm").put('x');
         std::ofstream(root / "characters" / "chocola" / "casual" / "session.nks.json").put('x');
         {
             std::ofstream f(root / "characters" / "characters.json");

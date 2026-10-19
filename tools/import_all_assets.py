@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """从源 catalog 逐项驱动事务导入，生成 195 行账本。
 
+输出按角色/型号分目录，角色 audio/ 存共享 FLAC，型号 audio 使用相对软链接。
 每项记录 catalog ID、角色/型号、source/resx/纹理来源及 hash、执行的命令、
 节点路径、失败原因；新 bundle 先写到临时暂存目录，全部验证后一次发布到目标。
 失败不留 partial 目录，进程退出非零。已有目标一律拒绝并提示使用新目标，
@@ -20,6 +21,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from asset_resources import group_audio, tree_ledger
+from model_container import read_model
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / 'import_emote'))
 import catalog_index
@@ -66,13 +71,13 @@ def publish_bundle(staging, target):
 
 
 def bundle_schema_version(bundle):
-    """读取已发布 bundle 的 model.nkm.json schema 版本，缺失返回 None。"""
-    manifest = bundle / 'model.nkm.json'
+    """读取已发布 bundle 的 model.nkm schema 版本，缺失返回 None。"""
+    manifest = bundle / 'model.nkm'
     if not manifest.is_file():
         return None
     try:
-        return json.loads(manifest.read_text()).get('schema')
-    except (json.JSONDecodeError, OSError):
+        return read_model(manifest).get('schema')
+    except (ValueError, OSError):
         return None
 
 
@@ -80,12 +85,7 @@ def bundle_hash(bundle):
     """计算 bundle 内全部文件的 sha256 摘要（路径→hash），按相对路径排序。"""
     if not bundle.is_dir():
         return None
-    digest = {}
-    for p in sorted(bundle.rglob('*')):
-        if p.is_file():
-            rel = str(p.relative_to(bundle))
-            digest[rel] = catalog_index.sha256(p)
-    return digest
+    return tree_ledger(bundle, bundle.parent)
 
 
 def run_cpu_audit(auditor, source, resx, external, audit_output, steps):
@@ -108,7 +108,7 @@ def run_cpu_audit(auditor, source, resx, external, audit_output, steps):
 
 
 def import_one(name, record, reference_root, index, importer, session_tool,
-               presentation, output, temporary, runtime_auditor, runtime_steps):
+               presentation, output, temporary, runtime_auditor, runtime_steps, converter=None):
     """事务导入单个模型：先写到暂存目录，验证后发布到目标。
 
     `index` 由调用方预先建立并复用，不在每项内重建。
@@ -129,7 +129,7 @@ def import_one(name, record, reference_root, index, importer, session_tool,
     try:
         catalog_index.validate_model_name(name)
         return import_into_row(row, name, reference_root, index, importer, session_tool,
-                               presentation, output, temporary, runtime_auditor, runtime_steps)
+                               presentation, output, temporary, runtime_auditor, runtime_steps, converter)
     except (OSError, ValueError, TypeError, subprocess.SubprocessError) as error:
         if row['status']['structure'] == 'OK':
             row['status']['cpu'] = 'ERROR'
@@ -140,9 +140,22 @@ def import_one(name, record, reference_root, index, importer, session_tool,
 
 
 def import_into_row(row, name, reference_root, index, importer, session_tool,
-                    presentation, output, temporary, runtime_auditor, runtime_steps):
+                    presentation, output, temporary, runtime_auditor, runtime_steps, converter=None):
     key = name.removesuffix('.pure')
-    target = output / key
+    character = row.get('character')
+    if character:
+        catalog_index.validate_model_name(character)
+        key = key.removeprefix(character + '-')
+        catalog_index.validate_model_name(key)
+        if key == 'audio':
+            raise ValueError('model directory audio is reserved for shared character voices')
+        role_root = output / character
+        if not role_root.resolve().is_relative_to(output.resolve()):
+            raise ValueError('character directory escapes output root')
+        target = role_root / key
+    else:
+        role_root = None
+        target = output / key
 
     if os.path.lexists(target):
         row['status']['structure'] = 'EXISTS_UNCHECKED'
@@ -167,7 +180,7 @@ def import_into_row(row, name, reference_root, index, importer, session_tool,
     row['resx_sha256'] = catalog_index.sha256(resx) if resx.is_file() else None
     row['nodes'].append(catalog_index.relative_to(source, reference_root))
 
-    psb = reference_root / 'data' / (key + '.pure.psb.zip')
+    psb = reference_root / 'data' / (name.removesuffix('.pure') + '.pure.psb.zip')
     if psb.is_file():
         row['psb'] = catalog_index.relative_to(psb, reference_root)
         row['psb_sha256'] = catalog_index.sha256(psb)
@@ -179,7 +192,7 @@ def import_into_row(row, name, reference_root, index, importer, session_tool,
     if any(v is None for v in external.values()):
         row['errors'].append('missing or ambiguous external texture')
 
-    staging = temporary / key
+    staging = temporary / name.removesuffix('.pure')
 
     cmd = [str(importer), str(source), str(resx),
            '--output', str(staging), '--resource-root', str(source.parent)]
@@ -200,15 +213,23 @@ def import_into_row(row, name, reference_root, index, importer, session_tool,
         shutil.rmtree(staging, ignore_errors=True)
         return row
 
-    if not (staging / 'model.nkm.json').is_file():
+    if not (staging / 'model.nkm').is_file():
         row['status']['structure'] = 'FAIL'
-        row['errors'].append('importer succeeded but model.nkm.json missing')
+        row['errors'].append('importer succeeded but model.nkm missing')
+        shutil.rmtree(staging, ignore_errors=True)
+        return row
+
+    if bundle_schema_version(staging) != 6:
+        row['status']['structure'] = 'FAIL'
+        row['errors'].append('importer produced invalid model.nkm or unsupported schema')
         shutil.rmtree(staging, ignore_errors=True)
         return row
 
     if session_tool is not None:
         cmd2 = ['python3', str(session_tool), '--reference-root', str(reference_root),
                 '--model', name, '--output', str(staging / 'session.nks.json')]
+        if converter is not None:
+            cmd2.extend(['--converter', str(converter)])
         row['commands'].append(cmd2)
         try:
             proc2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=60)
@@ -230,6 +251,8 @@ def import_into_row(row, name, reference_root, index, importer, session_tool,
     (staging / 'meta.json').write_text(json.dumps(meta, indent=2) + '\n')
 
     target.parent.mkdir(parents=True, exist_ok=True)
+    if role_root is not None:
+        row['audio_group'] = group_audio(staging, role_root, target)
     try:
         publish_bundle(staging, target)
     except (OSError, AttributeError) as error:
@@ -279,8 +302,10 @@ def main():
                         help='源仓库根目录（含 config/model-catalog.json 和 model_conversion/）')
     parser.add_argument('--importer', type=pathlib.Path, required=True,
                         help='nekomote_import 可执行文件')
+    parser.add_argument('--converter', type=pathlib.Path, default=None,
+                        help='nekomote_audio_convert (default: importer sibling)')
     parser.add_argument('--output', type=pathlib.Path, required=True,
-                        help='导入输出目录（如 assets/characters/）')
+                        help='导入输出目录（如 assets/characters/；按角色/型号分目录）')
     parser.add_argument('--session-tool', type=pathlib.Path, default=None,
                         help='import_session.py 脚本（可选）')
     parser.add_argument('--presentation', type=pathlib.Path, default=None,
@@ -308,6 +333,10 @@ def main():
     if not importer.is_file():
         parser.error(f'importer not found: {importer}')
 
+    converter = (args.converter or importer.with_name('nekomote_audio_convert')).resolve()
+    if args.session_tool is not None and not converter.is_file():
+        parser.error(f'converter not found: {converter}')
+
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
 
@@ -323,6 +352,7 @@ def main():
             'importer': tool_hash(importer),
             'runtime_auditor': tool_hash(args.runtime_auditor),
             'session_tool': tool_hash(args.session_tool),
+            'converter': tool_hash(converter),
         },
         'runtime_steps': args.runtime_steps,
     }
@@ -332,7 +362,7 @@ def main():
         for i, (name, record) in enumerate(sorted(catalog.items()), 1):
             row = import_one(name, record, root, index, importer, args.session_tool,
                              presentation, output, tmp,
-                             args.runtime_auditor, args.runtime_steps)
+                             args.runtime_auditor, args.runtime_steps, converter)
             rows.append(row)
             st = row['status']['structure']
             if st != 'OK' or row['status']['cpu'] not in ('OK', 'PENDING'):

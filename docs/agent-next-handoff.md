@@ -1,5 +1,19 @@
 # 当前独立任务交接
 
+## C20：回滚后的资产与背景优化（2026-10-19）
+
+从用户回滚后的 `5a9b4e2`（0.5.2）完成；先读 [当前格式](asset-format.md) 与
+[实现、测量和证据](asset-storage-and-memory-2026-10-19.md)。不要恢复被放弃的 WebP
+实现。正式模型现在是压缩 MessagePack 容器 `model.nkm`，离线导入器继续接收 FreeMote
+解包 JSON/resx/PNG/WAV，运行时不回落旧模型 JSON。音频统一 FLAC，按源语音 namespace
+分 main/little，型号使用角色内相对链接；路径解析只在加载阶段完成。
+
+本地 `assets/` 已完整迁移，原树在 `build/evidence/png-audio-model-20261019/assets-before/`。
+195 模型字段/类型与音频 PCM/RMS、PNG 字节验证通过；Release/LTO/Werror 和显式系统依赖
+构建通过，220 CPU 与 4 GPU 分组 runner 通过，2 CPU 用例跳过。背景旧纹理释放有
+GL/GLES/Vulkan 合成回归和真实资产隐藏窗口证据；没有安装用户桌面或做长期认证。
+PNG 基线已经逐行解码/裁切；直接条带上传 GPU 只能继续优化加载峰值，需独立预算与线程设计。
+
 ## L1：独立 layer-shell 壳（2026-10-15）
 
 用户要求复用 KDE 的应用/ABI 解耦方式实现多合成器壳，已从 `98d0075` 交付

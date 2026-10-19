@@ -773,6 +773,7 @@ nekomote_error WallpaperInstance::render_frame()
         if (!bg_frame.commands.empty())
         {
             background_renderer_->prepare(bg_frame);
+            background_renderer_->release_unused_textures();
             background_renderer_->render(target, {0, 0, 1, clear});
         }
         const auto tc = !bg_frame.commands.empty() ? render_gl::TargetContents::Preserve
@@ -824,6 +825,7 @@ nekomote_error WallpaperInstance::render_frame()
         if (!bg_frame.commands.empty())
         {
             vk_background_renderer_->prepare(bg_frame);
+            vk_background_renderer_->release_unused_textures();
             vk_background_renderer_->render(target, {0, 0, 1, clear});
         }
         const auto tc = !bg_frame.commands.empty() ? render_vk::TargetContents::Preserve

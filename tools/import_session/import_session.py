@@ -2,22 +2,25 @@
 """Compile project-authored reaction JS and model markers into a native session asset.
 
 The external reference is read only. JS runs only in this offline conversion,
-with a bounded VM and no browser/core driver. Only selected voice files are copied.
+with a bounded VM and no browser/core driver. Selected PCM WAV voices are losslessly encoded as FLAC.
 """
 import argparse
-import hashlib
 import json
 import math
 import pathlib
 import shutil
 import subprocess
 import wave
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+from asset_resources import audio_group_name, convert_audio, group_audio, sha256
 
 ZONES = ('bust', 'eye', 'face', 'head', 'pant')
 
 
 def sha(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return sha256(path)
 
 
 def main():
@@ -25,7 +28,16 @@ def main():
     parser.add_argument('--reference-root', type=pathlib.Path, required=True)
     parser.add_argument('--model', required=True)
     parser.add_argument('--output', type=pathlib.Path, required=True)
+    parser.add_argument('--converter', type=pathlib.Path,
+                        help='native nekomote_audio_convert (otherwise found on PATH)')
+    parser.add_argument('--character-root', type=pathlib.Path,
+                        help='optional shared character directory; output must be ROLE/MODEL/session.nks.json')
     args = parser.parse_args()
+    converter = args.converter or shutil.which('nekomote_audio_convert')
+    if converter is None:
+        parser.error('--converter is required when nekomote_audio_convert is absent from PATH')
+    if args.character_root is not None and args.output.resolve().parent.parent != args.character_root.resolve():
+        parser.error('--output must be inside a model directory immediately under --character-root')
     root = args.reference_root.resolve()
     catalog_path = root / 'config/model-catalog.json'
     catalog = json.loads(catalog_path.read_text())
@@ -115,6 +127,8 @@ process.stdout.write(vm.runInContext('JSON.stringify(getConfig())',context,{time
     args.output.parent.mkdir(parents=True, exist_ok=True)
     reactions = {}
     audio_hashes = {}
+    audio_sources = {}
+    voice_namespaces = set()
     for zone in ZONES:
         for item in config.get(zone, []):
             label = item['id']
@@ -131,17 +145,25 @@ process.stdout.write(vm.runInContext('JSON.stringify(getConfig())',context,{time
                 audio_source = (root / item['reaction']['audio']).resolve()
                 if not audio_source.is_relative_to(root):
                     raise ValueError(label + ': audio path escapes source root')
+                if label_path.parts[0] != audio_source.parent.name:
+                    raise ValueError(label + ': reaction id must retain the source voice namespace')
+                voice_namespaces.add(audio_source.parent.name)
                 with wave.open(str(audio_source)) as voice:
                     if voice.getcomptype() != 'NONE' or voice.getsampwidth() not in (1, 2, 3, 4):
                         raise ValueError(label + ': unsupported PCM wave format')
                     audio_ticks = math.ceil(voice.getnframes() * 60 / voice.getframerate())
-                audio_path = 'audio/' + label_path.name + '.wav'
+                audio_path = 'audio/' + label_path.name + '.flac'
                 destination = args.output.parent / audio_path
                 if not destination.resolve().is_relative_to(args.output.parent.resolve()):
                     raise ValueError(label + ': audio destination escapes session directory')
                 destination.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(audio_source, destination)
-                audio_hashes[audio_path] = sha(audio_source)
+                source_hash = sha(audio_source)
+                if audio_path in audio_sources and audio_sources[audio_path] != source_hash:
+                    raise ValueError(label + ': conflicting audio filename')
+                if audio_path not in audio_sources:
+                    convert_audio(converter, audio_source, destination)
+                audio_sources[audio_path] = source_hash
+                audio_hashes[audio_path] = sha(destination)
             duration = max(math.ceil(item['duration'] * .06), audio_ticks)
             beats = []
             for beat in item.get('beats', []):
@@ -159,9 +181,13 @@ process.stdout.write(vm.runInContext('JSON.stringify(getConfig())',context,{time
                                 idle_timeline='差分用_waiting_loop' if '差分用_waiting_loop' in timelines else '',
                                 talk_max=5, reactions=list(reactions.values())))
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=None, allow_nan=False, separators=(',', ':'))+'\n')
+    audio_group = audio_group_name(character, voice_namespaces) if voice_namespaces else None
+    if args.character_root is not None:
+        group_audio(args.output.parent, args.character_root, name=audio_group)
     report = dict(model=args.model, source_hashes={str(p.relative_to(root)): sha(p) for p in
                   (catalog_path, source_path, presentation_path, library_path, config_path)},
-                  audio_hashes=audio_hashes, reactions=len(reactions), warnings=warnings,
+                  audio_group=audio_group, audio_hashes=audio_hashes,
+                  reactions=len(reactions), warnings=warnings,
                   session_sha256=sha(args.output))
     pathlib.Path(str(args.output)+'.report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps(report, ensure_ascii=False))

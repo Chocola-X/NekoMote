@@ -16,6 +16,30 @@ namespace
 {
 using Clock = std::chrono::steady_clock;
 
+fs::path resolve_audio_path(const fs::path& session_dir, const fs::path& role_dir,
+                            const std::string& value)
+{
+    const fs::path relative(value);
+    if (relative.empty() || relative.is_absolute() || relative.extension() != ".flac" ||
+        std::any_of(relative.begin(), relative.end(),
+                    [](const fs::path& part) { return part == ".."; }))
+        throw std::runtime_error(value + ": audio must be a relative .flac path");
+    const auto source = session_dir / relative;
+    // Resolve directory and file links once, while constructing the candidate.
+    // Shared voice groups may leave the outfit directory, but never the role.
+    const auto resolved = fs::canonical(source);
+    auto root = role_dir.begin();
+    auto part = resolved.begin();
+    for (; root != role_dir.end() && part != resolved.end() && *root == *part; ++root, ++part)
+    {
+    }
+    if (root != role_dir.end() || !fs::is_regular_file(resolved))
+        throw std::runtime_error(
+            source.string() +
+            ": audio target escapes character directory or is not a regular file");
+    return resolved;
+}
+
 int minutes_at(std::chrono::system_clock::time_point now)
 {
     const std::time_t t = std::chrono::system_clock::to_time_t(now);
@@ -223,11 +247,13 @@ CandidateCpu WallpaperController::load_candidate_cpu(const CharacterEntry& entry
         check(result.instance->set_scale(cfg.scale));
         check(result.instance->start());
         check(result.instance->prepare_frame());
-        if (cfg.audio == AudioMode::Device)
+        if (cfg.audio == AudioMode::Device && !program.audio_paths().empty())
         {
+            const auto session_dir = entry.session_path.parent_path();
+            const auto role_dir = fs::canonical(session_dir).parent_path();
             for (const auto& path : program.audio_paths())
             {
-                auto clip = asset_io::load_wave(entry.session_path.parent_path() / path);
+                auto clip = asset_io::load_flac(resolve_audio_path(session_dir, role_dir, path));
                 if (!clip.ok)
                     throw std::runtime_error(clip.error);
                 result.audio_clips.push_back(std::move(clip.clip));

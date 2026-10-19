@@ -80,8 +80,8 @@ void verify_playback(audio::Device& device, const std::string& csv_path)
 int run(int argc, char** argv)
 {
     if (argc != 3)
-        throw std::runtime_error("usage: nekomote_audio_probe VOICE_WAV OUTPUT_CSV");
-    auto loaded = asset_io::load_wave(argv[1]);
+        throw std::runtime_error("usage: nekomote_audio_probe VOICE_FLAC OUTPUT_CSV");
+    auto loaded = asset_io::load_flac(argv[1]);
     if (!loaded.ok)
         throw std::runtime_error(loaded.error);
     model::AudioBank clips;

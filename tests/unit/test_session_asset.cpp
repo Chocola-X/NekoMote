@@ -42,7 +42,7 @@ Json session_document()
                         {"zones", {"bust", "head"}},
                         {"action", action},
                         {"recovery", action},
-                        {"audio_path", "audio/voice.wav"},
+                        {"audio_path", "audio/voice.flac"},
                         {"duration_ticks", 60},
                         {"recovery_ticks", 12},
                         {"beats", {{{"author_tick", 10}, {"action", action}}}}};
@@ -70,6 +70,10 @@ TEST_CASE("Session assets preserve authored bindings and reject corrupt rules", 
         REQUIRE(result.asset.reactions[0].action.variables[0].author_frames == 7.2f);
         REQUIRE(result.asset.reactions[0].beats[0].author_tick == 10);
         return;
+    }
+    SECTION("legacy WAVE audio reference")
+    {
+        j["session"]["reactions"][0]["audio_path"] = "audio/voice.wav";
     }
     SECTION("version")
     {
@@ -101,11 +105,11 @@ TEST_CASE("Session assets preserve authored bindings and reject corrupt rules", 
     }
     SECTION("escaped audio")
     {
-        j["session"]["reactions"][0]["audio_path"] = "audio/../../voice.wav";
+        j["session"]["reactions"][0]["audio_path"] = "audio/../../voice.flac";
     }
     SECTION("absolute audio")
     {
-        j["session"]["reactions"][0]["audio_path"] = "/voice.wav";
+        j["session"]["reactions"][0]["audio_path"] = "/voice.flac";
     }
     SECTION("wrong slot count")
     {

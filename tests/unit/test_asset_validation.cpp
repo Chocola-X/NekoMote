@@ -1,10 +1,16 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
+#include <nekomote/asset_io/asset_migration.hpp>
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+
+#include "model_container.hpp"
 
 namespace
 {
@@ -29,13 +35,26 @@ struct Workspace
 };
 Json read(const fs::path& path)
 {
+    if (path.extension() == ".nkm")
+    {
+        nekomote::asset_io::ModelInput buffer(path);
+        std::istream stream(&buffer);
+        return Json::from_msgpack(stream);
+    }
     std::ifstream f(path);
-    Json j;
-    f >> j;
-    return j;
+    return Json::parse(f);
 }
 void write(const fs::path& path, const Json& j)
 {
+    if (path.extension() == ".nkm")
+    {
+        nekomote::asset_io::ModelOutput buffer(path);
+        std::ostream stream(&buffer);
+        stream.exceptions(std::ios::failbit | std::ios::badbit);
+        Json::to_msgpack(j, stream);
+        buffer.finish();
+        return;
+    }
     std::ofstream f(path);
     f << j;
 }
@@ -96,6 +115,130 @@ Json physics_source()
     return source;
 }
 } // namespace
+TEST_CASE("Binary model containers reject corrupt, truncated and excessive inputs", "[asset]")
+{
+    Workspace workspace;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    const auto imported = nekomote::asset_io::import_emote(
+        {root / "minimal.json", root / "minimal.resx.json", root, {}});
+    REQUIRE(imported.ok);
+    const auto bundle = workspace.path / "bundle";
+    REQUIRE(nekomote::asset_io::write_bundle(imported, root, bundle).empty());
+    const auto path = bundle / "model.nkm";
+    std::ifstream input(path, std::ios::binary);
+    auto bytes = std::vector<char>(std::istreambuf_iterator<char>(input), {});
+    REQUIRE(nekomote::asset_io::load_asset(path).ok);
+    SECTION("source JSON requires explicit offline conversion")
+    {
+        const std::string json = "{\"schema\":6,\"model\":{}}";
+        bytes.assign(json.begin(), json.end());
+    }
+    SECTION("unknown container version")
+    {
+        bytes[7] = '9';
+    }
+    SECTION("truncated header")
+    {
+        bytes.resize(12);
+    }
+    SECTION("zero decoded length")
+    {
+        std::fill(bytes.begin() + 8, bytes.begin() + 16, 0);
+    }
+    SECTION("excessive decoded length")
+    {
+        bytes[15] = 1;
+    }
+    SECTION("decoded length mismatch")
+    {
+        bytes[8] ^= 1;
+    }
+    SECTION("truncated stream")
+    {
+        bytes.resize(bytes.size() - 1);
+    }
+    SECTION("checksum corruption")
+    {
+        bytes.back() ^= 1;
+    }
+    SECTION("trailing compressed bytes")
+    {
+        bytes.push_back(0);
+    }
+    SECTION("concatenated compressed streams")
+    {
+        const auto duplicate = bytes;
+        bytes.insert(bytes.end(), duplicate.begin() + 16, duplicate.end());
+    }
+    SECTION("valid compression cannot hide trailing MessagePack records")
+    {
+        const auto document = read(path);
+        const auto records = Json::to_msgpack(document);
+        {
+            nekomote::asset_io::ModelOutput buffer(path);
+            std::ostream stream(&buffer);
+            stream.exceptions(std::ios::failbit | std::ios::badbit);
+            stream.write(reinterpret_cast<const char*>(records.data()),
+                         static_cast<std::streamsize>(records.size()));
+            stream.put(0);
+            buffer.finish();
+        }
+        const auto result = nekomote::asset_io::load_asset(path);
+        REQUIRE_FALSE(result.ok);
+        REQUIRE_FALSE(result.errors.empty());
+        return;
+    }
+    SECTION("excessive nesting")
+    {
+        {
+            nekomote::asset_io::ModelOutput buffer(path);
+            std::ostream stream(&buffer);
+            stream.exceptions(std::ios::failbit | std::ios::badbit);
+            for (int i = 0; i < 257; ++i)
+                stream.put(static_cast<char>(0x91));
+            stream.put(0);
+            buffer.finish();
+        }
+        const auto result = nekomote::asset_io::load_asset(path);
+        REQUIRE_FALSE(result.ok);
+        REQUIRE(result.errors.front().find("nesting") != std::string::npos);
+        return;
+    }
+    {
+        std::ofstream output(path, std::ios::binary);
+        output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    }
+    const auto result = nekomote::asset_io::load_asset(path);
+    REQUIRE_FALSE(result.ok);
+    REQUIRE_FALSE(result.errors.empty());
+    REQUIRE(result.asset.parts.empty());
+}
+
+TEST_CASE("Offline JSON migration preserves every model field and refuses overwrite", "[asset]")
+{
+    Workspace workspace;
+    const fs::path root{NEKOMOTE_FIXTURES_DIR};
+    const auto imported = nekomote::asset_io::import_emote(
+        {root / "minimal.json", root / "minimal.resx.json", root, {}});
+    REQUIRE(imported.ok);
+    const auto bundle = workspace.path / "bundle";
+    REQUIRE(nekomote::asset_io::write_bundle(imported, root, bundle).empty());
+    const auto original = read(bundle / "model.nkm");
+    const auto source = workspace.path / "model.nkm.json";
+    write(source, original);
+    const auto destination = workspace.path / "new/subdirectory/model.nkm";
+    REQUIRE(nekomote::asset_io::convert_model_json(source, destination).empty());
+    REQUIRE(read(destination) == original);
+    REQUIRE_FALSE(nekomote::asset_io::convert_model_json(source, destination).empty());
+    REQUIRE(read(destination) == original);
+    auto invalid = original;
+    invalid["schema"] = 5;
+    write(source, invalid);
+    REQUIRE_FALSE(
+        nekomote::asset_io::convert_model_json(source, workspace.path / "bad.nkm").empty());
+    REQUIRE_FALSE(fs::exists(workspace.path / "bad.nkm"));
+}
+
 TEST_CASE("Invalid mesh, numeric types and resource references fail with a field path", "[import]")
 {
     Workspace w;
@@ -196,7 +339,7 @@ TEST_CASE("Mirror import normalizes observed patterns and rejects unknown rules"
         const auto bundle = w.path / "bundle";
         REQUIRE(nekomote::asset_io::write_bundle(imported, fs::path(NEKOMOTE_FIXTURES_DIR), bundle)
                     .empty());
-        auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+        auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm");
         REQUIRE(loaded.ok);
         REQUIRE(loaded.asset.mirrored_parameters == imported.asset.mirrored_parameters);
     }
@@ -228,7 +371,7 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
     REQUIRE(r.ok);
     const auto bundle = w.path / "bundle";
     REQUIRE(nekomote::asset_io::write_bundle(r, root, bundle).empty());
-    auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+    auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm");
     REQUIRE(loaded.ok);
     REQUIRE(loaded.asset.textures[0].path == "textures/0.png");
     REQUIRE(fs::exists(bundle / loaded.asset.textures[0].path));
@@ -236,7 +379,7 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
     REQUIRE(loaded.asset.parts[0].layers[0].frame_list[1].content.data.mesh.data.bp.state ==
             nekomote::model::FieldState::Null);
     REQUIRE_FALSE(nekomote::asset_io::write_bundle(r, root, bundle).empty());
-    auto j = read(bundle / "model.nkm.json");
+    auto j = read(bundle / "model.nkm");
     SECTION("schema")
     {
         j["schema"] = 999;
@@ -288,8 +431,8 @@ TEST_CASE("Bundle is portable, refuses overwrite and rejects corrupted assets", 
     {
         j["model"]["parts"][0]["layers"][0]["frame_list"][0]["time"] = "0";
     }
-    write(bundle / "model.nkm.json", j);
-    loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+    write(bundle / "model.nkm", j);
+    loaded = nekomote::asset_io::load_asset(bundle / "model.nkm");
     REQUIRE_FALSE(loaded.ok);
     REQUIRE_FALSE(loaded.errors.empty());
 }
@@ -302,7 +445,7 @@ TEST_CASE("Streamed model loading retains nested layer order and field states", 
     REQUIRE(imported.ok);
     const auto bundle = workspace.path / "bundle";
     REQUIRE(nekomote::asset_io::write_bundle(imported, root, bundle).empty());
-    const auto path = bundle / "model.nkm.json";
+    const auto path = bundle / "model.nkm";
     auto document = read(path);
     auto original = document["model"]["parts"][0]["layers"][0];
     auto child = original;
@@ -325,9 +468,20 @@ TEST_CASE("Streamed model loading retains nested layer order and field states", 
     REQUIRE(layer.children[0].frame_list[0].content.data.mesh.data.bp.has_value());
     REQUIRE(layer.children[0].frame_list[1].content.data.mesh.data.bp.state ==
             nekomote::model::FieldState::Null);
-    auto text = document.dump();
-    text.insert(1, "\"schema\":6,");
-    std::ofstream(path) << text;
+    auto bytes = Json::to_msgpack(document);
+    REQUIRE(bytes.front() == 0x82); // two envelope keys
+    bytes.front() = 0x83;
+    auto duplicate_key = Json::to_msgpack("schema");
+    duplicate_key.push_back(6);
+    bytes.insert(bytes.begin() + 1, duplicate_key.begin(), duplicate_key.end());
+    {
+        nekomote::asset_io::ModelOutput buffer(path);
+        std::ostream stream(&buffer);
+        stream.exceptions(std::ios::failbit | std::ios::badbit);
+        stream.write(reinterpret_cast<const char*>(bytes.data()),
+                     static_cast<std::streamsize>(bytes.size()));
+        buffer.finish();
+    }
     const auto duplicate = nekomote::asset_io::load_asset(path);
     REQUIRE_FALSE(duplicate.ok);
     REQUIRE(duplicate.errors.front().find("duplicate asset key") != std::string::npos);
@@ -351,7 +505,7 @@ TEST_CASE("Paired clamp data survives compilation and rejects invalid ranges", "
         REQUIRE(result.asset.paired_clamps.size() == 1);
         const auto bundle = w.path / "bundle";
         REQUIRE(nekomote::asset_io::write_bundle(result, root, bundle).empty());
-        const auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm.json");
+        const auto loaded = nekomote::asset_io::load_asset(bundle / "model.nkm");
         REQUIRE(loaded.ok);
         const auto& clamp = loaded.asset.paired_clamps[0];
         REQUIRE(clamp.variable_x == "move_LR");
@@ -394,7 +548,7 @@ TEST_CASE("Expression and selector rules survive offline compilation", "[asset][
         const auto imported = import_modified(w, source);
         REQUIRE(imported.ok);
         REQUIRE(nekomote::asset_io::write_bundle(imported, root, w.path / "bundle").empty());
-        const auto loaded = nekomote::asset_io::load_asset(w.path / "bundle/model.nkm.json");
+        const auto loaded = nekomote::asset_io::load_asset(w.path / "bundle/model.nkm");
         REQUIRE(loaded.ok);
         REQUIRE(loaded.asset.variable_controls.size() == 2);
         const auto& expression = loaded.asset.variable_controls[0];
@@ -402,10 +556,10 @@ TEST_CASE("Expression and selector rules survive offline compilation", "[asset][
         REQUIRE(expression.edges.size() == 2);
         REQUIRE(expression.junctions[0][1] == 11.0f);
         REQUIRE(loaded.asset.variable_controls[1].options[0].off_value == 1.0f);
-        auto compiled = read(w.path / "bundle/model.nkm.json");
+        auto compiled = read(w.path / "bundle/model.nkm");
         compiled["model"]["variable_controls"][0]["kind"] = 100;
-        write(w.path / "bundle/model.nkm.json", compiled);
-        REQUIRE_FALSE(nekomote::asset_io::load_asset(w.path / "bundle/model.nkm.json").ok);
+        write(w.path / "bundle/model.nkm", compiled);
+        REQUIRE_FALSE(nekomote::asset_io::load_asset(w.path / "bundle/model.nkm").ok);
     }
     SECTION("invalid edge")
     {
@@ -432,7 +586,7 @@ TEST_CASE("Physical snapshots and categories survive portable offline compilatio
     const auto imported = import_modified(w, source);
     REQUIRE(imported.ok);
     REQUIRE(nekomote::asset_io::write_bundle(imported, root, w.path / "bundle").empty());
-    const auto file = w.path / "bundle/model.nkm.json";
+    const auto file = w.path / "bundle/model.nkm";
     const auto loaded = nekomote::asset_io::load_asset(file);
     REQUIRE(loaded.ok);
     const auto& model = loaded.asset;

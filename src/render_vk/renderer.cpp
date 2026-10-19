@@ -534,6 +534,7 @@ void Renderer::reserve(Capacity capacity)
         VkDescriptorPoolSize size{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, set_count * 2};
         VkDescriptorPoolCreateInfo info{};
         info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
         info.maxSets = set_count;
         info.poolSizeCount = 1;
         info.pPoolSizes = &size;
@@ -690,6 +691,29 @@ void Renderer::prepare(RenderFrame frame)
     p.composition = frame.composition;
 }
 
+std::size_t Renderer::release_unused_textures()
+{
+    auto& p = *impl_;
+    std::size_t released = 0;
+    for (auto texture = p.textures.begin(); texture != p.textures.end();)
+    {
+        const auto referenced = [id = texture->id](const DrawCommand& command)
+        { return command.texture == id; };
+        if (std::any_of(p.commands.begin(), p.commands.end(), referenced) ||
+            std::any_of(p.mask_commands.begin(), p.mask_commands.end(), referenced))
+        {
+            ++texture;
+            continue;
+        }
+        const std::array<VkDescriptorSet, 2> sets{texture->unmasked, texture->masked};
+        check_vk(vkFreeDescriptorSets(p.ctx.device, p.descriptor_pool,
+                                      static_cast<std::uint32_t>(sets.size()), sets.data()),
+                 "release unused texture descriptors");
+        texture = p.textures.erase(texture);
+        ++released;
+    }
+    return released;
+}
 void Renderer::resize_output(int width, int height)
 {
     auto& p = *impl_;

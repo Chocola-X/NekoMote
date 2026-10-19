@@ -100,7 +100,9 @@ build/release/bin/nekomote_import \
 ```bash
 python3 tools/import_session/import_session.py \
   --reference-root <原解包素材根目录> \
-  --model <角色名> --output assets/characters/<角色名>/session.nks.json
+  --model <角色名> --output assets/characters/<角色组>/<型号>/session.nks.json \
+  --converter build/release/bin/nekomote_audio_convert \
+  --character-root assets/characters/<角色组>
 ```
 
 批量导入与背景：
@@ -117,10 +119,12 @@ python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest
 
 | 文件 | 用途 |
 | --- | --- |
-| `model.nkm.json` | schema 6 规范化模型 |
+| `model.nkm` | schema 6 规范化模型，MessagePack + zlib 压缩容器 |
 | `session.nks.json` | 反应会话 |
 | `textures/N.png` | 引用的 PNG 图集 |
 | `report.json` | 结构状态与警告（非播放认证） |
+
+已有 JSON/WAV 资产使用[一次性迁移工具](docs/asset-format.md#现有资产一次性迁移)转为当前格式。
 
 背景放 `assets/backgrounds/`：静态 PNG 放根目录，动态背景放 `dynamic/` 子目录（A/B/C 三相分别对应白天/黄昏/夜晚）。
 
@@ -132,10 +136,12 @@ assets/
 ├── characters/
 │   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"，值为多语言对象
 │   └── <角色组>/                     # 一级目录：角色组（如 chocola）
+│       ├── audio/main/               # 正常语音 FLAC（little/ 为小猫语音）
 │       └── <变体>/                   # 二级目录：型号变体（如 date-a）
-│           ├── model.nkm.json        # schema 6 模型（必需）
+│           ├── model.nkm             # schema 6 压缩模型（必需）
 │           ├── session.nks.json      # 反应会话（必需）
 │           ├── meta.json             # 可选：cutoff_y / display_name / hidden / order
+│           ├── audio -> ../audio/main # 按原声音 namespace 选择 main/little
 │           ├── textures/             # PNG 图集
 │           └── report.json           # 导入结构报告
 ├── backgrounds/
@@ -152,7 +158,7 @@ assets/
     └── toggle.png                    # UI 面板图标
 ```
 
-角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm.json` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
+角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
 
 显示名字典（`characters.json`、`background.json`、`dynamic/background.json`、`meta.json` 的 `display_name`）支持两种值格式：多语言对象按语言代码（`en` / `zh-CN` / `zh-TW` / `ja`）给出翻译；纯字符串则对所有语言生效。运行时按 `config.json` 的 `language` 字段选取，缺失的语言按 zh-CN → en → zh-TW → ja 顺序回退，最后回退到资产 ID。UI 面板语言在同一字段中切换，首次启动（无 `config.json`）默认英文。
 
@@ -179,7 +185,7 @@ build/release/bin/nekomote_player --assets assets --character <角色名>
 
 # 单模型模式
 build/release/bin/nekomote_player \
-  --model assets/characters/<角色名>/model.nkm.json \
+  --model assets/characters/<角色名>/model.nkm \
   --session assets/characters/<角色名>/session.nks.json --fit
 
 # 无音频环境

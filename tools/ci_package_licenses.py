@@ -11,6 +11,7 @@ def write_licenses(source, build, stage, mode):
     dependencies = (
         ("nlohmann_json", "LICENSE.MIT"), ("fast_float", "LICENSE-MIT"),
         ("stb", "LICENSE"), ("glad", "LICENSE"),
+        ("flac", "COPYING.Xiph"),
     )
     notices = ["Third-party notices for components included in NekoMote.\n"
                "The project license is provided separately in LICENSE.\n"]

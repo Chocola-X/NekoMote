@@ -1,0 +1,4 @@
+add_executable(nekomote_model_convert main.cpp)
+target_link_libraries(nekomote_model_convert PRIVATE nekomote::importer nekomote_warnings)
+target_compile_features(nekomote_model_convert PRIVATE cxx_std_20)
+install(TARGETS nekomote_model_convert RUNTIME DESTINATION bin COMPONENT runtime)

@@ -79,7 +79,7 @@ struct Fixture
             std::ofstream out(path / "session.nks.json");
             out << document;
         }
-        model.reset(nekomote_model_load((path / "model/model.nkm.json").c_str()));
+        model.reset(nekomote_model_load((path / "model/model.nkm").c_str()));
         asset.reset(nekomote_session_asset_load((path / "session.nks.json").c_str()));
         REQUIRE(model);
         REQUIRE(asset);

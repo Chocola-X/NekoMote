@@ -71,7 +71,7 @@ struct Reference
         reaction.zones = {model::TouchZone::Bust};
         reaction.action.main_timeline = "pose";
         reaction.action.difference_slots[3] = "idle";
-        reaction.audio_path = "audio/voice.wav";
+        reaction.audio_path = "audio/voice.flac";
         reaction.duration_ticks = 12;
         reaction.recovery_ticks = 4;
         reaction.beats = {{4, reaction.action}};

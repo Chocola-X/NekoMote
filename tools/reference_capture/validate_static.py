@@ -53,7 +53,7 @@ def main():
                        for name in ('FreeMoteDriver.js', 'emoteplayer.js')}
     for case in baseline['cases']:
         model, name = case['model'], case['case']
-        asset = (args.asset_root or args.output) / model / 'model.nkm.json'
+        asset = (args.asset_root or args.output) / model / 'model.nkm'
         if model not in imported:
             if args.importer:
                 source = resolve_source(source_index, model)

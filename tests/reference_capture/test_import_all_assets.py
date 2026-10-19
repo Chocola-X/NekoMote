@@ -24,6 +24,7 @@ TOOL = pathlib.Path(__file__).resolve().parents[2] / 'tools/import_all_assets.py
 SPEC = importlib.util.spec_from_file_location('import_all_assets', TOOL)
 batch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(batch)
+from model_container import write_model
 
 INDEX_TOOL = pathlib.Path(__file__).resolve().parents[2] / 'tools/import_emote/catalog_index.py'
 INDEX_SPEC = importlib.util.spec_from_file_location('catalog_index', INDEX_TOOL)
@@ -113,7 +114,7 @@ class BatchImportSafetyTest(unittest.TestCase):
             def competing_import(command, **kwargs):
                 bundle = pathlib.Path(command[command.index('--output') + 1])
                 bundle.mkdir()
-                (bundle / 'model.nkm.json').write_text('{"schema":5}')
+                write_model(bundle / 'model.nkm', {'schema': 6})
                 target.mkdir()
                 (target / 'user-note').write_bytes(b'preserve me')
                 return types.SimpleNamespace(returncode=0, stdout='', stderr='')
@@ -123,7 +124,7 @@ class BatchImportSafetyTest(unittest.TestCase):
                                        root / 'importer', None, {}, output, staging, None, 120)
             self.assertEqual(row['status']['structure'], 'FAIL')
             self.assertEqual((target / 'user-note').read_bytes(), b'preserve me')
-            self.assertFalse((target / 'model.nkm.json').exists())
+            self.assertFalse((target / 'model.nkm').exists())
 
     def test_cpu_report_is_written_to_explicit_staging_path(self):
         with tempfile.TemporaryDirectory() as name:
@@ -249,9 +250,30 @@ class ImportFailureRecordingTest(unittest.TestCase):
             row = batch.import_one('toy', {}, reference, index,
                                    root / 'importer', None, {}, output, staging, None, 120)
         self.assertEqual(row['status']['structure'], 'FAIL')
-        self.assertIn('model.nkm.json missing', row['errors'][0])
+        self.assertIn('model.nkm missing', row['errors'][0])
         import shutil
         shutil.rmtree(root)
+
+    def test_invalid_current_model_is_never_published(self):
+        for malformed in (True, False):
+            with self.subTest(malformed=malformed):
+                root, reference, source, index, output, staging = self._setup_single()
+                def invalid_model(command, **kwargs):
+                    bundle = pathlib.Path(command[command.index('--output') + 1])
+                    bundle.mkdir()
+                    if malformed:
+                        (bundle / 'model.nkm').write_bytes(b'not a model container')
+                    else:
+                        write_model(bundle / 'model.nkm', {'schema': 0})
+                    return types.SimpleNamespace(returncode=0, stdout='', stderr='')
+                with mock.patch.object(batch.subprocess, 'run', side_effect=invalid_model):
+                    row = batch.import_one('toy', {}, reference, index,
+                                           root / 'importer', None, {}, output, staging, None, 120)
+                self.assertEqual(row['status']['structure'], 'FAIL')
+                self.assertIn('invalid model.nkm or unsupported schema', row['errors'][0])
+                self.assertFalse((output / 'toy').exists())
+                import shutil
+                shutil.rmtree(root)
 
     def test_session_failure_records_command_and_error(self):
         root, reference, source, index, output, staging = self._setup_single()
@@ -263,7 +285,7 @@ class ImportFailureRecordingTest(unittest.TestCase):
             if len(calls) == 1:
                 bundle = pathlib.Path(command[command.index('--output') + 1])
                 bundle.mkdir()
-                (bundle / 'model.nkm.json').write_text('{"schema":5}')
+                write_model(bundle / 'model.nkm', {'schema': 6})
                 return types.SimpleNamespace(returncode=0, stdout='', stderr='')
             return types.SimpleNamespace(returncode=1, stdout='', stderr='session parse error')
 
@@ -277,6 +299,52 @@ class ImportFailureRecordingTest(unittest.TestCase):
         self.assertFalse((output / 'toy').exists())
         import shutil
         shutil.rmtree(root)
+
+
+class SharedCharacterAudioTest(unittest.TestCase):
+    def test_stripped_model_directory_is_validated(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            for model in ('cat-..', 'cat-', 'cat-audio'):
+                row = batch.import_one(model, {'character': 'cat'}, root / 'reference', {},
+                                       root / 'importer', None, {}, root / 'output',
+                                       root / 'staging', None, 120)
+                self.assertEqual(row['status']['structure'], 'ERROR')
+                self.assertTrue(row['errors'])
+
+    def test_batch_publishes_character_costume_and_groups_audio(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = pathlib.Path(name)
+            source = root / 'reference/model_conversion/cat/cat-dress.json'
+            source.parent.mkdir(parents=True)
+            source.write_text('{"source":{}}')
+            output, staging = root / 'output', root / 'staging'
+            output.mkdir()
+            staging.mkdir()
+            index = make_index_with(root / 'reference', 'cat-dress', source)
+
+            def fake_import(command, **kwargs):
+                bundle = pathlib.Path(command[command.index('--output') + 1])
+                bundle.mkdir()
+                write_model(bundle / 'model.nkm', {'schema': 6})
+                (bundle / 'audio').mkdir()
+                (bundle / 'audio/voice.flac').write_bytes(b'lossless clip')
+                (bundle / 'session.nks.json').write_text(json.dumps({'session': {'reactions': [
+                    {'label': 'cat/voice', 'audio_path': 'audio/voice.flac'}]}}))
+                return types.SimpleNamespace(returncode=0, stdout='', stderr='')
+
+            with mock.patch.object(batch.subprocess, 'run', side_effect=fake_import):
+                row = batch.import_one('cat-dress', {'character': 'cat'}, root / 'reference',
+                                       index, root / 'importer', None, {}, output, staging,
+                                       None, 120)
+            self.assertEqual(row['status']['structure'], 'OK', row['errors'])
+            bundle = output / 'cat/dress'
+            self.assertTrue((bundle / 'audio').is_symlink())
+            self.assertEqual((bundle / 'audio/voice.flac').read_bytes(), b'lossless clip')
+            entry = row['bundle_sha256']['audio']
+            self.assertEqual(entry['link'], '../audio/main')
+            self.assertEqual(row['audio_group'], 'main')
+            self.assertIn('voice.flac', entry['targets'])
 
 
 class CheckpointAndSummaryTest(unittest.TestCase):
@@ -337,16 +405,16 @@ class CheckpointAndSummaryTest(unittest.TestCase):
             def fake_import(command, **kwargs):
                 bundle = pathlib.Path(command[command.index('--output') + 1])
                 bundle.mkdir()
-                (bundle / 'model.nkm.json').write_text('{"schema":5}')
-                (bundle / 'texture.png').write_bytes(b'\x89PNG')
+                write_model(bundle / 'model.nkm', {'schema': 6})
+                (bundle / 'texture.png').write_bytes(b'PNG')
                 return types.SimpleNamespace(returncode=0, stdout='', stderr='')
 
             with mock.patch.object(batch.subprocess, 'run', side_effect=fake_import):
                 row = batch.import_one('toy', {}, reference, index,
                                        root / 'importer', None, {}, output, staging, None, 120)
             self.assertEqual(row['status']['structure'], 'OK')
-            self.assertEqual(row['schema'], 5)
-            self.assertIn('model.nkm.json', row['bundle_sha256'])
+            self.assertEqual(row['schema'], 6)
+            self.assertIn('model.nkm', row['bundle_sha256'])
             self.assertIn('texture.png', row['bundle_sha256'])
 
 

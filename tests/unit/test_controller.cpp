@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/application/controller.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
+#include <nekomote/asset_io/audio_import.hpp>
 #include <nekomote/asset_io/import_emote.hpp>
 #include <nlohmann/json.hpp>
 
@@ -18,7 +19,7 @@ namespace fs = std::filesystem;
 
 bool assets_available()
 {
-    return fs::exists("assets/characters/coconut/casual/model.nkm.json");
+    return fs::exists("assets/characters/coconut/casual/model.nkm");
 }
 struct LayoutFixture
 {
@@ -65,7 +66,7 @@ struct LayoutFixture
                                             {"pant", nullptr}}}}},
                                         {"reactions", nlohmann::json::array()}}}};
         std::ofstream(path / "session.nks.json") << document;
-        entry = {"synthetic", path / "model/model.nkm.json", path / "session.nks.json", path};
+        entry = {"synthetic", path / "model/model.nkm", path / "session.nks.json", path};
     }
     ~LayoutFixture()
     {
@@ -122,13 +123,13 @@ TEST_CASE("Controller short click reacts on release but long hold does not react
           "[controller][pointer][integration]")
 {
     const fs::path directory = "assets/characters/chocola/date-a";
-    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+    if (!fs::exists(directory / "model.nkm") || !fs::exists(directory / "session.nks.json"))
         SKIP("chocola/date-a assets are unavailable");
     WallpaperController c;
     ControllerConfig config;
     config.mute = true;
     config.audio = AudioMode::Disabled;
-    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm.json",
+    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm",
                                                    directory / "session.nks.json", directory},
                                     config);
     INFO(candidate.error);
@@ -218,13 +219,13 @@ TEST_CASE("Controller character transform reset restores its first fitted state"
           "[controller][integration][fit]")
 {
     const fs::path directory = "assets/characters/chocola/date-a";
-    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+    if (!fs::exists(directory / "model.nkm") || !fs::exists(directory / "session.nks.json"))
         SKIP("chocola/date-a assets are unavailable");
 
     WallpaperController c;
     ControllerConfig config;
     config.audio = AudioMode::Disabled;
-    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm.json",
+    auto candidate = c.load_initial(CharacterEntry{"chocola-date-a", directory / "model.nkm",
                                                    directory / "session.nks.json", directory},
                                     config);
     INFO(candidate.error);
@@ -496,14 +497,14 @@ TEST_CASE("Controller rejects an invalid CPU candidate without changing live err
           "[controller][integration]")
 {
     const fs::path directory = "assets/characters/chocola/date-a";
-    if (!fs::exists(directory / "model.nkm.json") || !fs::exists(directory / "session.nks.json"))
+    if (!fs::exists(directory / "model.nkm") || !fs::exists(directory / "session.nks.json"))
         SKIP("chocola/date-a assets are unavailable");
     WallpaperController controller;
     ControllerConfig config;
     config.audio = AudioMode::Disabled;
     config.scale = 0;
     auto candidate =
-        controller.load_initial(CharacterEntry{"chocola/date-a", directory / "model.nkm.json",
+        controller.load_initial(CharacterEntry{"chocola/date-a", directory / "model.nkm",
                                                directory / "session.nks.json", directory},
                                 config);
     REQUIRE_FALSE(candidate.ok);
@@ -730,11 +731,10 @@ TEST_CASE("Catalog reads localized character names and group titles", "[catalog]
     fs::remove_all(root);
     fs::create_directories(root / "characters" / "chocola" / "casual-a-with-bell");
     fs::create_directories(root / "characters" / "unknownchar" / "variant-x");
-    std::ofstream(root / "characters" / "chocola" / "casual-a-with-bell" / "model.nkm.json")
-        .put('x');
+    std::ofstream(root / "characters" / "chocola" / "casual-a-with-bell" / "model.nkm").put('x');
     std::ofstream(root / "characters" / "chocola" / "casual-a-with-bell" / "session.nks.json")
         .put('x');
-    std::ofstream(root / "characters" / "unknownchar" / "variant-x" / "model.nkm.json").put('x');
+    std::ofstream(root / "characters" / "unknownchar" / "variant-x" / "model.nkm").put('x');
     std::ofstream(root / "characters" / "unknownchar" / "variant-x" / "session.nks.json").put('x');
     {
         std::ofstream f(root / "characters" / "characters.json");
@@ -986,4 +986,97 @@ TEST_CASE("Layout persistence honors no-save and clears recovered sidebar coordi
     REQUIRE_FALSE(saved.sidebar_position_saved);
     REQUIRE_FALSE(saved.sidebar_free);
     fs::remove(path);
+}
+
+TEST_CASE("Controller resolves shared FLAC links once within the character directory",
+          "[controller][audio][asset]")
+{
+    LayoutFixture fixture;
+    const auto role = fixture.path / "character";
+    const auto outfit = role / "outfit";
+    const auto shared = role / "audio/common";
+    fs::create_directories(outfit);
+    fs::create_directories(shared);
+    const auto source = fixture.path / "source.wav";
+    // Two signed 16-bit PCM samples: -1 and +0.5.
+    const unsigned char wave[] = {'R',  'I',  'F', 'F', 40,   0,    0, 0, 'W', 'A',  'V', 'E',
+                                  'f',  'm',  't', ' ', 16,   0,    0, 0, 1,   0,    1,   0,
+                                  0x44, 0xac, 0,   0,   0x88, 0x58, 1, 0, 2,   0,    16,  0,
+                                  'd',  'a',  't', 'a', 4,    0,    0, 0, 0,   0x80, 0,   0x40};
+    {
+        std::ofstream out(source, std::ios::binary);
+        out.write(reinterpret_cast<const char*>(wave), sizeof(wave));
+    }
+    REQUIRE(nekomote::asset_io::transcode_wave_to_flac(source, shared / "voice.flac").empty());
+    nlohmann::json document;
+    {
+        std::ifstream in(fixture.entry.session_path);
+        in >> document;
+    }
+    const nlohmann::json action{{"main_timeline", "idle"},
+                                {"difference_slots", {"", "", "", "", "", ""}},
+                                {"variables", nlohmann::json::array()}};
+    document["session"]["reactions"] = {{{"label", "voice"},
+                                         {"zones", {"bust"}},
+                                         {"action", action},
+                                         {"recovery", action},
+                                         {"audio_path", "audio/voice.flac"},
+                                         {"duration_ticks", 60},
+                                         {"recovery_ticks", 1},
+                                         {"beats", nlohmann::json::array()}}};
+    fixture.entry.session_path = outfit / "session.nks.json";
+    fixture.entry.directory = outfit;
+    bool accepted = true;
+    SECTION("relative directory link")
+    {
+        fs::create_directory_symlink("../audio/common", outfit / "audio");
+    }
+    SECTION("relative file link")
+    {
+        fs::create_directories(outfit / "audio");
+        fs::create_symlink("../../audio/common/voice.flac", outfit / "audio/voice.flac");
+    }
+    SECTION("directory link escaping character")
+    {
+        fs::create_directory_symlink("../../outside", outfit / "audio");
+        fs::create_directories(fixture.path / "outside");
+        fs::copy_file(shared / "voice.flac", fixture.path / "outside/voice.flac");
+        accepted = false;
+    }
+    SECTION("file link escaping character")
+    {
+        fs::create_directories(outfit / "audio");
+        fs::copy_file(shared / "voice.flac", fixture.path / "outside.flac");
+        fs::create_symlink("../../../outside.flac", outfit / "audio/voice.flac");
+        accepted = false;
+    }
+    SECTION("link cycle")
+    {
+        fs::create_directory_symlink("audio", outfit / "audio");
+        accepted = false;
+    }
+    SECTION("legacy extension")
+    {
+        document["session"]["reactions"][0]["audio_path"] = "audio/voice.wav";
+        fs::create_directory_symlink("../audio/common", outfit / "audio");
+        accepted = false;
+    }
+    std::ofstream(fixture.entry.session_path) << document;
+    WallpaperController controller;
+    ControllerConfig config;
+    config.audio = AudioMode::Device;
+    auto candidate = controller.load_initial(fixture.entry, config);
+    INFO(candidate.error);
+    REQUIRE(candidate.ok == accepted);
+    if (!accepted)
+    {
+        REQUIRE_FALSE(candidate.error.empty());
+        return;
+    }
+    REQUIRE(candidate.audio_clips.size() == 1);
+    REQUIRE(candidate.audio_clips[0].samples == std::vector<float>{-1, .5f});
+    // Once PCM has loaded, filesystem links no longer participate in playback.
+    fs::remove_all(outfit / "audio");
+    REQUIRE(candidate.instance->advance(1.0 / 60));
+    REQUIRE(candidate.audio_clips[0].samples == std::vector<float>{-1, .5f});
 }

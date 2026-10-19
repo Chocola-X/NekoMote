@@ -1,5 +1,10 @@
 # 当前整合与接手摘要
 
+2026-10-19 C20 最新资产状态：用户回滚至 0.5.2 的 `5a9b4e2` 后，保留 PNG，完成
+FLAC/main/little 相对共享、`model.nkm` 流式压缩容器和 GL/Vulkan 背景旧纹理回收。
+全部本地资产已迁移并保留原树，224 CTest runner 通过、2 跳过；加载内存未出现实质增长，
+磁盘节省约 878 MiB，不宣称压缩能降低稳态 PCM/纹理占用。详见 [报告](asset-storage-and-memory-2026-10-19.md)。
+
 2026-10-12，C12 基线 `cfed43e`。共享 Controller/UI/高层 ABI/Plasma 已有实现，不重新执行旧 G31 待实现清单。用户此前确认 miku 用户真实桌面 OpenGL 初步接入正常；具体逐项覆盖未提供，Codex 未操作其桌面。
 
 C13（基线 `3a56ce0`）复核 GLM 的未提交优化并落地局部改进、CPU 候选线程修复与死代码清理；当前优化入口为 [复核](optimization-audit-2026-10-12.md)，下一步 G34 按 [验收契约](optimization-suggestions-2026-10-12.md) 执行。批量建议不等于确认缺陷，不关闭运行时/ABI 帧检查。

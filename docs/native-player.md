@@ -24,9 +24,9 @@ build/release/bin/nekomote_import \
   ../NekoWebShow/model_conversion/chocola/chocola-date-a/chocola-date-a.resx.json \
   --output assets/characters/chocola-date-a
 python3 tools/import_session/import_session.py --reference-root ../NekoWebShow \
-  --model chocola-date-a --output assets/characters/chocola-date-a/session.nks.json
-build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model.nkm.json \
-  --session assets/characters/chocola-date-a/session.nks.json --fit
+  --model chocola-date-a --output assets/characters/chocola/date-a/session.nks.json
+build/release/bin/nekomote_player --model assets/characters/chocola/date-a/model.nkm \
+  --session assets/characters/chocola/date-a/session.nks.json --fit
 ```
 
 正式播放只依赖当前资产/背景和设备服务，不需要原仓库、Python、Node、浏览器或asm核心。只接受当前模型schema 6和会话version 1，不自动回退；旧资产重建入口见 C5交接（已归档）。
@@ -67,8 +67,8 @@ Y向下，不再自行镜像。该诊断与 `--measure-frames` 互斥。
 固定步截图必须静音，独立于性能测量：
 
 ```sh
-build/release/bin/nekomote_player --model assets/characters/chocola-date-a/model.nkm.json \
-  --session assets/characters/chocola-date-a/session.nks.json --mute --transparent --seed 1 \
+build/release/bin/nekomote_player --model assets/characters/chocola/date-a/model.nkm \
+  --session assets/characters/chocola/date-a/session.nks.json --mute --transparent --seed 1 \
   --reaction chocola/h01 --capture build/frame.png --steps 36
 # 应用内回调控制自己的窗口，不注入系统输入
 build/dev/bin/nekomote_player --assets assets --character chocola-date-a --mute --no-save \

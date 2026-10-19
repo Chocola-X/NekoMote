@@ -315,7 +315,7 @@ int main(int argc, char** argv)
 {
     if (argc < 3)
     {
-        fprintf(stderr, "Usage: %s <model.nkm.json> <session.nks.json>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <model.nkm> <session.nks.json>\n", argv[0]);
         return 2;
     }
     g_model_path = argv[1];

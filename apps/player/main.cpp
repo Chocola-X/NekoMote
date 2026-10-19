@@ -163,7 +163,7 @@ std::optional<Options> options(int argc, char** argv)
                 "  [--no-save] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y 400]\n"
                 "  [--width 800 --height 1080] [--fps 60] [--seed 1]\n"
                 "  [--backend opengl|vulkan] (default opengl; Vulkan requires enabled build)\n"
-                "Or: nekomote_player --model model.nkm.json --session session.nks.json\n"
+                "Or: nekomote_player --model model.nkm --session session.nks.json\n"
                 "  [--background image.png] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y "
                 "400]\n"
                 "  [--width 800 --height 1080] [--fps 60] [--seed 1] [--reaction label]\n"
@@ -1236,6 +1236,7 @@ int run(int argc, char** argv)
         if (!bg_frame.commands.empty())
         {
             gpu.background_renderer->prepare(bg_frame);
+            gpu.background_renderer->release_unused_textures();
             gpu.background_renderer->render({0, 0, 1, clear}, player::BackendContents::Clear, w, h);
         }
         const auto target_contents = !bg_frame.commands.empty() ? player::BackendContents::Preserve
@@ -1361,7 +1362,7 @@ int run(int argc, char** argv)
                 const auto scale = controller.scale();
                 const auto& catalog = controller.catalog();
                 auto missing = catalog.characters[controller.current_character_index()];
-                missing.model_path = missing.model_path / "missing-model.nkm.json";
+                missing.model_path = missing.model_path / "missing-model.nkm";
                 if (try_switch_sync(controller, gpu, missing, controller_cfg, {}, window.get(),
                                     o.backend
 #if defined(NEKOMOTE_HAS_VULKAN)

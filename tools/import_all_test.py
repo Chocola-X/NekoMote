@@ -70,7 +70,7 @@ def main():
 
             try:
                 proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-                if proc.returncode == 0 and (out / 'model.nkm.json').is_file():
+                if proc.returncode == 0 and (out / 'model.nkm').is_file():
                     row['status'] = 'OK'
                     ok += 1
                 else:

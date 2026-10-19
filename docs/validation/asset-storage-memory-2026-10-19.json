@@ -1,0 +1,201 @@
+{
+  "base_commit": "5a9b4e2bd5703886e860b11fb3ae4ab69d2a4aa1",
+  "harness": "Codex",
+  "model": "GPT-6 (exact variant unknown)",
+  "platform": "Linux-6.6.107-1-MANJARO-x86_64-with-glibc2.42",
+  "cpu": "Intel(R) Xeon(R) CPU E5-1680 v4 @ 3.40GHz",
+  "compiler": "c++ (GCC) 15.2.1 20250813",
+  "build": "Release -O3 -DNDEBUG, LTO, Werror; pinned FLAC 1.4.3; PNG/zlib system",
+  "assets": {
+    "models": 195,
+    "old_bytes": 1943489922,
+    "new_bytes": 1022865679,
+    "pngs": 324,
+    "png_bytes": 983983314,
+    "old_model_bytes": 380401282,
+    "new_model_bytes": 14237614,
+    "old_audio_bytes": 575743820,
+    "new_audio_bytes": 19756208,
+    "regular_flac": 263,
+    "links": 202,
+    "groups": {
+      "main": 166,
+      "little": 29
+    },
+    "audio_logical_paths": 3697,
+    "unique_wavs": 262,
+    "all_png_bytes_equal": true,
+    "all_session_fields_equal_except_audio_extension": true
+  },
+  "model_loads": [
+    {
+      "model": "chocola/date-a",
+      "baseline_warm_median_ms": 71.2547,
+      "current_warm_median_ms": 54.3518,
+      "baseline_rss_kib": 13392,
+      "current_rss_kib": 13392
+    },
+    {
+      "model": "coconut/casual",
+      "baseline_warm_median_ms": 78.7542,
+      "current_warm_median_ms": 52.3473,
+      "baseline_rss_kib": 13452,
+      "current_rss_kib": 13444
+    },
+    {
+      "model": "fraise/maid-a",
+      "baseline_warm_median_ms": 107.791,
+      "current_warm_median_ms": 79.558,
+      "baseline_rss_kib": 14336,
+      "current_rss_kib": 14336
+    }
+  ],
+  "measurements": {
+    "models": 3,
+    "loads_per_process": 4,
+    "warmup_loads": 1,
+    "samples_per_process": 3,
+    "model_probes": "Both compiled -O3 -DNDEBUG, same frozen validation source; no concurrent build/GPU work during final measurements",
+    "scope": "CPU asset loading only; no frame-time/GPU/long-term claim"
+  },
+  "audio": {
+    "pairs": 262,
+    "decoded_pcm_bytes": 81655020,
+    "pcm_rms_exact": true
+  },
+  "png": [
+    {
+      "file": "assets/characters/chocola/date-a/textures/0.png",
+      "full": {
+        "width": 4096,
+        "height": 2048,
+        "ms": 92.4576,
+        "pixels": 33554432,
+        "held_rss_kib": 36844,
+        "peak_rss_kib": 36844,
+        "released_rss_kib": 4396
+      },
+      "crop": {
+        "width": 4096,
+        "height": 1577,
+        "ms": 178.037,
+        "pixels": 25837568,
+        "held_rss_kib": 29284,
+        "peak_rss_kib": 29284,
+        "released_rss_kib": 4372
+      }
+    }
+  ],
+  "background": {
+    "snapshots": [
+      {
+        "phase": "initial",
+        "textures": 4,
+        "background_textures": 1
+      },
+      {
+        "phase": "transition-BG_13A",
+        "textures": 5,
+        "background_textures": 2
+      },
+      {
+        "phase": "interrupted-transition-BG_07A",
+        "textures": 5,
+        "background_textures": 2
+      },
+      {
+        "phase": "settled-BG_07A-after-interrupt",
+        "textures": 4,
+        "background_textures": 1
+      },
+      {
+        "phase": "transition-BG_07A",
+        "textures": 5,
+        "background_textures": 2
+      },
+      {
+        "phase": "settled-BG_07A",
+        "textures": 4,
+        "background_textures": 1
+      },
+      {
+        "phase": "transition-BG_13A",
+        "textures": 5,
+        "background_textures": 2
+      },
+      {
+        "phase": "settled-BG_13A",
+        "textures": 4,
+        "background_textures": 1
+      },
+      {
+        "phase": "cleared",
+        "textures": 3,
+        "background_textures": 0
+      },
+      {
+        "phase": "destroyed",
+        "textures": 0,
+        "background_textures": 0
+      }
+    ],
+    "released_rgba8_bytes": 8294400,
+    "mask_source_and_descriptor_reuse_test": true,
+    "steady_retirement_allocations": 0,
+    "vulkan_validation_layer_available": false
+  },
+  "tests": {
+    "cpu": {
+      "name": "(empty)",
+      "tests": "222",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "2",
+      "hostname": "",
+      "time": "5",
+      "timestamp": "2026-10-19T09:29:25"
+    },
+    "gpu": {
+      "name": "(empty)",
+      "tests": "4",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "",
+      "time": "12",
+      "timestamp": "2026-10-19T09:30:01"
+    },
+    "python": {
+      "total": 158,
+      "passed": 146,
+      "skipped": 12
+    },
+    "fresh_source_imports": [
+      "chocola-date-a: main",
+      "chocola-koneko-a: little"
+    ],
+    "system_build": "PNG, shared FLAC 1.5.0, zlib; headless importer/converters built; no vendored fallback"
+  },
+  "binaries": {
+    "build/png-flac-config-check/bin/nekomote_import": "50f5ca39589b4afb9e3e31693fa98f02f424276b7ba0bfdf2d05eea161300fd0",
+    "build/png-flac-config-check/bin/nekomote_audio_convert": "53d0b9436b85cefc5b882ec7d9badbcac964b7b0ad2360a13d319467ec9ed2c2",
+    "build/png-flac-config-check/bin/nekomote_model_convert": "e42773a02af63414a4bcdbdd8b295045b04aa80be814f374168e843c8f52b807",
+    "build/png-flac-config-check/bin/nekomote_player": "2500ba10061d06397ff296ba97ab41bf1a47c7f6281c7f44b8b4c7bb9e36cc9b",
+    "build/png-flac-config-check/bin/nekomote_unit_tests": "52933ac1718f1d116f808aedfc5e0a1ab0e3635e87cb2af5f7227b4d2a11afab",
+    "build/png-flac-config-check/bin/nekomote_render_tests": "dcece65e7004873254c8c76ed2df98c5128578aa84c290c2752070a91bebefc1",
+    "build/png-flac-config-check/bin/nekomote_vk_tests": "1d40485e67d23d4fbb9b2be5e75cd2397076f7210975a5a7edcfc6d8dd429949",
+    "build/evidence/png-audio-model-20261019/model-probe-baseline": "5f32287d899d4b1bbbd3ebff76836438af87d1d29686e7580a42da14b85e57cd",
+    "build/evidence/png-audio-model-20261019/model-probe-current": "3aadfc65f8cd8b06984fd305794d538f769ab5e3de729d76a64630fae21c1f81",
+    "build/evidence/png-audio-model-20261019/candidate-probe-current": "025c5807da1af9bf39c720c8ac7868af21424723702d3cf7b816dd350e169e45",
+    "build/evidence/png-audio-model-20261019/png-probe": "6acd628308d45458ef63f9015563235e7ecc5b75cab55f9e85eec964e9a00aa0",
+    "build/evidence/background-retirement-20261019/background-probe": "7ea563dcb422f0e9c11716207abe37282ff4a2b003223ff5fd7f78f1996e5f11"
+  },
+  "remaining": [
+    "Real Plasma/layer-shell desktop deployment, other drivers and 8-24h soak not performed",
+    "No installed KHRONOS Vulkan validation layer in this run",
+    "Full raster quality/animation semantics not expanded by storage conversion",
+    "Peak PNG strip-to-GPU streaming not implemented; existing cropped row decoding and mmap release retained"
+  ],
+  "gpu": "NVIDIA GeForce RTX 3080 Ti, driver 580.82.09",
+  "display": "Existing KDE Wayland session, own hidden GLFW windows; no desktop installation or input injection"
+}

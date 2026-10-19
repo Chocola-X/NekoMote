@@ -4,11 +4,11 @@
 
 ```sh
 python3 tools/pose_probe/probe.py \
-  --asset build/evidence/chocola-date-a-v2/model.nkm.json \
+  --asset build/evidence/chocola-date-a-v2/model.nkm \
   --variables '{"head_LR":15,"head_UD":-20}' \
   --output build/evidence/pose-example.json
 python3 tools/pose_probe/compare_geometry.py \
-  --asset build/evidence/chocola-date-a-v2/model.nkm.json \
+  --asset build/evidence/chocola-date-a-v2/model.nkm \
   --probe build/evidence/pose-example.json \
   --trace build/evidence/reference/head-lr-ud.trace.json \
   --output build/evidence/geometry-example.json

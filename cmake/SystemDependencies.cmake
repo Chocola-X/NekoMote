@@ -4,6 +4,10 @@ find_package(nlohmann_json 3.11 CONFIG REQUIRED)
 # while newer distro releases expose the same API used by scene compilation.
 find_package(FastFloat CONFIG REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(NEKOMOTE_FLAC REQUIRED IMPORTED_TARGET flac>=1.4)
+set(NEKOMOTE_FLAC_TARGET PkgConfig::NEKOMOTE_FLAC)
+
 find_path(NEKOMOTE_STB_INCLUDE_DIR NAMES stb_image_write.h PATH_SUFFIXES stb REQUIRED)
 if(NOT EXISTS "${NEKOMOTE_STB_INCLUDE_DIR}/stb_truetype.h")
     message(FATAL_ERROR "System stb must provide stb_image_write.h and stb_truetype.h")

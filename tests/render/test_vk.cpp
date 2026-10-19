@@ -646,7 +646,7 @@ TEST_CASE("Vulkan wallpaper ABI validates borrowed targets and retains model aft
     } completion{f.host};
     REQUIRE(wallpaper);
     REQUIRE(reference);
-    const auto model_path = path / "model/model.nkm.json";
+    const auto model_path = path / "model/model.nkm";
     for (auto* wp : {wallpaper.get(), reference.get()})
     {
         REQUIRE(nekomote_wallpaper_set_muted(wp, 1) == NEKOMOTE_OK);
@@ -814,4 +814,93 @@ TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask",
     masks[0].command_count = 0;
     f.draw(frame);
     REQUIRE(pixel(f.capture().second, 8, 32) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
+}
+
+TEST_CASE("Vulkan background texture retirement preserves fades and reuses descriptors",
+          "[gpu][vulkan][background][lifecycle]")
+{
+    Fixture f;
+    f.upload(TextureId{1}, {1, 1, {255, 0, 0, 255}});
+    f.upload(TextureId{2}, {1, 1, {0, 0, 255, 255}});
+    const auto old_quad = quad();
+    const auto next_quad = quad(0, 0, 64, 64, .5f, .5f, .5f, .5f, .5f);
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(old_quad.begin(), old_quad.end(), vertices.begin());
+    std::copy(next_quad.begin(), next_quad.end(), vertices.begin() + 4);
+    const std::array<DrawCommand, 2> transition{
+        {{TextureId{1}, 0, 6, BlendMode::Over}, {TextureId{2}, 6, 6, BlendMode::Over}}};
+    f.draw({vertices, std::span(kIndices).first(12), transition});
+    const auto fading = f.capture();
+    require_same_picture(fading);
+    f.host.wait_ready();
+    REQUIRE(f.gl->release_unused_textures() == 0);
+    REQUIRE(f.vk->release_unused_textures() == 0);
+    const auto center = pixel(fading.second, 32, 32);
+    REQUIRE(center[0] >= 127);
+    REQUIRE(center[2] >= 127);
+
+    const std::array<DrawCommand, 1> settled{{{TextureId{2}, 0, 6, BlendMode::Over}}};
+    const RenderFrame settled_frame{old_quad, std::span(kIndices).first(6), settled};
+    f.draw(settled_frame);
+    const auto complete = f.capture();
+    require_same_picture(complete);
+    f.host.wait_ready();
+    REQUIRE(f.gl->release_unused_textures() == 1);
+    REQUIRE(f.vk->release_unused_textures() == 1);
+    REQUIRE_THROWS(f.gl->prepare({vertices, std::span(kIndices).first(12), transition}));
+    REQUIRE_THROWS(f.vk->prepare({vertices, std::span(kIndices).first(12), transition}));
+    REQUIRE(f.gl->release_unused_textures() == 0);
+    REQUIRE(f.vk->release_unused_textures() == 0);
+    f.draw(settled_frame);
+    const auto after = f.capture();
+    REQUIRE(after.first.pixels == complete.first.pixels);
+    REQUIRE(after.second.pixels == complete.second.pixels);
+    REQUIRE(pixel(after.second, 32, 32) == std::array<std::uint8_t, 4>{0, 0, 255, 255});
+
+    // More cycles than the pool's total descriptor capacity expose unreclaimed sets.
+    for (int cycle = 0; cycle < 12; ++cycle)
+    {
+        f.upload(TextureId{1}, {1, 1, {0, 255, 0, 255}});
+        f.gl->prepare(settled_frame);
+        f.vk->prepare(settled_frame);
+        REQUIRE(f.gl->release_unused_textures() == 1);
+        REQUIRE(f.vk->release_unused_textures() == 1);
+    }
+    allocation_count = 0;
+    track_allocations = true;
+    std::size_t released = 0;
+    for (int frame = 0; frame < 120; ++frame)
+        released += f.vk->release_unused_textures();
+    track_allocations = false;
+    REQUIRE(released == 0);
+    REQUIRE(allocation_count == 0);
+    f.gl->prepare({});
+    f.vk->prepare({});
+    REQUIRE(f.gl->release_unused_textures() == 1);
+    REQUIRE(f.vk->release_unused_textures() == 1);
+    REQUIRE(f.host.validation_errors == 0);
+}
+
+TEST_CASE("Vulkan texture retirement retains textures referenced only by masks",
+          "[gpu][vulkan][background][lifecycle][mask]")
+{
+    Fixture f;
+    f.upload(TextureId{1}, {1, 1, {255, 255, 255, 255}});
+    f.upload(TextureId{2}, {1, 1, {0, 0, 255, 255}});
+    const auto vertices = quad();
+    const std::array<DrawCommand, 1> commands{
+        {{TextureId{2}, 0, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    const std::array<DrawCommand, 1> sources{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    const std::array<MaskDefinition, 1> masks{{{0, 1}}};
+    f.draw({vertices, std::span(kIndices).first(6), commands, ColorComposition::ProtectedStraight,
+            sources, masks});
+    require_same_picture(f.capture());
+    f.host.wait_ready();
+    REQUIRE(f.gl->release_unused_textures() == 0);
+    REQUIRE(f.vk->release_unused_textures() == 0);
+    f.gl->prepare({});
+    f.vk->prepare({});
+    REQUIRE(f.gl->release_unused_textures() == 2);
+    REQUIRE(f.vk->release_unused_textures() == 2);
+    REQUIRE(f.host.validation_errors == 0);
 }

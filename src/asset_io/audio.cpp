@@ -1,142 +1,134 @@
 #include <nekomote/asset_io/audio.hpp>
 
+#include <FLAC/stream_decoder.h>
+
 #include <algorithm>
 #include <cmath>
-#include <cstring>
-#include <fstream>
-#include <span>
+#include <memory>
 #include <stdexcept>
 
 namespace nekomote::asset_io
 {
 namespace
 {
-using Bytes = std::span<const std::uint8_t>;
-std::uint32_t integer(Bytes b, std::size_t position, std::size_t width)
+constexpr std::uintmax_t kMaxSourceBytes = 64 * 1024 * 1024;
+constexpr std::uint64_t kMaxPcmSamples = 256 * 1024 * 1024 / sizeof(float);
+struct DecoderState
 {
-    if (position > b.size() || width > b.size() - position)
-        throw std::runtime_error("truncated WAVE field");
-    std::uint32_t value = 0;
-    for (std::size_t i = 0; i < width; ++i)
-        value |= std::uint32_t{b[position + i]} << (i * 8);
-    return value;
+    model::AudioClip clip;
+    std::uint64_t frames{0};
+    std::uint64_t written{0};
+    std::uint32_t bits{0};
+    const char* error{nullptr};
+};
+void metadata(const FLAC__StreamDecoder*, const FLAC__StreamMetadata* metadata, void* context)
+{
+    auto& state = *static_cast<DecoderState*>(context);
+    if (metadata->type != FLAC__METADATA_TYPE_STREAMINFO)
+        return;
+    const auto& info = metadata->data.stream_info;
+    if (state.frames != 0 || info.channels < 1 || info.channels > 2 || info.sample_rate < 8000 ||
+        info.sample_rate > 192000 ||
+        (info.bits_per_sample != 8 && info.bits_per_sample != 16 && info.bits_per_sample != 24 &&
+         info.bits_per_sample != 32) ||
+        info.total_samples == 0 || info.total_samples > kMaxPcmSamples / info.channels)
+    {
+        state.error = "unsupported FLAC metadata or decoded PCM exceeds 256 MiB";
+        return;
+    }
+    try
+    {
+        state.frames = info.total_samples;
+        state.bits = info.bits_per_sample;
+        state.clip.channels = info.channels;
+        state.clip.sample_rate = info.sample_rate;
+        state.clip.samples.resize(static_cast<std::size_t>(state.frames * info.channels));
+    }
+    catch (...)
+    {
+        state.error = "cannot allocate decoded FLAC PCM";
+    }
 }
-bool tag(Bytes b, std::size_t p, const char* text)
+FLAC__StreamDecoderWriteStatus write_frame(const FLAC__StreamDecoder*, const FLAC__Frame* frame,
+                                           const FLAC__int32* const channels[], void* context)
 {
-    return p <= b.size() && b.size() - p >= 4 &&
-           std::equal(text, text + 4, b.begin() + static_cast<std::ptrdiff_t>(p));
+    auto& state = *static_cast<DecoderState*>(context);
+    if (state.error)
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    if (state.frames == 0 || frame->header.channels != state.clip.channels ||
+        frame->header.sample_rate != state.clip.sample_rate ||
+        frame->header.bits_per_sample != state.bits ||
+        frame->header.blocksize > state.frames - state.written)
+    {
+        state.error = "FLAC frame disagrees with stream metadata";
+        return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    }
+    const double scale = std::ldexp(1.0, -static_cast<int>(state.bits - 1));
+    for (std::uint32_t f = 0; f < frame->header.blocksize; ++f)
+        for (std::uint32_t c = 0; c < state.clip.channels; ++c)
+            state.clip
+                .samples[static_cast<std::size_t>((state.written + f) * state.clip.channels + c)] =
+                static_cast<float>(static_cast<double>(channels[c][f]) * scale);
+    state.written += frame->header.blocksize;
+    return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+}
+void decode_error(const FLAC__StreamDecoder*, FLAC__StreamDecoderErrorStatus, void* context)
+{
+    static_cast<DecoderState*>(context)->error = "corrupt FLAC frame";
+}
+void prepare_rms(model::AudioClip& clip)
+{
+    const auto frames = clip.samples.size() / clip.channels;
+    clip.rms.resize((frames + model::kAudioRmsFrames - 1) / model::kAudioRmsFrames);
+    for (std::size_t window = 0; window < clip.rms.size(); ++window)
+    {
+        const auto begin = window * model::kAudioRmsFrames;
+        const auto end = std::min(frames, begin + model::kAudioRmsFrames);
+        double squared = 0;
+        for (std::size_t f = begin; f < end; ++f)
+        {
+            double mono = 0;
+            for (std::uint32_t c = 0; c < clip.channels; ++c)
+                mono += static_cast<double>(clip.samples[f * clip.channels + c]);
+            mono /= clip.channels;
+            squared += mono * mono;
+        }
+        clip.rms[window] =
+            static_cast<float>(std::sqrt(squared / static_cast<double>(end - begin)));
+    }
 }
 } // namespace
-AudioLoadResult load_wave(const std::filesystem::path& path)
+AudioLoadResult load_flac(const std::filesystem::path& path)
 {
     AudioLoadResult result;
     try
     {
-        std::ifstream file(path, std::ios::binary | std::ios::ate);
-        if (!file)
-            throw std::runtime_error("cannot open WAVE");
-        const auto size = file.tellg();
-        if (size < 12 || size > 64 * 1024 * 1024)
-            throw std::runtime_error("WAVE size outside 12 bytes..64 MiB");
-        std::vector<std::uint8_t> storage(static_cast<std::size_t>(size));
-        file.seekg(0);
-        if (!file.read(reinterpret_cast<char*>(storage.data()), size))
-            throw std::runtime_error("cannot read WAVE");
-        const Bytes b(storage);
-        if (!tag(b, 0, "RIFF") || !tag(b, 8, "WAVE") || integer(b, 4, 4) != b.size() - 8)
-            throw std::runtime_error("invalid RIFF/WAVE envelope");
-        Bytes format, data;
-        bool found_data = false;
-        for (std::size_t p = 12; p < b.size();)
-        {
-            const auto length = integer(b, p + 4, 4);
-            if (b.size() - p < 8 || length > b.size() - p - 8)
-                throw std::runtime_error("truncated WAVE chunk");
-            const auto chunk = b.subspan(p + 8, length);
-            if (tag(b, p, "fmt "))
-            {
-                if (!format.empty())
-                    throw std::runtime_error("duplicate WAVE format");
-                format = chunk;
-            }
-            else if (tag(b, p, "data"))
-            {
-                if (found_data)
-                    throw std::runtime_error("duplicate WAVE data");
-                found_data = true;
-                data = chunk;
-            }
-            p += 8 + length;
-            if (length % 2 != 0)
-            {
-                if (p == b.size())
-                    throw std::runtime_error("missing WAVE chunk padding");
-                ++p;
-            }
-        }
-        if (format.size() < 16 || !found_data || data.empty())
-            throw std::runtime_error("missing WAVE format or PCM data");
-        const auto encoding = integer(format, 0, 2);
-        auto& clip = result.clip;
-        clip.channels = integer(format, 2, 2);
-        clip.sample_rate = integer(format, 4, 4);
-        const auto bits = integer(format, 14, 2);
-        if (clip.channels < 1 || clip.channels > 2 || clip.sample_rate < 8000 ||
-            clip.sample_rate > 192000 ||
-            !((encoding == 1 && (bits == 8 || bits == 16 || bits == 24 || bits == 32)) ||
-              (encoding == 3 && bits == 32)))
-            throw std::runtime_error("unsupported WAVE encoding, channel count or sample rate");
-        const auto bytes = bits / 8;
-        const auto alignment = clip.channels * bytes;
-        if (integer(format, 12, 2) != alignment ||
-            integer(format, 8, 4) != clip.sample_rate * alignment || data.size() % alignment != 0)
-            throw std::runtime_error("inconsistent PCM alignment/rate");
-        clip.samples.resize(data.size() / bytes);
-        for (std::size_t i = 0; i < clip.samples.size(); ++i)
-        {
-            auto raw = integer(data, i * bytes, bytes);
-            double sample;
-            if (encoding == 3)
-            {
-                // Preserve the IEEE sample bits without aliasing or alignment assumptions.
-                // memcpy also supports the GCC 10 standard library used on Ubuntu 20.04.
-                float decoded;
-                static_assert(sizeof(decoded) == sizeof(raw));
-                std::memcpy(&decoded, &raw, sizeof(decoded));
-                sample = decoded;
-            }
-            else if (bits == 8)
-                sample = (static_cast<double>(raw) - 128) / 128;
-            else
-            {
-                if (bits < 32 && (raw & (std::uint32_t{1} << (bits - 1))) != 0)
-                    raw |= ~((std::uint32_t{1} << bits) - 1);
-                std::int32_t decoded;
-                std::memcpy(&decoded, &raw, sizeof(decoded));
-                sample = static_cast<double>(decoded) / std::ldexp(1.0, static_cast<int>(bits - 1));
-            }
-            if (!std::isfinite(sample) || sample < -1 || sample > 1)
-                throw std::runtime_error("PCM sample outside finite -1..1");
-            clip.samples[i] = static_cast<float>(sample);
-        }
-        const auto frames = clip.samples.size() / clip.channels;
-        clip.rms.resize((frames + model::kAudioRmsFrames - 1) / model::kAudioRmsFrames);
-        for (std::size_t window = 0; window < clip.rms.size(); ++window)
-        {
-            const auto begin = window * model::kAudioRmsFrames;
-            const auto end = std::min(frames, begin + model::kAudioRmsFrames);
-            double squared = 0;
-            for (std::size_t f = begin; f < end; ++f)
-            {
-                double mono = 0;
-                for (std::uint32_t c = 0; c < clip.channels; ++c)
-                    mono += static_cast<double>(clip.samples[f * clip.channels + c]);
-                mono /= clip.channels;
-                squared += mono * mono;
-            }
-            clip.rms[window] =
-                static_cast<float>(std::sqrt(squared / static_cast<double>(end - begin)));
-        }
+        const auto size = std::filesystem::file_size(path);
+        if (size < 42 || size > kMaxSourceBytes)
+            throw std::runtime_error("FLAC size outside 42 bytes..64 MiB");
+        std::unique_ptr<FLAC__StreamDecoder, decltype(&FLAC__stream_decoder_delete)> decoder(
+            FLAC__stream_decoder_new(), FLAC__stream_decoder_delete);
+        if (!decoder)
+            throw std::runtime_error("cannot allocate FLAC decoder");
+        DecoderState state;
+        if (!FLAC__stream_decoder_set_md5_checking(decoder.get(), true))
+            throw std::runtime_error("cannot enable FLAC checksum verification");
+        const auto initialized = FLAC__stream_decoder_init_file(
+            decoder.get(), path.c_str(), write_frame, metadata, decode_error, &state);
+        if (initialized != FLAC__STREAM_DECODER_INIT_STATUS_OK)
+            throw std::runtime_error(FLAC__StreamDecoderInitStatusString[initialized]);
+        // Stop after metadata before attempting frames: allocation/limit failures
+        // must not let the decoder process the rest of an untrusted stream.
+        bool processed = FLAC__stream_decoder_process_until_end_of_metadata(decoder.get());
+        if (processed && !state.error && state.frames != 0)
+            processed = FLAC__stream_decoder_process_until_end_of_stream(decoder.get());
+        const bool verified = FLAC__stream_decoder_finish(decoder.get());
+        if (state.error)
+            throw std::runtime_error(state.error);
+        if (!processed || !verified || state.frames == 0 || state.written != state.frames)
+            throw std::runtime_error("truncated FLAC stream or PCM checksum mismatch");
+        prepare_rms(state.clip);
+        result.clip = std::move(state.clip);
         result.ok = true;
     }
     catch (const std::exception& error)

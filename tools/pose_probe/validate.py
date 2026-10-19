@@ -27,7 +27,7 @@ def main():
     reports = []
     for case in baseline['cases']:
         model, name = case['model'], case['case']
-        asset = args.output / model / 'model.nkm.json'
+        asset = args.output / model / 'model.nkm'
         if model not in imported:
             source = args.reference_root / 'model_conversion' / model.split('-')[0] / model / model
             run(args.importer, str(source)+'.json', str(source)+'.resx.json',

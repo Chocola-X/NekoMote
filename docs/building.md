@@ -108,7 +108,7 @@ ctest --preset dev
 ```bash
 build/dev/bin/nekomote_import ../NekoWebShow/model_conversion/chocola/chocola-date-a/chocola-date-a.json \
   ../NekoWebShow/model_conversion/chocola/chocola-date-a/chocola-date-a.resx.json --output assets/characters/chocola-date-a
-build/dev/bin/nekomote_preview --asset assets/characters/chocola-date-a/model.nkm.json \
+build/dev/bin/nekomote_preview --asset assets/characters/chocola/date-a/model.nkm \
   --icon tex/0003 --origin 400 651 --hidden --screenshot build/mouth.png
 ctest --preset dev -L gpu  # 需要显示服务器，执行真实 GPU 像素/生命周期回归
 ```

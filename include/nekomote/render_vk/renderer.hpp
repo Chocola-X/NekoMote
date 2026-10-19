@@ -73,6 +73,12 @@ class Renderer
     void reserve(Capacity capacity);
     void upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region = {});
     void prepare(RenderFrame frame);
+    // Explicit resource-retirement boundary after a successful prepare, before
+    // render. Keeps textures referenced by normal or mask commands in that
+    // prepared frame; releases every other uploaded texture without reuploading
+    // retained pixels. Uses the same context/thread and host-completion contract
+    // as prepare. No per-frame allocation; returns the number released.
+    std::size_t release_unused_textures();
     void resize_output(int width, int height);
     void render(Target target, const View& view, TargetContents contents = TargetContents::Clear);
     std::string diagnostics() const;

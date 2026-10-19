@@ -40,7 +40,7 @@ struct ConfigFixture
         // Asset discovery only needs the names; these tests never load/render.
         const auto model_dir = assets / "characters" / "synthetic" / "default";
         fs::create_directories(model_dir);
-        std::ofstream(model_dir / "model.nkm.json") << "{}";
+        std::ofstream(model_dir / "model.nkm") << "{}";
         std::ofstream(model_dir / "session.nks.json") << "{}";
         std::ofstream(assets / "config.json") << R"({"fps":90})";
     }

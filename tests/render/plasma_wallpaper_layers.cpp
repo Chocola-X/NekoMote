@@ -83,8 +83,7 @@ int main(int argc, char** argv)
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
     QGuiApplication app(argc, argv);
     const auto source = qEnvironmentVariable("NEKOMOTE_TEST_ASSETS_DIR");
-    if (!std::filesystem::exists(source.toStdString() +
-                                 "/characters/chocola/date-a/model.nkm.json"))
+    if (!std::filesystem::exists(source.toStdString() + "/characters/chocola/date-a/model.nkm"))
     {
         std::puts("SKIPPED: set NEKOMOTE_TEST_ASSETS_DIR with chocola/date-a");
         return 77;

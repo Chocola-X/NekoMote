@@ -121,7 +121,7 @@ def write_fixture(root, importer, timeout):
     catalog_model = root / "assets/characters/synthetic/default"
     shutil.copytree(model_dir, catalog_model)
     shutil.copyfile(session_path, catalog_model / "session.nks.json")
-    return model_dir / "model.nkm.json", session_path
+    return model_dir / "model.nkm", session_path
 
 
 def run_worker(args):

@@ -135,6 +135,9 @@ SessionLoadResult load_session_asset(const std::filesystem::path& path)
             reaction.recovery = action(r.at("recovery"), reaction.label + "/recovery");
             reaction.audio_path = label(r.at("audio_path"), reaction.label + "/audio_path");
             const std::filesystem::path audio(reaction.audio_path);
+            require(audio.empty() || audio.extension() == ".flac",
+                    reaction.label + ": audio must use .flac; rebuild sessions from FreeMote "
+                                     "sources or run migrate_audio_assets.py");
             require(!audio.is_absolute(), reaction.label + ": absolute audio reference");
             for (const auto& component : audio)
                 require(component != "..",

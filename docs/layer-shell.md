@@ -123,7 +123,7 @@ ctest --test-dir build/layer-shell -R 'layer_shell_options|abi_synthetic_boundar
 诊断示例（截图文件必须不存在）：
 
 ```bash
-build/layer-shell/bin/nekomote_layer_shell --model /path/model.nkm.json \
+build/layer-shell/bin/nekomote_layer_shell --model /path/model.nkm \
     --session /path/session.nks.json --frames 4 --capture /tmp/nekomote-frame.ppm
 ```
 

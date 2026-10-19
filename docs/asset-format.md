@@ -1,6 +1,7 @@
 # 当前资产格式
 
-当前只支持 **schema 6**。运行时不读取历史 schema 或原 E-mote JSON。旧资产须显式重建，版本不支持时明确拒绝。
+当前只支持 **schema 6** 的 `model.nkm` 二进制压缩容器。运行时不读取旧的
+`model.nkm.json` 或原 E-mote JSON；旧资产须显式转换或从 FreeMote 解包输入重建。
 
 ```bash
 build/release/bin/nekomote_import model.json model.resx.json --output assets/new-model
@@ -11,16 +12,18 @@ build/release/bin/nekomote_import model.json model.resx.json --output assets/new
 
 | 文件 | 用途 |
 | --- | --- |
-| `model.nkm.json` | `schema=6` 与规范化强类型模型 |
+| `model.nkm` | `schema=6` 与规范化模型的 MessagePack + zlib 压缩容器 |
 | `textures/N.png` | 仅引用的 PNG 图集 |
 | `report.json` | 结构状态、警告和未支持字段；不是播放认证 |
 | `source.json` | 离线调查归档，运行时不依赖 |
 
 加载阶段验证数量、有限数值、引用和路径；解析/图片解码不进入稳态帧路径。`Field<T>` 编码为 `{ "state": 0|1|2, "value": ... }`，表示缺失、null、存在；只有 state=2 带 value。末尾空帧不转为可见默认帧。icon 键为 `texture/icon`，motion 键为 `group/name`。
 
-模型加载逐项转换 part/layer/frame 并释放对应 JSON 节点，不同时保留完整 JSON 树与强类型副本。字段顺序不影响数据；重复 JSON 对象键明确拒绝。schema 和资产内容无需迁移。PNG 保留编码色值与 straight alpha，不做 gamma/ICC 变换；解码直接写入最终 RGBA 缓冲。
+容器头为 8 字节 `NKMMPK01`，随后是 uint64 小端编码的未压缩 MessagePack 长度，
+余下为 zlib 数据流。内部保留 schema 6 的字段和值语义；更换容器无需改变模型求值公式。
+PNG 保留编码色值与 straight alpha，不做 gamma/ICC 变换；解码直接写入最终 RGBA 缓冲。
 
-模型 PNG 在加载边界按非零 RGBA 包围盒裁切，并保留一像素过滤边距；alpha=0 的 RGB 也参与包围盒，避免改变 straight-alpha 线性过滤。原始 texture/icon 尺寸、原点、几何和帧 UV 不变，`TextureRegion` 记录原图尺寸及裁切偏移；GL/Vulkan 后端在像素坐标中采样裁切纹理。普通非交错 PNG 从同一打开的文件按行扫描后再解码，仅保留裁切区域和一行工作缓冲；Adam7 合并完整行后裁切。全零纹理存为 1×1。源 PNG、schema 6 和 C ABI 0.5.0 无需迁移。具体收益与验收见 [纹理裁切优化](texture-cropping-2026-10-12.md)。
+模型 PNG 在加载边界按非零 RGBA 包围盒裁切，并保留一像素过滤边距；alpha=0 的 RGB 也参与包围盒，避免改变 straight-alpha 线性过滤。原始 texture/icon 尺寸、原点、几何和帧 UV 不变，`TextureRegion` 记录原图尺寸及裁切偏移；GL/Vulkan 后端在像素坐标中采样裁切纹理。普通非交错 PNG 从同一打开的文件按行扫描后再解码，仅保留裁切区域和一行工作缓冲；Adam7 合并完整行后裁切。全零纹理存为 1×1。PNG 文件及裁切坐标约定保持不变；模型容器需要显式转换。具体收益与验收见 [纹理裁切优化](texture-cropping-2026-10-12.md)。
 
 ## 镜像与参数
 
@@ -36,34 +39,62 @@ build/release/bin/nekomote_import model.json model.resx.json --output assets/new
 
 有物理控制器时 author_scale 必须有限且为正。链条末端使用 `normal_velocity_damping`：1 去除法向速度，2 反射；无旧字段别名。保存 Float32 作者数值，绑定和锚点在编译时解析。物理输出参数即使没有 drawable 使用也声明，空显示帧的已选资源定位点与未选资源区分。
 
-## 一次性 5 → 6 迁移
+## 现有资产一次性迁移
 
-首选从明确、已核实来源重新导入到新目录。现有会话/背景/音频配置可以保留。需要发布到已有角色目录时：
+只接受当前 schema 6 的来源 JSON；更早模型须从 FreeMote 解包数据重新导入。
+两个命令都生成完整的新资产树，原树保持原状，目标必须不存在：
 
 ```bash
-python3 tools/rebuild_asset_schema.py --assets assets/characters \
-  --rebuilt <逐项核实的新bundle根目录> --backup <不存在的备份目录>
+python3 tools/migrate_audio_assets.py --source assets --output assets-audio \
+  --converter build/release/bin/nekomote_audio_convert
+python3 tools/migrate_model_assets.py --source assets-audio --output assets-new \
+  --converter build/release/bin/nekomote_model_convert
 ```
 
-这是显式离线迁移工具：全量比较作者数据和解码图集像素，通过后备份旧模型，再逐项发布；失败回滚本次写入。只允许 schema 与新镜像参数字段变化，以及旧格式 documented mirror=false 缺省的显式规范化。纹理差异须先独立核实，不能静默覆盖。冻结历史资产不迁移，输入矩阵只在内容等价证据成立时更新 asset SHA；源 PSB、驱动、输入与参照图片 hash 保持原记录。
+音频按原声音 namespace 分组；模型转换后解码比较全部字段及类型，再移除新树中的旧 JSON。
+迁移验证来源树未发生修改，PNG、来源归档和其他配置保留原字节；失败不发布残缺目录，
+发布不覆盖已有目标。确认新树可加载后，再保留原树作为备份并将新树移到正式位置。
+冻结的历史证据不改写；旧容器不会自动回退加载。
+
+## 角色音频
+
+```text
+characters/chocola/
+├── audio/
+│   ├── main/voice.flac
+│   └── little/voice.flac
+├── date-a/audio -> ../audio/main
+└── koneko/audio -> ../audio/little
+```
+
+`main` 对应原角色声音 namespace，`little` 对应 `ko<角色>`。分组依据原数据，
+不按衣服名推断（teenage 也可能使用小猫语音）。同角色内重复文件使用相对文件链接。
+会话仍以 `audio/voice.flac` 引用，因此没有每帧或播放时的目录回落搜索。
+加载阶段解析并检查链接必须落在本角色内；移动整棵资产树后相对链接仍有效。
+型号若需要独有语音，可使用自己的 `audio/` 目录或指向角色下独立语音组的相对链接。
+
+运行时通过 libFLAC 一次解码到最终 float PCM 和 RMS；设备线程复用该数据。
+FLAC 缩小磁盘占用，稳态 PCM 大小与原 WAV 相同。FreeMote 的整数 PCM WAV
+由离线转换器无损编码并验证；float WAV 明确拒绝，不通过量化冒充无损。
 
 ## 背景资产
 
 ```
 assets/backgrounds/
-├── background-names.json     # 可选，键为文件名，值含 zh-CN 名称
+├── background.json     # 可选，键为文件名，值含 zh-CN 名称
 ├── BG_07A.png                # 静态背景（根目录）
 ├── BG_13A.png
-└── dynamic/                  # 动态背景（分时段 A/B/C 三相）
-    ├── BG_22A.png            # 06:00–16:00 白天
-    ├── BG_22B.png            # 16:00–18:00 黄昏
-    ├── BG_22C.png            # 18:00–次日06:00 夜晚
-    └── ...
+└── dynamic/
+    └── BG_22/
+        ├── config.json       # phases/transition_seconds
+        ├── A.png
+        ├── B.png
+        └── C.png
 ```
 
 静态背景的 `name` 为文件 stem（如 `BG_07A`）。动态背景的 `name` 为组名（如 `BG_22`，不含相后缀），要求 A/B/C 三相齐全才收录。`config.json` 的 `background` 字段存 `name`：静态为 `BG_07A`，动态为 `BG_22`。
 
-`background-names.json` 键为完整文件名（如 `"BG_07A.png"`、`"BG_22A.png"`），动态组用 A 相的名称作为组显示名。文件不存在时回退到 stem。
+`background.json` 键为完整文件名（如 `"BG_07A.png"`、`"BG_22A.png"`），动态组在 `dynamic/background.json` 中以组名为键保存显示名。文件不存在时回退到 stem。
 
 导入工具：
 

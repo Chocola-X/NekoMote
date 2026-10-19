@@ -119,13 +119,13 @@ def summarize(samples):
 
 
 def measure_native(model, width, height, fps, warmup, measure):
-    model_json = os.path.join(ASSETS, 'characters', model, 'model.nkm.json')
+    model_path = os.path.join(ASSETS, 'characters', model, 'model.nkm')
     print(f'[native] 帧时间: preview --benchmark {measure} (hidden, vsync=0)')
     print(f'[native] 资源: player {model} {width}x{height} @ {fps}fps 后台采样')
 
     render_benchmark = None
     preview_cmd = [
-        PREVIEW, '--asset', model_json, '--playback',
+        PREVIEW, '--asset', model_path, '--playback',
         '--width', str(width), '--height', str(height),
         '--benchmark', str(measure), '--hidden',
     ]
@@ -172,6 +172,9 @@ def measure_webgl(model, width, height, fps, warmup, measure, port):
         original_content = f.read()
 
     tmp_root = tempfile.mkdtemp(prefix='nekomote_webgl_')
+    php = None
+    samples = []
+    result = {}
     try:
         for entry in os.listdir(WEBGL_ROOT):
             src = os.path.join(WEBGL_ROOT, entry)
@@ -190,9 +193,6 @@ def measure_webgl(model, width, height, fps, warmup, measure, port):
             ['php', '-S', f'127.0.0.1:{port}', '-t', tmp_root],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    samples = []
-    result = {}
-    try:
         time.sleep(1.5)
         url = f'http://127.0.0.1:{port}/?char={model}'
         measure_duration = (warmup + measure) / fps + 8
@@ -263,11 +263,12 @@ def measure_webgl(model, width, height, fps, warmup, measure, port):
             'resource_stats': summarize(samples),
         }
     finally:
-        php.terminate()
-        try:
-            php.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            php.kill()
+        if php is not None:
+            php.terminate()
+            try:
+                php.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                php.kill()
         shutil.rmtree(tmp_root, ignore_errors=True)
 
 

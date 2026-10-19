@@ -7,7 +7,7 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
-| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_abi_host` |
+| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_abi_host` |
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |

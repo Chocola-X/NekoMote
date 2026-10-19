@@ -13,7 +13,8 @@ from plasma_distribution import BASELINE, UBUNTU20_BASELINE, elf_info, version
 def audit(stage, mode):
     binaries = {}
     if mode == "native20":
-        names = {"nekomote_player", "nekomote_import", "nekomote_abi_host"}
+        names = {"nekomote_player", "nekomote_import", "nekomote_audio_convert",
+                 "nekomote_model_convert", "nekomote_abi_host"}
         baseline, limits = "ubuntu20", UBUNTU20_BASELINE
     elif mode == "layer-shell":
         names = {"nekomote_layer_shell"}
@@ -29,6 +30,8 @@ def audit(stage, mode):
             raise ValueError(f"C++ system runtime must be dynamically linked: {binary}")
         if any(name.startswith(("libQt", "libKF", "libPlasma")) for name in info["needed"]):
             raise ValueError(f"unexpected desktop/Qt dependency: {binary}")
+        if any(library.startswith("libFLAC") for library in info["needed"]):
+            raise ValueError(f"portable archives must statically link pinned FLAC: {binary}")
         for family, required in info["versions"].items():
             if version(required) > version(limits[family]):
                 raise ValueError(f"{binary}: {family}_{required} exceeds {baseline} baseline")

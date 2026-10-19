@@ -569,6 +569,26 @@ void Renderer::prepare(RenderFrame frame)
     p.composition = frame.composition;
     check_gl("prepare frame");
 }
+std::size_t Renderer::release_unused_textures()
+{
+    auto& p = *impl_;
+    std::size_t released = 0;
+    for (auto texture = p.textures.begin(); texture != p.textures.end();)
+    {
+        const auto referenced = [id = texture->id](const DrawCommand& command)
+        { return command.texture == id; };
+        if (std::any_of(p.commands.begin(), p.commands.end(), referenced) ||
+            std::any_of(p.mask_commands.begin(), p.mask_commands.end(), referenced))
+        {
+            ++texture;
+            continue;
+        }
+        glDeleteTextures(1, &texture->handle);
+        texture = p.textures.erase(texture);
+        ++released;
+    }
+    return released;
+}
 void Renderer::resize_output(int width, int height)
 {
     auto& p = *impl_;

@@ -15,7 +15,9 @@ struct AssetResult
     std::vector<std::string> errors;
     bool ok{false};
 };
-// Current schema only. Rebuild unsupported assets using nekomote_import.
+// Current binary container and schema only. Streams decompression and record
+// conversion without retaining a complete decoded document. Source JSON belongs
+// to the offline importer/migrator; rebuild unsupported assets using nekomote_import.
 AssetResult load_asset(const std::filesystem::path& file);
 // Creates a new bundle directory including only referenced textures and offline
 // evidence. Refuses existing destinations; failed writes remove only our temp dir.

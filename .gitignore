@@ -21,6 +21,7 @@ __pycache__/
 assets/characters/*
 !assets/characters/.gitkeep
 assets/config.json
+assets/*-migration-report*.json
 assets/backgrounds/*
 !assets/backgrounds/.gitkeep
 assets/icons/*

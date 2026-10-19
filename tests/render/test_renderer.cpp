@@ -811,7 +811,7 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
 TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][integration]")
 {
     const auto source = std::filesystem::absolute("assets/characters/chocola/date-a");
-    if (!std::filesystem::exists(source / "model.nkm.json"))
+    if (!std::filesystem::exists(source / "model.nkm"))
         SKIP("real asset integration unavailable: chocola/date-a");
     struct Assets
     {
@@ -888,7 +888,7 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
           "[gpu][abi][integration]")
 {
     const auto source = std::filesystem::absolute("assets/characters/chocola/date-a");
-    if (!std::filesystem::exists(source / "model.nkm.json"))
+    if (!std::filesystem::exists(source / "model.nkm"))
         SKIP("real asset integration unavailable: chocola/date-a");
     if (::geteuid() == 0)
         SKIP("read-only permission scenario requires an unprivileged user");
@@ -996,4 +996,85 @@ TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask",
     REQUIRE(pixel(renderer.capture({output.framebuffer, 64, 64}), 8, 32) ==
             std::array<std::uint8_t, 4>{0, 255, 0, 255});
     REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("Background texture retirement keeps transition pixels and frees settled storage",
+          "[gpu][background][lifecycle]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    renderer.reserve({8, 12, 2, 2});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 0, 255, 255}});
+    const auto old_quad = quad(.5f, .5f, .5f, .5f);
+    const auto next_quad = quad(.5f, .5f, .5f, .5f, .5f);
+    std::array<RenderVertex, 8> vertices{};
+    std::copy(old_quad.begin(), old_quad.end(), vertices.begin());
+    std::copy(next_quad.begin(), next_quad.end(), vertices.begin() + 4);
+    const std::array<DrawCommand, 2> transition{
+        {{TextureId{1}, 0, 6, BlendMode::Over}, {TextureId{2}, 6, 6, BlendMode::Over}}};
+    renderer.prepare({vertices, kIndices, transition});
+    renderer.render({output.framebuffer, 64, 64}, {});
+    const auto fading = renderer.capture({output.framebuffer, 64, 64});
+    REQUIRE(renderer.release_unused_textures() == 0);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(renderer.capture({output.framebuffer, 64, 64}).pixels == fading.pixels);
+    const auto center = pixel(fading, 32, 32);
+    REQUIRE(center[0] >= 127);
+    REQUIRE(center[2] >= 127);
+
+    const std::array<DrawCommand, 1> settled{{{TextureId{2}, 0, 6, BlendMode::Over}}};
+    const RenderFrame settled_frame{old_quad, std::span(kIndices).first(6), settled};
+    renderer.prepare(settled_frame);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    const auto complete = renderer.capture({output.framebuffer, 64, 64});
+    REQUIRE(renderer.release_unused_textures() == 1);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(renderer.capture({output.framebuffer, 64, 64}).pixels == complete.pixels);
+    REQUIRE(pixel(complete, 32, 32) == std::array<std::uint8_t, 4>{0, 0, 255, 255});
+    REQUIRE_THROWS(renderer.prepare({vertices, kIndices, transition}));
+    REQUIRE(renderer.release_unused_textures() == 0);
+    renderer.render({output.framebuffer, 64, 64}, {});
+    REQUIRE(renderer.capture({output.framebuffer, 64, 64}).pixels == complete.pixels);
+
+    // Retired IDs and capacity are reusable across repeated background changes.
+    for (int cycle = 0; cycle < 12; ++cycle)
+    {
+        renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {0, 255, 0, 255}});
+        renderer.prepare(settled_frame);
+        REQUIRE(renderer.release_unused_textures() == 1);
+    }
+    allocation_count = 0;
+    track_allocations = true;
+    std::size_t released = 0;
+    for (int frame = 0; frame < 120; ++frame)
+        released += renderer.release_unused_textures();
+    track_allocations = false;
+    REQUIRE(released == 0);
+    REQUIRE(allocation_count == 0);
+    renderer.prepare({});
+    REQUIRE(renderer.release_unused_textures() == 1);
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("Texture retirement retains textures used only by mask sources",
+          "[gpu][background][lifecycle][mask]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    renderer.reserve({4, 6, 1, 2, 1, 1});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 255, 255, 255}});
+    renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 0, 255, 255}});
+    const auto vertices = quad(.5f, .5f, .5f, .5f);
+    const std::array<DrawCommand, 1> commands{
+        {{TextureId{2}, 0, 6, BlendMode::Over, ColorProtection::None, MaskId{1}}}};
+    const std::array<DrawCommand, 1> sources{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    const std::array<MaskDefinition, 1> masks{{{0, 1}}};
+    renderer.prepare({vertices, std::span(kIndices).first(6), commands,
+                      ColorComposition::ProtectedStraight, sources, masks});
+    REQUIRE(renderer.release_unused_textures() == 0);
+    renderer.prepare({});
+    REQUIRE(renderer.release_unused_textures() == 2);
 }

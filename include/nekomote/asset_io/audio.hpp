@@ -13,7 +13,8 @@ struct AudioLoadResult
     std::string error;
     bool ok{false};
 };
-// RIFF/WAVE integer PCM 8/16/24/32 or IEEE float32, mono/stereo. Explicitly
-// rejects compressed/extensible formats. Loading only; no I/O in playback.
-AudioLoadResult load_wave(const std::filesystem::path& path);
+// Native FLAC integer PCM 8/16/24/32, mono/stereo, 8..192 kHz.
+// Decodes directly into owned PCM and prepares RMS; no I/O in playback.
+// Rejects unknown sample counts and streams exceeding 256 MiB decoded PCM.
+AudioLoadResult load_flac(const std::filesystem::path& path);
 } // namespace nekomote::asset_io

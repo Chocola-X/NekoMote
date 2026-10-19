@@ -150,7 +150,7 @@ def check_smoke(stage: Path, probe: Path) -> int:
     if not probe.is_file():
         print("check: smoke test SKIPPED (no probe binary)")
         return 0
-    model = REPO / "assets/characters/coconut/casual/model.nkm.json"
+    model = REPO / "assets/characters/coconut/casual/model.nkm"
     session = REPO / "assets/characters/coconut/casual/session.nks.json"
     if not model.is_file() or not session.is_file():
         print("check: smoke test SKIPPED (no model/session assets)")

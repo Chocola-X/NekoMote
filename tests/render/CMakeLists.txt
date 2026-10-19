@@ -1,6 +1,6 @@
 find_program(NEKOMOTE_RENDER_FLOCK flock REQUIRED)
 add_executable(nekomote_render_tests test_renderer.cpp)
-target_link_libraries(nekomote_render_tests PRIVATE nekomote::render_gl nekomote::asset_io glfw nekomote_gl_loader Catch2::Catch2WithMain)
+target_link_libraries(nekomote_render_tests PRIVATE nekomote::render_gl nekomote::importer glfw nekomote_gl_loader Catch2::Catch2WithMain)
 add_test(NAME renderer_gpu COMMAND ${NEKOMOTE_RENDER_FLOCK}
     ${PROJECT_SOURCE_DIR}/build/gpu-validation.lock $<TARGET_FILE:nekomote_render_tests>)
 set_tests_properties(renderer_gpu PROPERTIES LABELS gpu WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
@@ -20,7 +20,7 @@ if(NEKOMOTE_BUILD_VULKAN)
     target_include_directories(nekomote_vk_tests PRIVATE
         ${PROJECT_SOURCE_DIR}/apps/player ${PROJECT_SOURCE_DIR}/src/render_vk)
     target_link_libraries(nekomote_vk_tests PRIVATE
-        nekomote::render_vk nekomote::render_gl nekomote::ui glfw
+        nekomote::render_vk nekomote::render_gl nekomote::ui nekomote::importer glfw
         nekomote_gl_loader Vulkan::Vulkan Catch2::Catch2WithMain nekomote_warnings)
     if(NEKOMOTE_BUILD_ABI)
         target_link_libraries(nekomote_vk_tests PRIVATE nekomote::abi)
