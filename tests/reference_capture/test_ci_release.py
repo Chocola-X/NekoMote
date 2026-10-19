@@ -15,6 +15,7 @@ PACKAGES = (
     "nekomote-native-ubuntu20-x86_64",
     "nekomote-native-ubuntu20-aarch64",
     "nekomote-plasma5-x86_64",
+    "nekomote-plasma5-aarch64",
     "nekomote-plasma6-x86_64",
     "nekomote-plasma6-aarch64",
     "nekomote-layer-shell-debian12-x86_64",
@@ -101,7 +102,7 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         self.assertEqual(self.calls(), [])
 
     def test_missing_or_unexpected_files_are_rejected_before_github_access(self):
-        # Every package in the nine-package set is mandatory: dropping any one
+        # Every package in the ten-package set is mandatory: dropping any one
         # of them (for example after adding a new adapter) must fail the gate.
         for package in PACKAGES:
             archive = self.assets / f"{package}.tar.gz"
