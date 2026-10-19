@@ -6,7 +6,7 @@
 
 NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面动态壁纸：模型求值、时间线动画、变形、遮罩、物理与 GPU 渲染均为从零实现的完整原生播放链条，不依赖浏览器、JavaScript、asm.js 或任何专有核心。目前可完美对接《猫娘乐园》（NEKOPARA）的角色解包素材（FreeMote 解包后经本项目导入器规范化），在真实桌面上长期稳定运行。
 
-支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经桌面插件或普通窗口运行。
+支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经 KDE Plasma 插件、Wayland/X11 独立壁纸壳或普通窗口运行。
 
 许可证：GNU AGPL-3.0（见 [LICENSE](LICENSE)）。
 
@@ -48,7 +48,7 @@ NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面
 - KF6/Plasma 6 开发包——Plasma 诊断探针（分发构建可关闭）
 - Wayland client ≥ 1.20、wayland-scanner、wayland-egl/cursor 与 EGL ≥ 1.5——独立 layer-shell 壳
 
-FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、fast_float v6.1.6、stb、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。
+FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、fast_float v6.1.6、stb、FLAC 1.4.3、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。系统依赖模式（`-DNEKOMOTE_USE_SYSTEM_DEPS=ON`）要求系统提供等价版本（FLAC ≥ 1.4），缺失直接报错，不回退下载。
 
 ## 构建
 
@@ -57,7 +57,7 @@ cmake --preset release          # Release + LTO + Vulkan，发布构建
 cmake --build --preset release
 ```
 
-产物在 `build/release/bin/`：`nekomote_player`、`nekomote_import`、`nekomote_abi_host`、`nekomote_preview`（不含测试与诊断探针）。
+产物在 `build/release/bin/`：`nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`、`nekomote_preview`（不含测试与诊断探针）。
 
 其他 preset：
 
@@ -124,6 +124,7 @@ python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest
 | `model.nkm` | schema 6 规范化模型，MessagePack + zlib 压缩容器 |
 | `session.nks.json` | 反应会话 |
 | `textures/N.png` | 引用的 PNG 图集 |
+| `audio/main/*.flac` | 会话语音（FLAC 无损；`little/` 为小猫语音） |
 | `report.json` | 结构状态与警告（非播放认证） |
 
 已有 JSON/WAV 资产使用[一次性迁移工具](docs/asset-format.md#现有资产一次性迁移)转为当前格式。
@@ -239,7 +240,7 @@ Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 
 五个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 
-- Ubuntu 20.04：x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_abi_host`。
+- Ubuntu 20.04：x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`。
 - KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 与 ARM64 插件。
 - KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 ARM64 插件。
 - Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 ARM64 独立程序。
@@ -258,7 +259,47 @@ python3 tools/plasma_distribution.py check-host stage
 python3 tools/plasma_deploy.py install --stage stage
 ```
 
-插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt/KDE/glibc/GPU 驱动。一个二进制不能覆盖所有 Linux 发行版：Qt 插件要求相同 major、不低于构建 minor 的 Qt。详见 [Plasma 分发](docs/plasma-distribution.md)。
+插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt/KDE/glibc/GPU 驱动。一个二进制不能覆盖所有 Linux 发行版：Qt 插件要求相同 major、不低于构建 minor 的 Qt。详见 [Plasma 分发](docs/plasma-distribution.md)。Plasma 5 包（`nekomote-plasma5-*`）步骤相同，但必须装进 Plasma 5 桌面，不得装进 Plasma 6。
+
+## 独立壁纸壳（Wayland layer-shell / X11）
+
+不使用 Plasma 插件时，可经两个独立进程壳把同一壁纸本体接到其他桌面。两者都只通过 C ABI 复用共享的模型、背景、声音、控制面板与配置，不重复任何业务逻辑：
+
+- **`nekomote_layer_shell`**：面向实现 [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) 协议的 Wayland 合成器（Sway、Hyprland、niri 等），OpenGL/EGL 输出。
+- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，OpenGL/GLX 输出，Ubuntu 20.04 基线。
+
+### 构建与运行
+
+```bash
+# Wayland layer-shell 壳（需 Wayland client ≥ 1.20、wayland-scanner、EGL ≥ 1.5）
+cmake --preset layer-shell && cmake --build --preset layer-shell
+build/layer-shell/bin/nekomote_layer_shell --list-outputs
+build/layer-shell/bin/nekomote_layer_shell --assets assets --output DP-1
+
+# X11/EWMH 壳（需 X11、RandR ≥ 1.3、GLX 开发文件）
+cmake --preset x11 && cmake --build --preset x11
+build/x11/bin/nekomote_x11 --list-outputs
+build/x11/bin/nekomote_x11 --assets assets --output HDMI-1
+```
+
+两者命令行契约基本一致：
+
+| 参数 | 含义 |
+| --- | --- |
+| `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
+| `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
+| `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
+| `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
+| `--config FILE` | 显式指定该实例配置文件 |
+| `--mute` / `--no-save` | 强制静音 / 不写配置 |
+| `--model FILE [--session FILE]` | 单模型诊断入口，不绘制资产控制面板 |
+| `--frames N [--capture FILE.ppm]` | 固定 1/60 秒步长诊断回放，仅在最后一步读一次 framebuffer |
+
+X11 壳另支持 `--ui-open`，在交互模式启动时展开控制面板。
+
+多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。每实例配置独立存放于 `$XDG_CONFIG_HOME/nekomote/<壳名>/output-<输出名>.json`。
+
+两个壳默认关闭，不依赖 Qt/GLFW；协议能力缺失（无 layer-shell 的合成器、无 EWMH 支持的 WM）时明确失败退出，不退化为普通窗口。适用范围与验收边界见 [layer-shell 说明](docs/layer-shell.md)与 [X11 说明](docs/x11.md)（后者含 XFCE 桌面图标共存的已知限制）。
 
 ## 配置
 
@@ -323,7 +364,10 @@ src/render_vk    Vulkan 后端
 src/application  会话、Controller、配置、多模型切换
 src/ui           共享控制面板与布局
 src/host_qt_quick Qt Quick 共享宿主基础
-adapters/plasma  Plasma 壁纸 QML 模块
+adapters/plasma  Plasma 6 壁纸 QML 模块
+adapters/plasma5 Plasma 5 适配器（Qt5 插件注册与入口）
+adapters/layer_shell 独立 Wayland layer-shell 壳
+adapters/x11     独立 X11/EWMH 壳
 apps/player      普通窗口播放器
 apps/abi_host    C ABI 诊断宿主
 apps/preview     部件预览
