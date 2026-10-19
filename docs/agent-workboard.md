@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| C21 PNG 打包/异机资产复核 | 输入主库 `86da860`/资产库 `4bced9e`；补齐 native20 PNG 工具构建/审计，Ubuntu20 x86_64 全流程 210 检查、安装/审计/归档和工具实跑通过；324 PNG 双路径像素一致，恢复三份旧名称字典并 amend 资产库为 `faa78f6`，见 [报告](png-ci-assets-audit-2026-10-19.md) | 本地已处理用户指定新资产树；未推送或重跑远端/ARM64，未新增桌面/GPU/长期认证 |
 | C20 PNG/FLAC/模型存储与背景回收 | base `5a9b4e2`（用户回滚后 0.5.2）；保留 PNG，main/little 相对链接与 FLAC、流式压缩模型、GL/Vulkan 背景旧纹理释放；195 模型与全部本地音频迁移、224 CTest runner 通过/2 跳过，见 [报告](asset-storage-and-memory-2026-10-19.md) | 已保留原资产备份；未安装真实桌面，其他驱动、多屏和长期待独立验收；PNG 直接上传 GPU 仅作为峰值候选，不自动实现 |
 | D1 真实 Wayland / KDE6 桌面资源测量 | base `88ea8fe`；Debian12 当前构建 200 必选检查/重装校验通过；真实 KDE6/Wayland 双后端各 2×120 秒，静态前后/驻留另测，见 [报告](plasma-desktop-2026-10-18.md)；原图片背景和资产配置已恢复，保留新安装 | Vulkan 第二轮 RSS 较第一轮高约 69 MiB、切回静态后驻留未归因；实际 present/多屏/其他模型/长期仍未验证 |
 | S1 系统依赖 / Arch 打包 | base `cffc7e4`；新增显式系统依赖模式和三包 PKGBUILD，固定模式/GitHub 默认保留；201 系统依赖 CPU/QML、199 固定依赖 CPU 通过，见 [说明](../packaging/arch/README.md) | 三份实际包审计通过，ARM64/干净 chroot 和其他发行版未验证 |

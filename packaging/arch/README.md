@@ -5,7 +5,7 @@
 
 | 包 | 安装内容 |
 | --- | --- |
-| `nekomote-git` | `/usr/bin/nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_abi_host` |
+| `nekomote-git` | `/usr/bin/nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
 | `nekomote-layer-shell-git` | `/usr/bin/nekomote_layer_shell` |
 | `nekomote-plasma6-git` | 原生库、`/usr/lib/qt6/qml/NekoMote/Wallpaper` 模块及 Plasma6 壁纸包 |
 

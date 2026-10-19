@@ -100,6 +100,29 @@ class StandaloneAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly"):
             AUDIT.audit(self.stage, "layer-shell")
 
+    def test_native_package_requires_png_converter_and_keeps_elf_gates(self):
+        fixture = self.stage / "bin/nekomote_layer_shell"
+        programs = {"nekomote_player", "nekomote_import", "nekomote_audio_convert",
+                    "nekomote_model_convert", "nekomote_png_recompress", "nekomote_abi_host"}
+        for name in programs:
+            shutil.copyfile(fixture, self.stage / "bin" / name)
+            (self.stage / "bin" / name).chmod(0o755)
+        fixture.unlink()
+        # The host compiler may target a newer glibc. Keep real ELF dependency
+        # parsing and ldd, but freeze versions at the declared native baseline.
+        info = AUDIT.elf_info(self.stage / "bin/nekomote_player")
+        info["versions"] = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.11"}
+        with patch.object(AUDIT, "elf_info", return_value=info):
+            report = AUDIT.audit(self.stage, "native20")
+            self.assertEqual(report["baseline"], "ubuntu20")
+            self.assertEqual(set(report["binaries"]), programs)
+            info["needed"].append("libFLAC.so.12")
+            with self.assertRaisesRegex(ValueError, "statically link pinned FLAC"):
+                AUDIT.audit(self.stage, "native20")
+        (self.stage / "bin/nekomote_png_recompress").unlink()
+        with self.assertRaisesRegex(ValueError, "exactly"):
+            AUDIT.audit(self.stage, "native20")
+
 
 if __name__ == "__main__":
     unittest.main()

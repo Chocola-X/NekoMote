@@ -1,5 +1,9 @@
 # GitHub 自动构建与测试
 
+2026-10-19 PNG 工具补修：native20 构建与严格包清单补齐 `nekomote_png_recompress`，
+Ubuntu20 x86_64 完整构建、210 检查、安装/审计/归档和工具实跑通过；用户提供的
+两架构原始失败日志及异机资产问题见 [复核记录](png-ci-assets-audit-2026-10-19.md)。
+
 四个日常构建工作流独立触发：任意分支的 push、pull request 和手动
 `workflow_dispatch` 都会运行；同一工作流同一 ref 的新运行取消旧运行，不取消其他工作流。
 它们也提供 `workflow_call`，供独立的标签发布工作流复用。分支 CI 只上传 Actions
@@ -7,7 +11,7 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
-| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_abi_host` |
+| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |

@@ -1,0 +1,288 @@
+{
+  "date": "2026-10-19",
+  "reviewed_main_commit": "86da860d506cb3ed4550ac8a3bdaba6ac0dcf2cb",
+  "reviewed_asset_commit": "4bced9e7dcb4bbfe1e5e9c0d6ccf8d7216f93d3b",
+  "amended_asset_commit": "faa78f61e00df31077016a45289a529ffb6a8c50",
+  "root_cause": "runtime install included nekomote_png_recompress, but native20 explicit build targets and exact program audit omitted it",
+  "provided_logs": {
+    "x86_64": {
+      "sha256": "ea079cb03b2d3bf609a400435ca404dfd33a3405c67a20e7dedc0e67ec062ab7",
+      "tests_passed": 210,
+      "failure": "cmake install cannot find bin/nekomote_png_recompress"
+    },
+    "aarch64": {
+      "sha256": "9fae17c1e913d71c23bf45664f91d3c6b7705c981dbcf0042eff383bacd87a9a",
+      "tests_passed": 210,
+      "failure": "cmake install cannot find bin/nekomote_png_recompress"
+    }
+  },
+  "asset_audit": {
+    "source": "assets",
+    "candidate": "experiments/NekoMoteAssets/assets",
+    "missing": [
+      "audio-migration-report.json",
+      "config.json",
+      "model-migration-report.json"
+    ],
+    "extra": [],
+    "non_png_differences": [
+      {
+        "path": "backgrounds/background.json",
+        "source_sha256": "6f7673548ebbd37c3e6168e677eb492f3ea06d2a70d3ccea21265f58822d5fcd",
+        "output_sha256": "e89daf38b846fc8feb7e1c7778bbdd35b440487f8f30eee21718612123ec721b"
+      },
+      {
+        "path": "backgrounds/dynamic/background.json",
+        "source_sha256": "81b3136d4f59936e7200fad566c758a681a18b97ca1da4a25f6f2ed0395d6d75",
+        "output_sha256": "ad9cc54c6f8b4ed02fa00ecaa0a9f8e2b1fa985eb8bde5b6b4efc885ffc2ad5e"
+      },
+      {
+        "path": "characters/characters.json",
+        "source_sha256": "006a1f6ee63b9c822a53c0f86a4f08113ed6649728d8acd5bfc1b04ccce7b31f",
+        "output_sha256": "0c8ed2ed5f6ce798ecbac0d42e792a9631ef0a73bd2b755b5d7fd921abc720c3"
+      }
+    ],
+    "link_differences": [],
+    "bad_links": [],
+    "reference_errors": [],
+    "summary": {
+      "models": 195,
+      "pngs": 324,
+      "pixel_mismatches": 0,
+      "unchanged_png_files": 1,
+      "source_png_bytes": 983983314,
+      "candidate_png_bytes": 802072704,
+      "non_png_regular_equal": 886,
+      "symlinks": 202
+    },
+    "metadata_repairs": [
+      {
+        "path": "characters/characters.json",
+        "source_commit": "3c46120475fa65ed4421b78910727379966e773e",
+        "old_sha256": "0c8ed2ed5f6ce798ecbac0d42e792a9631ef0a73bd2b755b5d7fd921abc720c3",
+        "restored_sha256": "006a1f6ee63b9c822a53c0f86a4f08113ed6649728d8acd5bfc1b04ccce7b31f"
+      },
+      {
+        "path": "backgrounds/background.json",
+        "source_commit": "3c46120475fa65ed4421b78910727379966e773e",
+        "old_sha256": "e89daf38b846fc8feb7e1c7778bbdd35b440487f8f30eee21718612123ec721b",
+        "restored_sha256": "6f7673548ebbd37c3e6168e677eb492f3ea06d2a70d3ccea21265f58822d5fcd"
+      },
+      {
+        "path": "backgrounds/dynamic/background.json",
+        "source_commit": "3c46120475fa65ed4421b78910727379966e773e",
+        "old_sha256": "ad9cc54c6f8b4ed02fa00ecaa0a9f8e2b1fa985eb8bde5b6b4efc885ffc2ad5e",
+        "restored_sha256": "81b3136d4f59936e7200fad566c758a681a18b97ca1da4a25f6f2ed0395d6d75"
+      }
+    ],
+    "post_repair_non_png_differences": [],
+    "metadata_repair_verified": true
+  },
+  "runtime_png_verification": {
+    "pngs": 324,
+    "full_rgba_equal": true,
+    "cropped_rgba_and_region_equal": true
+  },
+  "metadata_repaired_from": "3c46120475fa65ed4421b78910727379966e773e",
+  "post_repair": {
+    "non_png_differences": [],
+    "new_unexpected_files": [],
+    "localized_metadata": {
+      "characters/characters.json": {
+        "entries": 195,
+        "languages": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "ja"
+        ],
+        "sha256": "006a1f6ee63b9c822a53c0f86a4f08113ed6649728d8acd5bfc1b04ccce7b31f"
+      },
+      "backgrounds/background.json": {
+        "entries": 51,
+        "languages": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "ja"
+        ],
+        "sha256": "6f7673548ebbd37c3e6168e677eb492f3ea06d2a70d3ccea21265f58822d5fcd"
+      },
+      "backgrounds/dynamic/background.json": {
+        "entries": 35,
+        "languages": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "ja"
+        ],
+        "sha256": "81b3136d4f59936e7200fad566c758a681a18b97ca1da4a25f6f2ed0395d6d75"
+      }
+    }
+  },
+  "pillow_version": "11.3.0",
+  "tests": {
+    "host": {
+      "tests": 210,
+      "failures": 0,
+      "skipped": 0
+    },
+    "ubuntu20": {
+      "tests": 210,
+      "failures": 0,
+      "skipped": 0
+    },
+    "packaging_unit": {
+      "passed": 7,
+      "includes_new_native_package_case": true,
+      "overlaps_python_runner": true
+    }
+  },
+  "native_package": {
+    "archive_sha256": "4e7da36feef9c02ca08c19f3df329838d3659e780a3b7c5c5cbf7ba19582b97e",
+    "audit": {
+      "baseline": "ubuntu20",
+      "binaries": {
+        "nekomote_abi_host": {
+          "architecture": "x86_64",
+          "needed": [
+            "libm.so.6",
+            "libc.so.6",
+            "libz.so.1",
+            "libvulkan.so.1",
+            "libpulse.so.0",
+            "libpng16.so.16",
+            "libfontconfig.so.1",
+            "libpthread.so.0",
+            "libdl.so.2",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "0a0345cb1494a05dddee127144a86ec1c852c14f985974147ef7aad6530ab816",
+          "versions": {
+            "CXXABI": "1.3.11",
+            "GLIBC": "2.29",
+            "GLIBCXX": "3.4.28"
+          }
+        },
+        "nekomote_audio_convert": {
+          "architecture": "x86_64",
+          "needed": [
+            "libm.so.6",
+            "libc.so.6",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "9fadf7b87ae69d27b20a4fcd2a66259763bf3f3c2e72924dcfa0c8c86801afd2",
+          "versions": {
+            "CXXABI": "1.3.9",
+            "GLIBC": "2.29",
+            "GLIBCXX": "3.4.26"
+          }
+        },
+        "nekomote_import": {
+          "architecture": "x86_64",
+          "needed": [
+            "libc.so.6",
+            "libpng16.so.16",
+            "libz.so.1",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "69cab45b86cb65ce32bbf6ddb8c7fb1b1545d37591090617e28d94cd7d774746",
+          "versions": {
+            "CXXABI": "1.3.9",
+            "GLIBC": "2.28",
+            "GLIBCXX": "3.4.28"
+          }
+        },
+        "nekomote_model_convert": {
+          "architecture": "x86_64",
+          "needed": [
+            "libc.so.6",
+            "libz.so.1",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "73e381eddfadaa01a3e8f5887015083fdf336ad903a3e14660380c5eed614a94",
+          "versions": {
+            "CXXABI": "1.3.9",
+            "GLIBC": "2.28",
+            "GLIBCXX": "3.4.28"
+          }
+        },
+        "nekomote_player": {
+          "architecture": "x86_64",
+          "needed": [
+            "libm.so.6",
+            "libc.so.6",
+            "libvulkan.so.1",
+            "libpulse.so.0",
+            "libpthread.so.0",
+            "libdl.so.2",
+            "libpng16.so.16",
+            "libz.so.1",
+            "libfontconfig.so.1",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "aa9f94e2744e6d0168eeaed4de70eb9df4aa0a07b48e7f4b224f937256d747e2",
+          "versions": {
+            "CXXABI": "1.3.11",
+            "GLIBC": "2.29",
+            "GLIBCXX": "3.4.28"
+          }
+        },
+        "nekomote_png_recompress": {
+          "architecture": "x86_64",
+          "needed": [
+            "libc.so.6",
+            "libpng16.so.16",
+            "libz.so.1",
+            "libstdc++.so.6",
+            "libgcc_s.so.1"
+          ],
+          "public_qt5_renderer_exports": [],
+          "qt_symbol_minimum": "0.0",
+          "runpath": [],
+          "sha256": "daba6514c703583ee815729b3573a58652c12a76ea2e94f2af095a39880db348",
+          "versions": {
+            "CXXABI": "1.3.9",
+            "GLIBC": "2.14",
+            "GLIBCXX": "3.4.28"
+          }
+        }
+      },
+      "limits": {
+        "CXXABI": "1.3.12",
+        "GLIBC": "2.31",
+        "GLIBCXX": "3.4.28"
+      },
+      "scope": "ELF and dynamic-loader checks; no desktop/GPU/long-term acceptance"
+    },
+    "smoke": "strip and recompress of packaged converter executed in Ubuntu20, both 90 -> 74 bytes and pixel verification succeeded"
+  },
+  "environment": "Ubuntu20 x86_64 full existing OCI root filesystem, GCC10.5/glibc2.31/CMake3.28.4, Release/LTO/Werror; bubblewrap user namespace; unchanged CI script apart from target fix, cached pinned sources only",
+  "harness_note": "Initial local cmake cache wrapper created _deps in the missing-system-dependency negative test; scoped wrapper to fixed mode and repeated full build/tests/install/audit/archive successfully; no product/test weakening",
+  "not_performed": [
+    "ARM64 rerun after fix",
+    "remote GitHub rerun or push",
+    "GPU/desktop installation or soak",
+    "replace active root assets tree"
+  ]
+}

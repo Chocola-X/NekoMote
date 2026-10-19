@@ -14,7 +14,7 @@ def audit(stage, mode):
     binaries = {}
     if mode == "native20":
         names = {"nekomote_player", "nekomote_import", "nekomote_audio_convert",
-                 "nekomote_model_convert", "nekomote_abi_host"}
+                 "nekomote_model_convert", "nekomote_png_recompress", "nekomote_abi_host"}
         baseline, limits = "ubuntu20", UBUNTU20_BASELINE
     elif mode == "layer-shell":
         names = {"nekomote_layer_shell"}
