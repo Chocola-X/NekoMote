@@ -1,0 +1,1336 @@
+{
+  "base": "0b29ebdf9ce73815e8b99dedf081c67f5b95d2f1",
+  "policy": {
+    "maximum_screen_speed_px_s": 800,
+    "stiffness_per_tick": 0.5,
+    "velocity_retention_per_tick": 0.5,
+    "author_hz": 60
+  },
+  "evidence_root": "build/evidence/drag-800-20261020",
+  "tests": {
+    "cpu_passed": 223,
+    "gpu_passed": 4,
+    "integration_passed": 13,
+    "integration_skipped": 2,
+    "pointer_cases": 14,
+    "pointer_assertions": 30676,
+    "real_model_warmed_cpp_allocations": 0,
+    "final_pointer_and_allocation_cases": 21,
+    "final_pointer_and_allocation_assertions": 31229
+  },
+  "geometry_samples_5x5": [
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 0.0,
+            "hair_LR_M": 0.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 0.0,
+            "quake_LR_M": 0.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": 0.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 30.0,
+            "hair_LR_M": 30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 116.83103854332788,
+            "peak_output_pixels": 116.83103854332788
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 30.0,
+            "quake_LR_M": 30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 62.32271750992906,
+            "peak_output_pixels": 62.32271750992906
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": -1600.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 29.99993324279785,
+            "hair_LR_M": 29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 116.83054655516786,
+            "peak_output_pixels": 116.83054655516786
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 29.99993324279785,
+            "quake_LR_M": 29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 62.32256724319245,
+            "peak_output_pixels": 62.32256724319245
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": -800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 14.99999713897705,
+            "hair_LR_M": 14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 33.88868713400892,
+            "peak_output_pixels": 33.88868713400892
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 14.99999713897705,
+            "quake_LR_M": 14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 31.16131212890041,
+            "peak_output_pixels": 31.16131212890041
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": -400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 7.499998569488525,
+            "hair_LR_M": 7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 16.944366455517834,
+            "peak_output_pixels": 16.944366455517834
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 7.499998569488525,
+            "quake_LR_M": 7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 15.58068236113418,
+            "peak_output_pixels": 15.58068236113418
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": -200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -7.499998569488525,
+            "hair_LR_M": -7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 17.318532980929277,
+            "peak_output_pixels": 17.318532980929277
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -7.499998569488525,
+            "quake_LR_M": -7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 17.330503426826372,
+            "peak_output_pixels": 17.330503426826372
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": 200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -14.99999713897705,
+            "hair_LR_M": -14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 34.63712058162808,
+            "peak_output_pixels": 34.63712058162808
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -14.99999713897705,
+            "quake_LR_M": -14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 34.660999252772584,
+            "peak_output_pixels": 34.660999252772584
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": 400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -29.99993324279785,
+            "hair_LR_M": -29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 112.3806812971905,
+            "peak_output_pixels": 112.3806812971905
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -29.99993324279785,
+            "quake_LR_M": -29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 69.32191256702168,
+            "peak_output_pixels": 69.32191256702168
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": 800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -30.0,
+            "hair_LR_M": -30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 112.38111499609798,
+            "peak_output_pixels": 112.38111499609798
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -30.0,
+            "quake_LR_M": -30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 69.3220493828538,
+            "peak_output_pixels": 69.3220493828538
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0,
+      "screen_speed": 1600.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 27.477172851833654,
+        "peak_output_pixels": 27.477172851833654
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 110.16678502027132,
+        "peak_output_pixels": 110.16678502027132
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 112.38111499609798,
+        "peak_output_pixels": 112.38111499609798
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 41.13114929203747,
+        "peak_output_pixels": 41.13114929203747
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 36.70541751324882,
+        "peak_output_pixels": 36.70541751324882
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 69.3220493828538,
+        "peak_output_pixels": 69.3220493828538
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 27.47732543972428,
+        "peak_output_pixels": 27.47732543972428
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 114.02655912545465,
+        "peak_output_pixels": 114.02655912545465
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 116.83103854332788,
+        "peak_output_pixels": 116.83103854332788
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 37.73758983616996,
+        "peak_output_pixels": 37.73758983616996
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 36.55038557611008,
+        "peak_output_pixels": 36.55038557611008
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 62.32271750992906,
+        "peak_output_pixels": 62.32271750992906
+      },
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "scale": 1.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 0.0,
+            "hair_LR_M": 0.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 0.0,
+            "quake_LR_M": 0.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": 0.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 30.0,
+            "hair_LR_M": 30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 119.49554306404701,
+            "peak_output_pixels": 66.57694257026867
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 30.0,
+            "quake_LR_M": 30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 208.33415987571232,
+            "peak_output_pixels": 116.0733784860605
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": -1600.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 29.99993324279785,
+            "hair_LR_M": 29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 119.4950415698625,
+            "peak_output_pixels": 66.57666316278062
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 29.99993324279785,
+            "quake_LR_M": 29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 208.333684652007,
+            "peak_output_pixels": 116.0731137151701
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": -800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 14.99999713897705,
+            "hair_LR_M": 14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 34.485933385561154,
+            "peak_output_pixels": 19.2138380028285
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 14.99999713897705,
+            "quake_LR_M": 14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 104.1670494489675,
+            "peak_output_pixels": 58.03667225614575
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": -400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 7.499998569488525,
+            "hair_LR_M": 7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 17.24300580306676,
+            "peak_output_pixels": 9.606940791710445
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 7.499998569488525,
+            "quake_LR_M": 7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 52.08353996892808,
+            "peak_output_pixels": 29.018344621515126
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": -200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -7.499998569488525,
+            "hair_LR_M": -7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 17.26373680673078,
+            "peak_output_pixels": 9.618491070532338
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -7.499998569488525,
+            "quake_LR_M": -7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 24.45042534101884,
+            "peak_output_pixels": 13.622554632645748
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": 200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -14.99999713897705,
+            "hair_LR_M": -14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 34.52754010050695,
+            "peak_output_pixels": 19.23701918432243
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -14.99999713897705,
+            "quake_LR_M": -14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 48.90082779621199,
+            "peak_output_pixels": 27.24509651445357
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": 400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -29.99993324279785,
+            "hair_LR_M": -29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 120.93158506505627,
+            "peak_output_pixels": 67.37703338016979
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -29.99993324279785,
+            "quake_LR_M": -29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 97.80150302025278,
+            "peak_output_pixels": 54.49010802332099
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": 800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -30.0,
+            "hair_LR_M": -30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 120.93208641025808,
+            "peak_output_pixels": 67.37731270465213
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -30.0,
+            "quake_LR_M": -30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 97.80171662129248,
+            "peak_output_pixels": 54.49022703114161
+          }
+        }
+      ],
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505,
+      "screen_speed": 1600.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 27.40728759765625,
+        "peak_output_pixels": 15.269970457542513
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 120.93208641025808,
+        "peak_output_pixels": 67.37731270465213
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 120.93208641025808,
+        "peak_output_pixels": 67.37731270465213
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 41.79873847961426,
+        "peak_output_pixels": 23.288167407008814
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 86.16443041421579,
+        "peak_output_pixels": 48.006512947620834
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 97.80171662129248,
+        "peak_output_pixels": 54.49022703114161
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 27.40728759765625,
+        "peak_output_pixels": 15.269970457542513
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 119.49554306404701,
+        "peak_output_pixels": 66.57694257026867
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 119.49554306404701,
+        "peak_output_pixels": 66.57694257026867
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 51.44037628173828,
+        "peak_output_pixels": 28.660005969149097
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 156.96516684143046,
+        "peak_output_pixels": 87.45314369368106
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 208.33415987571232,
+        "peak_output_pixels": 116.0733784860605
+      },
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "scale": 0.5571500062942505
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 0.0,
+            "hair_LR_M": 0.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 0.0,
+            "quake_LR_M": 0.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 0.0,
+            "peak_output_pixels": 0.0
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": 0.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 30.0,
+            "hair_LR_M": 30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 130.99822528544462,
+            "peak_output_pixels": 71.54049154888634
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 30.0,
+            "quake_LR_M": 30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 171.13500532764607,
+            "peak_output_pixels": 93.45991043530134
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": -1600.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 29.99993324279785,
+            "hair_LR_M": 29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 130.99772279806248,
+            "peak_output_pixels": 71.54021713147162
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 29.99993324279785,
+            "quake_LR_M": 29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 171.13461993423215,
+            "peak_output_pixels": 93.45969996501282
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": -800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 14.99999713897705,
+            "hair_LR_M": 14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 42.40652693954838,
+            "peak_output_pixels": 23.15896857019077
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 14.99999713897705,
+            "quake_LR_M": 14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 85.56747714472198,
+            "peak_output_pixels": 46.729941281209705
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": -400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": 7.499998569488525,
+            "hair_LR_M": 7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 21.203261538332477,
+            "peak_output_pixels": 11.579483230300259
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": 7.499998569488525,
+            "quake_LR_M": 7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 42.7837537703253,
+            "peak_output_pixels": 23.364978940487045
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": -200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -7.499998569488525,
+            "hair_LR_M": -7.499998569488525,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 20.810302734375,
+            "peak_output_pixels": 11.364881345944013
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -7.499998569488525,
+            "quake_LR_M": -7.499998569488525,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 42.54520488815277,
+            "peak_output_pixels": 23.234703097040512
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": 200.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -14.99999713897705,
+            "hair_LR_M": -14.99999713897705,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 41.62060546875,
+            "peak_output_pixels": 22.729762691888027
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -14.99999713897705,
+            "quake_LR_M": -14.99999713897705,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 85.09040977630553,
+            "peak_output_pixels": 46.469406194081024
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": 400.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -29.99993324279785,
+            "hair_LR_M": -29.99993324279785,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 117.59696740788335,
+            "peak_output_pixels": 64.22182311772978
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -29.99993324279785,
+            "quake_LR_M": -29.99993324279785,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 170.18046202997994,
+            "peak_output_pixels": 92.93861713861027
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": 800.0
+    },
+    {
+      "chains": [
+        {
+          "actual_outputs": {
+            "hair_LR": -30.0,
+            "hair_LR_M": -30.0,
+            "hair_UD": 0.0
+          },
+          "anchor": "center_rearhair",
+          "steady_geometry": {
+            "peak_model_pixels": 117.59750478988497,
+            "peak_output_pixels": 64.22211659172503
+          }
+        },
+        {
+          "actual_outputs": {
+            "quake_LR": -30.0,
+            "quake_LR_M": -30.0,
+            "quake_UD": 0.0
+          },
+          "anchor": "center_obj",
+          "steady_geometry": {
+            "peak_model_pixels": 170.1808327687793,
+            "peak_output_pixels": 92.93881960574969
+          }
+        }
+      ],
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525,
+      "screen_speed": 1600.0
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 33.7464599609375,
+        "peak_output_pixels": 18.429549930006033
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 117.59750478988497,
+        "peak_output_pixels": 64.22211659172503
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 117.59750478988497,
+        "peak_output_pixels": 64.22211659172503
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 41.842185974121094,
+        "peak_output_pixels": 22.850771798975984
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 170.1808327687793,
+        "peak_output_pixels": 92.93881960574969
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": -30.0,
+      "geometry": {
+        "peak_model_pixels": 170.1808327687793,
+        "peak_output_pixels": 92.93881960574969
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 33.74639892578125,
+        "peak_output_pixels": 18.42951659760729
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 130.99822528544462,
+        "peak_output_pixels": 71.54049154888634
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_rearhair",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 130.99822528544462,
+        "peak_output_pixels": 71.54049154888634
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "root_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 35.262088775634766,
+        "peak_output_pixels": 19.257262138876285
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "tip_only",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 170.1807731816762,
+        "peak_output_pixels": 92.93878706415886
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    },
+    {
+      "anchor": "center_obj",
+      "force": "both",
+      "forced_endpoint": 30.0,
+      "geometry": {
+        "peak_model_pixels": 171.13500532764607,
+        "peak_output_pixels": 93.45991043530134
+      },
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "scale": 0.5461180210113525
+    }
+  ],
+  "casual_matched_3x3": {
+    "scale": 0.550131,
+    "speed_px_s": 800,
+    "duration_ticks": 60,
+    "before": {
+      "rear_px": 3.576,
+      "skirt_px": 4.362
+    },
+    "after": {
+      "rear_px": 61.824,
+      "skirt_px": 38.136
+    },
+    "definition": "maximum displacement of fixed atlas sample points after isolating one chain, not unoccluded final pixels"
+  },
+  "cpu_benchmark": {
+    "model": "chocola/casual-b-no-bell",
+    "trajectory": "800 px/s triangle wave, 1 second each direction",
+    "coverage": "Controller pointer_move + advance + prepare_frame; no UI/renderer/device",
+    "samples_per_run": 9500,
+    "discarded_warmup_samples": 500,
+    "affinity_cpu": 2,
+    "runs": [
+      {
+        "stage": "before",
+        "trial": 1,
+        "p50_us": 418.347,
+        "p95_us": 453.919,
+        "p99_us": 485.072
+      },
+      {
+        "stage": "after",
+        "trial": 1,
+        "p50_us": 417.42,
+        "p95_us": 455.837,
+        "p99_us": 500.281
+      },
+      {
+        "stage": "before",
+        "trial": 2,
+        "p50_us": 417.332,
+        "p95_us": 485.754,
+        "p99_us": 609.869
+      },
+      {
+        "stage": "after",
+        "trial": 2,
+        "p50_us": 417.918,
+        "p95_us": 472.477,
+        "p99_us": 612.882
+      },
+      {
+        "stage": "before",
+        "trial": 3,
+        "p50_us": 418.948,
+        "p95_us": 599.235,
+        "p99_us": 633.923
+      },
+      {
+        "stage": "after",
+        "trial": 3,
+        "p50_us": 418.249,
+        "p95_us": 481.575,
+        "p99_us": 614.135
+      }
+    ]
+  },
+  "visible_windows": {
+    "backends": [
+      "OpenGL",
+      "Vulkan"
+    ],
+    "resolution": [
+      1920,
+      1080
+    ],
+    "fps_budget": 60,
+    "input": "internal Controller callbacks, fixed 1/60 diagnostic advance",
+    "limitations": "captures affect cadence; not a performance benchmark or pixel equality comparison"
+  },
+  "config_sha256_before_after": "b0b18f3c0e2b49a60cadc33bd3a90a4935a0b6bbeea87418625f2f1d211e20e4"
+}

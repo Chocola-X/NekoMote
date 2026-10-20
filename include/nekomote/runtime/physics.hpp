@@ -101,7 +101,13 @@ class PhysicsInstance
     ~PhysicsInstance();
     PhysicsInstance(const PhysicsInstance&) = delete;
     PhysicsInstance& operator=(const PhysicsInstance&) = delete;
-    PhysicsStatus step(const GeometryInstance& anchors, PhysicsInputs inputs = {}) noexcept;
+    // Optional interaction response is a signed normalized screen-direction pose
+    // on each axis, in [-1, 1]. It blends bound outputs toward their authored
+    // parameter endpoints after source integration, without changing its state.
+    // Zero preserves source output exactly. Unreferenced outputs and ranges
+    // whose intersection does not contain zero retain their source output.
+    PhysicsStatus step(const GeometryInstance& anchors, PhysicsInputs inputs = {},
+                       Vec2 drag_response = {}) noexcept;
     void reset() noexcept;
     std::span<const ParameterValue> values() const noexcept;
     std::uint64_t tick_count() const noexcept;

@@ -47,6 +47,7 @@ struct LayoutFixture
         anchor.type = 1;
         anchor.inherit_mask = 0x200020c;
         anchor.frame_list.push_back({0, 2, {nekomote::model::FieldState::Value, {}}});
+        anchor.parameter = {{"drag_x", -30, 30, 1, 0, true}, {"drag_y", -30, 30, 1, 0, true}};
         imported.asset.parts[0].layers.push_back(anchor);
         ++imported.asset.total_layers;
         ++imported.asset.total_frames;
@@ -166,11 +167,11 @@ TEST_CASE("Controller drives physics during a held drag without accumulating its
             REQUIRE(value() < 0.f); // immediate response, no release event
     }
     REQUIRE(controller.origin().x == 3600.f);
-    REQUIRE(std::abs(value()) < 1.f); // constant speed cannot pin the pose at its limit
+    REQUIRE(value() == -30.f); // sustained fast dragging keeps the authored full pose
     controller.pointer_release({3600, 0});
     controller.advance(1.0 / 60);
     REQUIRE(controller.last_error());
-    REQUIRE(value() > 0.f); // stopping is another immediate inertial input
+    REQUIRE(value() > -30.f); // return begins on the next tick, without waiting for release lag
 }
 
 TEST_CASE("Controller short click reacts on release but long hold does not react",

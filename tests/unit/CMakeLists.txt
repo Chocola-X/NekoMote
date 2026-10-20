@@ -12,6 +12,7 @@ add_executable(nekomote_unit_tests
     test_audio.cpp
     test_deformation.cpp
     test_geometry_scene.cpp
+    test_drag_physics.cpp
     test_animation_curve.cpp
     test_animation.cpp
     test_session.cpp

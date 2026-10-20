@@ -162,6 +162,18 @@ ModelAsset chain_rig()
     result.chain_controls.push_back(chain);
     return result;
 }
+ModelAsset interactive_rig()
+{
+    auto result = chain_rig();
+    result.spring_controls = spring_rig().spring_controls;
+    // These enabled references declare each controller's authored pose domain.
+    for (auto& part : result.parts)
+        for (auto& marker : part.layers)
+            if (marker.label == "anchor")
+                for (const auto* name : {"spring_x", "spring_y", "root", "vertical", "tip"})
+                    marker.parameter.push_back({name, -30, 30, 1, 0, true});
+    return result;
+}
 void near(Vec2 actual, Vec2 expected)
 {
     REQUIRE_THAT(actual.x, Catch::Matchers::WithinAbs(expected.x, 0.001f));
@@ -1391,16 +1403,15 @@ TEST_CASE("Absent-anchor chain binding matches original exported-output observat
     }
 }
 
-TEST_CASE("Interactive placement drives physics without accumulating screen travel",
+TEST_CASE("Interactive drag holds full authored sway during sustained screen travel",
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
     for (const bool mirror : {false, true})
         for (const float scale : {0.5f, 2.0f})
         {
-            auto asset = chain_rig();
+            auto asset = interactive_rig();
             asset.mirror = mirror;
-            asset.spring_controls = spring_rig().spring_controls;
             auto compiled = compile_playback(asset);
             REQUIRE(compiled.program);
             PlaybackInstance dragged(*compiled.program), reference(*compiled.program);
@@ -1410,92 +1421,94 @@ TEST_CASE("Interactive placement drives physics without accumulating screen trav
                 REQUIRE(player->set_scale(scale));
                 REQUIRE(player->step());
             }
-            const auto compare = [&]
-            {
-                for (std::size_t i = 0; i < dragged.values().size(); ++i)
-                    REQUIRE(dragged.values()[i].value == reference.values()[i].value);
-            };
-            REQUIRE(dragged.drag_origin({104, 402}));
+            const auto id = compiled.program->scene().find_variable("root");
+            const auto value = [&] { return dragged.values()[id.value - 1].value; };
+            REQUIRE(dragged.drag_origin({104, 400}));
             REQUIRE(dragged.advance(1.0 / 120));
             REQUIRE(dragged.prepare_frame());
             REQUIRE(dragged.tick_count() == 1);
-            REQUIRE(dragged.drag_origin({120, 410}));
+            REQUIRE(dragged.drag_origin({120, 400}));
             REQUIRE(dragged.advance(1.0 / 120));
-            // Frozen placed offsets for this diagonal input at each model scale.
-            // Reference uses direct placement, independently of interactive policy.
-            const Vec2 drive =
-                scale == 0.5f ? Vec2{8.275862f, 4.137931f} : Vec2{23.414635f, 11.707317f};
-            REQUIRE(reference.set_origin({100.f + drive.x, 400.f + drive.y}));
             REQUIRE(reference.step());
-            compare(); // coalesced input reacts on the next tick, before release
-            for (int tick = 2; tick <= 60; ++tick)
+            REQUIRE(value() < -1.f); // first tick, before release
+            for (int tick = 2; tick <= 120; ++tick)
             {
-                REQUIRE(dragged.drag_origin({100.f + 20.f * static_cast<float>(tick),
-                                             400.f + 10.f * static_cast<float>(tick)}));
+                REQUIRE(dragged.drag_origin({100.f + 20.f * static_cast<float>(tick), 400}));
                 REQUIRE(dragged.step());
-                REQUIRE(reference.step()); // same velocity, same physical anchor
-                compare();
+                REQUIRE(reference.step());
+                near(dragged.observe_spring(0)->anchor, reference.observe_spring(0)->anchor);
+                if (tick >= 4)
+                    REQUIRE(value() == -30.f); // source masses cannot catch up to a held pose
             }
-            REQUIRE(dragged.step()); // stopping removes the velocity drive immediately
-            REQUIRE(reference.set_origin({100, 400}));
+            REQUIRE(dragged.step());
             REQUIRE(reference.step());
-            compare();
+            REQUIRE(value() > -30.f); // stopping starts return on the next tick
+            for (int tick = 0; tick < 60; ++tick)
+            {
+                REQUIRE(dragged.step());
+                REQUIRE(reference.step());
+            }
+            for (std::size_t i = 0; i < dragged.values().size(); ++i)
+                REQUIRE(dragged.values()[i].value == reference.values()[i].value);
             REQUIRE(dragged.prepare_frame());
             REQUIRE(reference.prepare_frame());
             const auto a = dragged.frame().vertices, b = reference.frame().vertices;
             REQUIRE(a.size() == b.size());
             for (std::size_t i = 0; i < a.size(); ++i)
-                near({a[i].x - (mirror ? -1200.f : 1200.f), a[i].y - 600.f}, {b[i].x, b[i].y});
+                near({a[i].x - (mirror ? -2400.f : 2400.f), a[i].y}, {b[i].x, b[i].y});
+            REQUIRE(dragged.drag_origin({3000, 400}));
+            REQUIRE(dragged.step());
+            REQUIRE(reference.step());
             dragged.set_playback_state(PlaybackState::Paused);
-            REQUIRE(dragged.drag_origin({2000, 2000}));
+            REQUIRE(dragged.drag_origin({4000, 2000}));
             dragged.set_playback_state(PlaybackState::Running);
             REQUIRE(dragged.step());
             REQUIRE(reference.step());
-            compare(); // no queued motion after a pause
-            dragged.reset();
-            reference.reset();
-            REQUIRE(dragged.step());
-            REQUIRE(reference.step());
-            compare();
+            for (std::size_t i = 0; i < dragged.values().size(); ++i)
+                REQUIRE(dragged.values()[i].value == reference.values()[i].value);
         }
 }
 
-TEST_CASE("Interactive physics responds continuously to speed with bounded author-space input",
+TEST_CASE("Interactive drag maps screen speed linearly to authored endpoints",
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
     for (const bool mirror : {false, true})
         for (const float scale : {0.5f, 2.0f})
         {
-            auto asset = spring_rig();
+            auto asset = interactive_rig();
             asset.mirror = mirror;
             auto compiled = compile_playback(asset);
             REQUIRE(compiled.program);
-            for (const Vec2 direction : {Vec2{1, 0}, Vec2{0, 1}, Vec2{0.6f, 0.8f}})
-            {
-                float previous = -1;
-                for (const float speed : {0.f, .01f, .25f, 1.f, 4.f, 16.f, 64.f, 1e6f})
+            const auto x = compiled.program->scene().find_variable("spring_x");
+            const auto y = compiled.program->scene().find_variable("spring_y");
+            for (const Vec2 direction : {Vec2{1, 0}, Vec2{0, -1}, Vec2{.6f, .8f}})
+                for (const float speed : {0.f, .01f, 200.f, 400.f, 800.f, 1600.f})
                 {
-                    PlaybackInstance player(*compiled.program);
+                    PlaybackInstance player(*compiled.program), source(*compiled.program);
                     REQUIRE(player.set_scale(scale));
+                    REQUIRE(source.set_scale(scale));
                     REQUIRE(player.step());
-                    const auto baseline = player.observe_spring(0)->anchor;
-                    const float physical_scale = scale * *asset.author_scale;
-                    REQUIRE(player.drag_origin(direction * (speed * physical_scale)));
-                    REQUIRE(player.step());
-                    const auto drive = player.observe_spring(0)->anchor - baseline;
-                    const float magnitude = std::hypot(drive.x, drive.y);
-                    REQUIRE(std::isfinite(magnitude));
-                    REQUIRE(magnitude > previous);
-                    REQUIRE(std::abs(drive.x) <= 32.f);
-                    REQUIRE(std::abs(drive.y) <= 12.f);
-                    REQUIRE_THAT(drive.x * direction.y,
-                                 Catch::Matchers::WithinAbs(drive.y * direction.x, .0001f));
-                    if (speed == 0)
-                        REQUIRE(magnitude == 0.f);
-                    previous = magnitude;
+                    REQUIRE(source.step());
+                    for (int tick = 1; tick <= 120; ++tick)
+                    {
+                        REQUIRE(player.drag_origin(direction *
+                                                   (speed * static_cast<float>(tick) / 60.f)));
+                        REQUIRE(player.step());
+                        REQUIRE(source.step());
+                    }
+                    const float weight = std::min(speed / 800.f, 1.f);
+                    for (const auto [id, component] :
+                         {std::pair{x, -direction.x * weight}, std::pair{y, -direction.y * weight}})
+                    {
+                        const float base = source.values()[id.value - 1].value;
+                        const float endpoint = component < 0 ? -30.f : 30.f;
+                        const float expected =
+                            (1 - std::abs(component)) * base + std::abs(component) * endpoint;
+                        REQUIRE_THAT(player.values()[id.value - 1].value,
+                                     Catch::Matchers::WithinAbs(expected, .001f));
+                    }
                 }
-            }
             PlaybackInstance extreme(*compiled.program);
             REQUIRE(extreme.set_scale(scale));
             REQUIRE(extreme.step());
@@ -1505,16 +1518,11 @@ TEST_CASE("Interactive physics responds continuously to speed with bounded autho
             {
                 REQUIRE(extreme.drag_origin({sign * maximum, sign * maximum}));
                 REQUIRE(extreme.advance(1.0 / 30));
-                const auto drive = extreme.observe_spring(0)->anchor - baseline;
-                REQUIRE(std::isfinite(drive.x));
-                REQUIRE(std::isfinite(drive.y));
-                REQUIRE(std::abs(drive.x) <= 32.f);
-                REQUIRE(std::abs(drive.y) <= 12.f);
+                near(extreme.observe_spring(0)->anchor, baseline);
+                for (const auto parameter : extreme.values())
+                    REQUIRE(std::isfinite(parameter.value));
             }
-            REQUIRE(extreme.step());
-            near(extreme.observe_spring(0)->anchor, baseline);
         }
-    // Unused physics metadata cannot make a model without enabled controls fail.
     auto unbound = rig();
     unbound.author_scale = field(std::numeric_limits<float>::quiet_NaN());
     auto compiled = compile_playback(unbound);
@@ -1526,10 +1534,45 @@ TEST_CASE("Interactive physics responds continuously to speed with bounded autho
     REQUIRE(player.prepare_frame());
 }
 
+TEST_CASE("Interactive drag responds to reversal and settles without a delayed pulse",
+          "[runtime][playback][pointer]")
+{
+    using namespace runtime;
+    auto compiled = compile_playback(interactive_rig());
+    REQUIRE(compiled.program);
+    PlaybackInstance player(*compiled.program);
+    const auto x = compiled.program->scene().find_variable("spring_x");
+    const auto value = [&] { return player.values()[x.value - 1].value; };
+    REQUIRE(player.step());
+    for (int tick = 1; tick <= 10; ++tick)
+    {
+        REQUIRE(player.drag_origin({static_cast<float>(tick * 20), 0}));
+        REQUIRE(player.step());
+    }
+    REQUIRE(value() == -30.f);
+    REQUIRE(player.drag_origin({180, 0}));
+    REQUIRE(player.step());
+    REQUIRE(value() > -30.f);
+    for (int tick = 2; tick <= 5; ++tick)
+    {
+        REQUIRE(player.drag_origin({200.f - static_cast<float>(tick * 20), 0}));
+        REQUIRE(player.step());
+    }
+    REQUIRE(value() == 30.f);
+    float return_peak = 0;
+    for (int tick = 0; tick < 60; ++tick)
+    {
+        REQUIRE(player.step());
+        if (tick >= 30)
+            return_peak = std::max(return_peak, std::abs(value()));
+    }
+    REQUIRE(return_peak < .01f);
+}
+
 TEST_CASE("Interactive placement distributes motion over catchup ticks", "[runtime][playback]")
 {
     using namespace runtime;
-    auto asset = chain_rig();
+    auto asset = interactive_rig();
     auto compiled = compile_playback(asset);
     REQUIRE(compiled.program);
     PlaybackInstance at30(*compiled.program), at60(*compiled.program);
@@ -1552,8 +1595,7 @@ TEST_CASE("Interactive placement handles initialization, reconfiguration and fai
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
-    auto asset = chain_rig();
-    asset.spring_controls = spring_rig().spring_controls;
+    auto asset = interactive_rig();
     auto compiled = compile_playback(asset);
     REQUIRE(compiled.program);
     PlaybackInstance dragged(*compiled.program), reference(*compiled.program);
@@ -1753,7 +1795,7 @@ TEST_CASE("Combined playback reuses frame storage without allocating during catc
           "[runtime][playback][allocation]")
 {
     using namespace runtime;
-    auto asset = chain_rig();
+    auto asset = interactive_rig();
     asset.spring_controls = spring_rig().spring_controls;
     auto compiled = compile_playback(asset);
     REQUIRE(compiled.program);

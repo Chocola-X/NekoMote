@@ -108,6 +108,12 @@ main/little 相对链接共享、`model.nkm`（MessagePack + zlib）和背景渐
 40 场景反向/停止压力与可见双后端验证见 [报告](docs/drag-speed-and-model-bindings-2026-10-20.md)。
 没有新增求值/堆分配/GPU 资源；真实桌面主观手感和其他型号仍分别验收。
 
+2026-10-20 C23：从 `0b29ebd` 依据 casual-b-no-bell 反馈，删除会随匀拖衰减的虚拟
+锚点策略。800 输出像素/秒映射到素材摆幅端点，慢速混合权重线性减弱，短暂惯性处理
+启停/反向，源积分独立。223 CPU / 4 GPU、可见双后端、真实几何与分配/耗时验证见
+[报告](docs/drag-800-response-2026-10-20.md)。C21/C22 交互策略由本次替代，素材调查仍有效；
+真实桌面主观手感和长期 GPU 功耗仍分别验收。
+
 2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
 `ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像；发布清单 9→10 包，
 publish 脚本同步强制 20 个附件。Qt5.12.8 / GCC10.5 基线与符号上限不变；ARM64

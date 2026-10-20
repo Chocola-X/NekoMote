@@ -3,7 +3,9 @@
 #include <nekomote/runtime/spring.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <utility>
 
@@ -11,6 +13,73 @@ namespace nekomote::runtime
 {
 namespace
 {
+struct DragRange
+{
+    float minimum{0}, maximum{0};
+    bool enabled{false};
+};
+struct ReferencedRange
+{
+    float minimum{-std::numeric_limits<float>::infinity()};
+    float maximum{std::numeric_limits<float>::infinity()};
+    bool referenced{false}, finite{true};
+};
+std::vector<DragRange> compile_drag_ranges(const model::ModelAsset& asset,
+                                           const GeometryScene& scene)
+{
+    std::vector<ReferencedRange> references(scene.variables().size() + 1);
+    const auto collect = [&](const auto& parameters)
+    {
+        for (const auto& parameter : parameters)
+        {
+            if (!parameter.enabled)
+                continue;
+            const auto id = scene.find_variable(parameter.id);
+            if (!id.valid())
+                continue;
+            auto& range = references[id.value];
+            range.referenced = true;
+            if (!std::isfinite(parameter.range_begin) || !std::isfinite(parameter.range_end))
+            {
+                range.finite = false;
+                continue;
+            }
+            range.minimum =
+                std::max(range.minimum, std::min(parameter.range_begin, parameter.range_end));
+            range.maximum =
+                std::min(range.maximum, std::max(parameter.range_begin, parameter.range_end));
+        }
+    };
+    const auto collect_layer = [&](const auto& self, const model::Layer& layer) -> void
+    {
+        collect(layer.parameter);
+        for (const auto& child : layer.children)
+            self(self, child);
+    };
+    for (const auto& part : asset.parts)
+    {
+        collect(part.parameter);
+        for (const auto& layer : part.layers)
+            collect_layer(collect_layer, layer);
+    }
+    std::vector<DragRange> result(references.size());
+    for (std::size_t i = 0; i < references.size(); ++i)
+    {
+        const auto& range = references[i];
+        if (range.referenced && range.finite && range.minimum < range.maximum &&
+            range.minimum <= 0 && range.maximum >= 0)
+            result[i] = {range.minimum, range.maximum, true};
+    }
+    return result;
+}
+float blend_drag(float source, DragRange range, float response) noexcept
+{
+    if (!range.enabled || response == 0)
+        return source;
+    const double weight = std::abs(static_cast<double>(response));
+    const double endpoint = response < 0 ? range.minimum : range.maximum;
+    return static_cast<float>((1 - weight) * static_cast<double>(source) + weight * endpoint);
+}
 struct SpringBinding
 {
     std::string source;
@@ -19,6 +88,7 @@ struct SpringBinding
     SpringCoefficients coefficients;
     SpringOutput mapping;
     SpringState snapshot;
+    std::array<DragRange, 2> drag_ranges;
 };
 struct ChainBinding
 {
@@ -32,6 +102,7 @@ struct ChainBinding
     ChainState snapshot;
     BendCoefficients bend_coefficients;
     BendState bend_snapshot;
+    std::array<DragRange, 3> drag_ranges;
 };
 struct BoundChainState
 {
@@ -84,6 +155,7 @@ PhysicsCompileResult compile_physics(const model::ModelAsset& asset, const Geome
         auto data = std::make_unique<PhysicsProgram::Impl>();
         data->scene = &scene;
         data->mirrored_coordinates = asset.mirror;
+        const auto drag_ranges = compile_drag_ranges(asset, scene);
         std::vector<ParamId> outputs;
         for (const auto& control : asset.spring_controls)
         {
@@ -110,6 +182,7 @@ PhysicsCompileResult compile_physics(const model::ModelAsset& asset, const Geome
             spring.y = scene.find_variable(binding.variable_y);
             require(spring.x.valid() && spring.y.valid() && spring.x != spring.y,
                     binding.source_path, "unresolved or repeated physical output");
+            spring.drag_ranges = {drag_ranges[spring.x.value], drag_ranges[spring.y.value]};
             for (ParamId id : {spring.x, spring.y})
             {
                 require(std::find(outputs.begin(), outputs.end(), id) == outputs.end(),
@@ -180,9 +253,11 @@ PhysicsCompileResult compile_physics(const model::ModelAsset& asset, const Geome
             chain.outputs = {scene.find_variable(control.variable_middle),
                              scene.find_variable(binding.variable_y),
                              scene.find_variable(binding.variable_x)};
-            for (const auto id : chain.outputs)
+            for (std::size_t component = 0; component < chain.outputs.size(); ++component)
             {
+                const auto id = chain.outputs[component];
                 require(id.valid(), binding.source_path, "unresolved physical output");
+                chain.drag_ranges[component] = drag_ranges[id.value];
                 require(std::find(outputs.begin(), outputs.end(), id) == outputs.end(),
                         binding.source_path, "physical outputs overlap");
                 outputs.push_back(id);
@@ -277,7 +352,8 @@ std::optional<SpringObservation> PhysicsInstance::observe_spring(std::size_t ind
     const auto& value = impl_->states[index];
     return SpringObservation{value.spring, value.sampled_anchor};
 }
-PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInputs inputs) noexcept
+PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInputs inputs,
+                                    Vec2 drag_response) noexcept
 {
     auto& instance = *impl_;
     instance.has_output = false;
@@ -288,7 +364,8 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         !finite(inputs.bust_displacement) || !std::isfinite(inputs.hair_amplitude) ||
         inputs.hair_amplitude < 0 || !finite(inputs.hair_displacement) ||
         !std::isfinite(inputs.parts_amplitude) || inputs.parts_amplitude < 0 ||
-        !finite(inputs.parts_displacement))
+        !finite(inputs.parts_displacement) || !finite(drag_response) ||
+        std::abs(drag_response.x) > 1 || std::abs(drag_response.y) > 1)
         return {PhysicsError::InvalidInput, kNoPhysicsController, {}};
     // Save the reciprocal of the author and instance scale, then save each
     // absolute anchor before subtraction. Dividing a delta changes its bits.
@@ -353,8 +430,10 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
         const auto value = spring_output(deformation, mapping);
         if (!finite(value))
             return {PhysicsError::NonfiniteState, i, {}};
-        instance.output[i * 2] = {spring.x, value.x};
-        instance.output[i * 2 + 1] = {spring.y, value.y};
+        instance.output[i * 2] = {spring.x,
+                                  blend_drag(value.x, spring.drag_ranges[0], drag_response.x)};
+        instance.output[i * 2 + 1] = {spring.y,
+                                      blend_drag(value.y, spring.drag_ranges[1], drag_response.y)};
     }
     for (std::size_t i = 0; i < program.chains.size(); ++i)
     {
@@ -383,7 +462,9 @@ PhysicsStatus PhysicsInstance::step(const GeometryInstance& geometry, PhysicsInp
             if (!std::isfinite(values[component]))
                 return {PhysicsError::NonfiniteState, controller, {}};
             instance.output[program.springs.size() * 2 + i * 3 + component] = {
-                chain.outputs[component], values[component]};
+                chain.outputs[component],
+                blend_drag(values[component], chain.drag_ranges[component],
+                           component == 1 ? drag_response.y : drag_response.x)};
         }
     }
     instance.states.swap(instance.next);
