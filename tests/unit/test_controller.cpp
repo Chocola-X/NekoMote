@@ -167,11 +167,12 @@ TEST_CASE("Controller drives physics during a held drag without accumulating its
             REQUIRE(value() < 0.f); // immediate response, no release event
     }
     REQUIRE(controller.origin().x == 3600.f);
-    REQUIRE(value() == -30.f); // sustained fast dragging keeps the authored full pose
+    REQUIRE(value() < -10.f); // sustained speed applies a bounded force to the spring
+    const float held = value();
     controller.pointer_release({3600, 0});
     controller.advance(1.0 / 60);
     REQUIRE(controller.last_error());
-    REQUIRE(value() > -30.f); // return begins on the next tick, without waiting for release lag
+    REQUIRE(value() > held); // releasing injects the opposite impulse on the next tick
 }
 
 TEST_CASE("Controller short click reacts on release but long hold does not react",

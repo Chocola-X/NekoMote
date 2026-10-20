@@ -166,12 +166,6 @@ ModelAsset interactive_rig()
 {
     auto result = chain_rig();
     result.spring_controls = spring_rig().spring_controls;
-    // These enabled references declare each controller's authored pose domain.
-    for (auto& part : result.parts)
-        for (auto& marker : part.layers)
-            if (marker.label == "anchor")
-                for (const auto* name : {"spring_x", "spring_y", "root", "vertical", "tip"})
-                    marker.parameter.push_back({name, -30, 30, 1, 0, true});
     return result;
 }
 void near(Vec2 actual, Vec2 expected)
@@ -1403,7 +1397,7 @@ TEST_CASE("Absent-anchor chain binding matches original exported-output observat
     }
 }
 
-TEST_CASE("Interactive drag holds full authored sway during sustained screen travel",
+TEST_CASE("Interactive drag retains source inertia without accumulating screen travel",
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
@@ -1437,39 +1431,32 @@ TEST_CASE("Interactive drag holds full authored sway during sustained screen tra
                 REQUIRE(dragged.step());
                 REQUIRE(reference.step());
                 near(dragged.observe_spring(0)->anchor, reference.observe_spring(0)->anchor);
-                if (tick >= 4)
-                    REQUIRE(value() == -30.f); // source masses cannot catch up to a held pose
+                if (tick == 4)
+                    REQUIRE(value() < -20.f);    // prompt excitation before release
+                REQUIRE(std::isfinite(value())); // coupled chains may oscillate while held
             }
+            const float held = value();
             REQUIRE(dragged.step());
             REQUIRE(reference.step());
-            REQUIRE(value() > -30.f); // stopping starts return on the next tick
-            for (int tick = 0; tick < 60; ++tick)
+            REQUIRE(value() > held); // stop impulse reacts on the next tick
+            for (int tick = 0; tick < 600; ++tick)
             {
                 REQUIRE(dragged.step());
                 REQUIRE(reference.step());
             }
             for (std::size_t i = 0; i < dragged.values().size(); ++i)
-                REQUIRE(dragged.values()[i].value == reference.values()[i].value);
+                REQUIRE_THAT(dragged.values()[i].value,
+                             Catch::Matchers::WithinAbs(reference.values()[i].value, .1f));
             REQUIRE(dragged.prepare_frame());
             REQUIRE(reference.prepare_frame());
             const auto a = dragged.frame().vertices, b = reference.frame().vertices;
             REQUIRE(a.size() == b.size());
             for (std::size_t i = 0; i < a.size(); ++i)
                 near({a[i].x - (mirror ? -2400.f : 2400.f), a[i].y}, {b[i].x, b[i].y});
-            REQUIRE(dragged.drag_origin({3000, 400}));
-            REQUIRE(dragged.step());
-            REQUIRE(reference.step());
-            dragged.set_playback_state(PlaybackState::Paused);
-            REQUIRE(dragged.drag_origin({4000, 2000}));
-            dragged.set_playback_state(PlaybackState::Running);
-            REQUIRE(dragged.step());
-            REQUIRE(reference.step());
-            for (std::size_t i = 0; i < dragged.values().size(); ++i)
-                REQUIRE(dragged.values()[i].value == reference.values()[i].value);
         }
 }
 
-TEST_CASE("Interactive drag maps screen speed linearly to authored endpoints",
+TEST_CASE("Interactive drag input scales linearly with screen speed and saturates at 800",
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
@@ -1480,35 +1467,29 @@ TEST_CASE("Interactive drag maps screen speed linearly to authored endpoints",
             asset.mirror = mirror;
             auto compiled = compile_playback(asset);
             REQUIRE(compiled.program);
-            const auto x = compiled.program->scene().find_variable("spring_x");
-            const auto y = compiled.program->scene().find_variable("spring_y");
             for (const Vec2 direction : {Vec2{1, 0}, Vec2{0, -1}, Vec2{.6f, .8f}})
-                for (const float speed : {0.f, .01f, 200.f, 400.f, 800.f, 1600.f})
+            {
+                Vec2 full_impulse{};
+                for (const float speed : {800.f, 1600.f, 400.f, 200.f, .01f, 0.f})
                 {
                     PlaybackInstance player(*compiled.program), source(*compiled.program);
-                    REQUIRE(player.set_scale(scale));
-                    REQUIRE(source.set_scale(scale));
+                    for (auto* p : {&player, &source})
+                    {
+                        REQUIRE(p->set_scale(scale));
+                        REQUIRE(p->step());
+                    }
+                    REQUIRE(player.drag_origin(direction * (speed / 60.f)));
                     REQUIRE(player.step());
                     REQUIRE(source.step());
-                    for (int tick = 1; tick <= 120; ++tick)
-                    {
-                        REQUIRE(player.drag_origin(direction *
-                                                   (speed * static_cast<float>(tick) / 60.f)));
-                        REQUIRE(player.step());
-                        REQUIRE(source.step());
-                    }
+                    const auto a = player.observe_spring(0)->state.velocity;
+                    const auto b = source.observe_spring(0)->state.velocity;
+                    const Vec2 impulse{a[0] - b[0], a[1] - b[1]};
+                    if (speed == 800.f)
+                        full_impulse = impulse;
                     const float weight = std::min(speed / 800.f, 1.f);
-                    for (const auto [id, component] :
-                         {std::pair{x, -direction.x * weight}, std::pair{y, -direction.y * weight}})
-                    {
-                        const float base = source.values()[id.value - 1].value;
-                        const float endpoint = component < 0 ? -30.f : 30.f;
-                        const float expected =
-                            (1 - std::abs(component)) * base + std::abs(component) * endpoint;
-                        REQUIRE_THAT(player.values()[id.value - 1].value,
-                                     Catch::Matchers::WithinAbs(expected, .001f));
-                    }
+                    near(impulse, full_impulse * weight);
                 }
+            }
             PlaybackInstance extreme(*compiled.program);
             REQUIRE(extreme.set_scale(scale));
             REQUIRE(extreme.step());
@@ -1534,39 +1515,42 @@ TEST_CASE("Interactive drag maps screen speed linearly to authored endpoints",
     REQUIRE(player.prepare_frame());
 }
 
-TEST_CASE("Interactive drag responds to reversal and settles without a delayed pulse",
+TEST_CASE("Interactive drag releases into a large coupled rebound and decays",
           "[runtime][playback][pointer]")
 {
     using namespace runtime;
     auto compiled = compile_playback(interactive_rig());
     REQUIRE(compiled.program);
     PlaybackInstance player(*compiled.program);
-    const auto x = compiled.program->scene().find_variable("spring_x");
-    const auto value = [&] { return player.values()[x.value - 1].value; };
+    const auto root = compiled.program->scene().find_variable("root");
+    const auto tip = compiled.program->scene().find_variable("tip");
+    const auto value = [&](ParamId id) { return player.values()[id.value - 1].value; };
     REQUIRE(player.step());
-    for (int tick = 1; tick <= 10; ++tick)
+    for (int tick = 1; tick <= 60; ++tick)
     {
-        REQUIRE(player.drag_origin({static_cast<float>(tick * 20), 0}));
+        REQUIRE(player.drag_origin({static_cast<float>(tick) * (800.f / 60.f), 0}));
         REQUIRE(player.step());
     }
-    REQUIRE(value() == -30.f);
-    REQUIRE(player.drag_origin({180, 0}));
+    REQUIRE(value(root) < -25.f);
+    const float held = value(root);
     REQUIRE(player.step());
-    REQUIRE(value() > -30.f);
-    for (int tick = 2; tick <= 5; ++tick)
-    {
-        REQUIRE(player.drag_origin({200.f - static_cast<float>(tick * 20), 0}));
-        REQUIRE(player.step());
-    }
-    REQUIRE(value() == 30.f);
-    float return_peak = 0;
-    for (int tick = 0; tick < 60; ++tick)
+    REQUIRE(value(root) > held);
+    float root_peak = 0, tip_peak = 0;
+    bool different_phase = false;
+    for (int tick = 0; tick < 120; ++tick)
     {
         REQUIRE(player.step());
-        if (tick >= 30)
-            return_peak = std::max(return_peak, std::abs(value()));
+        root_peak = std::max(root_peak, value(root));
+        tip_peak = std::max(tip_peak, value(tip));
+        different_phase |= value(root) * value(tip) < -1.f;
     }
-    REQUIRE(return_peak < .01f);
+    REQUIRE(root_peak > 25.f);
+    REQUIRE(tip_peak > 20.f);
+    REQUIRE(different_phase);
+    for (int tick = 0; tick < 600; ++tick)
+        REQUIRE(player.step());
+    REQUIRE(std::abs(value(root)) < .1f);
+    REQUIRE(std::abs(value(tip)) < .1f);
 }
 
 TEST_CASE("Interactive placement distributes motion over catchup ticks", "[runtime][playback]")
@@ -1588,6 +1572,35 @@ TEST_CASE("Interactive placement distributes motion over catchup ticks", "[runti
         REQUIRE(at60.advance(1.0 / 60));
         for (std::size_t i = 0; i < at30.values().size(); ++i)
             REQUIRE(at30.values()[i].value == at60.values()[i].value);
+    }
+}
+
+TEST_CASE("Pausing an active drag rebases input without injecting a resume impulse",
+          "[runtime][playback][pointer]")
+{
+    using namespace runtime;
+    auto compiled = compile_playback(interactive_rig());
+    REQUIRE(compiled.program);
+    PlaybackInstance paused(*compiled.program), reference(*compiled.program);
+    for (auto* player : {&paused, &reference})
+    {
+        REQUIRE(player->step());
+        for (int tick = 1; tick <= 30; ++tick)
+        {
+            REQUIRE(player->drag_origin({static_cast<float>(tick * 20), 0}));
+            REQUIRE(player->step());
+        }
+    }
+    paused.set_playback_state(PlaybackState::Paused);
+    REQUIRE(paused.drag_origin({4000, 3000}));
+    paused.set_playback_state(PlaybackState::Running);
+    REQUIRE(reference.set_origin({4000, 3000}));
+    for (int tick = 0; tick < 120; ++tick)
+    {
+        REQUIRE(paused.step());
+        REQUIRE(reference.step());
+        for (std::size_t i = 0; i < paused.values().size(); ++i)
+            REQUIRE(paused.values()[i].value == reference.values()[i].value);
     }
 }
 

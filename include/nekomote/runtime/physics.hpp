@@ -54,6 +54,15 @@ struct PhysicsInputs
     float parts_amplitude{1};
     Vec2 parts_displacement{};
 };
+// Interaction policy input, independent of the source's accumulated external
+// displacement. Velocity is pointer velocity / 800 output pixels/s (unit disk);
+// velocity_change is its difference from the previous author tick (radius <= 2).
+// Positive directions use presented screen coordinates. Both default to zero.
+// No timestep: these values describe exactly one 60 Hz author tick.
+struct PhysicsDragInput
+{
+    Vec2 velocity{}, velocity_change{};
+};
 class PhysicsInstance;
 struct PhysicsCompileResult;
 // Compiles enabled physical controllers and binds scene IDs once. Currently
@@ -101,13 +110,11 @@ class PhysicsInstance
     ~PhysicsInstance();
     PhysicsInstance(const PhysicsInstance&) = delete;
     PhysicsInstance& operator=(const PhysicsInstance&) = delete;
-    // Optional interaction response is a signed normalized screen-direction pose
-    // on each axis, in [-1, 1]. It blends bound outputs toward their authored
-    // parameter endpoints after source integration, without changing its state.
-    // Zero preserves source output exactly. Unreferenced outputs and ranges
-    // whose intersection does not contain zero retain their source output.
+    // Drag applies bounded impulses/forces to initialized particle velocities
+    // before source integration. Releasing input leaves each solver to ring down;
+    // zero input preserves the source path exactly. Failed steps commit no state.
     PhysicsStatus step(const GeometryInstance& anchors, PhysicsInputs inputs = {},
-                       Vec2 drag_response = {}) noexcept;
+                       PhysicsDragInput drag = {}) noexcept;
     void reset() noexcept;
     std::span<const ParameterValue> values() const noexcept;
     std::uint64_t tick_count() const noexcept;

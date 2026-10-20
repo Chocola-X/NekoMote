@@ -1,0 +1,602 @@
+{
+  "base": "3ea4ec3",
+  "earliest_reference": "8e850c0",
+  "policy": {
+    "maximum_screen_speed_px_s": 800,
+    "impulse_author_units_per_tick": 36,
+    "sustained_spring_distance": 64,
+    "sustained_chain_stretch": 80,
+    "maximum_added_motion_speed": 72,
+    "author_hz": 60
+  },
+  "comparison_method": "Earliest uses original Controller set_origin coupling and zero new drag input; candidate uses drag_origin. Both use identical source solver, assets and fixed trajectory, no timelines. Geometry isolates one complete chain including vertical output and samples fixed 5x5 atlas points.",
+  "geometry_results": [
+    {
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "held_peak_px": 91.328278,
+      "released_peak_px": 91.328278,
+      "horizontal_span_px": 66.006622,
+      "root_positive_peak": 32.195621,
+      "tip_positive_peak": 20.408279,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "held_peak_px": 50.024128,
+      "released_peak_px": 50.024128,
+      "horizontal_span_px": 68.75045,
+      "root_positive_peak": 32.195629,
+      "tip_positive_peak": 20.408297,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "held_peak_px": 91.328278,
+      "released_peak_px": 94.822441,
+      "horizontal_span_px": 77.993195,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    },
+    {
+      "model": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "held_peak_px": 50.024128,
+      "released_peak_px": 50.024128,
+      "horizontal_span_px": 71.757782,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    },
+    {
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "held_peak_px": 100.844276,
+      "released_peak_px": 100.844276,
+      "horizontal_span_px": 70.833206,
+      "root_positive_peak": 32.091331,
+      "tip_positive_peak": 20.25449,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "held_peak_px": 59.331654,
+      "released_peak_px": 87.536011,
+      "horizontal_span_px": 141.36618,
+      "root_positive_peak": 32.09132,
+      "tip_positive_peak": 20.254475,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "held_peak_px": 100.844276,
+      "released_peak_px": 100.844276,
+      "horizontal_span_px": 87.467117,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    },
+    {
+      "model": "assets/characters/chocola/wintermaid/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "held_peak_px": 59.331654,
+      "released_peak_px": 117.293312,
+      "horizontal_span_px": 170.448868,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    },
+    {
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "held_peak_px": 88.55088,
+      "released_peak_px": 88.55088,
+      "horizontal_span_px": 76.502121,
+      "root_positive_peak": 32.254978,
+      "tip_positive_peak": 20.477415,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "held_peak_px": 97.385201,
+      "released_peak_px": 97.385201,
+      "horizontal_span_px": 157.808533,
+      "root_positive_peak": 32.254978,
+      "tip_positive_peak": 20.477415,
+      "first_root_in_range_stop_tick": 20,
+      "first_tip_in_range_stop_tick": 19
+    },
+    {
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "held_peak_px": 88.55088,
+      "released_peak_px": 92.98558,
+      "horizontal_span_px": 105.70887,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    },
+    {
+      "model": "assets/characters/vanilla/wintermaid/model.nkm",
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "held_peak_px": 97.385201,
+      "released_peak_px": 103.684273,
+      "horizontal_span_px": 182.193848,
+      "root_positive_peak": 40.31945,
+      "tip_positive_peak": 36.116245,
+      "first_root_in_range_stop_tick": 2,
+      "first_tip_in_range_stop_tick": 2
+    }
+  ],
+  "casual_trace": [
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 1,
+      "root": -17.483044,
+      "tip": -6.80148,
+      "geometry_peak_px": 14.007743
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 1,
+      "root": -17.483044,
+      "tip": -6.80148,
+      "geometry_peak_px": 16.688524
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 4,
+      "root": -32.410309,
+      "tip": -21.146791,
+      "geometry_peak_px": 31.058422
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 4,
+      "root": -32.410309,
+      "tip": -21.146791,
+      "geometry_peak_px": 33.603977
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 60,
+      "root": -36.910294,
+      "tip": -37.926884,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 60,
+      "root": -36.910294,
+      "tip": -37.926888,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 61,
+      "root": -36.491707,
+      "tip": -38.093708,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 61,
+      "root": -36.491707,
+      "tip": -38.093708,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 66,
+      "root": -34.618679,
+      "tip": -38.28167,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 66,
+      "root": -34.618679,
+      "tip": -38.28167,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 75,
+      "root": -32.105663,
+      "tip": -34.319584,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 75,
+      "root": -32.105663,
+      "tip": -34.319584,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 90,
+      "root": 13.730238,
+      "tip": -6.709745,
+      "geometry_peak_px": 33.709705
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 90,
+      "root": 13.730311,
+      "tip": -6.709713,
+      "geometry_peak_px": 21.673479
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 120,
+      "root": 32.025082,
+      "tip": 17.864363,
+      "geometry_peak_px": 37.441002
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 120,
+      "root": 32.025093,
+      "tip": 17.864384,
+      "geometry_peak_px": 33.575336
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 180,
+      "root": 8.762441,
+      "tip": 8.407594,
+      "geometry_peak_px": 12.749464
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 180,
+      "root": 8.762441,
+      "tip": 8.407562,
+      "geometry_peak_px": 11.662764
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 300,
+      "root": -0.229903,
+      "tip": -0.053717,
+      "geometry_peak_px": 0.214201
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 300,
+      "root": -0.229903,
+      "tip": -0.053717,
+      "geometry_peak_px": 0.245322
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_rearhair",
+      "tick": 420,
+      "root": 0.0,
+      "tip": 0.0,
+      "geometry_peak_px": 0.0
+    },
+    {
+      "mode": "earliest",
+      "anchor": "center_obj",
+      "tick": 420,
+      "root": 0.0,
+      "tip": 0.0,
+      "geometry_peak_px": 0.0
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 1,
+      "root": -21.801655,
+      "tip": -5.027278,
+      "geometry_peak_px": 14.820121
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 1,
+      "root": -21.801655,
+      "tip": -5.027278,
+      "geometry_peak_px": 19.026924
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 4,
+      "root": -34.088509,
+      "tip": -24.821533,
+      "geometry_peak_px": 41.540882
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 4,
+      "root": -34.088509,
+      "tip": -24.821533,
+      "geometry_peak_px": 35.494591
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 60,
+      "root": -33.934895,
+      "tip": -31.817459,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 60,
+      "root": -33.934895,
+      "tip": -31.817459,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 61,
+      "root": -32.336498,
+      "tip": -31.906759,
+      "geometry_peak_px": 91.328278
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 61,
+      "root": -32.336498,
+      "tip": -31.906759,
+      "geometry_peak_px": 50.024128
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 66,
+      "root": 24.246691,
+      "tip": -0.679216,
+      "geometry_peak_px": 33.476917
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 66,
+      "root": 24.246691,
+      "tip": -0.679216,
+      "geometry_peak_px": 24.255228
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 75,
+      "root": 40.276836,
+      "tip": 24.767891,
+      "geometry_peak_px": 73.311165
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 75,
+      "root": 40.276836,
+      "tip": 24.767891,
+      "geometry_peak_px": 40.984699
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 90,
+      "root": 36.383423,
+      "tip": 34.011219,
+      "geometry_peak_px": 94.822441
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 90,
+      "root": 36.383423,
+      "tip": 34.011219,
+      "geometry_peak_px": 44.025101
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 120,
+      "root": 33.010353,
+      "tip": 26.10689,
+      "geometry_peak_px": 78.8162
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 120,
+      "root": 33.010353,
+      "tip": 26.10689,
+      "geometry_peak_px": 41.762573
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 180,
+      "root": -8.092382,
+      "tip": -1.313897,
+      "geometry_peak_px": 7.844075
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 180,
+      "root": -8.092382,
+      "tip": -1.313897,
+      "geometry_peak_px": 8.044458
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 300,
+      "root": 0.131479,
+      "tip": 0.113875,
+      "geometry_peak_px": 0.194918
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 300,
+      "root": 0.131479,
+      "tip": 0.113875,
+      "geometry_peak_px": 0.163649
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_rearhair",
+      "tick": 420,
+      "root": 0.0,
+      "tip": 0.0,
+      "geometry_peak_px": 0.0
+    },
+    {
+      "mode": "candidate",
+      "anchor": "center_obj",
+      "tick": 420,
+      "root": 0.0,
+      "tip": 0.0,
+      "geometry_peak_px": 0.0
+    }
+  ],
+  "stress": {
+    "scenarios": 50,
+    "peak_absolute": 42.28258514404297,
+    "last_stop_tick_above_30": 212,
+    "last_stop_tick_delta_gt_1": 445,
+    "referenced_output_peak_absolute": 42.28258514404297,
+    "referenced_last_tick_above_30": 95,
+    "referenced_last_tick_delta_gt_1": 219
+  },
+  "cpu_benchmark": {
+    "before": "3ea4ec3",
+    "model": "chocola/casual-b-no-bell",
+    "trajectory": "800 px/s horizontal triangle, 1 second each direction",
+    "coverage": "Controller pointer_move + advance + prepare_frame; no UI/renderer/device",
+    "discarded_warmup_samples": 500,
+    "samples_per_run": 9500,
+    "affinity_cpu": 2,
+    "runs": [
+      {
+        "stage": "before",
+        "trial": 1,
+        "p50_us": 417.804,
+        "p95_us": 452.749,
+        "p99_us": 484.277
+      },
+      {
+        "stage": "after",
+        "trial": 1,
+        "p50_us": 416.741,
+        "p95_us": 451.93,
+        "p99_us": 483.323
+      },
+      {
+        "stage": "before",
+        "trial": 2,
+        "p50_us": 418.194,
+        "p95_us": 452.852,
+        "p99_us": 484.263
+      },
+      {
+        "stage": "after",
+        "trial": 2,
+        "p50_us": 417.501,
+        "p95_us": 452.201,
+        "p99_us": 483.77
+      },
+      {
+        "stage": "before",
+        "trial": 3,
+        "p50_us": 417.932,
+        "p95_us": 452.723,
+        "p99_us": 483.461
+      },
+      {
+        "stage": "after",
+        "trial": 3,
+        "p50_us": 417.343,
+        "p95_us": 452.288,
+        "p99_us": 483.859
+      }
+    ]
+  },
+  "tests": {
+    "cpu_passed": 224,
+    "gpu_passed": 4,
+    "integration_passed": 13,
+    "integration_skipped": 2,
+    "focused_cases": 22,
+    "focused_assertions": 13723,
+    "warmed_real_model_cpp_allocations": 0
+  },
+  "visible": {
+    "resolution": [
+      1920,
+      1080
+    ],
+    "fps_budget": 60,
+    "seed": 1,
+    "runs": [
+      "earliest-gl",
+      "candidate-gl",
+      "candidate-vk"
+    ],
+    "snapshots_each": 11,
+    "input": "internal callbacks; live cursor callback disabled in diagnostic copy; fixed 1/60 advance",
+    "limitations": "capture readback changes cadence; not a performance benchmark or a pixel equality test"
+  },
+  "assets_config_sha256_before_after": "1a363648d238f5b8befbedd45f214695f0169e62ed5b886ff9903f9d9b8ff7c4",
+  "evidence_root": "build/evidence/drag-inertia-20261020"
+}

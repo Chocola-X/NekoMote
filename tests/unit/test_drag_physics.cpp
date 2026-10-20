@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <nekomote/runtime/physics.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <string>
@@ -85,7 +86,7 @@ float output(const PhysicsInstance& physics, const GeometryScene& scene, const c
 }
 } // namespace
 
-TEST_CASE("Drag pose uses bound component axes and intersected authored ranges",
+TEST_CASE("Drag excites initialized particle state and preserves independent rebound",
           "[runtime][physics][pointer]")
 {
     const auto asset = drag_rig();
@@ -93,71 +94,89 @@ TEST_CASE("Drag pose uses bound component axes and intersected authored ranges",
     REQUIRE(scene.scene);
     auto compiled = compile_physics(asset, *scene.scene);
     REQUIRE(compiled.program);
-    REQUIRE(compiled.program->controller_count() == 3);
     GeometryInstance geometry(*scene.scene);
     REQUIRE(geometry.evaluate());
-    for (const Vec2 response : {Vec2{}, Vec2{1, -1}, Vec2{-1, 1}, Vec2{.5f, -.5f}})
+    PhysicsInstance source(*compiled.program), dragged(*compiled.program);
+    REQUIRE(source.step(geometry));
+    REQUIRE(dragged.step(geometry, {}, {{1, 0}, {1, 0}}));
+    for (std::size_t i = 0; i < source.values().size(); ++i)
+        REQUIRE(dragged.values()[i].value == source.values()[i].value);
+    for (int tick = 0; tick < 60; ++tick)
     {
-        PhysicsInstance source(*compiled.program), mixed(*compiled.program);
-        for (int tick = 0; tick < 5; ++tick)
-        {
-            REQUIRE(source.step(geometry));
-            REQUIRE(mixed.step(geometry, {}, response));
-            struct Expected
-            {
-                const char* name;
-                float minimum, maximum, response;
-            };
-            for (const auto expected : {Expected{"spring_x", -8, 18, response.x},
-                                        Expected{"spring_y", -20, 40, response.y},
-                                        Expected{"hair_root", -30, 30, response.x},
-                                        Expected{"parts_root", -6, 14, response.x},
-                                        Expected{"parts_y", -12, 4, response.y},
-                                        Expected{"parts_tip", -9, 3, response.x}})
-            {
-                const auto original = output(source, *scene.scene, expected.name);
-                const auto actual = output(mixed, *scene.scene, expected.name);
-                const auto weight = std::abs(expected.response);
-                const auto endpoint = expected.response < 0 ? expected.minimum : expected.maximum;
-                if (weight == 0)
-                    REQUIRE(actual == original);
-                else if (weight == 1)
-                    REQUIRE(actual == endpoint);
-                else
-                    REQUIRE_THAT(actual, Catch::Matchers::WithinAbs(.5f * original + .5f * endpoint,
-                                                                    .000001f));
-            }
-            // Missing references and ranges excluding zero never receive a drag pose.
-            for (const auto* name : {"hair_y", "hair_tip"})
-                REQUIRE(output(mixed, *scene.scene, name) == output(source, *scene.scene, name));
-        }
-        // A nonzero pose did not perturb either source integrator or bend history.
         REQUIRE(source.step(geometry));
-        REQUIRE(mixed.step(geometry));
-        REQUIRE(source.values().size() == mixed.values().size());
-        for (std::size_t i = 0; i < source.values().size(); ++i)
-            REQUIRE(source.values()[i].value == mixed.values()[i].value);
+        REQUIRE(dragged.step(geometry, {}, {{1, 0}, {tick == 0 ? 1.f : 0.f, 0}}));
+    }
+    REQUIRE(dragged.observe_spring(0)->state.position[0] <
+            source.observe_spring(0)->state.position[0]);
+    const auto root = output(dragged, *scene.scene, "hair_root");
+    REQUIRE(root < -20.f);
+    REQUIRE(output(dragged, *scene.scene, "hair_tip") != root);
+    REQUIRE(output(dragged, *scene.scene, "hair_tip") < -10.f);
+    REQUIRE(std::abs(output(dragged, *scene.scene, "hair_y") -
+                     output(source, *scene.scene, "hair_y")) > 1.f);
+    REQUIRE(dragged.step(geometry, {}, {{}, {-1, 0}}));
+    float opposite_peak = 0;
+    for (int tick = 0; tick < 120; ++tick)
+    {
+        REQUIRE(dragged.step(geometry));
+        opposite_peak = std::max(opposite_peak, output(dragged, *scene.scene, "hair_root"));
+    }
+    REQUIRE(opposite_peak > 20.f);
+    for (int tick = 0; tick < 600; ++tick)
+        REQUIRE(dragged.step(geometry));
+    REQUIRE(std::abs(output(dragged, *scene.scene, "hair_root")) < .1f);
+}
+
+TEST_CASE("Zero drag keeps the original spring chain and bend path exact",
+          "[runtime][physics][pointer]")
+{
+    const auto asset = drag_rig();
+    auto scene = compile_geometry_scene(asset);
+    REQUIRE(scene.scene);
+    auto compiled = compile_physics(asset, *scene.scene);
+    REQUIRE(compiled.program);
+    GeometryInstance geometry(*scene.scene);
+    PhysicsInstance implicit(*compiled.program), explicit_zero(*compiled.program);
+    for (int tick = 0; tick < 120; ++tick)
+    {
+        REQUIRE(geometry.set_origin({static_cast<float>(tick), static_cast<float>(tick % 7)}));
+        REQUIRE(geometry.evaluate());
+        REQUIRE(implicit.step(geometry));
+        REQUIRE(explicit_zero.step(geometry, {}, {}));
+        for (std::size_t i = 0; i < implicit.values().size(); ++i)
+            REQUIRE(implicit.values()[i].value == explicit_zero.values()[i].value);
     }
 }
 
-TEST_CASE("Disjoint authored ranges leave source drag output untouched",
+TEST_CASE("Drag bounds added velocity without clipping preexisting source motion",
           "[runtime][physics][pointer]")
 {
-    auto asset = drag_rig();
-    asset.parts[0].layers[0].parameter.push_back({"parts_tip", 4, 8, 1, 0, true});
-    auto scene = compile_geometry_scene(asset);
-    REQUIRE(scene.scene);
-    auto compiled = compile_physics(asset, *scene.scene);
-    REQUIRE(compiled.program);
-    GeometryInstance geometry(*scene.scene);
-    REQUIRE(geometry.evaluate());
-    PhysicsInstance source(*compiled.program), mixed(*compiled.program);
-    REQUIRE(source.step(geometry));
-    REQUIRE(mixed.step(geometry, {}, {1, 1}));
-    REQUIRE(output(mixed, *scene.scene, "parts_tip") == output(source, *scene.scene, "parts_tip"));
+    for (const float initial : {-200.f, 200.f})
+    {
+        auto asset = drag_rig();
+        asset.spring_controls[0].velocity[0] = initial;
+        auto scene = compile_geometry_scene(asset);
+        REQUIRE(scene.scene);
+        auto compiled = compile_physics(asset, *scene.scene);
+        REQUIRE(compiled.program);
+        GeometryInstance geometry(*scene.scene);
+        REQUIRE(geometry.evaluate());
+        PhysicsInstance source(*compiled.program), outward(*compiled.program),
+            inward(*compiled.program);
+        for (auto* solver : {&source, &outward, &inward})
+            REQUIRE(solver->step(geometry));
+        const float sign = initial > 0 ? 1.f : -1.f;
+        REQUIRE(source.step(geometry));
+        REQUIRE(outward.step(geometry, {}, {{-sign, 0}, {-sign, 0}}));
+        REQUIRE(inward.step(geometry, {}, {{sign, 0}, {sign, 0}}));
+        REQUIRE(outward.observe_spring(0)->state.velocity[0] ==
+                source.observe_spring(0)->state.velocity[0]);
+        REQUIRE(std::abs(inward.observe_spring(0)->state.velocity[0]) <
+                std::abs(source.observe_spring(0)->state.velocity[0]));
+    }
 }
 
-TEST_CASE("Drag blending preserves source output beyond the authored range",
+TEST_CASE("Invalid drag input rejects valid physics instances without advancing state",
           "[runtime][physics][pointer]")
 {
     const auto asset = drag_rig();
@@ -167,43 +186,22 @@ TEST_CASE("Drag blending preserves source output beyond the authored range",
     REQUIRE(compiled.program);
     GeometryInstance geometry(*scene.scene);
     REQUIRE(geometry.evaluate());
-    PhysicsInstance source(*compiled.program), mixed(*compiled.program);
-    PhysicsInputs inputs;
-    inputs.bust_amplitude = 100;
-    REQUIRE(source.step(geometry, inputs));
-    REQUIRE(mixed.step(geometry, inputs, {.5f, 0}));
-    const auto original = output(source, *scene.scene, "spring_x");
-    REQUIRE(original > 18.f);
-    REQUIRE_THAT(output(mixed, *scene.scene, "spring_x"),
-                 Catch::Matchers::WithinAbs(.5f * original + 9, .000001f));
-    REQUIRE(output(mixed, *scene.scene, "spring_y") == output(source, *scene.scene, "spring_y"));
-}
-
-TEST_CASE("Invalid drag response rejects valid physics instances without advancing state",
-          "[runtime][physics][pointer]")
-{
-    const auto asset = drag_rig();
-    auto scene = compile_geometry_scene(asset);
-    REQUIRE(scene.scene);
-    auto compiled = compile_physics(asset, *scene.scene);
-    REQUIRE(compiled.program);
-    GeometryInstance geometry(*scene.scene);
-    REQUIRE(geometry.evaluate());
-    for (const Vec2 response :
-         {Vec2{1.001f, 0}, Vec2{0, -1.001f}, Vec2{std::numeric_limits<float>::quiet_NaN(), 0},
-          Vec2{0, std::numeric_limits<float>::infinity()}})
+    for (const PhysicsDragInput drag :
+         {PhysicsDragInput{{1.001f, 0}, {}}, PhysicsDragInput{{.8f, .8f}, {}},
+          PhysicsDragInput{{}, {1.5f, 1.5f}},
+          PhysicsDragInput{{std::numeric_limits<float>::quiet_NaN(), 0}, {}},
+          PhysicsDragInput{{}, {0, std::numeric_limits<float>::infinity()}}})
     {
         PhysicsInstance checked(*compiled.program), reference(*compiled.program);
         REQUIRE(checked.step(geometry));
         REQUIRE(reference.step(geometry));
-        const auto status = checked.step(geometry, {}, response);
+        const auto status = checked.step(geometry, {}, drag);
         REQUIRE(status.error == PhysicsError::InvalidInput);
         REQUIRE(status.controller == kNoPhysicsController);
         REQUIRE(checked.tick_count() == 1);
         REQUIRE(checked.values().empty());
         REQUIRE(checked.step(geometry));
         REQUIRE(reference.step(geometry));
-        REQUIRE(checked.tick_count() == 2);
         for (std::size_t i = 0; i < checked.values().size(); ++i)
             REQUIRE(checked.values()[i].value == reference.values()[i].value);
     }
