@@ -111,8 +111,10 @@ class PlaybackInstance
     // retaining the physical reference. Only reset() returns to direct placed
     // anchors; fitting/repositioning must not inject the accumulated drag distance.
     PlaybackStatus set_origin(Vec2 origin) noexcept;
-    // Interactive placement: drive physical anchors by one author tick of
-    // movement rather than accumulating the entire screen-space drag distance.
+    // Interactive placement: continuously map each author tick's movement to a
+    // bounded physical drive, increasing with speed in each fixed direction.
+    // Limits use author units; placement scale and mirror do not change them.
+    // This is interaction policy, independent of source solver coefficients.
     // The render origin still follows the pointer exactly. Fixed-rate catch-up
     // distributes pending movement over its ticks; preparation never consumes it.
     PlaybackStatus drag_origin(Vec2 origin) noexcept;

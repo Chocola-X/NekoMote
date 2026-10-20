@@ -1,6 +1,7 @@
 #include <nekomote/runtime/playback.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 
@@ -12,12 +13,28 @@ constexpr double kAuthorHz = 60;
 constexpr double kClockBoundaryTolerance = 1e-9;
 constexpr std::uint32_t kMaximumCatchUpTicks = 15;
 static_assert(kMaximumAdvanceSeconds * kAuthorHz == kMaximumCatchUpTicks);
+
+// Interactive policy, not source solver coefficients. Units are author units
+// per 60 Hz tick. Vertical chain output is more sensitive than horizontal output.
+constexpr double kDragGain = 3;
+constexpr double kDragHorizontalLimit = 32;
+constexpr double kDragVerticalLimit = 12;
+Vec2 drag_drive(double x, double y, double physical_scale) noexcept
+{
+    if (x == 0 && y == 0)
+        return {};
+    const double normalized_x = x * kDragGain / (physical_scale * kDragHorizontalLimit);
+    const double normalized_y = y * kDragGain / (physical_scale * kDragVerticalLimit);
+    const double gain = kDragGain / (1 + std::hypot(normalized_x, normalized_y));
+    return {static_cast<float>(x * gain), static_cast<float>(y * gain)};
+}
 } // namespace
 struct PlaybackProgram::Impl
 {
     std::unique_ptr<const GeometryScene> scene;
     std::unique_ptr<const AnimationProgram> animation;
     std::unique_ptr<const PhysicsProgram> physics; // destroyed before its borrowed scene
+    float author_scale{1};
 };
 PlaybackProgram::PlaybackProgram(std::unique_ptr<Impl> impl) : impl_(std::move(impl))
 {
@@ -49,6 +66,8 @@ PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMo
         if (!physics.program)
             return {{}, std::move(physics.errors)};
         data->physics = std::move(physics.program);
+        if (data->physics->controller_count() > 0)
+            data->author_scale = *asset.author_scale;
     }
     data->scene = std::move(geometry.scene);
     data->animation = std::move(animation.program);
@@ -63,10 +82,11 @@ struct PlaybackInstance::Impl
     PlaybackState state{PlaybackState::Running};
     double accumulator{0};
     Vec2 origin{}, physics_origin{}, previous_drag_origin{};
+    float author_scale{1};
     std::uint64_t ticks{0};
     bool faulted{false}, dirty{true}, frame_ready{false}, drag_driven{false};
     explicit Impl(const PlaybackProgram::Impl& data, AnimationConfig config)
-        : geometry(*data.scene), animation(*data.animation, config)
+        : geometry(*data.scene), animation(*data.animation, config), author_scale(data.author_scale)
     {
         if (data.physics)
             physics = std::make_unique<PhysicsInstance>(*data.physics);
@@ -241,16 +261,23 @@ PlaybackStatus PlaybackInstance::step_tick(PhysicsInputs inputs, float drag_frac
             return data.fail({PlaybackError::Geometry, {}, status, {}});
     if (data.physics)
     {
-        Vec2 movement{};
+        std::array<double, 2> movement{};
         if (data.drag_driven)
         {
-            movement = {(data.origin.x - data.previous_drag_origin.x) * drag_fraction,
-                        (data.origin.y - data.previous_drag_origin.y) * drag_fraction};
+            movement = {(static_cast<double>(data.origin.x) -
+                         static_cast<double>(data.previous_drag_origin.x)) *
+                            static_cast<double>(drag_fraction),
+                        (static_cast<double>(data.origin.y) -
+                         static_cast<double>(data.previous_drag_origin.y)) *
+                            static_cast<double>(drag_fraction)};
             // Initialization saves anchor offsets without advancing the solver.
             // A velocity offset here would cause an opposite kick next tick.
-            const auto physical_origin = data.physics->tick_count() == 0
-                                             ? data.physics_origin
-                                             : data.physics_origin + movement;
+            const auto physical_origin =
+                data.physics->tick_count() == 0
+                    ? data.physics_origin
+                    : data.physics_origin + drag_drive(movement[0], movement[1],
+                                                       static_cast<double>(data.geometry.scale()) *
+                                                           static_cast<double>(data.author_scale));
             if (const auto status = data.geometry.set_origin(physical_origin); !status)
                 return data.fail({PlaybackError::Geometry, {}, status, {}});
         }
@@ -271,7 +298,12 @@ PlaybackStatus PlaybackInstance::step_tick(PhysicsInputs inputs, float drag_frac
         if (data.drag_driven)
         {
             data.previous_drag_origin =
-                drag_fraction == 1 ? data.origin : data.previous_drag_origin + movement;
+                drag_fraction == 1
+                    ? data.origin
+                    : Vec2{static_cast<float>(static_cast<double>(data.previous_drag_origin.x) +
+                                              movement[0]),
+                           static_cast<float>(static_cast<double>(data.previous_drag_origin.y) +
+                                              movement[1])};
         }
     }
     data.compose();

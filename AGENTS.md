@@ -102,6 +102,12 @@ main/little 相对链接共享、`model.nkm`（MessagePack + zlib）和背景渐
 可见 player 的 GL/Vulkan 验证及资源边界见 [报告](docs/drag-physics-2026-10-20.md)。
 真实 Plasma 桌面拖动及全部型号手感仍待分别验收；缺锚点链候选已因实际引用证据撤回。
 
+2026-10-20 C22：从 `38ceb0d` 核查 wintermaid 长发/裙装，四个 Chocola/Vanilla
+型号的双马尾和裙摆绑定完整；按用户要求将拖动速度连续映射为作者单位的有界激励，
+正常速度增强、极快渐近限幅，沿用现有积分器和固定 tick。218 项 CPU / 4 项 GPU、
+40 场景反向/停止压力与可见双后端验证见 [报告](docs/drag-speed-and-model-bindings-2026-10-20.md)。
+没有新增求值/堆分配/GPU 资源；真实桌面主观手感和其他型号仍分别验收。
+
 2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
 `ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像；发布清单 9→10 包，
 publish 脚本同步强制 20 个附件。Qt5.12.8 / GCC10.5 基线与符号上限不变；ARM64

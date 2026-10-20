@@ -1,0 +1,324 @@
+{
+  "baseline": "38ceb0d",
+  "date": "2026-10-20",
+  "asset_audit": {
+    "models": 195,
+    "chains": 1170,
+    "chain_length": [
+      64,
+      48
+    ],
+    "horizontal_scale": [
+      0.75,
+      0.25
+    ]
+  },
+  "trajectory": {
+    "warmup_ticks": 240,
+    "author_hz": 60,
+    "forward_ticks": 60,
+    "hold_ticks": 60,
+    "timelines": false,
+    "comparison": "Isolate one chain output in a common settled pose; match active, nonzero-opacity sprite NodeId and source; sample a fixed 3x3 atlas grid. These are geometry samples, not unoccluded pixels."
+  },
+  "independent_stress": {
+    "cases": 40,
+    "models": [
+      "assets/characters/chocola/wintermaid-b/model.nkm",
+      "assets/characters/chocola/wintermaid/model.nkm",
+      "assets/characters/vanilla/wintermaid-b/model.nkm",
+      "assets/characters/vanilla/wintermaid/model.nkm"
+    ],
+    "scales": [
+      0.5,
+      2.0
+    ],
+    "all_recorded_values_finite": true,
+    "maximum_absolute_output": 29.902509689331055,
+    "maximum_last_hold_tick_outside_authored_pm30": 0,
+    "maximum_last_hold_tick_deviation_gt1": 228,
+    "peak_delta_difference_between_scales": 0.0,
+    "scope": "CPU playback output only. No timelines, no GPU or performance measurement. 240 warmup + 60 forward + 60 reverse + 240 hold ticks at 60 Hz."
+  },
+  "hashes": {
+    "build/evidence/drag-parts-20261020/response.cpp": "4ceff2b3cfc18a24d23f68022c1772f7007916ec98d3f6c6413587946f1098db",
+    "build/evidence/drag-parts-20261020/response-before-speed": "e9d95142e06b7163de17e6a4676db43ba6992b649db0d0ed8b76dc6ed1367528",
+    "build/evidence/drag-parts-20261020/response-speed": "ad60ec40b02b97955b60147c500ca95ed5c845e08ea058c58f451b813e59e70e",
+    "build/evidence/drag-parts-20261020/player-before-speed": "1c1c4148bacfd906eec3543c8dbf22892adb2476a95f6db2064588fc0f841172",
+    "build/evidence/drag-parts-20261020/player-drag": "bab89919a46873589dad2bc4a7633be8536d2ff455c7d3ede2209591e63dd675",
+    "build/evidence/drag-parts-20261020/azuki-review/speed_stress.cpp": "c26c2a9c05afc0f41715741e9989d306a2473f4eff387b60dc373af04f9e2dcd",
+    "build/evidence/drag-parts-20261020/azuki-review/wintermaid-source-audit.json": "b4636023c5e5b809c30fd515a03f77ae65cdcac67617b8c5ec55480064703022",
+    "build/evidence/drag-parts-20261020/azuki-review/rear-source-audit.json": "f3bac0919fc6a197b9987e1237673474856eabeed1dcb2ae9378f9ba1a0821d1",
+    "assets/characters/chocola/wintermaid/model.nkm": "0bb3f8c2cbb95126c578bc5b710134bbbf107f2041f9ff3e3dfaa631a335f546",
+    "assets/characters/chocola/wintermaid/session.nks.json": "99d512b4a8e937f5de7040899257a8434a0b034afc2115e7946a800fff421038",
+    "assets/characters/chocola/wintermaid-b/model.nkm": "4f20c0bf2b36c19fb6e63a784b5366046d2edf1b885ad44f7e206ac704dd7343",
+    "assets/characters/chocola/wintermaid-b/session.nks.json": "13d283ff6e75e0eda6a10c9b7342251005315a0d2f11c4370a5ef4bc51f3972a",
+    "assets/characters/vanilla/wintermaid/model.nkm": "5d5f78d6a05cdc6df54bbe045b512093aaf49b2825614dfa6c74a2496a7ae902",
+    "assets/characters/vanilla/wintermaid/session.nks.json": "cd18eff8ba0f5816eea67ca76871752dcf25dc44aea852a9ba977f6eb200c6b8",
+    "assets/characters/vanilla/wintermaid-b/model.nkm": "d59522284695e3b225d4c7c7dacb74318b31247ccd98cc687719033dda80d835",
+    "assets/characters/vanilla/wintermaid-b/session.nks.json": "e985fff8cb0ffaf932d5cfbff9dad38b3710dbccd0ad73c10ef6706dfcb00d31",
+    "build/evidence/drag-parts-20261020/probe-speed": "d131c6fbb337ea5d601862bcbdba68a215498bd3a1863ef3ad2e1d45b4fba9f4",
+    "build/evidence/drag-physics-20261020/probe-fixed": "cf2663aae9fa6567d36b6c821495496b31d15d3c1633b42eb124b79ab41bcb01",
+    "build/png-flac-config-check/bin/nekomote_player": "29f28b167dd9059cc5666f7f038f6d6530a3a7eee8d8ce9585b5bd30a8dc52dc",
+    "build/evidence/drag-parts-20261020/probe-speed-final": "af208adf5ba894c3382685b1b99e5a35b23e40c3375a1d5ae9127d0e3369fd9d",
+    "src/runtime/playback.cpp": "6ba12044fe93f776433b54101c3e690188b4278ad92706969748a1c8e4ae3adf",
+    "include/nekomote/runtime/playback.hpp": "1d8e8ac2a7742d6f6d5a29d2ede31f1304187882d9ae600955757916c33ee9c0",
+    "tests/unit/test_geometry_scene.cpp": "3ca6483bafbc3a9b42f58bbdf4282dc17bff8a55a316a7e1f3838140358fdcd1"
+  },
+  "fit_model_comparisons": [
+    {
+      "model": "chocola/wintermaid",
+      "scale": 0.55715,
+      "axis": "x",
+      "pixels_per_tick": 2.0,
+      "before_hair_skirt_samples_author": [
+        3.76679,
+        5.691686
+      ],
+      "after_hair_skirt_samples_author": [
+        8.342922,
+        12.586774
+      ],
+      "after_tip_vertical_root_delta": [
+        2.310143,
+        0.216734,
+        6.774042
+      ]
+    },
+    {
+      "model": "chocola/wintermaid",
+      "scale": 0.55715,
+      "axis": "x",
+      "pixels_per_tick": 8.0,
+      "before_hair_skirt_samples_author": [
+        14.383034,
+        21.615959
+      ],
+      "after_hair_skirt_samples_author": [
+        17.895025,
+        26.808218
+      ],
+      "after_tip_vertical_root_delta": [
+        5.204895,
+        1.11126,
+        14.148927
+      ]
+    },
+    {
+      "model": "chocola/wintermaid",
+      "scale": 0.55715,
+      "axis": "x",
+      "pixels_per_tick": 24.0,
+      "before_hair_skirt_samples_author": [
+        34.238972,
+        50.100674
+      ],
+      "after_hair_skirt_samples_author": [
+        23.60957,
+        35.133293
+      ],
+      "after_tip_vertical_root_delta": [
+        7.177632,
+        2.135934,
+        18.193565
+      ]
+    },
+    {
+      "model": "chocola/wintermaid",
+      "scale": 0.55715,
+      "axis": "y",
+      "pixels_per_tick": 8.0,
+      "before_hair_skirt_samples_author": [
+        49.047405,
+        26.546591
+      ],
+      "after_hair_skirt_samples_author": [
+        37.712742,
+        20.865873
+      ],
+      "after_tip_vertical_root_delta": [
+        0.0,
+        19.462702,
+        0.0
+      ]
+    },
+    {
+      "model": "chocola/wintermaid",
+      "scale": 0.55715,
+      "axis": "y",
+      "pixels_per_tick": 24.0,
+      "before_hair_skirt_samples_author": [
+        63.339809,
+        34.270626
+      ],
+      "after_hair_skirt_samples_author": [
+        41.910446,
+        23.004692
+      ],
+      "after_tip_vertical_root_delta": [
+        0.0,
+        21.457684,
+        0.0
+      ]
+    },
+    {
+      "model": "vanilla/wintermaid",
+      "scale": 0.546118,
+      "axis": "x",
+      "pixels_per_tick": 2.0,
+      "before_hair_skirt_samples_author": [
+        4.680579,
+        6.692849
+      ],
+      "after_hair_skirt_samples_author": [
+        10.309261,
+        14.745547
+      ],
+      "after_tip_vertical_root_delta": [
+        2.34469,
+        0.223244,
+        6.871074
+      ]
+    },
+    {
+      "model": "vanilla/wintermaid",
+      "scale": 0.546118,
+      "axis": "x",
+      "pixels_per_tick": 8.0,
+      "before_hair_skirt_samples_author": [
+        17.832945,
+        25.525068
+      ],
+      "after_hair_skirt_samples_author": [
+        21.942554,
+        31.424864
+      ],
+      "after_tip_vertical_root_delta": [
+        5.247959,
+        1.130008,
+        14.245824
+      ]
+    },
+    {
+      "model": "vanilla/wintermaid",
+      "scale": 0.546118,
+      "axis": "x",
+      "pixels_per_tick": 24.0,
+      "before_hair_skirt_samples_author": [
+        42.123436,
+        60.585335
+      ],
+      "after_hair_skirt_samples_author": [
+        28.810619,
+        41.309963
+      ],
+      "after_tip_vertical_root_delta": [
+        7.204467,
+        2.152303,
+        18.24321
+      ]
+    },
+    {
+      "model": "vanilla/wintermaid",
+      "scale": 0.546118,
+      "axis": "y",
+      "pixels_per_tick": 8.0,
+      "before_hair_skirt_samples_author": [
+        42.190067,
+        20.679121
+      ],
+      "after_hair_skirt_samples_author": [
+        32.197887,
+        15.781477
+      ],
+      "after_tip_vertical_root_delta": [
+        0.0,
+        19.517645,
+        0.0
+      ]
+    },
+    {
+      "model": "vanilla/wintermaid",
+      "scale": 0.546118,
+      "axis": "y",
+      "pixels_per_tick": 24.0,
+      "before_hair_skirt_samples_author": [
+        53.913895,
+        27.002403
+      ],
+      "after_hair_skirt_samples_author": [
+        35.711945,
+        17.503946
+      ],
+      "after_tip_vertical_root_delta": [
+        0.0,
+        21.478935,
+        0.0
+      ]
+    }
+  ],
+  "validation": {
+    "cpu_ctest_passed": 218,
+    "gpu_ctest_passed": 4,
+    "integration_passed": 13,
+    "integration_skipped": 2,
+    "pointer_cases_passed": 9,
+    "pointer_assertions": 3575,
+    "visible_windows": [
+      "chocola/wintermaid OpenGL",
+      "vanilla/wintermaid OpenGL",
+      "chocola/wintermaid Vulkan",
+      "vanilla/wintermaid Vulkan"
+    ],
+    "visible_window_mode": "X11,1920x1080,60fps budget,fit,mute,no-save,internal Controller callbacks; captures exclude these runs from benchmarks."
+  },
+  "cpu_benchmark": {
+    "machine": "Xeon E5-1680 v4, GCC 15.2.1, Release/LTO, CPU affinity 2",
+    "model": "chocola/wintermaid",
+    "scale": 1,
+    "trajectory": "x=120*sin(.03*t), y=80*sin(.017*t), dt=1/60",
+    "scope": "pointer_move+advance+prepare; no UI/window/GPU/audio;240 warmup,10000 samples,first500 timed samples discarded",
+    "runs": [
+      {
+        "run": 1,
+        "before_p50_p95_p99_us": [
+          621.612,
+          634.149,
+          660.405
+        ],
+        "speed_p50_p95_p99_us": [
+          620.79,
+          632.847,
+          644.329
+        ]
+      },
+      {
+        "run": 2,
+        "before_p50_p95_p99_us": [
+          622.84,
+          637.915,
+          722.738
+        ],
+        "speed_p50_p95_p99_us": [
+          620.979,
+          636.347,
+          648.737
+        ]
+      },
+      {
+        "run": 3,
+        "before_p50_p95_p99_us": [
+          622.148,
+          638.165,
+          709.508
+        ],
+        "speed_p50_p95_p99_us": [
+          621.797,
+          658.992,
+          833.611
+        ]
+      }
+    ],
+    "interpretation": "P50 approximately unchanged. Third new run has higher P95/P99; tail variation is not attributed, and this is not a claim that every percentile is unchanged."
+  }
+}

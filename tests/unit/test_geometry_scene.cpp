@@ -1421,7 +1421,11 @@ TEST_CASE("Interactive placement drives physics without accumulating screen trav
             REQUIRE(dragged.tick_count() == 1);
             REQUIRE(dragged.drag_origin({120, 410}));
             REQUIRE(dragged.advance(1.0 / 120));
-            REQUIRE(reference.set_origin({120, 410}));
+            // Frozen placed offsets for this diagonal input at each model scale.
+            // Reference uses direct placement, independently of interactive policy.
+            const Vec2 drive =
+                scale == 0.5f ? Vec2{8.275862f, 4.137931f} : Vec2{23.414635f, 11.707317f};
+            REQUIRE(reference.set_origin({100.f + drive.x, 400.f + drive.y}));
             REQUIRE(reference.step());
             compare(); // coalesced input reacts on the next tick, before release
             for (int tick = 2; tick <= 60; ++tick)
@@ -1454,6 +1458,72 @@ TEST_CASE("Interactive placement drives physics without accumulating screen trav
             REQUIRE(reference.step());
             compare();
         }
+}
+
+TEST_CASE("Interactive physics responds continuously to speed with bounded author-space input",
+          "[runtime][playback][pointer]")
+{
+    using namespace runtime;
+    for (const bool mirror : {false, true})
+        for (const float scale : {0.5f, 2.0f})
+        {
+            auto asset = spring_rig();
+            asset.mirror = mirror;
+            auto compiled = compile_playback(asset);
+            REQUIRE(compiled.program);
+            for (const Vec2 direction : {Vec2{1, 0}, Vec2{0, 1}, Vec2{0.6f, 0.8f}})
+            {
+                float previous = -1;
+                for (const float speed : {0.f, .01f, .25f, 1.f, 4.f, 16.f, 64.f, 1e6f})
+                {
+                    PlaybackInstance player(*compiled.program);
+                    REQUIRE(player.set_scale(scale));
+                    REQUIRE(player.step());
+                    const auto baseline = player.observe_spring(0)->anchor;
+                    const float physical_scale = scale * *asset.author_scale;
+                    REQUIRE(player.drag_origin(direction * (speed * physical_scale)));
+                    REQUIRE(player.step());
+                    const auto drive = player.observe_spring(0)->anchor - baseline;
+                    const float magnitude = std::hypot(drive.x, drive.y);
+                    REQUIRE(std::isfinite(magnitude));
+                    REQUIRE(magnitude > previous);
+                    REQUIRE(std::abs(drive.x) <= 32.f);
+                    REQUIRE(std::abs(drive.y) <= 12.f);
+                    REQUIRE_THAT(drive.x * direction.y,
+                                 Catch::Matchers::WithinAbs(drive.y * direction.x, .0001f));
+                    if (speed == 0)
+                        REQUIRE(magnitude == 0.f);
+                    previous = magnitude;
+                }
+            }
+            PlaybackInstance extreme(*compiled.program);
+            REQUIRE(extreme.set_scale(scale));
+            REQUIRE(extreme.step());
+            const auto baseline = extreme.observe_spring(0)->anchor;
+            const auto maximum = std::numeric_limits<float>::max();
+            for (const float sign : {1.f, -1.f, 1.f})
+            {
+                REQUIRE(extreme.drag_origin({sign * maximum, sign * maximum}));
+                REQUIRE(extreme.advance(1.0 / 30));
+                const auto drive = extreme.observe_spring(0)->anchor - baseline;
+                REQUIRE(std::isfinite(drive.x));
+                REQUIRE(std::isfinite(drive.y));
+                REQUIRE(std::abs(drive.x) <= 32.f);
+                REQUIRE(std::abs(drive.y) <= 12.f);
+            }
+            REQUIRE(extreme.step());
+            near(extreme.observe_spring(0)->anchor, baseline);
+        }
+    // Unused physics metadata cannot make a model without enabled controls fail.
+    auto unbound = rig();
+    unbound.author_scale = field(std::numeric_limits<float>::quiet_NaN());
+    auto compiled = compile_playback(unbound);
+    REQUIRE(compiled.program);
+    PlaybackInstance player(*compiled.program);
+    REQUIRE(player.step());
+    REQUIRE(player.drag_origin({10, 20}));
+    REQUIRE(player.step());
+    REQUIRE(player.prepare_frame());
 }
 
 TEST_CASE("Interactive placement distributes motion over catchup ticks", "[runtime][playback]")
