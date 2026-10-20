@@ -96,6 +96,12 @@ main/little 相对链接共享、`model.nkm`（MessagePack + zlib）和背景渐
 原树备份与测试、加载内存和未覆盖范围见 [报告](docs/asset-storage-and-memory-2026-10-19.md)。
 没有恢复 WebP，没有安装真实桌面；现有 PNG 已逐行裁切，不把磁盘压缩收益说成稳态内存收益。
 
+2026-10-20 C21：从 `8e850c0` 修正共享拖拽到物理的耦合：显示位置跟随鼠标，
+物理使用逐 author tick 位移速度，避免累计屏幕行程把软弹簧输出长期推到几何夹值之外。
+不改 solver/资产，不新增几何求值或堆分配；初始化、暂停、追赶和失败恢复有合成回归，
+可见 player 的 GL/Vulkan 验证及资源边界见 [报告](docs/drag-physics-2026-10-20.md)。
+真实 Plasma 桌面拖动及全部型号手感仍待分别验收；缺锚点链候选已因实际引用证据撤回。
+
 2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
 `ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像；发布清单 9→10 包，
 publish 脚本同步强制 20 个附件。Qt5.12.8 / GCC10.5 基线与符号上限不变；ARM64

@@ -1391,6 +1391,145 @@ TEST_CASE("Absent-anchor chain binding matches original exported-output observat
     }
 }
 
+TEST_CASE("Interactive placement drives physics without accumulating screen travel",
+          "[runtime][playback][pointer]")
+{
+    using namespace runtime;
+    for (const bool mirror : {false, true})
+        for (const float scale : {0.5f, 2.0f})
+        {
+            auto asset = chain_rig();
+            asset.mirror = mirror;
+            asset.spring_controls = spring_rig().spring_controls;
+            auto compiled = compile_playback(asset);
+            REQUIRE(compiled.program);
+            PlaybackInstance dragged(*compiled.program), reference(*compiled.program);
+            for (auto* player : {&dragged, &reference})
+            {
+                REQUIRE(player->set_origin({100, 400}));
+                REQUIRE(player->set_scale(scale));
+                REQUIRE(player->step());
+            }
+            const auto compare = [&]
+            {
+                for (std::size_t i = 0; i < dragged.values().size(); ++i)
+                    REQUIRE(dragged.values()[i].value == reference.values()[i].value);
+            };
+            REQUIRE(dragged.drag_origin({104, 402}));
+            REQUIRE(dragged.advance(1.0 / 120));
+            REQUIRE(dragged.prepare_frame());
+            REQUIRE(dragged.tick_count() == 1);
+            REQUIRE(dragged.drag_origin({120, 410}));
+            REQUIRE(dragged.advance(1.0 / 120));
+            REQUIRE(reference.set_origin({120, 410}));
+            REQUIRE(reference.step());
+            compare(); // coalesced input reacts on the next tick, before release
+            for (int tick = 2; tick <= 60; ++tick)
+            {
+                REQUIRE(dragged.drag_origin({100.f + 20.f * static_cast<float>(tick),
+                                             400.f + 10.f * static_cast<float>(tick)}));
+                REQUIRE(dragged.step());
+                REQUIRE(reference.step()); // same velocity, same physical anchor
+                compare();
+            }
+            REQUIRE(dragged.step()); // stopping removes the velocity drive immediately
+            REQUIRE(reference.set_origin({100, 400}));
+            REQUIRE(reference.step());
+            compare();
+            REQUIRE(dragged.prepare_frame());
+            REQUIRE(reference.prepare_frame());
+            const auto a = dragged.frame().vertices, b = reference.frame().vertices;
+            REQUIRE(a.size() == b.size());
+            for (std::size_t i = 0; i < a.size(); ++i)
+                near({a[i].x - (mirror ? -1200.f : 1200.f), a[i].y - 600.f}, {b[i].x, b[i].y});
+            dragged.set_playback_state(PlaybackState::Paused);
+            REQUIRE(dragged.drag_origin({2000, 2000}));
+            dragged.set_playback_state(PlaybackState::Running);
+            REQUIRE(dragged.step());
+            REQUIRE(reference.step());
+            compare(); // no queued motion after a pause
+            dragged.reset();
+            reference.reset();
+            REQUIRE(dragged.step());
+            REQUIRE(reference.step());
+            compare();
+        }
+}
+
+TEST_CASE("Interactive placement distributes motion over catchup ticks", "[runtime][playback]")
+{
+    using namespace runtime;
+    auto asset = chain_rig();
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance at30(*compiled.program), at60(*compiled.program);
+    REQUIRE(at30.step());
+    REQUIRE(at60.step());
+    for (int frame = 1; frame <= 60; ++frame)
+    {
+        REQUIRE(at30.drag_origin({static_cast<float>(frame * 20), 0}));
+        REQUIRE(at30.advance(1.0 / 30));
+        REQUIRE(at60.drag_origin({static_cast<float>(frame * 20 - 10), 0}));
+        REQUIRE(at60.advance(1.0 / 60));
+        REQUIRE(at60.drag_origin({static_cast<float>(frame * 20), 0}));
+        REQUIRE(at60.advance(1.0 / 60));
+        for (std::size_t i = 0; i < at30.values().size(); ++i)
+            REQUIRE(at30.values()[i].value == at60.values()[i].value);
+    }
+}
+
+TEST_CASE("Interactive placement handles initialization, reconfiguration and failed ticks",
+          "[runtime][playback][pointer]")
+{
+    using namespace runtime;
+    auto asset = chain_rig();
+    asset.spring_controls = spring_rig().spring_controls;
+    auto compiled = compile_playback(asset);
+    REQUIRE(compiled.program);
+    PlaybackInstance dragged(*compiled.program), reference(*compiled.program);
+    REQUIRE(dragged.set_origin({100, 400}));
+    REQUIRE(reference.set_origin({100, 400}));
+    REQUIRE(dragged.drag_origin({120, 400})); // before the first physics tick
+    const auto compare = [&]
+    {
+        for (std::size_t i = 0; i < dragged.values().size(); ++i)
+            REQUIRE(dragged.values()[i].value == reference.values()[i].value);
+    };
+    for (int tick = 0; tick < 3; ++tick)
+    {
+        REQUIRE(dragged.step());
+        REQUIRE(reference.step());
+        compare(); // initialization cannot leave an opposite velocity pulse
+    }
+    REQUIRE(dragged.drag_origin({140, 410}));
+    REQUIRE(dragged.set_origin({900, 800})); // explicit placement drops pending input
+    REQUIRE(dragged.set_scale(2));
+    REQUIRE(reference.set_scale(2));
+    REQUIRE(dragged.step());
+    REQUIRE(reference.step());
+    compare();
+    REQUIRE(dragged.prepare_frame());
+    REQUIRE(dragged.drag_origin({920, 810}));
+    PhysicsInputs invalid;
+    invalid.bust_amplitude = std::numeric_limits<float>::quiet_NaN();
+    const auto failed = dragged.step(invalid);
+    REQUIRE(failed.error == PlaybackError::Physics);
+    REQUIRE(failed.physics.error == PhysicsError::InvalidInput);
+    REQUIRE(dragged.frame().vertices.empty());
+    dragged.reset();
+    reference.reset();
+    REQUIRE(reference.set_origin({920, 810}));
+    REQUIRE(dragged.step());
+    REQUIRE(reference.step());
+    REQUIRE(dragged.prepare_frame());
+    REQUIRE(reference.prepare_frame());
+    compare();
+    REQUIRE(dragged.frame().vertices.size() == reference.frame().vertices.size());
+    for (std::size_t i = 0; i < dragged.frame().vertices.size(); ++i)
+        near({dragged.frame().vertices[i].x, dragged.frame().vertices[i].y},
+             {reference.frame().vertices[i].x, reference.frame().vertices[i].y});
+}
+
 TEST_CASE("Combined playback advances every animation and physics tick at any display rate",
           "[runtime][playback]")
 {
@@ -1559,6 +1698,7 @@ TEST_CASE("Combined playback reuses frame storage without allocating during catc
     measure_allocations = true;
     for (int i = 0; i < 200; ++i)
     {
+        success &= static_cast<bool>(player.drag_origin({static_cast<float>(i), 400}));
         success &= static_cast<bool>(player.advance(1.0 / 30));
         success &= static_cast<bool>(player.prepare_frame());
         success &= static_cast<bool>(player.prepare_frame());

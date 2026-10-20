@@ -498,6 +498,17 @@ SessionStatus SessionInstance::set_origin(Vec2 origin) noexcept
         data.origin = origin;
     return checked(status);
 }
+SessionStatus SessionInstance::drag_origin(Vec2 origin) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {SessionError::Faulted, {}};
+    const auto status = data.player.drag_origin(origin);
+    if (status)
+        data.origin = origin;
+    return checked(status);
+}
+
 SessionStatus SessionInstance::set_scale(float scale) noexcept
 {
     auto& data = *impl_;

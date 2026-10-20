@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -38,6 +39,30 @@ struct LayoutFixture
                 layer.inherit_mask = 0x20007fc;
         imported.asset.base_group = "body_parts";
         imported.asset.base_motion = "torso";
+        imported.asset.author_scale = {nekomote::model::FieldState::Value, 1.0f};
+        imported.asset.variables.push_back({"drag_x", {}});
+        imported.asset.variables.push_back({"drag_y", {}});
+        nekomote::model::Layer anchor;
+        anchor.label = "drag_anchor";
+        anchor.type = 1;
+        anchor.inherit_mask = 0x200020c;
+        anchor.frame_list.push_back({0, 2, {nekomote::model::FieldState::Value, {}}});
+        imported.asset.parts[0].layers.push_back(anchor);
+        ++imported.asset.total_layers;
+        ++imported.asset.total_frames;
+        nekomote::model::SpringControl spring;
+        spring.binding = {"/metadata/bustControl/0",
+                          "drag",
+                          "drag_anchor",
+                          "standard",
+                          "drag_x",
+                          "drag_y",
+                          true,
+                          {}};
+        spring.stiffness = 0.03125f;
+        spring.friction = 0.125f;
+        spring.axis_scale = {1, 1};
+        imported.asset.spring_controls.push_back(spring);
         nekomote::model::Timeline idle;
         idle.label = "idle";
         idle.loop_begin = 0;
@@ -117,6 +142,35 @@ TEST_CASE("Controller short click cannot leave a drag active", "[controller][poi
     c.pointer_move({200, 200}, start + 1s);
     REQUIRE(c.origin().x == 0.0f);
     REQUIRE(c.origin().y == 400.0f);
+}
+
+TEST_CASE("Controller drives physics during a held drag without accumulating its distance",
+          "[controller][pointer]")
+{
+    LayoutFixture fixture;
+    WallpaperController controller;
+    fixture.install(controller);
+    controller.advance(1.0 / 60);
+    const auto x = controller.current_program()->playback().scene().find_variable("drag_x");
+    const auto value = [&]
+    { return controller.current_instance()->playback().values()[x.value - 1].value; };
+    REQUIRE(value() == 0.0f);
+    controller.pointer_press({0, 0});
+    for (int frame = 1; frame <= 120; ++frame)
+    {
+        controller.pointer_move({static_cast<float>(frame * 30), 0});
+        controller.prepare_frame();
+        controller.advance(1.0 / 60);
+        REQUIRE(controller.last_error());
+        if (frame == 1)
+            REQUIRE(value() < 0.f); // immediate response, no release event
+    }
+    REQUIRE(controller.origin().x == 3600.f);
+    REQUIRE(std::abs(value()) < 1.f); // constant speed cannot pin the pose at its limit
+    controller.pointer_release({3600, 0});
+    controller.advance(1.0 / 60);
+    REQUIRE(controller.last_error());
+    REQUIRE(value() > 0.f); // stopping is another immediate inertial input
 }
 
 TEST_CASE("Controller short click reacts on release but long hold does not react",

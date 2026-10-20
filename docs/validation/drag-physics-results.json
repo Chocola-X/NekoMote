@@ -1,0 +1,107 @@
+{
+  "base_commit": "8e850c0",
+  "agent": "Codex",
+  "model": "GPT-6 (exact variant not exposed)",
+  "date": "2026-10-20",
+  "cpu": "Intel Xeon E5-1680 v4",
+  "gpu": "NVIDIA RTX 3080 Ti",
+  "driver": "580.82.09",
+  "compiler": "GCC 15.2.1",
+  "build": "Release / LTO / Werror",
+  "cpu_benchmark": {
+    "model": "chocola/date-a",
+    "scale": 1,
+    "affinity_cpu": 2,
+    "audio": "disabled",
+    "gpu_ui_window": false,
+    "warmup_ticks": 240,
+    "timed_ticks": 10000,
+    "excluded_initial_timed_ticks": 500,
+    "samples": 9500,
+    "author_step_seconds": 0.016666666666666666,
+    "input": "held pointer x=120*sin(0.03*t), y=80*sin(0.017*t)",
+    "scope": "pointer_move + Controller.advance + Controller.prepare_frame; excludes load, GPU and UI",
+    "runs_us": [
+      {
+        "before": {
+          "p50_us": 523.896,
+          "p95_us": 530.785,
+          "p99_us": 557.65
+        },
+        "fixed": {
+          "p50_us": 494.828,
+          "p95_us": 501.958,
+          "p99_us": 534.451
+        }
+      },
+      {
+        "before": {
+          "p50_us": 494.717,
+          "p95_us": 501.902,
+          "p99_us": 534.066
+        },
+        "fixed": {
+          "p50_us": 495.131,
+          "p95_us": 502.682,
+          "p99_us": 533.582
+        }
+      },
+      {
+        "before": {
+          "p50_us": 523.327,
+          "p95_us": 530.715,
+          "p99_us": 556.817
+        },
+        "fixed": {
+          "p50_us": 495.119,
+          "p95_us": 501.798,
+          "p99_us": 533.038
+        }
+      }
+    ]
+  },
+  "visible_diagnostic": {
+    "platform": "X11",
+    "size": [
+      1920,
+      1080
+    ],
+    "fps_budget": 60,
+    "backends": [
+      "OpenGL",
+      "Vulkan"
+    ],
+    "model": "chocola/date-a",
+    "fit_scale": 0.572991,
+    "audio": "disabled",
+    "no_save": true,
+    "input": "application callbacks only",
+    "measurement_mode": "explicit pacing, no host vblank wait",
+    "screenshots_excluded_from_performance": true
+  },
+  "tests": {
+    "cpu_ctest_passed": 217,
+    "gpu_ctest_passed": 4,
+    "integration_passed": 13,
+    "integration_skipped": 2,
+    "unit_runner_passed": 220,
+    "unit_runner_skipped": 1
+  },
+  "frozen_binary_sha256": {
+    "build/evidence/drag-physics-20261020/probe-before": "e76bab7beefb7737e18f52e2628157c4b97a87d6e893ac241cba1d7285505753",
+    "build/evidence/drag-physics-20261020/probe-fixed": "cf2663aae9fa6567d36b6c821495496b31d15d3c1633b42eb124b79ab41bcb01",
+    "build/png-flac-config-check/bin/nekomote_player": "0614b2aaf2513d6bb70db180d4cff285ba2b80b39a7f4422f8e144b2e2d61ed6"
+  },
+  "source_sha256": {
+    "build/evidence/drag-physics-20261020/probe.cpp": "7d0b656a7cbed3a0726221f620dc09915b70f3e440f953f384500affbc465d9a",
+    "build/evidence/drag-physics-20261020/shape.cpp": "95300034cea56d0041d35a2f5cdb0d6b962124873dd4a32c79733e9ef8c125bf",
+    "build/evidence/drag-physics-20261020/shape_after.cpp": "4c2d6d36a195286c59828e9cf416c7ec32cc05a1454dd3db029aef6a0802d971",
+    "build/evidence/drag-physics-20261020/build_window_probe.py": "c130b12d20f172391b710642dd1e4b4d28569683204366290dfcc18e27117f76"
+  },
+  "limits": [
+    "User-specific model/host not supplied",
+    "Real Plasma desktop drag not installed/tested",
+    "Very fast input can still reach authored parameter limits",
+    "No end-to-end power/VRAM performance claim"
+  ]
+}

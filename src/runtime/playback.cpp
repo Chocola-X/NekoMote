@@ -62,8 +62,9 @@ struct PlaybackInstance::Impl
     std::vector<ParameterValue> output;
     PlaybackState state{PlaybackState::Running};
     double accumulator{0};
+    Vec2 origin{}, physics_origin{}, previous_drag_origin{};
     std::uint64_t ticks{0};
-    bool faulted{false}, dirty{true}, frame_ready{false};
+    bool faulted{false}, dirty{true}, frame_ready{false}, drag_driven{false};
     explicit Impl(const PlaybackProgram::Impl& data, AnimationConfig config)
         : geometry(*data.scene), animation(*data.animation, config)
     {
@@ -187,6 +188,24 @@ PlaybackStatus PlaybackInstance::set_origin(Vec2 origin) noexcept
     const auto status = data.geometry.set_origin(origin);
     if (!status)
         return {PlaybackError::Geometry, {}, status, {}};
+    data.origin = origin;
+    data.previous_drag_origin = origin;
+    if (!data.drag_driven)
+        data.physics_origin = origin;
+    data.dirty = true;
+    data.frame_ready = false;
+    return {};
+}
+PlaybackStatus PlaybackInstance::drag_origin(Vec2 origin) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status = data.geometry.set_origin(origin);
+    if (!status)
+        return {PlaybackError::Geometry, {}, status, {}};
+    data.drag_driven = true;
+    data.origin = origin;
     data.dirty = true;
     data.frame_ready = false;
     return {};
@@ -205,6 +224,10 @@ PlaybackStatus PlaybackInstance::set_scale(float scale) noexcept
 }
 PlaybackStatus PlaybackInstance::step(PhysicsInputs inputs) noexcept
 {
+    return step_tick(inputs, 1);
+}
+PlaybackStatus PlaybackInstance::step_tick(PhysicsInputs inputs, float drag_fraction) noexcept
+{
     auto& data = *impl_;
     if (data.faulted)
         return {PlaybackError::Faulted, {}, {}, {}};
@@ -218,10 +241,38 @@ PlaybackStatus PlaybackInstance::step(PhysicsInputs inputs) noexcept
             return data.fail({PlaybackError::Geometry, {}, status, {}});
     if (data.physics)
     {
-        if (const auto status = data.geometry.evaluate(); !status)
-            return data.fail({PlaybackError::Geometry, {}, status, {}});
-        if (const auto status = data.physics->step(data.geometry, inputs); !status)
-            return data.fail({PlaybackError::Physics, {}, {}, status});
+        Vec2 movement{};
+        if (data.drag_driven)
+        {
+            movement = {(data.origin.x - data.previous_drag_origin.x) * drag_fraction,
+                        (data.origin.y - data.previous_drag_origin.y) * drag_fraction};
+            // Initialization saves anchor offsets without advancing the solver.
+            // A velocity offset here would cause an opposite kick next tick.
+            const auto physical_origin = data.physics->tick_count() == 0
+                                             ? data.physics_origin
+                                             : data.physics_origin + movement;
+            if (const auto status = data.geometry.set_origin(physical_origin); !status)
+                return data.fail({PlaybackError::Geometry, {}, status, {}});
+        }
+        const auto geometry_status = data.geometry.evaluate();
+        PhysicsStatus physics_status;
+        if (geometry_status)
+            physics_status = data.physics->step(data.geometry, inputs);
+        if (data.drag_driven)
+        {
+            // Restore on failure too: reset() preserves presentation placement.
+            if (const auto status = data.geometry.set_origin(data.origin); !status)
+                return data.fail({PlaybackError::Geometry, {}, status, {}});
+        }
+        if (!geometry_status)
+            return data.fail({PlaybackError::Geometry, {}, geometry_status, {}});
+        if (!physics_status)
+            return data.fail({PlaybackError::Physics, {}, {}, physics_status});
+        if (data.drag_driven)
+        {
+            data.previous_drag_origin =
+                drag_fraction == 1 ? data.origin : data.previous_drag_origin + movement;
+        }
     }
     data.compose();
     ++data.ticks;
@@ -247,13 +298,16 @@ PlaybackStatus PlaybackInstance::advance(double elapsed_seconds, PhysicsInputs i
         if (handler.before_tick)
             if (const auto status = handler.before_tick(handler.context, data.ticks + 1); !status)
                 return data.fail(status);
-        if (const auto status = step(inputs); !status)
+        const float fraction = data.drag_driven ? 1.0f / static_cast<float>(count - i) : 1;
+        if (const auto status = step_tick(inputs, fraction); !status)
             return status;
     }
     return {};
 }
 void PlaybackInstance::set_playback_state(PlaybackState state) noexcept
 {
+    if (impl_->state != state)
+        impl_->previous_drag_origin = impl_->origin;
     impl_->state = state;
     impl_->accumulator = 0;
 }
@@ -266,6 +320,8 @@ void PlaybackInstance::reset() noexcept
     data.faulted = false;
     data.accumulator = 0;
     data.ticks = 0;
+    data.drag_driven = false;
+    data.physics_origin = data.previous_drag_origin = data.origin;
     data.state = PlaybackState::Running;
     data.compose();
 }

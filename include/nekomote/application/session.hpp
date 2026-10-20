@@ -114,6 +114,7 @@ class SessionInstance
     SessionInstance& operator=(const SessionInstance&) = delete;
     SessionStatus start() noexcept;
     SessionStatus set_origin(Vec2 origin) noexcept;
+    SessionStatus drag_origin(Vec2 origin) noexcept;
     SessionStatus set_scale(float scale) noexcept;
     SessionStatus pointer_move(Vec2 position) noexcept;
     SessionStatus pointer_leave() noexcept;

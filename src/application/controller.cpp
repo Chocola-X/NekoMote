@@ -857,8 +857,10 @@ void WallpaperController::pointer_move(Vec2 position, PointerTime now)
         if (pointer_moved_)
         {
             const auto old_origin = origin();
-            set_origin({old_origin.x + position.x - drag_previous_.x,
-                        old_origin.y + position.y - drag_previous_.y});
+            controller_config_.origin = {old_origin.x + position.x - drag_previous_.x,
+                                         old_origin.y + position.y - drag_previous_.y};
+            if (current_instance_)
+                accept(current_instance_->drag_origin(controller_config_.origin));
         }
         drag_previous_ = position;
     }

@@ -107,7 +107,15 @@ class PlaybackInstance
     PlaybackStatus fade_in(TimelineId id, float frames = 0, float easing = 0) noexcept;
     PlaybackStatus fade_out(TimelineId id, float frames = 0, float easing = 0) noexcept;
     bool is_playing(TimelineId id) const noexcept;
+    // After interactive movement, set_origin rebases pending movement while
+    // retaining the physical reference. Only reset() returns to direct placed
+    // anchors; fitting/repositioning must not inject the accumulated drag distance.
     PlaybackStatus set_origin(Vec2 origin) noexcept;
+    // Interactive placement: drive physical anchors by one author tick of
+    // movement rather than accumulating the entire screen-space drag distance.
+    // The render origin still follows the pointer exactly. Fixed-rate catch-up
+    // distributes pending movement over its ticks; preparation never consumes it.
+    PlaybackStatus drag_origin(Vec2 origin) noexcept;
     PlaybackStatus set_scale(float scale) noexcept;
     PlaybackStatus step(PhysicsInputs inputs = {}) noexcept;
     // Drop elapsed beyond 250 ms and bound catch-up to 15 ticks. Invalid elapsed
@@ -130,6 +138,7 @@ class PlaybackInstance
     std::span<const GeometryPrimitive> frame_primitives() const noexcept;
 
   private:
+    PlaybackStatus step_tick(PhysicsInputs inputs, float drag_fraction) noexcept;
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };
