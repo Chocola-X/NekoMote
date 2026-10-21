@@ -21,6 +21,7 @@ import tempfile
 import time
 
 from run_layer_shell_test import private_environment, read_ppm, stop, write_fixture
+from configuration_checks import check_profile_lifecycle
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 
@@ -137,6 +138,10 @@ def run_worker(args):
             compare(f"compare-{mode}", images[f"opengl-{mode}"], images[f"vulkan-{mode}"])
         if args.real_assets:
             compare("compare-real-ui", images["opengl-real-ui"], images["vulkan-real-ui"])
+        for backend in ("opengl", "vulkan"):
+            result["cases"].extend(check_profile_lifecycle(
+                args.binary, backend, args.real_assets or root / "assets", root, env,
+                "X11 wallpaper window=", args.timeout))
         capture = root / "vulkan-repeat.ppm"
         _, case = check("vulkan-repeat", common + ["--backend", "vulkan", "--frames", "4",
             "--capture", str(capture)], vulkan=True)
@@ -221,7 +226,7 @@ def run_worker(args):
                         raise RuntimeError(f"ABI {backend}: synthetic material or dimensions invalid")
                 case["pixels_sha256"] = hashlib.sha256(abi_images[backend]).hexdigest()
             compare("compare-abi-host", abi_images["opengl"], abi_images["vulkan"])
-        if any((root / name).exists() for name in ("wallpaper.json", "real-wallpaper.json")):
+        if any((root / name).exists() for name in ("wallpaper.json", "real-wallpaper.json", "wallpaper.panel.json", "real-wallpaper.panel.json")):
             raise RuntimeError("diagnostic/no-save execution persisted configuration")
         result["passed"] = True
     except Exception as error:

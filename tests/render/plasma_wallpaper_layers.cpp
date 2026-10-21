@@ -119,17 +119,24 @@ int main(int argc, char** argv)
                 "second fixture failed");
         // Keep settings scrollable even though this fixture has just one group.
         background.fill(QColor(50, 50, 50));
-        for (int i = 0; i < 8; ++i)
+        for (int i = 0; i < 24; ++i)
             require(
                 background.save(directory.filePath(QString("backgrounds/z-extra-%1.png").arg(i))),
                 "scroll background fixture failed");
-        {
-            std::ofstream config(assets / "config.json");
-            config
-                << R"({"character":"chocola/date-a","background":"test","mute":true,"fit":true})";
-        }
+        QTemporaryDir configuration_directory;
+        require(configuration_directory.isValid(), "temporary configuration directory failed");
+        qputenv("XDG_CONFIG_HOME", configuration_directory.path().toUtf8());
         auto object = std::make_unique<InputItem>();
         auto* item = object.get();
+        const auto instance_id = item->createInstanceId();
+        item->setInstanceId(instance_id);
+        const auto panel_path = item->wallpaper_state()->config_path;
+        fs::create_directories(panel_path.parent_path());
+        {
+            std::ofstream config(panel_path);
+            config << R"({"version":1,"character":"chocola/date-a","background":"test",)"
+                   << R"("mute":true,"fit":true})";
+        }
         item->setWidth(800);
         item->setHeight(900);
         const auto backend = qEnvironmentVariable("NEKOMOTE_TEST_BACKEND", "opengl");
@@ -209,24 +216,25 @@ int main(int argc, char** argv)
         const auto open = capture(item, output + "/open.png");
         require(open.pixelColor(20, 70) != initial.pixelColor(20, 70),
                 "UI panel did not open via Qt events");
-        // The isolated catalog has one character group, followed by settings.
-        click({140, 115});
+        // The isolated catalog has a character group and background drawer before settings.
+        click({140, 160});
         const auto settings = capture(item, output + "/settings.png");
         require(changed_pixels(open, settings, {20, 440, 220, 350}) > 5000,
                 "settings did not expand");
         const auto saved_config = [&]
         {
-            QFile file(directory.filePath("config.json"));
+            QFile file(QString::fromStdString(panel_path.string()));
             require(file.open(QIODevice::ReadOnly), "cannot read saved configuration");
             return QJsonDocument::fromJson(file.readAll()).object();
         };
         // Pick a nondefault value and verify both preference and GUI scheduling.
-        click({140, 278});
+        click({140, 494});
         require(saved_config()["fps"].toInt() == 120, "FPS selection not saved");
         require(item->wallpaper_state()->fps_limit.load() == 120, "FPS not published to GUI");
         require(item->findChild<QTimer*>()->interval() == 8, "FPS timer not updated");
         // First static background row (second.png sorts before test.png).
-        click({140, 502});
+        click({140, 118});
+        click({140, 182});
         frames(35);
         // The shared background transition is 1.8 seconds. Frame count alone
         // does not establish elapsed time when Qt also schedules grab frames.
@@ -379,9 +387,10 @@ int main(int argc, char** argv)
             object.reset();
             object = std::make_unique<InputItem>();
             item = object.get();
+            item->setInstanceId(instance_id);
             item->setWidth(640);
-        item->setHeight(720);
-        item->setRenderBackend(backend);
+            item->setHeight(720);
+            item->setRenderBackend(backend);
             item->setAcceptHoverEvents(false);
             item->setAcceptedMouseButtons(Qt::NoButton);
             item->componentComplete();
@@ -409,11 +418,32 @@ int main(int argc, char** argv)
         invalid_layout["sidebar_free"] = true;
         invalid_layout["sidebar_y"] = -100000;
         {
-            QFile file(directory.filePath("config.json"));
+            QFile file(QString::fromStdString(panel_path.string()));
             require(file.open(QIODevice::WriteOnly | QIODevice::Truncate), "write bad layout");
             file.write(QJsonDocument(invalid_layout).toJson());
         }
         reload_layout();
+        require(saved_config() == invalid_layout,
+                "automatic layout recovery rewrote preferences without a user action");
+        const auto recovered_image = capture(item, output + "/layout-recovered.png");
+        const QPointF recovered_from(recovered_image.width() - 30, 30);
+        const QPointF recovered_to(recovered_image.width() - 60, 50);
+        require(recovered_image.pixelColor(recovered_from.toPoint()).red() > 200,
+                "offscreen icon did not recover in memory");
+        QMouseEvent recovery_press(QEvent::MouseButtonPress, recovered_from / dpi,
+                                   recovered_from / dpi, Qt::LeftButton, Qt::LeftButton,
+                                   Qt::NoModifier);
+        item->mousePressEvent(&recovery_press);
+        frames(2);
+        QMouseEvent recovery_move(QEvent::MouseMove, recovered_to / dpi, recovered_to / dpi,
+                                  Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        item->mouseMoveEvent(&recovery_move);
+        frames(2);
+        QMouseEvent recovery_release(QEvent::MouseButtonRelease, recovered_to / dpi,
+                                     recovered_to / dpi, Qt::LeftButton, Qt::NoButton,
+                                     Qt::NoModifier);
+        item->mouseReleaseEvent(&recovery_release);
+        frames(3);
         const auto recovered_layout = saved_config();
         require(recovered_layout["origin_x"].toDouble() != 100000,
                 "offscreen character did not recover");
@@ -432,7 +462,6 @@ int main(int argc, char** argv)
         fs::create_directories(bad_assets / "icons");
         fs::create_directory_symlink(assets / "characters", bad_assets / "characters");
         fs::create_directory_symlink(assets / "backgrounds", bad_assets / "backgrounds");
-        fs::copy_file(assets / "config.json", bad_assets / "config.json");
         {
             std::ofstream invalid_icon(bad_assets / "icons/toggle.png");
             invalid_icon << "invalid PNG fixture";

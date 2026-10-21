@@ -749,6 +749,7 @@ struct VulkanGlBridge::Impl
                 qWarning("NekoMote Vulkan bridge teardown: device wait error %d", result);
         }
         const bool current = gl_context && QOpenGLContext::currentContext() == gl_context;
+        auto* current_surface = current ? gl_context->surface() : nullptr;
         if (current)
         {
             try
@@ -814,6 +815,11 @@ struct VulkanGlBridge::Impl
                   validation_active ? "enabled" : "disabled", errors.load());
         if (instance)
             vkDestroyInstance(instance, nullptr);
+        // Driver teardown can disturb the native GL binding while Qt still
+        // considers its render context current. Restore the caller's surface
+        // before a rebuilt wallpaper or the scene graph resumes GL work.
+        if (current_surface && !gl_context->makeCurrent(current_surface))
+            qCritical("NekoMote Vulkan bridge could not restore the Qt GL context");
     }
 };
 

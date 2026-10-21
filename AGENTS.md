@@ -62,13 +62,20 @@ C18（2026-10-14）从 `693fd3f` 以程序生成模型和原 WebGL 输出补齐 
 
 ### 0.5 新 Agent 从哪里开始
 
+2026-10-21 CFG1：从 `e72e3fd` 分离显式保存的启动配置与用户操作保存的面板偏好。
+player、X11、layer-shell 使用 `--config` / `--state` / `--save-config`，默认无资产路径；
+Plasma 5/6 由插件持久保存壁纸 UUID，面板经同一 C ABI 按实例隔离。共享配置不再读写
+资产目录，严格 schema 与原子保存集中在 application，ABI 当前 0.7.0。使用与迁移见
+[配置说明](docs/configuration.md)，证据和未覆盖范围见
+[验收报告](docs/configuration-2026-10-21.md)。未安装用户桌面或执行远端发布。
+
 2026-10-21 SV1：从 `4dbe7c2` 为 X11 / layer-shell 补齐原生 Vulkan WSI，
 两壳只经高层 C ABI 复用壁纸业务，独立 `host_vulkan` 共用呈现与生命周期。
 本机 Release/LTO、225 既有 CPU runner + 新增宿主失败路径、私有 KWin/XWayland 与
 运行中缩放/呈现重试通过；14 对 GL/Vulkan 客户端图像一致。限定证据及虚拟合成器
 错误见 [报告](docs/shell-vulkan-2026-10-21.md)。未安装真实桌面或执行远端/ARM64，
-目标合成器、原生 Xorg、最终合成像素和长期仍待验收。下一步为已讨论的启动/面板配置
-分离，尚未实施；不要把 `--backend` 视为已持久化。
+目标合成器、原生 Xorg、最终合成像素和长期仍待验收。后续启动/面板配置分离由 CFG1 实施，
+见当前配置说明；本段保留 SV1 当期验证范围。
 
 2026-10-19 X11-L1：从 `5748da3` 新增 `adapters/x11/` 通用 EWMH/GLX 薄壳，
 默认关闭，Ubuntu20 基线。项目内私有根文件系统 + 可见 Xephyr/XFCE4.14 验证见

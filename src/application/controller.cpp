@@ -82,20 +82,6 @@ void WallpaperController::load_config(const fs::path& path)
     if (first_launch && config_.background.empty() && !catalog_.backgrounds.empty())
     {
         config_.background = catalog_.backgrounds.front().name;
-        if (!no_save_ && !config_path_.empty())
-        {
-            try
-            {
-                config_.save(config_path_);
-            }
-            catch (const std::exception& error)
-            {
-                // The in-memory default still applies for this session; the
-                // same deterministic pick happens again on the next launch.
-                std::fprintf(stderr, "Cannot save initial background to %s: %s\n",
-                             config_path_.c_str(), error.what());
-            }
-        }
     }
 }
 
@@ -479,6 +465,8 @@ void WallpaperController::request_switch_background(int index)
     if (index < 0 || index >= static_cast<int>(catalog_.backgrounds.size()))
         return;
     target_background_index_ = index;
+    need_bg_clear_ = false;
+    background_preference_pending_ = true;
     if (catalog_.backgrounds[index].type == BackgroundType::Dynamic)
         current_bg_phase_ = phase_at(catalog_.backgrounds[index], std::chrono::system_clock::now());
     need_bg_switch_ = true;
@@ -486,7 +474,9 @@ void WallpaperController::request_switch_background(int index)
 
 void WallpaperController::request_clear_background()
 {
+    need_bg_switch_ = false;
     need_bg_clear_ = true;
+    background_preference_pending_ = true;
 }
 
 std::optional<BackgroundRequest> WallpaperController::poll_background()
@@ -537,8 +527,14 @@ void WallpaperController::confirm_background(int background_index, TextureId old
             current_bg_phase_ =
                 phase_at(catalog_.backgrounds[background_index], std::chrono::system_clock::now());
     }
-    if (!no_save_ && !config_path_.empty())
-        config_.save(config_path_);
+    const bool save_preference =
+        background_preference_pending_ && background_index == target_background_index_;
+    if (save_preference)
+    {
+        background_preference_pending_ = false;
+        if (!no_save_ && !config_path_.empty())
+            config_.save(config_path_);
+    }
 }
 
 void WallpaperController::confirm_background_clear()
@@ -548,8 +544,12 @@ void WallpaperController::confirm_background_clear()
     current_has_background_ = false;
     current_background_index_ = -1;
     config_.background.clear();
-    if (!no_save_ && !config_path_.empty())
-        config_.save(config_path_);
+    if (background_preference_pending_)
+    {
+        background_preference_pending_ = false;
+        if (!no_save_ && !config_path_.empty())
+            config_.save(config_path_);
+    }
 }
 
 bool WallpaperController::has_background() const noexcept
@@ -570,6 +570,9 @@ std::filesystem::path WallpaperController::background_path(int index) const noex
 
 void WallpaperController::update_background_phase()
 {
+    // A user selection takes priority over an automatic phase refresh.
+    if (need_bg_switch_ || need_bg_clear_)
+        return;
     if (!current_has_background_ || current_background_index_ < 0)
         return;
     if (current_background_index_ >= static_cast<int>(catalog_.backgrounds.size()))
@@ -581,6 +584,7 @@ void WallpaperController::update_background_phase()
     if (new_phase == current_bg_phase_)
         return;
     current_bg_phase_ = new_phase;
+    background_preference_pending_ = false;
     target_background_index_ = current_background_index_;
     need_bg_switch_ = true;
 }
@@ -738,7 +742,11 @@ void WallpaperController::restore_character_transform(int width, int height)
         }
     }
     prepare_frame();
-    persist_character_transform();
+    // Output setup and resize may recover layout in memory; only a user action
+    // persists preferences. This also keeps first launch completely read-only.
+    config_.scale = controller_config_.scale;
+    config_.origin_x = controller_config_.origin.x;
+    config_.origin_y = controller_config_.origin.y;
 }
 
 void WallpaperController::save_ui_layout(Vec2 icon_position, Vec2 sidebar_position,

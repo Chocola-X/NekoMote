@@ -52,6 +52,7 @@ add_custom_target(nekomote_plasma_stage
 
 if(NEKOMOTE_BUILD_TESTS)
     add_executable(nekomote_plasma5_package_test ../../tests/plasma/test_plasma5_package.cpp)
+    set_target_properties(nekomote_plasma5_package_test PROPERTIES AUTOMOC ON)
     target_link_libraries(nekomote_plasma5_package_test PRIVATE Qt5::Qml Qt5::Quick nekomote_warnings)
     add_dependencies(nekomote_plasma5_package_test nekomote_plasma_stage)
     add_test(NAME plasma5_package_import COMMAND nekomote_plasma5_package_test

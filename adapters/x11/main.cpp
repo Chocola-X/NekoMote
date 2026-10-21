@@ -25,6 +25,11 @@ int main(int argc, char** argv)
             nekomote::x11::print_help();
             return 0;
         }
+        if (options.save_config)
+        {
+            std::cout << "Saved launch configuration: " << options.config << '\n';
+            return 0;
+        }
         struct sigaction action{};
         action.sa_handler = stop_handler;
         sigemptyset(&action.sa_mask);

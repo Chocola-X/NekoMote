@@ -23,7 +23,7 @@ if (os.environ.get("NEKOMOTE_PRIVATE_X11") != "1"
 out = Path(args.evidence)
 out.mkdir(parents=True, exist_ok=False)
 base = [args.binary, "--model", args.model, "--session", args.session,
-        "--no-save", "--mute", "--config", str(out / "config.json")]
+        "--no-save", "--mute", "--state", str(out / "config.json")]
 results = {}
 processes = []
 
@@ -147,7 +147,7 @@ try:
     captures = ["without-xfdesktop", "xfdesktop-only", "with-xfdesktop"]
     if args.assets:
         player, window = start("shared-ui", [args.binary, "--assets", args.assets, "--ui-open",
-                                             "--no-save", "--mute", "--config",
+                                             "--no-save", "--mute", "--state",
                                              str(out / "config.json")])
         capture("shared-ui")
         stop(player)

@@ -6,7 +6,8 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
-| SV1 X11 / layer-shell Vulkan | base `4dbe7c2`；原生 Xlib/Wayland WSI、高层 C ABI、共享呈现宿主；Release/LTO、225 既有 CPU + 新增失败回归、私有 GPU 与 14 对图像一致，见 [报告](shell-vulkan-2026-10-21.md) | 未安装真实桌面；目标合成器/原生 Xorg/最终合成像素/ARM64/远端/长期分别验收。下一步启动/面板配置分离尚未实现 |
+| CFG1 配置规范化 | base `e72e3fd`，共享启动/面板配置分离、C ABI 0.7.0、Plasma 持久 UUID；独立复核和本机 CPU/隔离 GPU 验证 | 使用与迁移见[说明](configuration.md)，范围见[报告](configuration-2026-10-21.md)；真实多屏/远端/ARM64 未验收 |
+| SV1 X11 / layer-shell Vulkan | base `4dbe7c2`；原生 Xlib/Wayland WSI、高层 C ABI、共享呈现宿主；Release/LTO、225 既有 CPU + 新增失败回归、私有 GPU 与 14 对图像一致，见 [报告](shell-vulkan-2026-10-21.md) | 未安装真实桌面；目标合成器/原生 Xorg/最终合成像素/ARM64/远端/长期分别验收。启动/面板配置分离由 CFG1 接续 |
 | C21 PNG 打包/异机资产复核 | 输入主库 `86da860`/资产库 `4bced9e`；补齐 native20 PNG 工具构建/审计，Ubuntu20 x86_64 全流程 210 检查、安装/审计/归档和工具实跑通过；324 PNG 双路径像素一致，恢复三份旧名称字典并 amend 资产库为 `faa78f6`，见 [报告](png-ci-assets-audit-2026-10-19.md) | 本地已处理用户指定新资产树；未推送或重跑远端/ARM64，未新增桌面/GPU/长期认证 |
 | C20 PNG/FLAC/模型存储与背景回收 | base `5a9b4e2`（用户回滚后 0.5.2）；保留 PNG，main/little 相对链接与 FLAC、流式压缩模型、GL/Vulkan 背景旧纹理释放；195 模型与全部本地音频迁移、224 CTest runner 通过/2 跳过，见 [报告](asset-storage-and-memory-2026-10-19.md) | 已保留原资产备份；未安装真实桌面，其他驱动、多屏和长期待独立验收；PNG 直接上传 GPU 仅作为峰值候选，不自动实现 |
 | D1 真实 Wayland / KDE6 桌面资源测量 | base `88ea8fe`；Debian12 当前构建 200 必选检查/重装校验通过；真实 KDE6/Wayland 双后端各 2×120 秒，静态前后/驻留另测，见 [报告](plasma-desktop-2026-10-18.md)；原图片背景和资产配置已恢复，保留新安装 | Vulkan 第二轮 RSS 较第一轮高约 69 MiB、切回静态后驻留未归因；实际 present/多屏/其他模型/长期仍未验证 |

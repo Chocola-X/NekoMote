@@ -34,6 +34,7 @@ struct WallpaperState
                                                                      nekomote_wallpaper_destroy};
     // Buffered config applied when the wallpaper handle is created.
     std::filesystem::path assets_dir;
+    std::filesystem::path config_path;
     std::filesystem::path model_path;
     std::filesystem::path session_path;
     std::uint32_t seed{0};

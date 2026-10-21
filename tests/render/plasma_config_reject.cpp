@@ -2,8 +2,10 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QUrl>
+#include <QUuid>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
@@ -48,6 +50,43 @@ void check_input_isolation(QQmlEngine& engine, const QString& assets_dir)
     std::puts("input isolation: hover/mouse disabled in diagnostic mode OK");
 }
 
+void check_instance_isolation()
+{
+    nekomote::plasma::NekoWallpaperItem first;
+    nekomote::plasma::NekoWallpaperItem second;
+    const auto first_id = first.createInstanceId();
+    const auto second_id = second.createInstanceId();
+    first.setInstanceId(first_id);
+    second.setInstanceId(second_id);
+    const auto first_path = first.wallpaper_state()->config_path;
+    const auto second_path = second.wallpaper_state()->config_path;
+    const auto base = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    if (first_id == second_id || QUuid(first_id).isNull() || first_path == second_path ||
+        first_path != (base + "/nekomote/plasma/" + first_id + ".json").toStdString() ||
+        second_path != (base + "/nekomote/plasma/" + second_id + ".json").toStdString())
+        throw std::runtime_error("instance isolation: UUID storage paths are not isolated");
+    nekomote::plasma::NekoWallpaperItem recreated;
+    recreated.setInstanceId(first_id);
+    if (recreated.wallpaper_state()->config_path != first_path)
+        throw std::runtime_error("instance isolation: recreation changed persisted UUID path");
+    first.setInstanceId(QStringLiteral("../../outside"));
+    if (first.status() != 2 || first.instanceId() != first_id ||
+        first.wallpaper_state()->config_path != first_path)
+        throw std::runtime_error("instance isolation: invalid UUID was accepted");
+    first.setInstanceId(first_id);
+    if (first.status() != 0 || !first.errorString().isEmpty())
+        throw std::runtime_error("instance isolation: valid UUID retry did not recover");
+    first.wallpaper_state()->config_dirty = false;
+    first.setInstanceId(second_id);
+    if (!first.wallpaper_state()->config_dirty ||
+        first.wallpaper_state()->config_path != second_path)
+        throw std::runtime_error("instance isolation: UUID switch did not request rebuild");
+    first.setInstanceId({});
+    if (!first.wallpaper_state()->config_path.empty())
+        throw std::runtime_error("instance isolation: generic host did not retain default storage");
+    std::puts("instance isolation: UUID paths, recreation, rejection and switching OK");
+}
+
 void check_backend_selection(QQmlEngine& engine)
 {
     QQmlComponent component(&engine);
@@ -83,6 +122,7 @@ int main(int argc, char** argv)
     {
         check_status(engine, {}, 0, "empty config");
         check_backend_selection(engine);
+        check_instance_isolation();
         const auto invalid_assets = QUrl::fromLocalFile(dir.filePath("nonexistent")).toString();
         check_status(engine, ("assetsDir: '" + invalid_assets.toUtf8() + "';").constData(), 1,
                      "with assets dir");

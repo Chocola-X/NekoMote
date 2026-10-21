@@ -690,21 +690,20 @@ TEST_CASE("Config language defaults to English and rejects unknown codes", "[con
     const auto path = fs::temp_directory_path() / "nekomote_config_language_test.json";
     {
         std::ofstream f(path);
-        f << R"({"character":"a","language":"zh-CN"})";
+        f << R"({"version":1,"character":"a","language":"zh-CN"})";
     }
     auto config = WallpaperConfig::load(path);
     REQUIRE(config.language == Language::ChineseSimplified);
     fs::remove(path);
     {
         std::ofstream f(path);
-        f << R"({"character":"a","language":"klingon"})";
+        f << R"({"version":1,"character":"a","language":"klingon"})";
     }
-    config = WallpaperConfig::load(path);
-    REQUIRE(config.language == Language::English);
+    REQUIRE_THROWS_AS(WallpaperConfig::load(path), std::invalid_argument);
     fs::remove(path);
     {
         std::ofstream f(path);
-        f << R"({"character":"a"})";
+        f << R"({"version":1,"character":"a"})";
     }
     config = WallpaperConfig::load(path);
     REQUIRE(config.language == Language::English);
@@ -934,18 +933,15 @@ TEST_CASE("First launch without config picks the first background", "[controller
         c.scan_assets(root);
         c.load_config(config_path);
         REQUIRE(c.config().background == "BG_07A");
-        // The pick is persisted so the choice survives the next launch.
-        REQUIRE(fs::exists(config_path));
-        const auto saved = WallpaperConfig::load(config_path);
-        REQUIRE(saved.background == "BG_07A");
-        REQUIRE(saved.language == Language::English);
+        // Defaults remain in memory until an actual panel operation saves.
+        REQUIRE_FALSE(fs::exists(config_path));
     }
 
     SECTION("existing config with cleared background keeps the empty state")
     {
         {
             std::ofstream f(config_path);
-            f << R"({"character":"a","background":""})";
+            f << R"({"version":1,"character":"a","background":""})";
         }
         WallpaperController c;
         c.scan_assets(root);
@@ -1089,17 +1085,13 @@ TEST_CASE("Resize retains visible transforms and recovers fully offscreen charac
     REQUIRE(c.last_error());
 }
 
-TEST_CASE("Malformed layout fields preserve valid preferences and recover fps defaults",
+TEST_CASE("Malformed panel fields reject the file instead of silently replacing preferences",
           "[controller][config][layout]")
 {
     const auto path = fs::temp_directory_path() / "nekomote-layout-corrupt.json";
-    std::ofstream(path) << R"({"character":"saved", "background":"bg", "fps":-1,
+    std::ofstream(path) << R"({"version":1,"character":"saved", "background":"bg", "fps":-1,
         "transform_saved":true, "scale":"bad", "origin_x":null, "icon_x":null})";
-    const auto config = WallpaperConfig::load(path);
-    REQUIRE(config.character == "saved");
-    REQUIRE(config.background == "bg");
-    REQUIRE(config.fps == 60);
-    REQUIRE_FALSE(config.transform_saved);
+    REQUIRE_THROWS_AS(WallpaperConfig::load(path), std::invalid_argument);
     fs::remove(path);
 }
 
@@ -1213,4 +1205,66 @@ TEST_CASE("Controller resolves shared FLAC links once within the character direc
     fs::remove_all(outfit / "audio");
     REQUIRE(candidate.instance->advance(1.0 / 60));
     REQUIRE(candidate.audio_clips[0].samples == std::vector<float>{-1, .5f});
+}
+
+TEST_CASE("Initial model output and background setup perform no preference writes",
+          "[controller][config]")
+{
+    LayoutFixture fixture;
+    const auto panel = fixture.path / "new-directory/panel.json";
+    fs::create_directory(fixture.path / "backgrounds");
+    std::ofstream(fixture.path / "backgrounds/first.png").put('x');
+    WallpaperController controller;
+    controller.scan_assets(fixture.path);
+    controller.load_config(panel);
+    controller.config().fit = true;
+    fixture.install(controller);
+    controller.set_output_size(800, 600);
+    controller.prepare_frame();
+    controller.confirm_background(0, nekomote::TextureId{1}, nekomote::TextureId{1}, 1, 1, 0);
+    controller.confirm_background(0, nekomote::TextureId{1}, nekomote::TextureId{2}, 1, 1, 1);
+    controller.set_output_size(100, 100);
+    REQUIRE_FALSE(fs::exists(panel.parent_path()));
+    controller.request_clear_background();
+    REQUIRE(controller.poll_background());
+    controller.confirm_background_clear();
+    REQUIRE(fs::exists(panel));
+    REQUIRE(WallpaperConfig::load(panel).background.empty());
+    fs::remove(panel);
+    controller.request_switch_background(0);
+    REQUIRE(controller.poll_background());
+    controller.confirm_background(0, nekomote::TextureId{1}, nekomote::TextureId{1}, 1, 1, 0);
+    REQUIRE(WallpaperConfig::load(panel).background == "first");
+}
+
+TEST_CASE("Queued background changes persist only the latest user choice", "[controller][config]")
+{
+    LayoutFixture fixture;
+    fs::create_directory(fixture.path / "backgrounds");
+    std::ofstream(fixture.path / "backgrounds/first.png").put('x');
+    WallpaperController controller;
+    controller.scan_assets(fixture.path);
+    controller.load_config(fixture.path / "panel.json");
+    fixture.install(controller);
+    SECTION("select then clear")
+    {
+        controller.request_switch_background(0);
+        controller.request_clear_background();
+        const auto request = controller.poll_background();
+        REQUIRE(request);
+        REQUIRE(request->action == BackgroundAction::Clear);
+        controller.confirm_background_clear();
+        REQUIRE(WallpaperConfig::load(fixture.path / "panel.json").background.empty());
+    }
+    SECTION("clear then select")
+    {
+        controller.request_clear_background();
+        controller.request_switch_background(0);
+        const auto request = controller.poll_background();
+        REQUIRE(request);
+        REQUIRE(request->action == BackgroundAction::Switch);
+        controller.confirm_background(0, nekomote::TextureId{1}, nekomote::TextureId{1}, 1, 1, 0);
+        REQUIRE(WallpaperConfig::load(fixture.path / "panel.json").background == "first");
+    }
+    REQUIRE_FALSE(controller.poll_background());
 }

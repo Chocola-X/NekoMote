@@ -7,11 +7,20 @@ WallpaperItem {
     readonly property string assetsDir: configuration.assetsDir
     readonly property string renderBackend: configuration.renderBackend
 
+    Component.onCompleted: {
+        if (configuration.panelInstanceId.length === 0) {
+            configuration.panelInstanceId = wallpaper.createInstanceId();
+            configuration.writeConfig();
+        }
+    }
+
     NekoWallpaperItem {
         id: wallpaper
         objectName: "nativeSession"
         anchors.fill: parent
-        assetsDir: root.assetsDir
+        instanceId: configuration.panelInstanceId
+        // Do not load the shared default panel file before the persisted ID arrives.
+        assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend
         paused: !root.visible
     }

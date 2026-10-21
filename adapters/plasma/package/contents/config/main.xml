@@ -2,6 +2,7 @@
 <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0">
   <kcfgfile name=""/>
   <group name="General">
+    <entry name="panelInstanceId" type="String"><default></default></entry>
     <entry name="assetsDir" type="String"><default></default></entry>
     <entry name="renderBackend" type="String"><default>opengl</default></entry>
   </group>

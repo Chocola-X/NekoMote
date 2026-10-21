@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.6.0
+ * @version 0.7.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -77,6 +77,47 @@ extern "C"
     nekomote_error nekomote_last_error(void);
     const char* nekomote_error_message(void);
     void nekomote_clear_error(void);
+
+    /* Explicit launch configuration, independent of panel preferences. These
+     * calls need no window, graphics context or assets. A missing file loads
+     * defaults without writing; malformed/unsupported files return INVALID_INPUT.
+     * A NULL path selects XDG_CONFIG_HOME/nekomote/{player,x11,layer-shell}.json.
+     * Relative explicit config paths resolve against cwd. Relative paths inside
+     * a loaded config resolve against its directory. Save resolves supplied
+     * paths against cwd, validates, atomically replaces, and updates the handle.
+     * Only save writes. An assets_dir or model_path is required for save.
+     * Handles are serially owned. Getter strings are borrowed until the next
+     * successful save or destroy. All strings in a valid values result are
+     * non-NULL. Save accepts NULL string fields as empty. Destroy accepts NULL.
+     * The state_path defaults to <launch-file-stem>.panel.json beside the launch
+     * file, giving each explicit launch config independent panel preferences. */
+    typedef int32_t nekomote_launch_kind;
+    enum
+    {
+        NEKOMOTE_LAUNCH_PLAYER = 0,
+        NEKOMOTE_LAUNCH_X11,
+        NEKOMOTE_LAUNCH_LAYER_SHELL,
+    };
+    typedef struct nekomote_launch_config nekomote_launch_config;
+    typedef struct
+    {
+        const char* assets_dir;
+        const char* model_path;
+        const char* session_path;
+        const char* output;
+        const char* backend;
+        const char* input;
+        const char* state_path;
+        uint32_t width;
+        uint32_t height;
+    } nekomote_launch_options;
+    nekomote_error nekomote_launch_config_load(nekomote_launch_kind kind, const char* path,
+                                               nekomote_launch_config** out);
+    const char* nekomote_launch_config_path(const nekomote_launch_config* config);
+    nekomote_launch_options nekomote_launch_config_values(const nekomote_launch_config* config);
+    nekomote_error nekomote_launch_config_save(nekomote_launch_config* config,
+                                               nekomote_launch_options values);
+    void nekomote_launch_config_destroy(nekomote_launch_config* config);
 
     /* ------------------------------------------------------------------ */
     /* Common types                                                       */
@@ -455,15 +496,13 @@ extern "C"
                                                     nekomote_vk_target target);
 
     /* Setup */
-    /* Optional per-instance configuration storage. Copies path (resolved against
-     * the current directory) and does no I/O until set_assets_dir. NULL, empty
-     * paths and directory-only paths are invalid. May be replaced before the
-     * first set_assets_dir call; later calls return BUSY, even if asset setup
-     * failed. Explicit storage never falls back to assets/XDG storage. Asset
-     * setup creates missing parents when saving is enabled and returns IO for
-     * unusable storage. With no_save enabled, read-only/missing storage is
-     * allowed without creating directories. Re-enabling saves validates it.
-     * Omit this call to retain the default assets/XDG configuration location. */
+    /* Optional per-instance panel configuration file. Copies an explicit path
+     * resolved against cwd. No I/O until asset setup, which only reads; absent
+     * files are defaults. Without this call, uses XDG_CONFIG_HOME/nekomote/panel.json
+     * (HOME/.config fallback). Asset directories are never configuration storage.
+     * Set before the first set_assets_dir call; later changes return BUSY.
+     * Missing parents are created only upon a user action that saves preferences.
+     * NULL, empty and directory-only paths are invalid. No automatic fallback. */
     nekomote_error nekomote_wallpaper_set_config_path(nekomote_wallpaper* wp, const char* path);
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
     nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
@@ -505,7 +544,7 @@ extern "C"
      * is reserved for the desktop and is not required for model control.
      * timestamp_ms is captured when the event is collected, from one monotonic
      * millisecond clock per instance. It preserves holds in delayed batches.
-     * All callers must rebuild for this current ABI (0.6.0). */
+     * All callers must rebuild for this current ABI (0.7.0). */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
                                                    uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);

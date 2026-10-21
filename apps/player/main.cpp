@@ -1,5 +1,6 @@
 #include <nekomote/application/controller.hpp>
 #include <nekomote/application/session.hpp>
+#include <nekomote/application/startup_config.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
 #include <nekomote/asset_io/audio.hpp>
 #include <nekomote/asset_io/image.hpp>
@@ -46,6 +47,9 @@ namespace fs = std::filesystem;
 struct Options
 {
     fs::path model, session, background, capture, check_window, assets, capture_ui;
+    fs::path state;
+    std::optional<application::LaunchConfig> launch;
+    bool save_launch{false};
     std::string reaction, character, background_name;
     int width{1920}, height{1080}, steps{0}, measure{0}, fps{0}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
@@ -63,6 +67,45 @@ struct Options
 std::optional<Options> options(int argc, char** argv)
 {
     Options o;
+    fs::path launch_path;
+    bool help = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        const std::string_view argument(argv[i]);
+        if (argument == "--config")
+        {
+            if (++i >= argc || !*argv[i])
+                throw std::runtime_error("missing value for --config");
+            launch_path = argv[i];
+        }
+        else if (argument == "--help")
+            help = true;
+    }
+    if (!help)
+    {
+        o.launch = application::LaunchConfig::load(application::LaunchKind::Player, launch_path);
+        const auto& saved = o.launch->values();
+        o.assets = saved.assets_dir;
+        o.model = saved.model_path;
+        o.session = saved.session_path;
+        o.state = saved.state_path;
+        o.backend =
+            saved.backend == "vulkan" ? player::BackendKind::Vulkan : player::BackendKind::OpenGL;
+        o.width = static_cast<int>(saved.width);
+        o.height = static_cast<int>(saved.height);
+    }
+    // Source selection replaces the saved mode before parsing so --session and
+    // --model remain independent of argument order.
+    for (int i = 1; i < argc; ++i)
+    {
+        if (std::string_view(argv[i]) == "--assets" || std::string_view(argv[i]) == "--model")
+        {
+            o.assets.clear();
+            o.model.clear();
+            o.session.clear();
+            break;
+        }
+    }
     for (int i = 1; i < argc; ++i)
     {
         const std::string key = argv[i];
@@ -73,13 +116,23 @@ std::optional<Options> options(int argc, char** argv)
             return argv[i];
         };
         if (key == "--model")
+        {
             o.model = value();
+        }
         else if (key == "--session")
             o.session = value();
         else if (key == "--background")
             o.background = value();
         else if (key == "--assets")
+        {
             o.assets = value();
+        }
+        else if (key == "--config")
+            (void)value();
+        else if (key == "--state")
+            o.state = value();
+        else if (key == "--save-config")
+            o.save_launch = true;
         else if (key == "--character")
             o.character = value();
         else if (key == "--background-name")
@@ -160,6 +213,10 @@ std::optional<Options> options(int argc, char** argv)
         {
             std::puts(
                 "nekomote_player --assets <dir> [--character name] [--background-name name]\n"
+                "  [--config launch.json] [--state panel.json] [--save-config]\n"
+                "  Saved launch settings load first; explicit arguments override them.\n"
+                "  --save-config writes launch settings and exits without opening a window.\n"
+                "  Panel changes save automatically; assets have no default location.\n"
                 "  [--no-save] [--mute] [--fit] [--scale 1] [--origin-x 0 --origin-y 400]\n"
                 "  [--width 800 --height 1080] [--fps 60] [--seed 1]\n"
                 "  [--backend opengl|vulkan] (default opengl; Vulkan requires enabled build)\n"
@@ -186,7 +243,15 @@ std::optional<Options> options(int argc, char** argv)
     {
         o.capture = o.capture_ui;
     }
-    if (o.assets.empty() && (o.model.empty() || o.session.empty()))
+    if (!o.assets.empty() && (!o.model.empty() || !o.session.empty()))
+        throw std::runtime_error("--assets and --model/--session are mutually exclusive");
+    if (fs::weakly_canonical(fs::absolute(o.state)) == fs::weakly_canonical(o.launch->path()))
+        throw std::runtime_error("launch configuration and panel state must use different files");
+#if !defined(NEKOMOTE_HAS_VULKAN)
+    if (o.vulkan())
+        throw std::runtime_error("Vulkan backend is not enabled in this build");
+#endif
+    if (o.assets.empty() && (o.model.empty() || (!o.save_launch && o.session.empty())))
         throw std::runtime_error("--assets or (--model and --session) required; see --help");
     if (o.width < 64 || o.width > 8192 || o.height < 64 || o.height > 8192 || o.steps < 0 ||
         o.steps > 100000 || (o.fps != 0 && (o.fps < 5 || o.fps > 240)) || o.measure < 0 ||
@@ -194,6 +259,12 @@ std::optional<Options> options(int argc, char** argv)
         !std::isfinite(o.origin.x) || !std::isfinite(o.origin.y))
         throw std::runtime_error(
             "invalid dimensions, FPS (5..240), step count, measurement count or placement");
+    if (o.save_launch &&
+        (o.no_save || !o.capture.empty() || !o.check_window.empty() || o.measure || o.steps ||
+         o.ui_open || o.ui_drawer != -1 || o.show_touch_regions || o.mute || o.fit || o.scale_set ||
+         o.origin_x_set || o.origin_y_set || o.fps || o.transparent || !o.background.empty() ||
+         !o.character.empty() || !o.background_name.empty() || !o.reaction.empty()))
+        throw std::runtime_error("--save-config accepts launch settings only");
     if (!o.capture.empty() && (!o.mute || o.measure != 0))
         throw std::runtime_error(
             "fixed-step screenshot requires --mute and excludes presentation measurement");
@@ -648,6 +719,20 @@ int run(int argc, char** argv)
     if (!parsed)
         return 0;
     auto o = std::move(*parsed);
+    if (o.save_launch)
+    {
+        auto saved = o.launch->values();
+        saved.assets_dir = o.assets.string();
+        saved.model_path = o.model.string();
+        saved.session_path = o.session.string();
+        saved.state_path = o.state.string();
+        saved.backend = o.vulkan() ? "vulkan" : "opengl";
+        saved.width = static_cast<std::uint32_t>(o.width);
+        saved.height = static_cast<std::uint32_t>(o.height);
+        o.launch->save(std::move(saved));
+        std::printf("Saved launch configuration: %s\n", o.launch->path().c_str());
+        return 0;
+    }
     const bool assets_mode = !o.assets.empty();
     application::WallpaperController controller;
     application::ControllerConfig controller_cfg;
@@ -670,8 +755,7 @@ int run(int argc, char** argv)
             std::printf("  character: %s\n", c.name.c_str());
         for (const auto& b : catalog.backgrounds)
             std::printf("  background: %s\n", b.name.c_str());
-        controller.set_config_path(o.assets / "config.json");
-        controller.load_config(o.assets / "config.json");
+        controller.load_config(o.state);
         auto& config = controller.config();
         if (!o.mute)
         {
@@ -707,11 +791,6 @@ int run(int argc, char** argv)
                 config.origin_x = controller_cfg.origin.x;
             if (!config.transform_saved || o.origin_y_set || o.fit)
                 config.origin_y = controller_cfg.origin.y;
-            config.width = o.width;
-            config.height = o.height;
-            if (o.fps > 0)
-                config.fps = o.fps;
-            config.mute = o.mute;
             config.fit = o.fit || config.fit;
         }
     }
@@ -847,6 +926,7 @@ int run(int argc, char** argv)
         }
     }
     Surface surface{&controller, window.get()};
+    surface.locked = controller.config().lock_transform;
     player::BackendUiRenderer ui_renderer;
     ui::Context ui_context;
     ui::IconState ui_icon{};
@@ -1294,16 +1374,14 @@ int run(int argc, char** argv)
                     }
                 }
             }
-            if ((ui_icon.moved || ui_sidebar.moved || ui_icon.position_reset ||
-                 ui_sidebar.position_reset) &&
-                !ui_icon.dragging && !ui_sidebar.dragging)
+            if ((ui_icon.moved || ui_sidebar.moved) && !ui_icon.dragging && !ui_sidebar.dragging)
             {
                 controller.save_ui_layout({ui_icon.x, ui_icon.y}, {ui_sidebar.x, ui_sidebar.y},
                                           ui_sidebar.is_free);
                 ui_icon.moved = false;
                 ui_sidebar.moved = false;
-                ui_icon.position_reset = ui_sidebar.position_reset = false;
             }
+            ui_icon.position_reset = ui_sidebar.position_reset = false;
             ui_context.end_frame();
             ui_renderer.end_frame();
         }
@@ -1555,13 +1633,6 @@ int run(int argc, char** argv)
     }
     if (!o.capture.empty() && !captured)
         throw std::runtime_error("capture interrupted");
-    if (assets_mode && !o.no_save)
-    {
-        controller.config().scale = controller.scale();
-        controller.config().origin_x = controller.origin().x;
-        controller.config().origin_y = controller.origin().y;
-        controller.save_config(controller.config_path());
-    }
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (vk_host)
     {

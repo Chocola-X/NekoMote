@@ -7,6 +7,9 @@
 #include <limits>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+
+#include "config_io.hpp"
 
 namespace nekomote::application
 {
@@ -379,110 +382,115 @@ const BackgroundEntry* AssetCatalog::find_background(const std::string& name) co
 WallpaperConfig WallpaperConfig::load(const fs::path& path)
 {
     WallpaperConfig config;
-    if (!fs::exists(path))
+    const auto json = config_io::read(path);
+    if (json.is_discarded())
         return config;
-    std::ifstream file(path);
-    if (!file)
-        return config;
-    Json json;
-    try
+    config_io::validate_keys(json,
+                             {"character", "background", "language", "lock_transform", "scale",
+                              "origin_x", "origin_y", "fps", "mute", "fit", "transform_saved",
+                              "icon_position_saved", "icon_x", "icon_y", "sidebar_position_saved",
+                              "sidebar_x", "sidebar_y", "sidebar_free", "background_fade_seconds"},
+                             path);
+    const auto fail = [&](const std::string& key)
+    { throw std::invalid_argument(path.string() + ": invalid panel config field '" + key + "'"); };
+    for (auto [key, value] :
+         {std::pair{"character", &config.character}, {"background", &config.background}})
     {
-        file >> json;
+        if (!json.contains(key))
+            continue;
+        if (!json[key].is_string())
+            fail(key);
+        *value = json[key].get<std::string>();
+        if (value->find('\0') != std::string::npos)
+            fail(key);
     }
-    catch (...)
+    if (json.contains("language"))
     {
-        return config;
+        if (!json["language"].is_string())
+            fail("language");
+        const auto language = language_from_code(json["language"].get<std::string>());
+        if (!language)
+            fail("language");
+        config.language = *language;
     }
-    if (!json.is_object())
-        return config;
-    if (json.contains("character") && json["character"].is_string())
-        config.character = json["character"].get<std::string>();
-    if (json.contains("background") && json["background"].is_string())
-        config.background = json["background"].get<std::string>();
-    if (json.contains("language") && json["language"].is_string())
+    for (auto [key, value] : {std::pair{"scale", &config.scale},
+                              {"origin_x", &config.origin_x},
+                              {"origin_y", &config.origin_y},
+                              {"icon_x", &config.icon_x},
+                              {"icon_y", &config.icon_y},
+                              {"sidebar_x", &config.sidebar_x},
+                              {"sidebar_y", &config.sidebar_y},
+                              {"background_fade_seconds", &config.background_fade_seconds}})
     {
-        if (auto lang = language_from_code(json["language"].get<std::string>()))
-            config.language = *lang;
+        if (!json.contains(key))
+            continue;
+        if (!json[key].is_number())
+            fail(key);
+        *value = json[key].get<float>();
+        if (!std::isfinite(*value))
+            fail(key);
     }
-    if (json.contains("scale") && json["scale"].is_number())
-        config.scale = json["scale"].get<float>();
-    if (json.contains("origin_x") && json["origin_x"].is_number())
-        config.origin_x = json["origin_x"].get<float>();
-    if (json.contains("origin_y") && json["origin_y"].is_number())
-        config.origin_y = json["origin_y"].get<float>();
-    if (json.contains("icon_x") && json["icon_x"].is_number())
-        config.icon_x = json["icon_x"].get<float>();
-    if (json.contains("icon_y") && json["icon_y"].is_number())
-        config.icon_y = json["icon_y"].get<float>();
-    if (json.contains("sidebar_x") && json["sidebar_x"].is_number())
-        config.sidebar_x = json["sidebar_x"].get<float>();
-    if (json.contains("sidebar_y") && json["sidebar_y"].is_number())
-        config.sidebar_y = json["sidebar_y"].get<float>();
-    if (json.contains("background_fade_seconds") && json["background_fade_seconds"].is_number())
-        config.background_fade_seconds = json["background_fade_seconds"].get<float>();
-    if (json.contains("width") && json["width"].is_number_integer())
+    if (config.scale <= 0)
+        fail("scale");
+    if (config.background_fade_seconds < 0)
+        fail("background_fade_seconds");
+    if (json.contains("fps"))
     {
-        const double value = json["width"].get<double>();
-        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
-            config.width = static_cast<int>(value);
+        if (!json["fps"].is_number_integer() ||
+            (json["fps"] != 0 && (json["fps"] < 5 || json["fps"] > 240)))
+            fail("fps");
+        config.fps = json["fps"].get<int>();
     }
-    if (json.contains("height") && json["height"].is_number_integer())
+    for (auto [key, value] : {std::pair{"mute", &config.mute},
+                              {"lock_transform", &config.lock_transform},
+                              {"fit", &config.fit},
+                              {"transform_saved", &config.transform_saved},
+                              {"icon_position_saved", &config.icon_position_saved},
+                              {"sidebar_position_saved", &config.sidebar_position_saved},
+                              {"sidebar_free", &config.sidebar_free}})
     {
-        const double value = json["height"].get<double>();
-        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
-            config.height = static_cast<int>(value);
+        if (!json.contains(key))
+            continue;
+        if (!json[key].is_boolean())
+            fail(key);
+        *value = json[key].get<bool>();
     }
-    if (json.contains("fps") && json["fps"].is_number_integer())
-    {
-        const double value = json["fps"].get<double>();
-        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max())
-            config.fps = static_cast<int>(value);
-    }
-    if (json.contains("mute") && json["mute"].is_boolean())
-        config.mute = json["mute"].get<bool>();
-    if (json.contains("fit") && json["fit"].is_boolean())
-        config.fit = json["fit"].get<bool>();
-    if (json.contains("transform_saved") && json["transform_saved"].is_boolean())
-        config.transform_saved = json["transform_saved"].get<bool>();
-    if (json.contains("icon_position_saved") && json["icon_position_saved"].is_boolean())
-        config.icon_position_saved = json["icon_position_saved"].get<bool>();
-    if (json.contains("sidebar_position_saved") && json["sidebar_position_saved"].is_boolean())
-        config.sidebar_position_saved = json["sidebar_position_saved"].get<bool>();
-    if (json.contains("sidebar_free") && json["sidebar_free"].is_boolean())
-        config.sidebar_free = json["sidebar_free"].get<bool>();
-    if (config.fps != 0 && (config.fps < 5 || config.fps > 240))
-        config.fps = 60;
-    if (!std::isfinite(config.background_fade_seconds) || config.background_fade_seconds < 0)
-        config.background_fade_seconds = 1.0f;
-    // A saved transform needs all three numeric values. Incomplete or corrupt
-    // layout data must not prevent valid character/background/FPS preferences loading.
-    for (const auto* key : {"scale", "origin_x", "origin_y"})
-        if (!json.contains(key) || !json[key].is_number())
-            config.transform_saved = false;
-    for (const auto* key : {"icon_x", "icon_y"})
-        if (!json.contains(key) || !json[key].is_number())
-            config.icon_position_saved = false;
-    for (const auto* key : {"sidebar_x", "sidebar_y"})
-        if (!json.contains(key) || !json[key].is_number())
-            config.sidebar_position_saved = false;
+    if (config.transform_saved)
+        for (const auto* key : {"scale", "origin_x", "origin_y"})
+            if (!json.contains(key))
+                fail(key);
+    if (config.icon_position_saved)
+        for (const auto* key : {"icon_x", "icon_y"})
+            if (!json.contains(key))
+                fail(key);
+    if (config.sidebar_position_saved)
+        for (const auto* key : {"sidebar_x", "sidebar_y"})
+            if (!json.contains(key))
+                fail(key);
     return config;
 }
 
 void WallpaperConfig::save(const fs::path& path) const
 {
-    if (!path.parent_path().empty())
-        fs::create_directories(path.parent_path());
+    for (float value :
+         {scale, origin_x, origin_y, icon_x, icon_y, sidebar_x, sidebar_y, background_fade_seconds})
+        if (!std::isfinite(value))
+            throw std::invalid_argument(path.string() + ": cannot save non-finite panel values");
+    if (scale <= 0 || background_fade_seconds < 0 || (fps != 0 && (fps < 5 || fps > 240)))
+        throw std::invalid_argument(path.string() + ": cannot save invalid panel scale/fade/FPS");
+    if (character.find('\0') != std::string::npos || background.find('\0') != std::string::npos)
+        throw std::invalid_argument(path.string() + ": cannot save panel strings containing NUL");
     Json json = Json::object();
+    json["version"] = 1;
     json["character"] = character;
     json["background"] = background;
     json["language"] = std::string(language_code(language));
     json["scale"] = scale;
     json["origin_x"] = origin_x;
     json["origin_y"] = origin_y;
-    json["width"] = width;
-    json["height"] = height;
     json["fps"] = fps;
     json["mute"] = mute;
+    json["lock_transform"] = lock_transform;
     json["fit"] = fit;
     json["transform_saved"] = transform_saved;
     json["icon_position_saved"] = icon_position_saved;
@@ -493,25 +501,6 @@ void WallpaperConfig::save(const fs::path& path) const
     json["sidebar_y"] = sidebar_y;
     json["sidebar_free"] = sidebar_free;
     json["background_fade_seconds"] = background_fade_seconds;
-    // Each config path is owned by its serial application controller. Replace
-    // only after a complete write, so interruption cannot truncate preferences.
-    const auto temporary = fs::path(path.string() + ".tmp");
-    struct PendingFile
-    {
-        fs::path path;
-        ~PendingFile()
-        {
-            std::error_code ec;
-            fs::remove(path, ec);
-        }
-    } pending{temporary};
-    std::ofstream file(temporary);
-    if (!file)
-        throw std::runtime_error("cannot write config " + temporary.string());
-    file << json.dump(2);
-    file.close();
-    if (!file)
-        throw std::runtime_error("cannot finish config " + temporary.string());
-    fs::rename(temporary, path);
+    config_io::write_atomic(path, json);
 }
 } // namespace nekomote::application

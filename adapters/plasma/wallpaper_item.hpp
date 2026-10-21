@@ -23,6 +23,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
+    Q_PROPERTY(QString instanceId READ instanceId WRITE setInstanceId NOTIFY instanceIdChanged)
     Q_PROPERTY(
         QString renderBackend READ renderBackend WRITE setRenderBackend NOTIFY renderBackendChanged)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -42,10 +43,13 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     QString errorString() const;
     QString assetsDir() const;
     QString renderBackend() const;
+    QString instanceId() const;
+    Q_INVOKABLE QString createInstanceId() const;
 
     void setPaused(bool value);
     void setAssetsDir(const QString& value);
     void setRenderBackend(const QString& value);
+    void setInstanceId(const QString& value);
 
     bool configure_diagnostics(int steps, bool fixed, std::uint32_t seed);
 
@@ -56,6 +60,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void statusChanged();
     void errorStringChanged();
     void assetsDirChanged();
+    void instanceIdChanged();
     void renderBackendChanged();
 
   protected:
@@ -90,6 +95,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     int status_{0};
     QString error_string_;
     QString assets_dir_;
+    QString instance_id_;
     QString render_backend_{QStringLiteral("opengl")};
     std::uint64_t playback_revision_{0};
     std::array<nekomote::qt_quick::Input, 32> inputs_{};

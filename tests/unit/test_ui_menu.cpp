@@ -293,3 +293,26 @@ TEST_CASE("Language radio click switches config language and persists it", "[ui_
     REQUIRE(saved.language == Language::ChineseSimplified);
     REQUIRE(saved.background == "BG_07A");
 }
+
+TEST_CASE("Position lock preference persists only after a panel action", "[ui_menu][config]")
+{
+    MenuFixture fixture;
+    const auto path = fixture.root / "panel.json";
+    fixture.controller.load_config(path);
+    fixture.click_drawer(2);
+    REQUIRE_FALSE(fs::exists(path));
+    const auto* option = fixture.painter.find("Lock position and size");
+    REQUIRE(option != nullptr);
+    fixture.ctx.mouse_move(option->x + 20, option->y + 7);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE(fixture.menu.locked);
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).lock_transform);
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    fixture.controller.set_no_save(true);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE_FALSE(fixture.menu.locked);
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).lock_transform);
+}

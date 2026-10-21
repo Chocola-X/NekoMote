@@ -1,14 +1,18 @@
 #include "wallpaper_item.hpp"
 
+#include <QDir>
 #include <QEvent>
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QStandardPaths>
 #include <QUrl>
+#include <QUuid>
 #include <QWheelEvent>
 #include <algorithm>
 #include <chrono>
+#include <utility>
 
 #include "qt_input.hpp"
 
@@ -72,6 +76,55 @@ QString NekoWallpaperItem::assetsDir() const
 QString NekoWallpaperItem::renderBackend() const
 {
     return render_backend_;
+}
+
+QString NekoWallpaperItem::instanceId() const
+{
+    return instance_id_;
+}
+
+QString NekoWallpaperItem::createInstanceId() const
+{
+    return QUuid::createUuid().toString(QUuid::WithoutBraces);
+}
+
+void NekoWallpaperItem::setInstanceId(const QString& value)
+{
+    // The package persists this ID in its containment-specific KConfig group.
+    // Only UUIDs become filenames; QML/configuration cannot inject a path.
+    QString normalized;
+    std::filesystem::path config_path;
+    if (!value.isEmpty())
+    {
+        const QUuid uuid(value);
+        normalized = uuid.toString(QUuid::WithoutBraces);
+        if (uuid.isNull() || value.compare(normalized, Qt::CaseInsensitive) != 0)
+        {
+            set_error(QStringLiteral("Invalid NekoMote wallpaper instance UUID: %1").arg(value));
+            return;
+        }
+        const auto directory =
+            QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+        if (!QDir::isAbsolutePath(directory))
+        {
+            set_error(QStringLiteral("NekoMote configuration directory must be absolute"));
+            return;
+        }
+        config_path = QDir(directory)
+                          .filePath(QStringLiteral("nekomote/plasma/%1.json").arg(normalized))
+                          .toStdString();
+    }
+    if (instance_id_ == normalized && status_ != 2)
+        return;
+    instance_id_ = normalized;
+    state_->config_path = std::move(config_path);
+    state_->config_dirty = true;
+    error_string_.clear();
+    emit errorStringChanged();
+    if (status_ != 3)
+        set_status(assets_dir_.isEmpty() ? 0 : 1);
+    emit instanceIdChanged();
+    update();
 }
 
 void NekoWallpaperItem::setRenderBackend(const QString& value)

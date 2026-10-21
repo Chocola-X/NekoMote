@@ -162,10 +162,9 @@ struct WallpaperConfig
     float scale{1};
     float origin_x{0};
     float origin_y{400};
-    int width{800};
-    int height{1080};
     int fps{60};
     bool mute{false};
+    bool lock_transform{false};
     bool fit{false};
     bool transform_saved{false};
     bool icon_position_saved{false};

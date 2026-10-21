@@ -76,7 +76,9 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | --- | --- |
 | `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
 | `--output NAME` | 固定输出，移除该输出后正常退出 |
-| `--config FILE` | 明确指定该实例配置文件 |
+| `--config FILE` | 启动配置文件，显式参数覆盖已保存值 |
+| `--state FILE` | 面板偏好文件，默认由启动文件路径派生 |
+| `--save-config` | 显式保存启动设置并退出，无需显示服务器 |
 | `--backend opengl\|vulkan` | 图形后端，默认 OpenGL；Vulkan 需要构建时启用 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 和模型交互 |
 | `--input passthrough` | 空输入区域；全部穿透，不支持鼠标控制和视线交互 |
@@ -89,15 +91,15 @@ interactive 接收背景上的指针事件，不保证桌面的右键菜单或�
 没有通用的逐按钮穿透机制。本程序不采集其他窗口上的全局鼠标位置。窗口上方是否有
 桌面图标、背景右键菜单如何实现，由目标桌面决定。
 
-默认配置位于 `$XDG_CONFIG_HOME/nekomote/layer-shell/`，未设置时使用
-`$HOME/.config/nekomote/layer-shell/`。默认输出写 `default.json`；指定输出写
-`output-<输出名UTF-8字节的十六进制编码>.json`，避免名称冲突或路径注入。
-同一输出的不同实例如需独立状态，须分别指定 `--config`。
-显式模型诊断入口不加载资产目录配置；正式持久化使用 `--assets`。
+默认启动配置为 `$XDG_CONFIG_HOME/nekomote/layer-shell.json`，默认面板偏好为
+同目录的 `layer-shell.panel.json`；XDG 未设置或不是绝对路径时使用 `$HOME/.config/`。
+多个实例分别用 `--config` 指定独立启动文件，面板文件由其路径派生，也可用 `--state`
+指定。输出名称不再参与配置标识。没有默认资产目录，启动参数仅在 `--save-config`
+时持久化；面板只保存用户操作数据。旧配置迁移与完整规则见[配置说明](configuration.md)。
 
 配置路径由壳选择，schema、默认值、读写时机和模型状态仍由共享应用负责。新增 ABI
 在首次资产设置开始后锁定路径；显式路径不可用时报告错误，不回退到其他位置。
-`--no-save` 不创建配置目录，但允许读取已有可读配置。
+普通读取和 `--no-save` 不创建配置目录，但允许读取已有可读配置。
 没有可用的 seat v5 指针能力时报告 unavailable，基础动画继续运行；不能仅由
 interactive 模式启动成功推定实际鼠标或光标已验收。
 

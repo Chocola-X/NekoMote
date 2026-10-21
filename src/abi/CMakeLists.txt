@@ -1,4 +1,4 @@
-add_library(nekomote_abi STATIC abi.cpp wallpaper_instance.cpp)
+add_library(nekomote_abi STATIC abi.cpp wallpaper_instance.cpp launch_config.cpp)
 add_library(nekomote::abi ALIAS nekomote_abi)
 target_include_directories(nekomote_abi PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(nekomote_abi

@@ -20,7 +20,7 @@ if(NEKOMOTE_BUILD_TESTS)
         ${PROJECT_SOURCE_DIR}/tests/x11/test_options.cpp options.cpp)
     target_include_directories(nekomote_x11_option_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(nekomote_x11_option_tests PRIVATE
-        Catch2::Catch2WithMain nekomote_warnings)
+        Catch2::Catch2WithMain nekomote_warnings nekomote::abi)
     if(NEKOMOTE_BUILD_VULKAN)
         target_compile_definitions(nekomote_x11_option_tests PRIVATE NEKOMOTE_HAS_VULKAN)
     endif()

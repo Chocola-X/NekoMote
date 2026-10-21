@@ -243,6 +243,7 @@ class WallpaperController
     bool need_bg_switch_{false};
     int target_background_index_{-1};
     bool need_bg_clear_{false};
+    bool background_preference_pending_{false};
     int current_bg_phase_{0};
 
     ControllerConfig controller_config_{};

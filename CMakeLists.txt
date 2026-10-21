@@ -219,6 +219,12 @@ if(NEKOMOTE_BUILD_TESTS)
             COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
         set_tests_properties(python_tools PROPERTIES LABELS python)
+        if(NEKOMOTE_BUILD_PLAYER)
+            add_test(NAME player_launch_config
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/player/launch_config.py
+                    $<TARGET_FILE:nekomote_player>)
+            set_tests_properties(player_launch_config PROPERTIES LABELS python)
+        endif()
         if(NEKOMOTE_BUILD_PREVIEW AND NEKOMOTE_BUILD_ABI)
             add_test(NAME python_abi_host
                 COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/abi_host

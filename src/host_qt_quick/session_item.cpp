@@ -102,12 +102,14 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             // Catalog, icon/font bindings and GPU resources belong to one asset
             // root. Switching it must not retain a UI initialized for the old root.
             needs_rebuild_ = needs_rebuild_ || assets_dir_ != state_->assets_dir ||
-                             assets_mode_ != state_->assets_mode;
+                             assets_mode_ != state_->assets_mode ||
+                             config_path_ != state_->config_path;
             const bool reload =
                 assets_dir_ != state_->assets_dir || model_path_ != state_->model_path ||
                 session_path_ != state_->session_path || assets_mode_ != state_->assets_mode ||
                 deterministic_ != state_->deterministic || seed_ != state_->seed;
             assets_dir_ = state_->assets_dir;
+            config_path_ = state_->config_path;
             model_path_ = state_->model_path;
             session_path_ = state_->session_path;
             assets_mode_ = state_->assets_mode;
@@ -236,6 +238,10 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     state_->wallpaper.reset(nekomote_wallpaper_create(load_gl));
                 if (!state_->wallpaper)
                     throw std::runtime_error("create wallpaper");
+                if (!config_path_.empty())
+                    check(nekomote_wallpaper_set_config_path(state_->wallpaper.get(),
+                                                             config_path_.c_str()),
+                          "set panel config path");
                 assets_applied_ = false;
                 config_applied_ = false;
             }
@@ -437,7 +443,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     bool config_received_{false}, config_applied_{false};
     bool assets_applied_{false};
     bool needs_rebuild_{false};
-    std::filesystem::path assets_dir_, model_path_, session_path_;
+    std::filesystem::path assets_dir_, config_path_, model_path_, session_path_;
     std::uint32_t seed_{0};
     int fixed_steps_{0}, trace_frames_{0};
     bool no_save_{false}, assets_mode_{true}, deterministic_{false};

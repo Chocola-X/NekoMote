@@ -5,9 +5,11 @@
 #include <unistd.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace
@@ -34,9 +36,13 @@ struct ConfigFixture
                     ("nekomote-config-" + std::to_string(::getpid()) + "-" +
                      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     fs::path assets = root / "assets";
+    std::optional<std::string> previous_xdg;
 
     ConfigFixture()
     {
+        if (const char* value = std::getenv("XDG_CONFIG_HOME"))
+            previous_xdg = value;
+        ::setenv("XDG_CONFIG_HOME", (root / "xdg").c_str(), 1);
         // Asset discovery only needs the names; these tests never load/render.
         const auto model_dir = assets / "characters" / "synthetic" / "default";
         fs::create_directories(model_dir);
@@ -47,15 +53,20 @@ struct ConfigFixture
 
     ~ConfigFixture()
     {
+        if (previous_xdg)
+            ::setenv("XDG_CONFIG_HOME", previous_xdg->c_str(), 1);
+        else
+            ::unsetenv("XDG_CONFIG_HOME");
         std::error_code ec;
         fs::permissions(root / "readonly", fs::perms::owner_all, fs::perm_options::add, ec);
+        fs::permissions(assets, fs::perms::owner_all, fs::perm_options::add, ec);
         fs::remove_all(root, ec);
     }
 
     fs::path config(const std::string& name, int fps)
     {
         const auto path = root / name;
-        std::ofstream(path) << "{\"fps\":" << fps << "}";
+        std::ofstream(path) << "{\"version\":1,\"fps\":" << fps << "}";
         return path;
     }
 };
@@ -77,7 +88,7 @@ TEST_CASE("Wallpaper configuration storage is copied and isolated per instance",
         REQUIRE(nekomote_wallpaper_set_assets_dir(handle, fixture.assets.c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_fps_limit(a.get()) == 30);
     REQUIRE(nekomote_wallpaper_fps_limit(b.get()) == 45);
-    REQUIRE(nekomote_wallpaper_fps_limit(default_storage.get()) == 90);
+    REQUIRE(nekomote_wallpaper_fps_limit(default_storage.get()) == 60);
     REQUIRE(nekomote_wallpaper_set_config_path(a.get(), path_b.c_str()) == NEKOMOTE_ERROR_BUSY);
     REQUIRE(nekomote_wallpaper_fps_limit(a.get()) == 30);
 }
@@ -115,7 +126,7 @@ TEST_CASE("Wallpaper explicit config creates parents only when saves are enabled
     REQUIRE(nekomote_wallpaper_fps_limit(wp.get()) == 60);
     REQUIRE_FALSE(fs::exists(path.parent_path()));
     REQUIRE(nekomote_wallpaper_set_no_save(wp.get(), 0) == NEKOMOTE_OK);
-    REQUIRE(fs::is_directory(path.parent_path()));
+    REQUIRE_FALSE(fs::exists(path.parent_path()));
     REQUIRE_FALSE(fs::exists(path));
 }
 
@@ -143,18 +154,59 @@ TEST_CASE("Wallpaper no-save reads read-only storage without enabling writes", "
     const auto directory = fixture.root / "readonly";
     fs::create_directory(directory);
     const auto path = directory / "config.json";
-    std::ofstream(path) << R"({"fps":24})";
+    std::ofstream(path) << R"({"version":1,"fps":24})";
     fs::permissions(directory, fs::perms::owner_read | fs::perms::owner_exec);
     // Root may bypass ordinary mode bits; do not report an unexecuted negative as PASS.
     if (::faccessat(AT_FDCWD, directory.c_str(), W_OK, AT_EACCESS) == 0)
         SKIP("effective credentials can write the read-only test directory");
     auto wp = wallpaper();
     REQUIRE(nekomote_wallpaper_set_config_path(wp.get(), path.c_str()) == NEKOMOTE_OK);
-    REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) ==
-            NEKOMOTE_ERROR_IO);
+    REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_no_save(wp.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_fps_limit(wp.get()) == 24);
-    REQUIRE(nekomote_wallpaper_set_no_save(wp.get(), 0) == NEKOMOTE_ERROR_IO);
+    REQUIRE(nekomote_wallpaper_set_no_save(wp.get(), 0) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_fps_limit(wp.get()) == 24);
+}
+
+TEST_CASE("Wallpaper reads the XDG panel file and never touches asset config", "[abi][wallpaper]")
+{
+    ConfigFixture fixture;
+    fs::create_directories(fixture.root / "xdg/nekomote");
+    const auto panel = fixture.root / "xdg/nekomote/panel.json";
+    std::ofstream(panel) << R"({"version":1,"fps":120})";
+    auto wp = wallpaper();
+    REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_fps_limit(wp.get()) == 120);
+    std::ifstream asset_config(fixture.assets / "config.json");
+    std::string content;
+    std::getline(asset_config, content);
+    REQUIRE(content == R"({"fps":90})");
+}
+
+TEST_CASE("Wallpaper rejects a corrupt panel config with a path diagnostic", "[abi][wallpaper]")
+{
+    ConfigFixture fixture;
+    const auto path = fixture.root / "bad-panel.json";
+    std::ofstream(path) << R"({"fps":30})";
+    auto wp = wallpaper();
+    REQUIRE(nekomote_wallpaper_set_config_path(wp.get(), path.c_str()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(std::string(nekomote_error_message()).find(path.string()) != std::string::npos);
+}
+
+TEST_CASE("Read-only assets load without creating panel storage", "[abi][wallpaper]")
+{
+    ConfigFixture fixture;
+    fs::permissions(fixture.assets, fs::perms::owner_read | fs::perms::owner_exec);
+    auto wp = wallpaper();
+    REQUIRE(nekomote_wallpaper_set_assets_dir(wp.get(), fixture.assets.c_str()) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_fps_limit(wp.get()) == 60);
+    REQUIRE_FALSE(fs::exists(fixture.root / "xdg"));
+    // The pre-existing legacy file is not read, modified or migrated implicitly.
+    std::ifstream asset_config(fixture.assets / "config.json");
+    std::string content;
+    std::getline(asset_config, content);
+    REQUIRE(content == R"({"fps":90})");
 }

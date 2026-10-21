@@ -1,11 +1,10 @@
 #include "wallpaper_instance.hpp"
 
+#include <nekomote/application/startup_config.hpp>
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/ui/menu.hpp>
 
-#include <fcntl.h>
 #include <nekomote/abi.h>
-#include <unistd.h>
 
 #include <algorithm>
 #include <chrono>
@@ -113,32 +112,6 @@ nekomote_error WallpaperInstance::set_config_path(const std::filesystem::path& p
     return NEKOMOTE_OK;
 }
 
-nekomote_error WallpaperInstance::prepare_config_storage(bool saving)
-{
-    const auto fail = [&]
-    {
-        error_string_ = "unusable config storage: " + config_path_override_.string();
-        set_error(NEKOMOTE_ERROR_IO, error_string_.c_str());
-        return NEKOMOTE_ERROR_IO;
-    };
-    std::error_code ec;
-    const bool exists = std::filesystem::exists(config_path_override_, ec);
-    if (ec ||
-        (exists && (!std::filesystem::is_regular_file(config_path_override_, ec) || ec ||
-                    ::faccessat(AT_FDCWD, config_path_override_.c_str(), R_OK, AT_EACCESS) != 0)))
-        return fail();
-    if (!saving)
-        return NEKOMOTE_OK;
-    // Config persistence writes a sibling temporary and renames it atomically.
-    // Writable file permissions alone do not make the storage usable.
-    const auto parent = config_path_override_.parent_path();
-    std::filesystem::create_directories(parent, ec);
-    if (ec || ::faccessat(AT_FDCWD, parent.c_str(), W_OK | X_OK, AT_EACCESS) != 0 ||
-        (exists && ::faccessat(AT_FDCWD, config_path_override_.c_str(), W_OK, AT_EACCESS) != 0))
-        return fail();
-    return NEKOMOTE_OK;
-}
-
 nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& dir)
 {
     config_path_locked_ = true;
@@ -151,46 +124,9 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     }
     assets_scanned_ = true;
     panel_.text_ready = false;
-    auto config_path = dir / "config.json";
-    if (!config_path_override_.empty())
-    {
-        const auto result = prepare_config_storage(!controller_.no_save());
-        if (result != NEKOMOTE_OK)
-            return result;
-        config_path = config_path_override_;
-    }
-    else
-    {
-        // Effective credentials include group/ACL permissions. Do not create a
-        // config just to probe it; a read-only existing file also needs fallback.
-        std::error_code ec;
-        const bool exists = std::filesystem::exists(config_path, ec);
-        const auto& probe_path = exists ? config_path : dir;
-        const int permissions = exists ? W_OK : W_OK | X_OK;
-        const bool dir_writable =
-            !ec && (!exists || std::filesystem::is_regular_file(config_path, ec)) && !ec &&
-            ::faccessat(AT_FDCWD, probe_path.c_str(), permissions, AT_EACCESS) == 0;
-        if (!dir_writable)
-        {
-            const char* xdg = std::getenv("XDG_DATA_HOME");
-            std::filesystem::path user_dir;
-            if (xdg && *xdg)
-                user_dir = std::filesystem::path(xdg) / "nekomote";
-            else
-            {
-                const char* home = std::getenv("HOME");
-                if (!home || !*home)
-                {
-                    error_string_ = "cannot determine writable config directory: HOME not set";
-                    set_error(NEKOMOTE_ERROR_NOT_FOUND, error_string_.c_str());
-                    return NEKOMOTE_ERROR_NOT_FOUND;
-                }
-                user_dir = std::filesystem::path(home) / ".local" / "share" / "nekomote";
-            }
-            std::filesystem::create_directories(user_dir);
-            config_path = user_dir / "config.json";
-        }
-    }
+    const auto config_path = config_path_override_.empty()
+                                 ? application::default_panel_config_path()
+                                 : config_path_override_;
     controller_.load_config(config_path);
     auto& config = controller_.config();
     if (!mute_forced_)
@@ -201,6 +137,7 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
             config.mute ? application::AudioMode::Disabled : application::AudioMode::Device;
     }
     panel_.fps_limit = config.fps;
+    panel_.locked = config.lock_transform;
     panel_.icon = {};
     panel_.sidebar = {};
     if (config.icon_position_saved)
@@ -223,12 +160,6 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
 
 nekomote_error WallpaperInstance::set_no_save(bool value)
 {
-    if (!value && config_path_locked_ && !config_path_override_.empty())
-    {
-        const auto result = prepare_config_storage(true);
-        if (result != NEKOMOTE_OK)
-            return result;
-    }
     controller_.set_no_save(value);
     return NEKOMOTE_OK;
 }
@@ -1054,15 +985,14 @@ void WallpaperInstance::draw_ui(float dt)
         if (muted_changed)
             set_muted(panel_.muted);
     }
-    if ((panel_.icon.moved || panel_.sidebar.moved || panel_.icon.position_reset ||
-         panel_.sidebar.position_reset) &&
-        !panel_.icon.dragging && !panel_.sidebar.dragging)
+    if ((panel_.icon.moved || panel_.sidebar.moved) && !panel_.icon.dragging &&
+        !panel_.sidebar.dragging)
     {
         controller_.save_ui_layout({panel_.icon.x, panel_.icon.y},
                                    {panel_.sidebar.x, panel_.sidebar.y}, panel_.sidebar.is_free);
         panel_.icon.moved = panel_.sidebar.moved = false;
-        panel_.icon.position_reset = panel_.sidebar.position_reset = false;
     }
+    panel_.icon.position_reset = panel_.sidebar.position_reset = false;
     ui_context_.end_frame();
     painter()->end_frame();
 }

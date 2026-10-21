@@ -822,10 +822,8 @@ void Host::Impl::initialize_graphics()
         check(nekomote_last_error(), "create wallpaper");
     if (!wallpaper_)
         throw std::runtime_error("create wallpaper returned a null handle");
-    const auto config_path =
-        options_.config.empty() ? default_config_path(options_.output) : options_.config;
     check(nekomote_wallpaper_set_no_save(wallpaper_, options_.no_save), "set no-save");
-    check(nekomote_wallpaper_set_config_path(wallpaper_, config_path.c_str()),
+    check(nekomote_wallpaper_set_config_path(wallpaper_, options_.state.c_str()),
           "set configuration path");
     if (options_.frames)
         check(nekomote_wallpaper_set_seed(wallpaper_, 1), "set diagnostic random seed");

@@ -21,6 +21,8 @@ import subprocess
 import sys
 import time
 
+from configuration_checks import check_profile_lifecycle
+
 REPO = pathlib.Path(__file__).resolve().parents[2]
 
 
@@ -335,6 +337,9 @@ def run_worker(args):
                               "--config", str(root / "real-wallpaper.json"), "--output", outputs[0],
                               "--frames", "4", "--capture", str(capture)], client_env=client_env)
                 if label == "base":
+                    result["cases"].extend(check_profile_lifecycle(
+                        args.binary, args.backend, args.real_assets or root / "assets", root,
+                        client_env, " background ", args.timeout))
                     if args.output_tool:
                         runtime_scale(client_env, outputs[0], width, height)
                     if args.backend == "vulkan" and args.retry_preload:
@@ -411,7 +416,7 @@ def run_worker(args):
                                                        passed=True))
                         finally:
                             stop(client)
-        if any((root / name).exists() for name in ("wallpaper.json", "real-wallpaper.json")):
+        if any((root / name).exists() for name in ("wallpaper.json", "real-wallpaper.json", "wallpaper.panel.json", "real-wallpaper.panel.json")):
             raise RuntimeError("diagnostic fixed-step execution wrote persistent config")
         result["passed"] = True
     except Exception as error:

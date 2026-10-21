@@ -1,3 +1,4 @@
+#include <KConfig>
 #include <KConfigGroup>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
@@ -16,6 +17,7 @@
 #include <QSGRendererInterface>
 #include <QTimer>
 #include <QUrl>
+#include <QUuid>
 #include <cstdio>
 #include <exception>
 #include <fstream>
@@ -337,6 +339,31 @@ int run(int argc, char** argv)
     QObject::connect(window.contentItem(), &QQuickItem::heightChanged, item, resize_item);
     int exit_code = 0;
     auto callbacks = std::make_unique<QObject>();
+    wait_for([&] { return native_item(containment) && configuration_of(containment); });
+    const auto persisted_instance_id =
+        configuration_of(containment)->property("panelInstanceId").toString();
+    const auto verify_instance_id = [&]
+    {
+        auto* native = native_item(containment);
+        if (QUuid(persisted_instance_id).isNull() || !native ||
+            native->instanceId() != persisted_instance_id ||
+            configuration_of(containment)->property("panelInstanceId").toString() !=
+                persisted_instance_id ||
+            native->wallpaper_state()->config_path.filename() !=
+                (persisted_instance_id + ".json").toStdString())
+            throw std::runtime_error("wallpaper lost its containment-specific panel instance ID");
+    };
+    verify_instance_id();
+    KConfig persisted_config(containment->config().config()->name(), KConfig::SimpleConfig);
+    if (persisted_config.group("Containments")
+            .group(QString::number(containment->id()))
+            .group("Wallpaper")
+            .group("uk.nekopara.nekomote")
+            .group("General")
+            .readEntry("panelInstanceId", QString{}) != persisted_instance_id)
+        throw std::runtime_error("wallpaper instance UUID was not saved to KConfig on disk");
+    std::printf("panel instance UUID=%s: persisted in wallpaper configuration on disk\n",
+                persisted_instance_id.toUtf8().constData());
 
     if (opts.bad_asset || opts.invalid_config)
     {
@@ -565,6 +592,7 @@ int run(int argc, char** argv)
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
                 throw std::runtime_error("round " + std::to_string(i) +
                                          " did not isolate real pointer input");
+            verify_instance_id();
             total_created += n->queryRendererCreated();
             std::printf("lifecycle: round %d renderer_created=%u\n", i, n->queryRendererCreated());
         }
@@ -601,6 +629,7 @@ int run(int argc, char** argv)
             if (n->acceptHoverEvents() || n->acceptedMouseButtons() != Qt::NoButton)
                 throw std::runtime_error("config round " + std::to_string(i) +
                                          " did not isolate real pointer input");
+            verify_instance_id();
             total_config_created += n->queryRendererCreated();
             std::printf("lifecycle: config round %d renderer_created=%u\n", i,
                         n->queryRendererCreated());

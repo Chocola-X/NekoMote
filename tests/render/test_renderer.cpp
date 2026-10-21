@@ -837,8 +837,9 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
         asset_io::write_png(assets.path / "icons/toggle.png", ImageRgba8{1, 1, {255, 0, 255, 255}})
             .empty());
     {
-        std::ofstream config(assets.path / "config.json");
-        config << R"({"character":"chocola/date-a","background":"bg","fit":true,"fps":120})";
+        std::ofstream config(assets.path / "panel.json");
+        config
+            << R"({"version":1,"character":"chocola/date-a","background":"bg","fit":true,"fps":120})";
     }
     Context context;
     render_gl::Renderer reader(glfwGetProcAddress);
@@ -847,6 +848,8 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
         nekomote_wallpaper_create(glfwGetProcAddress), nekomote_wallpaper_destroy};
     REQUIRE(wallpaper);
+    REQUIRE(nekomote_wallpaper_set_config_path(
+                wallpaper.get(), (assets.path / "panel.json").c_str()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_no_save(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_muted(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.path.c_str()) == NEKOMOTE_OK);
@@ -884,7 +887,7 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
             .empty());
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
 }
-TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-only config",
+TEST_CASE("Wallpaper ABI ignores asset-local config and uses the XDG config directory",
           "[gpu][abi][integration]")
 {
     const auto source = std::filesystem::absolute("assets/characters/chocola/date-a");
@@ -903,7 +906,7 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
         {
             if (const auto* value = std::getenv("HOME"))
                 home = value;
-            if (const auto* value = std::getenv("XDG_DATA_HOME"))
+            if (const auto* value = std::getenv("XDG_CONFIG_HOME"))
                 xdg = value;
         }
         ~Fixture()
@@ -913,9 +916,9 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
             else
                 ::unsetenv("HOME");
             if (xdg)
-                ::setenv("XDG_DATA_HOME", xdg->c_str(), 1);
+                ::setenv("XDG_CONFIG_HOME", xdg->c_str(), 1);
             else
-                ::unsetenv("XDG_DATA_HOME");
+                ::unsetenv("XDG_CONFIG_HOME");
             std::error_code ec;
             std::filesystem::remove_all(path, ec);
         }
@@ -923,6 +926,8 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
     const auto assets = fixture.path / "assets";
     std::filesystem::create_directories(assets / "characters/chocola");
     std::filesystem::create_directory_symlink(source, assets / "characters/chocola/date-a");
+    const auto configuration = fixture.path / "configuration";
+    REQUIRE(::setenv("XDG_CONFIG_HOME", configuration.c_str(), 1) == 0);
     Context context;
     render_gl::Renderer loader(glfwGetProcAddress);
     std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
@@ -936,19 +941,17 @@ TEST_CASE("Wallpaper ABI probes config without creating a file and handles read-
     }
     std::filesystem::permissions(assets / "config.json", std::filesystem::perms::owner_read);
     REQUIRE(::unsetenv("HOME") == 0);
-    REQUIRE(::unsetenv("XDG_DATA_HOME") == 0);
+    REQUIRE(::unsetenv("XDG_CONFIG_HOME") == 0);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.c_str()) ==
-            NEKOMOTE_ERROR_NOT_FOUND);
+            NEKOMOTE_ERROR_IO);
     REQUIRE(std::string(nekomote_error_message()).find("HOME") != std::string::npos);
     std::filesystem::remove(assets / "config.json");
     std::filesystem::create_directory(assets / "config.json");
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.c_str()) ==
-            NEKOMOTE_ERROR_NOT_FOUND);
-    const auto data = fixture.path / "data";
-    REQUIRE(::setenv("XDG_DATA_HOME", data.c_str(), 1) == 0);
+            NEKOMOTE_ERROR_IO);
+    REQUIRE(::setenv("XDG_CONFIG_HOME", configuration.c_str(), 1) == 0);
     REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), assets.c_str()) == NEKOMOTE_OK);
-    REQUIRE(std::filesystem::is_directory(data / "nekomote"));
-    REQUIRE_FALSE(std::filesystem::exists(data / "nekomote/config.json"));
+    REQUIRE_FALSE(std::filesystem::exists(configuration / "nekomote/panel.json"));
 }
 #endif
 

@@ -2,6 +2,7 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QUrl>
+#include <QUuid>
 #include <cstdio>
 #include <memory>
 
@@ -25,9 +26,22 @@ int main(int argc, char** argv)
     if (item->property("status").toInt() != 0 ||
         item->property("renderBackend").toString() != "opengl")
         return 1;
+    QString instance_id;
+    if (!QMetaObject::invokeMethod(item.get(), "createInstanceId",
+                                   Q_RETURN_ARG(QString, instance_id)) ||
+        QUuid(instance_id).isNull() || !item->setProperty("instanceId", instance_id) ||
+        item->property("instanceId").toString() != instance_id)
+        return 1;
+    if (!item->setProperty("instanceId", QStringLiteral("../../outside")) ||
+        item->property("status").toInt() != 2 ||
+        item->property("instanceId").toString() != instance_id)
+        return 1;
+    if (!item->setProperty("instanceId", instance_id) || item->property("status").toInt() != 0)
+        return 1;
     if (!item->setProperty("renderBackend", QStringLiteral("unknown")) ||
         item->property("status").toInt() != 2 || item->property("errorString").toString().isEmpty())
         return 1;
-    std::puts("Staged QML module loaded; default state and invalid backend verified");
+    std::puts("Staged QML module loaded; default state, stable instance UUID and invalid backend "
+              "verified");
     return 0;
 }

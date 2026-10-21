@@ -29,9 +29,8 @@
  */
 
 #if defined(NEKOMOTE_HAS_VULKAN)
-#include <vulkan/vulkan.h>
-
 #include <nekomote/host_vulkan/host.h>
+#include <vulkan/vulkan.h>
 #endif
 
 // clang-format off: glad must precede GLFW
@@ -463,6 +462,7 @@ static void print_usage(const char* prog)
     fprintf(stderr, "  --seed <N>         Random seed (default 42)\n");
     fprintf(stderr, "  --mute             Disable audio playback\n");
     fprintf(stderr, "  --no-save          Do not save config\n");
+    fprintf(stderr, "  --state <path>     Panel preferences file (default XDG config directory)\n");
     fprintf(stderr, "  --capture <path>   Save final frame as PNG (requires --steps)\n");
     fprintf(stderr, "  --ui-open          Start with UI panel open\n");
     fprintf(stderr, "\nThis is a C ABI wallpaper verification tool.\n");
@@ -486,6 +486,7 @@ int main(int argc, char** argv)
     const char* model_path = NULL;
     const char* session_path = NULL;
     const char* capture_path = NULL;
+    const char* state_path = NULL;
     int width = 800;
     int height = 600;
     long steps = 0;
@@ -503,6 +504,8 @@ int main(int argc, char** argv)
             model_path = argv[++i];
         else if (strcmp(argv[i], "--session") == 0 && i + 1 < argc)
             session_path = argv[++i];
+        else if (strcmp(argv[i], "--state") == 0 && i + 1 < argc)
+            state_path = argv[++i];
         else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc)
         {
             const char* name = argv[++i];
@@ -695,6 +698,8 @@ int main(int argc, char** argv)
     g_host.wp = wp;
     g_host.window = window;
 
+    if (state_path && !check("set_config_path", nekomote_wallpaper_set_config_path(wp, state_path)))
+        goto fail;
     if (!check("set_seed", nekomote_wallpaper_set_seed(wp, seed)))
         goto fail;
     if (mute && !check("set_muted", nekomote_wallpaper_set_muted(wp, 1)))

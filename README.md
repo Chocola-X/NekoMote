@@ -21,7 +21,7 @@ NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面
 - 声音与口型（PulseAudio），可静音
 - PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
 - 运行时 UI 控制面板：角色/背景切换、声音开关、FPS、锁定、位置调整
-- 配置持久化：角色、背景、变换、UI 布局、静音状态写入 `config.json`
+- 配置持久化：显式保存启动设置，面板偏好独立自动保存，资产目录只读
 
 ## 系统要求
 
@@ -135,7 +135,6 @@ python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest
 
 ```
 assets/
-├── config.json                       # 壁纸配置（角色、背景、语言、变换、UI、静音等，自动读写）
 ├── characters/
 │   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"，值为多语言对象
 │   └── <角色组>/                     # 一级目录：角色组（如 chocola）
@@ -161,9 +160,9 @@ assets/
     └── toggle.png                    # UI 面板图标
 ```
 
-角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与 `config.json` 的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
+角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与面板配置的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
 
-显示名字典（`characters.json`、`background.json`、`dynamic/background.json`、`meta.json` 的 `display_name`）支持两种值格式：多语言对象按语言代码（`en` / `zh-CN` / `zh-TW` / `ja`）给出翻译；纯字符串则对所有语言生效。运行时按 `config.json` 的 `language` 字段选取，缺失的语言按 zh-CN → en → zh-TW → ja 顺序回退，最后回退到资产 ID。UI 面板语言在同一字段中切换，首次启动（无 `config.json`）默认英文。
+显示名字典（`characters.json`、`background.json`、`dynamic/background.json`、`meta.json` 的 `display_name`）支持两种值格式：多语言对象按语言代码（`en` / `zh-CN` / `zh-TW` / `ja`）给出翻译；纯字符串则对所有语言生效。运行时按面板配置的 `language` 字段选取，缺失的语言按 zh-CN → en → zh-TW → ja 顺序回退，最后回退到资产 ID。UI 面板语言在同一字段中切换，首次启动默认英文。
 
 静态背景的 `name` 为 PNG 文件 stem（如 `BG_07A`）。动态背景的 `name` 为组目录名（如 `BG_01`），其 `config.json` 定义各相图片与切换时间：
 
@@ -204,9 +203,9 @@ build/release/bin/nekomote_player --assets assets --character <角色名> --mute
 - Tab / 1–9：切换角色；B / N：切换背景；C：清除背景
 - 右上角图标：打开 UI 控制面板（角色、背景选择、语言、关闭声音、FPS、锁定、重设位置）
 
-声音开关统一由 UI 控制面板的"关闭声音"管理，状态写入 `config.json` 的 `mute` 字段，下次启动自动恢复。`--mute` 仅作启动时强制静音覆盖。
+声音开关统一由 UI 控制面板的"关闭声音"管理，状态写入面板配置的 `mute` 字段，下次启动自动恢复。`--mute` 仅作启动时强制静音覆盖。
 
-界面与资产显示名支持英文、简体中文、繁体中文与日文，在 UI 控制面板的设置抽屉中切换并写入 `config.json` 的 `language` 字段。首次启动（资产目录无 `config.json`）默认英文，并自动选取列表中的第一张背景作为初始壁纸；已有配置中显式清空的背景保持无背景状态。
+界面与资产显示名支持英文、简体中文、繁体中文与日文，在 UI 控制面板的设置抽屉中切换并写入面板配置的 `language` 字段。首次启动默认英文，并在内存中选取列表中的第一张背景作为初始壁纸；已有配置中显式清空的背景保持无背景状态。
 
 ## KDE Plasma 壁纸部署
 
@@ -291,35 +290,50 @@ build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vu
 | `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
 | `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
-| `--config FILE` | 显式指定该实例配置文件 |
+| `--config FILE` | 显式指定启动配置文件 |
+| `--state FILE` | 显式指定面板偏好文件 |
+| `--save-config` | 保存合并后的启动设置并退出，无需显示服务器 |
 | `--mute` / `--no-save` | 强制静音 / 不写配置 |
 | `--model FILE [--session FILE]` | 单模型诊断入口，不绘制资产控制面板 |
 | `--frames N [--capture FILE.ppm]` | 固定 1/60 秒步长诊断回放，仅在最后一步读一次 framebuffer |
 
 两个壳均支持 `--ui-open`，在交互模式启动时展开控制面板。
 
-多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。每实例配置独立存放于 `$XDG_CONFIG_HOME/nekomote/<壳名>/output-<输出名>.json`。
+多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。独立实例分别指定 `--config FILE`，不按输出名称生成配置标识。
 
 两个壳默认关闭，不依赖 Qt/GLFW；协议能力缺失（无 layer-shell 的合成器、无 EWMH 支持的 WM）时明确失败退出，不退化为普通窗口。适用范围与验收边界见 [layer-shell 说明](docs/layer-shell.md)与 [X11 说明](docs/x11.md)（后者含 XFCE 桌面图标共存的已知限制）。
 
 ## 配置
 
-`assets/config.json` 由播放器/壁纸自动读写，字段：
+启动配置与面板偏好分开保存到 XDG 配置目录，不读写 `assets/config.json`，没有默认资产目录。
+`--config FILE` 选择启动文件，只有 `--save-config` 写入并退出；普通启动读取保存值后由
+显式命令行参数覆盖。面板文件默认是同目录的 `<启动文件 stem>.panel.json`，也可指定
+`--state FILE`。Plasma 启动设置由插件代管，面板按壁纸实例 UUID 隔离。
+
+```bash
+nekomote_x11 --config ~/.config/nekomote/left.json --assets /path/to/assets \
+  --backend vulkan --output DP-1 --save-config
+nekomote_x11 --config ~/.config/nekomote/left.json
+```
+
+面板偏好字段：
 
 | 字段 | 说明 |
 | --- | --- |
 | `character` | 当前角色名 |
 | `background` | 当前背景名（静态为文件 stem，动态为组名） |
 | `scale`、`origin_x`、`origin_y` | 角色缩放与中心原点位置（Y 向下） |
-| `width`、`height` | 输出尺寸 |
 | `fps` | 显示帧率限制（作者时钟仍 60Hz） |
 | `mute` | 静音状态（由 UI 面板维护） |
+| `lock_transform` | 锁定角色位置和大小 |
 | `fit` | 适配完整模型 |
 | `icon_x`、`icon_y` | UI 图标位置 |
 | `sidebar_x`、`sidebar_y`、`sidebar_free` | UI 面板位置与自由浮动 |
 | `background_fade_seconds` | 背景切换渐变时长 |
 
-`--no-save` 保留原配置不写回。
+面板数据只在用户操作时保存，首次启动和退出不为默认值创建文件。
+`--no-save` 保留原配置不写回。路径、实例隔离、JSON 示例与一次性旧配置迁移命令见
+[配置说明](docs/configuration.md)。
 
 ## 性能
 

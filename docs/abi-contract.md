@@ -1,13 +1,14 @@
 # C ABI 当前契约与验证
 
-当前仅支持 **0.6.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
+当前仅支持 **0.7.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
 2026-10-21 X11 / layer-shell 的 Vulkan 壳同样只调用高层壁纸 C ABI：
 `create_vk` 借用设备，`set_vk_target` 借用本帧 command buffer/framebuffer，角色、背景与
 面板共用 `render_frame/render_ui`。`src/host_vulkan` 为独立呈现帮助代码，不进入核心或
 application/ui；拥有 instance/device/surface/swapchain 和提交。所有输入、resize、advance
 之前等待上一帧完成；退出先停止设备工作、销毁 wallpaper，再销毁宿主与原生输出。
-ABI 版本和函数签名未改；限定验收见 [报告](shell-vulkan-2026-10-21.md)。
+该次接入没有调整 ABI；限定验收见 [报告](shell-vulkan-2026-10-21.md)。随后配置规范化
+增加无图形依赖的启动配置 C 接口，当前版本为 0.7.0。
 
 ## 壁纸应用层接口
 
@@ -25,11 +26,17 @@ ABI 版本和函数签名未改；限定验收见 [报告](shell-vulkan-2026-10-
 其音频事件不会进入当前实例的设备队列。该通知在同一求值线程调用，GPU销毁顺序不变。
 
 `nekomote_wallpaper_set_config_path` 复制并解析实例自己的配置文件路径，在首次
-`set_assets_dir` 开始后不可更换（含失败的扫描尝试）。省略时保留已有 Plasma 的
-assets/XDG 选择规则；指定后绝不自动回退。资产设置时验证存储：保存开启时创建父目录并
-检查文件/父目录权限，`no_save` 时不创建目录，允许文件不存在但拒绝已有不可读文件或
-非普通文件。重新允许保存会再次验证，失败时保持禁止保存。配置内容仍交共享 Controller
-加载/保存。layer-shell 为每个输出选择独立路径，不能由宿主维护第二份配置 schema。
+`set_assets_dir` 开始后不可更换（含失败的扫描尝试）。省略时使用 XDG 配置目录下的
+`nekomote/panel.json`；指定后绝不自动回退，不读取资产目录配置。读取不创建目录，已有
+不可读、损坏或非普通文件明确失败；保存仅在用户操作时发生，写入失败经既有错误边界
+报告。Plasma 按壁纸 UUID 指定路径，独立壳按启动文件指定路径，schema、默认值和保存
+时机都在共享应用层，见[配置说明](configuration.md)。
+
+`nekomote_launch_config_load` 创建独立启动配置句柄，可在无显示、无 GPU 的线程上调用。
+NULL 路径选择入口默认文件；不存在的文件只生成内存默认值。`values` 返回借用字符串，
+有效期到下一次成功 `save` 或 `destroy`；`path` 借用到销毁。`save` 复制输入、验证、原子
+写入并更新句柄，失败保留旧文件和句柄值。各句柄由同一串行线程拥有，不共享可变状态。
+非法 kind、路径、枚举字符串、尺寸和 schema 显式拒绝，异常不跨 ABI。
 
 后续公共数据和资源ID保持后端无关；现有GL renderer与GL输出目标是GL专属入口，不能通过改名包装成Vulkan目标。GL/Vulkan 设备、输出和 native 同步分别在对应后端契约中定义；CPU业务与UI不接收GL/Vulkan句柄。当前headless/ASan核心路径继续不引入UI GPU或窗口构建依赖。
 

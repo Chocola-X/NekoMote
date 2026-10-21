@@ -114,7 +114,6 @@ class WallpaperInstance
     void handle_switch_poll();
     void handle_background_poll();
     nekomote_error check_session();
-    nekomote_error prepare_config_storage(bool saving);
 
     render_gl::GlLoader loader_;
     application::WallpaperController controller_;

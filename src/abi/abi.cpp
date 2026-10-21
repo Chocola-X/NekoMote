@@ -17,7 +17,9 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "abi_internal.hpp"
@@ -88,6 +90,16 @@ nekomote_error wallpaper_call(Operation&& operation) noexcept
     {
         set_error(NEKOMOTE_ERROR_OUT_OF_MEMORY, "wallpaper allocation failed");
         return NEKOMOTE_ERROR_OUT_OF_MEMORY;
+    }
+    catch (const std::invalid_argument& error)
+    {
+        set_error(NEKOMOTE_ERROR_INVALID_INPUT, error.what());
+        return NEKOMOTE_ERROR_INVALID_INPUT;
+    }
+    catch (const std::system_error& error)
+    {
+        set_error(NEKOMOTE_ERROR_IO, error.what());
+        return NEKOMOTE_ERROR_IO;
     }
     catch (const std::exception& error)
     {
@@ -490,7 +502,7 @@ extern "C"
 
     const char* nekomote_version(void)
     {
-        return "0.6.0";
+        return "0.7.0";
     }
 
     /* ---- Asset loading ---- */

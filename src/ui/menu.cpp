@@ -341,8 +341,13 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         ctx.section_header(txt.character_section, sidebar_x, curr_y, sidebar.width,
                            kSectionHeaderHeight, style);
         curr_y += kSectionHeaderHeight;
-        ctx.switch_row(txt.lock_transform, menu.locked, sidebar_x, curr_y, sidebar.width,
-                       kSwitchRowHeight, style);
+        if (ctx.switch_row(txt.lock_transform, menu.locked, sidebar_x, curr_y, sidebar.width,
+                           kSwitchRowHeight, style))
+        {
+            controller.config().lock_transform = menu.locked;
+            if (!controller.no_save())
+                controller.save_config(controller.config_path());
+        }
         curr_y += kSwitchRowHeight;
         bool is_muted = menu.muted;
         if (ctx.switch_row(txt.mute, is_muted, sidebar_x, curr_y, sidebar.width, kSwitchRowHeight,

@@ -25,18 +25,19 @@ struct Options
     std::string session;
     std::string output;
     std::filesystem::path config;
+    std::filesystem::path state;
     std::filesystem::path capture;
     Backend backend = Backend::opengl;
     InputMode input = InputMode::interactive;
     uint64_t frames = 0;
     bool muted = false;
     bool no_save = false;
+    bool save_config = false;
     bool ui_open = false;
     bool list_outputs = false;
     bool help = false;
 };
 
 Options parse_options(int argc, char** argv);
-std::filesystem::path default_config_path(const std::string& output);
 void print_help();
 } // namespace nekomote::layer_shell
