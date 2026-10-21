@@ -66,6 +66,8 @@ Options parse_options(int argc, char** argv)
             result.muted = true;
         else if (option == "--no-save")
             result.no_save = true;
+        else if (option == "--ui-open")
+            result.ui_open = true;
         else if (option == "--assets")
             result.assets = value();
         else if (option == "--model")
@@ -78,6 +80,22 @@ Options parse_options(int argc, char** argv)
             result.config = value();
         else if (option == "--capture")
             result.capture = value();
+        else if (option == "--backend")
+        {
+            const auto backend = value();
+            if (backend == "opengl")
+                result.backend = Backend::opengl;
+            else if (backend == "vulkan")
+            {
+#if defined(NEKOMOTE_HAS_VULKAN)
+                result.backend = Backend::vulkan;
+#else
+                throw std::runtime_error("Vulkan backend is not enabled in this build");
+#endif
+            }
+            else
+                throw std::runtime_error("--backend expects opengl or vulkan");
+        }
         else if (option == "--input")
         {
             const auto mode = value();
@@ -132,9 +150,11 @@ void print_help()
            "       nekomote_layer_shell --list-outputs\n\n"
            "  --output NAME                 compositor output name (otherwise compositor selects)\n"
            "  --config FILE                 per-output application configuration\n"
+           "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
            "  --mute                        disable audio\n"
            "  --no-save                     do not persist application configuration\n"
+           "  --ui-open                     open shared controls after loading assets\n"
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"
            "  --capture FILE                diagnostic: final frame as binary PPM\n"
            "  --help                        show this help\n\n"

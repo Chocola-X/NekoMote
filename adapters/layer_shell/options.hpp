@@ -6,6 +6,12 @@
 
 namespace nekomote::layer_shell
 {
+enum class Backend
+{
+    opengl,
+    vulkan,
+};
+
 enum class InputMode
 {
     interactive,
@@ -20,10 +26,12 @@ struct Options
     std::string output;
     std::filesystem::path config;
     std::filesystem::path capture;
+    Backend backend = Backend::opengl;
     InputMode input = InputMode::interactive;
     uint64_t frames = 0;
     bool muted = false;
     bool no_save = false;
+    bool ui_open = false;
     bool list_outputs = false;
     bool help = false;
 };

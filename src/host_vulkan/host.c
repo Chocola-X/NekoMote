@@ -1,5 +1,4 @@
-#include "vk_host_c.h"
-
+#include <nekomote/host_vulkan/host.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +9,7 @@
         VkResult _r = (op);                                                                        \
         if (_r != VK_SUCCESS)                                                                      \
         {                                                                                          \
-            fprintf(stderr, "[vk_host_c] %s: VkResult %d\n", msg, (int)_r);                        \
+            fprintf(stderr, "[host_vulkan] %s: VkResult %d\n", msg, (int)_r);                      \
             return -1;                                                                             \
         }                                                                                          \
     } while (0)
@@ -24,7 +23,7 @@ static uint32_t find_memory_type(VkPhysicalDevice pd, uint32_t filter, VkMemoryP
     for (uint32_t i = 0; i < mem.memoryTypeCount; ++i)
         if ((filter & (1u << i)) && (mem.memoryTypes[i].propertyFlags & props) == props)
             return i;
-    fprintf(stderr, "[vk_host_c] no suitable memory type\n");
+    fprintf(stderr, "[host_vulkan] no suitable memory type\n");
     return 0xFFFFFFFF;
 }
 
@@ -183,7 +182,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
              "query surface caps");
     if (!(caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT))
     {
-        fprintf(stderr, "[vk_host_c] surface cannot accept blit\n");
+        fprintf(stderr, "[host_vulkan] surface cannot accept blit\n");
         return -1;
     }
     h->extent = caps.currentExtent;
@@ -202,7 +201,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     }
     if (!h->extent.width || !h->extent.height)
     {
-        fprintf(stderr, "[vk_host_c] surface unavailable\n");
+        fprintf(stderr, "[host_vulkan] surface unavailable\n");
         return -1;
     }
 
@@ -211,17 +210,23 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
              "query surface formats");
     if (!n)
     {
-        fprintf(stderr, "[vk_host_c] no surface formats\n");
+        fprintf(stderr, "[host_vulkan] no surface formats\n");
         return -1;
     }
     VkSurfaceFormatKHR* formats = malloc(sizeof(VkSurfaceFormatKHR) * n);
     if (!formats)
     {
-        fprintf(stderr, "[vk_host_c] alloc failed: surface formats\n");
+        fprintf(stderr, "[host_vulkan] alloc failed: surface formats\n");
         return -1;
     }
-    VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(h->physical_device, h->surface, &n, formats),
-             "read surface formats");
+    const VkResult read_formats =
+        vkGetPhysicalDeviceSurfaceFormatsKHR(h->physical_device, h->surface, &n, formats);
+    if (read_formats != VK_SUCCESS)
+    {
+        free(formats);
+        fprintf(stderr, "[host_vulkan] read surface formats: VkResult %d\n", (int)read_formats);
+        return -1;
+    }
     VkSurfaceFormatKHR selected = formats[0];
     for (uint32_t i = 0; i < n; ++i)
         if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM ||
@@ -235,7 +240,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
         selected.format = VK_FORMAT_B8G8R8A8_UNORM;
     if (selected.format != VK_FORMAT_B8G8R8A8_UNORM && selected.format != VK_FORMAT_R8G8B8A8_UNORM)
     {
-        fprintf(stderr, "[vk_host_c] no UNORM presentation format\n");
+        fprintf(stderr, "[host_vulkan] no UNORM presentation format\n");
         return -1;
     }
     VkFormatProperties source_props, dest_props;
@@ -245,7 +250,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     if (!(source_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_SRC_BIT) ||
         !(dest_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT))
     {
-        fprintf(stderr, "[vk_host_c] no GPU presentation blit support\n");
+        fprintf(stderr, "[host_vulkan] no GPU presentation blit support\n");
         return -1;
     }
     h->surface_format = selected.format;
@@ -282,7 +287,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     h->swap_images = malloc(sizeof(VkImage) * n);
     if (!h->swap_images)
     {
-        fprintf(stderr, "[vk_host_c] alloc failed: swapchain images\n");
+        fprintf(stderr, "[host_vulkan] alloc failed: swapchain images\n");
         return -1;
     }
     VK_CHECK(vkGetSwapchainImagesKHR(h->device, h->swapchain, &n, h->swap_images),
@@ -290,7 +295,7 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     h->swap_finished = calloc(n, sizeof(VkSemaphore));
     if (!h->swap_finished)
     {
-        fprintf(stderr, "[vk_host_c] alloc failed: swap semaphores\n");
+        fprintf(stderr, "[host_vulkan] alloc failed: swap semaphores\n");
         free(h->swap_images);
         h->swap_images = NULL;
         return -1;
@@ -309,20 +314,90 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     return 0;
 }
 
+static VKAPI_ATTR VkBool32 VKAPI_CALL validation_report(VkDebugReportFlagsEXT flags,
+                                                        VkDebugReportObjectTypeEXT object_type,
+                                                        uint64_t object, size_t location,
+                                                        int32_t message_code, const char* layer,
+                                                        const char* message, void* userdata)
+{
+    (void)object_type;
+    (void)object;
+    (void)location;
+    (void)message_code;
+    VkHostC* h = userdata;
+    if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        __atomic_fetch_add(&h->validation_errors, 1U, __ATOMIC_RELAXED);
+    else
+        __atomic_fetch_add(&h->validation_warnings, 1U, __ATOMIC_RELAXED);
+    fprintf(stderr, "[host_vulkan][validation] %s: %s\n", layer, message);
+    return VK_FALSE;
+}
+
 int vk_host_c_create_instance(VkHostC* h, const char** extensions, uint32_t ext_count)
 {
+    const char* validation = getenv("NEKOMOTE_VK_VALIDATION");
+    const int enable_validation = validation && strcmp(validation, "1") == 0;
+    if (!h || h->instance || (ext_count && !extensions) || ext_count == UINT32_MAX ||
+        (validation && *validation && strcmp(validation, "0") && !enable_validation))
+    {
+        fprintf(stderr, "[host_vulkan] invalid instance input or NEKOMOTE_VK_VALIDATION (0|1)\n");
+        return -1;
+    }
     VkApplicationInfo app = {0};
     app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app.pApplicationName = "NekoMote ABI Host";
+    app.pApplicationName = "NekoMote";
     app.pEngineName = "NekoMote";
     app.apiVersion = VK_API_VERSION_1_0;
 
+    VkDebugReportCallbackCreateInfoEXT callback = {0};
+    callback.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+    callback.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT |
+                     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+    callback.pfnCallback = validation_report;
+    callback.pUserData = h;
+    const char* layer = "VK_LAYER_KHRONOS_validation";
     VkInstanceCreateInfo info = {0};
     info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     info.pApplicationInfo = &app;
     info.enabledExtensionCount = ext_count;
     info.ppEnabledExtensionNames = extensions;
-    VK_CHECK(vkCreateInstance(&info, NULL, &h->instance), "create instance");
+    const char** enabled_extensions = NULL;
+    if (enable_validation)
+    {
+        enabled_extensions = calloc((size_t)ext_count + 1, sizeof(*enabled_extensions));
+        if (!enabled_extensions)
+            return -1;
+        if (ext_count)
+            memcpy(enabled_extensions, extensions, (size_t)ext_count * sizeof(*extensions));
+        enabled_extensions[ext_count] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+        info.enabledExtensionCount++;
+        info.ppEnabledExtensionNames = enabled_extensions;
+        info.enabledLayerCount = 1;
+        info.ppEnabledLayerNames = &layer;
+        info.pNext = &callback;
+    }
+    const VkResult result = vkCreateInstance(&info, NULL, &h->instance);
+    free(enabled_extensions);
+    if (result != VK_SUCCESS)
+    {
+        fprintf(stderr, "[host_vulkan] create instance: VkResult %d%s\n", (int)result,
+                enable_validation ? " (Khronos validation required)" : "");
+        return -1;
+    }
+    if (enable_validation)
+    {
+        PFN_vkCreateDebugReportCallbackEXT create_callback =
+            (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(
+                h->instance, "vkCreateDebugReportCallbackEXT");
+        if (!create_callback)
+        {
+            fprintf(stderr, "[host_vulkan] validation callback unavailable\n");
+            return -1;
+        }
+        VK_CHECK(create_callback(h->instance, &callback, NULL, &h->debug_callback),
+                 "create validation callback");
+        fprintf(stderr, "[host_vulkan] Khronos validation enabled\n");
+    }
     return 0;
 }
 
@@ -330,58 +405,65 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
 {
     h->surface = surface;
     uint32_t count = 0;
-    VK_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, NULL), "enum devices");
-    VkPhysicalDevice* devices = malloc(sizeof(VkPhysicalDevice) * count);
+    VkPhysicalDevice* devices = NULL;
+    VkExtensionProperties* extensions = NULL;
+    VkQueueFamilyProperties* queues = NULL;
+    int result = -1;
+#define SELECT_CHECK(op, message)                                                                  \
+    do                                                                                             \
+    {                                                                                              \
+        const VkResult status = (op);                                                              \
+        if (status != VK_SUCCESS)                                                                  \
+        {                                                                                          \
+            fprintf(stderr, "[host_vulkan] %s: VkResult %d\n", message, (int)status);              \
+            goto cleanup;                                                                          \
+        }                                                                                          \
+    } while (0)
+    SELECT_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, NULL), "enumerate devices");
+    if (!count)
+        goto cleanup;
+    devices = calloc(count, sizeof(*devices));
     if (!devices)
-    {
-        fprintf(stderr, "[vk_host_c] alloc failed: physical devices\n");
-        return -1;
-    }
-    VK_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, devices), "read devices");
+        goto cleanup;
+    SELECT_CHECK(vkEnumeratePhysicalDevices(h->instance, &count, devices), "read devices");
     int best = -1;
     for (uint32_t d = 0; d < count; ++d)
     {
         uint32_t n = 0;
-        VK_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, NULL),
-                 "enum device exts");
-        VkExtensionProperties* exts = malloc(sizeof(VkExtensionProperties) * n);
-        if (!exts)
-        {
-            fprintf(stderr, "[vk_host_c] alloc failed: device extensions\n");
-            free(devices);
-            return -1;
-        }
-        VK_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, exts),
-                 "read device exts");
+        SELECT_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, NULL),
+                     "enumerate device extensions");
+        if (!n)
+            continue;
+        extensions = calloc(n, sizeof(*extensions));
+        if (!extensions)
+            goto cleanup;
+        SELECT_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, extensions),
+                     "read device extensions");
         int has_swapchain = 0;
         for (uint32_t i = 0; i < n; ++i)
-            if (strcmp(exts[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
-            {
+            if (strcmp(extensions[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
                 has_swapchain = 1;
-                break;
-            }
-        free(exts);
+        free(extensions);
+        extensions = NULL;
         if (!has_swapchain)
             continue;
-
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, NULL);
-        VkQueueFamilyProperties* queues = malloc(sizeof(VkQueueFamilyProperties) * n);
+        if (!n)
+            continue;
+        queues = calloc(n, sizeof(*queues));
         if (!queues)
-        {
-            fprintf(stderr, "[vk_host_c] alloc failed: queue families\n");
-            free(devices);
-            return -1;
-        }
+            goto cleanup;
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, queues);
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(devices[d], &props);
-        int score = props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU     ? 3
-                    : props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? 2
-                                                                                 : 1;
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(devices[d], &properties);
+        const int score = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU     ? 3
+                          : properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? 2
+                                                                                            : 1;
         for (uint32_t i = 0; i < n; ++i)
         {
             VkBool32 present = VK_FALSE;
-            vkGetPhysicalDeviceSurfaceSupportKHR(devices[d], i, surface, &present);
+            SELECT_CHECK(vkGetPhysicalDeviceSurfaceSupportKHR(devices[d], i, surface, &present),
+                         "query presentation queue");
             if ((queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && present && score > best)
             {
                 best = score;
@@ -390,14 +472,23 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
             }
         }
         free(queues);
+        queues = NULL;
     }
-    free(devices);
-    if (!h->physical_device)
+    if (h->physical_device)
     {
-        fprintf(stderr, "[vk_host_c] no graphics/present device\n");
-        return -1;
+        VkPhysicalDeviceProperties properties;
+        vkGetPhysicalDeviceProperties(h->physical_device, &properties);
+        fprintf(stderr, "[host_vulkan] Vulkan 1.0 device=%s\n", properties.deviceName);
+        result = 0;
     }
-    return 0;
+cleanup:
+    free(queues);
+    free(extensions);
+    free(devices);
+    if (result)
+        fprintf(stderr, "[host_vulkan] cannot select graphics/present device\n");
+#undef SELECT_CHECK
+    return result;
 }
 
 int vk_host_c_create_device(VkHostC* h)
@@ -497,12 +588,12 @@ int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present, nekomote_vk_t
         return -1;
     if (h->recording)
     {
-        fprintf(stderr, "[vk_host_c] frame already recording\n");
+        fprintf(stderr, "[host_vulkan] frame already recording\n");
         return -1;
     }
-    if (w <= 0 || hgt <= 0)
+    if (!out_target || w <= 0 || hgt <= 0)
     {
-        fprintf(stderr, "[vk_host_c] invalid frame size\n");
+        fprintf(stderr, "[host_vulkan] invalid frame size\n");
         return -1;
     }
     if (present && (h->recreate || !h->swapchain || w != h->requested_w || hgt != h->requested_h))
@@ -531,7 +622,7 @@ int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present, nekomote_vk_t
             h->recreate = 1;
         else if (r != VK_SUCCESS)
         {
-            fprintf(stderr, "[vk_host_c] acquire: VkResult %d\n", (int)r);
+            fprintf(stderr, "[host_vulkan] acquire: VkResult %d\n", (int)r);
             return -1;
         }
     }
@@ -622,11 +713,17 @@ int vk_host_c_present(VkHostC* h)
     pi.pSwapchains = &h->swapchain;
     pi.pImageIndices = &h->image_index;
     VkResult r = vkQueuePresentKHR(h->graphics_queue, &pi);
-    if (r == VK_SUBOPTIMAL_KHR || r == VK_ERROR_OUT_OF_DATE_KHR)
+    if (r == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        h->recreate = 1;
+        h->present_frame = 0;
+        return 1;
+    }
+    if (r == VK_SUBOPTIMAL_KHR)
         h->recreate = 1;
     else if (r != VK_SUCCESS)
     {
-        fprintf(stderr, "[vk_host_c] present: VkResult %d\n", (int)r);
+        fprintf(stderr, "[host_vulkan] present: VkResult %d\n", (int)r);
         return -1;
     }
     h->present_frame = 0;
@@ -638,7 +735,7 @@ int vk_host_c_capture(VkHostC* h, int w, int hgt, uint8_t* pixels)
     if (!pixels || w <= 0 || hgt <= 0 || (size_t)w > SIZE_MAX / 4 / (size_t)hgt ||
         w != h->output_w || hgt != h->output_h)
     {
-        fprintf(stderr, "[vk_host_c] capture size mismatch\n");
+        fprintf(stderr, "[host_vulkan] capture size mismatch\n");
         return -1;
     }
     if (submit(h) != 0)
@@ -658,7 +755,7 @@ int vk_host_c_capture(VkHostC* h, int w, int hgt, uint8_t* pixels)
         VkResult capture_result = (op);                                                            \
         if (capture_result != VK_SUCCESS)                                                          \
         {                                                                                          \
-            fprintf(stderr, "[vk_host_c] %s: VkResult %d\n", msg, (int)capture_result);            \
+            fprintf(stderr, "[host_vulkan] %s: VkResult %d\n", msg, (int)capture_result);          \
             goto cleanup;                                                                          \
         }                                                                                          \
     } while (0)
@@ -789,6 +886,15 @@ void vk_host_c_destroy(VkHostC* h)
         vkDestroyDevice(h->device, NULL);
     if (h->surface)
         vkDestroySurfaceKHR(h->instance, h->surface, NULL);
+    if (h->debug_callback)
+    {
+        PFN_vkDestroyDebugReportCallbackEXT destroy_callback =
+            (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(
+                h->instance, "vkDestroyDebugReportCallbackEXT");
+        destroy_callback(h->instance, h->debug_callback, NULL);
+        fprintf(stderr, "[host_vulkan] validation errors=%u warnings=%u\n", h->validation_errors,
+                h->validation_warnings);
+    }
     if (h->instance)
         vkDestroyInstance(h->instance, NULL);
     memset(h, 0, sizeof(*h));

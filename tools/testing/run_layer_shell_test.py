@@ -14,6 +14,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import shutil
 import signal
 import subprocess
@@ -132,21 +133,29 @@ def run_worker(args):
     if not env.get("DBUS_SESSION_BUS_ADDRESS"):
         raise RuntimeError("worker requires a private dbus-run-session")
     result = dict(scope="KWin virtual output layer-shell protocol/GPU smoke",
-                  binary=str(args.binary),
+                  binary=str(args.binary), backend=args.backend,
                   binary_sha256=hashlib.sha256(args.binary.read_bytes()).hexdigest(),
                   compositor=str(args.compositor), cases=[], passed=False,
                   environment={key: env.get(key) for key in (
                       "LIBGL_ALWAYS_SOFTWARE", "__EGL_VENDOR_LIBRARY_FILENAMES", "KWIN_COMPOSE")},
                   not_covered=["Sway", "Hyprland", "niri", "physical outputs",
-                               "real input", "hotplug/resize while running",
+                               "real input", "hotplug", "physical mode resize while running",
+                               "scale change while running",
                                "real-model animation", "performance", "long-term",
-                               "compositor final output pixels"])
+                               "compositor final output pixels"],
+                  optional_checks={"runtime_scale": dict(
+                      executed=False, reason="--output-tool was not supplied")})
     model, session = write_fixture(root, args.importer, args.timeout)
     result["inputs_sha256"] = {str(path.relative_to(root)):
         hashlib.sha256(path.read_bytes()).hexdigest() for path in (
             model, session, root / "synthetic-source/model.json",
             root / "synthetic-source/model.resx.json", root / "synthetic-source/texture.png")}
     result["compositor_runs"] = []
+
+    def validate_log(name, log_text):
+        if args.backend == "vulkan" and env.get("NEKOMOTE_VK_VALIDATION") == "1":
+            if "[validation]" in log_text or "validation errors=0 warnings=0" not in log_text:
+                raise RuntimeError(f"{name}: validation errors/warnings or missing validation summary")
 
     def check(name, command, *, client_env=None, success=True, text=None):
         completed = subprocess.run(command, env=client_env or env, capture_output=True,
@@ -155,14 +164,93 @@ def run_worker(args):
                                          encoding="utf-8")
         if (completed.returncode == 0) != success:
             raise RuntimeError(f"{name}: unexpected exit {completed.returncode}; see log")
+        if success and "--list-outputs" not in command:
+            validate_log(name, completed.stdout + completed.stderr)
         if text and text not in completed.stdout + completed.stderr:
             raise RuntimeError(f"{name}: expected diagnostic {text!r}; see log")
         result["cases"].append(dict(name=name, command=command,
                                    exit_code=completed.returncode, passed=True))
         return completed
 
-    common = [str(args.binary), "--model", str(model), "--session", str(session),
+    common = [str(args.binary), "--backend", args.backend, "--model", str(model), "--session", str(session),
               "--config", str(root / "wallpaper.json")]
+
+    def runtime_scale(client_env, output, width, height):
+        """Change only the private KWin output while the owned client is alive."""
+        status = result["optional_checks"]["runtime_scale"]
+        status.update(executed=True, passed=False)
+        status.pop("reason", None)
+        capture = root / "runtime-scale.ppm"
+        log_path = root / "runtime-scale.log"
+        command = common + ["--output", output, "--input", "passthrough", "--frames", "120",
+                            "--capture", str(capture)]
+        tool_runs = []
+        status["output_tool_runs"] = tool_runs
+
+        def change_scale(scale):
+            tool_command = [str(args.output_tool), f"output.{output}.scale.{scale}"]
+            # KScreen's offscreen Qt backend has no outputs and can still return
+            # success for an unknown output. Bind it to this private Wayland
+            # socket explicitly; never inherit the harness's offscreen setting.
+            tool_env = dict(client_env, QT_QPA_PLATFORM="wayland")
+            completed = subprocess.run(tool_command, env=tool_env, capture_output=True,
+                                       text=True, timeout=args.timeout,
+                                       stdin=subprocess.DEVNULL)
+            tool_log = completed.stdout + completed.stderr
+            (root / f"runtime-scale-tool-{scale}.log").write_text(
+                tool_log, encoding="utf-8")
+            tool_runs.append(dict(command=tool_command, exit_code=completed.returncode))
+            if completed.returncode or re.search(
+                    r"not found|no outputs?|failed|error", tool_log, re.IGNORECASE):
+                raise RuntimeError(f"runtime scale: output tool scale {scale} failed; see log")
+
+        with log_path.open("w") as log:
+            client = subprocess.Popen(command, env=dict(client_env, WAYLAND_DEBUG="client"),
+                                      stdin=subprocess.DEVNULL,
+                                      stdout=log, stderr=log)
+            try:
+                deadline = time.monotonic() + args.timeout
+                while " background " not in log_path.read_text():
+                    if client.poll() is not None or time.monotonic() >= deadline:
+                        raise RuntimeError("runtime scale client did not initialize")
+                    time.sleep(0.05)
+                # Let the first buffers present before changing the live output.
+                time.sleep(0.2)
+                if client.poll() is not None:
+                    raise RuntimeError("runtime scale client exited before scale change")
+                change_scale(2)
+                code = client.wait(timeout=args.timeout)
+                if code:
+                    raise RuntimeError(f"runtime scale client exited {code}; see log")
+                log_text = log_path.read_text()
+                validate_log("runtime-scale", log_text)
+                if not re.search(r"wl_output[@#]\d+\.scale\(2\)", log_text):
+                    raise RuntimeError("runtime scale: client did not receive wl_output.scale(2)")
+                if not re.search(r"wl_surface[@#]\d+\.set_buffer_scale\(2\)", log_text):
+                    raise RuntimeError("runtime scale: client did not send set_buffer_scale(2)")
+                status["layer_configure_ack_observed"] = bool(
+                    re.search(r"zwlr_layer_surface_v1[@#]\d+\.configure\(", log_text) and
+                    re.search(r"zwlr_layer_surface_v1[@#]\d+\.ack_configure\(", log_text))
+                w, h, pixels = read_ppm(capture)
+                if (w, h) != (width, height):
+                    raise RuntimeError(f"runtime scale: expected {width}x{height} physical capture, "
+                                       f"got {w}x{h}")
+                colored = sum(1 for i in range(0, len(pixels), 3)
+                              if all(abs(pixels[i + j] - c) <= 2
+                                     for j, c in enumerate((247, 23, 191))))
+                if colored < 4:
+                    raise RuntimeError("runtime scale: synthetic material absent from capture")
+                result["cases"].append(dict(name="runtime-scale", command=command,
+                    exit_code=code, passed=True, width=w, height=h, material_pixels=colored,
+                    pixels_sha256=hashlib.sha256(pixels).hexdigest()))
+                status.update(passed=True, width=w, height=h)
+                result["not_covered"].remove("scale change while running")
+            finally:
+                stop(client)
+                # Both the D-Bus bus and Wayland socket belong to this harness;
+                # restore its baseline even when the client or resize fails.
+                change_scale(1)
+
     try:
         missing_env = dict(env, WAYLAND_DISPLAY="nekomote-nonexistent")
         check("missing-display", common + ["--frames", "1"],
@@ -233,7 +321,7 @@ def run_worker(args):
                         pixels_sha256=hashlib.sha256(pixels).hexdigest())
                     if args.real_assets and label == "desktop" and index == 0:
                         capture = root / "real-assets.ppm"
-                        check("real-assets", [str(args.binary), "--assets", str(args.real_assets),
+                        check("real-assets", [str(args.binary), "--backend", args.backend, "--assets", str(args.real_assets),
                               "--config", str(root / "real-wallpaper.json"), "--output", outputs[0],
                               "--frames", "4", "--capture", str(capture)], client_env=client_env)
                         w, h, pixels = read_ppm(capture)
@@ -241,7 +329,23 @@ def run_worker(args):
                             raise RuntimeError("real assets produced an empty/uniform image")
                         result["cases"][-1].update(width=w, height=h,
                             pixels_sha256=hashlib.sha256(pixels).hexdigest())
+                        capture = root / "real-assets-ui.ppm"
+                        check("real-assets-ui", [str(args.binary), "--backend", args.backend,
+                              "--assets", str(args.real_assets), "--ui-open",
+                              "--config", str(root / "real-wallpaper.json"), "--output", outputs[0],
+                              "--frames", "4", "--capture", str(capture)], client_env=client_env)
                 if label == "base":
+                    if args.output_tool:
+                        runtime_scale(client_env, outputs[0], width, height)
+                    if args.backend == "vulkan" and args.retry_preload:
+                        capture = root / "present-retry.ppm"
+                        retry_env = dict(client_env, LD_PRELOAD=str(args.retry_preload),
+                                         NEKOMOTE_TEST_PRESENT_RETRY="1")
+                        check("present-retry", common + ["--output", outputs[0], "--frames", "4",
+                              "--capture", str(capture)], client_env=retry_env,
+                              text="injected OUT_OF_DATE without surface commit")
+                        if read_ppm(capture)[2] != captures[0]:
+                            raise RuntimeError("present retry advanced or corrupted the fixed frame")
                     existing = root / "existing-capture.ppm"
                     original = b"preserve existing capture\x00\xff"
                     existing.write_bytes(original)
@@ -255,7 +359,7 @@ def run_worker(args):
                     if read_ppm(capture)[2] != captures[0]:
                         raise RuntimeError("identical fixed-step runs produced different pixels")
                     capture = root / "assets-catalog.ppm"
-                    check("assets-catalog", [str(args.binary), "--assets", str(root / "assets"),
+                    check("assets-catalog", [str(args.binary), "--backend", args.backend, "--assets", str(root / "assets"),
                           "--config", str(root / "wallpaper.json"), "--output", outputs[0],
                           "--frames", "4", "--capture", str(capture)], client_env=client_env)
                     w, h, pixels = read_ppm(capture)
@@ -275,7 +379,7 @@ def run_worker(args):
                                                   stdout=log, stderr=log)
                         try:
                             deadline = time.monotonic() + args.timeout
-                            while "layer-shell background" not in log_path.read_text():
+                            while " background " not in log_path.read_text():
                                 if client.poll() is not None or time.monotonic() >= deadline:
                                     raise RuntimeError("disconnect client did not initialize")
                                 time.sleep(0.05)
@@ -295,7 +399,7 @@ def run_worker(args):
                                                   stdout=log, stderr=log)
                         try:
                             deadline = time.monotonic() + args.timeout
-                            while "layer-shell background" not in log_path.read_text():
+                            while " background " not in log_path.read_text():
                                 if client.poll() is not None or time.monotonic() >= deadline:
                                     raise RuntimeError("signal client did not initialize")
                                 time.sleep(0.05)
@@ -328,8 +432,13 @@ def executable(value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", required=True, type=executable)
+    parser.add_argument("--backend", choices=("opengl", "vulkan"), default="opengl")
+    parser.add_argument("--retry-preload", type=lambda value: pathlib.Path(value).resolve(strict=True),
+                        help="optional diagnostic present OUT_OF_DATE interposer (Vulkan only)")
     parser.add_argument("--importer", required=True, type=executable)
     parser.add_argument("--compositor", required=True, type=executable)
+    parser.add_argument("--output-tool", type=executable,
+                        help="optional kscreen-doctor executable for private live-output scale")
     parser.add_argument("--no-protocol-server", required=True, type=executable)
     parser.add_argument("--real-assets", type=lambda value: pathlib.Path(value).resolve(strict=True),
                         help="optional read-only real asset directory")

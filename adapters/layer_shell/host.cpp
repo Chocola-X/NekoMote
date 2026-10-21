@@ -1,6 +1,9 @@
 #include "host.hpp"
 
 #include "nekomote/abi.h"
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include "nekomote/host_vulkan/host.h"
+#endif
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -99,12 +102,23 @@ class Host::Impl
     }
     ~Impl()
     {
-        // The context remains current throughout dispatch and ABI work. Destroying
-        // the wallpaper first also joins its workers before native targets vanish.
+        // Wallpaper renderers borrow the native device. Finish submitted work
+        // before releasing their resources, and keep Wayland alive for the host.
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_host_.device)
+        {
+            const auto result = vkDeviceWaitIdle(vk_host_.device);
+            if (result != VK_SUCCESS)
+                std::cerr << "Vulkan shutdown wait failed: " << result << '\n';
+        }
+#endif
         if (wallpaper_)
         {
             nekomote_wallpaper_destroy(wallpaper_);
         }
+#if defined(NEKOMOTE_HAS_VULKAN)
+        vk_host_c_destroy(&vk_host_);
+#endif
         if (egl_display_ != EGL_NO_DISPLAY)
         {
             eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -208,6 +222,10 @@ class Host::Impl
     void initialize_wayland();
     void create_surface();
     void initialize_egl();
+    void initialize_graphics();
+#if defined(NEKOMOTE_HAS_VULKAN)
+    void initialize_vulkan();
+#endif
     void resize();
     void process_input();
     void render();
@@ -248,6 +266,9 @@ class Host::Impl
     EGLContext egl_context_ = EGL_NO_CONTEXT;
     EGLSurface egl_surface_ = EGL_NO_SURFACE;
     wl_egl_window* egl_window_ = nullptr;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    VkHostC vk_host_{};
+#endif
     nekomote_wallpaper* wallpaper_ = nullptr;
     std::exception_ptr failure_;
     std::array<Input, 1024> inputs_{};
@@ -261,6 +282,7 @@ class Host::Impl
     bool configured_ = false;
     bool closed_ = false;
     bool frame_ready_ = true;
+    bool retry_frame_ = false;
     bool pointer_inside_ = false;
     uint64_t rendered_frames_ = 0;
     Clock::time_point last_frame_{};
@@ -760,6 +782,42 @@ void Host::Impl::initialize_egl()
     // wl_surface.frame owns pacing. Avoid an additional swap-interval wait.
     egl_check(eglSwapInterval(egl_display_, 0), "set EGL swap interval");
     wallpaper_ = nekomote_wallpaper_create(load_gl);
+}
+
+#if defined(NEKOMOTE_HAS_VULKAN)
+void Host::Impl::initialize_vulkan()
+{
+    const char* extensions[] = {VK_KHR_SURFACE_EXTENSION_NAME,
+                                VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME};
+    if (vk_host_c_create_instance(&vk_host_, extensions, 2) != 0)
+        throw std::runtime_error("cannot create Vulkan instance");
+    VkWaylandSurfaceCreateInfoKHR surface_info{};
+    surface_info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+    surface_info.display = display_;
+    surface_info.surface = surface_;
+    const auto result =
+        vkCreateWaylandSurfaceKHR(vk_host_.instance, &surface_info, nullptr, &vk_host_.surface);
+    if (result != VK_SUCCESS)
+        throw std::runtime_error("cannot create Vulkan Wayland surface: " + std::to_string(result));
+    if (vk_host_c_select_device(&vk_host_, vk_host_.surface) != 0 ||
+        vk_host_c_create_device(&vk_host_) != 0)
+        throw std::runtime_error("cannot initialize Vulkan device for Wayland surface");
+    const nekomote_vk_device_context context{vk_host_.instance,        vk_host_.physical_device,
+                                             vk_host_.device,          vk_host_.graphics_queue,
+                                             vk_host_.graphics_family, VK_FORMAT_R8G8B8A8_UNORM};
+    wallpaper_ = nekomote_wallpaper_create_vk(context);
+}
+#endif
+
+void Host::Impl::initialize_graphics()
+{
+    resize();
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+        initialize_vulkan();
+    else
+#endif
+        initialize_egl();
     if (!wallpaper_)
         check(nekomote_last_error(), "create wallpaper");
     if (!wallpaper_)
@@ -790,8 +848,11 @@ void Host::Impl::initialize_egl()
                                                                      : options_.session.c_str()),
               "load diagnostic model");
     }
-    std::cerr << "layer-shell background " << pixel_width_ << 'x' << pixel_height_ << ", scale "
-              << scale_ << ", local pointer "
+    if (options_.ui_open)
+        check(nekomote_wallpaper_set_ui_open(wallpaper_, 1), "open shared controls");
+    std::cerr << "layer-shell " << (options_.backend == Backend::vulkan ? "Vulkan" : "OpenGL")
+              << " background " << pixel_width_ << 'x' << pixel_height_ << ", scale " << scale_
+              << ", local pointer "
               << (options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
@@ -805,7 +866,7 @@ void Host::Impl::resize()
     if (!logical_width_ || !logical_height_ ||
         logical_width_ > static_cast<uint32_t>(INT_MAX / scale_) ||
         logical_height_ > static_cast<uint32_t>(INT_MAX / scale_))
-        throw std::runtime_error("output size overflows native EGL dimensions");
+        throw std::runtime_error("output size overflows native dimensions");
     pixel_width_ = static_cast<int>(logical_width_) * scale_;
     pixel_height_ = static_cast<int>(logical_height_) * scale_;
     wl_surface_set_buffer_scale(surface_, scale_);
@@ -852,22 +913,51 @@ void Host::Impl::process_input()
 
 void Host::Impl::capture()
 {
-    using ReadPixels = void (*)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void*);
-    using PixelStore = void (*)(GLenum, GLint);
-    using GetError = GLenum (*)();
-    const auto read_pixels = reinterpret_cast<ReadPixels>(eglGetProcAddress("glReadPixels"));
-    const auto pixel_store = reinterpret_cast<PixelStore>(eglGetProcAddress("glPixelStorei"));
-    const auto get_error = reinterpret_cast<GetError>(eglGetProcAddress("glGetError"));
-    if (!read_pixels || !pixel_store || !get_error)
-        throw std::runtime_error("capture GL functions unavailable");
     const auto row_bytes = static_cast<size_t>(pixel_width_) * 3;
     if (static_cast<size_t>(pixel_height_) > std::numeric_limits<size_t>::max() / row_bytes)
         throw std::runtime_error("capture dimensions overflow");
     std::vector<uint8_t> pixels(row_bytes * static_cast<size_t>(pixel_height_));
-    pixel_store(GL_PACK_ALIGNMENT, 1);
-    read_pixels(0, 0, pixel_width_, pixel_height_, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
-    if (get_error() != GL_NO_ERROR)
-        throw std::runtime_error("diagnostic framebuffer readback failed");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        const auto width = static_cast<size_t>(pixel_width_);
+        const auto height = static_cast<size_t>(pixel_height_);
+        if (height > std::numeric_limits<size_t>::max() / width / 4)
+            throw std::runtime_error("Vulkan capture dimensions overflow");
+        std::vector<uint8_t> rgba(width * height * 4);
+        if (vk_host_c_capture(&vk_host_, pixel_width_, pixel_height_, rgba.data()) != 0)
+            throw std::runtime_error("diagnostic Vulkan framebuffer readback failed");
+        // The host returns top-left straight RGBA. PPM has no alpha; composite
+        // over black to match the RGB bytes returned by the GL framebuffer.
+        for (size_t index = 0; index < width * height; ++index)
+            for (size_t channel = 0; channel < 3; ++channel)
+                pixels[index * 3 + channel] = static_cast<uint8_t>(
+                    (static_cast<unsigned>(rgba[index * 4 + channel]) * rgba[index * 4 + 3] +
+                     127U) /
+                    255U);
+    }
+    else
+#endif
+    {
+        using ReadPixels = void (*)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void*);
+        using PixelStore = void (*)(GLenum, GLint);
+        using GetError = GLenum (*)();
+        const auto read_pixels = reinterpret_cast<ReadPixels>(eglGetProcAddress("glReadPixels"));
+        const auto pixel_store = reinterpret_cast<PixelStore>(eglGetProcAddress("glPixelStorei"));
+        const auto get_error = reinterpret_cast<GetError>(eglGetProcAddress("glGetError"));
+        if (!read_pixels || !pixel_store || !get_error)
+            throw std::runtime_error("capture GL functions unavailable");
+        pixel_store(GL_PACK_ALIGNMENT, 1);
+        read_pixels(0, 0, pixel_width_, pixel_height_, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+        if (get_error() != GL_NO_ERROR)
+            throw std::runtime_error("diagnostic framebuffer readback failed");
+        // Normalize GL's bottom-left rows to the same top-left output contract.
+        for (int row = 0; row < pixel_height_ / 2; ++row)
+            std::swap_ranges(pixels.data() + static_cast<size_t>(row) * row_bytes,
+                             pixels.data() + static_cast<size_t>(row + 1) * row_bytes,
+                             pixels.data() +
+                                 static_cast<size_t>(pixel_height_ - 1 - row) * row_bytes);
+    }
     const int descriptor =
         open(options_.capture.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
     if (descriptor < 0)
@@ -881,7 +971,7 @@ void Host::Impl::capture()
     }
     if (std::fprintf(stream.get(), "P6\n%d %d\n255\n", pixel_width_, pixel_height_) < 0)
         throw std::runtime_error("cannot write diagnostic capture header");
-    for (int row = pixel_height_ - 1; row >= 0; --row)
+    for (int row = 0; row < pixel_height_; ++row)
         if (std::fwrite(pixels.data() + static_cast<size_t>(row) * row_bytes, 1, row_bytes,
                         stream.get()) != row_bytes)
             throw std::runtime_error("cannot write diagnostic capture pixels");
@@ -891,27 +981,70 @@ void Host::Impl::capture()
 
 void Host::Impl::render()
 {
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
+        throw std::runtime_error("wait for Vulkan frame failed");
+#endif
     const auto now = Clock::now();
     // Pass the same bounded delta to model/background advancement and UI.
     // This does not change application policies that use their own clock.
     constexpr double kResumeBudgetSeconds = 0.25;
     const double dt =
-        options_.frames
+        retry_frame_ ? 0.0
+        : options_.frames
             ? 1.0 / 60.0
             : (rendered_frames_ ? std::min(std::chrono::duration<double>(now - last_frame_).count(),
                                            kResumeBudgetSeconds)
                                 : 0.0);
-    check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+    if (!retry_frame_)
+        check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        nekomote_vk_target target{};
+        if (vk_host_c_begin_frame(&vk_host_, pixel_width_, pixel_height_, 1, &target) != 0)
+            throw std::runtime_error("begin Vulkan frame failed");
+        check(nekomote_wallpaper_set_vk_target(wallpaper_, target), "set Vulkan target");
+    }
+#endif
     check(nekomote_wallpaper_render_frame(wallpaper_), "render wallpaper");
     check(nekomote_wallpaper_render_ui(wallpaper_, static_cast<float>(dt)), "render controls");
-    if (!options_.capture.empty() && rendered_frames_ + 1 == options_.frames)
+    const bool capture_frame = !options_.capture.empty() && rendered_frames_ + 1 == options_.frames;
+    if (capture_frame && options_.backend == Backend::opengl)
         capture();
     frame_callback_ = wl_surface_frame(surface_);
     if (!frame_callback_)
         throw std::runtime_error("cannot allocate Wayland frame callback");
     listen_check(wl_callback_add_listener(frame_callback_, &frame_listener(), this));
     frame_ready_ = false;
-    egl_check(eglSwapBuffers(egl_display_, egl_surface_), "present wallpaper");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        const int result = vk_host_c_present(&vk_host_);
+        if (result < 0)
+            throw std::runtime_error("present Vulkan wallpaper failed");
+        if (result > 0)
+        {
+            // OUT_OF_DATE did not commit a buffer, so no frame callback is
+            // guaranteed. Retry the same application state on the new chain.
+            wl_callback_destroy(frame_callback_);
+            frame_callback_ = nullptr;
+            frame_ready_ = true;
+            retry_frame_ = true;
+            last_frame_ = now;
+            next_frame_ = now;
+            return;
+        }
+    }
+    else
+#endif
+        egl_check(eglSwapBuffers(egl_display_, egl_surface_), "present wallpaper");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    // Capture only an accepted present, avoiding a stale file on WSI retry.
+    if (capture_frame && options_.backend == Backend::vulkan)
+        capture();
+#endif
+    retry_frame_ = false;
     ++rendered_frames_;
     last_frame_ = now;
     const int fps = nekomote_wallpaper_fps_limit(wallpaper_);
@@ -984,8 +1117,14 @@ void Host::Impl::run()
             break;
         if (configured_)
         {
-            if (egl_display_ == EGL_NO_DISPLAY)
-                initialize_egl();
+            if (!wallpaper_)
+                initialize_graphics();
+#if defined(NEKOMOTE_HAS_VULKAN)
+            // Input and resize can replace GPU resources too, so synchronize
+            // before any wallpaper mutation, not just command recording.
+            if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
+                throw std::runtime_error("wait for Vulkan frame before input/resize failed");
+#endif
             resize();
             process_input();
             if (frame_ready_ && Clock::now() >= next_frame_)

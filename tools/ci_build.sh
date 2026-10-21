@@ -49,12 +49,12 @@ if [[ "$MODE" == native20 ]]; then
 elif [[ "$MODE" == layer-shell ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
-        -DNEKOMOTE_BUILD_LAYER_SHELL=ON -DNEKOMOTE_BUILD_VULKAN=OFF)
+        -DNEKOMOTE_BUILD_LAYER_SHELL=ON)
     TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests)
 elif [[ "$MODE" == x11 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
-        -DNEKOMOTE_BUILD_X11=ON -DNEKOMOTE_BUILD_VULKAN=OFF)
+        -DNEKOMOTE_BUILD_X11=ON)
     TARGETS+=(nekomote_x11 nekomote_x11_option_tests)
 else
     QT_MAJOR=6
@@ -64,6 +64,9 @@ else
         -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF "-DNEKOMOTE_QT_MAJOR=$QT_MAJOR")
     TARGETS+=(nekomote_plasma_module_test)
     [[ "$MODE" != plasma5 ]] || TARGETS+=(nekomote_plasma5_package_test)
+fi
+if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
+    TARGETS+=(nekomote_host_vulkan_failure_tests)
 fi
 cmake -S "$WORK_DIR/src" -B "$WORK_DIR/build" -G Ninja "${OPTIONS[@]}"
 cmake --build "$WORK_DIR/build" --target "${TARGETS[@]}" -j "$JOBS"

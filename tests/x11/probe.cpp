@@ -32,7 +32,8 @@ int main(int argc, char** argv)
     try
     {
         if (argc < 3)
-            throw std::runtime_error("usage: probe shape|unmap|map|capture WINDOW_ID|root [FILE]");
+            throw std::runtime_error(
+                "usage: probe shape|unmap|map|capture|resize WINDOW_ID|root [FILE|WIDTH HEIGHT]");
         std::unique_ptr<Display, decltype(&XCloseDisplay)> display(XOpenDisplay(nullptr),
                                                                    XCloseDisplay);
         if (!display)
@@ -57,6 +58,20 @@ int main(int argc, char** argv)
             XMapWindow(display.get(), window);
         else if (operation == "unmap")
             XUnmapWindow(display.get(), window);
+        else if (operation == "resize" && argc == 5 && id != "root")
+        {
+            const auto dimension = [](const char* text)
+            {
+                const std::string value(text);
+                size_t length = 0;
+                const auto parsed = std::stoul(value, &length);
+                if (length != value.size() || !parsed || parsed > 65535 ||
+                    value.find_first_not_of("0123456789") != std::string::npos)
+                    throw std::runtime_error("resize dimension must be 1..65535");
+                return static_cast<unsigned>(parsed);
+            };
+            XResizeWindow(display.get(), window, dimension(argv[3]), dimension(argv[4]));
+        }
         else if (operation == "capture" && argc == 4)
         {
             XWindowAttributes attributes{};

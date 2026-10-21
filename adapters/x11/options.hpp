@@ -12,6 +12,12 @@ enum class InputMode
     passthrough,
 };
 
+enum class Backend
+{
+    opengl,
+    vulkan,
+};
+
 struct Options
 {
     std::string assets;
@@ -21,6 +27,7 @@ struct Options
     std::filesystem::path config;
     std::filesystem::path capture;
     InputMode input = InputMode::interactive;
+    Backend backend = Backend::opengl;
     uint64_t frames = 0;
     bool ui_open = false;
     bool muted = false;

@@ -80,6 +80,22 @@ Options parse_options(int argc, char** argv)
             result.config = value();
         else if (option == "--capture")
             result.capture = value();
+        else if (option == "--backend")
+        {
+            const auto backend = value();
+            if (backend == "opengl")
+                result.backend = Backend::opengl;
+            else if (backend == "vulkan")
+            {
+#if defined(NEKOMOTE_HAS_VULKAN)
+                result.backend = Backend::vulkan;
+#else
+                throw std::runtime_error("Vulkan backend is not enabled in this build");
+#endif
+            }
+            else
+                throw std::runtime_error("--backend expects opengl or vulkan");
+        }
         else if (option == "--input")
         {
             const auto mode = value();
@@ -132,6 +148,7 @@ void print_help()
         << "Usage: nekomote_x11 --assets DIR [options]\n"
            "       nekomote_x11 --model FILE [--session FILE] [options]\n"
            "       nekomote_x11 --list-outputs\n\n"
+           "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --output NAME                 XRandR output name (otherwise primary/first active)\n"
            "  --config FILE                 per-output application configuration\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
@@ -141,7 +158,8 @@ void print_help()
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"
            "  --capture FILE                diagnostic: final frame as binary PPM\n"
            "  --help                        show this help\n\n"
-           "Requires X11, an EWMH desktop-window WM, XRandR 1.3 and OpenGL 3.3. No keyboard focus "
+           "Requires X11, an EWMH desktop-window WM, XRandR 1.3 and OpenGL 3.3 or Vulkan 1.0. No "
+           "keyboard focus "
            "or global\n"
            "pointer tracking is requested. Run one process per output for multiple screens.\n";
 }

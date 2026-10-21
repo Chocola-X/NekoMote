@@ -31,7 +31,7 @@
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include <vulkan/vulkan.h>
 
-#include "vk_host_c.h"
+#include <nekomote/host_vulkan/host.h>
 #endif
 
 // clang-format off: glad must precede GLFW
@@ -832,7 +832,7 @@ int main(int argc, char** argv)
 #if defined(NEKOMOTE_HAS_VULKAN)
         if (use_vulkan)
         {
-            if (vk_host_c_present(&vk_host) != 0)
+            if (vk_host_c_present(&vk_host) < 0)
             {
                 fprintf(stderr, "[abi_host] vk_present failed\n");
                 exit_code = 1;

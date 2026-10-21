@@ -2,6 +2,13 @@
 
 当前仅支持 **0.6.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
+2026-10-21 X11 / layer-shell 的 Vulkan 壳同样只调用高层壁纸 C ABI：
+`create_vk` 借用设备，`set_vk_target` 借用本帧 command buffer/framebuffer，角色、背景与
+面板共用 `render_frame/render_ui`。`src/host_vulkan` 为独立呈现帮助代码，不进入核心或
+application/ui；拥有 instance/device/surface/swapchain 和提交。所有输入、resize、advance
+之前等待上一帧完成；退出先停止设备工作、销毁 wallpaper，再销毁宿主与原生输出。
+ABI 版本和函数签名未改；限定验收见 [报告](shell-vulkan-2026-10-21.md)。
+
 ## 壁纸应用层接口
 
 共享 Controller/UI 与高层 `nekomote_wallpaper_*` 已实现，GLM 已迁移 Plasma 调用者。本轮显示补修见 [说明](plasma-display-fix.md)。宿主只经 ABI 连接共享业务；以下既有单会话/renderer 契约仍适用于相应接口，不能据此推定高层实例已完成全部异常/生命周期验收。

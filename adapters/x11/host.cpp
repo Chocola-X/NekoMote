@@ -10,6 +10,9 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/shape.h>
+#if defined(NEKOMOTE_HAS_VULKAN)
+#include "nekomote/host_vulkan/host.h"
+#endif
 #include <fcntl.h>
 #include <poll.h>
 #include <unistd.h>
@@ -198,9 +201,17 @@ class Host::Impl
     }
     ~Impl()
     {
+        // Stop borrowed-device submissions before destroying wallpaper resources.
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_host_.device)
+            vkDeviceWaitIdle(vk_host_.device);
+#endif
         // The wallpaper and its audio/loading workers die with GL still current.
         if (wallpaper_)
             nekomote_wallpaper_destroy(wallpaper_);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        vk_host_c_destroy(&vk_host_);
+#endif
         if (display_)
         {
             // An asynchronous setup failure can leave a locally assigned XID
@@ -230,6 +241,9 @@ class Host::Impl
     void validate_wm();
     void create_window();
     void initialize_wallpaper();
+#if defined(NEKOMOTE_HAS_VULKAN)
+    void initialize_vulkan();
+#endif
     void update_output();
     void handle_event(const XEvent& event);
     void render();
@@ -241,6 +255,9 @@ class Host::Impl
     Window root_ = None, window_ = None;
     Colormap colormap_ = None;
     GLXContext context_ = nullptr;
+#if defined(NEKOMOTE_HAS_VULKAN)
+    VkHostC vk_host_{};
+#endif
     nekomote_wallpaper* wallpaper_ = nullptr;
     Atom wm_delete_ = None, wm_protocols_ = None;
     int randr_event_ = 0;
@@ -316,45 +333,55 @@ void Host::Impl::validate_wm()
 void Host::Impl::create_window()
 {
     XTransaction setup(display_);
-    const char* extensions = glXQueryExtensionsString(display_, DefaultScreen(display_));
-    if (!extension(extensions, "GLX_ARB_create_context") ||
-        !extension(extensions, "GLX_ARB_create_context_profile"))
-        throw std::runtime_error("GLX_ARB_create_context and core profiles are required");
-    const std::array<int, 19> attributes{GLX_X_RENDERABLE,
-                                         True,
-                                         GLX_DRAWABLE_TYPE,
-                                         GLX_WINDOW_BIT,
-                                         GLX_RENDER_TYPE,
-                                         GLX_RGBA_BIT,
-                                         GLX_X_VISUAL_TYPE,
-                                         GLX_TRUE_COLOR,
-                                         GLX_RED_SIZE,
-                                         8,
-                                         GLX_GREEN_SIZE,
-                                         8,
-                                         GLX_BLUE_SIZE,
-                                         8,
-                                         GLX_ALPHA_SIZE,
-                                         0,
-                                         GLX_DOUBLEBUFFER,
-                                         True,
-                                         None};
-    int count = 0;
-    XOwned<GLXFBConfig> configs(
-        glXChooseFBConfig(display_, DefaultScreen(display_), attributes.data(), &count));
-    if (!configs || count <= 0)
-        throw std::runtime_error("no compatible GLX framebuffer configuration");
-    XOwned<XVisualInfo> visual(glXGetVisualFromFBConfig(display_, configs.get()[0]));
-    if (!visual)
-        throw std::runtime_error("no X11 visual for GLX framebuffer");
-    colormap_ = XCreateColormap(display_, root_, visual->visual, AllocNone);
+    const char* extensions = nullptr;
+    XOwned<GLXFBConfig> configs;
+    XOwned<XVisualInfo> gl_visual;
+    Visual* visual = DefaultVisual(display_, DefaultScreen(display_));
+    int depth = DefaultDepth(display_, DefaultScreen(display_));
+    if (options_.backend == Backend::opengl)
+    {
+        extensions = glXQueryExtensionsString(display_, DefaultScreen(display_));
+        if (!extension(extensions, "GLX_ARB_create_context") ||
+            !extension(extensions, "GLX_ARB_create_context_profile"))
+            throw std::runtime_error("GLX_ARB_create_context and core profiles are required");
+        const std::array<int, 19> attributes{GLX_X_RENDERABLE,
+                                             True,
+                                             GLX_DRAWABLE_TYPE,
+                                             GLX_WINDOW_BIT,
+                                             GLX_RENDER_TYPE,
+                                             GLX_RGBA_BIT,
+                                             GLX_X_VISUAL_TYPE,
+                                             GLX_TRUE_COLOR,
+                                             GLX_RED_SIZE,
+                                             8,
+                                             GLX_GREEN_SIZE,
+                                             8,
+                                             GLX_BLUE_SIZE,
+                                             8,
+                                             GLX_ALPHA_SIZE,
+                                             0,
+                                             GLX_DOUBLEBUFFER,
+                                             True,
+                                             None};
+        int count = 0;
+        configs.reset(
+            glXChooseFBConfig(display_, DefaultScreen(display_), attributes.data(), &count));
+        if (!configs || count <= 0)
+            throw std::runtime_error("no compatible GLX framebuffer configuration");
+        gl_visual.reset(glXGetVisualFromFBConfig(display_, configs.get()[0]));
+        if (!gl_visual)
+            throw std::runtime_error("no X11 visual for GLX framebuffer");
+        visual = gl_visual->visual;
+        depth = gl_visual->depth;
+    }
+    colormap_ = XCreateColormap(display_, root_, visual, AllocNone);
     XSetWindowAttributes settings{};
     settings.colormap = colormap_;
     settings.event_mask = StructureNotifyMask | PointerMotionMask | EnterWindowMask |
                           LeaveWindowMask | ButtonPressMask | ButtonReleaseMask | ExposureMask;
     window_ = XCreateWindow(display_, root_, output_.x, output_.y, static_cast<unsigned>(width_),
-                            static_cast<unsigned>(height_), 0, visual->depth, InputOutput,
-                            visual->visual, CWColormap | CWEventMask, &settings);
+                            static_cast<unsigned>(height_), 0, depth, InputOutput, visual,
+                            CWColormap | CWEventMask, &settings);
     if (!window_)
         throw std::runtime_error("cannot create X11 desktop window");
     const auto set_property =
@@ -398,50 +425,73 @@ void Host::Impl::create_window()
         XShapeCombineRectangles(display_, window_, ShapeInput, 0, 0, nullptr, 0, ShapeSet,
                                 Unsorted);
     }
-    auto create =
-        reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(load_gl("glXCreateContextAttribsARB"));
-    if (!create)
-        throw std::runtime_error("GLX core context creation function unavailable");
-    const std::array<int, 7> context_attributes{GLX_CONTEXT_MAJOR_VERSION_ARB,
-                                                3,
-                                                GLX_CONTEXT_MINOR_VERSION_ARB,
-                                                3,
-                                                GLX_CONTEXT_PROFILE_MASK_ARB,
-                                                GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-                                                None};
-    XTransaction transaction(display_);
-    context_ = create(display_, configs.get()[0], nullptr, True, context_attributes.data());
-    if (transaction.finish() || !context_)
-        throw std::runtime_error("cannot create OpenGL 3.3 core context");
-    if (!glXMakeCurrent(display_, window_, context_))
-        throw std::runtime_error("cannot make GLX context current");
-    if (extension(extensions, "GLX_EXT_swap_control"))
+    if (options_.backend == Backend::opengl)
     {
-        auto interval = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(load_gl("glXSwapIntervalEXT"));
-        if (interval)
-            interval(display_, window_, 0);
+        auto create = reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(
+            load_gl("glXCreateContextAttribsARB"));
+        if (!create)
+            throw std::runtime_error("GLX core context creation function unavailable");
+        const std::array<int, 7> context_attributes{GLX_CONTEXT_MAJOR_VERSION_ARB,
+                                                    3,
+                                                    GLX_CONTEXT_MINOR_VERSION_ARB,
+                                                    3,
+                                                    GLX_CONTEXT_PROFILE_MASK_ARB,
+                                                    GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                                                    None};
+        XTransaction transaction(display_);
+        context_ = create(display_, configs.get()[0], nullptr, True, context_attributes.data());
+        if (transaction.finish() || !context_)
+            throw std::runtime_error("cannot create OpenGL 3.3 core context");
+        if (!glXMakeCurrent(display_, window_, context_))
+            throw std::runtime_error("cannot make GLX context current");
+        if (extension(extensions, "GLX_EXT_swap_control"))
+        {
+            auto interval =
+                reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(load_gl("glXSwapIntervalEXT"));
+            if (interval)
+                interval(display_, window_, 0);
+        }
+        else if (extension(extensions, "GLX_MESA_swap_control"))
+        {
+            auto interval =
+                reinterpret_cast<PFNGLXSWAPINTERVALMESAPROC>(load_gl("glXSwapIntervalMESA"));
+            if (interval && interval(0) != 0)
+                std::cerr << "Cannot disable GLX swap interval; frame pacing may include vsync\n";
+        }
+        else
+            std::cerr << "No GLX extension to disable vsync; frame pacing may include vsync\n";
     }
-    else if (extension(extensions, "GLX_MESA_swap_control"))
-    {
-        auto interval =
-            reinterpret_cast<PFNGLXSWAPINTERVALMESAPROC>(load_gl("glXSwapIntervalMESA"));
-        if (interval && interval(0) != 0)
-            std::cerr << "Cannot disable GLX swap interval; frame pacing may include vsync\n";
-    }
+#if defined(NEKOMOTE_HAS_VULKAN)
     else
-        std::cerr << "No GLX extension to disable vsync; frame pacing may include vsync\n";
+        initialize_vulkan();
+#endif
     XMapWindow(display_, window_);
     XFlush(display_);
     if (setup.finish())
-        throw std::runtime_error("X11 desktop window/GLX initialization failed");
+        throw std::runtime_error("X11 desktop window/graphics initialization failed");
     std::cout << "X11 wallpaper window=0x" << std::hex << window_ << std::dec
+              << " backend=" << (options_.backend == Backend::opengl ? "opengl" : "vulkan")
               << " output=" << output_.name << " geometry=" << width_ << 'x' << height_ << '+'
               << output_.x << '+' << output_.y << std::endl;
 }
 
 void Host::Impl::initialize_wallpaper()
 {
-    wallpaper_ = nekomote_wallpaper_create(load_gl);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        nekomote_vk_device_context context{};
+        context.instance = vk_host_.instance;
+        context.physical_device = vk_host_.physical_device;
+        context.device = vk_host_.device;
+        context.graphics_queue = vk_host_.graphics_queue;
+        context.graphics_queue_family = vk_host_.graphics_family;
+        context.color_format = VK_FORMAT_R8G8B8A8_UNORM;
+        wallpaper_ = nekomote_wallpaper_create_vk(context);
+    }
+    else
+#endif
+        wallpaper_ = nekomote_wallpaper_create(load_gl);
     if (!wallpaper_)
     {
         check(nekomote_last_error(), "create wallpaper");
@@ -476,6 +526,27 @@ void Host::Impl::initialize_wallpaper()
               << (options_.input == InputMode::interactive ? "enabled" : "passthrough")
               << "; keyboard focus/global pointer/automatic occlusion pause not requested\n";
 }
+
+#if defined(NEKOMOTE_HAS_VULKAN)
+void Host::Impl::initialize_vulkan()
+{
+    const char* extensions[]{VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_XLIB_SURFACE_EXTENSION_NAME};
+    if (vk_host_c_create_instance(&vk_host_, extensions, 2) != 0)
+        throw std::runtime_error("cannot create Vulkan X11 instance");
+    VkXlibSurfaceCreateInfoKHR info{};
+    info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+    info.dpy = display_;
+    info.window = window_;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+    const auto result = vkCreateXlibSurfaceKHR(vk_host_.instance, &info, nullptr, &surface);
+    if (result != VK_SUCCESS)
+        throw std::runtime_error("cannot create Vulkan X11 surface: " +
+                                 std::to_string(static_cast<int>(result)));
+    // select_device takes ownership of the surface even on failure.
+    if (vk_host_c_select_device(&vk_host_, surface) != 0 || vk_host_c_create_device(&vk_host_) != 0)
+        throw std::runtime_error("cannot initialize Vulkan X11 device");
+}
+#endif
 
 void Host::Impl::set_mapped(bool mapped)
 {
@@ -604,10 +675,36 @@ void Host::Impl::capture()
     if (static_cast<size_t>(height_) > std::numeric_limits<size_t>::max() / row_bytes)
         throw std::runtime_error("capture dimensions overflow");
     std::vector<uint8_t> pixels(row_bytes * static_cast<size_t>(height_));
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(0, 0, width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
-    if (glGetError() != GL_NO_ERROR)
-        throw std::runtime_error("diagnostic framebuffer readback failed");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        if (pixels.size() / 3 > std::numeric_limits<size_t>::max() / 4)
+            throw std::runtime_error("capture RGBA dimensions overflow");
+        std::vector<uint8_t> rgba(pixels.size() / 3 * 4);
+        if (vk_host_c_capture(&vk_host_, width_, height_, rgba.data()) != 0)
+            throw std::runtime_error("diagnostic Vulkan framebuffer readback failed");
+        // The helper returns top-left straight RGBA. Composite on black to
+        // match the opaque GLX framebuffer, then store bottom-up for the writer.
+        for (int y = 0; y < height_; ++y)
+            for (int x = 0; x < width_; ++x)
+            {
+                const auto source = (static_cast<size_t>(y) * width_ + x) * 4;
+                const auto destination =
+                    static_cast<size_t>(height_ - 1 - y) * row_bytes + static_cast<size_t>(x) * 3;
+                for (size_t channel = 0; channel < 3; ++channel)
+                    pixels[destination + channel] = static_cast<uint8_t>(
+                        (static_cast<unsigned>(rgba[source + channel]) * rgba[source + 3] + 127) /
+                        255);
+            }
+    }
+    else
+#endif
+    {
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0, width_, height_, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+        if (glGetError() != GL_NO_ERROR)
+            throw std::runtime_error("diagnostic framebuffer readback failed");
+    }
     const int descriptor =
         open(options_.capture.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0644);
     if (descriptor < 0)
@@ -636,11 +733,29 @@ void Host::Impl::render()
                           ? 1.0 / 60.0
                           : std::min(std::chrono::duration<double>(now - last_frame_).count(), .25);
     check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        nekomote_vk_target target{};
+        if (vk_host_c_begin_frame(&vk_host_, width_, height_, options_.capture.empty(), &target) !=
+            0)
+            throw std::runtime_error("cannot begin Vulkan frame");
+        check(nekomote_wallpaper_set_vk_target(wallpaper_, target), "set Vulkan target");
+    }
+#endif
     check(nekomote_wallpaper_render_frame(wallpaper_), "render wallpaper");
     check(nekomote_wallpaper_render_ui(wallpaper_, static_cast<float>(dt)), "render controls");
     if (!options_.capture.empty() && rendered_frames_ + 1 == options_.frames)
         capture();
-    glXSwapBuffers(display_, window_);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (options_.backend == Backend::vulkan)
+    {
+        if (vk_host_c_present(&vk_host_) < 0)
+            throw std::runtime_error("cannot present Vulkan frame");
+    }
+    else
+#endif
+        glXSwapBuffers(display_, window_);
     ++rendered_frames_;
     last_frame_ = now;
     const int fps = nekomote_wallpaper_fps_limit(wallpaper_);
@@ -664,6 +779,12 @@ void Host::Impl::run()
     last_frame_ = next_frame_ = Clock::now();
     while (!closed_ && !stop_requested)
     {
+#if defined(NEKOMOTE_HAS_VULKAN)
+        // Events can resize or advance the wallpaper (availability flush), so
+        // retire the previous submission before both input and frame mutation.
+        if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
+            throw std::runtime_error("cannot retire Vulkan frame");
+#endif
         // A busy input producer cannot starve presentation indefinitely.
         for (size_t count = 0; count < 1024 && XPending(display_); ++count)
         {

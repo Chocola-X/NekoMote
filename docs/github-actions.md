@@ -33,12 +33,16 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 与 aarch64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
-| [x11.yml](../.github/workflows/x11.yml) | Ubuntu 20.04 / GCC10.5，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH/GLX 程序 |
+| [x11.yml](../.github/workflows/x11.yml) | Ubuntu 20.04 / GCC10.5，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH OpenGL/Vulkan 程序 |
 
 GitHub 当前的 [托管 runner 列表](https://github.com/actions/runner-images#available-images)
 不包含 Ubuntu 20.04，因此使用 `ubuntu-24.04` runner 的 Docker 运行 focal 构建。
-runner 的系统库不会被用于容器内编译。全部模式开启 Release、LTO、Werror；原生程序和两套插件启用 OpenGL 与 Vulkan，
-layer-shell 仅启用 OpenGL/EGL，X11 仅启用 OpenGL/GLX，测试失败或依赖审计失败时不上传发行包。
+runner 的系统库不会被用于容器内编译。全部模式开启 Release、LTO、Werror 和 OpenGL/Vulkan 双后端；layer-shell 使用 EGL 或
+原生 Wayland Vulkan surface，X11 使用 GLX 或原生 Xlib Vulkan surface。
+测试失败或依赖审计失败时不上传发行包。2026-10-21 壳双后端改造保留原基线和包名，
+Debian12 镜像新增 `libvulkan-dev glslang-tools`，原生程序/X11/layer-shell 构建必选共享
+Vulkan 宿主的无显示失败路径测试。此次本机 Release/LTO 与 GPU 验证见
+[报告](shell-vulkan-2026-10-21.md)；修改后的固定基线镜像与远端双架构构建尚未执行。
 
 ## 版本标签自动发布
 

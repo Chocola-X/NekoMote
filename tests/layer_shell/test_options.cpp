@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 
 #include <cstdlib>
 #include <filesystem>
@@ -12,6 +13,7 @@
 
 namespace
 {
+using nekomote::layer_shell::Backend;
 using nekomote::layer_shell::InputMode;
 using nekomote::layer_shell::Options;
 
@@ -95,6 +97,22 @@ TEST_CASE("Layer shell discovery does not require model assets", "[layer-shell][
         parse({"--assets", "assets", "--output", "DP-1", "--config", "wallpaper.json"});
     REQUIRE(selected.output == "DP-1");
     REQUIRE(selected.config == "wallpaper.json");
+}
+
+TEST_CASE("Layer shell backend selection respects build capabilities", "[layer-shell][options]")
+{
+    REQUIRE(parse({"--model", "model"}).backend == Backend::opengl);
+    REQUIRE(parse({"--model", "model", "--backend", "opengl"}).backend == Backend::opengl);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    REQUIRE(parse({"--model", "model", "--backend", "vulkan"}).backend == Backend::vulkan);
+#else
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--backend", "vulkan"}),
+                        "Vulkan backend is not enabled in this build");
+#endif
+    REQUIRE_THROWS_AS(parse({"--model", "model", "--backend", "software"}), std::runtime_error);
+    REQUIRE_THROWS_AS(parse({"--model", "model", "--backend"}), std::runtime_error);
+    REQUIRE(parse({"--assets", "assets", "--ui-open"}).ui_open);
+    REQUIRE_FALSE(parse({"--assets", "assets"}).ui_open);
 }
 
 TEST_CASE("Layer shell output configuration names cannot escape their directory",

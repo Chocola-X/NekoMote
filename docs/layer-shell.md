@@ -1,11 +1,14 @@
 # Wayland layer-shell 适配器
 
+2026-10-21 双后端交付与限定验收见 [报告](shell-vulkan-2026-10-21.md)。
+
 ## 实现与边界
 
 `adapters/layer_shell/` 提供独立程序 `nekomote_layer_shell`。它只通过高层
-`nekomote_wallpaper_*` C ABI 使用已有 application、UI、音频和 OpenGL 渲染。
-本轮没有增加模型求值公式或重写渲染引擎。唯一新增共享能力是
-`nekomote_wallpaper_set_config_path`，用于让多个输出独立保存配置。
+`nekomote_wallpaper_*` C ABI 使用已有 application、UI、音频和 OpenGL/Vulkan 渲染。
+不增加模型求值公式或重写渲染引擎。初版新增的
+`nekomote_wallpaper_set_config_path` 用于让多个输出独立保存配置；Vulkan
+呈现设备和交换链复用独立的共享宿主工具。
 
 宿主创建 `zwlr_layer_shell_v1` 的 background surface，四边锚定，覆盖完整输出，
 不占用其他窗口的工作区域，不申请键盘焦点。一个进程对应一个输出；合成器指定的
@@ -22,6 +25,7 @@
 - `pkg-config`、`wayland-scanner`、Wayland client ≥ 1.20。
 - `wayland-egl`、`wayland-cursor` 开发文件与 EGL ≥ 1.5。
 - OpenGL 开发头文件和可创建 desktop OpenGL 3.3 core 上下文的 EGL 驱动。
+- 启用 Vulkan 时需要 Vulkan 开发文件与支持 Wayland WSI 的 Vulkan 驱动。
 - 运行环境提供默认光标主题（interactive 模式）。
 
 Debian 12 / Ubuntu 22.04 及更新系统的相关开发包通常为
@@ -34,7 +38,9 @@ cmake --preset layer-shell
 cmake --build --preset layer-shell -j 4
 ```
 
-该 preset 启用 Release、LTO、Werror 和 C ABI，关闭 GLFW、Qt、Plasma 与 Vulkan。
+该 preset 启用 Release、LTO、Werror、C ABI 和 Vulkan，关闭 GLFW、Qt 与 Plasma。
+默认仍选择 OpenGL；`--backend vulkan` 显式选择 Vulkan。可以用
+`-DNEKOMOTE_BUILD_VULKAN=OFF` 构建仅 OpenGL 的程序，此时 Vulkan 参数明确报错。
 协议 XML 固定在源码中，来源、许可和本地修改见
 [协议说明](../adapters/layer_shell/protocols/README.md)，构建不另行下载协议。
 
@@ -49,7 +55,7 @@ GitHub Actions 新增 Debian 12 / GCC12 / Wayland1.21 基线构建，提供
 `nekomote-layer-shell-debian12-aarch64.tar.gz`，并纳入版本标签发布。
 解压后执行 `nekomote-layer-shell/bin/nekomote_layer_shell`；包中不附带 README、
 模型或系统库，项目 AGPL-v3 许可证为 `LICENSE`，依赖及协议声明为 `THIRD_PARTY_NOTICES`。
-运行时仍需系统的 Wayland、EGL、OpenGL、PulseAudio、PNG/zlib 与 Fontconfig。
+运行时仍需系统的 Wayland、EGL、OpenGL、Vulkan loader、PulseAudio、PNG/zlib 与 Fontconfig。
 基线符号审计和本地验证范围见 [CI 说明](github-actions.md#layer-shell-分发与归档精简2026-10-18)。
 
 ## 使用
@@ -59,6 +65,7 @@ GitHub Actions 新增 Debian 12 / GCC12 / Wayland1.21 基线构建，提供
 ```bash
 build/layer-shell/bin/nekomote_layer_shell --list-outputs
 build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --output DP-1
+build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vulkan
 ```
 
 不指定 `--output` 时由合成器选择输出。显式名称依赖 `wl_output` v4；旧合成器只能使用
@@ -70,10 +77,12 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --output DP-
 | `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
 | `--output NAME` | 固定输出，移除该输出后正常退出 |
 | `--config FILE` | 明确指定该实例配置文件 |
+| `--backend opengl\|vulkan` | 图形后端，默认 OpenGL；Vulkan 需要构建时启用 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 和模型交互 |
 | `--input passthrough` | 空输入区域；全部穿透，不支持鼠标控制和视线交互 |
 | `--mute` | 强制静音 |
 | `--no-save` | 不保存配置 |
+| `--ui-open` | 资产加载后展开共享控制面板，便于诊断 |
 | `--model FILE [--session FILE]` | 显式模型诊断入口，不绘制资产控制面板 |
 
 interactive 接收背景上的指针事件，不保证桌面的右键菜单或图标层行为；layer-shell
@@ -94,16 +103,22 @@ interactive 模式启动成功推定实际鼠标或光标已验收。
 
 ## 调度与生命周期
 
-Wayland 连接、EGL 上下文、输入队列和壁纸实例由同一个线程拥有。采用
+Wayland 连接、图形设备、输入队列和壁纸实例由同一个线程拥有。采用
 `wl_surface.frame` 与共享 FPS 限制共同调度，等待事件时使用 poll；没有常态截图、
 GPU 读回或忙循环。帧回调暂停期间不推进求值，恢复时传入的 delta 最大 250ms。
-共享 Controller 既有角色渐变仍含墙钟逻辑，本轮不宣称完成其恢复预算修复。
+角色渐变沿用共享 application 的同一推进预算，不恢复墙钟渐变。
 
 配置变化触发尺寸/缩放更新；layer close 或目标输出移除结束进程，合成器连接断开
-报告失败，SIGINT/SIGTERM 正常退出。先销毁壁纸实例及工作线程，再释放 EGL 和
-Wayland 资源。启动连接中的同步 roundtrip 没有独立内部超时。
+报告失败，SIGINT/SIGTERM 正常退出。Vulkan 路径先等待 GPU 完成，再销毁壁纸实例
+及工作线程，之后释放图形设备、surface 和 Wayland 连接。启动连接中的同步
+roundtrip 没有独立内部超时。
 
-首版只用 desktop OpenGL，没有 Vulkan 呈现链路。整数缩放受支持；尚未实现
+OpenGL 路径使用 EGL/desktop GL；Vulkan 路径在同一 layer surface 上创建原生
+`VkWaylandSurfaceKHR`，不创建 EGL 上下文或 `wl_egl_window`。共享
+`nekomote::host_vulkan` 管理设备、交换链和单帧提交，壳保持 configure/ack、
+buffer scale 和 frame callback 节奏。每次修改共享实例（包括输入、resize、advance）前
+等待上一帧 GPU 工作完成，帧回调在实际 present 前申请；正式帧不读回。
+整数缩放受支持；尚未实现
 fractional-scale/viewporter，分数缩放效果由合成器重采样。没有通用遮挡检测或显式
 锁屏通知；依赖合成器是否抑制不可见 surface 的帧回调，不能保证所有桌面都自动暂停。
 
@@ -120,6 +135,12 @@ ctest --test-dir build/layer-shell -R 'layer_shell_options|abi_synthetic_boundar
 [测试说明](../tests/layer_shell/README.md)。不安装其他桌面、不连接当前桌面 socket、
 不注入系统键鼠。
 
+`tools/testing/run_layer_shell_test.py --output-tool /usr/bin/kscreen-doctor` 可额外检查
+运行中的整数缩放：只在脚本自建的私有 KWin、D-Bus 与 Wayland socket 中，将选定
+输出从 scale1 改为 scale2，检查客户端收到 scale 事件、提交 buffer scale2、材质画面
+及正常退出，并在 finally 恢复 scale1。未提供工具时结果明确记录未执行。
+缩放通常保持物理模式尺寸不变，此项不作为运行中物理尺寸/交换链重建或热插拔验收。
+
 诊断示例（截图文件必须不存在）：
 
 ```bash
@@ -128,7 +149,13 @@ build/layer-shell/bin/nekomote_layer_shell --model /path/model.nkm \
 ```
 
 `--frames` 固定随机种子和 1/60 秒步长，强制静音与不保存；`--capture` 仅在该模式
-最后一帧执行一次 RGB 读回。不同初始尺寸的重启不代替运行中 resize/热插拔测试。
+最后一帧执行一次诊断读回。PPM 统一为左上原点 RGB，Vulkan 的 straight RGBA
+按黑底合成，保持与 OpenGL RGB 读回相同的输出约定。不同初始尺寸的重启不代替
+运行中 resize/热插拔测试。Vulkan 可用 `NEKOMOTE_VK_VALIDATION=1` 显式启用
+Khronos validation layer；缺少该层时明确失败，不作为普通运行依赖。
+
+2026-10-21 新增 Vulkan 接入，下面 L1 证据只证明当时的 OpenGL 版本。
+本次双后端验收结果由集成报告单独记录，不扩展为目标合成器实机或长期认证。
 
 ## 本轮结果（2026-10-15，L1）
 

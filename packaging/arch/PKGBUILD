@@ -93,7 +93,7 @@ package_nekomote-git() {
 }
 
 package_nekomote-layer-shell-git() {
-    pkgdesc='NekoMote Wayland layer-shell live wallpaper (OpenGL/EGL)'
+    pkgdesc='NekoMote Wayland layer-shell live wallpaper (OpenGL/EGL and Vulkan)'
     depends+=(wayland libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote-layer-shell)
@@ -104,7 +104,7 @@ package_nekomote-layer-shell-git() {
 }
 
 package_nekomote-x11-git() {
-    pkgdesc='NekoMote X11/EWMH live wallpaper (OpenGL/GLX)'
+    pkgdesc='NekoMote X11/EWMH live wallpaper (OpenGL/GLX and Vulkan)'
     depends+=(libx11 libxrandr libxext libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote-x11)

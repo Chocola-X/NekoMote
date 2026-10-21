@@ -2,10 +2,11 @@
 
 2026-10-13，C12 基线 `cfed43e`。Plasma OpenGL 初步接入已获用户确认；当前完成 Vulkan ABI 复核、Plasma 双后端和分发入口。详见 [显示补修](plasma-display-fix.md)、[任务交接](agent-next-handoff.md)。源码交付与完整独立验收分别计。
 
-本轮 C13 以 `3a56ce0` 复核 GLM 未提交优化，实际结论见 [优化审查](optimization-audit-2026-10-12.md) 与 [验证](validation/optimization-results.json)。G34 优化候选契约见 [建议](optimization-suggestions-2026-10-12.md)；用户现已结束本轮优化，C17 Wayland 兼容已交付，当前任务为 C18 合成模型求值验证，后续优化不自动领用。原优化清单的“135 项已确认”和全量立即执行顺序不再有效。
+本轮 C13 以 `3a56ce0` 复核 GLM 未提交优化，实际结论见 [优化审查](optimization-audit-2026-10-12.md) 与 [验证](validation/optimization-results.json)。G34 优化候选契约见 [建议](optimization-suggestions-2026-10-12.md)；用户现已结束本轮优化，C17 Wayland 兼容已交付，当期任务为 C18 合成模型求值验证；最新 SV1 交付及配置改造后续见下表，后续优化不自动领用。原优化清单的“135 项已确认”和全量立即执行顺序不再有效。
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| SV1 X11 / layer-shell Vulkan | base `4dbe7c2`；原生 Xlib/Wayland WSI、高层 C ABI、共享呈现宿主；Release/LTO、225 既有 CPU + 新增失败回归、私有 GPU 与 14 对图像一致，见 [报告](shell-vulkan-2026-10-21.md) | 未安装真实桌面；目标合成器/原生 Xorg/最终合成像素/ARM64/远端/长期分别验收。下一步启动/面板配置分离尚未实现 |
 | C21 PNG 打包/异机资产复核 | 输入主库 `86da860`/资产库 `4bced9e`；补齐 native20 PNG 工具构建/审计，Ubuntu20 x86_64 全流程 210 检查、安装/审计/归档和工具实跑通过；324 PNG 双路径像素一致，恢复三份旧名称字典并 amend 资产库为 `faa78f6`，见 [报告](png-ci-assets-audit-2026-10-19.md) | 本地已处理用户指定新资产树；未推送或重跑远端/ARM64，未新增桌面/GPU/长期认证 |
 | C20 PNG/FLAC/模型存储与背景回收 | base `5a9b4e2`（用户回滚后 0.5.2）；保留 PNG，main/little 相对链接与 FLAC、流式压缩模型、GL/Vulkan 背景旧纹理释放；195 模型与全部本地音频迁移、224 CTest runner 通过/2 跳过，见 [报告](asset-storage-and-memory-2026-10-19.md) | 已保留原资产备份；未安装真实桌面，其他驱动、多屏和长期待独立验收；PNG 直接上传 GPU 仅作为峰值候选，不自动实现 |
 | D1 真实 Wayland / KDE6 桌面资源测量 | base `88ea8fe`；Debian12 当前构建 200 必选检查/重装校验通过；真实 KDE6/Wayland 双后端各 2×120 秒，静态前后/驻留另测，见 [报告](plasma-desktop-2026-10-18.md)；原图片背景和资产配置已恢复，保留新安装 | Vulkan 第二轮 RSS 较第一轮高约 69 MiB、切回静态后驻留未归因；实际 present/多屏/其他模型/长期仍未验证 |

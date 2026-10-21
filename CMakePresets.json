@@ -77,7 +77,7 @@
         {
             "name": "layer-shell",
             "inherits": "release",
-            "displayName": "Standalone Wayland layer-shell OpenGL wallpaper",
+            "displayName": "Standalone Wayland layer-shell OpenGL/Vulkan wallpaper",
             "cacheVariables": {
                 "NEKOMOTE_BUILD_LAYER_SHELL": "ON",
                 "NEKOMOTE_BUILD_ABI": "ON",
@@ -85,13 +85,13 @@
                 "NEKOMOTE_BUILD_PLAYER": "OFF",
                 "NEKOMOTE_BUILD_QT_QUICK": "OFF",
                 "NEKOMOTE_BUILD_PLASMA": "OFF",
-                "NEKOMOTE_BUILD_VULKAN": "OFF"
+                "NEKOMOTE_BUILD_VULKAN": "ON"
             }
         },
         {
             "name": "x11",
             "inherits": "release",
-            "displayName": "Standalone X11/EWMH OpenGL wallpaper (Ubuntu 20.04 baseline)",
+            "displayName": "Standalone X11/EWMH OpenGL/Vulkan wallpaper (Ubuntu 20.04 baseline)",
             "cacheVariables": {
                 "NEKOMOTE_BUILD_X11": "ON",
                 "NEKOMOTE_BUILD_ABI": "ON",
@@ -99,7 +99,7 @@
                 "NEKOMOTE_BUILD_PLAYER": "OFF",
                 "NEKOMOTE_BUILD_QT_QUICK": "OFF",
                 "NEKOMOTE_BUILD_PLASMA": "OFF",
-                "NEKOMOTE_BUILD_VULKAN": "OFF"
+                "NEKOMOTE_BUILD_VULKAN": "ON"
             }
         },
         {

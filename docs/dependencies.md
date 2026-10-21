@@ -39,9 +39,10 @@ GitHub Actions 保持默认固定版本模式，系统模式的查找规则见 [
 
 独立 `NEKOMOTE_BUILD_X11` 壳仅在启用时通过 CMake `FindX11` / `FindOpenGL`
 查找系统 Xlib、Xrandr、Xext 和 OpenGL/GLX；两种依赖模式使用同一查找方式，
-不下载平台库。运行协议要求 RandR≥1.3、GLX core context / OpenGL≥3.3；
+不下载平台库。运行协议要求 RandR≥1.3；OpenGL 路径要求 GLX core context / OpenGL≥3.3，
+Vulkan 路径要求支持 Xlib WSI 的 Vulkan1.0 设备且不初始化 GLX；
 输入穿透另需 Shape≥1.1。Ubuntu20 包为 `libx11-dev libxrandr-dev libxext-dev
-libgl1-mesa-dev`，不需要 Qt/GTK/XFCE 开发库，也不引入 GLFW。
+libgl1-mesa-dev`；默认双后端构建另需 `libvulkan-dev glslang-tools`。不需要 Qt/GTK/XFCE 开发库，也不引入 GLFW。
 这些共享系统库沿用各自包的许可（X.Org MIT/X11 等），不复制其实现进仓库；
 XFCE/Xephyr 仅是可选隔离验证环境。见 [X11 边界与验证](x11.md)。
 

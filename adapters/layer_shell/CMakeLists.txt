@@ -28,6 +28,11 @@ target_link_libraries(nekomote_layer_shell PRIVATE nekomote::abi nekomote_warnin
     nekomote_layer_shell_protocols PkgConfig::WAYLAND_CLIENT PkgConfig::WAYLAND_EGL
     PkgConfig::WAYLAND_CURSOR PkgConfig::EGL)
 target_compile_features(nekomote_layer_shell PRIVATE cxx_std_20)
+if(NEKOMOTE_BUILD_VULKAN)
+    target_link_libraries(nekomote_layer_shell PRIVATE nekomote::host_vulkan)
+    target_compile_definitions(nekomote_layer_shell PRIVATE
+        NEKOMOTE_HAS_VULKAN VK_USE_PLATFORM_WAYLAND_KHR)
+endif()
 install(TARGETS nekomote_layer_shell RUNTIME DESTINATION bin COMPONENT layer_shell)
 install(FILES ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION share/licenses/nekomote COMPONENT layer_shell)
 install(FILES protocols/wlr-layer-shell-unstable-v1.xml protocols/xdg-shell.xml
@@ -39,6 +44,9 @@ if(NEKOMOTE_BUILD_TESTS)
     target_include_directories(nekomote_layer_shell_option_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(nekomote_layer_shell_option_tests PRIVATE
         Catch2::Catch2WithMain nekomote_warnings)
+    if(NEKOMOTE_BUILD_VULKAN)
+        target_compile_definitions(nekomote_layer_shell_option_tests PRIVATE NEKOMOTE_HAS_VULKAN)
+    endif()
     add_test(NAME layer_shell_options COMMAND nekomote_layer_shell_option_tests)
     pkg_check_modules(WAYLAND_SERVER REQUIRED IMPORTED_TARGET wayland-server)
     add_executable(nekomote_layer_shell_no_protocol_server

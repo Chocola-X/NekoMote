@@ -15,8 +15,8 @@ NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面
 - 独立 C++ 模型求值核心：参数、时间线、差分、变形、遮罩、物理、视线/触摸反应
 - OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
 - KDE Plasma 6 壁纸插件；独立 Plasma 5 适配器（Qt5）
-- 独立 Wayland layer-shell 壁纸壳（OpenGL，面向支持该协议的合成器），见 [使用与验收范围](docs/layer-shell.md)
-- 独立 X11/EWMH 壁纸壳（OpenGL/GLX，Ubuntu 20.04 基线），见 [使用与桌面共存限制](docs/x11.md)
+- 独立 Wayland layer-shell 壁纸壳（OpenGL/Vulkan，面向支持该协议的合成器），见 [使用与验收范围](docs/layer-shell.md)
+- 独立 X11/EWMH 壁纸壳（OpenGL/GLX 与 Vulkan，Ubuntu 20.04 基线），见 [使用与桌面共存限制](docs/x11.md)
 - 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
 - 声音与口型（PulseAudio），可静音
 - PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
@@ -69,8 +69,8 @@ cmake --build --preset release
 | `asan` | Debug | ASan/UBSan，不构建预览/播放器（无窗口语义检查） |
 | `plasma` | Release | LTO、Qt6 + Plasma6 QML 模块；分发时关闭 KF6 探针 |
 | `plasma5` | Release | LTO、Qt5 + Plasma5 QML 模块，不构建 KF6 探针/普通窗口 |
-| `layer-shell` | Release | LTO、独立 Wayland 背景进程，仅 OpenGL，不依赖 Qt/GLFW |
-| `x11` | Release | LTO、独立 X11/EWMH 背景进程，仅 OpenGL/GLX，不依赖 Qt/GLFW |
+| `layer-shell` | Release | LTO、独立 Wayland 背景进程，OpenGL/Vulkan，不依赖 Qt/GLFW |
+| `x11` | Release | LTO、独立 X11/EWMH 背景进程，OpenGL/Vulkan，不依赖 Qt/GLFW |
 | `qt-quick` | Release | LTO、Qt Quick 隔离宿主（不需 Plasma 依赖） |
 | `vulkan` | Debug | Vulkan + 验证层调试 |
 
@@ -265,8 +265,8 @@ python3 tools/plasma_deploy.py install --stage stage
 
 不使用 Plasma 插件时，可经两个独立进程壳把同一壁纸本体接到其他桌面。两者都只通过 C ABI 复用共享的模型、背景、声音、控制面板与配置，不重复任何业务逻辑：
 
-- **`nekomote_layer_shell`**：面向实现 [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) 协议的 Wayland 合成器（Sway、Hyprland、niri 等），OpenGL/EGL 输出。
-- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，OpenGL/GLX 输出，Ubuntu 20.04 基线。
+- **`nekomote_layer_shell`**：面向实现 [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) 协议的 Wayland 合成器（Sway、Hyprland、niri 等），支持 OpenGL/EGL 或原生 Wayland Vulkan 输出。
+- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，支持 OpenGL/GLX 或原生 Xlib Vulkan 输出，Ubuntu 20.04 基线。
 
 ### 构建与运行
 
@@ -274,12 +274,12 @@ python3 tools/plasma_deploy.py install --stage stage
 # Wayland layer-shell 壳（需 Wayland client ≥ 1.20、wayland-scanner、EGL ≥ 1.5）
 cmake --preset layer-shell && cmake --build --preset layer-shell
 build/layer-shell/bin/nekomote_layer_shell --list-outputs
-build/layer-shell/bin/nekomote_layer_shell --assets assets --output DP-1
+build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --output DP-1 --backend vulkan
 
 # X11/EWMH 壳（需 X11、RandR ≥ 1.3、GLX 开发文件）
 cmake --preset x11 && cmake --build --preset x11
 build/x11/bin/nekomote_x11 --list-outputs
-build/x11/bin/nekomote_x11 --assets assets --output HDMI-1
+build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vulkan
 ```
 
 两者命令行契约基本一致：
@@ -287,6 +287,7 @@ build/x11/bin/nekomote_x11 --assets assets --output HDMI-1
 | 参数 | 含义 |
 | --- | --- |
 | `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
+| `--backend opengl\|vulkan` | 选择后端，默认 OpenGL；Vulkan 未编译或初始化失败时明确报错 |
 | `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
 | `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
@@ -295,7 +296,7 @@ build/x11/bin/nekomote_x11 --assets assets --output HDMI-1
 | `--model FILE [--session FILE]` | 单模型诊断入口，不绘制资产控制面板 |
 | `--frames N [--capture FILE.ppm]` | 固定 1/60 秒步长诊断回放，仅在最后一步读一次 framebuffer |
 
-X11 壳另支持 `--ui-open`，在交互模式启动时展开控制面板。
+两个壳均支持 `--ui-open`，在交互模式启动时展开控制面板。
 
 多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。每实例配置独立存放于 `$XDG_CONFIG_HOME/nekomote/<壳名>/output-<输出名>.json`。
 

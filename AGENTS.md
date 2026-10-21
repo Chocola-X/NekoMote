@@ -62,6 +62,14 @@ C18（2026-10-14）从 `693fd3f` 以程序生成模型和原 WebGL 输出补齐 
 
 ### 0.5 新 Agent 从哪里开始
 
+2026-10-21 SV1：从 `4dbe7c2` 为 X11 / layer-shell 补齐原生 Vulkan WSI，
+两壳只经高层 C ABI 复用壁纸业务，独立 `host_vulkan` 共用呈现与生命周期。
+本机 Release/LTO、225 既有 CPU runner + 新增宿主失败路径、私有 KWin/XWayland 与
+运行中缩放/呈现重试通过；14 对 GL/Vulkan 客户端图像一致。限定证据及虚拟合成器
+错误见 [报告](docs/shell-vulkan-2026-10-21.md)。未安装真实桌面或执行远端/ARM64，
+目标合成器、原生 Xorg、最终合成像素和长期仍待验收。下一步为已讨论的启动/面板配置
+分离，尚未实施；不要把 `--backend` 视为已持久化。
+
 2026-10-19 X11-L1：从 `5748da3` 新增 `adapters/x11/` 通用 EWMH/GLX 薄壳，
 默认关闭，Ubuntu20 基线。项目内私有根文件系统 + 可见 Xephyr/XFCE4.14 验证见
 [说明](docs/x11.md)；已验证桌面属性/输入区域/隐藏恢复/调整尺寸与真实资产/UI，

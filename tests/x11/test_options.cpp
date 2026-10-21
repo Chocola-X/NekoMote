@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 
 #include <cstdlib>
 #include <filesystem>
@@ -11,6 +12,7 @@
 
 namespace
 {
+using nekomote::x11::Backend;
 using nekomote::x11::InputMode;
 using nekomote::x11::Options;
 
@@ -26,6 +28,20 @@ Options parse(std::initializer_list<std::string> arguments)
 }
 
 } // namespace
+
+TEST_CASE("X11 backend selection matches build capabilities", "[x11][options]")
+{
+    REQUIRE(parse({"--model", "model"}).backend == Backend::opengl);
+    REQUIRE(parse({"--model", "model", "--backend", "opengl"}).backend == Backend::opengl);
+#if defined(NEKOMOTE_HAS_VULKAN)
+    REQUIRE(parse({"--model", "model", "--backend", "vulkan"}).backend == Backend::vulkan);
+#else
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--backend", "vulkan"}),
+                        "Vulkan backend is not enabled in this build");
+#endif
+    REQUIRE_THROWS_AS(parse({"--model", "model", "--backend", "gles"}), std::runtime_error);
+    REQUIRE_THROWS_AS(parse({"--model", "model", "--backend"}), std::runtime_error);
+}
 
 TEST_CASE("X11 options select one model source", "[x11][options]")
 {
