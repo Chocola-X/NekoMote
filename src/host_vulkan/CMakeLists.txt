@@ -21,7 +21,10 @@ if(NEKOMOTE_BUILD_TESTS)
             vkGetPhysicalDeviceProperties vkGetPhysicalDeviceSurfaceSupportKHR vkDeviceWaitIdle
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceFormatsKHR
             vkQueuePresentKHR)
-        target_link_options(nekomote_host_vulkan_failure_tests PRIVATE "LINKER:--wrap=${symbol}")
+        # GCC 10 / binutils 2.34 LTO can discard wrappers before ld rewrites host calls.
+        # Mark them as link roots so fault injection survives whole-program analysis.
+        target_link_options(nekomote_host_vulkan_failure_tests PRIVATE
+            "LINKER:--wrap=${symbol}" "LINKER:--undefined=__wrap_${symbol}")
     endforeach()
     add_test(NAME host_vulkan_failures COMMAND nekomote_host_vulkan_failure_tests)
 endif()

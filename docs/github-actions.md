@@ -1,5 +1,35 @@
 # GitHub 自动构建与测试
 
+## 2026-10-21：Ubuntu20 Vulkan 故障测试链接补修
+
+基线 `29c9a0d`。用户保存在 `experiments/evidence-{native20,x11}-{x86_64,aarch64}/`
+的四份 `build-test.log` 均在 `nekomote_host_vulkan_failure_tests` 链接时失败，缺少
+`__wrap_vkQueuePresentKHR`、`__wrap_vkEnumeratePhysicalDevices` 等测试桩。对应工具链
+为 GCC10.5 / binutils2.34；LTO 优化发生在链接器 `--wrap` 改写引用之前，未被显式引用
+的桩函数被删除。本机较新链接器未暴露该问题。
+
+共享宿主的测试目标现在为每个 `--wrap=<symbol>` 配对
+`--undefined=__wrap_<symbol>`，将桩函数保留为链接根。修复仅影响此测试目标的链接参数，
+保留生产目标与测试的 Release、LTO、Werror，不删除故障路径检查；四个失败 job 复用
+同一处配置，工作流和容器配方无需修改。
+
+验证：
+
+- 在项目证据目录解包 Ubuntu 官方 GCC10.5、binutils2.34、glibc2.31 和 Vulkan loader
+  1.2.131.2，原参数复现同类未定义符号，添加链接根后构建成功、14 个无显示故障场景通过。
+- 同一旧工具链通过小型 CMake 驱动直接构建仓库的 `src/host_vulkan/` 目标，开启
+  Release/LTO/Werror，构建和执行均通过。
+- 本机 GCC15 Release/LTO/Werror 重新构建实际目标，239/239 个必选 CPU CTest runner
+  通过，`git diff --check` 通过。生产帧路径未改，无新增运行期开销，未重跑 GPU 或性能测试。
+
+本地记录在 `build/evidence/ci-wrap-20261021/`，包括 `focal-comparison.json`、前后链接
+日志、`cmake-gcc10-{configure,build,test}.log`、`cpu-tests.log` 和工具链包 SHA256。
+这是 x86_64 定向 sysroot 验证，Vulkan / Linux UAPI 头仍使用本机头文件，未执行完整
+容器配方、aarch64 构建或远端 Actions 重跑，不将此结果扩展为整个发行包验收。
+工具链仅在项目内解包，未安装系统包或修改桌面。
+
+## 既有构建与分发说明
+
 2026-10-19 plasma5-aarch64：`plasma5.yml` 扩为 x86_64 / aarch64 双矩阵，复用
 `ubuntu-24.04-arm` 原生 runner 与已多架构化的 focal 基线镜像（Python / Node 下载
 按架构选择固定 URL 与 SHA256）。Qt5.12.8 / GCC10.5 基线与符号上限不变；发布清单
