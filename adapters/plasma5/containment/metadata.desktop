@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=NekoMote Desktop
+Name[zh_CN]=NekoMote 桌面
+Comment=Minimal desktop layout for live wallpapers
+Comment[zh_CN]=用于动态壁纸的简洁桌面布局
+Type=Service
+X-KDE-ServiceTypes=Plasma/Applet,Plasma/Containment
+X-KDE-PluginInfo-Name=org.nekomote.validation
+X-KDE-PluginInfo-Website=https://www.nekopara.uk
+X-KDE-PluginInfo-License=AGPL-3.0-or-later
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-Plasma-ContainmentType=Desktop

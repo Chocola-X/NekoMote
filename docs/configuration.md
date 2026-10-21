@@ -36,6 +36,17 @@ Plasma 在每个壁纸配置中持久保存 UUID，区分不同桌面背景实�
 仍由插件 KConfig 管理，面板数据通过同一壁纸 C ABI 保存，不维护第二套面板业务。
 手工复制 Plasma 的整份 KConfig 时应清空 `panelInstanceId`，使新实例生成自己的 UUID。
 
+Plasma 5 / 6 的壁纸列表显示 **NekoMote Wallpaper**（简体中文：**NekoMote 壁纸**），
+附带的简洁桌面布局显示 **NekoMote Desktop**（简体中文：**NekoMote 桌面**）。名称随
+桌面语言选择；插件 ID 保持不变，已有壁纸配置继续使用。该布局只承载壁纸，不提供
+文件夹视图的桌面图标功能；普通桌面布局也可以选择 NekoMote 壁纸。
+
+壁纸设置中的资产目录应选择包含 `characters/` 的资产根目录，背景放在同级
+`backgrounds/`。渲染后端只影响 NekoMote，应用更改时重建壁纸设备；Vulkan 需要驱动
+支持 GPU 图像共享，无法加载时可改回默认 OpenGL。角色、背景、帧率和声音在壁纸上的
+控制面板调整。设置页底部提供 [GitHub 仓库](https://github.com/Chocola-X/NekoMote) 与
+[个人网站](https://www.nekopara.uk) 链接。
+
 文件内相对路径相对于启动文件所在目录；命令行相对路径相对于本次工作目录，显式保存
 时转换为绝对路径。启动文件与面板文件不得是同一路径。
 

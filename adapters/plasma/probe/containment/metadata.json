@@ -1,6 +1,13 @@
 {
     "KPackageStructure": "Plasma/Applet",
-    "KPlugin": {"Id": "org.nekomote.validation", "Name": "NekoMote isolated validation"},
+    "KPlugin": {
+        "Id": "org.nekomote.validation",
+        "Name": "NekoMote Desktop",
+        "Name[zh_CN]": "NekoMote 桌面",
+        "Description": "Minimal desktop layout for live wallpapers",
+        "Description[zh_CN]": "用于动态壁纸的简洁桌面布局",
+        "Website": "https://www.nekopara.uk"
+    },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-ContainmentType": "Desktop"
 }

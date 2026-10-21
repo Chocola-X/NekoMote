@@ -33,13 +33,17 @@ add_custom_target(nekomote_plasma_package ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../plasma/package
         ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/package
-        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote)
+        ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/containment
+        ${CMAKE_CURRENT_BINARY_DIR}/plasmoids/org.nekomote.validation)
 install(TARGETS nekomote_plasma_qml LIBRARY DESTINATION lib COMPONENT plasma)
 install(TARGETS nekomote_plasma_qmlplugin LIBRARY DESTINATION ${NEKOMOTE_INSTALL_QMLDIR}/NekoMote/Wallpaper COMPONENT plasma)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper/qmldir
     DESTINATION ${NEKOMOTE_INSTALL_QMLDIR}/NekoMote/Wallpaper COMPONENT plasma)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/wallpapers/uk.nekopara.nekomote
     DESTINATION share/plasma/wallpapers COMPONENT plasma)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/plasmoids/org.nekomote.validation
+    DESTINATION share/plasma/plasmoids COMPONENT plasma)
 set(NEKOMOTE_STAGE_DIR ${CMAKE_CURRENT_BINARY_DIR}/stage)
 set(NEKOMOTE_STAGE_DIR ${NEKOMOTE_STAGE_DIR} PARENT_SCOPE)
 add_custom_target(nekomote_plasma_stage

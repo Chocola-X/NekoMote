@@ -42,6 +42,17 @@ int main(int argc, char** argv)
     wallpaper.insert(QStringLiteral("configuration"),
                      QVariant::fromValue<QObject*>(&configuration));
     engine.rootContext()->setContextProperty(QStringLiteral("wallpaper"), &wallpaper);
+    QQmlComponent containment_component(
+        &engine,
+        QUrl::fromLocalFile(stage + "/share/plasma/plasmoids/org.nekomote.validation/contents/ui/"
+                                    "main.qml"));
+    std::unique_ptr<QObject> containment(containment_component.create());
+    if (!containment || containment_component.isError())
+    {
+        std::fprintf(stderr, "containment: %s\n",
+                     containment_component.errorString().toUtf8().constData());
+        return 1;
+    }
     const QString pages = stage + "/share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/";
     QString persisted_id;
     for (const auto* page : {"main.qml", "main.qml", "config.qml"})
@@ -67,7 +78,8 @@ int main(int argc, char** argv)
             persisted_id = id;
         }
     }
-    std::puts("Plasma 5 staged module, context and configuration page imported successfully");
+    std::puts("Plasma 5 staged module, containment, context and configuration page imported "
+              "successfully");
     return 0;
 }
 
