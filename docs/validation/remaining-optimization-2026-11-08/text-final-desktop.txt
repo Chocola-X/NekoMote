@@ -1,0 +1,9 @@
+vendor=NVIDIA Corporation renderer=NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 version=3.3.0 NVIDIA 580.82.09
+catalog_groups=8 largest_group=vanilla items=37
+icon cpu_us=10.942/12.994/134.753 gpu_us=3.072/4.096/683.008 draw=4 uploads=5 bytes=240 allocations=0
+collapsed cpu_us=123.525/350.441/410.465 gpu_us=25.600/765.952/927.744 draw=39 uploads=55 bytes=15264 allocations=0
+characters-top cpu_us=204.802/414.940/457.110 gpu_us=27.648/1008.640/1166.336 draw=51 uploads=79 bytes=35808 allocations=0
+characters-partial cpu_us=208.490/417.280/464.047 gpu_us=27.648/1025.024/1173.504 draw=52 uploads=81 bytes=37248 allocations=0
+characters-bottom cpu_us=220.392/381.931/451.235 gpu_us=23.552/1215.488/1367.040 draw=53 uploads=83 bytes=45888 allocations=0
+settings-top cpu_us=255.694/427.326/649.291 gpu_us=49.152/800.768/1072.128 draw=72 uploads=120 bytes=25776 allocations=0
+settings-bottom cpu_us=251.609/441.868/576.419 gpu_us=47.104/855.040/1155.072 draw=73 uploads=122 bytes=30864 allocations=0

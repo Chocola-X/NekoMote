@@ -1,0 +1,429 @@
+{
+  "ui": [
+    {
+      "image": "characters-bottom.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "132b48ed979bfa925f7be0b0a03dd1429bf5d351a20b2f9b3f145b4ff66ab76c",
+      "candidate_rgba_sha256": "132b48ed979bfa925f7be0b0a03dd1429bf5d351a20b2f9b3f145b4ff66ab76c"
+    },
+    {
+      "image": "characters-partial.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "5cbb14f8485103623ed195e7a9d5706fa82f197c2c5134f814822bd34b3d3914",
+      "candidate_rgba_sha256": "5cbb14f8485103623ed195e7a9d5706fa82f197c2c5134f814822bd34b3d3914"
+    },
+    {
+      "image": "characters-top.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "5eef89d4a07f6f46ccfca9df74d6913b845264812ccc77b03d47d09044f7a9a1",
+      "candidate_rgba_sha256": "5eef89d4a07f6f46ccfca9df74d6913b845264812ccc77b03d47d09044f7a9a1"
+    },
+    {
+      "image": "collapsed.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "b0e1dbaf2b0a00b4793eb919763a3a9864081bfcaa69c7246fab648faf204b9d",
+      "candidate_rgba_sha256": "b0e1dbaf2b0a00b4793eb919763a3a9864081bfcaa69c7246fab648faf204b9d"
+    },
+    {
+      "image": "icon.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "34017f328bf1db328cbf95432c57f366db310dc5cc40ad26c507cfd4bc6c450a",
+      "candidate_rgba_sha256": "34017f328bf1db328cbf95432c57f366db310dc5cc40ad26c507cfd4bc6c450a"
+    },
+    {
+      "image": "settings-bottom.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "6900e88b69e7adae1ab67e7c9fd6adc3965a754ac17012d8a7fa4b94fc74911a",
+      "candidate_rgba_sha256": "6900e88b69e7adae1ab67e7c9fd6adc3965a754ac17012d8a7fa4b94fc74911a"
+    },
+    {
+      "image": "settings-top.png",
+      "baseline": "ui-baseline",
+      "candidate": "text-final-desktop",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "499a9a61a4013d8855fce16bea2fb0890f2c3af8383aafad1c517dc4ee25c513",
+      "candidate_rgba_sha256": "499a9a61a4013d8855fce16bea2fb0890f2c3af8383aafad1c517dc4ee25c513"
+    },
+    {
+      "image": "characters-bottom.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "132b48ed979bfa925f7be0b0a03dd1429bf5d351a20b2f9b3f145b4ff66ab76c",
+      "candidate_rgba_sha256": "132b48ed979bfa925f7be0b0a03dd1429bf5d351a20b2f9b3f145b4ff66ab76c"
+    },
+    {
+      "image": "characters-partial.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "5cbb14f8485103623ed195e7a9d5706fa82f197c2c5134f814822bd34b3d3914",
+      "candidate_rgba_sha256": "5cbb14f8485103623ed195e7a9d5706fa82f197c2c5134f814822bd34b3d3914"
+    },
+    {
+      "image": "characters-top.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "5eef89d4a07f6f46ccfca9df74d6913b845264812ccc77b03d47d09044f7a9a1",
+      "candidate_rgba_sha256": "5eef89d4a07f6f46ccfca9df74d6913b845264812ccc77b03d47d09044f7a9a1"
+    },
+    {
+      "image": "collapsed.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "b0e1dbaf2b0a00b4793eb919763a3a9864081bfcaa69c7246fab648faf204b9d",
+      "candidate_rgba_sha256": "b0e1dbaf2b0a00b4793eb919763a3a9864081bfcaa69c7246fab648faf204b9d"
+    },
+    {
+      "image": "icon.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "34017f328bf1db328cbf95432c57f366db310dc5cc40ad26c507cfd4bc6c450a",
+      "candidate_rgba_sha256": "34017f328bf1db328cbf95432c57f366db310dc5cc40ad26c507cfd4bc6c450a"
+    },
+    {
+      "image": "settings-bottom.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "6900e88b69e7adae1ab67e7c9fd6adc3965a754ac17012d8a7fa4b94fc74911a",
+      "candidate_rgba_sha256": "6900e88b69e7adae1ab67e7c9fd6adc3965a754ac17012d8a7fa4b94fc74911a"
+    },
+    {
+      "image": "settings-top.png",
+      "baseline": "ui-baseline-gles",
+      "candidate": "text-final-gles",
+      "max_error": 0,
+      "different_pixels": 0,
+      "baseline_rgba_sha256": "499a9a61a4013d8855fce16bea2fb0890f2c3af8383aafad1c517dc4ee25c513",
+      "candidate_rgba_sha256": "499a9a61a4013d8855fce16bea2fb0890f2c3af8383aafad1c517dc4ee25c513"
+    }
+  ],
+  "atlas": [
+    {
+      "image": "chocola-date-a-0-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 14,
+      "different_pixels": 3298,
+      "baseline_rgba_sha256": "e0fecf3f9e4c6b5c8fd153fd3708717ecdad75bbc6505e4267e16d1b5a1ab4d9",
+      "candidate_rgba_sha256": "4d4d466b8b3d337dd8b5190509564779b0f83ac8a6a7fd8749198acc6c477d2a",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 127
+    },
+    {
+      "image": "chocola-date-a-0-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 7,
+      "different_pixels": 3324,
+      "baseline_rgba_sha256": "ebe16ac0eabf461ce43048effec85f2d72f0da07f2894c2e9f644d03754153ae",
+      "candidate_rgba_sha256": "230dda65d121388df86da6684bcd3f79b72b3744dc839677276949493b10908d",
+      "max_error_both_alpha_ge16": 7,
+      "pixels_over_one_both_alpha_ge16": 97
+    },
+    {
+      "image": "chocola-date-a-0-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 18,
+      "different_pixels": 2127,
+      "baseline_rgba_sha256": "f151f667311a22ab46402e1095e40c61044fccac33e8cbb3698ec45b8ef6957b",
+      "candidate_rgba_sha256": "5dc83fe2101bd47a40ca03b43724abdf10b31668dd5ec9d5884a97be666ccf9c",
+      "max_error_both_alpha_ge16": 9,
+      "pixels_over_one_both_alpha_ge16": 1394
+    },
+    {
+      "image": "chocola-date-a-180-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 6,
+      "different_pixels": 3307,
+      "baseline_rgba_sha256": "01c7d58352b7cbd0bacefa96119d7a6bf632ed45ff71e2e2cef93152b50299c6",
+      "candidate_rgba_sha256": "5ba0105904b6ae05065fcf558954f8f90293488151c8e0d9c2836a6a030aa8f6",
+      "max_error_both_alpha_ge16": 6,
+      "pixels_over_one_both_alpha_ge16": 124
+    },
+    {
+      "image": "chocola-date-a-180-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 9,
+      "different_pixels": 3076,
+      "baseline_rgba_sha256": "60e514637c574e18c4eafc0af42769f98590cd0fb990dc68f7f9813225eedfea",
+      "candidate_rgba_sha256": "6eb8066ac5d1b906393c8fffbf8339cca8dfd5cd47a6292655802d39c67cc921",
+      "max_error_both_alpha_ge16": 9,
+      "pixels_over_one_both_alpha_ge16": 85
+    },
+    {
+      "image": "chocola-date-a-180-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 18,
+      "different_pixels": 1998,
+      "baseline_rgba_sha256": "841a829425e23842ee5627e4dd9d6a39f0b1f4240c3163e6174eb730b059089b",
+      "candidate_rgba_sha256": "e41659c2149e35351da9b852ac3d667cac8f75bb5e7168e5c1ef320be837eda7",
+      "max_error_both_alpha_ge16": 7,
+      "pixels_over_one_both_alpha_ge16": 1325
+    },
+    {
+      "image": "chocola-date-a-60-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 43,
+      "different_pixels": 3337,
+      "baseline_rgba_sha256": "ad524a0284d668bbde48d7c88c6c7de61deb43e802e722cf6e629adf5d81a213",
+      "candidate_rgba_sha256": "ad3d2700100fa1f837fe6dc467d74fdb2b9cdb917ea1bb1ea2c793dcb6e8d32d",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 101
+    },
+    {
+      "image": "chocola-date-a-60-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 14,
+      "different_pixels": 3179,
+      "baseline_rgba_sha256": "dddf87f040f96cbc504612c13018b15f3aeea29f80901b2ace30c961eb762492",
+      "candidate_rgba_sha256": "6dbb889daba01996fcafdfee999de9842bbab74a3257752ce75c25baa4a7f688",
+      "max_error_both_alpha_ge16": 7,
+      "pixels_over_one_both_alpha_ge16": 101
+    },
+    {
+      "image": "chocola-date-a-60-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 23,
+      "different_pixels": 2038,
+      "baseline_rgba_sha256": "23f19e36c9c78c0b12367f58c5ac755095cea40b8df86556b9c9250f4d8b4f7c",
+      "candidate_rgba_sha256": "fa67ba57d52a3639ab67eb2b514e0a99de60f3250708fc3f43ab0d5594714f88",
+      "max_error_both_alpha_ge16": 12,
+      "pixels_over_one_both_alpha_ge16": 1336
+    },
+    {
+      "image": "chocola-wintermaid-0-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 85,
+      "different_pixels": 12572,
+      "baseline_rgba_sha256": "a83675d93832bff004b44ab4cfee07ea4566088dd7b2f80ee73016548fc0895b",
+      "candidate_rgba_sha256": "22f77792baa48f5a167044a81ca863bf665e0042aeeb19219a30678b5715ac3d",
+      "max_error_both_alpha_ge16": 12,
+      "pixels_over_one_both_alpha_ge16": 567
+    },
+    {
+      "image": "chocola-wintermaid-0-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 43,
+      "different_pixels": 12043,
+      "baseline_rgba_sha256": "40a801e49e928e126f093bd661ab4dc74728dbe6f5c1f0a056d24d21b97840ce",
+      "candidate_rgba_sha256": "868da6abfc9024dadf51170d1a5573a4f1dbee56a635ff8b9193c89ad1c895f3",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 579
+    },
+    {
+      "image": "chocola-wintermaid-0-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 64,
+      "different_pixels": 7991,
+      "baseline_rgba_sha256": "112099eb0ac3ede50be5bec2993fd4f4e54ed32df1e09844264ac521793a695a",
+      "candidate_rgba_sha256": "a938f9c811e1a4b213cb23c1385ca971d8cb9046ed43f31f19a0fccf57c57bfb",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 5300
+    },
+    {
+      "image": "chocola-wintermaid-180-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 16,
+      "different_pixels": 11963,
+      "baseline_rgba_sha256": "f0861e31c6fe546c35aac69b380ce52854d3a99a2442d60760956ddd50fb6f67",
+      "candidate_rgba_sha256": "1189723aec9ed6444a2a1ad0b70fab14c8e91460e69fe9fdc05ba0011337e7e0",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 521
+    },
+    {
+      "image": "chocola-wintermaid-180-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 51,
+      "different_pixels": 11980,
+      "baseline_rgba_sha256": "cc39e0f09d9036183a3b7951f94344fe5cf4b77f0a5e22ac5f2e553e8e0ce194",
+      "candidate_rgba_sha256": "d8526ac2fe1257e2136167d1950f2e988144e853a376991722833db36a6226d3",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 554
+    },
+    {
+      "image": "chocola-wintermaid-180-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 85,
+      "different_pixels": 7888,
+      "baseline_rgba_sha256": "80df047995ee29004ef51bdbc521ec421a53759c948fe00861165fe778a09747",
+      "candidate_rgba_sha256": "ac665e67f1ff855a9b28458c3da47ad41dfb369094cfa79f1a3924dd97cd7654",
+      "max_error_both_alpha_ge16": 16,
+      "pixels_over_one_both_alpha_ge16": 5202
+    },
+    {
+      "image": "chocola-wintermaid-60-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 28,
+      "different_pixels": 11889,
+      "baseline_rgba_sha256": "77d9ca53007868a978e3c3b5fdf46d4562cb71a34018ed43dde1f8da0c44f43c",
+      "candidate_rgba_sha256": "24ebbfd8ed5a3735fb3369a1761d62e2d2b2c682203b152041f8efa73666d7b9",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 508
+    },
+    {
+      "image": "chocola-wintermaid-60-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 85,
+      "different_pixels": 12198,
+      "baseline_rgba_sha256": "5da684ba8e4ffb2ec8e611a8989656174cc132c68a06f9ec4e100f087814e0f9",
+      "candidate_rgba_sha256": "3e216ed24dc0542c0bad80c1185a5a701ebe9f557d383ac7d46e05f7650c85b3",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 580
+    },
+    {
+      "image": "chocola-wintermaid-60-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 128,
+      "different_pixels": 7993,
+      "baseline_rgba_sha256": "687bc26b5cb0acf228a36220d69b31ce5193284d3644701598f8cd8fdb9d7578",
+      "candidate_rgba_sha256": "bb5b9f0a7861a07c5b6863a2c204594e1b7f26a27e73d3bafb80051842b9b400",
+      "max_error_both_alpha_ge16": 13,
+      "pixels_over_one_both_alpha_ge16": 5229
+    },
+    {
+      "image": "maple-yukata-0-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 42,
+      "different_pixels": 8958,
+      "baseline_rgba_sha256": "2db631024306fb2cd5b4f3fb9e5791cd4cff437bd97597a64b039451529dfe61",
+      "candidate_rgba_sha256": "947368dc2948568d66e4307b69df1b1d54105c2261ff5dd56c4bb78b4bf01a0f",
+      "max_error_both_alpha_ge16": 11,
+      "pixels_over_one_both_alpha_ge16": 502
+    },
+    {
+      "image": "maple-yukata-0-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 23,
+      "different_pixels": 9198,
+      "baseline_rgba_sha256": "9275c33f9888c31241ef3bb2f25c028b250a4b7afc4fa6f2488805fd7efdd51f",
+      "candidate_rgba_sha256": "189aaae0703dad3bebc4cbb8a75a85dc738d30399a78d4863571f1fc1d37f1b6",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 401
+    },
+    {
+      "image": "maple-yukata-0-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 38,
+      "different_pixels": 6128,
+      "baseline_rgba_sha256": "18f2b7a50cc605d1608939c4dea77550a601a1e2845a66c83e0624642397040e",
+      "candidate_rgba_sha256": "dc3ba71c956327bef481d10f352d08e28ace5da8752d6e653db4ac354efba100",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 4202
+    },
+    {
+      "image": "maple-yukata-180-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 17,
+      "different_pixels": 9116,
+      "baseline_rgba_sha256": "1d3c5d6d389e352e392ac3b8957e92c0df70c2d9294f5f6ee80f1cf8c0a683f6",
+      "candidate_rgba_sha256": "26ddbe8160fa2e3684ca2418c2aae9475dae7f2431cbb9fde080f8d46e94f131",
+      "max_error_both_alpha_ge16": 15,
+      "pixels_over_one_both_alpha_ge16": 472
+    },
+    {
+      "image": "maple-yukata-180-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 255,
+      "different_pixels": 8869,
+      "baseline_rgba_sha256": "9e5fb845d51f6397a547b144a2dd69d958085a8cd52bcb5350fff538977251fd",
+      "candidate_rgba_sha256": "e1f71ea0614f6cfe9774f058c8aa0081adebb110eff259004bfeb65356976905",
+      "max_error_both_alpha_ge16": 15,
+      "pixels_over_one_both_alpha_ge16": 375
+    },
+    {
+      "image": "maple-yukata-180-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 255,
+      "different_pixels": 5841,
+      "baseline_rgba_sha256": "968e996fc5cb7436dfef681c8e467de31033e3c4736e2d2d9ead86a845d5bad7",
+      "candidate_rgba_sha256": "7b75ffd72f1196d959bbecf681f1ba389bc4f155e472ac59aff2e5d3d282465a",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 3969
+    },
+    {
+      "image": "maple-yukata-60-0.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 255,
+      "different_pixels": 8943,
+      "baseline_rgba_sha256": "454a81bc581fa42170ce07dadc36e582f34a1e5f17bbf579ec17ba25b9f728f5",
+      "candidate_rgba_sha256": "e7dc7462a06dc1457615883d8cf6eb7f145c9e847e26b166dc9c04369980e8c2",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 436
+    },
+    {
+      "image": "maple-yukata-60-1.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 17,
+      "different_pixels": 9327,
+      "baseline_rgba_sha256": "9c1eb69984d4a5c87a6134dc40c6ecc740e542913b2dfe0aea49a1f746a8024e",
+      "candidate_rgba_sha256": "766339485b43a871fab16a777b9f49b54ac98deff39b66854f756cbf705ea030",
+      "max_error_both_alpha_ge16": 14,
+      "pixels_over_one_both_alpha_ge16": 452
+    },
+    {
+      "image": "maple-yukata-60-2.png",
+      "baseline": "atlas-baseline",
+      "candidate": "atlas-npot",
+      "max_error": 23,
+      "different_pixels": 6161,
+      "baseline_rgba_sha256": "fa382180f0f2be35e2b65b5ffe51ae58dcb0726db49746221b5eafa02fe2f8bb",
+      "candidate_rgba_sha256": "c81714fb19145edacd8642b5d8a8cc75d8c4f2a3ad1cdb9e4590865bb8547009",
+      "max_error_both_alpha_ge16": 16,
+      "pixels_over_one_both_alpha_ge16": 4141
+    }
+  ]
+}

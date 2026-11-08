@@ -32,8 +32,10 @@ struct Device::Impl
     std::atomic<int> error{0};
     std::atomic<std::uint32_t> underruns{0};
     std::thread worker;
+    // Immutable endpoint after construction; the producer only calls wakeup.
+    // Its RAII lifetime extends past worker join, including failed connections.
+    std::unique_ptr<pa_mainloop, decltype(&pa_mainloop_free)> loop{nullptr, pa_mainloop_free};
     // Worker-owned, never accessed from the evaluation thread.
-    pa_mainloop* loop{nullptr};
     pa_context* context{nullptr};
     pa_stream* stream{nullptr};
     const model::AudioClip* clip{nullptr};
@@ -57,11 +59,20 @@ struct Device::Impl
                             [](float v) { return !std::isfinite(v) || v < 0 || v > 1; }))
                 throw std::invalid_argument("invalid decoded audio bank");
         }
+        // Keep the wakeup endpoint alive from before publication until after join.
+        loop.reset(pa_mainloop_new());
+        if (!loop)
+        {
+            fail(PA_ERR_INTERNAL);
+            return;
+        }
         worker = std::thread([this] { run(); });
     }
     ~Impl()
     {
         quitting.store(true, std::memory_order_release);
+        if (loop)
+            pa_mainloop_wakeup(loop.get());
         if (worker.joinable())
             worker.join();
     }
@@ -221,9 +232,7 @@ struct Device::Impl
     }
     void run() noexcept
     {
-        loop = pa_mainloop_new();
-        if (loop)
-            context = pa_context_new(pa_mainloop_get_api(loop), "NekoMote");
+        context = pa_context_new(pa_mainloop_get_api(loop.get()), "NekoMote");
         if (!context || pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr) < 0)
             fail(context ? pa_context_errno(context) : PA_ERR_INTERNAL);
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
@@ -231,7 +240,12 @@ struct Device::Impl
                state.load(std::memory_order_acquire) != DeviceState::Failed)
         {
             int return_code = 0;
-            if (pa_mainloop_iterate(loop, 0, &return_code) < 0)
+            // Playing/connecting retain their existing cadence. Ready/paused
+            // wait for Pulse events or a queued command, including shutdown.
+            const bool wait_for_event =
+                state.load(std::memory_order_relaxed) != DeviceState::Connecting &&
+                (!stream || paused);
+            if (pa_mainloop_iterate(loop.get(), wait_for_event ? 1 : 0, &return_code) < 0)
             {
                 fail(PA_ERR_INTERNAL);
                 break;
@@ -262,7 +276,9 @@ struct Device::Impl
             }
             else if (std::chrono::steady_clock::now() > deadline)
                 fail(PA_ERR_TIMEOUT);
-            std::this_thread::sleep_for(std::chrono::milliseconds(stream ? 4 : 12));
+            if (state.load(std::memory_order_relaxed) == DeviceState::Connecting ||
+                (stream && !paused))
+                std::this_thread::sleep_for(std::chrono::milliseconds(stream ? 4 : 12));
         }
         close_stream();
         if (context)
@@ -270,8 +286,6 @@ struct Device::Impl
             pa_context_disconnect(context);
             pa_context_unref(context);
         }
-        if (loop)
-            pa_mainloop_free(loop);
     }
 };
 Device::Device(std::shared_ptr<const model::AudioBank> clips)
@@ -297,6 +311,7 @@ bool Device::submit(application::AudioCommand command) noexcept
         return false;
     impl_->commands[position % kCommands] = command;
     impl_->write.store(position + 1, std::memory_order_release);
+    pa_mainloop_wakeup(impl_->loop.get());
     return true;
 }
 Snapshot Device::snapshot() const noexcept

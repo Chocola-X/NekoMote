@@ -122,6 +122,8 @@ class UiRenderer : public nekomote::ui::Painter
     std::vector<float> icon_vertices_;
     std::vector<float> icon_uvs_;
     std::uint32_t icon_texture_{0};
+    bool clip_enabled_{false};
+    float clip_left_{0}, clip_top_{0}, clip_right_{0}, clip_bottom_{0};
 
     bool create_rect_shader();
     bool create_text_shader();
@@ -130,6 +132,7 @@ class UiRenderer : public nekomote::ui::Painter
     void flush_rects();
     void flush_text();
     void flush_icons();
+    bool outside_clip(const std::vector<float>& vertices) const;
 };
 
 } // namespace nekomote::render_gl

@@ -244,6 +244,7 @@ void UiRenderer::reset()
     initialized_ = false;
     font_ready_ = false;
     icon_texture_ = 0;
+    clip_enabled_ = false;
     rect_vertices_.clear();
     rect_uvs_.clear();
     text_vertices_.clear();
@@ -390,6 +391,7 @@ void UiRenderer::set_render_target(std::uint32_t framebuffer)
 void UiRenderer::begin_frame()
 {
     global_alpha_ = 1.0f;
+    clip_enabled_ = false;
     if (!initialized_)
         return;
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -415,6 +417,7 @@ void UiRenderer::end_frame()
     if (!initialized_)
         return;
     glDisable(GL_SCISSOR_TEST);
+    clip_enabled_ = false;
     flush_rects();
     flush_text();
     flush_icons();
@@ -430,13 +433,36 @@ void UiRenderer::push_clip_rect(float x, float y, float w, float h)
     const GLsizei sw = static_cast<GLsizei>(std::max(0.0f, w));
     const GLsizei sh = static_cast<GLsizei>(std::max(0.0f, h));
     glScissor(sx, sy, sw, sh);
+    // Match the actual integer scissor, including fractional scrolling. Glyph
+    // quads can extend outside their logical row, so cull their real bounds.
+    clip_enabled_ = true;
+    clip_left_ = static_cast<float>(sx);
+    clip_right_ = clip_left_ + static_cast<float>(sw);
+    clip_bottom_ = static_cast<float>(viewport_height_) - static_cast<float>(sy);
+    clip_top_ = clip_bottom_ - static_cast<float>(sh);
 }
 
 void UiRenderer::pop_clip_rect()
 {
+    clip_enabled_ = false;
     if (!initialized_)
         return;
     glDisable(GL_SCISSOR_TEST);
+}
+
+bool UiRenderer::outside_clip(const std::vector<float>& vertices) const
+{
+    if (!clip_enabled_ || vertices.empty())
+        return false;
+    float left = vertices[0], right = left, top = vertices[1], bottom = top;
+    for (std::size_t i = 2; i < vertices.size(); i += 2)
+    {
+        left = std::min(left, vertices[i]);
+        right = std::max(right, vertices[i]);
+        top = std::min(top, vertices[i + 1]);
+        bottom = std::max(bottom, vertices[i + 1]);
+    }
+    return right <= clip_left_ || left >= clip_right_ || bottom <= clip_top_ || top >= clip_bottom_;
 }
 
 void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float radius,
@@ -493,6 +519,16 @@ void UiRenderer::draw_text(float x, float y, const char* text, float size,
     font_metrics_.draw_text(text_vertices_, text_uvs_, x, y, text, size);
     if (text_vertices_.empty())
         return;
+    // Origins inside the clip are common and need no bounds scan. For text
+    // outside it, inspect generated glyphs rather than assuming a line height.
+    if (clip_enabled_ &&
+        (x < clip_left_ || x >= clip_right_ || y < clip_top_ || y >= clip_bottom_) &&
+        outside_clip(text_vertices_))
+    {
+        text_vertices_.clear();
+        text_uvs_.clear();
+        return;
+    }
     glUseProgram(text_shader_);
     glUniform4f(text_uniforms_.color, color.r, color.g, color.b, color.a);
     flush_text();

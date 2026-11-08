@@ -52,11 +52,16 @@ if(TARGET nekomote_audio)
     add_executable(nekomote_audio_device_tests test_audio_device.cpp)
     target_link_libraries(nekomote_audio_device_tests PRIVATE nekomote::audio
         Catch2::Catch2WithMain nekomote_warnings)
-    add_test(NAME audio_device_contract COMMAND nekomote_audio_device_tests)
+    add_test(NAME audio_device_contract COMMAND nekomote_audio_device_tests "~[pulse-integration]")
     # Bank lifetime must be independent of an audio server, including teardown
     # while connecting. Never send these synthetic clips to the user's device.
     set_tests_properties(audio_device_contract PROPERTIES
         ENVIRONMENT "PULSE_SERVER=unix:/nekomote-unit-tests/no-pulse-server" TIMEOUT 15)
+    add_test(NAME audio_device_pulse_integration
+        COMMAND nekomote_audio_device_tests "[pulse-integration]")
+    set_tests_properties(audio_device_pulse_integration PROPERTIES
+        LABELS integration TIMEOUT 25
+        SKIP_REGULAR_EXPRESSION "${NEKOMOTE_CATCH_SKIP_REPORT}")
 endif()
 catch_discover_tests(nekomote_unit_tests
     TEST_SPEC "~[integration]"

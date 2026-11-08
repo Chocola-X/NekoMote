@@ -791,6 +791,72 @@ TEST_CASE("C renderer validates real handles and cannot reuse failed frames", "[
 }
 #endif
 
+TEST_CASE("UI text culling matches raster scissoring at fractional clip edges", "[gpu][ui]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    render_gl::UiRenderer ui;
+    REQUIRE(ui.init(64, 64));
+    REQUIRE(ui.init_font("", 36));
+    REQUIRE(ui.font()->prepare_text("AVgj f"));
+    ui.set_render_target(output.framebuffer);
+    bool saw_visible = false, saw_invisible = false;
+    const auto paint = [&](float x, float y, bool cull)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, output.framebuffer);
+        glDisable(GL_SCISSOR_TEST);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ui.begin_frame();
+        ui.push_clip_rect(10.75f, 11.5f, 35.75f, 26.5f);
+        if (!cull)
+        {
+            // Keep the GPU clip but bypass the CPU culling state, giving a
+            // raster reference with the same integer scissor and real glyphs.
+            std::array<GLint, 4> clip;
+            glGetIntegerv(GL_SCISSOR_BOX, clip.data());
+            ui.pop_clip_rect();
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(clip[0], clip[1], clip[2], clip[3]);
+        }
+        ui.draw_text(x, y, "AVgj f", 16, {1, 1, 1, 1});
+        ui.pop_clip_rect();
+        // Pop must restore ordinary unscissored text on the same frame.
+        ui.draw_text(2, 48, "f", 12, {1, 0, 0, 1});
+        ui.end_frame();
+        return reader.capture({output.framebuffer, 64, 64});
+    };
+    const std::array<std::array<float, 2>, 9> positions{{
+        {-200, -70},
+        {-60, 15},
+        {-4, 15},
+        {5, 5},
+        {5, 10.75f},
+        {11.25f, 20},
+        {11.25f, 37.75f},
+        {11.25f, 39.25f},
+        {11.25f, 95},
+    }};
+    for (const auto& position : positions)
+    {
+        const auto reference = paint(position[0], position[1], false);
+        const auto candidate = paint(position[0], position[1], true);
+        REQUIRE(candidate.pixels == reference.pixels);
+        // The scissored text is white, the pop sentinel is red.
+        bool visible = false;
+        for (std::size_t i = 1; i < reference.pixels.size(); i += 4)
+            visible = visible || reference.pixels[i] != 0;
+        saw_visible = saw_visible || visible;
+        saw_invisible = saw_invisible || !visible;
+    }
+    REQUIRE(saw_visible);
+    REQUIRE(saw_invisible);
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
 TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[gpu][ui]")
 {
     Context context;

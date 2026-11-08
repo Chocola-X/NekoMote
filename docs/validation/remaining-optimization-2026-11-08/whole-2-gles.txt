@@ -1,0 +1,10 @@
+vendor=NVIDIA Corporation renderer=NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 version=OpenGL ES 3.2 NVIDIA 580.82.09
+catalog_groups=8 largest_group=vanilla items=37
+model=chocola/wintermaid fixed_step=1/60 resolution=800x1080 warmup=100 sample_pairs=120
+icon baseline_us=2177.671/2367.076/2612.349 optimized_us=2187.060/2414.501/2773.734 paired_delta_us_p50=15.546 allocations=0
+collapsed baseline_us=2404.526/3120.231/3369.927 optimized_us=2503.327/3090.866/3387.502 paired_delta_us_p50=4.919 allocations=0
+characters-top baseline_us=3139.419/3655.013/4006.939 optimized_us=2857.239/3371.600/3660.848 paired_delta_us_p50=-245.407 allocations=0
+characters-partial baseline_us=1872.281/3514.420/3633.838 optimized_us=1438.130/3176.049/3452.905 paired_delta_us_p50=-212.796 allocations=0
+characters-bottom baseline_us=1212.096/3387.199/3465.601 optimized_us=1078.033/2949.330/3113.108 paired_delta_us_p50=-138.180 allocations=0
+settings-top baseline_us=2486.687/3507.590/3625.682 optimized_us=2179.236/3462.348/3691.062 paired_delta_us_p50=-50.498 allocations=0
+settings-bottom baseline_us=2981.447/3919.910/4735.004 optimized_us=2972.738/4050.954/4511.718 paired_delta_us_p50=-27.582 allocations=0

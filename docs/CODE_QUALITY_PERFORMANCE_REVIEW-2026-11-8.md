@@ -8,7 +8,8 @@
 > 本文保留原作者对基线及第一版未提交实现的审查记录。A 阶段后续独立复核发现的问题、
 > 已撤回的音频优化及最终修复/测试范围，分别见
 > [独立复核](code-quality-performance-audit-2026-11-08.md)和
-> [修复验收](code-quality-performance-fixes-2026-11-08.md)。下列初版实施记录不代表最终状态。
+> [修复验收](code-quality-performance-fixes-2026-11-08.md)。剩余建议的分步基线、取舍及最终保留项见
+> [后续优化验收](remaining-optimization-2026-11-08.md)。下列初版实施记录不代表最终状态。
 
 ## A 阶段实施记录（2026-11-07）
 

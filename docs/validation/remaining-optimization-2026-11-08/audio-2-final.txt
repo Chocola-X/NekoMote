@@ -1,0 +1,6 @@
+READY
+idle switches=0 per_second=0.000 cpu_ticks=0 seconds=3.000
+playing switches=246 per_second=245.967 cpu_ticks=0 seconds=1.000
+paused switches=8 per_second=2.667 cpu_ticks=0 seconds=3.000
+play_command_us p50=258.558 p95=267.446 p99=279.082
+idle_join_us=170.837

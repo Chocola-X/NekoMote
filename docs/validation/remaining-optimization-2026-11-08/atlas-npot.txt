@@ -1,0 +1,4 @@
+vendor=NVIDIA Corporation renderer=NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 version=OpenGL ES 3.2 NVIDIA 580.82.09
+chocola/date-a atlas_raw=25837568 atlas_padded=33554432
+chocola/wintermaid atlas_raw=34067000 atlas_padded=67108864
+maple/yukata atlas_raw=22744504 atlas_padded=33554432

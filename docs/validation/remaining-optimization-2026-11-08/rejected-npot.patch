@@ -1,0 +1,36 @@
+diff --git a/src/render_gl/renderer.cpp b/src/render_gl/renderer.cpp
+index 30a7e18..b68269a 100644
+--- a/src/render_gl/renderer.cpp
++++ b/src/render_gl/renderer.cpp
+@@ -475,29 +475,8 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion
+     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+     glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+     glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+-    if (p.shared->atlas_target == GL_TEXTURE_2D)
+-    {
+-        // GLES has only normalized samplers. Power-of-two storage gives exact
+-        // binary scaling; arbitrary crop dimensions caused mask-amplified errors.
+-        const auto storage_size = [max_size](int value)
+-        {
+-            int result = 1;
+-            while (result < value)
+-            {
+-                if (result > max_size / 2)
+-                    throw std::runtime_error("OpenGL ES atlas padding exceeds texture limits");
+-                result *= 2;
+-            }
+-            return result;
+-        };
+-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, storage_size(image.width),
+-                     storage_size(image.height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width, image.height, GL_RGBA,
+-                        GL_UNSIGNED_BYTE, image.pixels.data());
+-    }
+-    else
+-        glTexImage2D(p.shared->atlas_target, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
+-                     GL_UNSIGNED_BYTE, image.pixels.data());
++    glTexImage2D(p.shared->atlas_target, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA,
++                 GL_UNSIGNED_BYTE, image.pixels.data());
+     glTexParameteri(p.shared->atlas_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+     glTexParameteri(p.shared->atlas_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+     glTexParameteri(p.shared->atlas_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

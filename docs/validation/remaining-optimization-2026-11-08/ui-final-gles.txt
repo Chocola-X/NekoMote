@@ -1,0 +1,5 @@
+Filters: [gpu] [ui]
+Randomness seeded to: 2881709979
+===============================================================================
+All tests passed (32 assertions in 2 test cases)
+

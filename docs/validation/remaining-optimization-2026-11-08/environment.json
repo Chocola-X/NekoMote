@@ -1,0 +1,39 @@
+{
+  "baseline": "1846c37f7cc595d0e1d3c6d13e275fa4e898e072",
+  "kernel": "6.6.107-1-MANJARO",
+  "machine": "x86_64",
+  "compiler": "c++ (GCC) 15.2.1 20250813",
+  "source_hashes": {
+    "src/audio/device.cpp": "0544aef1581179dabb7fb5feb14fb4f37a75dfbfd631c53ce133f7c46b57f717",
+    "include/nekomote/audio/device.hpp": "8bc1379320ce1a764365aa6b0770d1f3eec55c40fcd2766b07baae060c194d55",
+    "src/render_gl/ui_renderer.cpp": "6c19f32610b037355b444e140008d585f51829ed8d78c638f8fc24c1a4c3aa79",
+    "include/nekomote/render_gl/ui_renderer.hpp": "9deb4d11bc5fa8ae7d86525ea5b3a226984ab3a7544519ae50d0877a02248adf",
+    "src/render_gl/renderer.cpp": "824d1382f6ddf1dc28a093dad880fc3895e47a1a1488083253ef0602be8b62aa"
+  },
+  "asset_hashes": [
+    {
+      "path": "assets/characters/chocola/date-a/model.nkm",
+      "sha256": "c9408bb022d87c71be740e8b3154e921b0a36aa39b8562fd5c51b14276ccad3e"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/session.nks.json",
+      "sha256": "cc418a47c393847a0ddf19d200722da5493d18be29d88af4f61a4dd6b4e28769"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid/model.nkm",
+      "sha256": "0bb3f8c2cbb95126c578bc5b710134bbbf107f2041f9ff3e3dfaa631a335f546"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid/session.nks.json",
+      "sha256": "99d512b4a8e937f5de7040899257a8434a0b034afc2115e7946a800fff421038"
+    },
+    {
+      "path": "assets/characters/maple/yukata/model.nkm",
+      "sha256": "8286c3c3001f528aea0a3e83bf68271c21f79b3eceb48a0f7273cb2757181f12"
+    },
+    {
+      "path": "assets/characters/maple/yukata/session.nks.json",
+      "sha256": "d726e7f6761f012aada2599a36a2ab394df1e08d552526a4f57cebfbfe260065"
+    }
+  ]
+}

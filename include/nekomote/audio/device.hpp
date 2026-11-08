@@ -28,6 +28,8 @@ struct Snapshot
 // aliases. Owns its PulseAudio context/streams. Construction validates the bank;
 // snapshot/submit never block or allocate or change bank ownership. Destruction
 // joins the worker before releasing its bank. Device recreation may reuse it.
+// Ready/paused workers wait for device events; submit and destruction wake them.
+// Playing/connecting retain bounded polling, including the connection deadline.
 class Device
 {
   public:

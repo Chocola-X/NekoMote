@@ -1,0 +1,12 @@
+Test project /run/media/chocola/MIKU/NekoMote/build/release
+    Start 254: audio_device_contract
+1/2 Test #254: audio_device_contract ............   Passed    0.01 sec
+    Start 255: audio_device_pulse_integration
+2/2 Test #255: audio_device_pulse_integration ...   Passed    6.78 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+integration    =   6.78 sec*proc (1 test)
+
+Total Test time (real) =   6.79 sec

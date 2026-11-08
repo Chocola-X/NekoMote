@@ -1,0 +1,20 @@
+[1/20] Building CXX object src/render_gl/CMakeFiles/nekomote_render_gl.dir/renderer.cpp.o
+[2/20] Linking CXX static library lib/libnekomote_render_gl.a
+[3/20] Building CXX object src/abi/CMakeFiles/nekomote_abi.dir/wallpaper_instance.cpp.o
+[4/20] Building CXX object src/abi/CMakeFiles/nekomote_abi.dir/abi.cpp.o
+[5/20] Linking CXX static library lib/libnekomote_abi.a
+[6/20] Building CXX object apps/player/CMakeFiles/nekomote_player.dir/main.cpp.o
+[7/20] Building CXX object tests/render/CMakeFiles/nekomote_render_tests.dir/test_renderer.cpp.o
+[8/20] Building CXX object tests/render/CMakeFiles/nekomote_vk_tests.dir/test_vk.cpp.o
+[9/20] Linking CXX executable bin/nekomote_preview
+[10/20] Linking CXX executable bin/nekomote_x11_option_tests
+[11/20] Linking CXX executable bin/nekomote_layer_shell_option_tests
+[12/20] Linking CXX executable bin/nekomote_layer_shell
+[13/20] Linking CXX executable bin/nekomote_x11
+[14/20] Linking CXX executable bin/nekomote_abi_host
+[15/20] Linking CXX executable bin/nekomote_player
+[16/20] Linking CXX executable bin/nekomote_abi_negative_test
+[17/20] Linking CXX executable bin/nekomote_abi_test
+[18/20] Linking CXX executable bin/nekomote_abi_boundary_tests
+[19/20] Linking CXX executable bin/nekomote_vk_tests
+[20/20] Linking CXX executable bin/nekomote_render_tests

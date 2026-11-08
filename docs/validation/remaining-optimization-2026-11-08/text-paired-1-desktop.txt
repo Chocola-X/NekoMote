@@ -1,0 +1,9 @@
+vendor=NVIDIA Corporation renderer=NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 version=3.3.0 NVIDIA 580.82.09
+catalog_groups=8 largest_group=vanilla items=37
+icon baseline_us=30.237/72.346/100.053 optimized_us=32.066/72.505/108.450 paired_delta_us_p50=9.427 allocations=0
+collapsed baseline_us=197.276/414.182/488.676 optimized_us=202.831/446.988/615.589 paired_delta_us_p50=28.489 allocations=0
+characters-top baseline_us=471.275/1256.722/1418.654 optimized_us=335.593/763.517/1213.093 paired_delta_us_p50=-181.536 allocations=0
+characters-partial baseline_us=411.686/889.305/934.411 optimized_us=287.422/674.366/715.861 paired_delta_us_p50=-136.718 allocations=0
+characters-bottom baseline_us=399.080/1057.507/1538.673 optimized_us=285.127/685.268/1070.946 paired_delta_us_p50=-106.633 allocations=0
+settings-top baseline_us=374.577/802.637/1288.456 optimized_us=312.030/811.946/1203.997 paired_delta_us_p50=-43.906 allocations=0
+settings-bottom baseline_us=333.543/920.483/1202.090 optimized_us=331.545/1029.279/1211.222 paired_delta_us_p50=-27.824 allocations=0
