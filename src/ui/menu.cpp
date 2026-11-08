@@ -235,18 +235,19 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     }
     if (footer_h > 0.0f)
     {
+        // Dividers meet the panel edges; only the text keeps horizontal padding.
+        painter.push_clip_rect(sidebar_x, footer_top, sidebar.width, footer_h);
+        ctx.divider_line(sidebar_x, footer_top, sidebar.width, style);
+        ctx.divider_line(sidebar_x, footer_top + 34.0f, sidebar.width, style);
+        painter.pop_clip_rect();
         painter.push_clip_rect(sidebar_x + style.padding, footer_top,
                                std::max(0.0f, sidebar.width - 2.0f * style.padding), footer_h);
-        float footer_y = footer_top;
-        ctx.divider_line(sidebar_x, footer_y, sidebar.width, style);
-        footer_y += 10.0f;
+        float footer_y = footer_top + 10.0f;
         const float atw =
             painter.font() ? painter.font()->text_width(txt.author_line, 12.0f) : 160.0f;
         ctx.label(txt.author_line, sidebar_x + (sidebar.width - atw) * 0.5f, footer_y, 12.0f,
                   style.text);
-        footer_y += 24.0f;
-        ctx.divider_line(sidebar_x, footer_y, sidebar.width, style);
-        footer_y += 10.0f;
+        footer_y += 34.0f;
         const float gtw =
             painter.font() ? painter.font()->text_width(txt.github_line, 12.0f) : 170.0f;
         ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, footer_y, 12.0f,
