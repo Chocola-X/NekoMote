@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
 
 namespace nekomote::ui
 {
@@ -16,6 +17,14 @@ constexpr float kSwitchRowHeight = 34.0f;
 constexpr float kSidebarHeaderHeight = 44.0f;
 constexpr float kFooterHeight = 68.0f;
 constexpr float kSidebarMaxHeightRatio = 4.0f / 5.0f;
+
+struct FpsOption
+{
+    int fps;
+    const char* label;
+};
+constexpr FpsOption kFpsOptions[] = {{0, ""},          {30, "30 FPS"},   {60, "60 FPS"},
+                                     {120, "120 FPS"}, {180, "180 FPS"}, {240, "240 FPS"}};
 
 // Sidebar strings per config language. FPS option labels ("30 FPS", "∞") and
 // language option labels (shown in their own language) are shared.
@@ -113,13 +122,14 @@ const UiStrings& ui_strings(application::Language lang) noexcept
 
 bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catalog)
 {
-    std::string text =
-        "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ 30 FPS 60 FPS 120 FPS ";
+    std::string text = "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ ";
     const auto append = [&text](const auto& value)
     {
         text += value;
         text += ' ';
     };
+    for (const auto& option : kFpsOptions)
+        append(option.label);
     for (const auto* strings : {&kStringsEn, &kStringsZhCn, &kStringsZhTw, &kStringsJa})
         for (const auto* label :
              {strings->background_drawer, strings->settings_drawer, strings->language_section,
@@ -190,7 +200,8 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     if (sidebar.expanded_drawer == settings_drawer_index)
     {
         content_scrollable_h += kSectionHeaderHeight + 4.0f * kRadioRowHeight;
-        content_scrollable_h += kSectionHeaderHeight + 4.0f * kRadioRowHeight;
+        content_scrollable_h +=
+            kSectionHeaderHeight + static_cast<float>(std::size(kFpsOptions)) * kRadioRowHeight;
         content_scrollable_h += kSectionHeaderHeight + 2.0f * kSwitchRowHeight + kSwitchRowHeight;
     }
     content_scrollable_h += kFooterHeight;
@@ -322,19 +333,12 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         ctx.section_header(txt.fps_section, sidebar_x, curr_y, sidebar.width, kSectionHeaderHeight,
                            style);
         curr_y += kSectionHeaderHeight;
-        const struct
-        {
-            int fps;
-            const char* label;
-            const char* badge;
-        } fps_opts[] = {{0, txt.unlimited, "∞"},
-                        {30, "30 FPS", ""},
-                        {60, "60 FPS", txt.recommended},
-                        {120, "120 FPS", ""}};
-        for (const auto& opt : fps_opts)
+        for (const auto& opt : kFpsOptions)
         {
             const bool selected = (menu.fps_limit == opt.fps);
-            if (ctx.radio_row(opt.label, opt.badge, selected, sidebar_x, curr_y, sidebar.width,
+            const auto* label = opt.fps == 0 ? txt.unlimited : opt.label;
+            const auto* badge = opt.fps == 0 ? "∞" : (opt.fps == 60 ? txt.recommended : "");
+            if (ctx.radio_row(label, badge, selected, sidebar_x, curr_y, sidebar.width,
                               kRadioRowHeight, style))
             {
                 menu.fps_limit = opt.fps;
