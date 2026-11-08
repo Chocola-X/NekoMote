@@ -3379,6 +3379,89 @@ TEST_CASE("Shape exclusion moves the resolved child origin without stretching ve
     REQUIRE(measured_allocations == 0);
 }
 
+TEST_CASE("Animated surfaces retain ordered deformation through rigid ancestor chains",
+          "[runtime][scene][inheritance]")
+{
+    using namespace runtime;
+    auto asset = rig();
+    asset.parts.resize(1);
+    asset.variables = {{"mode", {}}};
+    const auto content = [](bool outer, bool curved)
+    {
+        FrameContent result;
+        result.src = field(std::string{"blank"});
+        result.icon = field(std::string{"16:16:0:0"});
+        if (curved)
+        {
+            std::array<float, 32> controls{};
+            const auto identity = identity_patch();
+            constexpr std::array<float, 4> squared{0, 0, 1.0f / 3.0f, 1};
+            for (std::size_t i = 0; i < identity.size(); ++i)
+            {
+                // x += y*y/32 outside, y += 2 inside: reversing the
+                // surfaces changes the answer even though rigid groups do not.
+                controls[2 * i] = identity[i].x + (outer ? 0.5f * squared[i / 4] : 0);
+                controls[2 * i + 1] = identity[i].y + (outer ? 0 : 0.125f);
+            }
+            MeshData mesh;
+            mesh.bp = field(controls);
+            result.mesh = field(mesh);
+        }
+        return result;
+    };
+    const auto surface = [&](std::string name, bool outer)
+    {
+        auto result = layer(std::move(name), 0, content(outer, true));
+        result.mesh_sync_child_mask = 8;
+        result.parameterize = field(0);
+        result.parameter = {{"mode", 0, 3, 3, 0, true}};
+        result.frame_list.clear();
+        for (int mode = 0; mode < 4; ++mode)
+            result.frame_list.push_back({static_cast<float>(mode), 2,
+                                         field(content(outer, outer ? mode < 2 : mode % 2 == 0))});
+        return result;
+    };
+    const auto wrap = [](Layer child, std::string prefix)
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            auto group = layer(prefix + std::to_string(i), 0, {});
+            group.mesh_sync_child_mask = 8;
+            group.children.push_back(std::move(child));
+            child = std::move(group);
+        }
+        return child;
+    };
+    auto tile = sprite();
+    tile.coord = field(std::array<float, 3>{4, 6, 0});
+    auto inner = surface("inner", false);
+    inner.children = {wrap(layer("sprite", 0, tile), "inner rigid ")};
+    auto outer = surface("outer", true);
+    outer.children = {wrap(std::move(inner), "outer rigid ")};
+    asset.parts[0].layers = {outer};
+    const auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance instance(*compiled.scene);
+    const auto mode = compiled.scene->find_variable("mode");
+    const std::array<Vec2, 4> expected{{{6, 8}, {5.125f, 6}, {4, 8}, {4, 6}}};
+    const std::array<Vec2, 4> expected_corner{{{2.53125f, 7}, {1.78125f, 5}, {1, 7}, {1, 5}}};
+    for (const int value : {0, 1, 2, 3, 0, 3, 2, 1})
+    {
+        REQUIRE(instance.set_parameter(mode, static_cast<float>(value)));
+        REQUIRE(instance.set_origin({10, -4}));
+        REQUIRE(instance.set_scale(2));
+        REQUIRE(instance.evaluate());
+        REQUIRE(instance.primitives().size() == 1);
+        const auto node = instance.primitives()[0].node;
+        const auto point = instance.sample_atlas_point(node, {3, 1});
+        near(point, expected[value] * 2 + Vec2{10, -4});
+        REQUIRE(instance.build_frame());
+        REQUIRE_FALSE(instance.frame().vertices.empty());
+        const auto vertex = instance.frame().vertices[0];
+        near({vertex.x, vertex.y}, expected_corner[value] * 2 + Vec2{10, -4});
+    }
+}
+
 TEST_CASE("Nested exclusions resolve every parent curve at the current attachment origin",
           "[runtime][inheritance]")
 {

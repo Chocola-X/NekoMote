@@ -374,6 +374,7 @@ struct State
     Pose pose;
     Pose transform;
     NodeId transform_parent, curve_parent, excluded_curve;
+    NodeId next_curve;
     int child_sync{0};
     RigidTransform world;
     const detail::PreparedPatch* world_patch{nullptr};
@@ -773,12 +774,13 @@ struct GeometryInstance::Impl
     }
     Vec2 deform_curves(NodeId id, Vec2 p) const noexcept
     {
+        if (!states[id.value].transform.mesh)
+            id = states[id.value].next_curve;
         while (id.valid())
         {
             const auto& s = states[id.value];
-            if (s.transform.mesh)
-                p = warp(s, p);
-            id = s.curve_parent;
+            p = warp(s, p);
+            id = s.next_curve;
         }
         return p;
     }
@@ -1028,6 +1030,12 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         {
             state.curve_parent = inherited_curve;
         }
+        // Resolve only the warp-bearing ancestors, in the original order. Rebuild
+        // after pose/combination/inheritance selection on every evaluation; retain
+        // curve_parent for observation and the separate excluded attachment chains.
+        const auto& curve_parent = instance.states[state.curve_parent.value];
+        state.next_curve =
+            curve_parent.transform.mesh ? state.curve_parent : curve_parent.next_curve;
         // Mask one bends the direct child origin, leaving its geometry rigid.
         // Mask eight retains the curve in the descendant vertex chain.
         if (transform_parent.child_sync == 1 && transform_parent.transform.mesh)

@@ -1,0 +1,58 @@
+{
+  "compiler": "c++ (GCC) 15.2.1 20250813",
+  "kernel": "6.6.107-1-MANJARO",
+  "machine": "x86_64",
+  "cpu": "Intel Xeon E5-1680 v4",
+  "cpu_affinity": "0",
+  "baseline": "0dc14663dc8812a328d9a9d2f185528e5dad8d4f",
+  "mode": "Release O3 LTO Werror; probes O3 LTO; dt=1/60; seeds=12345; CPU0; 120 warmup + 600 samples, 3 alternating rounds",
+  "run_order": [
+    [
+      "baseline-0",
+      "candidate-0"
+    ],
+    [
+      "candidate-1",
+      "baseline-1"
+    ],
+    [
+      "baseline-2",
+      "candidate-2"
+    ]
+  ],
+  "sizeof_state_before": 416,
+  "sizeof_state_after": 424,
+  "asset_sha256": {
+    "assets/characters/chocola/date-a/model.nkm": "c9408bb022d87c71be740e8b3154e921b0a36aa39b8562fd5c51b14276ccad3e",
+    "assets/characters/chocola/date-a/session.nks.json": "cc418a47c393847a0ddf19d200722da5493d18be29d88af4f61a4dd6b4e28769",
+    "assets/characters/chocola/date-a/textures/0.png": "0404f69a42405a4fc3f8f3ed7f381dfc3215bb2c57d938555c79f6db78b29642",
+    "assets/characters/chocola/wintermaid/model.nkm": "0bb3f8c2cbb95126c578bc5b710134bbbf107f2041f9ff3e3dfaa631a335f546",
+    "assets/characters/chocola/wintermaid/session.nks.json": "99d512b4a8e937f5de7040899257a8434a0b034afc2115e7946a800fff421038",
+    "assets/characters/chocola/wintermaid/textures/0.png": "1f0ffe68419ac5cbeb35d4e03da67046cabc26b1230eec23c8ef36d506cc023f",
+    "assets/characters/chocola/casual-b-no-bell/model.nkm": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304",
+    "assets/characters/chocola/casual-b-no-bell/session.nks.json": "d6b4fd76aa5ed92b107531c936caa98469fa0af1a975e6fc628a4a7b12652fc5",
+    "assets/characters/chocola/casual-b-no-bell/textures/0.png": "c205bb2d07d52b20b48da0e87ae5cb370609713868fcd5c9b49f1e45068e86a4",
+    "assets/characters/vanilla/wintermaid/model.nkm": "5d5f78d6a05cdc6df54bbe045b512093aaf49b2825614dfa6c74a2496a7ae902",
+    "assets/characters/vanilla/wintermaid/session.nks.json": "cd18eff8ba0f5816eea67ca76871752dcf25dc44aea852a9ba977f6eb200c6b8",
+    "assets/characters/vanilla/wintermaid/textures/0.png": "564f063c2a83dfd7c137a59891e81510ee3dea3ebaca85a20c0e9acaa9b7be3d",
+    "assets/characters/maple/yukata/model.nkm": "8286c3c3001f528aea0a3e83bf68271c21f79b3eceb48a0f7273cb2757181f12",
+    "assets/characters/maple/yukata/session.nks.json": "d726e7f6761f012aada2599a36a2ab394df1e08d552526a4f57cebfbfe260065",
+    "assets/characters/maple/yukata/textures/0.png": "ad674e850d82763db0829b645c87b37c666afd5fcfd7879500c7e160e7001854",
+    "assets/characters/coconut/casual/model.nkm": "7c7d0ebc601292faa4d3a3cb12849e2572808ca7e72a15f990893c24bfe722cd",
+    "assets/characters/coconut/casual/session.nks.json": "981f7746d1451196a127374c7f80e4e44b989c6b79be16c25b340cbc9d05fba6",
+    "assets/characters/coconut/casual/textures/0.png": "80442952e1e11dc612d2aec2b6bb83f4d54fea6ee12e0f78a1e9281dc5ccbbbb",
+    "assets/characters/azuki/casual/model.nkm": "40a6c761fce5f827be8175fcd59e824e855984dfbbf31927a96899b0755376fd",
+    "assets/characters/azuki/casual/session.nks.json": "caf09956c34bedcbc811feed292d8b9975b51c338acb16837d257d586ecea14e",
+    "assets/characters/azuki/casual/textures/0.png": "1449ac60ca12bc56bb2f41b94ccded494361264d247e8488262613e6bec0f9f6",
+    "assets/characters/azuki/casual/textures/1.png": "450160c5a78bc4e940be68821b274a57bd4fb09ffdb137814f061913f074fad6"
+  },
+  "source_sha256": {
+    "src/runtime/geometry_scene.cpp": "dbadf7fa74be80c771bed10ba53548fab2edd3981cede171ba15fa9e9508381b",
+    "src/runtime/patch_evaluation.hpp": "3d9cff02642dd50508418fee5554513fb57e7c55d7a638f144f0f2e973187227",
+    "docs/validation/compound-review-2026-11-08/runtime_probe.cpp": "47325e3633bd382e8f5b81a63458414fc6c97c51e69e59a8858d4b6ca8194afd"
+  },
+  "binary_sha256": {
+    "baseline-probe": "aa8bb325878609f967fbf24f9917e4cd148a970ef965e40a09a9b224cf8d737c",
+    "candidate-probe": "4136f5e25c65527fa12d4847114581cf4bb4cdef172ef505b2dfab0e7c6d282d"
+  }
+}
