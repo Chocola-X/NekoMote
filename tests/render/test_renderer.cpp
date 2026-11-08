@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "geometry_fixture.hpp"
+#include "index_reuse_fixture.hpp"
 #ifdef NEKOMOTE_HAS_ABI
 #include <nekomote/abi.h>
 #endif
@@ -1288,4 +1289,26 @@ TEST_CASE("GPU renderer distinguishes independent geometry producers at the same
     REQUIRE(pixel(before, 36, 36)[3] == 255);
     REQUIRE(pixel(after, 36, 36)[3] == 0);
     REQUIRE(draw(first.frame()).pixels == before.pixels);
+    glEnable(static_cast<GLenum>(0xFFFFFFFFu));
+    REQUIRE_THROWS(renderer.reserve({4, 6, 1, 1}));
+    REQUIRE(draw(first.frame()).pixels == before.pixels);
+}
+
+TEST_CASE("GPU index revisions preserve animation, validation and resource invalidation", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    const auto reserve = [&] { renderer.reserve({8, 12, 1, 1}); };
+    reserve();
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 255, 255, 255}});
+    Output output;
+    output.resize(64, 64);
+    test::check_index_reuse(
+        [&](RenderFrame frame)
+        {
+            renderer.prepare(frame);
+            renderer.render({output.framebuffer, 64, 64}, {});
+            return renderer.capture({output.framebuffer, 64, 64});
+        },
+        [&](RenderFrame frame) { renderer.prepare(frame); }, reserve);
 }

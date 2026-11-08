@@ -399,18 +399,31 @@ TEST_CASE("Geometry topology survives repeated builds and resource and visibilit
     runtime::GeometryInstance reused(*compiled.scene);
     const auto parameter = compiled.scene->find_variable("pick");
     std::vector<std::uint32_t> initial;
+    std::vector<std::uint32_t> previous_indices;
+    std::uint64_t previous_index_revision = 0;
     for (const float value : {0.0f, 0.0f, 3.0f, 3.0f, 1.0f, 1.0f, 2.0f, 2.0f, 0.0f})
     {
         CAPTURE(value);
         REQUIRE(reused.set_parameter(parameter, value));
         REQUIRE(reused.evaluate());
         REQUIRE(reused.build_frame());
+        const auto index_revision = reused.frame().index_revision;
+        REQUIRE(index_revision != 0);
         REQUIRE(reused.build_frame()); // No evaluate between these calls.
+        REQUIRE(reused.frame().index_revision == index_revision);
         runtime::GeometryInstance fresh(*compiled.scene);
         REQUIRE(fresh.set_parameter(parameter, value));
         REQUIRE(fresh.evaluate());
         REQUIRE(fresh.build_frame());
         const auto actual = reused.frame(), expected = fresh.frame();
+        if (previous_index_revision != 0)
+        {
+            const bool unchanged = std::equal(actual.indices.begin(), actual.indices.end(),
+                                              previous_indices.begin(), previous_indices.end());
+            REQUIRE((index_revision == previous_index_revision) == unchanged);
+        }
+        previous_indices.assign(actual.indices.begin(), actual.indices.end());
+        previous_index_revision = index_revision;
         REQUIRE(std::equal(actual.indices.begin(), actual.indices.end(), expected.indices.begin(),
                            expected.indices.end()));
         REQUIRE(actual.vertices.size() == expected.vertices.size());
@@ -518,6 +531,7 @@ TEST_CASE(
     REQUIRE(frame.masks[1].command_count == 1);
     REQUIRE(frame.mask_commands[0].first_index == frame.commands[0].first_index);
     input.parts[1].layers[1].stencil_composite_mask_layers = {"missing source"};
+    input.parts[2].layers.push_back(layer("extra", 0, sprite()));
     auto invalid = runtime::compile_geometry_scene(input);
     REQUIRE(invalid.scene);
     REQUIRE_FALSE(invalid.scene->diagnostics().empty());
@@ -526,6 +540,20 @@ TEST_CASE(
     REQUIRE(rejected.build_frame().error == runtime::GeometryError::UnsupportedMask);
     REQUIRE(rejected.frame().vertices.empty());
     REQUIRE(rejected.frame().commands.empty());
+    const auto pick = invalid.scene->find_variable("pick");
+    REQUIRE(rejected.set_parameter(pick, 1));
+    REQUIRE(rejected.evaluate());
+    REQUIRE(rejected.build_frame());
+    const auto successful_index_revision = rejected.frame().index_revision;
+    REQUIRE(successful_index_revision != 0);
+    REQUIRE(rejected.set_parameter(pick, 0));
+    REQUIRE(rejected.evaluate());
+    REQUIRE(rejected.build_frame().error == runtime::GeometryError::UnsupportedMask);
+    REQUIRE(rejected.set_parameter(pick, 1));
+    REQUIRE(rejected.evaluate());
+    REQUIRE(rejected.build_frame());
+    REQUIRE(rejected.frame().index_revision != successful_index_revision);
+    REQUIRE(rejected.frame().indices.size() == 18);
 }
 
 TEST_CASE("Atlas packing changes UV without changing deformed model geometry", "[runtime][scene]")

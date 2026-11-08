@@ -78,5 +78,10 @@ struct RenderFrame
     std::span<const MaskDefinition> masks{};
     std::uint64_t revision{0};
     std::shared_ptr<const FrameProducer> producer{};
+    // With a producer and nonzero frame revision, this identifies immutable
+    // index content independently of animated vertices/commands. Advance before
+    // changing indices, even if building the resulting frame fails. Zero disables
+    // index-only reuse; external frames need not supply cache metadata.
+    std::uint64_t index_revision{0};
 };
 } // namespace nekomote

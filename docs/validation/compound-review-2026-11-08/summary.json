@@ -1,0 +1,3302 @@
+{
+  "runtime": {
+    "cases": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 96.330138,
+            "after_us": 92.331507,
+            "change_percent": -4.150965713347155
+          },
+          "p50": {
+            "before_us": 95.896,
+            "after_us": 91.868,
+            "change_percent": -4.200383749061487
+          },
+          "p95": {
+            "before_us": 100.9,
+            "after_us": 96.61,
+            "change_percent": -4.251734390485639
+          },
+          "p99": {
+            "before_us": 107.981,
+            "after_us": 103.514,
+            "change_percent": -4.136838888322947
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 391.795885,
+            "after_us": 370.410727,
+            "change_percent": -5.458239562674327
+          },
+          "p50": {
+            "before_us": 392.88,
+            "after_us": 371.219,
+            "change_percent": -5.5133883119527605
+          },
+          "p95": {
+            "before_us": 404.808,
+            "after_us": 384.161,
+            "change_percent": -5.100442678998441
+          },
+          "p99": {
+            "before_us": 430.509,
+            "after_us": 415.482,
+            "change_percent": -3.4905193619645503
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 488.097912,
+            "after_us": 462.742233,
+            "change_percent": -5.1947935806781365
+          },
+          "p50": {
+            "before_us": 489.49,
+            "after_us": 463.619,
+            "change_percent": -5.285296941714845
+          },
+          "p95": {
+            "before_us": 503.048,
+            "after_us": 478.657,
+            "change_percent": -4.84864267425773
+          },
+          "p99": {
+            "before_us": 530.598,
+            "after_us": 509.812,
+            "change_percent": -3.917466707375439
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 92.467548,
+            "after_us": 88.089005,
+            "change_percent": -4.735221269195966
+          },
+          "p50": {
+            "before_us": 92.063,
+            "after_us": 87.78,
+            "change_percent": -4.652249003399844
+          },
+          "p95": {
+            "before_us": 97.406,
+            "after_us": 92.528,
+            "change_percent": -5.007905057183337
+          },
+          "p99": {
+            "before_us": 103.841,
+            "after_us": 97.789,
+            "change_percent": -5.828141100336081
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 299.31022,
+            "after_us": 282.41767,
+            "change_percent": -5.643826662517581
+          },
+          "p50": {
+            "before_us": 300.525,
+            "after_us": 283.386,
+            "change_percent": -5.7030197154978595
+          },
+          "p95": {
+            "before_us": 311.007,
+            "after_us": 294.818,
+            "change_percent": -5.205349075744281
+          },
+          "p99": {
+            "before_us": 337.15,
+            "after_us": 323.819,
+            "change_percent": -3.9540263977458023
+          }
+        }
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 112.444235,
+            "after_us": 109.397105,
+            "change_percent": -2.7099032689403835
+          },
+          "p50": {
+            "before_us": 111.678,
+            "after_us": 107.967,
+            "change_percent": -3.3229463278353855
+          },
+          "p95": {
+            "before_us": 118.202,
+            "after_us": 113.917,
+            "change_percent": -3.6251501666638486
+          },
+          "p99": {
+            "before_us": 122.724,
+            "after_us": 174.931,
+            "change_percent": 42.54017144160882
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 445.600107,
+            "after_us": 423.280122,
+            "change_percent": -5.008972091651664
+          },
+          "p50": {
+            "before_us": 440.034,
+            "after_us": 415.255,
+            "change_percent": -5.631155774326524
+          },
+          "p95": {
+            "before_us": 484.637,
+            "after_us": 466.038,
+            "change_percent": -3.837717714495592
+          },
+          "p99": {
+            "before_us": 490.468,
+            "after_us": 578.312,
+            "change_percent": 17.910240831206114
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 558.242158,
+            "after_us": 532.677227,
+            "change_percent": -4.579541446957503
+          },
+          "p50": {
+            "before_us": 552.954,
+            "after_us": 523.425,
+            "change_percent": -5.34022721600712
+          },
+          "p95": {
+            "before_us": 597.196,
+            "after_us": 575.199,
+            "change_percent": -3.6833803307457003
+          },
+          "p99": {
+            "before_us": 605.191,
+            "after_us": 750.642,
+            "change_percent": 24.03390004147452
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 103.114048,
+            "after_us": 99.508165,
+            "change_percent": -3.496985202249059
+          },
+          "p50": {
+            "before_us": 102.85,
+            "after_us": 98.651,
+            "change_percent": -4.082644628099175
+          },
+          "p95": {
+            "before_us": 107.381,
+            "after_us": 103.441,
+            "change_percent": -3.6691779737569985
+          },
+          "p99": {
+            "before_us": 112.611,
+            "after_us": 120.31,
+            "change_percent": 6.836809903117813
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 342.772587,
+            "after_us": 323.137692,
+            "change_percent": -5.7282570849225944
+          },
+          "p50": {
+            "before_us": 337.242,
+            "after_us": 316.192,
+            "change_percent": -6.241808552908601
+          },
+          "p95": {
+            "before_us": 381.59,
+            "after_us": 366.263,
+            "change_percent": -4.016614691160669
+          },
+          "p99": {
+            "before_us": 386.556,
+            "after_us": 386.023,
+            "change_percent": -0.13788429102121746
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 112.006987,
+            "after_us": 107.589633,
+            "change_percent": -3.9438200404408597
+          },
+          "p50": {
+            "before_us": 111.597,
+            "after_us": 106.919,
+            "change_percent": -4.191868957050815
+          },
+          "p95": {
+            "before_us": 117.08,
+            "after_us": 112.559,
+            "change_percent": -3.86146224803553
+          },
+          "p99": {
+            "before_us": 122.174,
+            "after_us": 119.477,
+            "change_percent": -2.2075073256175637
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 442.494342,
+            "after_us": 416.448353,
+            "change_percent": -5.886174472260263
+          },
+          "p50": {
+            "before_us": 443.856,
+            "after_us": 416.256,
+            "change_percent": -6.218232940413115
+          },
+          "p95": {
+            "before_us": 454.869,
+            "after_us": 429.022,
+            "change_percent": -5.682295342175447
+          },
+          "p99": {
+            "before_us": 486.816,
+            "after_us": 462.481,
+            "change_percent": -4.998808584763026
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 554.39362,
+            "after_us": 524.037987,
+            "change_percent": -5.475465789090428
+          },
+          "p50": {
+            "before_us": 555.573,
+            "after_us": 523.03,
+            "change_percent": -5.857556072739323
+          },
+          "p95": {
+            "before_us": 568.428,
+            "after_us": 538.383,
+            "change_percent": -5.28562984230192
+          },
+          "p99": {
+            "before_us": 600.036,
+            "after_us": 570.979,
+            "change_percent": -4.842542780766468
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 107.272247,
+            "after_us": 102.707367,
+            "change_percent": -4.2554156621702806
+          },
+          "p50": {
+            "before_us": 106.742,
+            "after_us": 102.297,
+            "change_percent": -4.1642465009087415
+          },
+          "p95": {
+            "before_us": 112.083,
+            "after_us": 107.678,
+            "change_percent": -3.9301232122623375
+          },
+          "p99": {
+            "before_us": 118.704,
+            "after_us": 113.38,
+            "change_percent": -4.4851058094082745
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 332.194097,
+            "after_us": 313.172632,
+            "change_percent": -5.726009333633641
+          },
+          "p50": {
+            "before_us": 333.918,
+            "after_us": 314.54,
+            "change_percent": -5.803221150102711
+          },
+          "p95": {
+            "before_us": 344.235,
+            "after_us": 324.933,
+            "change_percent": -5.607216000697202
+          },
+          "p99": {
+            "before_us": 376.494,
+            "after_us": 359.075,
+            "change_percent": -4.626634156188425
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 127.419743,
+            "after_us": 123.222075,
+            "change_percent": -3.2943623187185356
+          },
+          "p50": {
+            "before_us": 126.927,
+            "after_us": 122.636,
+            "change_percent": -3.3806833849378104
+          },
+          "p95": {
+            "before_us": 132.527,
+            "after_us": 128.33,
+            "change_percent": -3.1669018388705505
+          },
+          "p99": {
+            "before_us": 138.062,
+            "after_us": 137.515,
+            "change_percent": -0.3961988092306523
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 504.63915,
+            "after_us": 475.947595,
+            "change_percent": -5.68555868089109
+          },
+          "p50": {
+            "before_us": 499.512,
+            "after_us": 469.47,
+            "change_percent": -6.01426992744919
+          },
+          "p95": {
+            "before_us": 548.191,
+            "after_us": 524.037,
+            "change_percent": -4.406128520898733
+          },
+          "p99": {
+            "before_us": 554.394,
+            "after_us": 530.598,
+            "change_percent": -4.292254245175819
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 632.058893,
+            "after_us": 599.16967,
+            "change_percent": -5.203506091638843
+          },
+          "p50": {
+            "before_us": 627.399,
+            "after_us": 593.335,
+            "change_percent": -5.429399791838996
+          },
+          "p95": {
+            "before_us": 675.619,
+            "after_us": 646.796,
+            "change_percent": -4.266161845655613
+          },
+          "p99": {
+            "before_us": 683.466,
+            "after_us": 656.466,
+            "change_percent": -3.9504525462861317
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 118.190652,
+            "after_us": 113.572125,
+            "change_percent": -3.9076922936341907
+          },
+          "p50": {
+            "before_us": 117.715,
+            "after_us": 113.308,
+            "change_percent": -3.7437879624516834
+          },
+          "p95": {
+            "before_us": 123.443,
+            "after_us": 119.176,
+            "change_percent": -3.4566561084873104
+          },
+          "p99": {
+            "before_us": 129.059,
+            "after_us": 125.729,
+            "change_percent": -2.5802152503893505
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 383.471802,
+            "after_us": 361.002478,
+            "change_percent": -5.859446218160269
+          },
+          "p50": {
+            "before_us": 377.976,
+            "after_us": 355.227,
+            "change_percent": -6.018636103879615
+          },
+          "p95": {
+            "before_us": 428.883,
+            "after_us": 410.747,
+            "change_percent": -4.2286590981689525
+          },
+          "p99": {
+            "before_us": 434.013,
+            "after_us": 415.612,
+            "change_percent": -4.239734754488911
+          }
+        }
+      },
+      {
+        "model": "chocola/casual-b-no-bell",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 95.96005,
+            "after_us": 91.561257,
+            "change_percent": -4.583983647361578
+          },
+          "p50": {
+            "before_us": 95.442,
+            "after_us": 91.167,
+            "change_percent": -4.479160118186954
+          },
+          "p95": {
+            "before_us": 99.483,
+            "after_us": 94.35,
+            "change_percent": -5.15967552245108
+          },
+          "p99": {
+            "before_us": 105.991,
+            "after_us": 101.152,
+            "change_percent": -4.565481974884655
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 324.115702,
+            "after_us": 302.415388,
+            "change_percent": -6.695236875626587
+          },
+          "p50": {
+            "before_us": 321.248,
+            "after_us": 299.763,
+            "change_percent": -6.687979380416376
+          },
+          "p95": {
+            "before_us": 353.708,
+            "after_us": 330.244,
+            "change_percent": -6.633720469992199
+          },
+          "p99": {
+            "before_us": 389.921,
+            "after_us": 365.314,
+            "change_percent": -6.310765514040018
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 420.137462,
+            "after_us": 393.976645,
+            "change_percent": -6.2267280036075405
+          },
+          "p50": {
+            "before_us": 417.083,
+            "after_us": 391.343,
+            "change_percent": -6.171433503643165
+          },
+          "p95": {
+            "before_us": 451.214,
+            "after_us": 425.697,
+            "change_percent": -5.655188003918321
+          },
+          "p99": {
+            "before_us": 486.919,
+            "after_us": 458.422,
+            "change_percent": -5.85251345706369
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 91.499797,
+            "after_us": 87.321072,
+            "change_percent": -4.566922700385878
+          },
+          "p50": {
+            "before_us": 90.78,
+            "after_us": 86.881,
+            "change_percent": -4.294998898435775
+          },
+          "p95": {
+            "before_us": 95.868,
+            "after_us": 89.209,
+            "change_percent": -6.9460090958401
+          },
+          "p99": {
+            "before_us": 104.533,
+            "after_us": 97.847,
+            "change_percent": -6.3960663139869816
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 233.136452,
+            "after_us": 215.824285,
+            "change_percent": -7.425765834336362
+          },
+          "p50": {
+            "before_us": 230.664,
+            "after_us": 213.17,
+            "change_percent": -7.584191724759826
+          },
+          "p95": {
+            "before_us": 263.507,
+            "after_us": 242.901,
+            "change_percent": -7.81990611255109
+          },
+          "p99": {
+            "before_us": 294.554,
+            "after_us": 276.7,
+            "change_percent": -6.061367355391534
+          }
+        }
+      },
+      {
+        "model": "chocola/casual-b-no-bell",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 113.247245,
+            "after_us": 109.646162,
+            "change_percent": -3.17984159349749
+          },
+          "p50": {
+            "before_us": 112.659,
+            "after_us": 108.689,
+            "change_percent": -3.523908431638856
+          },
+          "p95": {
+            "before_us": 118.257,
+            "after_us": 114.893,
+            "change_percent": -2.84465190221298
+          },
+          "p99": {
+            "before_us": 124.141,
+            "after_us": 127.912,
+            "change_percent": 3.037674901926035
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 394.168265,
+            "after_us": 372.355283,
+            "change_percent": -5.533926481879514
+          },
+          "p50": {
+            "before_us": 385.931,
+            "after_us": 362.347,
+            "change_percent": -6.110936929140188
+          },
+          "p95": {
+            "before_us": 430.154,
+            "after_us": 415.892,
+            "change_percent": -3.315556754092719
+          },
+          "p99": {
+            "before_us": 458.486,
+            "after_us": 444.561,
+            "change_percent": -3.0371701644106963
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 507.360192,
+            "after_us": 482.001445,
+            "change_percent": -4.998174354207119
+          },
+          "p50": {
+            "before_us": 499.215,
+            "after_us": 472.479,
+            "change_percent": -5.355608305038906
+          },
+          "p95": {
+            "before_us": 544.987,
+            "after_us": 529.455,
+            "change_percent": -2.8499762379652904
+          },
+          "p99": {
+            "before_us": 573.877,
+            "after_us": 555.395,
+            "change_percent": -3.220550745194528
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 103.606543,
+            "after_us": 100.226032,
+            "change_percent": -3.2628354369472534
+          },
+          "p50": {
+            "before_us": 103.283,
+            "after_us": 99.147,
+            "change_percent": -4.004531239410158
+          },
+          "p95": {
+            "before_us": 107.673,
+            "after_us": 104.144,
+            "change_percent": -3.2775161832585664
+          },
+          "p99": {
+            "before_us": 113.067,
+            "after_us": 122.361,
+            "change_percent": 8.219905012072504
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 292.940958,
+            "after_us": 272.248662,
+            "change_percent": -7.063640448666797
+          },
+          "p50": {
+            "before_us": 284.573,
+            "after_us": 262.599,
+            "change_percent": -7.721744508438954
+          },
+          "p95": {
+            "before_us": 328.697,
+            "after_us": 315.342,
+            "change_percent": -4.063012440028357
+          },
+          "p99": {
+            "before_us": 356.837,
+            "after_us": 340.553,
+            "change_percent": -4.563428119841828
+          }
+        }
+      },
+      {
+        "model": "vanilla/wintermaid",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 110.316155,
+            "after_us": 106.86945,
+            "change_percent": -3.124388263894795
+          },
+          "p50": {
+            "before_us": 109.652,
+            "after_us": 105.429,
+            "change_percent": -3.8512749425455017
+          },
+          "p95": {
+            "before_us": 115.637,
+            "after_us": 112.31,
+            "change_percent": -2.8771068083744855
+          },
+          "p99": {
+            "before_us": 122.313,
+            "after_us": 164.422,
+            "change_percent": 34.42724812571025
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 449.48327,
+            "after_us": 428.624973,
+            "change_percent": -4.640505752305302
+          },
+          "p50": {
+            "before_us": 450.647,
+            "after_us": 425.873,
+            "change_percent": -5.497429251720309
+          },
+          "p95": {
+            "before_us": 462.48,
+            "after_us": 446.725,
+            "change_percent": -3.406633800380554
+          },
+          "p99": {
+            "before_us": 494.965,
+            "after_us": 596.953,
+            "change_percent": 20.605093289424502
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 559.799425,
+            "after_us": 535.494423,
+            "change_percent": -4.341734005889708
+          },
+          "p50": {
+            "before_us": 561.394,
+            "after_us": 531.811,
+            "change_percent": -5.269561128191603
+          },
+          "p95": {
+            "before_us": 575.019,
+            "after_us": 552.692,
+            "change_percent": -3.8828282195892627
+          },
+          "p99": {
+            "before_us": 611.168,
+            "after_us": 730.831,
+            "change_percent": 19.57939551808996
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 106.613418,
+            "after_us": 102.892795,
+            "change_percent": -3.4898262055532148
+          },
+          "p50": {
+            "before_us": 105.762,
+            "after_us": 101.181,
+            "change_percent": -4.3314233845804795
+          },
+          "p95": {
+            "before_us": 110.678,
+            "after_us": 107.321,
+            "change_percent": -3.033123113897973
+          },
+          "p99": {
+            "before_us": 119.387,
+            "after_us": 155.735,
+            "change_percent": 30.44552589477918
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 346.076642,
+            "after_us": 325.277572,
+            "change_percent": -6.009960649121182
+          },
+          "p50": {
+            "before_us": 347.113,
+            "after_us": 325.113,
+            "change_percent": -6.3379936792917535
+          },
+          "p95": {
+            "before_us": 358.801,
+            "after_us": 340.311,
+            "change_percent": -5.15327437771913
+          },
+          "p99": {
+            "before_us": 391.038,
+            "after_us": 435.558,
+            "change_percent": 11.38508277967869
+          }
+        }
+      },
+      {
+        "model": "vanilla/wintermaid",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 125.176557,
+            "after_us": 121.399363,
+            "change_percent": -3.0174931237324287
+          },
+          "p50": {
+            "before_us": 124.205,
+            "after_us": 120.151,
+            "change_percent": -3.2639587778269807
+          },
+          "p95": {
+            "before_us": 130.793,
+            "after_us": 126.999,
+            "change_percent": -2.900766860611814
+          },
+          "p99": {
+            "before_us": 145.149,
+            "after_us": 140.553,
+            "change_percent": -3.166401421987064
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 516.275795,
+            "after_us": 487.799218,
+            "change_percent": -5.515768369501039
+          },
+          "p50": {
+            "before_us": 509.963,
+            "after_us": 480.931,
+            "change_percent": -5.6929620384224
+          },
+          "p95": {
+            "before_us": 558.959,
+            "after_us": 536.867,
+            "change_percent": -3.9523471310060287
+          },
+          "p99": {
+            "before_us": 570.827,
+            "after_us": 542.43,
+            "change_percent": -4.97471212819296
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 641.613788,
+            "after_us": 609.198582,
+            "change_percent": -5.052136753644709
+          },
+          "p50": {
+            "before_us": 634.865,
+            "after_us": 601.697,
+            "change_percent": -5.224417789608815
+          },
+          "p95": {
+            "before_us": 683.878,
+            "after_us": 658.104,
+            "change_percent": -3.7688008679910734
+          },
+          "p99": {
+            "before_us": 710.145,
+            "after_us": 671.424,
+            "change_percent": -5.452548423209347
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 116.379753,
+            "after_us": 111.975685,
+            "change_percent": -3.784221813909505
+          },
+          "p50": {
+            "before_us": 115.516,
+            "after_us": 110.839,
+            "change_percent": -4.048789778039408
+          },
+          "p95": {
+            "before_us": 121.988,
+            "after_us": 117.254,
+            "change_percent": -3.8807095779912704
+          },
+          "p99": {
+            "before_us": 132.606,
+            "after_us": 123.457,
+            "change_percent": -6.899386151456199
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 402.712722,
+            "after_us": 375.735968,
+            "change_percent": -6.698758823914175
+          },
+          "p50": {
+            "before_us": 395.943,
+            "after_us": 368.922,
+            "change_percent": -6.824467158151537
+          },
+          "p95": {
+            "before_us": 445.363,
+            "after_us": 425.149,
+            "change_percent": -4.538769498139716
+          },
+          "p99": {
+            "before_us": 461.368,
+            "after_us": 435.633,
+            "change_percent": -5.577976799431261
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 89.629993,
+            "after_us": 86.015313,
+            "change_percent": -4.032891088142776
+          },
+          "p50": {
+            "before_us": 89.09,
+            "after_us": 85.082,
+            "change_percent": -4.4988214165450735
+          },
+          "p95": {
+            "before_us": 92.12,
+            "after_us": 87.655,
+            "change_percent": -4.846938775510212
+          },
+          "p99": {
+            "before_us": 107.42,
+            "after_us": 99.5,
+            "change_percent": -7.3729286911189735
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 343.566282,
+            "after_us": 323.120785,
+            "change_percent": -5.950961450867864
+          },
+          "p50": {
+            "before_us": 341.399,
+            "after_us": 319.717,
+            "change_percent": -6.350926628373255
+          },
+          "p95": {
+            "before_us": 381.023,
+            "after_us": 359.952,
+            "change_percent": -5.530112355422123
+          },
+          "p99": {
+            "before_us": 411.043,
+            "after_us": 393.387,
+            "change_percent": -4.2954143483771805
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 433.081638,
+            "after_us": 409.136098,
+            "change_percent": -5.529105346184171
+          },
+          "p50": {
+            "before_us": 430.518,
+            "after_us": 404.482,
+            "change_percent": -6.047598474395944
+          },
+          "p95": {
+            "before_us": 471.765,
+            "after_us": 446.621,
+            "change_percent": -5.329772238296615
+          },
+          "p99": {
+            "before_us": 501.626,
+            "after_us": 479.809,
+            "change_percent": -4.349256218776532
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 85.052185,
+            "after_us": 81.054933,
+            "change_percent": -4.699764033105069
+          },
+          "p50": {
+            "before_us": 84.493,
+            "after_us": 80.589,
+            "change_percent": -4.620501106600539
+          },
+          "p95": {
+            "before_us": 89.996,
+            "after_us": 82.279,
+            "change_percent": -8.574825547802122
+          },
+          "p99": {
+            "before_us": 98.905,
+            "after_us": 92.024,
+            "change_percent": -6.957181133410851
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 259.977845,
+            "after_us": 241.947213,
+            "change_percent": -6.935449441855324
+          },
+          "p50": {
+            "before_us": 256.626,
+            "after_us": 240.07,
+            "change_percent": -6.451411782126515
+          },
+          "p95": {
+            "before_us": 297.0,
+            "after_us": 276.791,
+            "change_percent": -6.804377104377101
+          },
+          "p99": {
+            "before_us": 329.233,
+            "after_us": 311.2,
+            "change_percent": -5.477275971728234
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 104.300485,
+            "after_us": 100.283937,
+            "change_percent": -3.850938948174598
+          },
+          "p50": {
+            "before_us": 103.671,
+            "after_us": 99.883,
+            "change_percent": -3.6538665586326124
+          },
+          "p95": {
+            "before_us": 109.269,
+            "after_us": 104.539,
+            "change_percent": -4.32876662182321
+          },
+          "p99": {
+            "before_us": 118.966,
+            "after_us": 110.626,
+            "change_percent": -7.010406334582986
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 398.406113,
+            "after_us": 375.036992,
+            "change_percent": -5.865653221038802
+          },
+          "p50": {
+            "before_us": 389.188,
+            "after_us": 365.47,
+            "change_percent": -6.094226954582349
+          },
+          "p95": {
+            "before_us": 433.991,
+            "after_us": 415.773,
+            "change_percent": -4.197782903332092
+          },
+          "p99": {
+            "before_us": 470.334,
+            "after_us": 450.85,
+            "change_percent": -4.142588033184924
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 502.634868,
+            "after_us": 475.320928,
+            "change_percent": -5.434151456440539
+          },
+          "p50": {
+            "before_us": 493.692,
+            "after_us": 465.781,
+            "change_percent": -5.653524869756854
+          },
+          "p95": {
+            "before_us": 539.544,
+            "after_us": 516.051,
+            "change_percent": -4.354232462968721
+          },
+          "p99": {
+            "before_us": 576.622,
+            "after_us": 551.92,
+            "change_percent": -4.283915632771551
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 95.330233,
+            "after_us": 91.344817,
+            "change_percent": -4.1806422522852715
+          },
+          "p50": {
+            "before_us": 94.91,
+            "after_us": 90.989,
+            "change_percent": -4.131282267411218
+          },
+          "p95": {
+            "before_us": 100.153,
+            "after_us": 93.645,
+            "change_percent": -6.498057971303917
+          },
+          "p99": {
+            "before_us": 106.656,
+            "after_us": 103.49,
+            "change_percent": -2.9684218421842323
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 304.004063,
+            "after_us": 284.022947,
+            "change_percent": -6.572647682014699
+          },
+          "p50": {
+            "before_us": 294.63,
+            "after_us": 274.619,
+            "change_percent": -6.791908495401
+          },
+          "p95": {
+            "before_us": 339.457,
+            "after_us": 324.356,
+            "change_percent": -4.4485752245498
+          },
+          "p99": {
+            "before_us": 370.724,
+            "after_us": 348.056,
+            "change_percent": -6.114521854533295
+          }
+        }
+      },
+      {
+        "model": "coconut/casual",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 98.565558,
+            "after_us": 93.683805,
+            "change_percent": -4.952798014900894
+          },
+          "p50": {
+            "before_us": 98.094,
+            "after_us": 93.263,
+            "change_percent": -4.924867983770653
+          },
+          "p95": {
+            "before_us": 102.275,
+            "after_us": 95.859,
+            "change_percent": -6.273282815937431
+          },
+          "p99": {
+            "before_us": 110.775,
+            "after_us": 104.126,
+            "change_percent": -6.002256826901375
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 374.976413,
+            "after_us": 352.084938,
+            "change_percent": -6.104777315686771
+          },
+          "p50": {
+            "before_us": 371.93,
+            "after_us": 348.985,
+            "change_percent": -6.169171618315272
+          },
+          "p95": {
+            "before_us": 412.582,
+            "after_us": 388.487,
+            "change_percent": -5.840051189824081
+          },
+          "p99": {
+            "before_us": 443.884,
+            "after_us": 421.926,
+            "change_percent": -4.946787899541327
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 473.439313,
+            "after_us": 445.768743,
+            "change_percent": -5.8445864633974836
+          },
+          "p50": {
+            "before_us": 469.91,
+            "after_us": 442.282,
+            "change_percent": -5.87942371943565
+          },
+          "p95": {
+            "before_us": 512.585,
+            "after_us": 483.845,
+            "change_percent": -5.606874957324148
+          },
+          "p99": {
+            "before_us": 544.146,
+            "after_us": 516.658,
+            "change_percent": -5.051585420089455
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 95.415883,
+            "after_us": 90.35184,
+            "change_percent": -5.307337563495585
+          },
+          "p50": {
+            "before_us": 94.789,
+            "after_us": 90.07,
+            "change_percent": -4.978425766702898
+          },
+          "p95": {
+            "before_us": 100.007,
+            "after_us": 92.673,
+            "change_percent": -7.3334866559340846
+          },
+          "p99": {
+            "before_us": 105.904,
+            "after_us": 99.706,
+            "change_percent": -5.852470161655832
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 279.849767,
+            "after_us": 262.438883,
+            "change_percent": -6.2215109866430645
+          },
+          "p50": {
+            "before_us": 277.142,
+            "after_us": 259.711,
+            "change_percent": -6.289555534707835
+          },
+          "p95": {
+            "before_us": 317.006,
+            "after_us": 297.783,
+            "change_percent": -6.063923080320233
+          },
+          "p99": {
+            "before_us": 329.894,
+            "after_us": 331.862,
+            "change_percent": 0.5965552571432164
+          }
+        }
+      },
+      {
+        "model": "coconut/casual",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 111.95333,
+            "after_us": 107.151823,
+            "change_percent": -4.288846968643101
+          },
+          "p50": {
+            "before_us": 111.349,
+            "after_us": 106.668,
+            "change_percent": -4.203899451274817
+          },
+          "p95": {
+            "before_us": 116.791,
+            "after_us": 110.725,
+            "change_percent": -5.193893365070945
+          },
+          "p99": {
+            "before_us": 123.87,
+            "after_us": 116.073,
+            "change_percent": -6.294502300799232
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 444.723922,
+            "after_us": 418.138082,
+            "change_percent": -5.97805485264632
+          },
+          "p50": {
+            "before_us": 435.597,
+            "after_us": 408.758,
+            "change_percent": -6.161429027288989
+          },
+          "p95": {
+            "before_us": 482.591,
+            "after_us": 461.436,
+            "change_percent": -4.383629201539197
+          },
+          "p99": {
+            "before_us": 512.353,
+            "after_us": 485.66,
+            "change_percent": -5.209884591287639
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 556.677252,
+            "after_us": 525.184763,
+            "change_percent": -5.657225777927055
+          },
+          "p50": {
+            "before_us": 549.676,
+            "after_us": 515.856,
+            "change_percent": -6.152715417809773
+          },
+          "p95": {
+            "before_us": 595.369,
+            "after_us": 568.88,
+            "change_percent": -4.44917353775558
+          },
+          "p99": {
+            "before_us": 629.957,
+            "after_us": 595.488,
+            "change_percent": -5.471643302638107
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 104.298065,
+            "after_us": 99.362047,
+            "change_percent": -4.732607455373206
+          },
+          "p50": {
+            "before_us": 103.883,
+            "after_us": 99.144,
+            "change_percent": -4.561862864953836
+          },
+          "p95": {
+            "before_us": 109.225,
+            "after_us": 101.505,
+            "change_percent": -7.06797894254978
+          },
+          "p99": {
+            "before_us": 116.326,
+            "after_us": 108.679,
+            "change_percent": -6.573766827708328
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 341.114033,
+            "after_us": 319.4104,
+            "change_percent": -6.3625740662507475
+          },
+          "p50": {
+            "before_us": 331.546,
+            "after_us": 310.041,
+            "change_percent": -6.486279430305297
+          },
+          "p95": {
+            "before_us": 378.599,
+            "after_us": 362.186,
+            "change_percent": -4.335193700987061
+          },
+          "p99": {
+            "before_us": 402.203,
+            "after_us": 391.382,
+            "change_percent": -2.6904324433184135
+          }
+        }
+      },
+      {
+        "model": "azuki/casual",
+        "moving": false,
+        "advance_us": {
+          "mean": {
+            "before_us": 101.524992,
+            "after_us": 96.671917,
+            "change_percent": -4.780177672902452
+          },
+          "p50": {
+            "before_us": 101.031,
+            "after_us": 96.293,
+            "change_percent": -4.689649711474697
+          },
+          "p95": {
+            "before_us": 106.096,
+            "after_us": 99.861,
+            "change_percent": -5.876753129241441
+          },
+          "p99": {
+            "before_us": 112.161,
+            "after_us": 106.957,
+            "change_percent": -4.639758917983972
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 445.192255,
+            "after_us": 420.786177,
+            "change_percent": -5.482143439355203
+          },
+          "p50": {
+            "before_us": 447.081,
+            "after_us": 422.75,
+            "change_percent": -5.442190565020654
+          },
+          "p95": {
+            "before_us": 457.328,
+            "after_us": 434.024,
+            "change_percent": -5.0956862470699305
+          },
+          "p99": {
+            "before_us": 482.255,
+            "after_us": 461.491,
+            "change_percent": -4.305605955355574
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 546.504303,
+            "after_us": 517.458093,
+            "change_percent": -5.3149096613792075
+          },
+          "p50": {
+            "before_us": 548.509,
+            "after_us": 519.171,
+            "change_percent": -5.348681607776717
+          },
+          "p95": {
+            "before_us": 559.276,
+            "after_us": 530.667,
+            "change_percent": -5.1153634341541405
+          },
+          "p99": {
+            "before_us": 584.79,
+            "after_us": 561.352,
+            "change_percent": -4.007934472203701
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 97.182717,
+            "after_us": 92.336417,
+            "change_percent": -4.986792044515487
+          },
+          "p50": {
+            "before_us": 96.643,
+            "after_us": 91.855,
+            "change_percent": -4.954316401601766
+          },
+          "p95": {
+            "before_us": 101.406,
+            "after_us": 95.979,
+            "change_percent": -5.351754334063075
+          },
+          "p99": {
+            "before_us": 107.212,
+            "after_us": 104.359,
+            "change_percent": -2.66108271462151
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 347.670727,
+            "after_us": 328.657415,
+            "change_percent": -5.468769880071034
+          },
+          "p50": {
+            "before_us": 348.447,
+            "after_us": 330.867,
+            "change_percent": -5.045243609501582
+          },
+          "p95": {
+            "before_us": 359.824,
+            "after_us": 338.735,
+            "change_percent": -5.860920894659616
+          },
+          "p99": {
+            "before_us": 384.862,
+            "after_us": 368.146,
+            "change_percent": -4.343375027932095
+          }
+        }
+      },
+      {
+        "model": "azuki/casual",
+        "moving": true,
+        "advance_us": {
+          "mean": {
+            "before_us": 115.871657,
+            "after_us": 111.689038,
+            "change_percent": -3.609699825040047
+          },
+          "p50": {
+            "before_us": 115.273,
+            "after_us": 111.163,
+            "change_percent": -3.56544897764437
+          },
+          "p95": {
+            "before_us": 120.708,
+            "after_us": 116.046,
+            "change_percent": -3.862212943632559
+          },
+          "p99": {
+            "before_us": 126.772,
+            "after_us": 120.431,
+            "change_percent": -5.001893162528004
+          }
+        },
+        "prepare_us": {
+          "mean": {
+            "before_us": 493.221772,
+            "after_us": 466.089165,
+            "change_percent": -5.501096776401027
+          },
+          "p50": {
+            "before_us": 488.572,
+            "after_us": 461.138,
+            "change_percent": -5.615139631415644
+          },
+          "p95": {
+            "before_us": 535.802,
+            "after_us": 513.773,
+            "change_percent": -4.1114068256557506
+          },
+          "p99": {
+            "before_us": 541.446,
+            "after_us": 521.555,
+            "change_percent": -3.6736812165940935
+          }
+        },
+        "total_us": {
+          "mean": {
+            "before_us": 609.093428,
+            "after_us": 577.698865,
+            "change_percent": -5.1543099230419
+          },
+          "p50": {
+            "before_us": 604.181,
+            "after_us": 572.768,
+            "change_percent": -5.1992697552554645
+          },
+          "p95": {
+            "before_us": 651.402,
+            "after_us": 624.833,
+            "change_percent": -4.078740931099389
+          },
+          "p99": {
+            "before_us": 658.305,
+            "after_us": 635.365,
+            "change_percent": -3.484706936754234
+          }
+        },
+        "geometry_evaluate_us": {
+          "mean": {
+            "before_us": 106.709007,
+            "after_us": 101.886408,
+            "change_percent": -4.519392631964047
+          },
+          "p50": {
+            "before_us": 106.271,
+            "after_us": 101.619,
+            "change_percent": -4.377487743598918
+          },
+          "p95": {
+            "before_us": 111.167,
+            "after_us": 104.987,
+            "change_percent": -5.559203720528583
+          },
+          "p99": {
+            "before_us": 118.898,
+            "after_us": 113.437,
+            "change_percent": -4.593012498107618
+          }
+        },
+        "geometry_build_us": {
+          "mean": {
+            "before_us": 386.16193,
+            "after_us": 364.481045,
+            "change_percent": -5.6144542782868285
+          },
+          "p50": {
+            "before_us": 381.476,
+            "after_us": 359.137,
+            "change_percent": -5.8559385125145464
+          },
+          "p95": {
+            "before_us": 428.876,
+            "after_us": 411.761,
+            "change_percent": -3.9906639681399625
+          },
+          "p99": {
+            "before_us": 436.934,
+            "after_us": 416.972,
+            "change_percent": -4.568653389299082
+          }
+        }
+      }
+    ],
+    "equal_case_weight": {
+      "advance_us": {
+        "mean": {
+          "mean_change_percent": -3.822865034838364,
+          "min_change_percent": -4.952798014900894,
+          "max_change_percent": -2.7099032689403835
+        },
+        "p50": {
+          "mean_change_percent": -3.9821956277447152,
+          "min_change_percent": -4.924867983770653,
+          "max_change_percent": -3.2639587778269807
+        },
+        "p95": {
+          "mean_change_percent": -4.219235527780123,
+          "min_change_percent": -6.273282815937431,
+          "max_change_percent": -2.84465190221298
+        },
+        "p99": {
+          "mean_change_percent": 2.0864942725205484,
+          "min_change_percent": -7.3729286911189735,
+          "max_change_percent": 42.54017144160882
+        }
+      },
+      "prepare_us": {
+        "mean": {
+          "mean_change_percent": -5.664790667341841,
+          "min_change_percent": -6.695236875626587,
+          "max_change_percent": -4.640505752305302
+        },
+        "p50": {
+          "mean_change_percent": -5.942817069916931,
+          "min_change_percent": -6.687979380416376,
+          "max_change_percent": -5.442190565020654
+        },
+        "p95": {
+          "mean_change_percent": -4.678107938205921,
+          "min_change_percent": -6.633720469992199,
+          "max_change_percent": -3.315556754092719
+        },
+        "p99": {
+          "mean_change_percent": -1.083061280161228,
+          "min_change_percent": -6.310765514040018,
+          "max_change_percent": 20.605093289424502
+        }
+      },
+      "total_us": {
+        "mean": {
+          "mean_change_percent": -5.286169189577453,
+          "min_change_percent": -6.2267280036075405,
+          "max_change_percent": -4.341734005889708
+        },
+        "p50": {
+          "mean_change_percent": -5.586765328086655,
+          "min_change_percent": -6.171433503643165,
+          "max_change_percent": -5.1992697552554645
+        },
+        "p95": {
+          "mean_change_percent": -4.512483256001679,
+          "min_change_percent": -5.655188003918321,
+          "max_change_percent": -2.8499762379652904
+        },
+        "p99": {
+          "mean_change_percent": -0.7337015059689073,
+          "min_change_percent": -5.85251345706369,
+          "max_change_percent": 24.03390004147452
+        }
+      },
+      "geometry_evaluate_us": {
+        "mean": {
+          "mean_change_percent": -4.280404040341715,
+          "min_change_percent": -5.307337563495585,
+          "max_change_percent": -3.2628354369472534
+        },
+        "p50": {
+          "mean_change_percent": -4.353324824728174,
+          "min_change_percent": -4.978425766702898,
+          "max_change_percent": -3.7437879624516834
+        },
+        "p95": {
+          "mean_change_percent": -5.256180535347104,
+          "min_change_percent": -8.574825547802122,
+          "max_change_percent": -3.033123113897973
+        },
+        "p99": {
+          "mean_change_percent": -0.7351863566639829,
+          "min_change_percent": -6.957181133410851,
+          "max_change_percent": 30.44552589477918
+        }
+      },
+      "geometry_build_us": {
+        "mean": {
+          "mean_change_percent": -6.23793367074245,
+          "min_change_percent": -7.425765834336362,
+          "max_change_percent": -5.468769880071034
+        },
+        "p50": {
+          "mean_change_percent": -6.368244282684831,
+          "min_change_percent": -7.721744508438954,
+          "max_change_percent": -5.045243609501582
+        },
+        "p95": {
+          "mean_change_percent": -5.152603947660227,
+          "min_change_percent": -7.81990611255109,
+          "max_change_percent": -3.9906639681399625
+        },
+        "p99": {
+          "mean_change_percent": -2.8838337517212995,
+          "min_change_percent": -6.114521854533295,
+          "max_change_percent": 11.38508277967869
+        }
+      }
+    }
+  },
+  "desktop": {
+    "cases": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.973,
+            "after_us": 46.962,
+            "change_percent": -17.57148122795007
+          },
+          "p50": {
+            "before_us": 56.914,
+            "after_us": 46.444,
+            "change_percent": -18.396176687633968
+          },
+          "p95": {
+            "before_us": 59.459,
+            "after_us": 53.976,
+            "change_percent": -9.221480347802691
+          },
+          "p99": {
+            "before_us": 67.052,
+            "after_us": 64.93,
+            "change_percent": -3.1647079878303397
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 639.64,
+            "after_us": 631.124,
+            "change_percent": -1.3313738978175116
+          },
+          "p50": {
+            "before_us": 638.522,
+            "after_us": 626.958,
+            "change_percent": -1.8110574107078614
+          },
+          "p95": {
+            "before_us": 678.379,
+            "after_us": 676.066,
+            "change_percent": -0.340959846929223
+          },
+          "p99": {
+            "before_us": 702.175,
+            "after_us": 778.725,
+            "change_percent": 10.901840709224908
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 878.71,
+            "after_us": 811.508,
+            "change_percent": -7.647801891409001
+          },
+          "p50": {
+            "before_us": 832.376,
+            "after_us": 805.195,
+            "change_percent": -3.265471373513884
+          },
+          "p95": {
+            "before_us": 1089.823,
+            "after_us": 877.093,
+            "change_percent": -19.519683471536208
+          },
+          "p99": {
+            "before_us": 1119.488,
+            "after_us": 1036.328,
+            "change_percent": -7.4283958380974235
+          }
+        }
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 57.03,
+            "after_us": 46.638,
+            "change_percent": -18.22198842714361
+          },
+          "p50": {
+            "before_us": 57.351,
+            "after_us": 46.295,
+            "change_percent": -19.277780683859035
+          },
+          "p95": {
+            "before_us": 61.663,
+            "after_us": 51.87,
+            "change_percent": -15.881484845044834
+          },
+          "p99": {
+            "before_us": 70.618,
+            "after_us": 63.71,
+            "change_percent": -9.782208502081613
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 641.191,
+            "after_us": 631.651,
+            "change_percent": -1.4878561926165657
+          },
+          "p50": {
+            "before_us": 639.951,
+            "after_us": 628.122,
+            "change_percent": -1.8484227698683298
+          },
+          "p95": {
+            "before_us": 677.139,
+            "after_us": 672.111,
+            "change_percent": -0.7425358752043532
+          },
+          "p99": {
+            "before_us": 690.845,
+            "after_us": 720.614,
+            "change_percent": 4.30907077564433
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 831.738,
+            "after_us": 811.324,
+            "change_percent": -2.454378662511525
+          },
+          "p50": {
+            "before_us": 829.493,
+            "after_us": 804.604,
+            "change_percent": -3.000507538942465
+          },
+          "p95": {
+            "before_us": 873.458,
+            "after_us": 877.285,
+            "change_percent": 0.43814356271281163
+          },
+          "p99": {
+            "before_us": 990.003,
+            "after_us": 1065.835,
+            "change_percent": 7.659774768359284
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 65.137,
+            "after_us": 52.231,
+            "change_percent": -19.813623593349405
+          },
+          "p50": {
+            "before_us": 65.233,
+            "after_us": 52.173,
+            "change_percent": -20.020541750341092
+          },
+          "p95": {
+            "before_us": 71.773,
+            "after_us": 58.869,
+            "change_percent": -17.978905716634387
+          },
+          "p99": {
+            "before_us": 73.656,
+            "after_us": 65.21,
+            "change_percent": -11.466818724883254
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 711.058,
+            "after_us": 695.252,
+            "change_percent": -2.2228847717063904
+          },
+          "p50": {
+            "before_us": 707.015,
+            "after_us": 694.052,
+            "change_percent": -1.8334830236982236
+          },
+          "p95": {
+            "before_us": 754.245,
+            "after_us": 740.702,
+            "change_percent": -1.7955704048419285
+          },
+          "p99": {
+            "before_us": 767.35,
+            "after_us": 759.191,
+            "change_percent": -1.063269694402813
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 915.6,
+            "after_us": 885.956,
+            "change_percent": -3.237658366098739
+          },
+          "p50": {
+            "before_us": 909.999,
+            "after_us": 881.85,
+            "change_percent": -3.0933001025275852
+          },
+          "p95": {
+            "before_us": 965.496,
+            "after_us": 948.2,
+            "change_percent": -1.791410839609897
+          },
+          "p99": {
+            "before_us": 1161.661,
+            "after_us": 1125.07,
+            "change_percent": -3.1498862404780836
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 64.808,
+            "after_us": 52.835,
+            "change_percent": -18.474571040612275
+          },
+          "p50": {
+            "before_us": 65.117,
+            "after_us": 52.775,
+            "change_percent": -18.953575871124293
+          },
+          "p95": {
+            "before_us": 66.705,
+            "after_us": 58.506,
+            "change_percent": -12.291432426354842
+          },
+          "p99": {
+            "before_us": 79.778,
+            "after_us": 67.559,
+            "change_percent": -15.316252600967694
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 707.436,
+            "after_us": 697.218,
+            "change_percent": -1.444370939562034
+          },
+          "p50": {
+            "before_us": 708.602,
+            "after_us": 694.697,
+            "change_percent": -1.962314529171516
+          },
+          "p95": {
+            "before_us": 729.61,
+            "after_us": 727.531,
+            "change_percent": -0.2849467523745597
+          },
+          "p99": {
+            "before_us": 774.051,
+            "after_us": 775.52,
+            "change_percent": 0.18978077671882865
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1062.373,
+            "after_us": 1073.899,
+            "change_percent": 1.0849296810065523
+          },
+          "p50": {
+            "before_us": 1113.803,
+            "after_us": 1057.589,
+            "change_percent": -5.04703255423088
+          },
+          "p95": {
+            "before_us": 1161.405,
+            "after_us": 1143.808,
+            "change_percent": -1.5151476013965826
+          },
+          "p99": {
+            "before_us": 1498.288,
+            "after_us": 1495.254,
+            "change_percent": -0.20249778413763408
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.51,
+            "after_us": 46.088,
+            "change_percent": -18.442753494956644
+          },
+          "p50": {
+            "before_us": 56.9,
+            "after_us": 45.828,
+            "change_percent": -19.45869947275922
+          },
+          "p95": {
+            "before_us": 58.61,
+            "after_us": 51.796,
+            "change_percent": -11.626002388670875
+          },
+          "p99": {
+            "before_us": 66.181,
+            "after_us": 58.229,
+            "change_percent": -12.015533159063773
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 585.565,
+            "after_us": 576.238,
+            "change_percent": -1.5928206091552544
+          },
+          "p50": {
+            "before_us": 581.181,
+            "after_us": 568.467,
+            "change_percent": -2.187614529724824
+          },
+          "p95": {
+            "before_us": 624.648,
+            "after_us": 616.657,
+            "change_percent": -1.2792804907724054
+          },
+          "p99": {
+            "before_us": 655.894,
+            "after_us": 707.359,
+            "change_percent": 7.846542276648361
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 975.325,
+            "after_us": 944.318,
+            "change_percent": -3.1791454130674413
+          },
+          "p50": {
+            "before_us": 968.793,
+            "after_us": 927.974,
+            "change_percent": -4.213387173524163
+          },
+          "p95": {
+            "before_us": 1020.269,
+            "after_us": 1011.666,
+            "change_percent": -0.8432089968429812
+          },
+          "p99": {
+            "before_us": 1502.113,
+            "after_us": 1277.714,
+            "change_percent": -14.938889417773504
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.655,
+            "after_us": 46.357,
+            "change_percent": -18.176683434824824
+          },
+          "p50": {
+            "before_us": 56.838,
+            "after_us": 46.036,
+            "change_percent": -19.00489109398642
+          },
+          "p95": {
+            "before_us": 61.804,
+            "after_us": 52.546,
+            "change_percent": -14.979612970034307
+          },
+          "p99": {
+            "before_us": 81.992,
+            "after_us": 61.965,
+            "change_percent": -24.425553712557324
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 590.295,
+            "after_us": 577.422,
+            "change_percent": -2.18077401976976
+          },
+          "p50": {
+            "before_us": 581.08,
+            "after_us": 571.846,
+            "change_percent": -1.5891099332277836
+          },
+          "p95": {
+            "before_us": 631.738,
+            "after_us": 618.757,
+            "change_percent": -2.0548075309701375
+          },
+          "p99": {
+            "before_us": 889.363,
+            "after_us": 737.427,
+            "change_percent": -17.08368798791945
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 967.991,
+            "after_us": 944.284,
+            "change_percent": -2.449093018426829
+          },
+          "p50": {
+            "before_us": 947.253,
+            "after_us": 916.468,
+            "change_percent": -3.2499237268185044
+          },
+          "p95": {
+            "before_us": 1029.087,
+            "after_us": 1033.447,
+            "change_percent": 0.4236765210327009
+          },
+          "p99": {
+            "before_us": 1452.598,
+            "after_us": 1255.636,
+            "change_percent": -13.559291696670384
+          }
+        }
+      }
+    ],
+    "equal_case_weight": {
+      "prepare_us": {
+        "mean": {
+          "mean_change_percent": -18.450183536472807,
+          "min_change_percent": -19.813623593349405,
+          "max_change_percent": -17.57148122795007
+        },
+        "p50": {
+          "mean_change_percent": -19.185277593284006,
+          "min_change_percent": -20.020541750341092,
+          "max_change_percent": -18.396176687633968
+        },
+        "p95": {
+          "mean_change_percent": -13.66315311575699,
+          "min_change_percent": -17.978905716634387,
+          "max_change_percent": -9.221480347802691
+        },
+        "p99": {
+          "mean_change_percent": -12.695179114563999,
+          "min_change_percent": -24.425553712557324,
+          "max_change_percent": -3.1647079878303397
+        }
+      },
+      "cpu_us": {
+        "mean": {
+          "mean_change_percent": -1.710013405104586,
+          "min_change_percent": -2.2228847717063904,
+          "max_change_percent": -1.3313738978175116
+        },
+        "p50": {
+          "mean_change_percent": -1.872000366066423,
+          "min_change_percent": -2.187614529724824,
+          "max_change_percent": -1.5891099332277836
+        },
+        "p95": {
+          "mean_change_percent": -1.083016816848768,
+          "min_change_percent": -2.0548075309701375,
+          "max_change_percent": -0.2849467523745597
+        },
+        "p99": {
+          "mean_change_percent": 0.8500461426523607,
+          "min_change_percent": -17.08368798791945,
+          "max_change_percent": 10.901840709224908
+        }
+      },
+      "complete_us": {
+        "mean": {
+          "mean_change_percent": -2.980524611751164,
+          "min_change_percent": -7.647801891409001,
+          "max_change_percent": 1.0849296810065523
+        },
+        "p50": {
+          "mean_change_percent": -3.6449370782595802,
+          "min_change_percent": -5.04703255423088,
+          "max_change_percent": -3.000507538942465
+        },
+        "p95": {
+          "mean_change_percent": -3.8012718042733593,
+          "min_change_percent": -19.519683471536208,
+          "max_change_percent": 0.43814356271281163
+        },
+        "p99": {
+          "mean_change_percent": -5.269864368132957,
+          "min_change_percent": -14.938889417773504,
+          "max_change_percent": 7.659774768359284
+        }
+      }
+    },
+    "upload_counters": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 26,
+        "before_index_bytes": 49484304,
+        "after_index_bytes": 1995696,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 26,
+        "before_index_bytes": 49484304,
+        "after_index_bytes": 1995696,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 57563208,
+        "after_index_bytes": 1373592,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 57563208,
+        "after_index_bytes": 1373592,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 49021560,
+        "after_index_bytes": 1167144,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 49021560,
+        "after_index_bytes": 1167144,
+        "vertex_bytes_unchanged": true
+      }
+    ]
+  },
+  "gles": {
+    "cases": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 57.243,
+            "after_us": 46.109,
+            "change_percent": -19.45041315095295
+          },
+          "p50": {
+            "before_us": 57.036,
+            "after_us": 46.068,
+            "change_percent": -19.229960025247216
+          },
+          "p95": {
+            "before_us": 62.609,
+            "after_us": 48.048,
+            "change_percent": -23.257039722723572
+          },
+          "p99": {
+            "before_us": 78.687,
+            "after_us": 60.047,
+            "change_percent": -23.688792303684213
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 641.728,
+            "after_us": 627.687,
+            "change_percent": -2.1879986536351703
+          },
+          "p50": {
+            "before_us": 641.07,
+            "after_us": 628.334,
+            "change_percent": -1.9866785218463079
+          },
+          "p95": {
+            "before_us": 682.437,
+            "after_us": 653.024,
+            "change_percent": -4.309994915281557
+          },
+          "p99": {
+            "before_us": 698.816,
+            "after_us": 688.137,
+            "change_percent": -1.528156195622321
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 836.262,
+            "after_us": 805.247,
+            "change_percent": -3.708765913075085
+          },
+          "p50": {
+            "before_us": 830.041,
+            "after_us": 803.079,
+            "change_percent": -3.2482732780670043
+          },
+          "p95": {
+            "before_us": 963.429,
+            "after_us": 866.939,
+            "change_percent": -10.015268379922137
+          },
+          "p99": {
+            "before_us": 1158.606,
+            "after_us": 1005.784,
+            "change_percent": -13.190161280020995
+          }
+        }
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.541,
+            "after_us": 46.106,
+            "change_percent": -18.455633964733554
+          },
+          "p50": {
+            "before_us": 57.111,
+            "after_us": 46.069,
+            "change_percent": -19.334278860464703
+          },
+          "p95": {
+            "before_us": 58.428,
+            "after_us": 51.188,
+            "change_percent": -12.391319230505914
+          },
+          "p99": {
+            "before_us": 64.566,
+            "after_us": 62.117,
+            "change_percent": -3.793017997088255
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 643.396,
+            "after_us": 630.533,
+            "change_percent": -1.9992353076487834
+          },
+          "p50": {
+            "before_us": 642.494,
+            "after_us": 629.795,
+            "change_percent": -1.976516512216464
+          },
+          "p95": {
+            "before_us": 672.108,
+            "after_us": 654.634,
+            "change_percent": -2.5998797812256225
+          },
+          "p99": {
+            "before_us": 708.644,
+            "after_us": 690.454,
+            "change_percent": -2.5668741991747734
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 835.104,
+            "after_us": 805.573,
+            "change_percent": -3.536206268919806
+          },
+          "p50": {
+            "before_us": 828.69,
+            "after_us": 802.868,
+            "change_percent": -3.1160023651787716
+          },
+          "p95": {
+            "before_us": 877.97,
+            "after_us": 867.88,
+            "change_percent": -1.1492420014351357
+          },
+          "p99": {
+            "before_us": 1047.242,
+            "after_us": 1008.114,
+            "change_percent": -3.736290179347268
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 64.868,
+            "after_us": 52.142,
+            "change_percent": -19.61830178208053
+          },
+          "p50": {
+            "before_us": 65.136,
+            "after_us": 52.068,
+            "change_percent": -20.062638172439208
+          },
+          "p95": {
+            "before_us": 67.36,
+            "after_us": 58.518,
+            "change_percent": -13.126484560570074
+          },
+          "p99": {
+            "before_us": 73.893,
+            "after_us": 66.081,
+            "change_percent": -10.572043359993499
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 709.603,
+            "after_us": 694.933,
+            "change_percent": -2.0673531538057177
+          },
+          "p50": {
+            "before_us": 709.795,
+            "after_us": 694.305,
+            "change_percent": -2.182320247395375
+          },
+          "p95": {
+            "before_us": 733.058,
+            "after_us": 729.647,
+            "change_percent": -0.46531106679142953
+          },
+          "p99": {
+            "before_us": 765.617,
+            "after_us": 755.521,
+            "change_percent": -1.3186750032979977
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 914.019,
+            "after_us": 883.439,
+            "change_percent": -3.345663492772033
+          },
+          "p50": {
+            "before_us": 911.984,
+            "after_us": 880.975,
+            "change_percent": -3.4001693012158163
+          },
+          "p95": {
+            "before_us": 949.373,
+            "after_us": 944.508,
+            "change_percent": -0.5124434758519536
+          },
+          "p99": {
+            "before_us": 1093.362,
+            "after_us": 1095.778,
+            "change_percent": 0.22096981603529908
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 65.549,
+            "after_us": 52.477,
+            "change_percent": -19.9423332163725
+          },
+          "p50": {
+            "before_us": 65.354,
+            "after_us": 52.411,
+            "change_percent": -19.804449612877562
+          },
+          "p95": {
+            "before_us": 72.402,
+            "after_us": 58.045,
+            "change_percent": -19.829562719261894
+          },
+          "p99": {
+            "before_us": 78.032,
+            "after_us": 68.261,
+            "change_percent": -12.521785933975805
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 713.15,
+            "after_us": 696.494,
+            "change_percent": -2.335553530112877
+          },
+          "p50": {
+            "before_us": 711.729,
+            "after_us": 696.864,
+            "change_percent": -2.0885758483917383
+          },
+          "p95": {
+            "before_us": 758.929,
+            "after_us": 741.694,
+            "change_percent": -2.2709634234559517
+          },
+          "p99": {
+            "before_us": 768.908,
+            "after_us": 756.996,
+            "change_percent": -1.5492100485363758
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1170.732,
+            "after_us": 1122.337,
+            "change_percent": -4.133738549898691
+          },
+          "p50": {
+            "before_us": 1156.231,
+            "after_us": 1110.784,
+            "change_percent": -3.930615940932214
+          },
+          "p95": {
+            "before_us": 1220.606,
+            "after_us": 1213.76,
+            "change_percent": -0.5608689454254745
+          },
+          "p99": {
+            "before_us": 1634.993,
+            "after_us": 1527.441,
+            "change_percent": -6.578132138792025
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.397,
+            "after_us": 44.959,
+            "change_percent": -20.281220632303132
+          },
+          "p50": {
+            "before_us": 56.805,
+            "after_us": 45.102,
+            "change_percent": -20.602059677845265
+          },
+          "p95": {
+            "before_us": 58.183,
+            "after_us": 46.178,
+            "change_percent": -20.633174638640163
+          },
+          "p99": {
+            "before_us": 65.267,
+            "after_us": 56.276,
+            "change_percent": -13.775721268022112
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 584.818,
+            "after_us": 571.584,
+            "change_percent": -2.2629262437202757
+          },
+          "p50": {
+            "before_us": 582.796,
+            "after_us": 570.355,
+            "change_percent": -2.1347092293015124
+          },
+          "p95": {
+            "before_us": 624.738,
+            "after_us": 613.299,
+            "change_percent": -1.8310075583684804
+          },
+          "p99": {
+            "before_us": 658.949,
+            "after_us": 642.565,
+            "change_percent": -2.48638361997664
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 975.093,
+            "after_us": 936.581,
+            "change_percent": -3.9495719895435544
+          },
+          "p50": {
+            "before_us": 958.049,
+            "after_us": 929.947,
+            "change_percent": -2.9332528920754553
+          },
+          "p95": {
+            "before_us": 1015.663,
+            "after_us": 990.1,
+            "change_percent": -2.516878137728751
+          },
+          "p99": {
+            "before_us": 1437.94,
+            "after_us": 1336.879,
+            "change_percent": -7.028179200801155
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 56.878,
+            "after_us": 46.273,
+            "change_percent": -18.64517036464011
+          },
+          "p50": {
+            "before_us": 57.273,
+            "after_us": 45.841,
+            "change_percent": -19.96053987044506
+          },
+          "p95": {
+            "before_us": 58.634,
+            "after_us": 47.385,
+            "change_percent": -19.185114438721563
+          },
+          "p99": {
+            "before_us": 65.654,
+            "after_us": 61.366,
+            "change_percent": -6.531209065708099
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 587.079,
+            "after_us": 578.338,
+            "change_percent": -1.4888967242909334
+          },
+          "p50": {
+            "before_us": 583.272,
+            "after_us": 572.316,
+            "change_percent": -1.8783689256470448
+          },
+          "p95": {
+            "before_us": 625.367,
+            "after_us": 616.186,
+            "change_percent": -1.468097932893797
+          },
+          "p99": {
+            "before_us": 654.042,
+            "after_us": 779.59,
+            "change_percent": 19.19570914406108
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 968.677,
+            "after_us": 939.815,
+            "change_percent": -2.979527747639299
+          },
+          "p50": {
+            "before_us": 951.005,
+            "after_us": 928.255,
+            "change_percent": -2.3922061398205074
+          },
+          "p95": {
+            "before_us": 1011.077,
+            "after_us": 1018.585,
+            "change_percent": 0.7425745022387131
+          },
+          "p99": {
+            "before_us": 1406.763,
+            "after_us": 1366.192,
+            "change_percent": -2.883996806853739
+          }
+        }
+      }
+    ],
+    "equal_case_weight": {
+      "prepare_us": {
+        "mean": {
+          "mean_change_percent": -19.398845518513795,
+          "min_change_percent": -20.281220632303132,
+          "max_change_percent": -18.455633964733554
+        },
+        "p50": {
+          "mean_change_percent": -19.832321036553168,
+          "min_change_percent": -20.602059677845265,
+          "max_change_percent": -19.229960025247216
+        },
+        "p95": {
+          "mean_change_percent": -18.070449218403862,
+          "min_change_percent": -23.257039722723572,
+          "max_change_percent": -12.391319230505914
+        },
+        "p99": {
+          "mean_change_percent": -11.813761654745331,
+          "min_change_percent": -23.688792303684213,
+          "max_change_percent": -3.793017997088255
+        }
+      },
+      "cpu_us": {
+        "mean": {
+          "mean_change_percent": -2.056993935535626,
+          "min_change_percent": -2.335553530112877,
+          "max_change_percent": -1.4888967242909334
+        },
+        "p50": {
+          "mean_change_percent": -2.0411948807997407,
+          "min_change_percent": -2.182320247395375,
+          "max_change_percent": -1.8783689256470448
+        },
+        "p95": {
+          "mean_change_percent": -2.15754244633614,
+          "min_change_percent": -4.309994915281557,
+          "max_change_percent": -0.46531106679142953
+        },
+        "p99": {
+          "mean_change_percent": 1.6244016795754954,
+          "min_change_percent": -2.5668741991747734,
+          "max_change_percent": 19.19570914406108
+        }
+      },
+      "complete_us": {
+        "mean": {
+          "mean_change_percent": -3.6089123269747447,
+          "min_change_percent": -4.133738549898691,
+          "max_change_percent": -2.979527747639299
+        },
+        "p50": {
+          "mean_change_percent": -3.1700866528816283,
+          "min_change_percent": -3.930615940932214,
+          "max_change_percent": -2.3922061398205074
+        },
+        "p95": {
+          "mean_change_percent": -2.335354406354123,
+          "min_change_percent": -10.015268379922137,
+          "max_change_percent": 0.7425745022387131
+        },
+        "p99": {
+          "mean_change_percent": -5.532631631629981,
+          "min_change_percent": -13.190161280020995,
+          "max_change_percent": 0.22096981603529908
+        }
+      }
+    },
+    "upload_counters": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 26,
+        "before_index_bytes": 49484304,
+        "after_index_bytes": 1995696,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 26,
+        "before_index_bytes": 49484304,
+        "after_index_bytes": 1995696,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 57563208,
+        "after_index_bytes": 1373592,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 57563208,
+        "after_index_bytes": 1373592,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 49021560,
+        "after_index_bytes": 1167144,
+        "vertex_bytes_unchanged": true
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "before_index_calls": 600,
+        "after_index_calls": 16,
+        "before_index_bytes": 49021560,
+        "after_index_bytes": 1167144,
+        "vertex_bytes_unchanged": true
+      }
+    ]
+  },
+  "vulkan": {
+    "cases": [
+      {
+        "model": "chocola/date-a",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 38.866,
+            "after_us": 34.423,
+            "change_percent": -11.431585447434767
+          },
+          "p50": {
+            "before_us": 39.057,
+            "after_us": 34.178,
+            "change_percent": -12.49199887344139
+          },
+          "p95": {
+            "before_us": 39.512,
+            "after_us": 38.861,
+            "change_percent": -1.6476007288924954
+          },
+          "p99": {
+            "before_us": 51.184,
+            "after_us": 48.748,
+            "change_percent": -4.759299781181614
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 603.553,
+            "after_us": 608.65,
+            "change_percent": 0.8444991574890759
+          },
+          "p50": {
+            "before_us": 553.14,
+            "after_us": 550.035,
+            "change_percent": -0.5613407094044898
+          },
+          "p95": {
+            "before_us": 830.912,
+            "after_us": 830.323,
+            "change_percent": -0.07088596626357857
+          },
+          "p99": {
+            "before_us": 859.561,
+            "after_us": 862.239,
+            "change_percent": 0.311554386483337
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 912.789,
+            "after_us": 894.668,
+            "change_percent": -1.9852342655312438
+          },
+          "p50": {
+            "before_us": 842.235,
+            "after_us": 837.548,
+            "change_percent": -0.5564955149097384
+          },
+          "p95": {
+            "before_us": 1134.594,
+            "after_us": 1129.514,
+            "change_percent": -0.44773725226822103
+          },
+          "p99": {
+            "before_us": 1261.159,
+            "after_us": 1208.813,
+            "change_percent": -4.150626526869328
+          }
+        }
+      },
+      {
+        "model": "chocola/date-a",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 39.007,
+            "after_us": 33.959,
+            "change_percent": -12.941266952085506
+          },
+          "p50": {
+            "before_us": 39.112,
+            "after_us": 34.195,
+            "change_percent": -12.57158928206178
+          },
+          "p95": {
+            "before_us": 43.227,
+            "after_us": 38.215,
+            "change_percent": -11.594605223587095
+          },
+          "p99": {
+            "before_us": 49.665,
+            "after_us": 45.577,
+            "change_percent": -8.231148696264977
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 618.393,
+            "after_us": 611.905,
+            "change_percent": -1.049170996437554
+          },
+          "p50": {
+            "before_us": 555.337,
+            "after_us": 549.747,
+            "change_percent": -1.0065959948643899
+          },
+          "p95": {
+            "before_us": 842.712,
+            "after_us": 835.253,
+            "change_percent": -0.8851185221048219
+          },
+          "p99": {
+            "before_us": 875.404,
+            "after_us": 862.381,
+            "change_percent": -1.4876559851223048
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 895.596,
+            "after_us": 894.271,
+            "change_percent": -0.14794617215798667
+          },
+          "p50": {
+            "before_us": 836.417,
+            "after_us": 836.289,
+            "change_percent": -0.015303371404462585
+          },
+          "p95": {
+            "before_us": 1133.537,
+            "after_us": 1126.234,
+            "change_percent": -0.6442665744479492
+          },
+          "p99": {
+            "before_us": 1166.651,
+            "after_us": 1160.961,
+            "change_percent": -0.48772083510836284
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 44.146,
+            "after_us": 38.709,
+            "change_percent": -12.315951615095354
+          },
+          "p50": {
+            "before_us": 44.082,
+            "after_us": 38.688,
+            "change_percent": -12.236286919831219
+          },
+          "p95": {
+            "before_us": 48.791,
+            "after_us": 43.604,
+            "change_percent": -10.631059006784039
+          },
+          "p99": {
+            "before_us": 58.909,
+            "after_us": 52.563,
+            "change_percent": -10.772547488499207
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 685.386,
+            "after_us": 671.356,
+            "change_percent": -2.0470216782951467
+          },
+          "p50": {
+            "before_us": 625.768,
+            "after_us": 620.743,
+            "change_percent": -0.8030132573094151
+          },
+          "p95": {
+            "before_us": 906.053,
+            "after_us": 887.565,
+            "change_percent": -2.0404987346214765
+          },
+          "p99": {
+            "before_us": 931.179,
+            "after_us": 926.792,
+            "change_percent": -0.47112316751128924
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1014.799,
+            "after_us": 1084.727,
+            "change_percent": 6.890822714645961
+          },
+          "p50": {
+            "before_us": 942.205,
+            "after_us": 943.274,
+            "change_percent": 0.11345726248532806
+          },
+          "p95": {
+            "before_us": 1243.317,
+            "after_us": 1436.226,
+            "change_percent": 15.515672994095642
+          },
+          "p99": {
+            "before_us": 1581.709,
+            "after_us": 1485.965,
+            "change_percent": -6.053199419109334
+          }
+        }
+      },
+      {
+        "model": "chocola/wintermaid",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 44.526,
+            "after_us": 39.119,
+            "change_percent": -12.14346673853479
+          },
+          "p50": {
+            "before_us": 44.614,
+            "after_us": 38.705,
+            "change_percent": -13.244721387905145
+          },
+          "p95": {
+            "before_us": 48.533,
+            "after_us": 44.825,
+            "change_percent": -7.64016236375249
+          },
+          "p99": {
+            "before_us": 56.686,
+            "after_us": 59.502,
+            "change_percent": 4.967716896588237
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 670.166,
+            "after_us": 681.902,
+            "change_percent": 1.7512079096820843
+          },
+          "p50": {
+            "before_us": 625.119,
+            "after_us": 625.137,
+            "change_percent": 0.0028794517523689223
+          },
+          "p95": {
+            "before_us": 887.51,
+            "after_us": 898.625,
+            "change_percent": 1.2523802548703777
+          },
+          "p99": {
+            "before_us": 926.295,
+            "after_us": 933.088,
+            "change_percent": 0.7333516860179579
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1402.616,
+            "after_us": 1396.736,
+            "change_percent": -0.41921666371977917
+          },
+          "p50": {
+            "before_us": 1352.725,
+            "after_us": 1338.498,
+            "change_percent": -1.0517289175552946
+          },
+          "p95": {
+            "before_us": 1633.074,
+            "after_us": 1630.419,
+            "change_percent": -0.1625768336278699
+          },
+          "p99": {
+            "before_us": 2087.295,
+            "after_us": 1792.504,
+            "change_percent": -14.123111491188368
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": false,
+        "prepare_us": {
+          "mean": {
+            "before_us": 38.788,
+            "after_us": 34.572,
+            "change_percent": -10.869341033309254
+          },
+          "p50": {
+            "before_us": 38.465,
+            "after_us": 34.268,
+            "change_percent": -10.911217990380873
+          },
+          "p95": {
+            "before_us": 39.516,
+            "after_us": 35.186,
+            "change_percent": -10.957586800283426
+          },
+          "p99": {
+            "before_us": 50.028,
+            "after_us": 42.535,
+            "change_percent": -14.9776125369793
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 527.575,
+            "after_us": 525.521,
+            "change_percent": -0.38932853148843094
+          },
+          "p50": {
+            "before_us": 498.414,
+            "after_us": 497.237,
+            "change_percent": -0.23614906483364617
+          },
+          "p95": {
+            "before_us": 702.224,
+            "after_us": 693.182,
+            "change_percent": -1.2876233224726086
+          },
+          "p99": {
+            "before_us": 793.989,
+            "after_us": 797.197,
+            "change_percent": 0.4040358241738762
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1127.626,
+            "after_us": 1125.137,
+            "change_percent": -0.22072921340940965
+          },
+          "p50": {
+            "before_us": 1092.719,
+            "after_us": 1088.023,
+            "change_percent": -0.4297536695161419
+          },
+          "p95": {
+            "before_us": 1337.1,
+            "after_us": 1337.912,
+            "change_percent": 0.060728442150925765
+          },
+          "p99": {
+            "before_us": 1918.683,
+            "after_us": 1858.412,
+            "change_percent": -3.141269297742255
+          }
+        }
+      },
+      {
+        "model": "maple/yukata",
+        "moving": true,
+        "prepare_us": {
+          "mean": {
+            "before_us": 38.582,
+            "after_us": 34.369,
+            "change_percent": -10.919599813384483
+          },
+          "p50": {
+            "before_us": 38.523,
+            "after_us": 34.312,
+            "change_percent": -10.931132050982539
+          },
+          "p95": {
+            "before_us": 39.122,
+            "after_us": 36.507,
+            "change_percent": -6.684218598231184
+          },
+          "p99": {
+            "before_us": 51.569,
+            "after_us": 44.494,
+            "change_percent": -13.719482634916336
+          }
+        },
+        "cpu_us": {
+          "mean": {
+            "before_us": 536.536,
+            "after_us": 527.222,
+            "change_percent": -1.7359506165476213
+          },
+          "p50": {
+            "before_us": 502.788,
+            "after_us": 495.195,
+            "change_percent": -1.5101792405546655
+          },
+          "p95": {
+            "before_us": 708.692,
+            "after_us": 686.749,
+            "change_percent": -3.0962674899674303
+          },
+          "p99": {
+            "before_us": 814.813,
+            "after_us": 796.937,
+            "change_percent": -2.193877613636497
+          }
+        },
+        "complete_us": {
+          "mean": {
+            "before_us": 1149.779,
+            "after_us": 1131.962,
+            "change_percent": -1.5496021409331706
+          },
+          "p50": {
+            "before_us": 1107.629,
+            "after_us": 1094.342,
+            "change_percent": -1.1995893931993296
+          },
+          "p95": {
+            "before_us": 1369.082,
+            "after_us": 1342.749,
+            "change_percent": -1.9234056104747599
+          },
+          "p99": {
+            "before_us": 1562.571,
+            "after_us": 1918.703,
+            "change_percent": 22.79141235822244
+          }
+        }
+      }
+    ],
+    "equal_case_weight": {
+      "prepare_us": {
+        "mean": {
+          "mean_change_percent": -11.770201933307359,
+          "min_change_percent": -12.941266952085506,
+          "max_change_percent": -10.869341033309254
+        },
+        "p50": {
+          "mean_change_percent": -12.06449108410049,
+          "min_change_percent": -13.244721387905145,
+          "max_change_percent": -10.911217990380873
+        },
+        "p95": {
+          "mean_change_percent": -8.192538786921789,
+          "min_change_percent": -11.594605223587095,
+          "max_change_percent": -1.6476007288924954
+        },
+        "p99": {
+          "mean_change_percent": -7.9153957068755325,
+          "min_change_percent": -14.9776125369793,
+          "max_change_percent": 4.967716896588237
+        }
+      },
+      "cpu_us": {
+        "mean": {
+          "mean_change_percent": -0.43762745926626545,
+          "min_change_percent": -2.0470216782951467,
+          "max_change_percent": 1.7512079096820843
+        },
+        "p50": {
+          "mean_change_percent": -0.6857331358690396,
+          "min_change_percent": -1.5101792405546655,
+          "max_change_percent": 0.0028794517523689223
+        },
+        "p95": {
+          "mean_change_percent": -1.0213356300932563,
+          "min_change_percent": -3.0962674899674303,
+          "max_change_percent": 1.2523802548703777
+        },
+        "p99": {
+          "mean_change_percent": -0.4506191449324866,
+          "min_change_percent": -2.193877613636497,
+          "max_change_percent": 0.7333516860179579
+        }
+      },
+      "complete_us": {
+        "mean": {
+          "mean_change_percent": 0.4280157098157285,
+          "min_change_percent": -1.9852342655312438,
+          "max_change_percent": 6.890822714645961
+        },
+        "p50": {
+          "mean_change_percent": -0.5232356006832731,
+          "min_change_percent": -1.1995893931993296,
+          "max_change_percent": 0.11345726248532806
+        },
+        "p95": {
+          "mean_change_percent": 2.0664025275712947,
+          "min_change_percent": -1.9234056104747599,
+          "max_change_percent": 15.515672994095642
+        },
+        "p99": {
+          "mean_change_percent": -0.860752535299201,
+          "min_change_percent": -14.123111491188368,
+          "max_change_percent": 22.79141235822244
+        }
+      }
+    }
+  }
+}

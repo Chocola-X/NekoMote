@@ -336,6 +336,8 @@ struct Renderer::Impl
     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
     std::size_t mask_command_capacity{0}, mask_capacity{0}, descriptor_texture_capacity{0};
     std::uint64_t prepared_revision{0};
+    std::uint64_t prepared_index_revision{0};
+    std::size_t prepared_index_count{0};
     std::shared_ptr<const FrameProducer> prepared_producer;
     bool has_prepared_frame{false};
     ColorComposition composition{ColorComposition::PremultipliedOver};
@@ -637,6 +639,11 @@ void Renderer::prepare(RenderFrame frame)
     if (p.has_prepared_frame && frame.producer && frame.producer == p.prepared_producer &&
         frame.revision != 0 && frame.revision == p.prepared_revision)
         return;
+    const bool reuse_indices = p.has_prepared_frame && frame.producer &&
+                               frame.producer == p.prepared_producer && frame.revision != 0 &&
+                               frame.index_revision != 0 &&
+                               frame.index_revision == p.prepared_index_revision &&
+                               frame.indices.size() == p.prepared_index_count;
     // A failed upload may have changed buffers before reporting its error.
     // Never let the last successful token authorize reuse after that failure.
     p.prepared_producer.reset();
@@ -735,13 +742,16 @@ void Renderer::prepare(RenderFrame frame)
         std::memcpy(buffer.mapped_data, bytes, size);
     };
     upload(p.vbo, frame.vertices.data(), frame.vertices.size() * sizeof(RenderVertex));
-    upload(p.ebo, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));
+    if (!reuse_indices)
+        upload(p.ebo, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));
     p.commands.assign(frame.commands.begin(), frame.commands.end());
     p.mask_commands.assign(frame.mask_commands.begin(), frame.mask_commands.end());
     p.masks.assign(frame.masks.begin(), frame.masks.end());
     p.composition = frame.composition;
     p.prepared_producer = frame.producer;
     p.prepared_revision = frame.revision;
+    p.prepared_index_revision = frame.index_revision;
+    p.prepared_index_count = frame.indices.size();
     p.has_prepared_frame = true;
 }
 

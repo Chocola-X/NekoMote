@@ -9,6 +9,7 @@
 #include <nekomote/abi.h>
 
 #include "geometry_fixture.hpp"
+#include "index_reuse_fixture.hpp"
 #ifndef GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_NONE
 #endif
@@ -1014,4 +1015,26 @@ TEST_CASE("Vulkan distinguishes independent geometry producers at the same revis
     require_same_picture(after);
     REQUIRE(pixel(before.second, 36, 36)[3] == 255);
     REQUIRE(pixel(after.second, 36, 36)[3] == 0);
+}
+
+TEST_CASE("Vulkan index revisions preserve animation, validation and resource invalidation",
+          "[gpu][vulkan]")
+{
+    Fixture f;
+    f.upload(TextureId{1}, {1, 1, {255, 255, 255, 255}});
+    test::check_index_reuse(
+        [&](RenderFrame frame)
+        {
+            f.draw(frame);
+            const auto pictures = f.capture();
+            require_same_picture(pictures);
+            return pictures.second;
+        },
+        [&](RenderFrame frame) { f.vk->prepare(frame); },
+        [&]
+        {
+            f.host.wait_ready();
+            f.gl->reserve({16, 24, 8, 4, 8, 4});
+            f.vk->reserve({16, 24, 8, 4, 8, 4});
+        });
 }

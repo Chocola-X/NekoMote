@@ -315,6 +315,8 @@ struct Renderer::Impl
     std::size_t mask_command_capacity{0}, mask_capacity{0};
     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
     std::uint64_t prepared_revision{0};
+    std::uint64_t prepared_index_revision{0};
+    std::size_t prepared_index_count{0};
     std::shared_ptr<const FrameProducer> prepared_producer;
     bool has_prepared_frame{false};
     ~Impl()
@@ -428,6 +430,10 @@ void Renderer::reserve(Capacity capacity)
     p.mask_capacity = masks;
     p.commands.reserve(commands);
     p.textures.reserve(textures);
+    // BufferData can replace storage before check_gl reports an error.
+    p.prepared_producer.reset();
+    p.prepared_revision = 0;
+    p.has_prepared_frame = false;
     glBindVertexArray(p.vao);
     glBindBuffer(GL_ARRAY_BUFFER, p.vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ebo);
@@ -440,9 +446,6 @@ void Renderer::reserve(Capacity capacity)
     p.index_capacity = indices;
     p.command_capacity = commands;
     p.texture_capacity = textures;
-    p.prepared_producer.reset();
-    p.prepared_revision = 0;
-    p.has_prepared_frame = false;
 }
 void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
@@ -510,6 +513,11 @@ void Renderer::prepare(RenderFrame frame)
     if (p.has_prepared_frame && frame.producer && frame.producer == p.prepared_producer &&
         frame.revision != 0 && frame.revision == p.prepared_revision)
         return;
+    const bool reuse_indices = p.has_prepared_frame && frame.producer &&
+                               frame.producer == p.prepared_producer && frame.revision != 0 &&
+                               frame.index_revision != 0 &&
+                               frame.index_revision == p.prepared_index_revision &&
+                               frame.indices.size() == p.prepared_index_count;
     // A failed upload may have changed buffers before reporting its error.
     // Never let the last successful token authorize reuse after that failure.
     p.prepared_producer.reset();
@@ -607,8 +615,10 @@ void Renderer::prepare(RenderFrame frame)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, p.ebo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, byte_size(frame.vertices.size(), sizeof(RenderVertex)),
                     frame.vertices.data());
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0,
-                    byte_size(frame.indices.size(), sizeof(std::uint32_t)), frame.indices.data());
+    if (!reuse_indices)
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0,
+                        byte_size(frame.indices.size(), sizeof(std::uint32_t)),
+                        frame.indices.data());
     p.commands.assign(frame.commands.begin(), frame.commands.end());
     p.mask_commands.assign(frame.mask_commands.begin(), frame.mask_commands.end());
     p.masks.assign(frame.masks.begin(), frame.masks.end());
@@ -616,6 +626,8 @@ void Renderer::prepare(RenderFrame frame)
     check_gl("prepare frame");
     p.prepared_producer = frame.producer;
     p.prepared_revision = frame.revision;
+    p.prepared_index_revision = frame.index_revision;
+    p.prepared_index_count = frame.indices.size();
     p.has_prepared_frame = true;
 }
 std::size_t Renderer::release_unused_textures()

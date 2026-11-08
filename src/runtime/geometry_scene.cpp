@@ -15,6 +15,8 @@
 #include <unordered_set>
 #include <utility>
 
+#include "patch_evaluation.hpp"
+
 namespace nekomote::runtime
 {
 namespace
@@ -374,7 +376,7 @@ struct State
     NodeId transform_parent, curve_parent, excluded_curve;
     int child_sync{0};
     RigidTransform world;
-    Patch world_patch{};
+    const detail::PreparedPatch* world_patch{nullptr};
     Vec2 domain_corner{}, attachment_offset{};
     std::array<float, 4> domain_inverse{};
     float depth{0}, opacity{0};
@@ -727,6 +729,10 @@ struct GeometryInstance::Impl
     std::vector<float> input;
     std::vector<double> parameters;
     std::vector<State> states;
+    // Only mesh nodes read/write these controls. Keep the larger prepared data
+    // out of the state traversed and cleared for every node on every evaluation.
+    // Sized once; pointers in State stay valid for this instance's lifetime.
+    std::vector<detail::PreparedPatch> world_patches;
     std::vector<GeometryPrimitive> primitives;
     std::vector<RenderVertex> vertices;
     std::vector<std::uint32_t> indices;
@@ -743,14 +749,15 @@ struct GeometryInstance::Impl
     std::vector<DrawCommand> node_commands;
     std::vector<bool> used_masks, needed_mask_sources;
     bool evaluated{false}, frame_ready{false};
-    std::uint64_t frame_revision{0};
+    std::uint64_t frame_revision{0}, index_revision{0};
     std::shared_ptr<const FrameProducer> frame_producer{std::make_shared<FrameProducer>()};
     Vec2 origin{};
     float scale{1};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
         : owner(scene_owner), scene(data), input(data.variables.size() + 1),
-          parameters(input.size()), states(data.nodes.size()), node_commands(data.nodes.size()),
-          used_masks(data.masks.size()), needed_mask_sources(data.nodes.size())
+          parameters(input.size()), states(data.nodes.size()), world_patches(data.nodes.size()),
+          node_commands(data.nodes.size()), used_masks(data.masks.size()),
+          needed_mask_sources(data.nodes.size())
     {
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
@@ -802,7 +809,8 @@ struct GeometryInstance::Impl
                                          y * static_cast<double>(s.domain_inverse[2])),
                       static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
                                          y * static_cast<double>(s.domain_inverse[3]))};
-        return evaluate_patch(s.world_patch, uv);
+        const auto result = detail::evaluate_precise(*s.world_patch, uv.x, uv.y);
+        return {static_cast<float>(result[0]), static_cast<float>(result[1])};
     }
 };
 GeometryInstance::GeometryInstance(const GeometryScene& scene)
@@ -1060,8 +1068,12 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             // its corner translation retains the transient double value.
             const double saved_a = static_cast<float>(a), saved_b = static_cast<float>(b);
             const double saved_c = static_cast<float>(c), saved_d = static_cast<float>(d);
-            for (std::size_t j = 0; j < state.world_patch.size(); ++j)
-                state.world_patch[j] = {
+            auto& world_patch = instance.world_patches[id.value];
+            state.world_patch = &world_patch;
+            // Preserve the Float32 control save before exact promotion to double;
+            // every vertex then reuses it without float-to-double conversion.
+            for (std::size_t j = 0; j < world_patch.size(); ++j)
+                world_patch[j] = {
                     static_cast<float>(saved_a * static_cast<double>(state.transform.patch[j].x) +
                                        saved_c * static_cast<double>(state.transform.patch[j].y) +
                                        offset_x),
@@ -1190,7 +1202,10 @@ std::optional<GeometryNodeObservation> GeometryInstance::observe_node(NodeId id)
     result.domain_corner = s.domain_corner;
     result.domain_inverse = s.domain_inverse;
     result.unit_patch = s.transform.patch;
-    result.world_patch = s.world_patch;
+    if (s.world_patch)
+        for (std::size_t i = 0; i < s.world_patch->size(); ++i)
+            result.world_patch[i] = {static_cast<float>((*s.world_patch)[i].x),
+                                     static_cast<float>((*s.world_patch)[i].y)};
     if (s.transform.resource.valid())
     {
         const auto& r = instance.scene.resources[s.transform.resource.value].rect;
@@ -1229,6 +1244,10 @@ GeometryStatus GeometryInstance::build_frame() noexcept
     }
     if (rebuild_indices)
     {
+        // Invalidate before touching storage: a later mask failure must not let
+        // a subsequent successful frame reuse an older renderer index buffer.
+        if (++instance.index_revision == 0)
+            ++instance.index_revision;
         instance.indices.clear();
         instance.frame_grids.clear();
     }
@@ -1385,6 +1404,7 @@ RenderFrame GeometryInstance::frame() const noexcept
     return {impl_->vertices,       impl_->indices,
             impl_->commands,       ColorComposition::ProtectedStraight,
             impl_->mask_commands,  impl_->masks,
-            impl_->frame_revision, impl_->frame_producer};
+            impl_->frame_revision, impl_->frame_producer,
+            impl_->index_revision};
 }
 } // namespace nekomote::runtime
