@@ -256,17 +256,22 @@ TEST_CASE("Sidebar height follows four fifths of the output on resize", "[ui_men
             REQUIRE(clip.y >= sidebar.y);
             REQUIRE(clip.y + clip.h <= sidebar.y + sidebar.height);
         }
-        if (sidebar.height > 44.0f)
+        if (sidebar.height > 44.0f + 68.0f)
         {
             const auto& scrollbar = fixture.painter.rects.back();
             REQUIRE(scrollbar.y >= sidebar.y + 44.0f);
             REQUIRE(scrollbar.h > 0.0f);
-            REQUIRE(scrollbar.y + scrollbar.h <= sidebar.y + sidebar.height);
+            REQUIRE(scrollbar.y + scrollbar.h <= sidebar.y + sidebar.height - 68.0f);
+        }
+        else
+        {
+            REQUIRE(fixture.painter.rects.size() == 1); // No space for a scroll track.
+            REQUIRE(sidebar.scroll_y == 0.0f);
         }
     }
 }
 
-TEST_CASE("Capped sidebar scroll reaches the footer and resets when collapsed", "[ui_menu]")
+TEST_CASE("Sidebar scroll keeps the header and project footer fixed", "[ui_menu]")
 {
     MenuFixture fixture;
     fixture.painter.vh = 480;
@@ -274,35 +279,87 @@ TEST_CASE("Capped sidebar scroll reaches the footer and resets when collapsed", 
     catalog.character_groups.front().items.resize(50);
     auto& sidebar = fixture.menu.sidebar;
     sidebar.expanded_drawer = 0;
-    sidebar.scroll_y = 1000000.0f;
     fixture.render(catalog);
-    REQUIRE(sidebar.scroll_y > 0.0f);
-    REQUIRE(sidebar.scroll_y < 1000000.0f);
-    const auto* footer = fixture.painter.find("GitHub project: NekoMote");
-    REQUIRE(footer != nullptr);
-    REQUIRE(footer->y >= sidebar.y + 44.0f);
-    REQUIRE(footer->y + 12.0f <= sidebar.y + sidebar.height);
-
+    const float footer_top = sidebar.y + sidebar.height - 68.0f;
+    const auto text_y = [&](const char* label)
+    {
+        const auto* call = fixture.painter.find(label);
+        REQUIRE(call != nullptr);
+        return call->y;
+    };
+    const float title_y = text_y("NekoMote Wallpaper");
+    const float author_y = text_y("Author: GTX690战术核显卡导弹");
+    const float project_y = text_y("GitHub project: NekoMote");
+    const float first_group_y = text_y("Chocola");
+    REQUIRE(author_y >= footer_top);
+    REQUIRE(project_y + 12.0f <= sidebar.y + sidebar.height);
+    for (const float scroll : {64.0f, 1000000.0f})
+    {
+        sidebar.scroll_y = scroll;
+        fixture.render(catalog);
+        REQUIRE(sidebar.scroll_y > 0.0f);
+        REQUIRE(sidebar.scroll_y < 1000000.0f);
+        REQUIRE(text_y("NekoMote Wallpaper") == title_y);
+        REQUIRE(text_y("Author: GTX690战术核显卡导弹") == author_y);
+        REQUIRE(text_y("GitHub project: NekoMote") == project_y);
+        REQUIRE(text_y("Chocola") == first_group_y - sidebar.scroll_y);
+        const auto& clip = fixture.painter.clips.back();
+        REQUIRE(clip.y == sidebar.y + 44.0f);
+        REQUIRE(clip.y + clip.h == footer_top);
+        const auto& scrollbar = fixture.painter.rects.back();
+        REQUIRE(scrollbar.y >= clip.y);
+        REQUIRE(scrollbar.y + scrollbar.h <= footer_top);
+    }
+    // The final choice remains reachable above the fixed project information.
+    REQUIRE(text_y("Settings") + 15.0f <= footer_top);
     sidebar.expanded_drawer = -1;
     fixture.render(catalog);
     REQUIRE(sidebar.scroll_y == 0.0f);
     REQUIRE(sidebar.height < static_cast<float>(fixture.painter.vh) * 0.8f);
 }
 
-TEST_CASE("Capped sidebar ignores clicks on hidden content below its bounds", "[ui_menu]")
+TEST_CASE("Only the sidebar choice area responds to the scroll wheel", "[ui_menu]")
 {
     MenuFixture fixture;
     fixture.painter.vh = 480;
     auto catalog = fixture.controller.catalog();
-    catalog.character_groups.front().items.resize(9);
+    catalog.character_groups.front().items.resize(50);
+    auto& sidebar = fixture.menu.sidebar;
+    sidebar.expanded_drawer = 0;
+    fixture.render(catalog);
+    const float x = sidebar.x + 100.0f;
+    const auto scroll_at = [&](float px, float py, double delta)
+    {
+        fixture.ctx.mouse_move(px, py);
+        fixture.ctx.mouse_scroll(delta);
+        fixture.render(catalog);
+    };
+    scroll_at(x, sidebar.y + 80.0f, -3);
+    REQUIRE(sidebar.scroll_y == 96.0f);
+    scroll_at(x, sidebar.y + 20.0f, -3); // Fixed title.
+    REQUIRE(sidebar.scroll_y == 96.0f);
+    scroll_at(x, sidebar.y + sidebar.height - 30.0f, -3); // Fixed footer.
+    REQUIRE(sidebar.scroll_y == 96.0f);
+    scroll_at(sidebar.x + sidebar.width + 10.0f, sidebar.y + 80.0f, -3);
+    REQUIRE(sidebar.scroll_y == 96.0f);
+    scroll_at(x, sidebar.y + 80.0f, 1);
+    REQUIRE(sidebar.scroll_y == 64.0f);
+}
+
+TEST_CASE("Fixed sidebar footer blocks clicks on the choices beneath it", "[ui_menu]")
+{
+    MenuFixture fixture;
+    fixture.painter.vh = 480;
+    auto catalog = fixture.controller.catalog();
+    catalog.character_groups.front().items.resize(7);
     auto& sidebar = fixture.menu.sidebar;
     sidebar.expanded_drawer = 0;
     fixture.render(catalog);
 
-    // The background header lies below the clipped panel, but within the output.
-    const float header_y = sidebar.y + 44.0f + 42.0f + 9.0f * 34.0f;
-    REQUIRE(header_y > sidebar.y + sidebar.height);
-    REQUIRE(header_y + 21.0f < static_cast<float>(fixture.painter.vh));
+    // The background header lies beneath the fixed footer, inside the panel.
+    const float header_y = sidebar.y + 44.0f + 42.0f + 7.0f * 34.0f;
+    REQUIRE(header_y > sidebar.y + sidebar.height - 68.0f);
+    REQUIRE(header_y + 21.0f < sidebar.y + sidebar.height);
     fixture.ctx.mouse_move(sidebar.x + 100.0f, header_y + 21.0f);
     fixture.ctx.mouse_button(0, 1);
     fixture.render(catalog);

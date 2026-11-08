@@ -204,33 +204,61 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
             kSectionHeaderHeight + static_cast<float>(std::size(kFpsOptions)) * kRadioRowHeight;
         content_scrollable_h += kSectionHeaderHeight + 2.0f * kSwitchRowHeight + kSwitchRowHeight;
     }
-    content_scrollable_h += kFooterHeight;
 
     const float max_sidebar_h =
         std::max(0.0f, static_cast<float>(output_height)) * kSidebarMaxHeightRatio;
-    const float content_total_h = kSidebarHeaderHeight + content_scrollable_h;
+    const float content_total_h = kSidebarHeaderHeight + content_scrollable_h + kFooterHeight;
     sidebar.height = std::min(max_sidebar_h, content_total_h);
     ctx.validate_sidebar_position(sidebar);
     const float sidebar_x = sidebar.x;
     const float sidebar_y = sidebar.y;
 
-    const float clip_h = std::max(0.0f, sidebar.height - kSidebarHeaderHeight);
-    const float max_scroll = std::max(0.0f, content_scrollable_h - clip_h);
+    // Fixed chrome keeps both the content and scrollbar away from the panel's
+    // rounded bottom. On tiny outputs, clip the header/footer without overlap.
+    const float header_h = std::min(kSidebarHeaderHeight, sidebar.height);
+    const float footer_h = std::min(kFooterHeight, sidebar.height - header_h);
+    const float clip_y = sidebar_y + header_h;
+    const float clip_h = std::max(0.0f, sidebar.height - header_h - footer_h);
+    const float footer_top = clip_y + clip_h;
+    const float max_scroll = clip_h > 0.0f ? std::max(0.0f, content_scrollable_h - clip_h) : 0.0f;
+    if (clip_h > 0.0f && ctx.mouse_in_rect(sidebar_x, clip_y, sidebar.width, clip_h))
+        sidebar.scroll_y -= ctx.scroll_delta() * kRadioRowHeight;
     sidebar.scroll_y = std::clamp(sidebar.scroll_y, 0.0f, max_scroll);
 
     painter.draw_rounded_rect(sidebar_x, sidebar_y, sidebar.width, sidebar.height,
                               style.corner_radius, style.panel_bg, style.accent, 2.0f);
-    if (clip_h <= 0.0f)
+    if (header_h > 0.0f)
     {
-        painter.push_clip_rect(sidebar_x, sidebar_y, sidebar.width, sidebar.height);
+        painter.push_clip_rect(sidebar_x, sidebar_y, sidebar.width, header_h);
         ctx.sidebar_header(sidebar, "NekoMote Wallpaper", style);
         painter.pop_clip_rect();
+    }
+    if (footer_h > 0.0f)
+    {
+        painter.push_clip_rect(sidebar_x + style.padding, footer_top,
+                               std::max(0.0f, sidebar.width - 2.0f * style.padding), footer_h);
+        float footer_y = footer_top;
+        ctx.divider_line(sidebar_x, footer_y, sidebar.width, style);
+        footer_y += 10.0f;
+        const float atw =
+            painter.font() ? painter.font()->text_width(txt.author_line, 12.0f) : 160.0f;
+        ctx.label(txt.author_line, sidebar_x + (sidebar.width - atw) * 0.5f, footer_y, 12.0f,
+                  style.text);
+        footer_y += 24.0f;
+        ctx.divider_line(sidebar_x, footer_y, sidebar.width, style);
+        footer_y += 10.0f;
+        const float gtw =
+            painter.font() ? painter.font()->text_width(txt.github_line, 12.0f) : 170.0f;
+        ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, footer_y, 12.0f,
+                  style.text);
+        painter.pop_clip_rect();
+    }
+    if (clip_h <= 0.0f)
+    {
         painter.set_global_alpha(1.0f);
         return;
     }
-    ctx.sidebar_header(sidebar, "NekoMote Wallpaper", style);
 
-    const float clip_y = sidebar_y + kSidebarHeaderHeight;
     painter.push_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
     ctx.set_input_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
 
@@ -376,21 +404,10 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         curr_y += kSwitchRowHeight;
     }
 
-    ctx.divider_line(sidebar_x, curr_y, sidebar.width, style);
-    curr_y += 10.0f;
-    const float atw = painter.font() ? painter.font()->text_width(txt.author_line, 12.0f) : 160.0f;
-    ctx.label(txt.author_line, sidebar_x + (sidebar.width - atw) * 0.5f, curr_y, 12.0f, style.text);
-    curr_y += 24.0f;
-    ctx.divider_line(sidebar_x, curr_y, sidebar.width, style);
-    curr_y += 10.0f;
-    const float gtw = painter.font() ? painter.font()->text_width(txt.github_line, 12.0f) : 170.0f;
-    ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, curr_y, 12.0f, style.text);
-    curr_y += 24.0f;
-
-    ctx.clear_input_clip_rect();
-    painter.pop_clip_rect();
     ctx.draw_scrollbar(sidebar_x, clip_y, sidebar.width, clip_h, content_scrollable_h,
                        sidebar.scroll_y, style);
+    ctx.clear_input_clip_rect();
+    painter.pop_clip_rect();
     painter.set_global_alpha(1.0f);
 }
 

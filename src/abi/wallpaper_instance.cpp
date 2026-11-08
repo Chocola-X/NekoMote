@@ -989,8 +989,6 @@ void WallpaperInstance::draw_ui(float dt)
                                   panel_.sidebar.height);
     ui_context_.set_captures_mouse(mouse_over_icon || mouse_over_sidebar || panel_.icon.dragging ||
                                    panel_.sidebar.dragging);
-    if (mouse_over_sidebar && ui_context_.scroll_delta() != 0.0f)
-        panel_.sidebar.scroll_y -= ui_context_.scroll_delta() * 32.0f;
     if (panel_.sidebar.animation > 0.001f)
     {
         ui::MenuState menu;

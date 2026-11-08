@@ -1365,11 +1365,6 @@ int run(int argc, char** argv)
             ui_context.set_captures_mouse(mouse_over_icon || mouse_over_sidebar ||
                                           ui_icon.dragging || ui_sidebar.dragging);
 
-            if (mouse_over_sidebar && ui_context.scroll_delta() != 0.0f)
-            {
-                ui_sidebar.scroll_y -= ui_context.scroll_delta() * 32.0f;
-            }
-
             if (ui_sidebar.animation > 0.001f)
             {
                 ui::MenuState menu;
