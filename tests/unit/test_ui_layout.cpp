@@ -519,3 +519,41 @@ TEST_CASE("Valid saved UI coordinates survive reopen and viewport resize", "[ui_
     REQUIRE_FALSE(icon.position_reset);
     REQUIRE_FALSE(sidebar.position_reset);
 }
+
+TEST_CASE("Paused presentation can settle after sidebar and icon animations", "[ui][layout]")
+{
+    MockPainter painter;
+    Context context;
+    context.init(&painter);
+    IconState icon;
+    SidebarState sidebar;
+    context.mouse_move(-100, -100);
+    const auto draw = [&]
+    {
+        context.begin_frame();
+        context.toggle_icon(icon, 0);
+        context.sidebar(sidebar, 1.f / 60);
+        context.end_frame();
+    };
+    draw();
+    REQUIRE_FALSE(has_pending_animation(icon, sidebar));
+    sidebar.open = true;
+    draw();
+    REQUIRE(has_pending_animation(icon, sidebar));
+    for (int i = 0; i < 60; ++i)
+        draw();
+    REQUIRE_FALSE(has_pending_animation(icon, sidebar));
+    sidebar.open = false;
+    draw();
+    REQUIRE(has_pending_animation(icon, sidebar));
+    for (int i = 0; i < 60; ++i)
+        draw();
+    REQUIRE(sidebar.animation == 0.0f);
+    REQUIRE_FALSE(has_pending_animation(icon, sidebar));
+    context.mouse_move(icon.x + 10, icon.y + 10);
+    draw();
+    REQUIRE(has_pending_animation(icon, sidebar));
+    for (int i = 0; i < 100; ++i)
+        draw();
+    REQUIRE_FALSE(has_pending_animation(icon, sidebar));
+}

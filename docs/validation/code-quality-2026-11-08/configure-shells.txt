@@ -1,0 +1,111 @@
+-- Populating nlohmann_json
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/nlohmann_json-subbuild
+[0/7] Performing disconnected update step for 'nlohmann_json-populate'
+-- Already at requested tag: v3.11.3
+[1/7] No patch_disconnected step for 'nlohmann_json-populate'
+[3/7] No configure step for 'nlohmann_json-populate'
+[4/7] No build step for 'nlohmann_json-populate'
+[5/7] No install step for 'nlohmann_json-populate'
+[6/7] No test step for 'nlohmann_json-populate'
+[7/7] Completed 'nlohmann_json-populate'
+-- Using the multi-header code from /run/media/chocola/MIKU/NekoMote/build/release/_deps/nlohmann_json-src/include/
+-- Populating fast_float
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/fast_float-subbuild
+[0/7] Performing disconnected update step for 'fast_float-populate'
+-- Already at requested tag: v6.1.6
+[1/7] No patch_disconnected step for 'fast_float-populate'
+[3/7] No configure step for 'fast_float-populate'
+[4/7] No build step for 'fast_float-populate'
+[5/7] No install step for 'fast_float-populate'
+[6/7] No test step for 'fast_float-populate'
+[7/7] Completed 'fast_float-populate'
+CMake Deprecation Warning at build/release/_deps/fast_float-src/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Tests are disabled. Set FASTFLOAT_TEST to ON to run tests.
+-- Populating stb
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/stb-subbuild
+[0/7] Performing disconnected update step for 'stb-populate'
+-- Already at requested ref: 2c980bb59875b0d32144a71867fbdebb2f77cd20
+[1/7] No patch_disconnected step for 'stb-populate'
+[3/7] No configure step for 'stb-populate'
+[4/7] No build step for 'stb-populate'
+[5/7] No install step for 'stb-populate'
+[6/7] No test step for 'stb-populate'
+[7/7] Completed 'stb-populate'
+-- Populating flac
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/flac-subbuild
+[0/7] Performing disconnected update step for 'flac-populate'
+-- Already at requested tag: 1.4.3
+[1/7] No patch_disconnected step for 'flac-populate'
+[3/7] No configure step for 'flac-populate'
+[4/7] No build step for 'flac-populate'
+[5/7] No install step for 'flac-populate'
+[6/7] No test step for 'flac-populate'
+[7/7] Completed 'flac-populate'
+CMake Deprecation Warning at build/release/_deps/flac-src/CMakeLists.txt:5 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Populating glfw
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/glfw-subbuild
+[0/7] Performing disconnected update step for 'glfw-populate'
+-- Already at requested tag: 3.4
+[1/7] No patch_disconnected step for 'glfw-populate'
+[3/7] No configure step for 'glfw-populate'
+[4/7] No build step for 'glfw-populate'
+[5/7] No install step for 'glfw-populate'
+[6/7] No test step for 'glfw-populate'
+[7/7] Completed 'glfw-populate'
+-- Including Wayland support
+-- Including X11 support
+-- Populating glad
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/glad-subbuild
+[0/7] Performing disconnected update step for 'glad-populate'
+-- Already at requested tag: v2.0.8
+[1/7] No patch_disconnected step for 'glad-populate'
+[3/7] No configure step for 'glad-populate'
+[4/7] No build step for 'glad-populate'
+[5/7] No install step for 'glad-populate'
+[6/7] No test step for 'glad-populate'
+[7/7] Completed 'glad-populate'
+-- Glad Library 'nekomote_gl_loader'
+-- Found ZLIB: /usr/lib/libz.so (found suitable version "1.3.1", minimum required is "1.2.11")
+-- Checking for module 'wayland-client>=1.20'
+--   Found wayland-client, version 1.24.0
+-- Checking for module 'wayland-egl'
+--   Found wayland-egl, version 18.1.0
+-- Checking for module 'wayland-cursor'
+--   Found wayland-cursor, version 1.24.0
+-- Checking for module 'egl>=1.5'
+--   Found egl, version 1.5
+-- Found X11: /usr/include  found components: Xrandr Xext
+-- Found OpenGL: /usr/lib/libOpenGL.so  found components: OpenGL GLX
+-- Found OpenGL: /usr/lib/libOpenGL.so
+-- Found ZLIB: /usr/lib/libz.so (found version "1.3.1")
+-- Configuring done (1.7s)
+-- Generating done (0.1s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release

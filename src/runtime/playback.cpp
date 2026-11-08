@@ -46,9 +46,14 @@ const AnimationProgram& PlaybackProgram::animation() const noexcept
 PlaybackCompileResult compile_playback(const model::ModelAsset& asset, PhysicsMode mode,
                                        std::span<const VariableSourceDefinition> sources)
 {
+    return compile_playback(asset, compile_geometry_scene(asset), mode, sources);
+}
+PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
+                                       GeometryCompileResult geometry, PhysicsMode mode,
+                                       std::span<const VariableSourceDefinition> sources)
+{
     if (mode != PhysicsMode::Enabled && mode != PhysicsMode::DisabledDiagnostic)
         return {{}, {"unsupported playback physics mode"}};
-    auto geometry = compile_geometry_scene(asset);
     if (!geometry.scene)
         return {{}, std::move(geometry.errors)};
     auto animation = compile_animation(asset, *geometry.scene, sources);

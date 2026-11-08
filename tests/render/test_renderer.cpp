@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+
+#include "geometry_fixture.hpp"
 #ifdef NEKOMOTE_HAS_ABI
 #include <nekomote/abi.h>
 #endif
@@ -235,6 +237,44 @@ TEST_CASE("GPU cropped atlas storage preserves filtering and original clamp edge
     }
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
+TEST_CASE("GPU frame revisions gate reuse without weakening external frame validation", "[gpu]")
+{
+    Context context;
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    Output output;
+    renderer.reserve({8, 12, 2, 1});
+    renderer.upload_texture(TextureId{1}, kAtlas);
+    output.resize(64, 64);
+    auto vertices = quad(0, 0, 1, 1);
+    std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    RenderFrame frame{vertices, std::span(kIndices).first(6),
+                      commands, ColorComposition::PremultipliedOver,
+                      {},       {},
+                      41};
+    frame.producer = std::make_shared<FrameProducer>();
+    renderer.prepare(frame);
+    commands[0].texture = TextureId{999};
+    REQUIRE_NOTHROW(
+        renderer.prepare(frame)); // Same immutable revision: no repeated validation/upload.
+    ++frame.revision;
+    REQUIRE_THROWS(renderer.prepare(frame));
+    commands[0].texture = TextureId{1};
+    renderer.prepare(frame);
+    renderer.reserve({8, 12, 2, 1});
+    commands[0].texture = TextureId{999};
+    REQUIRE_THROWS(renderer.prepare(frame)); // reserve invalidates the previous revision gate.
+
+    const auto producer = frame.producer;
+    frame.producer.reset();
+    REQUIRE_THROWS(renderer.prepare(frame));
+    frame.producer = producer;
+    frame.revision = 0;
+    REQUIRE_THROWS(renderer.prepare(frame)); // External/zero-revision frames always validate.
+    render_gl::View invalid_view{};
+    invalid_view.alpha = std::numeric_limits<float>::quiet_NaN();
+    REQUIRE_THROWS(renderer.render({output.framebuffer, 64, 64}, invalid_view));
+}
+
 TEST_CASE("GPU atlas orientation, alpha, host target and resize", "[gpu]")
 {
     Context context;
@@ -871,6 +911,31 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
         REQUIRE(icon[0] > 200);
         REQUIRE(icon[2] > 200);
         REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), -1) == NEKOMOTE_ERROR_INVALID_INPUT);
+        REQUIRE(nekomote_wallpaper_set_paused(wallpaper.get(), 1) == NEKOMOTE_OK);
+        const auto draw_paused = [&]
+        {
+            REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), 0) == NEKOMOTE_OK);
+            REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_OK);
+            REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 1.f / 60) == NEKOMOTE_OK);
+        };
+        draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 0);
+        REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 1) == NEKOMOTE_OK);
+        draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 1);
+        for (int i = 0; i < 30; ++i)
+            draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 0);
+        REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 0) == NEKOMOTE_OK);
+        draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 1);
+        for (int i = 0; i < 30; ++i)
+            draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 0);
+        REQUIRE(nekomote_wallpaper_fit(wallpaper.get()) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 1);
+        draw_paused();
+        REQUIRE(nekomote_wallpaper_needs_render(wallpaper.get()) == 0);
         nekomote_wallpaper_reset_gl(wallpaper.get());
         if (generation == 0)
             REQUIRE(nekomote_wallpaper_load_initial(wallpaper.get()) == NEKOMOTE_OK);
@@ -1122,4 +1187,39 @@ TEST_CASE("Renderer peers isolate frame state and outlive their program source",
     source.reset();
     REQUIRE(draw(peer, b, b_view, 48, 32).pixels == expected_b.pixels);
     REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("GPU renderer distinguishes independent geometry producers at the same revision", "[gpu]")
+{
+    Context context;
+    auto scene = test::sprite_scene();
+    REQUIRE(scene.scene);
+    runtime::GeometryInstance first(*scene.scene), second(*scene.scene);
+    REQUIRE(first.evaluate());
+    REQUIRE(first.build_frame());
+    REQUIRE(second.set_origin({16, 0}));
+    REQUIRE(second.evaluate());
+    REQUIRE(second.build_frame());
+    REQUIRE(first.frame().revision == second.frame().revision);
+    render_gl::Renderer renderer(glfwGetProcAddress);
+    renderer.reserve({4, 6, 1, 1});
+    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 255, 255, 255}});
+    Output output;
+    output.resize(64, 64);
+    const auto draw = [&](RenderFrame frame)
+    {
+        renderer.prepare(frame);
+        renderer.resize_output(64, 64);
+        renderer.render({output.framebuffer, 64, 64}, {32, 32, 1, {0, 0, 0, 0}});
+        return renderer.capture({output.framebuffer, 64, 64});
+    };
+    const auto before = draw(first.frame());
+    const auto after = draw(second.frame());
+    // A driver error is reported after prepare has already changed the buffers.
+    glEnable(static_cast<GLenum>(0xFFFFFFFFu));
+    REQUIRE_THROWS(renderer.prepare(first.frame()));
+    REQUIRE(draw(second.frame()).pixels == after.pixels);
+    REQUIRE(pixel(before, 36, 36)[3] == 255);
+    REQUIRE(pixel(after, 36, 36)[3] == 0);
+    REQUIRE(draw(first.frame()).pixels == before.pixels);
 }

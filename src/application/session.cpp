@@ -172,8 +172,10 @@ SessionCompileResult compile_session(const model::ModelAsset& model,
         }
         if (geometry.scene->find_variable("face_talk").valid())
             sources.push_back({"lipSync", {"face_talk"}});
-        geometry = {}; // Binding discovery only; final playback owns its compiled scene.
-        auto playback = runtime::compile_playback(model, runtime::PhysicsMode::Enabled, sources);
+        // Transfer binding-discovery geometry into playback instead of compiling
+        // the complete scene a second time.
+        auto playback = runtime::compile_playback(model, std::move(geometry),
+                                                  runtime::PhysicsMode::Enabled, sources);
         require(static_cast<bool>(playback.program),
                 playback.errors.empty() ? "playback compilation failed" : playback.errors.front());
         data->playback = std::move(playback.program);

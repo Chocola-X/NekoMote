@@ -100,6 +100,10 @@ static void test_null_safety(void)
     CHECK(nekomote_wallpaper_fps_limit(NULL) == -1, "should reject NULL");
     PASS();
 
+    TEST("null: wallpaper_needs_render(NULL)");
+    CHECK(nekomote_wallpaper_needs_render(NULL) == 0, "should reject NULL");
+    PASS();
+
     TEST("null: image_load_png(NULL)");
     CHECK(nekomote_image_load_png(NULL) == NULL, "should reject NULL");
     PASS();

@@ -1,0 +1,15 @@
+GL Mesa | llvmpipe (LLVM 20.1.8, 256 bits)
+session_new n=40 p50_us=1848.604 p95_us=1904.152 p99_us=1904.444
+session_duplicate_geometry_simulated n=40 p50_us=3051.801 p95_us=3103.829 p99_us=3266.401
+frame vertices=1521 indices=7332 commands=33 maskcmd=4 masks=10 rev=1/1 first_x=73.000000 second_x=173.000000 upload_bytes=78000
+atlas raw=25837568 GLES_padded=33554432
+prepare_cached n=1000 p50_us=0.035 p95_us=0.038 p99_us=0.043
+prepare_uncached_same_content n=1000 p50_us=17.551 p95_us=17.734 p99_us=17.902
+cross_instance_gpu_x=173.000000 expected=173.000000 (first=73.000000)
+cross_instance_revision_collision_invalid_composition_rejected=1 (expected 1)
+half_alpha_white direct_RGBA=255,255,255,128 protected_RGBA=128,128,128,128
+paused_open_sidebar frame=0 needs_render=0
+paused_open_sidebar frame=1 needs_render=0
+paused_open_sidebar frame=2 needs_render=0
+paused_closed_sidebar needs_render=1
+paused_closed_sidebar_settled=1

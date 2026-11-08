@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <span>
 
 namespace nekomote
@@ -59,7 +60,14 @@ struct MaskDefinition
 {
     std::uint32_t first_command{0}, command_count{0};
 };
+struct FrameProducer
+{
+};
 // Non-owning views; caller keeps storage alive until prepare returns.
+// A producer token plus nonzero revision identifies immutable content. A producer
+// allocates one token per instance; renderers retain it to prevent address reuse.
+// Increment revision for every content change. Missing token or zero revision
+// disables reuse; externally assembled frames use these defaults.
 struct RenderFrame
 {
     std::span<const RenderVertex> vertices;
@@ -68,5 +76,7 @@ struct RenderFrame
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::span<const DrawCommand> mask_commands{};
     std::span<const MaskDefinition> masks{};
+    std::uint64_t revision{0};
+    std::shared_ptr<const FrameProducer> producer{};
 };
 } // namespace nekomote

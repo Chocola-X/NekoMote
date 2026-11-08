@@ -1599,6 +1599,11 @@ extern "C"
         return wallpaper_call([&] { return wp->instance->set_paused(paused != 0); });
     }
 
+    int nekomote_wallpaper_needs_render(const nekomote_wallpaper* wp)
+    {
+        return wp && wp->instance && wp->instance->needs_render() ? 1 : 0;
+    }
+
     nekomote_error nekomote_wallpaper_set_output_available(nekomote_wallpaper* wp, int available)
     {
         if (!wp || !wp->instance || (available != 0 && available != 1))

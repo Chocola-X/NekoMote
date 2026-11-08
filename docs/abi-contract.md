@@ -16,6 +16,12 @@ application/ui；拥有 instance/device/surface/swapchain 和提交。所有输�
 
 高层壁纸输入使用输出物理像素、左上原点、Y 向下；Qt 壳按逻辑/输出尺寸转换一次。转发左键按下/释放后，由共享 Controller 区分未移动点击与按住左键移动超过 4px 后立即拖动；不再额外对同一次左键按下调用 touch。直接 touch 接口保留给明确的触摸/诊断事件。滚轮在 UI 外围绕指针缩放，右键留给桌面。pointer_move/mouse_button 的 `timestamp_ms` 为采集时的单调毫秒时间，同一实例使用一致时钟，按序传递；当前手势按移动量判定，时间戳仍按宿主单调时钟传入。宿主必须按当前头文件重建，不保留旧签名。`set_render_target` 指定 FBO，角色/背景和 UI 都绘制到此目标；UI 可在输出尺寸晚于加载时延迟初始化。显式 model/session 诊断模式不绘控制面板。创建/加载/绘制/重置/销毁中的 GPU 操作须在其有效 GL 上下文与允许线程执行；CPU 查询不能作为跨线程读写许可。当前其他高层接口的异常/借用寿命边界仍需独立复核，不沿用测试数量宣称全部满足。
 
+`nekomote_wallpaper_needs_render` 由实例的串行求值线程查询，表示未呈现的输入/输出、
+模型或 UI 更新及未完成的 UI 动画。暂停且返回 0 时可跳过 prepare/render/present，
+仍需低频 advance 轮询异步完成并处理输入、resize、expose 和宿主呈现重试；事件应立即
+结束空闲等待。正常运行仍按 FPS 调度。绘制模型和 UI 后再次查询，面板完全展开/关闭后
+可以静止；UI 动画时间独立于模型暂停。此查询不代替 Vulkan fence/WSI 生命周期契约。
+
 `nekomote_wallpaper_fps_limit` 在求值线程读取已保存的帧率限制（0 表示不限帧，错误句柄返回 -1）；GUI 线程只能读取宿主发布的原子快照，不能直接并发查询 Controller。KDE 壁纸 item 依据该值调度更新。
 
 `nekomote_wallpaper_set_output_available(wp, 0/1)` 独立通知宿主输出可用性，

@@ -1,0 +1,35 @@
+[
+  {
+    "model": "chocola/date-a",
+    "model_sha256": "c9408bb022d87c71be740e8b3154e921b0a36aa39b8562fd5c51b14276ccad3e",
+    "png_sha256": "f22a71c9e68e7c78e855295fc8583c0474214a539087f4bdabe13aa4da289c9b",
+    "png_bytes_equal": true,
+    "output": [
+      128,
+      128
+    ],
+    "view_scale": 0.1
+  },
+  {
+    "model": "chocola/wintermaid",
+    "model_sha256": "0bb3f8c2cbb95126c578bc5b710134bbbf107f2041f9ff3e3dfaa631a335f546",
+    "png_sha256": "b30c6497e0bdb5b8355a76c3285e93a4b15b55337293e8701476a48d7567aa3d",
+    "png_bytes_equal": true,
+    "output": [
+      128,
+      128
+    ],
+    "view_scale": 0.1
+  },
+  {
+    "model": "maple/yukata",
+    "model_sha256": "8286c3c3001f528aea0a3e83bf68271c21f79b3eceb48a0f7273cb2757181f12",
+    "png_sha256": "7af9800f0c7811736e2acb11db144a8a5ae24caf3f521432ef4df28b9a3fc9f0",
+    "png_bytes_equal": true,
+    "output": [
+      128,
+      128
+    ],
+    "view_scale": 0.1
+  }
+]

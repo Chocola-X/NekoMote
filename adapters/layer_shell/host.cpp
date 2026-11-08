@@ -287,6 +287,7 @@ class Host::Impl
     uint64_t rendered_frames_ = 0;
     Clock::time_point last_frame_{};
     Clock::time_point next_frame_{};
+    bool idle_wait_{false};
 };
 
 const wl_registry_listener& Host::Impl::registry_listener()
@@ -996,6 +997,16 @@ void Host::Impl::render()
                                 : 0.0);
     if (!retry_frame_)
         check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+    const bool paused = nekomote_wallpaper_paused(wallpaper_) != 0;
+    if (!retry_frame_ && paused && options_.capture.empty() &&
+        !nekomote_wallpaper_needs_render(wallpaper_))
+    {
+        last_frame_ = now;
+        idle_wait_ = true;
+        next_frame_ = now + std::chrono::milliseconds(500);
+        return;
+    }
+    idle_wait_ = false;
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (options_.backend == Backend::vulkan)
     {
@@ -1125,6 +1136,9 @@ void Host::Impl::run()
 #endif
             resize();
             process_input();
+            if (idle_wait_ && (nekomote_wallpaper_needs_render(wallpaper_) ||
+                               !nekomote_wallpaper_paused(wallpaper_)))
+                next_frame_ = Clock::now();
             if (frame_ready_ && Clock::now() >= next_frame_)
                 render();
         }

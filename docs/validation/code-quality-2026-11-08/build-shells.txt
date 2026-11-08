@@ -1,0 +1,15 @@
+[1/15] Generating wlr-layer-shell-unstable-v1-client-protocol.h
+[2/15] Generating wlr-layer-shell-unstable-v1-protocol.c
+[3/15] Generating xdg-shell-protocol.c
+[4/15] Generating xdg-shell-client-protocol.h
+[5/15] Building C object adapters/layer_shell/CMakeFiles/nekomote_layer_shell_protocols.dir/xdg-shell-protocol.c.o
+[6/15] Building C object adapters/layer_shell/CMakeFiles/nekomote_layer_shell_protocols.dir/wlr-layer-shell-unstable-v1-protocol.c.o
+[7/15] Linking C static library lib/libnekomote_layer_shell_protocols.a
+[8/15] Building CXX object adapters/x11/CMakeFiles/nekomote_x11.dir/main.cpp.o
+[9/15] Building CXX object adapters/layer_shell/CMakeFiles/nekomote_layer_shell.dir/main.cpp.o
+[10/15] Building CXX object adapters/x11/CMakeFiles/nekomote_x11.dir/options.cpp.o
+[11/15] Building CXX object adapters/layer_shell/CMakeFiles/nekomote_layer_shell.dir/options.cpp.o
+[12/15] Building CXX object adapters/x11/CMakeFiles/nekomote_x11.dir/host.cpp.o
+[13/15] Building CXX object adapters/layer_shell/CMakeFiles/nekomote_layer_shell.dir/host.cpp.o
+[14/15] Linking CXX executable bin/nekomote_x11
+[15/15] Linking CXX executable bin/nekomote_layer_shell

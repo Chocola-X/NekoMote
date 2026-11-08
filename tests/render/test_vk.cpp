@@ -7,6 +7,8 @@
 
 #include <glad/gl.h>
 #include <nekomote/abi.h>
+
+#include "geometry_fixture.hpp"
 #ifndef GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_NONE
 #endif
@@ -280,6 +282,37 @@ void require_same_picture(const std::pair<ImageRgba8, ImageRgba8>& pair)
     require_same_picture(pair.first, pair.second);
 }
 } // namespace
+
+TEST_CASE("Vulkan frame revisions gate reuse and zero retains full validation", "[gpu][vulkan]")
+{
+    Fixture f;
+    f.upload(TextureId{1}, {1, 1, {255, 255, 255, 255}});
+    auto vertices = quad();
+    std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
+    RenderFrame frame{vertices, std::span(kIndices).first(6),
+                      commands, ColorComposition::PremultipliedOver,
+                      {},       {},
+                      73};
+    frame.producer = std::make_shared<FrameProducer>();
+    f.vk->prepare(frame);
+    commands[0].texture = TextureId{999};
+    REQUIRE_NOTHROW(f.vk->prepare(frame));
+    ++frame.revision;
+    REQUIRE_THROWS(f.vk->prepare(frame));
+    const auto producer = frame.producer;
+    frame.producer.reset();
+    REQUIRE_THROWS(f.vk->prepare(frame));
+    frame.producer = producer;
+    frame.revision = 0;
+    REQUIRE_THROWS(f.vk->prepare(frame));
+    commands[0].texture = TextureId{1};
+    frame.revision = 73;
+    f.vk->prepare(frame);
+    f.host.wait_ready();
+    f.vk->reserve({16, 24, 8, 4, 8, 4});
+    commands[0].texture = TextureId{999};
+    REQUIRE_THROWS(f.vk->prepare(frame));
+}
 
 TEST_CASE("Vulkan target clear preserve and top-left atlas coordinates match OpenGL",
           "[gpu][vulkan]")
@@ -957,4 +990,28 @@ TEST_CASE("Vulkan peers isolate frame state and outlive their pipeline source",
     actual = f.capture();
     REQUIRE(actual.first.pixels == expected_b.first.pixels);
     REQUIRE(actual.second.pixels == expected_b.second.pixels);
+}
+
+TEST_CASE("Vulkan distinguishes independent geometry producers at the same revision",
+          "[gpu][vulkan]")
+{
+    Fixture f;
+    auto scene = test::sprite_scene();
+    REQUIRE(scene.scene);
+    runtime::GeometryInstance first(*scene.scene), second(*scene.scene);
+    REQUIRE(first.evaluate());
+    REQUIRE(first.build_frame());
+    REQUIRE(second.set_origin({16, 0}));
+    REQUIRE(second.evaluate());
+    REQUIRE(second.build_frame());
+    REQUIRE(first.frame().revision == second.frame().revision);
+    f.upload(TextureId{1}, {1, 1, {255, 255, 255, 255}});
+    f.draw(first.frame(), {32, 32, 1, {0, 0, 0, 0}});
+    const auto before = f.capture();
+    f.draw(second.frame(), {32, 32, 1, {0, 0, 0, 0}});
+    const auto after = f.capture();
+    require_same_picture(before);
+    require_same_picture(after);
+    REQUIRE(pixel(before.second, 36, 36)[3] == 255);
+    REQUIRE(pixel(after.second, 36, 36)[3] == 0);
 }

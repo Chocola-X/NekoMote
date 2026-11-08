@@ -1,0 +1,4 @@
+[1/4] Building CXX object tests/render/CMakeFiles/nekomote_render_tests.dir/test_renderer.cpp.o
+[2/4] Building CXX object tests/render/CMakeFiles/nekomote_vk_tests.dir/test_vk.cpp.o
+[3/4] Linking CXX executable bin/nekomote_render_tests
+[4/4] Linking CXX executable bin/nekomote_vk_tests

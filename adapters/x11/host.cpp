@@ -266,6 +266,7 @@ class Host::Impl
     bool mapped_ = false, closed_ = false;
     uint64_t rendered_frames_ = 0;
     Clock::time_point last_frame_{}, next_frame_{};
+    bool idle_wait_{false};
 };
 
 void Host::Impl::initialize_display()
@@ -603,6 +604,11 @@ void Host::Impl::handle_event(const XEvent& event)
             window_ = None;
             closed_ = true;
             break;
+        case Expose:
+            if (event.xexpose.count == 0)
+                check(nekomote_wallpaper_set_output_size(wallpaper_, width_, height_),
+                      "refresh wallpaper output");
+            break;
         case ConfigureNotify:
             if (event.xconfigure.width != width_ || event.xconfigure.height != height_)
             {
@@ -732,6 +738,17 @@ void Host::Impl::render()
                           ? 1.0 / 60.0
                           : std::min(std::chrono::duration<double>(now - last_frame_).count(), .25);
     check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+    const bool paused = nekomote_wallpaper_paused(wallpaper_) != 0;
+    if (paused && options_.capture.empty() && !nekomote_wallpaper_needs_render(wallpaper_))
+    {
+        // Keep polling asynchronous/session work, but leave the last presented
+        // framebuffer untouched while the paused presentation is stable.
+        last_frame_ = now;
+        idle_wait_ = true;
+        next_frame_ = now + std::chrono::milliseconds(500);
+        return;
+    }
+    idle_wait_ = false;
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (options_.backend == Backend::vulkan)
     {
@@ -795,6 +812,9 @@ void Host::Impl::run()
         }
         if (closed_ || stop_requested)
             break;
+        if (idle_wait_ &&
+            (nekomote_wallpaper_needs_render(wallpaper_) || !nekomote_wallpaper_paused(wallpaper_)))
+            next_frame_ = Clock::now();
         if (mapped_ && width_ > 0 && height_ > 0 && Clock::now() >= next_frame_)
             render();
         if (closed_ || XPending(display_))

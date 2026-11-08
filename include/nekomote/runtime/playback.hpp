@@ -71,6 +71,9 @@ class PlaybackProgram
     friend class PlaybackInstance;
     friend PlaybackCompileResult compile_playback(const model::ModelAsset&, PhysicsMode,
                                                   std::span<const VariableSourceDefinition>);
+    friend PlaybackCompileResult compile_playback(const model::ModelAsset&, GeometryCompileResult,
+                                                  PhysicsMode,
+                                                  std::span<const VariableSourceDefinition>);
 };
 struct PlaybackCompileResult
 {
@@ -78,6 +81,11 @@ struct PlaybackCompileResult
     std::vector<std::string> errors;
 };
 PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
+                                       PhysicsMode mode = PhysicsMode::Enabled,
+                                       std::span<const VariableSourceDefinition> sources = {});
+// Reuses binding-discovery geometry without compiling the same scene twice.
+PlaybackCompileResult compile_playback(const model::ModelAsset& asset,
+                                       GeometryCompileResult geometry,
                                        PhysicsMode mode = PhysicsMode::Enabled,
                                        std::span<const VariableSourceDefinition> sources = {});
 // Single-threaded CPU session. Each 60 Hz author tick advances animation, binds

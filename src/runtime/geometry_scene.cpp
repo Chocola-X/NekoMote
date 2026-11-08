@@ -743,6 +743,8 @@ struct GeometryInstance::Impl
     std::vector<DrawCommand> node_commands;
     std::vector<bool> used_masks, needed_mask_sources;
     bool evaluated{false}, frame_ready{false};
+    std::uint64_t frame_revision{0};
+    std::shared_ptr<const FrameProducer> frame_producer{std::make_shared<FrameProducer>()};
     Vec2 origin{};
     float scale{1};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
@@ -1372,14 +1374,17 @@ GeometryStatus GeometryInstance::build_frame() noexcept
             static_cast<std::uint32_t>(instance.mask_commands.size()) - definition.first_command;
     }
     instance.frame_ready = true;
+    if (++instance.frame_revision == 0)
+        ++instance.frame_revision;
     return {};
 }
 RenderFrame GeometryInstance::frame() const noexcept
 {
     if (!impl_->frame_ready)
         return {};
-    return {impl_->vertices,      impl_->indices,
-            impl_->commands,      ColorComposition::ProtectedStraight,
-            impl_->mask_commands, impl_->masks};
+    return {impl_->vertices,       impl_->indices,
+            impl_->commands,       ColorComposition::ProtectedStraight,
+            impl_->mask_commands,  impl_->masks,
+            impl_->frame_revision, impl_->frame_producer};
 }
 } // namespace nekomote::runtime

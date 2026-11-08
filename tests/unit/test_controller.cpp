@@ -1268,3 +1268,26 @@ TEST_CASE("Queued background changes persist only the latest user choice", "[con
     }
     REQUIRE_FALSE(controller.poll_background());
 }
+
+TEST_CASE("Reset after a paused draw leaves a new model frame pending", "[controller][fit]")
+{
+    LayoutFixture fixture;
+    WallpaperController controller;
+    fixture.install(controller);
+    controller.set_no_save(true);
+    controller.set_output_size(320, 240);
+    controller.set_paused(true);
+    controller.set_origin({50, 20});
+    controller.prepare_frame();
+    const auto drawn = controller.current_instance()->frame().revision;
+    REQUIRE(drawn != 0);
+    // The menu handles reset after the character has already been drawn.
+    controller.reset_character_transform();
+    REQUIRE(controller.current_instance()->frame().revision == 0);
+    controller.advance(0);
+    REQUIRE(controller.current_instance()->frame().revision == 0);
+    controller.prepare_frame();
+    REQUIRE(controller.current_instance()->frame().revision != 0);
+    REQUIRE(controller.current_instance()->frame().revision != drawn);
+    REQUIRE(controller.paused());
+}

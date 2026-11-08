@@ -314,6 +314,9 @@ struct Renderer::Impl
     std::vector<MaskBounds> mask_bounds;
     std::size_t mask_command_capacity{0}, mask_capacity{0};
     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
+    std::uint64_t prepared_revision{0};
+    std::shared_ptr<const FrameProducer> prepared_producer;
+    bool has_prepared_frame{false};
     ~Impl()
     {
         for (const auto& t : textures)
@@ -437,6 +440,9 @@ void Renderer::reserve(Capacity capacity)
     p.index_capacity = indices;
     p.command_capacity = commands;
     p.texture_capacity = textures;
+    p.prepared_producer.reset();
+    p.prepared_revision = 0;
+    p.has_prepared_frame = false;
 }
 void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
@@ -501,6 +507,14 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
 void Renderer::prepare(RenderFrame frame)
 {
     auto& p = *impl_;
+    if (p.has_prepared_frame && frame.producer && frame.producer == p.prepared_producer &&
+        frame.revision != 0 && frame.revision == p.prepared_revision)
+        return;
+    // A failed upload may have changed buffers before reporting its error.
+    // Never let the last successful token authorize reuse after that failure.
+    p.prepared_producer.reset();
+    p.prepared_revision = 0;
+    p.has_prepared_frame = false;
     if (frame.composition != ColorComposition::PremultipliedOver &&
         frame.composition != ColorComposition::ProtectedStraight)
         throw std::runtime_error("unsupported color composition");
@@ -600,6 +614,9 @@ void Renderer::prepare(RenderFrame frame)
     p.masks.assign(frame.masks.begin(), frame.masks.end());
     p.composition = frame.composition;
     check_gl("prepare frame");
+    p.prepared_producer = frame.producer;
+    p.prepared_revision = frame.revision;
+    p.has_prepared_frame = true;
 }
 std::size_t Renderer::release_unused_textures()
 {
@@ -651,7 +668,8 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
     if (target.width <= 0 || target.height <= 0)
         return; // minimized output
     if (!std::isfinite(view.origin_x) || !std::isfinite(view.origin_y) ||
-        !std::isfinite(view.scale) || view.scale <= 0 ||
+        !std::isfinite(view.scale) || view.scale <= 0 || !std::isfinite(view.alpha) ||
+        view.alpha < 0.0F || view.alpha > 1.0F ||
         std::any_of(view.clear.begin(), view.clear.end(),
                     [](float value) { return !std::isfinite(value); }))
         throw std::runtime_error("invalid output view");

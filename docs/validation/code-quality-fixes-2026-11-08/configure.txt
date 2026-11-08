@@ -1,0 +1,66 @@
+-- Populating nlohmann_json
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/nlohmann_json-subbuild
+ninja: no work to do.
+-- Using the multi-header code from /run/media/chocola/MIKU/NekoMote/build/release/_deps/nlohmann_json-src/include/
+-- Populating fast_float
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/fast_float-subbuild
+ninja: no work to do.
+CMake Deprecation Warning at build/release/_deps/fast_float-src/CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Tests are disabled. Set FASTFLOAT_TEST to ON to run tests.
+-- Populating stb
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/stb-subbuild
+ninja: no work to do.
+-- Populating flac
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/flac-subbuild
+ninja: no work to do.
+CMake Deprecation Warning at build/release/_deps/flac-src/CMakeLists.txt:5 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- Performing Test HAVE_FLAG__ffile_prefix_map__tmp_nekomote_catch2__
+-- Performing Test HAVE_FLAG__ffile_prefix_map__tmp_nekomote_catch2__ - Success
+-- Populating glfw
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/glfw-subbuild
+ninja: no work to do.
+-- Including Wayland support
+-- Including X11 support
+-- Populating glad
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release/_deps/glad-subbuild
+ninja: no work to do.
+-- Glad Library 'nekomote_gl_loader'
+-- Found ZLIB: /usr/lib/libz.so (found suitable version "1.3.1", minimum required is "1.2.11")
+-- Checking for module 'wayland-server'
+--   Found wayland-server, version 1.24.0
+-- Found X11: /usr/include  found components: Xrandr Xext
+-- Found OpenGL: /usr/lib/libOpenGL.so  found components: OpenGL GLX
+-- Found OpenGL: /usr/lib/libOpenGL.so
+-- Found ZLIB: /usr/lib/libz.so (found version "1.3.1")
+-- Found ZLIB: /usr/lib/libz.so (found suitable version "1.3.1", minimum required is "1.2.11")
+-- Configuring done (1.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: /run/media/chocola/MIKU/NekoMote/build/release

@@ -1,0 +1,10 @@
+banks 195 unique clips 263
+(6599932, 20, 'assets/characters/maple/yukata/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/yukata-b/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/wintermaid/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/wintermaid-b/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/winter/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/winter-b/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/swimsuit-b/session.nks.json', 37.414580498866215)
+(6599932, 20, 'assets/characters/maple/swimsuit-a/session.nks.json', 37.414580498866215)
+PCM MiB min/median/max 3.704113006591797 5.782527923583984 6.294185638427734

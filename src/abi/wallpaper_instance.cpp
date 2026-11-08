@@ -78,6 +78,9 @@ nekomote_error WallpaperInstance::set_vk_target(render_vk::Target target)
         set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid Vulkan target handles or output size");
         return NEKOMOTE_ERROR_INVALID_INPUT;
     }
+    if (!vk_target_set_ || vk_target_.framebuffer != target.framebuffer ||
+        vk_target_.width != target.width || vk_target_.height != target.height)
+        presentation_dirty_ = true;
     vk_target_ = target;
     vk_target_set_ = true;
     return NEKOMOTE_OK;
@@ -167,6 +170,8 @@ nekomote_error WallpaperInstance::set_no_save(bool value)
 nekomote_error WallpaperInstance::set_muted(bool value)
 {
     mute_forced_ = true;
+    if (panel_.muted != value)
+        presentation_dirty_ = true;
     panel_.muted = value;
     controller_cfg_.mute = value;
     controller_cfg_.audio =
@@ -219,6 +224,7 @@ nekomote_error WallpaperInstance::set_output_size(int width, int height)
 #endif
     output_width_ = width;
     output_height_ = height;
+    presentation_dirty_ = true;
     controller_.set_output_size(width, height);
     return NEKOMOTE_OK;
 }
@@ -226,6 +232,7 @@ nekomote_error WallpaperInstance::set_output_size(int width, int height)
 nekomote_error WallpaperInstance::set_paused(bool paused)
 {
     paused_ = paused;
+    presentation_dirty_ = true;
     controller_.set_paused(paused);
     return NEKOMOTE_OK;
 }
@@ -233,18 +240,25 @@ nekomote_error WallpaperInstance::set_paused(bool paused)
 nekomote_error WallpaperInstance::set_output_available(bool available)
 {
     output_unavailable_ = !available;
+    presentation_dirty_ = true;
     controller_.set_output_unavailable(output_unavailable_);
     return NEKOMOTE_OK;
 }
 
 nekomote_error WallpaperInstance::set_ui_open(bool open)
 {
-    panel_.sidebar.open = open;
+    if (panel_.sidebar.open != open)
+    {
+        panel_.sidebar.open = open;
+        presentation_dirty_ = true;
+    }
     return NEKOMOTE_OK;
 }
 
 void WallpaperInstance::set_render_target_fbo(std::uint32_t fbo)
 {
+    if (render_target_fbo_ != fbo)
+        presentation_dirty_ = true;
     render_target_fbo_ = fbo;
 }
 
@@ -273,6 +287,7 @@ void WallpaperInstance::reset_gpu_resources()
 #endif
     panel_.ui_ready = false;
     panel_.icon_texture = 0;
+    presentation_dirty_ = true;
     last_render_width_ = 0;
     last_render_height_ = 0;
 }
@@ -336,6 +351,7 @@ nekomote_error WallpaperInstance::load_model(const std::filesystem::path& model_
         controller_.prepare_frame();
     }
     initialized_ = true;
+    presentation_dirty_ = true;
     return NEKOMOTE_OK;
 }
 
@@ -519,6 +535,7 @@ void WallpaperInstance::handle_switch_poll()
     auto candidate_opt = controller_.poll_candidate();
     if (!candidate_opt)
         return;
+    presentation_dirty_ = true;
     if (!candidate_opt->ok)
     {
         controller_.reject_candidate(candidate_opt->error);
@@ -584,6 +601,7 @@ void WallpaperInstance::handle_background_poll()
     auto bg_req = controller_.poll_background();
     if (!bg_req)
         return;
+    presentation_dirty_ = true;
     if (bg_req->action == application::BackgroundAction::Switch)
         apply_background(bg_req->path, bg_req->fade_duration, bg_req->background_index);
     else if (bg_req->action == application::BackgroundAction::Clear)
@@ -790,6 +808,8 @@ nekomote_error WallpaperInstance::render_frame()
         }
     }
 #endif
+    // A later advance(0) can set this again when asynchronous work completes.
+    presentation_dirty_ = false;
     return NEKOMOTE_OK;
 }
 
@@ -920,7 +940,11 @@ nekomote_error WallpaperInstance::render_ui(float dt)
         }
         panel_.text_ready = true;
     }
-    draw_ui(paused_ ? 0.0f : std::min(dt, .25f));
+    const auto revision = controller_.current_instance()->frame().revision;
+    draw_ui(std::min(dt, .25f));
+    presentation_dirty_ = presentation_dirty_ ||
+                          ui::has_pending_animation(panel_.icon, panel_.sidebar) ||
+                          controller_.current_instance()->frame().revision != revision;
     return NEKOMOTE_OK;
 }
 
@@ -1002,6 +1026,7 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y,
 {
     if (!initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     const float px = static_cast<float>(x);
     const float py = static_cast<float>(y);
     ui_context_.mouse_move(x, y);
@@ -1022,6 +1047,7 @@ nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     ui_context_.mouse_move(x, y);
     if (ui_captures_mouse())
         return NEKOMOTE_OK;
@@ -1035,6 +1061,7 @@ nekomote_error WallpaperInstance::pointer_leave()
 {
     if (!initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     controller_.pointer_leave();
     return NEKOMOTE_OK;
 }
@@ -1043,6 +1070,7 @@ nekomote_error WallpaperInstance::touch(float x, float y)
 {
     if (!initialized_ || paused_ || minimized_ || panel_.locked)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     ui_context_.mouse_move(x, y);
     if (ui_captures_mouse())
         return NEKOMOTE_OK;
@@ -1057,6 +1085,7 @@ nekomote_error WallpaperInstance::mouse_button(int button, int action,
 {
     if (!initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     ui_context_.mouse_button(button, action);
     if (ui_captures_mouse() || panel_.locked || paused_ || minimized_)
     {
@@ -1079,6 +1108,7 @@ nekomote_error WallpaperInstance::mouse_scroll(double amount)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     ui_context_.mouse_scroll(amount);
     if (ui_captures_mouse())
         return NEKOMOTE_OK;
@@ -1094,6 +1124,7 @@ nekomote_error WallpaperInstance::key(int key, int action)
 {
     if (action != 1 || !initialized_)
         return NEKOMOTE_OK;
+    presentation_dirty_ = true;
     switch (key)
     {
         case NEKOMOTE_KEY_SPACE:
@@ -1151,24 +1182,28 @@ nekomote_error WallpaperInstance::key(int key, int action)
 
 nekomote_error WallpaperInstance::switch_character(int index)
 {
+    presentation_dirty_ = true;
     controller_.request_switch_character(index);
     return NEKOMOTE_OK;
 }
 
 nekomote_error WallpaperInstance::switch_background(int index)
 {
+    presentation_dirty_ = true;
     controller_.request_switch_background(index);
     return NEKOMOTE_OK;
 }
 
 nekomote_error WallpaperInstance::clear_background()
 {
+    presentation_dirty_ = true;
     controller_.request_clear_background();
     return NEKOMOTE_OK;
 }
 
 nekomote_error WallpaperInstance::fit()
 {
+    presentation_dirty_ = true;
     if (output_width_ > 0 && output_height_ > 0)
         controller_.fit_to_output(output_width_, output_height_);
     return NEKOMOTE_OK;
@@ -1176,6 +1211,7 @@ nekomote_error WallpaperInstance::fit()
 
 nekomote_error WallpaperInstance::reset()
 {
+    presentation_dirty_ = true;
     controller_.reset();
     return NEKOMOTE_OK;
 }

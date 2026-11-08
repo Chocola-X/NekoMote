@@ -527,6 +527,7 @@ struct Surface
     GLFWwindow* window;
     bool locked{false};
     bool paused{false}, minimized{false}, output_unavailable{false};
+    bool presentation_dirty{true};
     ui::Context* ui_context{nullptr};
     const ui::IconState* ui_icon{nullptr};
     const ui::SidebarState* ui_sidebar{nullptr};
@@ -538,16 +539,19 @@ struct Surface
     void set_paused(bool value) noexcept
     {
         paused = value;
+        presentation_dirty = true;
         controller->set_paused(value);
     }
     void set_minimized(bool value) noexcept
     {
         minimized = value;
+        presentation_dirty = true;
         controller->set_minimized(value);
     }
     void set_output_unavailable(bool value) noexcept
     {
         output_unavailable = value;
+        presentation_dirty = true;
         controller->set_output_unavailable(value);
     }
     Vec2 point(double x, double y) const noexcept
@@ -562,9 +566,14 @@ struct Surface
     {
         return *static_cast<Surface*>(glfwGetWindowUserPointer(w));
     }
+    static void refresh(GLFWwindow* w) noexcept
+    {
+        get(w).presentation_dirty = true;
+    }
     static void move(GLFWwindow* w, double x, double y) noexcept
     {
         auto& s = get(w);
+        s.presentation_dirty = true;
         const auto p = s.point(x, y);
         if (s.ui_context)
             s.ui_context->mouse_move(x, y);
@@ -580,6 +589,7 @@ struct Surface
     static void enter(GLFWwindow* w, int entered) noexcept
     {
         auto& s = get(w);
+        s.presentation_dirty = true;
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         if (entered)
@@ -595,6 +605,7 @@ struct Surface
     static void button(GLFWwindow* w, int button, int action, int) noexcept
     {
         auto& s = get(w);
+        s.presentation_dirty = true;
         double x = 0, y = 0;
         glfwGetCursorPos(w, &x, &y);
         if (s.ui_context)
@@ -618,6 +629,7 @@ struct Surface
     static void scroll(GLFWwindow* w, double, double amount) noexcept
     {
         auto& s = get(w);
+        s.presentation_dirty = true;
         if (s.ui_context)
         {
             s.ui_context->mouse_scroll(amount);
@@ -639,6 +651,7 @@ struct Surface
     void fit() noexcept
     {
         int w = 0, h = 0;
+        presentation_dirty = true;
         glfwGetFramebufferSize(window, &w, &h);
         controller->fit_to_output(w, h);
     }
@@ -647,6 +660,7 @@ struct Surface
         if (action != GLFW_PRESS)
             return;
         auto& s = get(w);
+        s.presentation_dirty = true;
         if (key == GLFW_KEY_ESCAPE)
             glfwSetWindowShouldClose(w, GLFW_TRUE);
         else if (key == GLFW_KEY_SPACE)
@@ -1048,6 +1062,7 @@ int run(int argc, char** argv)
     if (o.capture.empty())
     {
         glfwSetWindowUserPointer(window.get(), &surface);
+        glfwSetWindowRefreshCallback(window.get(), Surface::refresh);
         glfwSetCursorPosCallback(window.get(), Surface::move);
         glfwSetCursorEnterCallback(window.get(), Surface::enter);
         glfwSetMouseButtonCallback(window.get(), Surface::button);
@@ -1126,6 +1141,7 @@ int run(int argc, char** argv)
             auto candidate_opt = controller.poll_candidate();
             if (candidate_opt)
             {
+                surface.presentation_dirty = true;
                 if (candidate_opt->ok)
                 {
                     fs::path bg_path;
@@ -1187,6 +1203,7 @@ int run(int argc, char** argv)
         auto bg_req = controller.poll_background();
         if (bg_req)
         {
+            surface.presentation_dirty = true;
             if (bg_req->action == application::BackgroundAction::Switch)
             {
                 std::printf(
@@ -1219,6 +1236,8 @@ int run(int argc, char** argv)
             surface.set_output_unavailable(unavailable);
             check(controller.last_error());
         }
+        if (w != last_width || h != last_height)
+            surface.presentation_dirty = true;
         if (gpu.device)
         {
             while (const auto audio_command = controller.pop_audio_command())
@@ -1234,6 +1253,16 @@ int run(int argc, char** argv)
         if (o.capture.empty())
         {
             controller.advance(elapsed);
+        }
+        // Diagnostic capture/check-window paths intentionally keep their exact
+        // frame cadence. An interactive paused surface polls async work at 20 Hz
+        // but does not prepare or submit another GPU frame until something changes.
+        if (surface.paused && o.capture.empty() && o.check_window.empty() &&
+            !surface.presentation_dirty)
+        {
+            glfwWaitEventsTimeout(.05);
+            previous = Clock::now();
+            continue;
         }
         if (w <= 0 || h <= 0 || surface.minimized)
         {
@@ -1558,6 +1587,8 @@ int run(int argc, char** argv)
             }
             check(controller.last_error());
         }
+        surface.presentation_dirty = (ui_ready && ui::has_pending_animation(ui_icon, ui_sidebar)) ||
+                                     controller.current_instance()->frame().revision == 0;
         const auto cpu_ms = std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
         if (o.vulkan())
         {
@@ -1651,6 +1682,7 @@ int run(int argc, char** argv)
     glfwSetMouseButtonCallback(window.get(), nullptr);
     glfwSetScrollCallback(window.get(), nullptr);
     glfwSetKeyCallback(window.get(), nullptr);
+    glfwSetWindowRefreshCallback(window.get(), nullptr);
     glfwSetWindowIconifyCallback(window.get(), nullptr);
     glfwSetWindowUserPointer(window.get(), nullptr);
     return 0;

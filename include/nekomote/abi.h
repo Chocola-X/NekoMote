@@ -511,6 +511,13 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
                                                       int height);
     nekomote_error nekomote_wallpaper_set_paused(nekomote_wallpaper* wp, int paused);
+    /* Nonzero while model/UI changes or UI animation need presentation. Query
+     * on the instance's serial owner thread, after advance (which polls async
+     * loads) and after a successful render_frame + render_ui pair. Paused hosts
+     * may skip presentation when zero, but must still poll advance and service
+     * input/output events. NULL returns zero. This does not replace host WSI
+     * retry/availability handling or the normal unpaused frame schedule. */
+    int nekomote_wallpaper_needs_render(const nekomote_wallpaper* wp);
     /* Host output availability (0/1), separate from user pause. When unavailable,
      * the shared controller pauses playback/audio without replacing user policy.
      * Advance once with dt=0 to flush audio commands before suspending dispatch;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 namespace nekomote::ui
 {
 
@@ -40,4 +42,12 @@ struct SidebarState
     int expanded_drawer{-1};
 };
 
+// Retain redraws through opening, closing and the icon's hover/press easing.
+// The icon tolerance is below 0.0001 output pixels, near float convergence.
+inline bool has_pending_animation(const IconState& icon, const SidebarState& sidebar) noexcept
+{
+    const float target = icon.dragging ? 0.96f : (icon.hover ? 1.08f : 1.0f);
+    return (sidebar.open ? sidebar.animation < 1.0f : sidebar.animation > 0.0f) ||
+           std::abs(icon.press_scale - target) > 0.000001f;
+}
 } // namespace nekomote::ui

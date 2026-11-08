@@ -225,6 +225,17 @@ TEST_CASE("Reusable motion branches switch without sharing instance state", "[ru
     REQUIRE(first.build_frame());
     REQUIRE(first.frame().commands.size() == 1);
     REQUIRE(first.frame().vertices.size() == 4);
+    REQUIRE(second.build_frame());
+    REQUIRE(first.frame().revision == second.frame().revision);
+    REQUIRE(first.frame().producer);
+    REQUIRE(first.frame().producer != second.frame().producer);
+    const auto initial_producer = first.frame().producer;
+    const auto initial_revision = first.frame().revision;
+    REQUIRE(initial_revision != 0);
+    REQUIRE(first.frame().revision == initial_revision); // Reading does not publish new content.
+    REQUIRE(first.build_frame());
+    REQUIRE(first.frame().revision != initial_revision);
+    REQUIRE(first.frame().producer == initial_producer);
     near({first.frame().vertices[0].x, first.frame().vertices[0].y}, {2, 13});
     REQUIRE(first.set_parameter({}, 0).error == runtime::GeometryError::InvalidParameter);
     REQUIRE(first.set_parameter(pick, std::numeric_limits<float>::quiet_NaN()).error ==
