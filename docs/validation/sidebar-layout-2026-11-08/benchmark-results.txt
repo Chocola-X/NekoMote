@@ -1,0 +1,18 @@
+round=1 baseline
+expanded=-1 p50_ns=55.9 p95_ns=62.6 p99_ns=64.3 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1164.7 p95_ns=1545.2 p99_ns=1982.7 allocations=0 height=1064.0 x=300.0 draws=23970000
+round=1 fixed
+expanded=-1 p50_ns=59.7 p95_ns=66.8 p99_ns=79.3 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1604.8 p95_ns=1803.3 p99_ns=2127.4 allocations=0 height=864.0 x=300.0 draws=23970000
+round=2 fixed
+expanded=-1 p50_ns=60.0 p95_ns=85.5 p99_ns=95.7 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1602.2 p95_ns=1974.4 p99_ns=2622.7 allocations=0 height=864.0 x=300.0 draws=23970000
+round=2 baseline
+expanded=-1 p50_ns=63.6 p95_ns=84.1 p99_ns=121.8 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1168.9 p95_ns=1435.6 p99_ns=1693.8 allocations=0 height=1064.0 x=300.0 draws=23970000
+round=3 baseline
+expanded=-1 p50_ns=65.2 p95_ns=74.0 p99_ns=97.6 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1174.3 p95_ns=1542.5 p99_ns=3354.8 allocations=0 height=1064.0 x=300.0 draws=23970000
+round=3 fixed
+expanded=-1 p50_ns=63.2 p95_ns=63.6 p99_ns=67.5 allocations=0 height=238.0 x=300.0 draws=1938000
+expanded=0 p50_ns=1588.8 p95_ns=1880.8 p99_ns=4021.3 allocations=0 height=864.0 x=300.0 draws=23970000

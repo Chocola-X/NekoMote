@@ -15,8 +15,7 @@ constexpr float kRadioRowHeight = 32.0f;
 constexpr float kSwitchRowHeight = 34.0f;
 constexpr float kSidebarHeaderHeight = 44.0f;
 constexpr float kFooterHeight = 68.0f;
-constexpr float kSidebarMargin = 16.0f;
-constexpr float kSidebarMinHeight = 64.0f;
+constexpr float kSidebarMaxHeightRatio = 4.0f / 5.0f;
 
 // Sidebar strings per config language. FPS option labels ("30 FPS", "∞") and
 // language option labels (shown in their own language) are shared.
@@ -197,24 +196,32 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     content_scrollable_h += kFooterHeight;
 
     const float max_sidebar_h =
-        std::max(kSidebarMinHeight, static_cast<float>(output_height) - kSidebarMargin);
+        std::max(0.0f, static_cast<float>(output_height)) * kSidebarMaxHeightRatio;
     const float content_total_h = kSidebarHeaderHeight + content_scrollable_h;
     sidebar.height = std::min(max_sidebar_h, content_total_h);
     ctx.validate_sidebar_position(sidebar);
     const float sidebar_x = sidebar.x;
     const float sidebar_y = sidebar.y;
 
-    const float max_scroll =
-        std::max(0.0f, content_scrollable_h - (sidebar.height - kSidebarHeaderHeight));
+    const float clip_h = std::max(0.0f, sidebar.height - kSidebarHeaderHeight);
+    const float max_scroll = std::max(0.0f, content_scrollable_h - clip_h);
     sidebar.scroll_y = std::clamp(sidebar.scroll_y, 0.0f, max_scroll);
 
     painter.draw_rounded_rect(sidebar_x, sidebar_y, sidebar.width, sidebar.height,
                               style.corner_radius, style.panel_bg, style.accent, 2.0f);
+    if (clip_h <= 0.0f)
+    {
+        painter.push_clip_rect(sidebar_x, sidebar_y, sidebar.width, sidebar.height);
+        ctx.sidebar_header(sidebar, "NekoMote Wallpaper", style);
+        painter.pop_clip_rect();
+        painter.set_global_alpha(1.0f);
+        return;
+    }
     ctx.sidebar_header(sidebar, "NekoMote Wallpaper", style);
 
     const float clip_y = sidebar_y + kSidebarHeaderHeight;
-    const float clip_h = sidebar.height - kSidebarHeaderHeight;
     painter.push_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
+    ctx.set_input_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
 
     float curr_y = clip_y - sidebar.scroll_y;
 
@@ -376,6 +383,7 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, curr_y, 12.0f, style.text);
     curr_y += 24.0f;
 
+    ctx.clear_input_clip_rect();
     painter.pop_clip_rect();
     ctx.draw_scrollbar(sidebar_x, clip_y, sidebar.width, clip_h, content_scrollable_h,
                        sidebar.scroll_y, style);

@@ -467,7 +467,7 @@ TEST_CASE("Saved UI coordinates outside new viewport return to defaults", "[ui_l
     SECTION("bottom edge")
     {
         icon.y = 470;
-        sidebar.y = 400;
+        sidebar.y = 480;
     }
     SECTION("negative coordinates")
     {
@@ -488,6 +488,27 @@ TEST_CASE("Saved UI coordinates outside new viewport return to defaults", "[ui_l
     REQUIRE(sidebar.x == 8.0f);
     REQUIRE(sidebar.y == 8.0f);
     REQUIRE(sidebar.position_reset);
+}
+
+TEST_CASE("Sidebar bottom overflow only adjusts its vertical placement", "[ui_layout][config]")
+{
+    MockPainter painter;
+    painter.vw = 640;
+    painter.vh = 480;
+    Context ctx;
+    ctx.init(&painter);
+    SidebarState sidebar;
+    sidebar.is_free = true;
+    sidebar.x = 300.0f;
+    sidebar.y = 400.0f;
+    sidebar.height = 300.0f;
+    sidebar.open = true;
+    sidebar.animation = 1.0f;
+    ctx.sidebar(sidebar);
+    REQUIRE(sidebar.x == 300.0f);
+    REQUIRE(sidebar.y == 172.0f);
+    REQUIRE(sidebar.is_free);
+    REQUIRE_FALSE(sidebar.position_reset);
 }
 
 TEST_CASE("Valid saved UI coordinates survive reopen and viewport resize", "[ui_layout][config]")

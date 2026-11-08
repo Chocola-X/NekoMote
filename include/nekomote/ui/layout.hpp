@@ -22,6 +22,9 @@ class Context
     void mouse_button(int button, int action);
     void mouse_scroll(double amount);
     bool mouse_in_rect(float x, float y, float w, float h) const;
+    // Single content clip for hit-testing, paired with the Painter's draw clip.
+    void set_input_clip_rect(float x, float y, float w, float h);
+    void clear_input_clip_rect();
 
     void begin_frame();
     void end_frame();
@@ -89,6 +92,9 @@ class Context
     bool mouse_pressed_{false};
     bool mouse_released_{false};
     bool captures_mouse_{false};
+    bool input_clip_enabled_{false};
+    float input_clip_left_{0}, input_clip_top_{0};
+    float input_clip_right_{0}, input_clip_bottom_{0};
 };
 
 } // namespace nekomote::ui

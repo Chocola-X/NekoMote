@@ -38,17 +38,36 @@ void Context::mouse_scroll(double amount)
 
 bool Context::mouse_in_rect(float x, float y, float w, float h) const
 {
+    if (input_clip_enabled_ && (mouse_x_ < input_clip_left_ || mouse_x_ > input_clip_right_ ||
+                                mouse_y_ < input_clip_top_ || mouse_y_ > input_clip_bottom_))
+        return false;
     return mouse_x_ >= x && mouse_x_ <= x + w && mouse_y_ >= y && mouse_y_ <= y + h;
+}
+
+void Context::set_input_clip_rect(float x, float y, float w, float h)
+{
+    input_clip_enabled_ = true;
+    input_clip_left_ = x;
+    input_clip_top_ = y;
+    input_clip_right_ = x + w;
+    input_clip_bottom_ = y + h;
+}
+
+void Context::clear_input_clip_rect()
+{
+    input_clip_enabled_ = false;
 }
 
 void Context::begin_frame()
 {
+    clear_input_clip_rect();
     if (painter_)
         painter_->begin_frame();
 }
 
 void Context::end_frame()
 {
+    clear_input_clip_rect();
     mouse_pressed_ = false;
     mouse_released_ = false;
     scroll_delta_ = 0.0f;
@@ -123,12 +142,18 @@ void Context::validate_sidebar_position(SidebarState& sidebar)
     const float vw = static_cast<float>(painter_->viewport_width());
     const float vh = static_cast<float>(painter_->viewport_height());
     if (!std::isfinite(sidebar.x) || !std::isfinite(sidebar.y) || sidebar.x < 0 || sidebar.y < 0 ||
-        sidebar.x + sidebar.width > vw || sidebar.y + std::max(sidebar.height, 44.0f) > vh)
+        sidebar.x + sidebar.width > vw || sidebar.y >= vh)
     {
         sidebar.is_free = false;
         sidebar.x = sidebar.y = 8.0f;
         sidebar.position_reset = true;
+        return;
     }
+
+    // Expanding content can push the bottom outside the viewport without
+    // invalidating the user's horizontal position or free placement.
+    sidebar.y =
+        std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - std::max(sidebar.height, 44.0f) - 8.0f));
 }
 
 void Context::sidebar(SidebarState& sidebar, float delta_time)
@@ -350,11 +375,11 @@ void Context::label(const char* text, float x, float y, float size, Color color)
 void Context::draw_scrollbar(float x, float y, float w, float h, float content_height,
                              float scroll_y, const Style& style)
 {
-    if (!painter_ || content_height <= h)
+    if (!painter_ || h <= 0.0f || content_height <= h)
         return;
     const float bar_w = 4.0f;
     const float bar_x = x + w - bar_w - 3.0f;
-    const float bar_h = std::max(24.0f, h * (h / content_height));
+    const float bar_h = std::min(h, std::max(24.0f, h * (h / content_height)));
     const float max_scroll = content_height - h;
     const float ratio = std::clamp(scroll_y / max_scroll, 0.0f, 1.0f);
     const float bar_y = y + ratio * (h - bar_h);

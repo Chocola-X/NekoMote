@@ -27,6 +27,15 @@ class RecordingPainter : public Painter
         std::string text;
     };
     std::vector<TextCall> texts;
+    struct Rect
+    {
+        float x;
+        float y;
+        float w;
+        float h;
+    };
+    std::vector<Rect> rects;
+    std::vector<Rect> clips;
 
     void begin_frame() override
     {
@@ -34,8 +43,9 @@ class RecordingPainter : public Painter
     void end_frame() override
     {
     }
-    void draw_rounded_rect(float, float, float, float, float, Color, Color, float) override
+    void draw_rounded_rect(float x, float y, float w, float h, float, Color, Color, float) override
     {
+        rects.push_back({x, y, w, h});
     }
     void draw_text(float x, float y, const char* text, float, Color) override
     {
@@ -53,8 +63,9 @@ class RecordingPainter : public Painter
     void draw_arrow(float, float, float, bool, Color) override
     {
     }
-    void push_clip_rect(float, float, float, float) override
+    void push_clip_rect(float x, float y, float w, float h) override
     {
+        clips.push_back({x, y, w, h});
     }
     void pop_clip_rect() override
     {
@@ -148,8 +159,15 @@ struct MenuFixture
 
     void render()
     {
+        render(controller.catalog());
+    }
+
+    void render(const nekomote::application::AssetCatalog& catalog)
+    {
         painter.texts.clear();
-        build_sidebar(ctx, painter, controller.catalog(), controller, menu, 1080);
+        painter.rects.clear();
+        painter.clips.clear();
+        build_sidebar(ctx, painter, catalog, controller, menu, painter.vh);
         ctx.end_frame();
     }
 
@@ -174,6 +192,132 @@ struct MenuFixture
     }
 };
 } // namespace
+
+TEST_CASE("Expanding a long drawer preserves free sidebar placement", "[ui_menu]")
+{
+    MenuFixture fixture;
+    auto catalog = fixture.controller.catalog();
+    catalog.character_groups.front().items.resize(50);
+    auto& sidebar = fixture.menu.sidebar;
+    sidebar.is_free = true;
+    sidebar.x = 300.0f;
+    sidebar.y = 600.0f;
+    const auto render = [&]
+    {
+        fixture.ctx.sidebar(sidebar);
+        fixture.render(catalog);
+    };
+    const auto click_first_drawer = [&]
+    {
+        fixture.ctx.mouse_move(sidebar.x + 100.0f, sidebar.y + 44.0f + 21.0f);
+        fixture.ctx.mouse_button(0, 1);
+        render();
+        fixture.ctx.mouse_button(0, 0);
+        render();
+    };
+
+    render();
+    REQUIRE(sidebar.y == 600.0f);
+    click_first_drawer();
+    REQUIRE(sidebar.expanded_drawer == 0);
+    REQUIRE(sidebar.height == 864.0f);
+    REQUIRE(sidebar.x == 300.0f);
+    REQUIRE(sidebar.y < 600.0f);
+    REQUIRE(sidebar.y + sidebar.height <= static_cast<float>(fixture.painter.vh));
+    REQUIRE(sidebar.is_free);
+    REQUIRE_FALSE(sidebar.position_reset);
+
+    click_first_drawer();
+    REQUIRE(sidebar.expanded_drawer == -1);
+    REQUIRE(sidebar.height < 864.0f);
+    REQUIRE(sidebar.x == 300.0f);
+    REQUIRE(sidebar.is_free);
+    REQUIRE_FALSE(sidebar.position_reset);
+}
+
+TEST_CASE("Sidebar height follows four fifths of the output on resize", "[ui_menu]")
+{
+    MenuFixture fixture;
+    auto catalog = fixture.controller.catalog();
+    catalog.character_groups.front().items.resize(50);
+    auto& sidebar = fixture.menu.sidebar;
+    sidebar.expanded_drawer = 0;
+    for (const int height : {1080, 720, 480, 80, 55, 32, 0})
+    {
+        CAPTURE(height);
+        fixture.painter.vh = height;
+        fixture.render(catalog);
+        REQUIRE(sidebar.height == static_cast<float>(height) * 0.8f);
+        REQUIRE_FALSE(fixture.painter.rects.empty());
+        REQUIRE(fixture.painter.rects.front().h == sidebar.height);
+        for (const auto& clip : fixture.painter.clips)
+        {
+            REQUIRE(clip.h >= 0.0f);
+            REQUIRE(clip.y >= sidebar.y);
+            REQUIRE(clip.y + clip.h <= sidebar.y + sidebar.height);
+        }
+        if (sidebar.height > 44.0f)
+        {
+            const auto& scrollbar = fixture.painter.rects.back();
+            REQUIRE(scrollbar.y >= sidebar.y + 44.0f);
+            REQUIRE(scrollbar.h > 0.0f);
+            REQUIRE(scrollbar.y + scrollbar.h <= sidebar.y + sidebar.height);
+        }
+    }
+}
+
+TEST_CASE("Capped sidebar scroll reaches the footer and resets when collapsed", "[ui_menu]")
+{
+    MenuFixture fixture;
+    fixture.painter.vh = 480;
+    auto catalog = fixture.controller.catalog();
+    catalog.character_groups.front().items.resize(50);
+    auto& sidebar = fixture.menu.sidebar;
+    sidebar.expanded_drawer = 0;
+    sidebar.scroll_y = 1000000.0f;
+    fixture.render(catalog);
+    REQUIRE(sidebar.scroll_y > 0.0f);
+    REQUIRE(sidebar.scroll_y < 1000000.0f);
+    const auto* footer = fixture.painter.find("GitHub project: NekoMote");
+    REQUIRE(footer != nullptr);
+    REQUIRE(footer->y >= sidebar.y + 44.0f);
+    REQUIRE(footer->y + 12.0f <= sidebar.y + sidebar.height);
+
+    sidebar.expanded_drawer = -1;
+    fixture.render(catalog);
+    REQUIRE(sidebar.scroll_y == 0.0f);
+    REQUIRE(sidebar.height < static_cast<float>(fixture.painter.vh) * 0.8f);
+}
+
+TEST_CASE("Capped sidebar ignores clicks on hidden content below its bounds", "[ui_menu]")
+{
+    MenuFixture fixture;
+    fixture.painter.vh = 480;
+    auto catalog = fixture.controller.catalog();
+    catalog.character_groups.front().items.resize(9);
+    auto& sidebar = fixture.menu.sidebar;
+    sidebar.expanded_drawer = 0;
+    fixture.render(catalog);
+
+    // The background header lies below the clipped panel, but within the output.
+    const float header_y = sidebar.y + 44.0f + 42.0f + 9.0f * 34.0f;
+    REQUIRE(header_y > sidebar.y + sidebar.height);
+    REQUIRE(header_y + 21.0f < static_cast<float>(fixture.painter.vh));
+    fixture.ctx.mouse_move(sidebar.x + 100.0f, header_y + 21.0f);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render(catalog);
+    REQUIRE(sidebar.expanded_drawer == 0);
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render(catalog);
+
+    // Scrolling the same header into view makes it actionable again.
+    sidebar.scroll_y = 200.0f;
+    fixture.render(catalog);
+    fixture.ctx.mouse_move(sidebar.x + 100.0f, header_y + 21.0f - sidebar.scroll_y);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render(catalog);
+    REQUIRE(sidebar.expanded_drawer == 1);
+}
 
 TEST_CASE("Sidebar localizes drawer and settings strings per config language", "[ui_menu]")
 {

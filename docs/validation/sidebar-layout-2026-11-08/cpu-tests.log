@@ -1,0 +1,535 @@
+Test project /run/media/chocola/MIKU/NekoMote/build/release
+        Start   1: python_tools
+        Start 261: ui_font_glyph
+        Start 260: ui_font_retry
+        Start 245: Controller short click reacts on release but long hold does not react
+  1/261 Test #245: Controller short click reacts on release but long hold does not react ...........................   Passed    0.51 sec
+        Start 250: Controller character fade advances with playback time
+  2/261 Test #250: Controller character fade advances with playback time ...........................................   Passed    0.43 sec
+        Start 247: Controller repeat switch request ignored while pending
+  3/261 Test #247: Controller repeat switch request ignored while pending ..........................................   Passed    0.40 sec
+        Start 251: Controller clear_previous
+  4/261 Test #251: Controller clear_previous .......................................................................   Passed    0.40 sec
+        Start 248: Controller reject candidate retains current
+  5/261 Test #248: Controller reject candidate retains current .....................................................   Passed    0.41 sec
+        Start 249: Controller confirm candidate switches
+  6/261 Test #260: ui_font_retry ...................................................................................   Passed    2.16 sec
+        Start   2: player_launch_config
+  7/261 Test #261: ui_font_glyph ...................................................................................   Passed    2.32 sec
+        Start 216: Bundle is portable, refuses overwrite and rejects corrupted assets
+  8/261 Test   #2: player_launch_config ............................................................................   Passed    0.35 sec
+        Start 209: Binary model containers reject corrupt, truncated and excessive inputs
+  9/261 Test #249: Controller confirm candidate switches ...........................................................   Passed    0.41 sec
+        Start 246: Controller character transform reset restores its first fitted state
+ 10/261 Test #216: Bundle is portable, refuses overwrite and rejects corrupted assets ..............................   Passed    0.26 sec
+        Start  56: Controller resolves shared FLAC links once within the character directory
+ 11/261 Test  #56: Controller resolves shared FLAC links once within the character directory .......................   Passed    0.16 sec
+        Start  52: Saved transform outside new output or invalid returns to default fit
+ 12/261 Test #209: Binary model containers reject corrupt, truncated and excessive inputs ..........................   Passed    0.25 sec
+        Start 256: abi_test
+ 13/261 Test #246: Controller character transform reset restores its first fitted state ............................   Passed    0.25 sec
+        Start 220: Physical snapshots and categories survive portable offline compilation
+ 14/261 Test  #52: Saved transform outside new output or invalid returns to default fit ............................   Passed    0.14 sec
+        Start  40: Controller character fade freezes with playback policy and bounds recovery time
+ 15/261 Test #256: abi_test ........................................................................................   Passed    0.13 sec
+        Start 259: ui_font_custom
+ 16/261 Test #220: Physical snapshots and categories survive portable offline compilation ..........................   Passed    0.13 sec
+        Start  58: Queued background changes persist only the latest user choice
+ 17/261 Test  #40: Controller character fade freezes with playback policy and bounds recovery time .................   Passed    0.11 sec
+        Start 258: ui_font_empty
+ 18/261 Test #259: ui_font_custom ..................................................................................   Passed    0.11 sec
+        Start 218: Paired clamp data survives compilation and rejects invalid ranges
+ 19/261 Test  #58: Queued background changes persist only the latest user choice ...................................   Passed    0.09 sec
+        Start  51: Saved transform restores after first output and reset keeps default fit
+ 20/261 Test #258: ui_font_empty ...................................................................................   Passed    0.09 sec
+        Start  41: Controller fading session audio cannot fill an unconsumed queue
+ 21/261 Test #218: Paired clamp data survives compilation and rejects invalid ranges ...............................   Passed    0.07 sec
+        Start  57: Initial model output and background setup perform no preference writes
+ 22/261 Test  #51: Saved transform restores after first output and reset keeps default fit .........................   Passed    0.08 sec
+        Start 215: Mirror import normalizes observed patterns and rejects unknown rules
+ 23/261 Test  #41: Controller fading session audio cannot fill an unconsumed queue .................................   Passed    0.08 sec
+        Start 217: Streamed model loading retains nested layer order and field states
+ 24/261 Test  #57: Initial model output and background setup perform no preference writes ..........................   Passed    0.08 sec
+        Start 257: abi_synthetic_boundary
+ 25/261 Test #215: Mirror import normalizes observed patterns and rejects unknown rules ............................   Passed    0.08 sec
+        Start 219: Expression and selector rules survive offline compilation
+ 26/261 Test #217: Streamed model loading retains nested layer order and field states ..............................   Passed    0.07 sec
+        Start  29: Controller drives physics during a held drag without accumulating its distance
+ 27/261 Test #257: abi_synthetic_boundary ..........................................................................   Passed    0.08 sec
+        Start  53: Resize retains visible transforms and recovers fully offscreen characters
+ 28/261 Test #219: Expression and selector rules survive offline compilation .......................................   Passed    0.07 sec
+        Start  59: Reset after a paused draw leaves a new model frame pending
+ 29/261 Test  #29: Controller drives physics during a held drag without accumulating its distance ..................   Passed    0.08 sec
+        Start 210: Offline JSON migration preserves every model field and refuses overwrite
+ 30/261 Test  #53: Resize retains visible transforms and recovers fully offscreen characters .......................   Passed    0.08 sec
+        Start 252: Controller rejects an invalid CPU candidate without changing live error state
+ 31/261 Test  #59: Reset after a paused draw leaves a new model frame pending ......................................   Passed    0.09 sec
+        Start 104: External variable differences match frozen SDK source trajectories
+ 32/261 Test #210: Offline JSON migration preserves every model field and refuses overwrite ........................   Passed    0.09 sec
+        Start 244: font atlas growth preserves glyph locations and final UVs
+ 33/261 Test #252: Controller rejects an invalid CPU candidate without changing live error state ...................   Passed    0.08 sec
+        Start 101: Automatic Eye blink timing, deterministic seeds and concurrent requests match reference
+ 34/261 Test #101: Automatic Eye blink timing, deterministic seeds and concurrent requests match reference .........   Passed    0.02 sec
+        Start 106: Difference timeline typed controllers, weights and stopping match source caches
+ 35/261 Test #104: External variable differences match frozen SDK source trajectories ..............................   Passed    0.04 sec
+        Start 195: FLAC rejects corrupt frames, invalid counts and excessive decoded size
+ 36/261 Test #244: font atlas growth preserves glyph locations and final UVs .......................................   Passed    0.03 sec
+ 37/261 Test #106: Difference timeline typed controllers, weights and stopping match source caches .................   Passed    0.01 sec
+        Start   6: x11_options
+        Start 103: Selector requests match original deferred choice and independent fade trajectories
+ 38/261 Test #195: FLAC rejects corrupt frames, invalid counts and excessive decoded size ..........................   Passed    0.01 sec
+        Start  91: Difference weights, fades and replay match public SDK ratio and playing samples
+ 39/261 Test   #6: x11_options .....................................................................................   Passed    0.01 sec
+        Start  99: Eye expression routes close before switching and reopen from the nearest junction
+ 40/261 Test #103: Selector requests match original deferred choice and independent fade trajectories ..............   Passed    0.01 sec
+        Start  90: Native variable transitions and author events match frozen SDK trajectories
+ 41/261 Test  #91: Difference weights, fades and replay match public SDK ratio and playing samples .................   Passed    0.01 sec
+        Start 105: External contributions follow the author clock across presentation rates
+ 42/261 Test  #99: Eye expression routes close before switching and reopen from the nearest junction ...............   Passed    0.01 sec
+        Start   5: layer_shell_options
+ 43/261 Test  #90: Native variable transitions and author events match frozen SDK trajectories .....................   Passed    0.01 sec
+        Start 193: FLAC conversion preserves integer PCM and runtime samples/RMS
+ 44/261 Test #105: External contributions follow the author clock across presentation rates ........................   Passed    0.01 sec
+        Start 100: Main timelines dispatch nonlinear expression transitions through their control graph
+ 45/261 Test   #5: layer_shell_options .............................................................................   Passed    0.01 sec
+        Start  93: Unbound and disabled variable controllers apply requests immediately
+ 46/261 Test #193: FLAC conversion preserves integer PCM and runtime samples/RMS ...................................   Passed    0.01 sec
+        Start  96: Animation rejects unknown IDs and selected unsupported controllers
+ 47/261 Test #100: Main timelines dispatch nonlinear expression transitions through their control graph ............   Passed    0.01 sec
+        Start  97: Nonlinear expression routes preserve independent curve distance across junctions
+ 48/261 Test  #93: Unbound and disabled variable controllers apply requests immediately ............................   Passed    0.01 sec
+        Start  69: Two-particle chains match isolated original physical trajectories
+ 49/261 Test  #96: Animation rejects unknown IDs and selected unsupported controllers ..............................   Passed    0.01 sec
+        Start 142: Interactive drag retains source inertia without accumulating screen travel
+ 50/261 Test  #97: Nonlinear expression routes preserve independent curve distance across junctions ................   Passed    0.01 sec
+        Start 102: Blink seeds reset independently and follow the shared clock through pause and display rates
+ 51/261 Test  #69: Two-particle chains match isolated original physical trajectories ...............................   Passed    0.01 sec
+        Start  94: Author playback is independent of display partition and pause discards catchup
+ 52/261 Test #142: Interactive drag retains source inertia without accumulating screen travel ......................   Passed    0.01 sec
+        Start  92: Disabling automatic blinking preserves the enabled eye transition graph
+ 53/261 Test #102: Blink seeds reset independently and follow the shared clock through pause and display rates .....   Passed    0.01 sec
+        Start 206: Recompression is lossless and produces a leaner non-interlaced file
+ 54/261 Test  #94: Author playback is independent of display partition and pause discards catchup ..................   Passed    0.01 sec
+        Start  98: Expression transitions report an inverse curve domain failure without NaN output
+ 55/261 Test #206: Recompression is lossless and produces a leaner non-interlaced file .............................   Passed    0.01 sec
+        Start 107: Expression endpoints outside the control graph cancel interpolation
+ 56/261 Test  #92: Disabling automatic blinking preserves the enabled eye transition graph .........................   Passed    0.01 sec
+        Start  95: Transition curves consume transient progress before its Float32 save
+ 57/261 Test  #98: Expression transitions report an inverse curve domain failure without NaN output ................   Passed    0.01 sec
+        Start 221: Malformed physical source data fails with the original field path
+ 58/261 Test #107: Expression endpoints outside the control graph cancel interpolation .............................   Passed    0.01 sec
+        Start   7: Expanding a long drawer preserves free sidebar placement
+ 59/261 Test  #95: Transition curves consume transient progress before its Float32 save ............................   Passed    0.01 sec
+        Start  24: Sidebar bottom overflow only adjusts its vertical placement
+ 60/261 Test   #7: Expanding a long drawer preserves free sidebar placement ........................................   Passed    0.00 sec
+        Start 254: audio_device_contract
+ 61/261 Test  #24: Sidebar bottom overflow only adjusts its vertical placement .....................................   Passed    0.00 sec
+        Start  68: Concurrent atomic config replacement never exposes partial JSON or collides temporaries
+ 62/261 Test #221: Malformed physical source data fails with the original field path ...............................   Passed    0.01 sec
+        Start   9: Capped sidebar scroll reaches the footer and resets when collapsed
+ 63/261 Test #254: audio_device_contract ...........................................................................   Passed    0.01 sec
+        Start   8: Sidebar height follows four fifths of the output on resize
+ 64/261 Test  #68: Concurrent atomic config replacement never exposes partial JSON or collides temporaries .........   Passed    0.01 sec
+ 65/261 Test   #9: Capped sidebar scroll reaches the footer and resets when collapsed ..............................   Passed    0.00 sec
+        Start 201: Crop decoding preserves PNG formats including Adam7 and rejects invalid input
+        Start 255: abi_negative_test
+ 66/261 Test   #8: Sidebar height follows four fifths of the output on resize ......................................   Passed    0.00 sec
+        Start  62: Launch config rejects unsupported schema and invalid settings
+ 67/261 Test #201: Crop decoding preserves PNG formats including Adam7 and rejects invalid input ...................   Passed    0.01 sec
+        Start  11: Sidebar localizes drawer and settings strings per config language
+ 68/261 Test #255: abi_negative_test ...............................................................................   Passed    0.01 sec
+        Start  72: Chain output bending matches isolated SDK thresholds and phase wrapping
+ 69/261 Test  #62: Launch config rejects unsupported schema and invalid settings ...................................   Passed    0.01 sec
+        Start 211: Invalid mesh, numeric types and resource references fail with a field path
+ 70/261 Test  #11: Sidebar localizes drawer and settings strings per config language ...............................   Passed    0.00 sec
+        Start 171: Application gaze, reaction and lip scheduling reuse storage in normal playback
+ 71/261 Test  #72: Chain output bending matches isolated SDK thresholds and phase wrapping .........................   Passed    0.01 sec
+        Start 234: Mat3 translate
+ 72/261 Test #211: Invalid mesh, numeric types and resource references fail with a field path ......................   Passed    0.01 sec
+        Start  86: Model reset preserves the configured background
+ 73/261 Test #171: Application gaze, reaction and lip scheduling reuse storage in normal playback ..................   Passed    0.01 sec
+ 74/261 Test #234: Mat3 translate ..................................................................................   Passed    0.00 sec
+        Start 165: Selector state is independent, resettable and allocation free in playback
+        Start 198: Decoded pixels keep ownership across moves and return memory to the OS
+ 75/261 Test  #86: Model reset preserves the configured background .................................................   Passed    0.00 sec
+        Start 109: Drag excites initialized particle state and preserves independent rebound
+ 76/261 Test #165: Selector state is independent, resettable and allocation free in playback .......................   Passed    0.00 sec
+        Start 194: FLAC stereo decoding preserves RMS across block/window boundaries
+ 77/261 Test #198: Decoded pixels keep ownership across moves and return memory to the OS ..........................   Passed    0.00 sec
+        Start 156: Physical anchor differences consume saved absolute author coordinates
+ 78/261 Test #109: Drag excites initialized particle state and preserves independent rebound .......................   Passed    0.00 sec
+        Start  73: Spring response matches isolated original physical controller trajectories
+ 79/261 Test #156: Physical anchor differences consume saved absolute author coordinates ...........................   Passed    0.00 sec
+        Start 120: Automatic priority-two meshes match original size boundary captures
+ 80/261 Test #194: FLAC stereo decoding preserves RMS across block/window boundaries ...............................   Passed    0.01 sec
+        Start 223: Minimal fixture icons and texture
+ 81/261 Test #120: Automatic priority-two meshes match original size boundary captures .............................   Passed    0.00 sec
+        Start 158: Parameterized scene time has one Float32 save before key weighting
+ 82/261 Test  #73: Spring response matches isolated original physical controller trajectories ......................   Passed    0.01 sec
+        Start 181: Shape exclusion moves the resolved child origin without stretching vertices
+ 83/261 Test #223: Minimal fixture icons and texture ...............................................................   Passed    0.00 sec
+        Start 207: Recompression rejects unsupported layouts and keeps failures clean
+ 84/261 Test #158: Parameterized scene time has one Float32 save before key weighting ..............................   Passed    0.00 sec
+        Start 121: Mask labels bind within reusable motion instances and required failures publish no frame
+ 85/261 Test #181: Shape exclusion moves the resolved child origin without stretching vertices .....................   Passed    0.00 sec
+        Start  63: Explicit startup save validates before replacing and cleans failed temporaries
+ 86/261 Test #207: Recompression rejects unsupported layouts and keeps failures clean ..............................   Passed    0.00 sec
+        Start 113: Blank domains accept decimal exponents and reject malformed or out-of-range numbers
+ 87/261 Test #121: Mask labels bind within reusable motion instances and required failures publish no frame ........   Passed    0.00 sec
+        Start 228: FixedStep validity
+ 88/261 Test  #63: Explicit startup save validates before replacing and cleans failed temporaries ..................   Passed    0.00 sec
+        Start 114: Reusable motion branches switch without sharing instance state
+ 89/261 Test #113: Blank domains accept decimal exponents and reject malformed or out-of-range numbers .............   Passed    0.00 sec
+        Start  84: touch_available is false when zones have no reactions
+ 90/261 Test #228: FixedStep validity ..............................................................................   Passed    0.00 sec
+        Start 116: Cyclic motion graphs fail during compilation with a source path
+ 91/261 Test #114: Reusable motion branches switch without sharing instance state ..................................   Passed    0.00 sec
+        Start 134: Warmed physical binding and anchor sampling allocate no project heap
+ 92/261 Test  #84: touch_available is false when zones have no reactions ...........................................   Passed    0.00 sec
+        Start 186: Geometry capacity covers changing atlas aspect ratios without frame allocation
+ 93/261 Test #116: Cyclic motion graphs fail during compilation with a source path .................................   Passed    0.00 sec
+        Start 172: Tessellation retains local doubles until the observed world Float32 boundary
+ 94/261 Test #134: Warmed physical binding and anchor sampling allocate no project heap ............................   Passed    0.00 sec
+        Start 225: Minimal fixture diagnostics counts
+ 95/261 Test #186: Geometry capacity covers changing atlas aspect ratios without frame allocation ..................   Passed    0.00 sec
+        Start 191: WAVE rejects truncated, compressed and misaligned PCM
+ 96/261 Test #172: Tessellation retains local doubles until the observed world Float32 boundary ....................   Passed    0.00 sec
+        Start 144: Interactive drag releases into a large coupled rebound and decays
+ 97/261 Test #225: Minimal fixture diagnostics counts ..............................................................   Passed    0.00 sec
+        Start 242: Id ordering
+ 98/261 Test #191: WAVE rejects truncated, compressed and misaligned PCM ...........................................   Passed    0.00 sec
+        Start  32: Controller default state
+ 99/261 Test #144: Interactive drag releases into a large coupled rebound and decays ...............................   Passed    0.00 sec
+        Start 159: Model scaling preserves author physics and independent resettable sessions
+100/261 Test #242: Id ordering .....................................................................................   Passed    0.00 sec
+        Start 238: Id default-constructed is invalid
+101/261 Test  #32: Controller default state ........................................................................   Passed    0.00 sec
+        Start 137: Bound chains preserve isolated trajectories and compile fixed absent anchors
+102/261 Test #159: Model scaling preserves author physics and independent resettable sessions ......................   Passed    0.00 sec
+        Start 196: FLAC converter rejects float and malformed WAV without replacing output
+103/261 Test #238: Id default-constructed is invalid ...............................................................   Passed    0.00 sec
+        Start 148: Combined playback advances every animation and physics tick at any display rate
+104/261 Test #137: Bound chains preserve isolated trajectories and compile fixed absent anchors ....................   Passed    0.00 sec
+        Start 110: Zero drag keeps the original spring chain and bend path exact
+105/261 Test #196: FLAC converter rejects float and malformed WAV without replacing output .........................   Passed    0.00 sec
+        Start 202: PNG decoding preserves atlas dimensions, row orientation and alpha
+106/261 Test #148: Combined playback advances every animation and physics tick at any display rate .................   Passed    0.00 sec
+        Start  18: UI Sidebar mid-animation reversal
+107/261 Test #110: Zero drag keeps the original spring chain and bend path exact ...................................   Passed    0.00 sec
+        Start 182: Nested exclusions resolve every parent curve at the current attachment origin
+108/261 Test #202: PNG decoding preserves atlas dimensions, row orientation and alpha ..............................   Passed    0.00 sec
+        Start  16: UI Sidebar dragging viewport bounds clamping
+109/261 Test  #18: UI Sidebar mid-animation reversal ...............................................................   Passed    0.00 sec
+        Start  13: Position lock preference persists only after a panel action
+110/261 Test #182: Nested exclusions resolve every parent curve at the current attachment origin ...................   Passed    0.00 sec
+        Start 123: Parameterized nested motion roots retain their own time despite reference offsets
+111/261 Test  #16: UI Sidebar dragging viewport bounds clamping ....................................................   Passed    0.00 sec
+        Start 180: Observed attr2 uses ordinary alpha and unknown protection flags fail
+112/261 Test  #13: Position lock preference persists only after a panel action .....................................   Passed    0.00 sec
+        Start 166: Weighted difference playback remains independent and allocation free through pause and replay
+113/261 Test #123: Parameterized nested motion roots retain their own time despite reference offsets ...............   Passed    0.00 sec
+        Start  42: Controller config save load
+114/261 Test #180: Observed attr2 uses ordinary alpha and unknown protection flags fail ............................   Passed    0.00 sec
+        Start 146: Pausing an active drag rebases input without injecting a resume impulse
+115/261 Test #166: Weighted difference playback remains independent and allocation free through pause and replay ...   Passed    0.00 sec
+        Start 178: Mirrored geometry reverses normalized parameters once without changing inputs
+116/261 Test  #42: Controller config save load .....................................................................   Passed    0.00 sec
+        Start  65: Panel config has a strict schema and never saves launch dimensions
+117/261 Test #146: Pausing an active drag rebases input without injecting a resume impulse .........................   Passed    0.00 sec
+        Start 128: Mirrored physical locators integrate in presented coordinates
+118/261 Test #178: Mirrored geometry reverses normalized parameters once without changing inputs ...................   Passed    0.00 sec
+        Start 179: Mirrored parameter compilation rejects invalid normalized references
+119/261 Test  #65: Panel config has a strict schema and never saves launch dimensions ..............................   Passed    0.00 sec
+        Start 152: Scene key weights retain the original blend rounding at a patch corner
+120/261 Test #128: Mirrored physical locators integrate in presented coordinates ...................................   Passed    0.00 sec
+        Start 126: Exported locators report inactive branches and reject unknown transforms
+121/261 Test #179: Mirrored parameter compilation rejects invalid normalized references ............................   Passed    0.00 sec
+        Start  80: Application pause, audio snapshots, partitions and resets preserve independent state
+122/261 Test #152: Scene key weights retain the original blend rounding at a patch corner ..........................   Passed    0.00 sec
+        Start  47: LocalizedName fallback prefers zh-CN data then asset id
+123/261 Test #126: Exported locators report inactive branches and reject unknown transforms ........................   Passed    0.00 sec
+        Start 124: Warmed animation, expression and Eye routing allocate no project heap
+124/261 Test  #80: Application pause, audio snapshots, partitions and resets preserve independent state ............   Passed    0.00 sec
+        Start 177: Stencil unions preserve real sources and omit absent optional labels
+125/261 Test  #47: LocalizedName fallback prefers zh-CN data then asset id .........................................   Passed    0.00 sec
+        Start 141: Absent-anchor chain binding matches original exported-output observations
+126/261 Test #124: Warmed animation, expression and Eye routing allocate no project heap ...........................   Passed    0.00 sec
+        Start  49: First launch without config picks the first background
+127/261 Test #177: Stencil unions preserve real sources and omit absent optional labels ............................   Passed    0.00 sec
+        Start 131: Physical anchor failure cannot partially advance earlier controllers
+128/261 Test #141: Absent-anchor chain binding matches original exported-output observations .......................   Passed    0.00 sec
+        Start  55: Layout persistence honors no-save and clears recovered sidebar coordinates
+129/261 Test  #49: First launch without config picks the first background ..........................................   Passed    0.00 sec
+        Start  87: Model reset preserves and continues an in-progress background fade
+130/261 Test #131: Physical anchor failure cannot partially advance earlier controllers ............................   Passed    0.00 sec
+        Start 108: Transition curves match frozen original variable trajectories
+131/261 Test  #55: Layout persistence honors no-save and clears recovered sidebar coordinates ......................   Passed    0.00 sec
+        Start 136: Empty display frames retain neutral exported origins in selected branches
+132/261 Test  #87: Model reset preserves and continues an in-progress background fade ..............................   Passed    0.00 sec
+        Start 112: Invalid drag input rejects valid physics instances without advancing state
+133/261 Test #108: Transition curves match frozen original variable trajectories ...................................   Passed    0.00 sec
+        Start 214: Missing or invalid resx is an error
+134/261 Test #136: Empty display frames retain neutral exported origins in selected branches .......................   Passed    0.00 sec
+        Start 190: PCM WAVE signed samples, padding and RMS are decoded at loading
+135/261 Test #112: Invalid drag input rejects valid physics instances without advancing state ......................   Passed    0.00 sec
+        Start 222: Minimal fixture imports with correct structure
+136/261 Test #214: Missing or invalid resx is an error .............................................................   Passed    0.00 sec
+        Start  45: Catalog scans static and dynamic backgrounds
+137/261 Test #190: PCM WAVE signed samples, padding and RMS are decoded at loading .................................   Passed    0.00 sec
+        Start  89: Background and model share the bounded clock across stalls
+138/261 Test #222: Minimal fixture imports with correct structure ..................................................   Passed    0.00 sec
+        Start 243: Id hashing is deterministic
+139/261 Test  #45: Catalog scans static and dynamic backgrounds ....................................................   Passed    0.00 sec
+        Start  48: Catalog reads localized character names and group titles
+140/261 Test  #89: Background and model share the bounded clock across stalls ......................................   Passed    0.00 sec
+        Start  44: Controller persists model transform and shared panel layout
+141/261 Test #243: Id hashing is deterministic .....................................................................   Passed    0.00 sec
+        Start  19: UI Input capture state machine
+142/261 Test  #48: Catalog reads localized character names and group titles ........................................   Passed    0.00 sec
+        Start  22: UI mouse_in_rect hit testing
+143/261 Test  #44: Controller persists model transform and shared panel layout .....................................   Passed    0.00 sec
+        Start 189: Physical paired limit preserves the original vector direction
+144/261 Test  #19: UI Input capture state machine ..................................................................   Passed    0.00 sec
+        Start  36: Controller request_switch_background ignored without catalog
+145/261 Test  #22: UI mouse_in_rect hit testing ....................................................................   Passed    0.00 sec
+        Start 147: Interactive placement handles initialization, reconfiguration and failed ticks
+146/261 Test #189: Physical paired limit preserves the original vector direction ...................................   Passed    0.00 sec
+        Start 204: PNG normalization preserves encoded color and transparency across formats
+147/261 Test  #36: Controller request_switch_background ignored without catalog ....................................   Passed    0.00 sec
+        Start  81: Application rejects invalid rule bindings and reports undrained audio events
+148/261 Test #147: Interactive placement handles initialization, reconfiguration and failed ticks ..................   Passed    0.00 sec
+        Start  46: Catalog reads localized background names from JSON
+149/261 Test #204: PNG normalization preserves encoded color and transparency across formats .......................   Passed    0.00 sec
+        Start 167: Weighted difference accumulation preserves observed transient products
+150/261 Test  #81: Application rejects invalid rule bindings and reports undrained audio events ....................   Passed    0.00 sec
+        Start 230: degrees_to_radians
+151/261 Test  #46: Catalog reads localized background names from JSON ..............................................   Passed    0.00 sec
+        Start 199: Atlas crop preserves low alpha, transparent RGB and filtering gutters
+152/261 Test #167: Weighted difference accumulation preserves observed transient products ..........................   Passed    0.00 sec
+        Start 164: Blank mask sources produce empty coverage while retaining their visible target
+153/261 Test #230: degrees_to_radians ..............................................................................   Passed    0.00 sec
+        Start 135: Two-particle state is independent, resettable and allocation free
+154/261 Test #199: Atlas crop preserves low alpha, transparent RGB and filtering gutters ...........................   Passed    0.00 sec
+        Start 162: Opacity-zero sprites still supply mask geometry without color draws
+155/261 Test #164: Blank mask sources produce empty coverage while retaining their visible target ..................   Passed    0.00 sec
+        Start  85: Background fade pauses during playback pause
+156/261 Test #135: Two-particle state is independent, resettable and allocation free ...............................   Passed    0.00 sec
+        Start  30: Controller pointer gesture cancels at lifecycle boundaries
+157/261 Test #162: Opacity-zero sprites still supply mask geometry without color draws .............................   Passed    0.00 sec
+        Start  28: Controller short click cannot leave a drag active
+158/261 Test  #85: Background fade pauses during playback pause ....................................................   Passed    0.00 sec
+        Start 151: Combined playback reuses frame storage without allocating during catchup
+159/261 Test  #30: Controller pointer gesture cancels at lifecycle boundaries ......................................   Passed    0.00 sec
+        Start 130: Physical compilation rejects unsupported or unresolved selected semantics
+160/261 Test  #28: Controller short click cannot leave a drag active ...............................................   Passed    0.00 sec
+        Start 212: Missing and explicit null are preserved separately from zero
+161/261 Test #151: Combined playback reuses frame storage without allocating during catchup ........................   Passed    0.00 sec
+        Start 197: FLAC publication refuses existing files and links and removes temporary outputs
+162/261 Test #130: Physical compilation rejects unsupported or unresolved selected semantics .......................   Passed    0.00 sec
+        Start 155: Canonical unit curves preserve the observed world locator rounding
+163/261 Test #212: Missing and explicit null are preserved separately from zero ....................................   Passed    0.00 sec
+        Start 170: Mixed selector and numeric difference tracks stay allocation free through fades
+164/261 Test #197: FLAC publication refuses existing files and links and removes temporary outputs .................   Passed    0.00 sec
+        Start  26: Paused presentation can settle after sidebar and icon animations
+165/261 Test #155: Canonical unit curves preserve the observed world locator rounding ..............................   Passed    0.00 sec
+        Start 150: Playback faults hide stale frames and require reset after a failed author tick
+166/261 Test #170: Mixed selector and numeric difference tracks stay allocation free through fades .................   Passed    0.00 sec
+        Start 188: Paired control matches original WebGL position observations
+167/261 Test  #26: Paused presentation can settle after sidebar and icon animations ................................   Passed    0.00 sec
+        Start 138: A failed chain step cannot partially advance mixed spring and chain state
+168/261 Test #150: Playback faults hide stale frames and require reset after a failed author tick ..................   Passed    0.00 sec
+        Start 154: Combined helpers accumulate from the leaf toward the nearest parent
+169/261 Test #188: Paired control matches original WebGL position observations .....................................   Passed    0.00 sec
+        Start 161: Automatic grids retain both axes for small and slender source sprites
+170/261 Test #138: A failed chain step cannot partially advance mixed spring and chain state .......................   Passed    0.00 sec
+        Start 235: Mat3 scale
+171/261 Test #154: Combined helpers accumulate from the leaf toward the nearest parent .............................   Passed    0.00 sec
+        Start 239: IdGenerator issues valid, increasing ids
+172/261 Test #161: Automatic grids retain both axes for small and slender source sprites ...........................   Passed    0.00 sec
+        Start 175: Single shape exclusion preserves identity curves and rejects unknown masks
+173/261 Test #235: Mat3 scale ......................................................................................   Passed    0.00 sec
+        Start 183: Combined nested surfaces match submitted reference corner positions
+174/261 Test #239: IdGenerator issues valid, increasing ids ........................................................   Passed    0.00 sec
+        Start  20: UI Icon toggle vs drag distinction
+175/261 Test #175: Single shape exclusion preserves identity curves and rejects unknown masks ......................   Passed    0.00 sec
+        Start 169: External channels validate bindings and reuse storage during paused independent playback
+176/261 Test #183: Combined nested surfaces match submitted reference corner positions .............................   Passed    0.00 sec
+        Start  76: Application schedules reaction beats and recovery on the shared author clock
+177/261 Test  #20: UI Icon toggle vs drag distinction ..............................................................   Passed    0.00 sec
+        Start 129: Bound physical instances normalize anchors and preserve state on failed steps
+178/261 Test #169: External channels validate bindings and reuse storage during paused independent playback ........   Passed    0.00 sec
+        Start 173: Paired clamp preserves transient values until each binding time is saved
+179/261 Test  #76: Application schedules reaction beats and recovery on the shared author clock ....................   Passed    0.00 sec
+        Start 237: Mat3 compose TRS equals T*R*S
+180/261 Test #129: Bound physical instances normalize anchors and preserve state on failed steps ...................   Passed    0.00 sec
+        Start 139: Chain compilation rejects unverified snapshots and invalid mapping
+181/261 Test #173: Paired clamp preserves transient values until each binding time is saved ........................   Passed    0.00 sec
+        Start  82: Undrained audio commands fault a partial scheduled reaction until reset
+182/261 Test #237: Mat3 compose TRS equals T*R*S ...................................................................   Passed    0.00 sec
+        Start 208: Metadata stripping drops auxiliary chunks and keeps pixels identical
+183/261 Test #139: Chain compilation rejects unverified snapshots and invalid mapping ..............................   Passed    0.00 sec
+        Start 174: Saved world corners and propagated identity surfaces match submitted reference grids
+184/261 Test  #82: Undrained audio commands fault a partial scheduled reaction until reset .........................   Passed    0.00 sec
+        Start 153: Rigid angles retain source degree interpolation and wrapped Float32 coefficients
+185/261 Test #208: Metadata stripping drops auxiliary chunks and keeps pixels identical ............................   Passed    0.00 sec
+        Start 149: Playback owns compilation data and resets independent placed instances
+186/261 Test #174: Saved world corners and propagated identity surfaces match submitted reference grids ............   Passed    0.00 sec
+        Start  33: Controller poll_candidate idle returns nullopt
+187/261 Test #153: Rigid angles retain source degree interpolation and wrapped Float32 coefficients ................   Passed    0.00 sec
+        Start  64: Launch config rejects panel aliases through symbolic links
+188/261 Test #149: Playback owns compilation data and resets independent placed instances ..........................   Passed    0.00 sec
+        Start  23: Saved UI coordinates outside new viewport return to defaults
+189/261 Test  #33: Controller poll_candidate idle returns nullopt ..................................................   Passed    0.00 sec
+        Start 200: Empty and fully occupied atlases have defined crop storage
+190/261 Test  #64: Launch config rejects panel aliases through symbolic links ......................................   Passed    0.00 sec
+        Start  79: Mirrored gaze keeps the presented input direction on enter and move
+191/261 Test  #23: Saved UI coordinates outside new viewport return to defaults ....................................   Passed    0.00 sec
+        Start  78: Presented touch coordinates follow mirrored placement and authored scale
+192/261 Test #200: Empty and fully occupied atlases have defined crop storage ......................................   Passed    0.00 sec
+        Start 213: Motion parameter table and unknown fields survive import
+193/261 Test  #79: Mirrored gaze keeps the presented input direction on enter and move .............................   Passed    0.00 sec
+        Start 140: Placed model origins participate in parent matrix rounding and invalidation
+194/261 Test  #78: Presented touch coordinates follow mirrored placement and authored scale ........................   Passed    0.00 sec
+        Start  66: Panel save failure preserves the existing preferences and reports failure
+195/261 Test #213: Motion parameter table and unknown fields survive import ........................................   Passed    0.00 sec
+        Start 125: Spring advancement has independent state and no project heap
+196/261 Test #140: Placed model origins participate in parent matrix rounding and invalidation .....................   Passed    0.00 sec
+        Start 168: External contributions preserve source activation order before the base channel
+197/261 Test  #66: Panel save failure preserves the existing preferences and reports failure .......................   Passed    0.00 sec
+        Start 226: Missing file fails gracefully
+198/261 Test #125: Spring advancement has independent state and no project heap ....................................   Passed    0.00 sec
+        Start 187: Patch evaluation preserves neutral and extrapolated normalized points
+199/261 Test #168: External contributions preserve source activation order before the base channel .................   Passed    0.00 sec
+        Start  50: Controller background_path returns current phase for dynamic
+200/261 Test #226: Missing file fails gracefully ...................................................................   Passed    0.00 sec
+        Start 176: Verified source multiply is explicit and unknown blend modes fail
+201/261 Test #187: Patch evaluation preserves neutral and extrapolated normalized points ...........................   Passed    0.00 sec
+        Start  70: Absolute chain anchors preserve the observed origin and rest precision
+202/261 Test  #50: Controller background_path returns current phase for dynamic ....................................   Passed    0.00 sec
+        Start  60: Launch and panel defaults resolve XDG without creating files
+203/261 Test #176: Verified source multiply is explicit and unknown blend modes fail ...............................   Passed    0.00 sec
+        Start  14: UI Sidebar docked animation open and close timing
+204/261 Test  #70: Absolute chain anchors preserve the observed origin and rest precision ..........................   Passed    0.00 sec
+        Start 143: Interactive drag input scales linearly with screen speed and saturates at 800
+205/261 Test  #60: Launch and panel defaults resolve XDG without creating files ....................................   Passed    0.00 sec
+        Start  31: Controller wheel zoom keeps the model point under the pointer
+206/261 Test  #14: UI Sidebar docked animation open and close timing ...............................................   Passed    0.00 sec
+        Start  77: Application input regions, capabilities and placement are explicit
+207/261 Test #143: Interactive drag input scales linearly with screen speed and saturates at 800 ...................   Passed    0.00 sec
+208/261 Test  #31: Controller wheel zoom keeps the model point under the pointer ...................................   Passed    0.00 sec
+        Start 203: Invalid images fail without returning usable pixels
+        Start  39: Controller reset no crash without instance
+209/261 Test  #77: Application input regions, capabilities and placement are explicit ..............................   Passed    0.00 sec
+        Start 184: Adjacent exclusions retain attachments through unsynchronized rigid groups
+210/261 Test #203: Invalid images fail without returning usable pixels .............................................   Passed    0.00 sec
+        Start  12: Language radio click switches config language and persists it
+211/261 Test  #39: Controller reset no crash without instance ......................................................   Passed    0.00 sec
+        Start 192: Float PCM rejects NaN and stereo RMS follows mono downmix
+212/261 Test #184: Adjacent exclusions retain attachments through unsynchronized rigid groups ......................   Passed    0.00 sec
+        Start  88: Explicit background clear remains empty after model reset
+213/261 Test  #12: Language radio click switches config language and persists it ...................................   Passed    0.00 sec
+        Start  67: Copying a default launch profile derives independent panel storage
+214/261 Test #192: Float PCM rejects NaN and stereo RMS follows mono downmix .......................................   Passed    0.00 sec
+        Start  54: Malformed panel fields reject the file instead of silently replacing preferences
+215/261 Test  #88: Explicit background clear remains empty after model reset .......................................   Passed    0.00 sec
+        Start  25: Valid saved UI coordinates survive reopen and viewport resize
+216/261 Test  #67: Copying a default launch profile derives independent panel storage ..............................   Passed    0.00 sec
+        Start  15: UI Sidebar dragging coordinates and synchronous title position
+217/261 Test  #54: Malformed panel fields reject the file instead of silently replacing preferences ................   Passed    0.00 sec
+        Start  43: Config language defaults to English and rejects unknown codes
+218/261 Test  #25: Valid saved UI coordinates survive reopen and viewport resize ...................................   Passed    0.00 sec
+        Start 231: Vec2 arithmetic
+219/261 Test  #15: UI Sidebar dragging coordinates and synchronous title position ..................................   Passed    0.00 sec
+        Start 241: Ids of different tags are distinct types
+220/261 Test  #43: Config language defaults to English and rejects unknown codes ...................................   Passed    0.00 sec
+        Start 233: Mat3 identity is neutral
+221/261 Test #231: Vec2 arithmetic .................................................................................   Passed    0.00 sec
+        Start 118: Warmed geometry evaluation and frame building allocate no project heap
+222/261 Test #241: Ids of different tags are distinct types ........................................................   Passed    0.00 sec
+        Start 236: Mat3 rotate 90 degrees
+223/261 Test #233: Mat3 identity is neutral ........................................................................   Passed    0.00 sec
+        Start  34: Controller poll_background idle returns nullopt
+224/261 Test #118: Warmed geometry evaluation and frame building allocate no project heap ..........................   Passed    0.00 sec
+        Start 232: Vec2 dot and length
+225/261 Test #236: Mat3 rotate 90 degrees ..........................................................................   Passed    0.00 sec
+        Start  61: Launch configs roundtrip normalized paths and isolate panel files
+226/261 Test  #34: Controller poll_background idle returns nullopt .................................................   Passed    0.00 sec
+        Start 117: Unverified active ancestors and frame types cannot silently affect sprites
+227/261 Test #232: Vec2 dot and length .............................................................................   Passed    0.00 sec
+        Start 122: Atlas packing changes UV without changing deformed model geometry
+228/261 Test  #61: Launch configs roundtrip normalized paths and isolate panel files ...............................   Passed    0.00 sec
+        Start 160: Child synchronization selects rigid origins or full curves through helpers
+229/261 Test #117: Unverified active ancestors and frame types cannot silently affect sprites ......................   Passed    0.00 sec
+        Start 132: Physical anchor selection requires exactly one active branch
+230/261 Test #122: Atlas packing changes UV without changing deformed model geometry ...............................   Passed    0.00 sec
+        Start 127: Warmed bending output retains independent resettable state without heap
+231/261 Test #160: Child synchronization selects rigid origins or full curves through helpers ......................   Passed    0.00 sec
+        Start 205: Read-only file views own their mapping and reject invalid files
+232/261 Test #132: Physical anchor selection requires exactly one active branch ....................................   Passed    0.00 sec
+        Start 115: Same-domain helpers combine before the parent's rotation
+233/261 Test #127: Warmed bending output retains independent resettable state without heap .........................   Passed    0.00 sec
+        Start 157: Placed nested curves preserve the observed physical locator coordinates
+234/261 Test #205: Read-only file views own their mapping and reject invalid files .................................   Passed    0.00 sec
+        Start 229: Alpha multiply
+235/261 Test #115: Same-domain helpers combine before the parent's rotation ........................................   Passed    0.00 sec
+        Start  74: Spring particle storage and transient output match observed author step
+236/261 Test #157: Placed nested curves preserve the observed physical locator coordinates .........................   Passed    0.00 sec
+        Start  17: UI Sidebar free fade-in / fade-out
+237/261 Test #229: Alpha multiply ..................................................................................   Passed    0.00 sec
+        Start 111: Drag bounds added velocity without clipping preexisting source motion
+238/261 Test  #74: Spring particle storage and transient output match observed author step .........................   Passed    0.00 sec
+        Start 227: Seconds arithmetic
+239/261 Test  #17: UI Sidebar free fade-in / fade-out ..............................................................   Passed    0.00 sec
+        Start  71: Returning an absolute chain anchor removes accumulated placement drift
+240/261 Test #111: Drag bounds added velocity without clipping preexisting source motion ...........................   Passed    0.00 sec
+        Start 163: Referenced motions sharing a stencil retain independent content clips
+241/261 Test #227: Seconds arithmetic ..............................................................................   Passed    0.00 sec
+        Start 145: Interactive placement distributes motion over catchup ticks
+242/261 Test  #71: Returning an absolute chain anchor removes accumulated placement drift ..........................   Passed    0.00 sec
+        Start 133: Nonfinite physical state is transactional and requires reset
+243/261 Test #163: Referenced motions sharing a stencil retain independent content clips ...........................   Passed    0.00 sec
+        Start  37: Controller request_clear_background produces clear request
+244/261 Test #145: Interactive placement distributes motion over catchup ticks .....................................   Passed    0.00 sec
+        Start  38: Controller pause resume
+245/261 Test #133: Nonfinite physical state is transactional and requires reset ....................................   Passed    0.00 sec
+        Start  75: Session assets preserve authored bindings and reject corrupt rules
+246/261 Test  #37: Controller request_clear_background produces clear request ......................................   Passed    0.00 sec
+        Start 224: Minimal fixture variables and parts order
+247/261 Test  #38: Controller pause resume .........................................................................   Passed    0.00 sec
+        Start  83: touch_available is false when no regions are defined
+248/261 Test  #75: Session assets preserve authored bindings and reject corrupt rules ..............................   Passed    0.00 sec
+        Start  27: Controller held left button drags immediately after movement tolerance
+249/261 Test #224: Minimal fixture variables and parts order .......................................................   Passed    0.00 sec
+        Start 119: Geometry topology survives repeated builds and resource and visibility changes
+250/261 Test  #83: touch_available is false when no regions are defined ............................................   Passed    0.00 sec
+        Start  21: UI Viewport bounds safety reset for free sidebar
+251/261 Test  #27: Controller held left button drags immediately after movement tolerance ..........................   Passed    0.00 sec
+        Start  35: Controller request_switch_character ignored without catalog
+252/261 Test #119: Geometry topology survives repeated builds and resource and visibility changes ..................   Passed    0.00 sec
+        Start 240: IdGenerator skips zero
+253/261 Test  #21: UI Viewport bounds safety reset for free sidebar ................................................   Passed    0.00 sec
+        Start 185: Discrete parameter mode one truncates before clipping fractional ranges
+254/261 Test  #35: Controller request_switch_character ignored without catalog .....................................   Passed    0.00 sec
+        Start   4: host_vulkan_failures
+255/261 Test #240: IdGenerator skips zero ..........................................................................   Passed    0.00 sec
+        Start  10: Capped sidebar ignores clicks on hidden content below its bounds
+256/261 Test #185: Discrete parameter mode one truncates before clipping fractional ranges .........................   Passed    0.00 sec
+257/261 Test   #4: host_vulkan_failures ............................................................................   Passed    0.00 sec
+        Start 253: Real model chocola-date-a imports
+        Start 262: ui_font_cjk
+258/261 Test  #10: Capped sidebar ignores clicks on hidden content below its bounds ................................   Passed    0.00 sec
+259/261 Test #253: Real model chocola-date-a imports ...............................................................***Skipped   0.00 sec
+260/261 Test #262: ui_font_cjk .....................................................................................***Skipped   0.11 sec
+261/261 Test   #1: python_tools ....................................................................................   Passed    5.55 sec
+
+100% tests passed, 0 tests failed out of 261
+
+Label Time Summary:
+integration    =   7.76 sec*proc (15 tests)
+python         =   5.90 sec*proc (2 tests)
+
+Total Test time (real) =   5.56 sec
+
+The following tests did not run:
+	253 - Real model chocola-date-a imports (Skipped)
+	262 - ui_font_cjk (Skipped)

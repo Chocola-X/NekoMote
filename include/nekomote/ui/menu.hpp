@@ -20,6 +20,7 @@ struct MenuState
 // creation. Call again when the catalog changes, with a valid backend context.
 bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catalog);
 
+// Total panel height is capped at 4/5 of the output height; excess content scrolls.
 void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatalog& catalog,
                    application::WallpaperController& controller, MenuState& menu,
                    int output_height);
