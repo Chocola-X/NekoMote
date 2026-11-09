@@ -317,16 +317,27 @@ TEST_CASE("Unverified active ancestors and frame types cannot silently affect sp
     REQUIRE(instance.build_frame());
     REQUIRE_FALSE(instance.frame().commands.empty());
     REQUIRE(instance.set_parameter(compiled.scene->find_variable("pick"), 1));
-    REQUIRE(instance.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+    const auto selected_error = instance.evaluate();
+    REQUIRE(selected_error.error == runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(compiled.scene->node_label(selected_error.node).find("/B/sprite") !=
+            std::string_view::npos);
     REQUIRE(instance.primitives().empty());
     REQUIRE(instance.frame().commands.empty());
+    // The inactive resource branch must not reject the selected valid branch,
+    // including after an error and a cached key interval from the failed branch.
+    REQUIRE(instance.set_parameter(compiled.scene->find_variable("pick"), 0));
+    REQUIRE(instance.evaluate());
+    REQUIRE(instance.build_frame());
+    REQUIRE_FALSE(instance.frame().commands.empty());
 
     input = rig();
     input.parts[0].layers[0].frame_list[0].content.data.zx = field(2.0f);
     compiled = runtime::compile_geometry_scene(input);
     REQUIRE(compiled.scene);
     runtime::GeometryInstance ancestor(*compiled.scene);
-    REQUIRE(ancestor.evaluate().error == runtime::GeometryError::UnsupportedTransform);
+    const auto ancestor_error = ancestor.evaluate();
+    REQUIRE(ancestor_error.error == runtime::GeometryError::UnsupportedTransform);
+    REQUIRE(ancestor_error.node == NodeId{1});
     REQUIRE(ancestor.frame().commands.empty());
 }
 

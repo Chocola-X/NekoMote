@@ -51,3 +51,18 @@ ctest --test-dir build/release --output-on-failure -j1 -L gpu
 
 汇总统一采用每场景每统计量的三轮中位数，再等权汇总变化率；无跨机器性能硬阈值。
 没有把加载耗时、GPU读回、sanitizer开销混入稳态 Release 计时。
+
+## 祖先重复验证
+
+基线 `30e5ee2`，`validation-before-N.jsonl` 来自冻结的关键帧缓存版本，
+`validation-after-N.jsonl` 只进一步修改 unsupported 检查。探针、参数与上节完全一致。
+对应逐场景汇总与140帧比较在 `validation-summary.json`、`validation-frames.json`；
+`environment.json` 保存实际源代码/二进制/资产哈希。`analyze.py` 也会重建本阶段聚合结果。
+新增错误来源与恢复断言，既有 UI/ABI/GL/GLES/VK 路径继续运行最终回归。
+
+`final-cpu.txt` / `final-gpu.txt` 为最终版本验收结果，`asan-tests.txt` 为 runtime
+89 用例、28,637 断言的结果。ASan/UBSan 使用独立 Debug 构建：C++ 为 -g（O0），
+第三方 FLAC 的 C 编译为 -g -O1，避免其默认 FORTIFY 在 O0 下不可用的诊断；
+该依赖的上游 inline 提示产生 GCC15 的 Winline 提示，项目自身未新增警告或禁用规则。
+实际源码只读共享 `build/release/_deps/*-src`，二进制依赖构建在隔离目录；
+`ASAN_OPTIONS=detect_leaks=1`、`UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1`。

@@ -1,0 +1,75 @@
+{
+  "sampled_frames": 140,
+  "files": [
+    {
+      "file": "azuki-casual-idle.bin",
+      "equal": true,
+      "sha256": "47c8518f86c15e34c6bbfb6e27333d9fb49ce8b3257481a6b474b7309465a6de"
+    },
+    {
+      "file": "azuki-casual-moving.bin",
+      "equal": true,
+      "sha256": "eea0bf12d11c502d8e6a88e03c4e4510db4802e403eba692b1337312f68e0618"
+    },
+    {
+      "file": "chocola-casual-b-no-bell-idle.bin",
+      "equal": true,
+      "sha256": "7c98dad792079423ac7612b87add508ac3561fb5e4b6c479877e437ae34bd25f"
+    },
+    {
+      "file": "chocola-casual-b-no-bell-moving.bin",
+      "equal": true,
+      "sha256": "6702fbd5520dfa246c269931ca5a80d574d69a37c51185488f1954d9379f763a"
+    },
+    {
+      "file": "chocola-date-a-idle.bin",
+      "equal": true,
+      "sha256": "438dad986bfeddad00367838f5bcf49274665f7a2add5d2efa2bd1ce916d3e16"
+    },
+    {
+      "file": "chocola-date-a-moving.bin",
+      "equal": true,
+      "sha256": "dd0522b69f956e3e0a1cbc80da737ae9e9a8a01f81047fed9fa481c86f2838c7"
+    },
+    {
+      "file": "chocola-wintermaid-idle.bin",
+      "equal": true,
+      "sha256": "c990810ee5415eed35926589239c89d4e05e16f3c5d925a1442f3fa0ee296f86"
+    },
+    {
+      "file": "chocola-wintermaid-moving.bin",
+      "equal": true,
+      "sha256": "b9596f23f9c1067b4fbb3f1bdcad408d00f63a93f9e96f66124f69e18bebca1f"
+    },
+    {
+      "file": "coconut-casual-idle.bin",
+      "equal": true,
+      "sha256": "b68afe2df41078e8539132204bfd304cc577a3544e52dbbfdeec4c3cbb9773f1"
+    },
+    {
+      "file": "coconut-casual-moving.bin",
+      "equal": true,
+      "sha256": "6053f7d1d8e0168b96bd7a41e82f62949db11393116f3b741d1d6d57c97933a4"
+    },
+    {
+      "file": "maple-yukata-idle.bin",
+      "equal": true,
+      "sha256": "61b09af88d852b855b23ca773e4218a4296f77c2acc5e5cace4584f2fa43c512"
+    },
+    {
+      "file": "maple-yukata-moving.bin",
+      "equal": true,
+      "sha256": "e6ed4d4ab528f12ad2bad8e50a17eec29f2b3e27007c62f6a662d558bb29b4fd"
+    },
+    {
+      "file": "vanilla-wintermaid-idle.bin",
+      "equal": true,
+      "sha256": "ab9cd46e55531afce536ce099479ebbe4d7ecc8c5fbdf97bfd25a3fd47030a33"
+    },
+    {
+      "file": "vanilla-wintermaid-moving.bin",
+      "equal": true,
+      "sha256": "9b22eb6422710f5762c43e28cff801c3f4a78b7f9310dc76daf62db4e032148e"
+    }
+  ]
+}

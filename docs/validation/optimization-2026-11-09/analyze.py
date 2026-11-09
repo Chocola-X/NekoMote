@@ -11,6 +11,7 @@ for prefix, metrics in (
     ('gles', ('prepare_us', 'cpu_us', 'complete_us')),
     ('vk', ('prepare_us', 'cpu_us', 'complete_us')),
     ('runtime', ('advance_us', 'prepare_us', 'total_us', 'geometry_evaluate_us', 'geometry_build_us')),
+    ('validation', ('advance_us', 'prepare_us', 'total_us', 'geometry_evaluate_us', 'geometry_build_us')),
 ):
     before, after = [
         [[json.loads(line) for line in (root / f'{prefix}-{label}-{i}.jsonl').read_text().splitlines()]
@@ -20,7 +21,7 @@ for prefix, metrics in (
     for i, row in enumerate(before[0]):
         for run in before + after:
             assert all(run[i][key] == row[key] for key in ('model', 'moving'))
-            if prefix == 'runtime':
+            if prefix in ('runtime', 'validation'):
                 assert run[i]['fingerprint'] == row['fingerprint']
                 assert run[i]['allocations'] == 0
     result[prefix] = {

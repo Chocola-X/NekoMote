@@ -941,13 +941,12 @@ GeometryStatus GeometryInstance::evaluate() noexcept
         state.pose = key == n.keys.end() ? left.pose : interpolate(left, *key, time);
         if (!state.pose.active)
             continue;
-        if (n.has_sprites)
-            for (NodeId ancestor = id; ancestor.valid();
-                 ancestor = scene.nodes[ancestor.value].parent)
-                if (scene.nodes[ancestor.value].unsupported ||
-                    (ancestor == id ? state.pose.unsupported
-                                    : instance.states[ancestor.value].pose.unsupported))
-                    return {GeometryError::UnsupportedTransform, ancestor, {}};
+        // Compilation propagates has_sprites to every ancestor. An active
+        // child's active ancestors were therefore checked earlier in this pass;
+        // an inactive parent already excludes its descendants above. Retain the
+        // first unsupported node/error source without retracing each ancestor.
+        if (n.has_sprites && (n.unsupported || state.pose.unsupported))
+            return {GeometryError::UnsupportedTransform, id, {}};
         state.transform = state.pose;
         state.child_sync = n.child_sync;
         state.transform_parent = n.parent;
