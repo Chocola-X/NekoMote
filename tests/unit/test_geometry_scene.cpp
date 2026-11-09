@@ -330,6 +330,46 @@ TEST_CASE("Unverified active ancestors and frame types cannot silently affect sp
     REQUIRE(ancestor.frame().commands.empty());
 }
 
+TEST_CASE("Geometry key intervals follow jumps reversals and inactive boundaries",
+          "[runtime][scene]")
+{
+    auto input = rig();
+    auto& keys = input.parts[0].layers[0].frame_list;
+    keys[0].time = .25f;
+    keys[0].type = 3;
+    keys[1].time = .75f;
+    const auto compiled = runtime::compile_geometry_scene(input);
+    REQUIRE(compiled.scene);
+    runtime::GeometryInstance reused(*compiled.scene);
+    const auto pick = compiled.scene->find_variable("pick");
+    for (const float value : {0.0f, .25f, .4f, .75f, 1.0f, .3f, .1f, .9f, .75f, .25f})
+    {
+        runtime::GeometryInstance fresh(*compiled.scene);
+        for (auto* instance : {&reused, &fresh})
+        {
+            REQUIRE(instance->set_parameter(pick, value));
+            REQUIRE(instance->evaluate());
+            REQUIRE(instance->build_frame());
+        }
+        const auto actual = reused.frame(), expected = fresh.frame();
+        REQUIRE(actual.vertices.size() == expected.vertices.size());
+        REQUIRE(actual.commands.size() == expected.commands.size());
+        REQUIRE(std::equal(actual.indices.begin(), actual.indices.end(), expected.indices.begin(),
+                           expected.indices.end()));
+        for (std::size_t i = 0; i < actual.vertices.size(); ++i)
+        {
+            const auto a = actual.vertices[i], b = expected.vertices[i];
+            REQUIRE(a.x == b.x);
+            REQUIRE(a.y == b.y);
+            REQUIRE(a.u == b.u);
+            REQUIRE(a.v == b.v);
+            REQUIRE(a.color == b.color);
+        }
+        for (std::size_t i = 0; i < actual.commands.size(); ++i)
+            REQUIRE(actual.commands[i].texture == expected.commands[i].texture);
+    }
+}
+
 TEST_CASE("Warmed geometry evaluation and frame building allocate no project heap",
           "[runtime][scene]")
 {

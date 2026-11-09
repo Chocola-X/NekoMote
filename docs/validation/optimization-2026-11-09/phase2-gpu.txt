@@ -1,0 +1,19 @@
+Test project /run/media/chocola/MIKU/NekoMote/build/release
+    Start   3: python_abi_host
+1/4 Test   #3: python_abi_host ..................   Passed    2.31 sec
+    Start 267: renderer_gpu
+2/4 Test #267: renderer_gpu .....................   Passed    3.89 sec
+    Start 268: renderer_gles_gpu
+3/4 Test #268: renderer_gles_gpu ................   Passed    3.95 sec
+    Start 269: renderer_vulkan_gpu
+4/4 Test #269: renderer_vulkan_gpu ..............   Passed    5.29 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+gles      =   3.95 sec*proc (1 test)
+gpu       =  15.45 sec*proc (4 tests)
+python    =   2.31 sec*proc (1 test)
+vulkan    =   5.29 sec*proc (1 test)
+
+Total Test time (real) =  15.45 sec

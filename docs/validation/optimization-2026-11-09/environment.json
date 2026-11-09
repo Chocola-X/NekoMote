@@ -9,5 +9,19 @@
     "gl-after": "d2457a280ff5b294ab19bd24b60e4e00e5046c04167b2973a35da979188ce445",
     "vk-before": "07a32eede1992cf221e8f429575684684b69f21b3f2c3a13015b9e03a35dae55",
     "gl-before": "27058fc30488f7588a63c3dcbfe0502f22963771720f508bd3b589b73523df05"
+  },
+  "runtime": {
+    "baseline": "87ca4a5",
+    "warmup": 120,
+    "samples": 600,
+    "rounds": 3,
+    "cpu": 0,
+    "dt": "1/60",
+    "probe": "docs/validation/compound-review-2026-11-08/runtime_probe.cpp",
+    "binary_sha256": {
+      "runtime-before": "4136f5e25c65527fa12d4847114581cf4bb4cdef172ef505b2dfab0e7c6d282d",
+      "runtime-after": "e1909aea3a60947e0773d7330f5a542fef6c628d4996ba687e0a1be56c5ac467"
+    },
+    "source_sha256": "81fc8417e005e0bf36885a7f91212c49a41c51fb05fd92c067e2cb1a2061b2b3"
   }
 }

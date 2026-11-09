@@ -730,6 +730,9 @@ struct GeometryInstance::Impl
     std::vector<float> input;
     std::vector<double> parameters;
     std::vector<State> states;
+    // Upper-bound indices into immutable node keys. Reuse only while both
+    // boundaries contain the current authored time; reverse/jump uses binary search.
+    std::vector<std::size_t> key_cursors;
     // Only mesh nodes read/write these controls. Keep the larger prepared data
     // out of the state traversed and cleared for every node on every evaluation.
     // Sized once; pointers in State stay valid for this instance's lifetime.
@@ -756,9 +759,9 @@ struct GeometryInstance::Impl
     float scale{1};
     Impl(const GeometryScene& scene_owner, const CompiledData& data)
         : owner(scene_owner), scene(data), input(data.variables.size() + 1),
-          parameters(input.size()), states(data.nodes.size()), world_patches(data.nodes.size()),
-          node_commands(data.nodes.size()), used_masks(data.masks.size()),
-          needed_mask_sources(data.nodes.size())
+          parameters(input.size()), states(data.nodes.size()), key_cursors(data.nodes.size()),
+          world_patches(data.nodes.size()), node_commands(data.nodes.size()),
+          used_masks(data.masks.size()), needed_mask_sources(data.nodes.size())
     {
         primitives.reserve(data.nodes.size());
         vertices.reserve(data.vertex_capacity);
@@ -924,9 +927,14 @@ GeometryStatus GeometryInstance::evaluate() noexcept
                     static_cast<double>(n.binding.division) /
                     (static_cast<double>(n.binding.end) - static_cast<double>(n.binding.begin)));
         }
-        const auto key =
-            std::upper_bound(n.keys.begin(), n.keys.end(), time, [](double t, const Key& k)
-                             { return t < static_cast<double>(k.time); });
+        auto& cursor = instance.key_cursors[i];
+        if ((cursor != 0 && time < n.keys[cursor - 1].time) ||
+            (cursor != n.keys.size() && time >= n.keys[cursor].time))
+            cursor = static_cast<std::size_t>(
+                std::upper_bound(n.keys.begin(), n.keys.end(), time, [](double t, const Key& k)
+                                 { return t < static_cast<double>(k.time); }) -
+                n.keys.begin());
+        const auto key = n.keys.begin() + static_cast<std::ptrdiff_t>(cursor);
         if (key == n.keys.begin())
             continue;
         const auto& left = *(key - 1);
