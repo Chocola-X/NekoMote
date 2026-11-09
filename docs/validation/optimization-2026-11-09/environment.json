@@ -1,0 +1,13 @@
+{
+  "baseline": "87ca4a5107064d131a583069b6a1e4f2fd7f1a87",
+  "compiler": "c++ (GCC) 15.2.1 20250813",
+  "gpu": "NVIDIA Corporation NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 3.3.0 NVIDIA 580.82.09",
+  "flags": "Release O3 LTO Werror, no fast-math; CPU0; dt1/60; 120warmup 300samples 3 alternating rounds; 3840x2160, scale.65",
+  "binaries": {
+    "runtime-before": "4136f5e25c65527fa12d4847114581cf4bb4cdef172ef505b2dfab0e7c6d282d",
+    "vk-after": "91e069b9a8523d575723ce18c17e1697e1d94cf1162baeb82c2673dfa3707b7c",
+    "gl-after": "d2457a280ff5b294ab19bd24b60e4e00e5046c04167b2973a35da979188ce445",
+    "vk-before": "07a32eede1992cf221e8f429575684684b69f21b3f2c3a13015b9e03a35dae55",
+    "gl-before": "27058fc30488f7588a63c3dcbfe0502f22963771720f508bd3b589b73523df05"
+  }
+}

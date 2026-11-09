@@ -1,0 +1,152 @@
+diff --git a/src/render_gl/renderer.cpp b/src/render_gl/renderer.cpp
+index 1d8c6c4..9932bda 100644
+--- a/src/render_gl/renderer.cpp
++++ b/src/render_gl/renderer.cpp
+@@ -312,6 +312,7 @@ struct Renderer::Impl
+     std::vector<DrawCommand> commands, mask_commands;
+     std::vector<MaskDefinition> masks;
+     std::vector<MaskBounds> mask_bounds;
++    Bounds frame_bounds;
+     std::size_t mask_command_capacity{0}, mask_capacity{0};
+     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
+     std::uint64_t prepared_revision{0};
+@@ -531,6 +532,7 @@ void Renderer::prepare(RenderFrame frame)
+         frame.mask_commands.size() > p.mask_command_capacity ||
+         frame.masks.size() > p.mask_capacity)
+         throw std::runtime_error("frame exceeds reserved capacity");
++    Bounds frame_bounds; // Include mask/unused vertices conservatively, during validation.
+     for (const auto& vertex : frame.vertices)
+     {
+         if (!std::isfinite(vertex.x) || !std::isfinite(vertex.y) || !std::isfinite(vertex.u) ||
+@@ -538,6 +540,7 @@ void Renderer::prepare(RenderFrame frame)
+             std::any_of(vertex.color.begin(), vertex.color.end(),
+                         [](float value) { return !std::isfinite(value); }))
+             throw std::runtime_error("nonfinite vertex");
++        frame_bounds.include(vertex.x, vertex.y);
+     }
+     for (auto index : frame.indices)
+         if (index >= frame.vertices.size())
+@@ -619,6 +622,7 @@ void Renderer::prepare(RenderFrame frame)
+         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0,
+                         byte_size(frame.indices.size(), sizeof(std::uint32_t)),
+                         frame.indices.data());
++    p.frame_bounds = frame_bounds;
+     p.commands.assign(frame.commands.begin(), frame.commands.end());
+     p.mask_commands.assign(frame.mask_commands.begin(), frame.mask_commands.end());
+     p.masks.assign(frame.masks.begin(), frame.masks.end());
+@@ -830,6 +834,9 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
+             glClearColor(view.clear[0], view.clear[1], view.clear[2], view.clear[3]);
+             glClear(GL_COLOR_BUFFER_BIT);
+         }
++        const auto composite_clip = clip(p.frame_bounds, target, view);
++        glEnable(GL_SCISSOR_TEST);
++        glScissor(composite_clip.x, composite_clip.y, composite_clip.width, composite_clip.height);
+         glUseProgram(p.shared->blit_program);
+         glBindTexture(GL_TEXTURE_2D, p.color_target->texture);
+         glUniform1f(p.shared->blit_global_alpha, view.alpha);
+diff --git a/src/render_vk/renderer.cpp b/src/render_vk/renderer.cpp
+index a9598f5..5ffd795 100644
+--- a/src/render_vk/renderer.cpp
++++ b/src/render_vk/renderer.cpp
+@@ -333,6 +333,7 @@ struct Renderer::Impl
+     std::vector<DrawCommand> commands, mask_commands;
+     std::vector<MaskDefinition> masks;
+     std::vector<MaskBounds> mask_bounds;
++    Bounds frame_bounds;
+     std::size_t vertex_capacity{0}, index_capacity{0}, command_capacity{0}, texture_capacity{0};
+     std::size_t mask_command_capacity{0}, mask_capacity{0}, descriptor_texture_capacity{0};
+     std::uint64_t prepared_revision{0};
+@@ -657,12 +658,16 @@ void Renderer::prepare(RenderFrame frame)
+         frame.mask_commands.size() > p.mask_command_capacity ||
+         frame.masks.size() > p.mask_capacity)
+         throw std::runtime_error("frame exceeds reserved capacity");
++    Bounds frame_bounds; // Include mask/unused vertices conservatively, during validation.
+     for (const auto& vertex : frame.vertices)
++    {
+         if (!std::isfinite(vertex.x) || !std::isfinite(vertex.y) || !std::isfinite(vertex.u) ||
+             !std::isfinite(vertex.v) ||
+             std::any_of(vertex.color.begin(), vertex.color.end(),
+                         [](float v) { return !std::isfinite(v); }))
+             throw std::runtime_error("nonfinite vertex");
++        frame_bounds.include(vertex.x, vertex.y);
++    }
+     for (auto index : frame.indices)
+         if (index >= frame.vertices.size())
+             throw std::runtime_error("frame vertex index out of range");
+@@ -744,6 +749,7 @@ void Renderer::prepare(RenderFrame frame)
+     upload(p.vbo, frame.vertices.data(), frame.vertices.size() * sizeof(RenderVertex));
+     if (!reuse_indices)
+         upload(p.ebo, frame.indices.data(), frame.indices.size() * sizeof(std::uint32_t));
++    p.frame_bounds = frame_bounds;
+     p.commands.assign(frame.commands.begin(), frame.commands.end());
+     p.mask_commands.assign(frame.mask_commands.begin(), frame.mask_commands.end());
+     p.masks.assign(frame.masks.begin(), frame.masks.end());
+@@ -1029,6 +1035,7 @@ void Renderer::render(Target target, const View& view, TargetContents contents)
+         p.color_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+         begin(p.shared->target_pass, target.framebuffer, target.width, target.height,
+               contents == TargetContents::Clear, view.clear);
++        set_scissor(clip(p.frame_bounds, target, view));
+         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, p.shared->pipelines[kBlit]);
+         vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                 p.shared->blit_pipeline_layout, 0, 1, &p.blit_set, 0, nullptr);
+diff --git a/tests/render/test_vk.cpp b/tests/render/test_vk.cpp
+index cfa050c..9e15358 100644
+--- a/tests/render/test_vk.cpp
++++ b/tests/render/test_vk.cpp
+@@ -342,6 +342,56 @@ TEST_CASE("Vulkan target clear preserve and top-left atlas coordinates match Ope
+     REQUIRE(pixel(images.second, 52, 16)[0] > 240);
+ }
+
++TEST_CASE("Protected composite bounds retain fractional edges and empty target policies",
++          "[gpu][vulkan]")
++{
++    Fixture f;
++    f.upload(TextureId{1}, {1, 1, {255, 0, 0, 255}});
++    const auto vertices = quad(8, 12, 24, 36);
++    const std::array<DrawCommand, 1> commands{{{TextureId{1}, 0, 6, BlendMode::Over}}};
++    const RenderFrame frame{vertices, std::span(kIndices).first(6), commands,
++                            ColorComposition::ProtectedStraight};
++    for (const auto view : {render_vk::View{0, 0, 1, {0, 0, 1, 1}},
++                            render_vk::View{3.25f, -2.25f, 1.5f, {0, 0, 1, 1}, 1, true},
++                            render_vk::View{-150, 0, 1, {0, 0, 1, 1}}})
++    {
++        f.draw(frame, view);
++        const auto images = f.capture();
++        require_same_picture(images);
++        float left = 8 * view.scale + view.origin_x;
++        float right = 24 * view.scale + view.origin_x;
++        if (view.flip_x)
++        {
++            const float old_left = left;
++            left = 64 - right;
++            right = 64 - old_left;
++        }
++        const float top = 12 * view.scale + view.origin_y;
++        const float bottom = 36 * view.scale + view.origin_y;
++        for (const auto* image : {&images.first, &images.second})
++            for (int y = 0; y < 64; ++y)
++                for (int x = 0; x < 64; ++x)
++                {
++                    const bool inside = static_cast<float>(x) + .5f >= left &&
++                                        static_cast<float>(x) + .5f < right &&
++                                        static_cast<float>(y) + .5f >= top &&
++                                        static_cast<float>(y) + .5f < bottom;
++                    REQUIRE(pixel(*image, x, y) ==
++                            (inside ? std::array<std::uint8_t, 4>{255, 0, 0, 255}
++                                    : std::array<std::uint8_t, 4>{0, 0, 255, 255}));
++                }
++        const RenderFrame empty{{}, {}, {}, ColorComposition::ProtectedStraight};
++        f.draw(empty, view, 64, 64, render_vk::TargetContents::Preserve);
++        const auto preserved = f.capture();
++        REQUIRE(preserved.first.pixels == images.first.pixels);
++        REQUIRE(preserved.second.pixels == images.second.pixels);
++        f.draw(empty, view);
++        const auto cleared = f.capture();
++        for (const auto* image : {&cleared.first, &cleared.second})
++            REQUIRE(pixel(*image, 16, 20) == std::array<std::uint8_t, 4>{0, 0, 255, 255});
++    }
++}
++
+ TEST_CASE("Vulkan transparent order protection multiply and whole-model fade match OpenGL",
+           "[gpu][vulkan]")
+ {

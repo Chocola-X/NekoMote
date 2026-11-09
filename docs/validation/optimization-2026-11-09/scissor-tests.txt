@@ -1,0 +1,11 @@
+Test project /run/media/chocola/MIKU/NekoMote/build/release
+    Start 268: renderer_vulkan_gpu
+1/1 Test #268: renderer_vulkan_gpu ..............   Passed    5.72 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gpu       =   5.72 sec*proc (1 test)
+vulkan    =   5.72 sec*proc (1 test)
+
+Total Test time (real) =   5.73 sec

@@ -1,0 +1,158 @@
+{
+  "gl": {
+    "prepare_us": {
+      "mean": 8.191651734878066,
+      "p50": 7.701456972700634,
+      "p95": 10.519849299860695,
+      "p99": 8.115308718789382
+    },
+    "cpu_us": {
+      "mean": 1.8125727814854702,
+      "p50": 1.652751786117701,
+      "p95": 1.6524519164714553,
+      "p99": 1.4637213777759561
+    },
+    "complete_us": {
+      "mean": 3.1698087348821735,
+      "p50": 4.506722921332265,
+      "p95": 4.576695101031222,
+      "p99": 5.760441000960764
+    },
+    "images": [
+      {
+        "file": "chocola-date-a-idle.png",
+        "equal": true,
+        "sha256": "77be1996c43e79b3981a49461745dcd568e1feb4880cdde913dbe56f91568428"
+      },
+      {
+        "file": "chocola-date-a-moving.png",
+        "equal": true,
+        "sha256": "13fde7569750b62c03ee23047622806b57d87478aa9fe26a979320ae4ad9024f"
+      },
+      {
+        "file": "chocola-wintermaid-idle.png",
+        "equal": true,
+        "sha256": "bc7e6ded457c0bb2e0d6b72ee7a8ed7bb2153826863e0deb59ab2fe101a335bd"
+      },
+      {
+        "file": "chocola-wintermaid-moving.png",
+        "equal": true,
+        "sha256": "09fb8e328aa6ee9fd6bfb3c81fc835a577a45a36b7cf0ea9c014cb05ed0adcf2"
+      },
+      {
+        "file": "maple-yukata-idle.png",
+        "equal": true,
+        "sha256": "9a53ccdf10003e17905a1fa4847f01fdccfe899765fe169db73090a49c3bb08d"
+      },
+      {
+        "file": "maple-yukata-moving.png",
+        "equal": true,
+        "sha256": "eca9d756d42e5a3df4b0a6a4b48bf75fcb0d123f19360100a353a6002dec040a"
+      }
+    ]
+  },
+  "gles": {
+    "prepare_us": {
+      "mean": 8.338687320020872,
+      "p50": 8.019118778345568,
+      "p95": 12.59159809410079,
+      "p99": 11.588497060257508
+    },
+    "cpu_us": {
+      "mean": 1.9213800214509507,
+      "p50": 1.2425308804088357,
+      "p95": 2.3143299014379837,
+      "p99": 11.579554583408424
+    },
+    "complete_us": {
+      "mean": -0.5758379954528937,
+      "p50": -0.5824765499196823,
+      "p95": 0.9353280224648466,
+      "p99": 1.4633289168012114
+    },
+    "images": [
+      {
+        "file": "chocola-date-a-idle.png",
+        "equal": true,
+        "sha256": "77be1996c43e79b3981a49461745dcd568e1feb4880cdde913dbe56f91568428"
+      },
+      {
+        "file": "chocola-date-a-moving.png",
+        "equal": true,
+        "sha256": "13fde7569750b62c03ee23047622806b57d87478aa9fe26a979320ae4ad9024f"
+      },
+      {
+        "file": "chocola-wintermaid-idle.png",
+        "equal": true,
+        "sha256": "bc7e6ded457c0bb2e0d6b72ee7a8ed7bb2153826863e0deb59ab2fe101a335bd"
+      },
+      {
+        "file": "chocola-wintermaid-moving.png",
+        "equal": true,
+        "sha256": "09fb8e328aa6ee9fd6bfb3c81fc835a577a45a36b7cf0ea9c014cb05ed0adcf2"
+      },
+      {
+        "file": "maple-yukata-idle.png",
+        "equal": true,
+        "sha256": "9a53ccdf10003e17905a1fa4847f01fdccfe899765fe169db73090a49c3bb08d"
+      },
+      {
+        "file": "maple-yukata-moving.png",
+        "equal": true,
+        "sha256": "eca9d756d42e5a3df4b0a6a4b48bf75fcb0d123f19360100a353a6002dec040a"
+      }
+    ]
+  },
+  "vk": {
+    "prepare_us": {
+      "mean": 9.637553631627897,
+      "p50": 9.904413488609924,
+      "p95": 10.735500035711487,
+      "p99": 15.41577156305817
+    },
+    "cpu_us": {
+      "mean": 0.763476777728106,
+      "p50": 0.35162150462202574,
+      "p95": 1.0672655373041777,
+      "p99": 1.073819179004513
+    },
+    "complete_us": {
+      "mean": 2.872011113837162,
+      "p50": 4.990044577486363,
+      "p95": 3.099547905576065,
+      "p99": 2.551930260435827
+    },
+    "images": [
+      {
+        "file": "chocola-date-a-idle.png",
+        "equal": true,
+        "sha256": "77be1996c43e79b3981a49461745dcd568e1feb4880cdde913dbe56f91568428"
+      },
+      {
+        "file": "chocola-date-a-moving.png",
+        "equal": true,
+        "sha256": "13fde7569750b62c03ee23047622806b57d87478aa9fe26a979320ae4ad9024f"
+      },
+      {
+        "file": "chocola-wintermaid-idle.png",
+        "equal": true,
+        "sha256": "bc7e6ded457c0bb2e0d6b72ee7a8ed7bb2153826863e0deb59ab2fe101a335bd"
+      },
+      {
+        "file": "chocola-wintermaid-moving.png",
+        "equal": true,
+        "sha256": "09fb8e328aa6ee9fd6bfb3c81fc835a577a45a36b7cf0ea9c014cb05ed0adcf2"
+      },
+      {
+        "file": "maple-yukata-idle.png",
+        "equal": true,
+        "sha256": "9a53ccdf10003e17905a1fa4847f01fdccfe899765fe169db73090a49c3bb08d"
+      },
+      {
+        "file": "maple-yukata-moving.png",
+        "equal": true,
+        "sha256": "eca9d756d42e5a3df4b0a6a4b48bf75fcb0d123f19360100a353a6002dec040a"
+      }
+    ]
+  }
+}
