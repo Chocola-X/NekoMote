@@ -1,0 +1,1615 @@
+{
+  "baseline_commit": "ff741726f4576458a738fc3bd933932025572d13",
+  "build": "GCC15.2.1 Release/O3/LTO/Werror, C++20",
+  "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  16\nOn-line CPU(s) list:                     0-15\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) CPU E5-1680 v4 @ 3.40GHz\nCPU family:                              6\nModel:                                   79\nThread(s) per core:                      2\nCore(s) per socket:                      8\nSocket(s):                               1\nStepping:                                1\nCPU(s) scaling MHz:                      89%\nCPU max MHz:                             4000.0000\nCPU min MHz:                             1200.0000\nBogoMIPS:                                6803.16\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cdp_l3 pti intel_ppin ssbd ibrs ibpb stibp tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm cqm rdt_a rdseed adx smap intel_pt xsaveopt cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local dtherm ida arat pln pts vnmi md_clear flush_l1d ibpb_exit_to_user\nVirtualization:                          VT-x\nL1d cache:                               256 KiB (8 instances)\nL1i cache:                               256 KiB (8 instances)\nL2 cache:                                2 MiB (8 instances)\nL3 cache:                                20 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-15\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             KVM: Mitigation: VMX disabled\nVulnerability L1tf:                      Mitigation; PTE Inversion; VMX conditional cache flushes, SMT vulnerable\nVulnerability Mds:                       Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Meltdown:                  Mitigation; PTI\nVulnerability Mmio stale data:           Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP conditional; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace\n",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti, 580.82.09\n",
+  "session": {
+    "DISPLAY": ":0",
+    "XDG_SESSION_TYPE": "x11",
+    "XDG_CURRENT_DESKTOP": "KDE"
+  },
+  "sources": {
+    "src/runtime/geometry_scene.cpp": "85fd826907d0a24e09c3626f10adb3e7a489790de533c59eed968770ed190fee",
+    "src/runtime/playback.cpp": "fbfd6b0cf79ccbdd6a8267f1d1b9fd575f314f8f0386e1744f6c3824b2140c18",
+    "include/nekomote/runtime/geometry_scene.hpp": "10c8cc9833a6fecf28a1ec4930bd165ef4e76c61d5c595f033234cee6f9e3c3b",
+    "tools/anchor_audit/main.cpp": "81f3e26e9632d09a3c30ff398a0ff31a4a0a259e73cad68308fadad14e18920d",
+    "docs/validation/compound-review-2026-11-08/runtime_probe.cpp": "47325e3633bd382e8f5b81a63458414fc6c97c51e69e59a8858d4b6ca8194afd",
+    "docs/validation/anchor-evaluation-2026-11-10/renderer_probe.cpp": "38ef896e9193e72597eef396d0ce769865a5363d690aa2a0e400b134fe8c9b42",
+    "docs/validation/anchor-evaluation-2026-11-10/vulkan_probe.cpp": "b157170f552eb907a6f8cc3855b7cfef77beb050d1846eed6c88dda1343dfb44"
+  },
+  "asset_inputs": [
+    {
+      "path": "assets/characters/azuki/casual/model.nkm",
+      "sha256": "40a6c761fce5f827be8175fcd59e824e855984dfbbf31927a96899b0755376fd"
+    },
+    {
+      "path": "assets/characters/azuki/casual/session.nks.json",
+      "sha256": "caf09956c34bedcbc811feed292d8b9975b51c338acb16837d257d586ecea14e"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a/model.nkm",
+      "sha256": "aaf7ce1e02a6ac5e4272b2c3c31b2d26371bbdc8c945610fcb10bc408c298597"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a/session.nks.json",
+      "sha256": "d7a10266084650592ad60789538efba4b29ca9cd90799e4b0091bb56e917805b"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a-ohtoro/model.nkm",
+      "sha256": "b14eae70b581382d5bb7dd8fbcce947c09ea780d38ea54c61bb9630b5cd401c8"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a-ohtoro/session.nks.json",
+      "sha256": "6bde2c770dde75af12da24c2fc16ce1772b725ee529d5c79eb6aebcd50d4a1e5"
+    },
+    {
+      "path": "assets/characters/azuki/casual-b/model.nkm",
+      "sha256": "a70e57958afa1cf16e4a34508ef8b8f052e282e21d478f401e2eb0e9d416acfa"
+    },
+    {
+      "path": "assets/characters/azuki/casual-b/session.nks.json",
+      "sha256": "af2078410ccf70a4e10cf5109dd03f8f1fde72542cc51268ae8625939e81ec55"
+    },
+    {
+      "path": "assets/characters/azuki/dress/model.nkm",
+      "sha256": "62b494487da6aa0a4976f86f8d4c56a84780e05994ab26eae553562c222534a7"
+    },
+    {
+      "path": "assets/characters/azuki/dress/session.nks.json",
+      "sha256": "4a9fa8f48613889e5a4e302b16e5e17d9772466650492fb5808f7600f84847eb"
+    },
+    {
+      "path": "assets/characters/azuki/dress-a/model.nkm",
+      "sha256": "d25c714867c0bb9db9cb0d20a819218ae4ae2b61d4f6802718e2221876842522"
+    },
+    {
+      "path": "assets/characters/azuki/dress-a/session.nks.json",
+      "sha256": "7f13c7d3aaba18e10feb8e8fd920980754d22deb6c2a9ea9843e2d1fd2fcdbdf"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-a/model.nkm",
+      "sha256": "f21d249569b78117d89e8b7d28a8a2ee4efc31eb5eec733c25b880161e5126fc"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-a/session.nks.json",
+      "sha256": "f5f51098347378e62c74f8d80a7d3350838d313de397634048fe69492acce1b0"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-b/model.nkm",
+      "sha256": "7102b8e291f91c8c5d00d0e5c178f14e528492fa7976d30b60f74947b5ba412c"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-b/session.nks.json",
+      "sha256": "72b385159c47ecdc4cb8b4c56f3b6f683acbb7ca212cee642cc10dbd1918e680"
+    },
+    {
+      "path": "assets/characters/azuki/maid/model.nkm",
+      "sha256": "e26bd7d9167a76ba878be5f46e2bd6176e6c5e0868978f4df119f2c95ea4565a"
+    },
+    {
+      "path": "assets/characters/azuki/maid/session.nks.json",
+      "sha256": "467bc2b0e27f70ef38983dc65437f1bba7f91ab5270084a51bb790846d12d7b0"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a/model.nkm",
+      "sha256": "4975bd229bc5d3b064a3016b441b421b6fc3e69d554e0e2e2c17c64c6d256f19"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a/session.nks.json",
+      "sha256": "da319d0ddb9d365c1e185e6c411d982130bef1ab03d0f45b8a2d0b782edb7344"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a-custard/model.nkm",
+      "sha256": "2c395273ac0f78269ec28b38ed30ee54df0c8590d4c4cd4ca72a7b26574f5fa2"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a-custard/session.nks.json",
+      "sha256": "38a2153da236340421b66ba8e03a9efe606855377ecb8181345e73f861340bc9"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b/model.nkm",
+      "sha256": "85c252dcbe9843fd26eca9c9980bbe97458d59621cbf1c00310648a16fa61fc9"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b/session.nks.json",
+      "sha256": "3512aef5b0f87f202bd64c247e0efc30da9e19a35418093d5c1bdc373222421e"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b-custard/model.nkm",
+      "sha256": "b0d75bbff19027beeba26780f3bf6cb4041628a90b6985641831cab7f639fe65"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b-custard/session.nks.json",
+      "sha256": "2cd01b91b37d871c4286df146e763394afc72b8546385c40ce76d013464979c9"
+    },
+    {
+      "path": "assets/characters/azuki/santa/model.nkm",
+      "sha256": "87c07ad15a063fddeaffc6365c5cb487771f980c7b22d1ff82bb05d42a7531b1"
+    },
+    {
+      "path": "assets/characters/azuki/santa/session.nks.json",
+      "sha256": "56643deb74e2ca5d799c6bd1f46200324b830b2bae30e1f8308ccdf9a81df694"
+    },
+    {
+      "path": "assets/characters/azuki/santa-b/model.nkm",
+      "sha256": "6317516d9dfe6cbd99d45032140ef901b5e3e590f97b05b31a6d630bbc0bef14"
+    },
+    {
+      "path": "assets/characters/azuki/santa-b/session.nks.json",
+      "sha256": "fc9aec231562c10aea850950ad4a7e6e1fdb90376c272b394a1bcaa66d1d4c90"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-a/model.nkm",
+      "sha256": "4ab7e738234c4c7b5397bb244300a778adfd997d66c6abce729b7b9fb43a4650"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-a/session.nks.json",
+      "sha256": "b10d8dd9b4ffa1736bd9299c5f70349c41c581f5d42823e0c96ab3b74d913ecf"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-b/model.nkm",
+      "sha256": "869d9437cc6b1cc685d04ed2b4d5a54980724eca577ce0948774cf803ebaa362"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-b/session.nks.json",
+      "sha256": "f2cdf4a123d684454d5a5f0c902c031dcbf4c7be16d518e74efa128b6c4d9b9f"
+    },
+    {
+      "path": "assets/characters/azuki/teenage/model.nkm",
+      "sha256": "76ec5bb16539cc711d48679ef16f2cde31daadde748a2a21de3b324262d3b751"
+    },
+    {
+      "path": "assets/characters/azuki/teenage/session.nks.json",
+      "sha256": "b3e08dfbb8f9b0ac702ff6b3eaaa1fe7f578ec51dc1c4964808cb8da6b6e7167"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-a/model.nkm",
+      "sha256": "3cbc5e946058fb68f667491de4950c02aab69dc7986ff4809c98f32ae27b945f"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-a/session.nks.json",
+      "sha256": "beefb6747b135197ffb9e1e2982dfb0ebec5c4d228959c84ec8fc32cd11638b0"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-b/model.nkm",
+      "sha256": "4b9e978d358cee12181965663cb6ae5a500b338dc389d50bd8ff647d11a83000"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-b/session.nks.json",
+      "sha256": "596a817d821d9c9ff0d2e1f688a4ae936a5ae3ec779cc6551d39e33ace2d4fd0"
+    },
+    {
+      "path": "assets/characters/azuki/winter/model.nkm",
+      "sha256": "3e019aa02e91a9b90bc91d40e15f5ddd76185e341eb2352d7259b2e41b6fa3cd"
+    },
+    {
+      "path": "assets/characters/azuki/winter/session.nks.json",
+      "sha256": "a5d92cb68ff7c98bfd1d90326d16dbb7c1caf60aa6df3d042263e98cbff9217d"
+    },
+    {
+      "path": "assets/characters/azuki/winter-b/model.nkm",
+      "sha256": "adb300d0a3ba609575015388ece8b3f2ca6646abb751a960aba0717b7db38378"
+    },
+    {
+      "path": "assets/characters/azuki/winter-b/session.nks.json",
+      "sha256": "5e5039589332ae4ddfe1e3907a6b7318ade0ca5775b1745538e71a37efe9b6a8"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid/model.nkm",
+      "sha256": "b2f16294400f264d42aa2a47248065ba89b3ec677aeadadab20a209e2756c878"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid/session.nks.json",
+      "sha256": "dbbb65048bdb6a3c9e59e36ba75608743abeebb775192a572f9701b129167100"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid-b/model.nkm",
+      "sha256": "7541c85df606e2f85a96f2fb762aa75e57c1d3f7f1cad2a25e4a941c09d2be45"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid-b/session.nks.json",
+      "sha256": "e932801a3420cb59f618e13b4060d8fa63195d28fdeaba4950201111ad173941"
+    },
+    {
+      "path": "assets/characters/azuki/yukata/model.nkm",
+      "sha256": "be58bc32003e70dfcbe290db615db568e6e9fb564cb9a759ac1ea8daea7bc486"
+    },
+    {
+      "path": "assets/characters/azuki/yukata/session.nks.json",
+      "sha256": "47a28e1d0d2a4c7d39336e02427feea00d2c6013f044795f1031915bfc0bef89"
+    },
+    {
+      "path": "assets/characters/azuki/yukata-b/model.nkm",
+      "sha256": "107807af452c79d662264a41c40d5c283dc4459e5d91ce39f9f7107e81d9ce2d"
+    },
+    {
+      "path": "assets/characters/azuki/yukata-b/session.nks.json",
+      "sha256": "64606a5fbece52bd42ebfb16f9844f5c7d38338bc7f2152f5fcaaf20279d617f"
+    },
+    {
+      "path": "assets/characters/chocola/casual/model.nkm",
+      "sha256": "f5b2a15e764c251519f6343bb1142e41b0439ed1f465d77573fa58c4ed99ec72"
+    },
+    {
+      "path": "assets/characters/chocola/casual/session.nks.json",
+      "sha256": "7e2be328dcea247d542cfcc36367d3e5db0f205335805ef7f062db82d4b001de"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-no-bell/model.nkm",
+      "sha256": "3b909cebc857e2b8a648ca6166a1207756d4a8f5643828ea339b1e7c57666b85"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-no-bell/session.nks.json",
+      "sha256": "2d9d419ad01a9bcee00521236ae2c07a4aea9942cc33b581e8f4da1023c238ca"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-with-bell/model.nkm",
+      "sha256": "f7a8af9d9c096381a1b8502a3c3020145b8c8bd15a980c8d957c97637a2a001f"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-with-bell/session.nks.json",
+      "sha256": "08c7659f8dbf715e23b1ad4c8d2c0a519d92741125956e29f725c8c22cf32e3e"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-no-bell/model.nkm",
+      "sha256": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-no-bell/session.nks.json",
+      "sha256": "d6b4fd76aa5ed92b107531c936caa98469fa0af1a975e6fc628a4a7b12652fc5"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-with-bell/model.nkm",
+      "sha256": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-with-bell/session.nks.json",
+      "sha256": "8397595a51fe3affbf7c6b5bc648cdc1cdb8e180325d483682804e0f1b334768"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/model.nkm",
+      "sha256": "c9408bb022d87c71be740e8b3154e921b0a36aa39b8562fd5c51b14276ccad3e"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/session.nks.json",
+      "sha256": "cc418a47c393847a0ddf19d200722da5493d18be29d88af4f61a4dd6b4e28769"
+    },
+    {
+      "path": "assets/characters/chocola/date-b/model.nkm",
+      "sha256": "b45352b160718347f8886667dfc26073901fff771067528a9cf93183f3df935f"
+    },
+    {
+      "path": "assets/characters/chocola/date-b/session.nks.json",
+      "sha256": "09a6152e93db3dbdb473d3736dda988ecce283c7da861b809c2c876a1e00abb7"
+    },
+    {
+      "path": "assets/characters/chocola/dress/model.nkm",
+      "sha256": "b0fc59379c08f4036eeec23b6e1c610673742eec334d5a79b65957c06be5409d"
+    },
+    {
+      "path": "assets/characters/chocola/dress/session.nks.json",
+      "sha256": "022cc73dcfabe09b4de91fe5cc0326706ba94a40dcce384390d579e7a73f3b10"
+    },
+    {
+      "path": "assets/characters/chocola/dress-a/model.nkm",
+      "sha256": "80b761ceb9b7a403ac7c805d52e03551c40452d835666019a2bf0e0e12f07dc8"
+    },
+    {
+      "path": "assets/characters/chocola/dress-a/session.nks.json",
+      "sha256": "41ccefa772e208c8db8950d6c805223f8aaf2f31ef82497a2b32d1eb2f1cd816"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-a/model.nkm",
+      "sha256": "06e4cdb743e8750437547bd3d978222e04d4bdc5b03a7c01894e8daba7dede54"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-a/session.nks.json",
+      "sha256": "10e04a231f52d24665b2b56e2dff9718065d974cfb3f498b339221d5ee6bfa64"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-b/model.nkm",
+      "sha256": "b5aced2d05363cdeeb6f2459687794d1f4dada690c43e4a104e39dc9701ee206"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-b/session.nks.json",
+      "sha256": "86a07f500d89c0bc4610a6877d270a39df94b77cd9ae4ea3dbf3cb38157fba98"
+    },
+    {
+      "path": "assets/characters/chocola/koneko/model.nkm",
+      "sha256": "72b8e9f58f5e34a294bd5ca414a943229a0660f24c463b02d32c25a3b3543be1"
+    },
+    {
+      "path": "assets/characters/chocola/koneko/session.nks.json",
+      "sha256": "6dcfa8f80876e2bdd3726253847a517d18a645f4f280fa0660f6eca500d65305"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-a/model.nkm",
+      "sha256": "1bde116a051cc1e90a675bd95b7642d9b6ac08a1984de8281fe33d49f54cf050"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-a/session.nks.json",
+      "sha256": "76ac92ee9e0801a05791e236ce6965585354c1259bdd9e05645e3f4fdf457513"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-b/model.nkm",
+      "sha256": "855eb6aca45ba86abe3f75433a91daf08b30f6db94471b71203f7cbb9c166b23"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-b/session.nks.json",
+      "sha256": "97614e16f97b6a4991fd5a5e14a0374a426363cb0e9e7d8716d7b4622054da3b"
+    },
+    {
+      "path": "assets/characters/chocola/lolita/model.nkm",
+      "sha256": "612be1ae23e914d174b15948a80a08b511b50e6ec02e628e9ed0a9d559cee068"
+    },
+    {
+      "path": "assets/characters/chocola/lolita/session.nks.json",
+      "sha256": "27d91641ca363930efb262450c1c2801b75050806c306bab4b08cca6960cb20d"
+    },
+    {
+      "path": "assets/characters/chocola/maid/model.nkm",
+      "sha256": "695efc21787219916c581a6dd044fead4bf9cc6670de335945851bf43406221a"
+    },
+    {
+      "path": "assets/characters/chocola/maid/session.nks.json",
+      "sha256": "3cc40326b3029d887e7bcde9b8bc13241498a0569d68c5947b465197dcf39500"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/model.nkm",
+      "sha256": "15b6911533d4d4b2540788f023beeb0b9e795393d95c737c52aed44893a61a0f"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/session.nks.json",
+      "sha256": "08ecca4707fd4ea42739ca7b2c4806b8f46341b6dfafaea93b5a18c2e4144061"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-with-bell/model.nkm",
+      "sha256": "21bf6f0771d3c15e02eb4acfaf083d560c10292966c39f6cd6c397477c30f967"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-with-bell/session.nks.json",
+      "sha256": "dd99b529aac4aa5d8c71b7c15aec39f444967e1109c155b51ec8ebc76d32975d"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-no-bell/model.nkm",
+      "sha256": "4188e6be60b345bccff4878b392e75f1acdb3efa79040c12c6e06e074497afd9"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-no-bell/session.nks.json",
+      "sha256": "000880bd106248ad05fca9fb47bade231c724a52607d684ce03e52ff86a363c7"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-with-bell/model.nkm",
+      "sha256": "f0d8a383ca9e2642427fbfc72eb46694d8971a0af94de1062a112dc656a11ff3"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-with-bell/session.nks.json",
+      "sha256": "ddc95d27ad8c225587708aec044836a0bdabfa0bc4d62fb31ee7ea282aded63f"
+    },
+    {
+      "path": "assets/characters/chocola/pajama/model.nkm",
+      "sha256": "eaaa35c4d2649fe776ebe5c4495d6d1780b2a5c98de9593cbf054118f821e772"
+    },
+    {
+      "path": "assets/characters/chocola/pajama/session.nks.json",
+      "sha256": "6c18f023e59ea6490c258caa5d38c5b156d56192c5197be7220ef51b8af8c896"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-a/model.nkm",
+      "sha256": "e8b34badec8cc4baf0f687ab79265173eae1f2b0c6aeb51de14ba0a7791835ce"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-a/session.nks.json",
+      "sha256": "f6dae61be72190d02411969a31a63e306e5735d5b25178d81837785dc27ac6e2"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-b/model.nkm",
+      "sha256": "96120093778a2f5741375a8c23e2fbcf1e5a3d7fa93d409ff8198ff5534ba5c9"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-b/session.nks.json",
+      "sha256": "5c9b13038b5d5a98418dec252692e72f352f326a7784d00c86b40c23a1af761b"
+    },
+    {
+      "path": "assets/characters/chocola/santa/model.nkm",
+      "sha256": "98199be02ab00cd7a2ed6753aac505d99963e831daf570990562ea10a8ea9962"
+    },
+    {
+      "path": "assets/characters/chocola/santa/session.nks.json",
+      "sha256": "743bc96bbb1adc3383a2a5463631b7f67fc427a0ad891ed8363e1a5ace8af1ac"
+    },
+    {
+      "path": "assets/characters/chocola/santa-b/model.nkm",
+      "sha256": "7ec0e1e5fcdec986687fd767c850d7d052915525be822c54de1afd0312d23226"
+    },
+    {
+      "path": "assets/characters/chocola/santa-b/session.nks.json",
+      "sha256": "851b35122a85f946d27675728b358887ebf6934d9c5df7dba1c8c1fd590cfc09"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-a/model.nkm",
+      "sha256": "d80bf4b144f1a59bd67fead2f1175355469b134d07696c7319a47943cb2db739"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-a/session.nks.json",
+      "sha256": "83a425f3d219ac6243e099d965e827a5dcbd858338792373852050952d7bb8e1"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-b/model.nkm",
+      "sha256": "b2d6b122f97d9fc4ca4321b47b483c31ed69792dcb2e8e7a726fb9f518edd685"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-b/session.nks.json",
+      "sha256": "86ade95fcbd3b188efb802a48951a3122b89b53200d28f884c2095b9a2d019b7"
+    },
+    {
+      "path": "assets/characters/chocola/teenage/model.nkm",
+      "sha256": "91762677ce5f23322b93207c1ab80fd5bc617d819f5c41fedbfcf21a61cbbb8c"
+    },
+    {
+      "path": "assets/characters/chocola/teenage/session.nks.json",
+      "sha256": "e1b474c423add193683b0ce90d24070b7f6f462a91ef7582e799244e3ed51976"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-a/model.nkm",
+      "sha256": "6c3362dc960ffc901b2de2e7ff8de77e386a677dbbbf2a79d2adccda8181e8ca"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-a/session.nks.json",
+      "sha256": "887b7ba7b0939809dc455d82cd7e2d73a678d4f50b7d834feb9205e6c42309af"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-b/model.nkm",
+      "sha256": "1a9d5ceb85881f377e2eb705ceb2935fc1a592717eda19f3e20e4453e4181fbf"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-b/session.nks.json",
+      "sha256": "70277accc8c713bde1b0c8a1b7f5c5e6d4f542cc56ffde21966dd5cc452030b2"
+    },
+    {
+      "path": "assets/characters/chocola/winter/model.nkm",
+      "sha256": "b1e362940b24630aea557ed632f97bf7a49262af05945d03d699f53e00c9bd0c"
+    },
+    {
+      "path": "assets/characters/chocola/winter/session.nks.json",
+      "sha256": "c0e3d6d4f774cd49bd8a890c783b1ae3442851ddcaa669b8c0dc4dbf9a9ae656"
+    },
+    {
+      "path": "assets/characters/chocola/winter-b/model.nkm",
+      "sha256": "237a5f5387249d64ad0b957b5862d4780e914c8731d12ec6cbe2819047a22ffc"
+    },
+    {
+      "path": "assets/characters/chocola/winter-b/session.nks.json",
+      "sha256": "c6c2f295dbf4d307caabe394a345b06e797dfdd3e28434ff4f815c9ede57c5f1"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid/model.nkm",
+      "sha256": "0bb3f8c2cbb95126c578bc5b710134bbbf107f2041f9ff3e3dfaa631a335f546"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid/session.nks.json",
+      "sha256": "99d512b4a8e937f5de7040899257a8434a0b034afc2115e7946a800fff421038"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid-b/model.nkm",
+      "sha256": "4f20c0bf2b36c19fb6e63a784b5366046d2edf1b885ad44f7e206ac704dd7343"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid-b/session.nks.json",
+      "sha256": "13d283ff6e75e0eda6a10c9b7342251005315a0d2f11c4370a5ef4bc51f3972a"
+    },
+    {
+      "path": "assets/characters/chocola/yukata/model.nkm",
+      "sha256": "8086f8b661f740e11aa79bee7abe38e59b4d68f8f7572f5d1b1e78a2b8c40605"
+    },
+    {
+      "path": "assets/characters/chocola/yukata/session.nks.json",
+      "sha256": "7ca228831d1f5923be5ebde6bd9639725f2fd61846777f0db1bda7fd91fc4e59"
+    },
+    {
+      "path": "assets/characters/chocola/yukata-b/model.nkm",
+      "sha256": "6ab4b97c28e2ced5bfa838b5c1ae26d567885ababa6c70b3e8384efaf41621b1"
+    },
+    {
+      "path": "assets/characters/chocola/yukata-b/session.nks.json",
+      "sha256": "5f31002c0fd6c8a967e235f90fb7b55988685806d1f859c0b43ebdb6c51d8c1c"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual/model.nkm",
+      "sha256": "e6fe931c75176c18d8e4e6df38242dd0e4485783c8d96e8cd84646f13ac9e220"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual/session.nks.json",
+      "sha256": "b7caf6d528637462e0c4121fae6189c874cda33d5a52639d0f6f0c864e782a4f"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-a/model.nkm",
+      "sha256": "8edfd04198a8a5c37e7eeb9736284f2fa5bd4899e474c449a5af757d0222b6ee"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-a/session.nks.json",
+      "sha256": "a508b1153306479e59b2991277d99097da557b60cb19209449535986c0e4d7f3"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-b/model.nkm",
+      "sha256": "ea50abfad5cd6fed3e60403de8f0cd817924fa8764300d37706227a5122d4bfd"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-b/session.nks.json",
+      "sha256": "3bafa1f56a3781e494a85fcfc58973fa0984aa38fbb57764e0a6f92d1d28cf5e"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress/model.nkm",
+      "sha256": "ec19042f79e916386d3a26682a6507fe7f7e561aadf75fe7e74ca5e6e2d5c0eb"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress/session.nks.json",
+      "sha256": "bc36edd824d8655923d62726a14b3c63ab15916893ebd6c775d8db8888c3fd98"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-a/model.nkm",
+      "sha256": "1be6036d3ad757b3c699d8ee40f024392b29b5f86fef773916c03ea76371749b"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-a/session.nks.json",
+      "sha256": "eb5e11cc88d5ef0b6ce3e298e948ca5c795b9a1245c935ad555fa9d84f11d107"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-b/model.nkm",
+      "sha256": "52677950ce8df238620e2e9199014794f84f9d6b698013e76c7d6766e7fe7371"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-b/session.nks.json",
+      "sha256": "6c3ea6407ee8e5513149989ada921e38a055e323d8fe15946c06be7c60dbd850"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-a/model.nkm",
+      "sha256": "5ee58b65dc972ed430e172f0651dfb305c08740b81289741964168592acce8ed"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-a/session.nks.json",
+      "sha256": "74f590ea04477ef3e1094121d1062b137b4dd6e79c3daa3c9af3cba8a128c43c"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-b/model.nkm",
+      "sha256": "755bb0d4ffb3ba1e0d35ef77dca2f4279136197809e078b12ffbf580cfd888ec"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-b/session.nks.json",
+      "sha256": "c7e8949c93209d352c1a5ce0a0f828dc9894a0cb9fb248e97c25ba008b19a022"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid/model.nkm",
+      "sha256": "81f13e4b10e5c50b780d5df2ee41d5f0ee17263d3daadd2d7c09631bed8ae6ee"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid/session.nks.json",
+      "sha256": "d62cd5d83e4202d4ebee2c022ca42ddc7ca22185cc117f21c40ba56e597ff509"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-a/model.nkm",
+      "sha256": "d48798126bd88a78cd84c763f8af47a82e3153a5a4cfbd4e02edf28f50844165"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-a/session.nks.json",
+      "sha256": "f7116133557bd4360e8dbc4734f8eeeee18f6c2d30c590198bf3870572e3f714"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-b/model.nkm",
+      "sha256": "df27e34816e8da5ce4b4336064afafc7f4d4715e0b602d4e79fc4b2244b6d4a4"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-b/session.nks.json",
+      "sha256": "0b9e8b0afa8be60d0e8230dbe52bf64c2846ee76c536ac1c34d22c0c337576c1"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa/model.nkm",
+      "sha256": "210f49faef2b602d406d87acca2e05df1d8ee274ba7424c4ab8d4329ac568a52"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa/session.nks.json",
+      "sha256": "902e0e21748501529e29790ac1c14534d482878d421879f503693468781065f7"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa-b/model.nkm",
+      "sha256": "ba25df283ecba274c8adbdb833dfcfb604876c18dcafbd3c43f3a4806ed35b21"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa-b/session.nks.json",
+      "sha256": "b4042d39154678735304f75ee157dcd326b46d25b555e1c7ea14130dbde03407"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-a/model.nkm",
+      "sha256": "ebd49384c0241de02905b16af8a3bd3736bbe10547f00ccd463072559cde1ee3"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-a/session.nks.json",
+      "sha256": "1ff1e7b25d662f7cdd077c7ac1f7632f29f02011fc05dce25a1887d582a8a85d"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-b/model.nkm",
+      "sha256": "952ddff13db3d6ab503577c4cf27e8b268f474384098cd0dde38c965fa7b288f"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-b/session.nks.json",
+      "sha256": "9172724a7e767f49425e654cd10c84156f05a1c76d670a8a98937c6bd6972ce4"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage/model.nkm",
+      "sha256": "87c6d7125ec5963b847c96da40de83fa26ab2bd1795c50778adff2d8745cab25"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage/session.nks.json",
+      "sha256": "7d38f5bec2c4ae80739e210a553035b9039e91cb0807dd3768ccee595a261114"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-a/model.nkm",
+      "sha256": "c6648799c0c487efee25a3697cd2e14a85c12955886e75f1864a2fb3eb01de6e"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-a/session.nks.json",
+      "sha256": "e76e2075d861807a2a6b93c8fcf171c7c5ae728763b94f0d9948b35f7980b750"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-b/model.nkm",
+      "sha256": "22645936017739d3c8e625606bc3fec01ef2ca76167c2ff9b3b05c2d95a850cb"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-b/session.nks.json",
+      "sha256": "00c8d0b65a8376f417c9e07873f936abae777b379b4e116a836d6528aa215c60"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter/model.nkm",
+      "sha256": "435b1bbb4b5516c95c43dc317594f077c0ee5ed9cc3c477d24dbe7bf54907a19"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter/session.nks.json",
+      "sha256": "9d58a7a89422e65c8c1a26948bc622539dc951f2ebfd3c21a17cf69ed6ec865c"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter-b/model.nkm",
+      "sha256": "2ab7585f2a09cb7a607235c1d10a62d13e9cd987125672f09e76e124767e45ba"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter-b/session.nks.json",
+      "sha256": "ab19ef36213c01436a0f9916d76f82daa89cce1fd397c07d0efc1b9314cfaff3"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid/model.nkm",
+      "sha256": "02627c478d3697673fdeb14346ca2abb31a2b4eba29ee1351af4ae39b9763d1a"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid/session.nks.json",
+      "sha256": "07d2bb07267354d040f85a8424a168a9dc8ebf7afb9782745c5a790f0988b37d"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid-b/model.nkm",
+      "sha256": "0aba575f91c261650eaa745e0bb7ceee83c371c5b7b3649fde1ed048a7572e46"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid-b/session.nks.json",
+      "sha256": "10b952a6e5b1d03cc809973d74a182e53000490b373c64aefb8bab51e1cea823"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata/model.nkm",
+      "sha256": "01882df14aff0355b32c715c322adcf1d175f4e5fd3e73a736d5d8b234c87f99"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata/session.nks.json",
+      "sha256": "2e789b1bb7f864db3b3ec65a37a300da39421c2cd4adc07efe85677432bd35c9"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata-b/model.nkm",
+      "sha256": "f7bdc4a2d2e44e4904017fdaf7bc614204f4f20ba9cbb128e29b4fcb0d930d12"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata-b/session.nks.json",
+      "sha256": "eb31fe55b39d651fe438883d853983e0e240321db09f3fe32fb8997641b6ee7e"
+    },
+    {
+      "path": "assets/characters/coconut/casual/model.nkm",
+      "sha256": "7c7d0ebc601292faa4d3a3cb12849e2572808ca7e72a15f990893c24bfe722cd"
+    },
+    {
+      "path": "assets/characters/coconut/casual/session.nks.json",
+      "sha256": "981f7746d1451196a127374c7f80e4e44b989c6b79be16c25b340cbc9d05fba6"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a/model.nkm",
+      "sha256": "7a9456fc401f526056e8a8f8a2d30604ea7335b27fef76ae69eb91ebd26fda9a"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a/session.nks.json",
+      "sha256": "b9fff827ee86a933b41d26aeacd979fc6bfb1503c266f34df1afcecdc6ca565a"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a-4yo/model.nkm",
+      "sha256": "7eec89fe90acc172ef3eda9216f7b2bc033bf65ddae3a3260d4d6144ea635c08"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a-4yo/session.nks.json",
+      "sha256": "de1df03886942063541734de0e0c8b6db9c53a58340ecc5558faaf5be44d05eb"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b/model.nkm",
+      "sha256": "16b511c2761162a441d7253537ada5af40ca8b34fb92f7a8f9dfdf0b8a55b227"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b/session.nks.json",
+      "sha256": "4d642ffae3fed75a24301864e135185f93858e58cd936e67a4b1f5da88bd1d54"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b-4yo/model.nkm",
+      "sha256": "34d194b71bf69f320c0402d98f05ff65053b2809abb04f2018aae117bd5c3630"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b-4yo/session.nks.json",
+      "sha256": "6eed83597f189dcb43357b3558432e4b970a6e023f2324c92da82664f63a305b"
+    },
+    {
+      "path": "assets/characters/coconut/dress/model.nkm",
+      "sha256": "0de7c84898f2deaafa8c43bee0435fdabc0ec854a360d542ff5456f66d9b4bb2"
+    },
+    {
+      "path": "assets/characters/coconut/dress/session.nks.json",
+      "sha256": "3d482df7e5bb4f9837941c66119421ac76d88e747af8cd4d6824f0d10880d4a3"
+    },
+    {
+      "path": "assets/characters/coconut/dress-a/model.nkm",
+      "sha256": "3016b20881c27121e85ac275ea68b8b872ca9b6346408279335478bf5defb9f1"
+    },
+    {
+      "path": "assets/characters/coconut/dress-a/session.nks.json",
+      "sha256": "4c9435f2d26fba4921167da648be439cde1f2150b65d671264d7e247372674f3"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-a/model.nkm",
+      "sha256": "12d56a18a162c75c2129b8a2579a2978fbcf307b3a2f5d5ecf4aadad9db1b3b6"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-a/session.nks.json",
+      "sha256": "aa1733827bb91fca78df1c5236bdbfeb902748d1080f1394ec944724a8d070a8"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-b/model.nkm",
+      "sha256": "d3855e2575c26424dd0cb587b6b17f7060b8ccd1d658ffd42cd0dd76def8abcf"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-b/session.nks.json",
+      "sha256": "e6c1ef554757d29a8a3e88ec1471e10388bef452e85d5f1fbcfdcf6e4e2f80f9"
+    },
+    {
+      "path": "assets/characters/coconut/koneko/model.nkm",
+      "sha256": "a4a8fc08a4e3184976ed55f3b1a6cf9b3aef72cf22a108a2be9b3db86612d5af"
+    },
+    {
+      "path": "assets/characters/coconut/koneko/session.nks.json",
+      "sha256": "60d87fe28028caed750d150af448b4b39efb14d2bdb4e8ef751b9c8f6bc7647a"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-a/model.nkm",
+      "sha256": "d36caace81d357ebd55fc659160041122630d0172fb766d8221257b9ed203821"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-a/session.nks.json",
+      "sha256": "174f985512b80f89e05f1027d94dc5ad2e5e7ae182869a094fe789a530238402"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-b/model.nkm",
+      "sha256": "c6a03f9c0503a3fe0890a8906d28102f564feb740d4d4152cf4f7e36ef01caaf"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-b/session.nks.json",
+      "sha256": "45b9304efd21a743ff283ab014a5dbb29e64657e22fa71073c1d0106528a8f8c"
+    },
+    {
+      "path": "assets/characters/coconut/maid/model.nkm",
+      "sha256": "c805d6f478be8460970fce275ee7b68919f142541945cdbbfe83da217718469e"
+    },
+    {
+      "path": "assets/characters/coconut/maid/session.nks.json",
+      "sha256": "29fc555c54c74d808189ff98ae23981ea35827c105cbe5caab8ef761a56525fc"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a/model.nkm",
+      "sha256": "86c96cd89e8d08bba27cc0065d6cb363e6d32acfcfd0c26aa7bfa7a2f631950c"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a/session.nks.json",
+      "sha256": "bda4837d47166d9f80f093a3bcf3901e8c420681a4306d35d3934a999900198a"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a-4yo/model.nkm",
+      "sha256": "e6855de0a1617471a8bd6fdd778f8bd07f1adf71b6b71829bc86660d6e904efa"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a-4yo/session.nks.json",
+      "sha256": "095d0dc936cb44b8c163afef8ac53b89d427b0d6b4fec9d44bfb53d59935edb4"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b/model.nkm",
+      "sha256": "f99d855fb213d3418cc0ffc35631786eab1babce1831ae8b908599c8776d5266"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b/session.nks.json",
+      "sha256": "b1afe8ace8ca197e4262db87dee4982c7251664d94f50b397978c6880296e505"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b-4yo/model.nkm",
+      "sha256": "a86b72912827af74a8ed9c56bc63e9e10a3fef1c6b153dc1720dd121cfef2de9"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b-4yo/session.nks.json",
+      "sha256": "00f4237642444d368164244620f2464af6a3d1e4f135ca60f1ce0436598de604"
+    },
+    {
+      "path": "assets/characters/coconut/pajama/model.nkm",
+      "sha256": "971b853b4f0120c2e6c0977f9cd59716d8c1d479443b6de78594ca0a1edaa770"
+    },
+    {
+      "path": "assets/characters/coconut/pajama/session.nks.json",
+      "sha256": "e51b02160acced0fa72e2133ff4b1fda4dce6fd8de3c3aa369a8ee6af386e619"
+    },
+    {
+      "path": "assets/characters/coconut/santa/model.nkm",
+      "sha256": "4d98f7fa7cec20b6976e273eda837dc62c60caa32dd3f7901e326f1f2c055b8b"
+    },
+    {
+      "path": "assets/characters/coconut/santa/session.nks.json",
+      "sha256": "e4aadc24e857b7f2ea55460516906338e3c1bfbeaa584ad3a1a175163b6fd7ed"
+    },
+    {
+      "path": "assets/characters/coconut/santa-b/model.nkm",
+      "sha256": "0c159eebd11a9fb1133b1ad6bdf96556d7722acc92eb5e7578bfb0610d9019d5"
+    },
+    {
+      "path": "assets/characters/coconut/santa-b/session.nks.json",
+      "sha256": "46d8480c0ad77d17b7ee446e4a414315cd73f2c2122e20ed71e686b4ea052619"
+    },
+    {
+      "path": "assets/characters/coconut/shirt-a/model.nkm",
+      "sha256": "0b257d7852fcccc4c7c54ea234539d122e92b51c663a3e5bc5c2088d98952539"
+    },
+    {
+      "path": "assets/characters/coconut/shirt-a/session.nks.json",
+      "sha256": "f7991a4c0ae8563182357f5bc05e8974dddee8bedcefce2a3882cfece2d5c4ea"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-a/model.nkm",
+      "sha256": "2d4a522a3540051d82b8ddf3bae679ade030288b74bacd7762533f9871d286d9"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-a/session.nks.json",
+      "sha256": "6e8a7986056d167d7d49c87904a9ae9097c8b08ce842ce117c199101a738ec4f"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-b/model.nkm",
+      "sha256": "7aa74e6856bb2f7090a79a3c9db64781fdc2d5dc24d9a0695ed066dcf361d523"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-b/session.nks.json",
+      "sha256": "5483231cf0ca5aba8f4bca583f1aa2ee13690bb8202f0f92e8b1e832d3e1a168"
+    },
+    {
+      "path": "assets/characters/coconut/teenage/model.nkm",
+      "sha256": "431d12c2dd58a33e5a64ff08ddd0ee94d6f43419c84ced5377429d6d4a5c1cec"
+    },
+    {
+      "path": "assets/characters/coconut/teenage/session.nks.json",
+      "sha256": "3f60c0ee3c824fb0d42d29a7656dca5c81b7416b416cb79421c785ae03d36143"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-a/model.nkm",
+      "sha256": "e1664f4e0e8bf3b1cd805ea2148a7f51e5fec0813113291c2ceef16233e9b12d"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-a/session.nks.json",
+      "sha256": "0b78e91fdf45dd7c12c1a39081f35e153ce0e0eb76d56c7c50d257a20c325e83"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-b/model.nkm",
+      "sha256": "84a746cdb6e3dffcc785886aab38261b9c7f50f596d0fa87401ded5204e76638"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-b/session.nks.json",
+      "sha256": "647c5bbef8f609400b451b18e9d5f4e4a70ec7c3248d9b5798128e357b8d6d1a"
+    },
+    {
+      "path": "assets/characters/coconut/winter/model.nkm",
+      "sha256": "8d68a5dc95cc26b52c959e6770e4285fa4b4ca05565039fbc684eee81b989308"
+    },
+    {
+      "path": "assets/characters/coconut/winter/session.nks.json",
+      "sha256": "7196db06ed3db84dc6556b4c4a39e766b0862e3fae1286c408a04a5de6cdd9b4"
+    },
+    {
+      "path": "assets/characters/coconut/winter-b/model.nkm",
+      "sha256": "2dd272c169b63c42a790f154700a49e863361e244b1ce2152a396af6fd0476e6"
+    },
+    {
+      "path": "assets/characters/coconut/winter-b/session.nks.json",
+      "sha256": "513d83dffaecdedbd208b49ae99d819b135f109407ac505994f86830c0418586"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid/model.nkm",
+      "sha256": "5cb8c41739aa02d002280597ef3a3d4b1ee90cb3b6837a48b522f38028010526"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid/session.nks.json",
+      "sha256": "1224dac323a6dc2fe07f59d19c2e9b7c9353cf17250ebbb006f9bc9de67e35be"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid-b/model.nkm",
+      "sha256": "beef059785c07e1d46b1f40d20b8dac8602969ef275fce356062651b8e4b2919"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid-b/session.nks.json",
+      "sha256": "2a8c51ef2c292411fd5e65584c8026cfc21d670eed82b61cdefbaea0984d3b2e"
+    },
+    {
+      "path": "assets/characters/coconut/yukata/model.nkm",
+      "sha256": "572d78b698949b2e6eb95e5238c5b8710b6a82f0b7c930e1f569c0837c081aa0"
+    },
+    {
+      "path": "assets/characters/coconut/yukata/session.nks.json",
+      "sha256": "60c3fe20c6206eea3f22be402b8697810125562f34b201a1b8b5c54b608db82b"
+    },
+    {
+      "path": "assets/characters/coconut/yukata-b/model.nkm",
+      "sha256": "74a3a96f1f9117c2033885a747b11199c6ea63224f17e5da7f09a57f9b86e5ed"
+    },
+    {
+      "path": "assets/characters/coconut/yukata-b/session.nks.json",
+      "sha256": "f99e083fd52442d3d0fd0b19faf826d9b7270a2f4d4eb376077d33f75400561b"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/model.nkm",
+      "sha256": "02b38fe20201dfa94f233c9d5e8363f0869386e6f01cdb75a461ac96d7271af4"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/session.nks.json",
+      "sha256": "2e869619ab71969b7bef5955b1c8e001d24eb09255d3c319cb4a1556a6e7cf37"
+    },
+    {
+      "path": "assets/characters/fraise/casual-b/model.nkm",
+      "sha256": "025f6334d78107bd34d14e959b3e3de1078e614ca0691ec77eb53f93aaea7e32"
+    },
+    {
+      "path": "assets/characters/fraise/casual-b/session.nks.json",
+      "sha256": "fb447d7faeae61d3b9bf260983afefc1008ceafca623a6308cc081e34c4b8549"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-a/model.nkm",
+      "sha256": "f6d39b2f9fb2d545e8c28f02d35bb8fe1634ceb51d9a3e2e9518d3f92f221628"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-a/session.nks.json",
+      "sha256": "7690fef2b5ec0cdbca226d5637e1ea17fc41e3b4830c0d75995dcbeeedd30701"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-b/model.nkm",
+      "sha256": "8a3a00a90caaed1af2b65ed20ba01637383465ab5f20ea487f2bb554afed0732"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-b/session.nks.json",
+      "sha256": "d9a82093d54ed25112ef21f6f85097cf9fb289ee42e8487411368140ebb283e1"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-a/model.nkm",
+      "sha256": "269000630282627e387bb5fbd6d831900f52451735e8e60c60fa608d6eade960"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-a/session.nks.json",
+      "sha256": "b691a821c8952306925a012f605c9e447e6a2f497c1894d0712014306b30e253"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-b/model.nkm",
+      "sha256": "bf35ccd3e022a87be5237a1810838fbdef4113b59385a8acf834ae623083a0e4"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-b/session.nks.json",
+      "sha256": "fb9c134bea57a9b5088f281101aa2402694b48ae04480270ad9cfc46c5ccf5b5"
+    },
+    {
+      "path": "assets/characters/fraise/maid-a/model.nkm",
+      "sha256": "b0d39bff15def2aceddd5c75c677f7ed4902a2373a190c93adc47b52aa22ffb0"
+    },
+    {
+      "path": "assets/characters/fraise/maid-a/session.nks.json",
+      "sha256": "6ccd4af07d61fda292337edcb62182f7fe37d3f64dd2095c70aa4cf875126284"
+    },
+    {
+      "path": "assets/characters/fraise/maid-b/model.nkm",
+      "sha256": "298897046cd1adb1b82e5a66eb4c390e33872b437799f88cc22ebace62480bcc"
+    },
+    {
+      "path": "assets/characters/fraise/maid-b/session.nks.json",
+      "sha256": "e3d1438bb9e8db2d99a28934345044dd4b04f96f9c667fac23bfa1bede6e464d"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-a/model.nkm",
+      "sha256": "90984e88ced0e8422ad5b8f299db4987306599728ef032641c1e9043ab8f72fb"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-a/session.nks.json",
+      "sha256": "9fb525b3300ee17e7252a3a5fc784686a7f1170c44c06ed1c275ce81d2839ff0"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-b/model.nkm",
+      "sha256": "fa8915e4ea30ec8f5aadb764b762d354ea1a4acff4569cf0fd5689e06b3700e5"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-b/session.nks.json",
+      "sha256": "74fb4a089eb9ebf08fdb34099add3484d2b94d851247a50486a8de9822332556"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-a/model.nkm",
+      "sha256": "a4085727b593acc6b702b389b4a8f5d871a1ca7e1e9ae865c71d4152850458e9"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-a/session.nks.json",
+      "sha256": "cc5eb0587d0bba4e884885c47fd319f92a23a8149660ce8086aa67eeedeefcc7"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-b/model.nkm",
+      "sha256": "10b707750132d65027deac61e640ced3cae681095c534cc84817be203b572ce3"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-b/session.nks.json",
+      "sha256": "1bc1a97330bc898ba02bd2027378415aa96e772822e6133dc287e9ad8745a987"
+    },
+    {
+      "path": "assets/characters/maple/casual/model.nkm",
+      "sha256": "ea46b2d55007328f2650aab5948f172ac2fbb09cbfae01eec6069fb3c5a3eabf"
+    },
+    {
+      "path": "assets/characters/maple/casual/session.nks.json",
+      "sha256": "33e30a2d0c8f00f3a9ff0cd1874e25f4c0db727d19c9cd093ce733b90ab87ee0"
+    },
+    {
+      "path": "assets/characters/maple/casual-a/model.nkm",
+      "sha256": "cbb9c4cd01e72c963459038ffadea1e66df38a45b1c2f37b90bb31226fbf0eb7"
+    },
+    {
+      "path": "assets/characters/maple/casual-a/session.nks.json",
+      "sha256": "03395930d60520ac7c871abbe3cf3984dc1f399ab0981dd61fc7492d4c8a32a3"
+    },
+    {
+      "path": "assets/characters/maple/casual-b/model.nkm",
+      "sha256": "ca14d5fa59e5657b4b4122bef961e97e34ebfc17c62014f138c3bcea8fa5a045"
+    },
+    {
+      "path": "assets/characters/maple/casual-b/session.nks.json",
+      "sha256": "f40a6580096486922af702b08b10e35b527dfb11695f962200cfcba9bee6daa2"
+    },
+    {
+      "path": "assets/characters/maple/dress/model.nkm",
+      "sha256": "5b5c2c176b7830e0e988382554a86a89a60568762b4c39231d868261af20720b"
+    },
+    {
+      "path": "assets/characters/maple/dress/session.nks.json",
+      "sha256": "b00c891a82c4648cb95c79f9366296ea8ce001fa0f753d649fdfaca936a47b07"
+    },
+    {
+      "path": "assets/characters/maple/dress-a/model.nkm",
+      "sha256": "fb4c55444765bd855fac8dc6d3df0b7edab12082ad423e5225892578d0d9711f"
+    },
+    {
+      "path": "assets/characters/maple/dress-a/session.nks.json",
+      "sha256": "590c60f42374bf8548c1c07e0f02ac35462ae66f92fa132da5b0bac4afae128a"
+    },
+    {
+      "path": "assets/characters/maple/dress-b/model.nkm",
+      "sha256": "c4a69f5e6465dcc495f4ab65720d796bdb95d920cf0c2da8c3dfd655746cd52d"
+    },
+    {
+      "path": "assets/characters/maple/dress-b/session.nks.json",
+      "sha256": "97224550102cc0b14e18f44cbfd4c4395a6ee166243ca5c17cf04a9b2fb8f159"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-a/model.nkm",
+      "sha256": "b7a60a74cff597567d995a56f201c501d0f092a4369a02ae3cd886bda62158df"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-a/session.nks.json",
+      "sha256": "1bc3bd86eaa5de5a75a9c67d7b00239790a141d0a5bafeb17ecb4511bcb8b00a"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-b/model.nkm",
+      "sha256": "49c19295437e7239a52b61374719b8db27bc0298b6c759f9e2577693ece8757c"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-b/session.nks.json",
+      "sha256": "536c1fb3d003098ecb412f3f7986b14582366d8ecf81227d98b67a409db9a571"
+    },
+    {
+      "path": "assets/characters/maple/maid/model.nkm",
+      "sha256": "f9d30bf6d4689fd232fa7ef08438182621c6f087640600ec6e72dcf594ed7a80"
+    },
+    {
+      "path": "assets/characters/maple/maid/session.nks.json",
+      "sha256": "bd32b276d224c0ea34222d14e063421d8b22d39601709f1e4a941338c21e3303"
+    },
+    {
+      "path": "assets/characters/maple/maid-a/model.nkm",
+      "sha256": "d4ada78daf61b40fe52057c1f18c8c665ee446f4fca3c2512858ead525d55d06"
+    },
+    {
+      "path": "assets/characters/maple/maid-a/session.nks.json",
+      "sha256": "c7d2674bae7f65b0d57241a4dbb94649aa8728a53973cade0d9d19500135fb08"
+    },
+    {
+      "path": "assets/characters/maple/maid-b/model.nkm",
+      "sha256": "de7c8b9187f26bc2c0a9f97e25509f764381327c91df304a2dc6a37550c93a4e"
+    },
+    {
+      "path": "assets/characters/maple/maid-b/session.nks.json",
+      "sha256": "beeb3fe5a3356fa22aa6566b3d6f86ae26bd317300e1b09aa3311ea448957749"
+    },
+    {
+      "path": "assets/characters/maple/santa/model.nkm",
+      "sha256": "8f5b49b25ff6c6ed50538aa38e128cd5ad19610e994a2969081046ab1287956b"
+    },
+    {
+      "path": "assets/characters/maple/santa/session.nks.json",
+      "sha256": "77c47c6803423ef6b9bf2fea2e6feeddc7d4d8e726b3cbee4fcc39be6049525e"
+    },
+    {
+      "path": "assets/characters/maple/santa-b/model.nkm",
+      "sha256": "f1630a95eb158a30f9f388918b24d6af93fd63761876df54eb6106526f4573f5"
+    },
+    {
+      "path": "assets/characters/maple/santa-b/session.nks.json",
+      "sha256": "664986c9f669f98ef4128db3a34af65099e376c285323119ccd1f03e401fc51f"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-a/model.nkm",
+      "sha256": "ef64a910ca82801ba9292504fb0c87f735ff496055d65a82bc5b516096c6f053"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-a/session.nks.json",
+      "sha256": "95a0463dbe03d10190401c4744c26a400249cff88b43e98340e8f12408288cee"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-b/model.nkm",
+      "sha256": "f404bee4b8c73352d8768abf818d71152c218d1a3de550ae28dd9e826179dbdb"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-b/session.nks.json",
+      "sha256": "1b1b33f4f8544c41780f283495814996e7c047cb690efc257091965eca5f411e"
+    },
+    {
+      "path": "assets/characters/maple/teenage/model.nkm",
+      "sha256": "445d4697c160c7689eb1ac530aa58e83b280d8f91e2a8e3f4f487a27e7ffb687"
+    },
+    {
+      "path": "assets/characters/maple/teenage/session.nks.json",
+      "sha256": "dac26a9ce1b3a94e4521bce28ccf5322a194566b5b94881160a618cfade406b3"
+    },
+    {
+      "path": "assets/characters/maple/teenage-a/model.nkm",
+      "sha256": "8e8e5463a0d7a06404a10ccc694d483ef89d38be8e73337ef374c661d18137f2"
+    },
+    {
+      "path": "assets/characters/maple/teenage-a/session.nks.json",
+      "sha256": "65558bb4b2373df7bdb277a28e66c380499128094abbbd2a42c5958fa2ddd830"
+    },
+    {
+      "path": "assets/characters/maple/teenage-b/model.nkm",
+      "sha256": "67bb55865fe6aa9a1be989efe4d48618f6041ebfa48bcd425bd9d479c364c238"
+    },
+    {
+      "path": "assets/characters/maple/teenage-b/session.nks.json",
+      "sha256": "573189dea668122e937dea129fa7e70cff734c90d40fa4829193e1b37a42556d"
+    },
+    {
+      "path": "assets/characters/maple/winter/model.nkm",
+      "sha256": "3cc877ed25bdc385951597d14b13034f5c9517cbae1b9037075ab11a327eee99"
+    },
+    {
+      "path": "assets/characters/maple/winter/session.nks.json",
+      "sha256": "4cf52b857d41e56d3ad0790f5df798492f8e89226eb36b579c4ec11e7bb61542"
+    },
+    {
+      "path": "assets/characters/maple/winter-b/model.nkm",
+      "sha256": "4564f1fc90705c81417f5eabc77aac29d880bb5f4b60612d076f42c0f57527fc"
+    },
+    {
+      "path": "assets/characters/maple/winter-b/session.nks.json",
+      "sha256": "f8bc40114b51b750a38ed4c6be480bea87b40364b0148769e75777a3372cc210"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid/model.nkm",
+      "sha256": "fe1a2a6230550734f91d0ff1db2b9e819100e1dd0eccbc919b7ca6c614d28f8f"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid/session.nks.json",
+      "sha256": "d1000ee4378c4e6a213c86fc52c1b96fdf8a55d52c21af7f4bea9be76348b250"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid-b/model.nkm",
+      "sha256": "2aad753c57b4d92c6658481191e492e37b0b92e19669bb6fc70b1a628f9cbff4"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid-b/session.nks.json",
+      "sha256": "c360e2ebe6d0321181ae859952da18e8371136325967dcc0760bf96163b74f6f"
+    },
+    {
+      "path": "assets/characters/maple/yukata/model.nkm",
+      "sha256": "8286c3c3001f528aea0a3e83bf68271c21f79b3eceb48a0f7273cb2757181f12"
+    },
+    {
+      "path": "assets/characters/maple/yukata/session.nks.json",
+      "sha256": "d726e7f6761f012aada2599a36a2ab394df1e08d552526a4f57cebfbfe260065"
+    },
+    {
+      "path": "assets/characters/maple/yukata-b/model.nkm",
+      "sha256": "47e9db92f946ec2062f821f4f3383dc1e2a1aee2b46dd03a1035cc49b319eb12"
+    },
+    {
+      "path": "assets/characters/maple/yukata-b/session.nks.json",
+      "sha256": "b258c1e1e035e251d5d64176bd44994073912bdfd0e7ba5fcbc820e1e4806eb6"
+    },
+    {
+      "path": "assets/characters/milk/summer/model.nkm",
+      "sha256": "5024dcd109ff2581d0a4afdc3a413668433603991f80c011e6e2acdfd874b161"
+    },
+    {
+      "path": "assets/characters/milk/summer/session.nks.json",
+      "sha256": "e6255ae416cbca754387352a90fa0441122f8a0d9d470e395f9803b5637b427f"
+    },
+    {
+      "path": "assets/characters/milk/teenage/model.nkm",
+      "sha256": "d1e1c6fabbd454b629ec08f9d465e42fad83b3ad6581413e4560cabb771fd952"
+    },
+    {
+      "path": "assets/characters/milk/teenage/session.nks.json",
+      "sha256": "e6e8b608c7d772214e79bb785e59115c3cd61b329c595937d8bf46a461ac5ab3"
+    },
+    {
+      "path": "assets/characters/milk/teenage-4yo/model.nkm",
+      "sha256": "55cb8bd9c2a74290d7d7612fc7a1cfb5f53974b5c511d70e0344b0866442bec7"
+    },
+    {
+      "path": "assets/characters/milk/teenage-4yo/session.nks.json",
+      "sha256": "6cfd6cd1f11102f26ad5c89ad2f503db14a8727f872331db1df0af39c37c5693"
+    },
+    {
+      "path": "assets/characters/milk/winter/model.nkm",
+      "sha256": "b8252c3707093c28e7229cd55af51677243e280fa2f7f10fa006722e7ef9feb5"
+    },
+    {
+      "path": "assets/characters/milk/winter/session.nks.json",
+      "sha256": "5beb1eaf7523e52b1aaa812ea0ed5b453ccb6c088536b39ffb2fa17db1061983"
+    },
+    {
+      "path": "assets/characters/vanilla/casual/model.nkm",
+      "sha256": "f522fa1ff3214b64812cc17708033910cc372f003da1bd378720e818765292d2"
+    },
+    {
+      "path": "assets/characters/vanilla/casual/session.nks.json",
+      "sha256": "5f7c07a0cef5eefb424f6cae6e5d8de9b10733541d21ed08c3125ce90cf4ac09"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-no-bell/model.nkm",
+      "sha256": "8560011c61ebf6c7c5edd15d47bf29b385e4ab36bcac95247094d1f438935083"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-no-bell/session.nks.json",
+      "sha256": "2f88d652b3f45694310c0a097d6f01be015e44ee8ff4f52d7e9c17b19a3b5934"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-with-bell/model.nkm",
+      "sha256": "0091d3b30b98a9df45e77e6d41ba3df942702a4ceb9870e18b5509e0e71ec4d6"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-with-bell/session.nks.json",
+      "sha256": "e11e921ff90ad1078b3dee8d3b56015a21d29ee00bcc2a09d26185e72a1f02b7"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell/model.nkm",
+      "sha256": "5ad3ffc47b945688d4da3fcd91b0efbbe8f377267f082c0ff9bd94a7ee6d091b"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell/session.nks.json",
+      "sha256": "281e2606cda293fd6f4316acdf818f34ec50aef871cc0dda2ed29c58c43ef81a"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell-tail-pin/model.nkm",
+      "sha256": "7e1d8ab32cc27b1c95e989bddfcd79a97cf4e5b856e5ffbc541d1f99a12d6bd1"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell-tail-pin/session.nks.json",
+      "sha256": "fd8a52026bddc6cf3d888bcbbe6ef044955b534a8b554a4b9be8331d26e24f75"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-with-bell/model.nkm",
+      "sha256": "bb5aef09a7e4c307f906662f43da73c4e2027308c9083a754c88df9cbbe6e33b"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-with-bell/session.nks.json",
+      "sha256": "fc686fa585ca5d41ed80a7c679b5f045bce55f88bb23d739a81fa524b73cf787"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/model.nkm",
+      "sha256": "ee85e3b34bc75beabe8c44edc4e2769b897921b3a35ee4c702c48a33e437bdcc"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/session.nks.json",
+      "sha256": "6add3cb6f2d2247796703ebe0f75c307f5ee6265f77372b83cbda1d5db4e9406"
+    },
+    {
+      "path": "assets/characters/vanilla/date-b/model.nkm",
+      "sha256": "337ddfdfdff8f62cfbfcf997351ea0a2c1d0ce066007e98ce18d6a3cbebe52f4"
+    },
+    {
+      "path": "assets/characters/vanilla/date-b/session.nks.json",
+      "sha256": "b7b81d845366891d2325a265306ee4f6a62ed8fa57cd4963cad2f246547b7f5f"
+    },
+    {
+      "path": "assets/characters/vanilla/dress/model.nkm",
+      "sha256": "34516dbcf5ddf010b577377ea282959290a00e3938406bca58fb3dd9d3d1d254"
+    },
+    {
+      "path": "assets/characters/vanilla/dress/session.nks.json",
+      "sha256": "9c8f48ba73eb0dfffdab9fd2dd989e96464d045ecb48081e75f9c8ceee1f857b"
+    },
+    {
+      "path": "assets/characters/vanilla/dress-a/model.nkm",
+      "sha256": "486f431c0ddfb8b67a99696dd0822868e4e07ef5cb0c5f6cf672a0f16f2fd759"
+    },
+    {
+      "path": "assets/characters/vanilla/dress-a/session.nks.json",
+      "sha256": "a46fd2315e486c000891c0d4268add2f5860790dfd7d800b4ae7fa097a67128e"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-a/model.nkm",
+      "sha256": "a440b54e7cdd15028dc11b8dee03f21a1960f7e94abca465e03b35b2b5fdbdde"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-a/session.nks.json",
+      "sha256": "81ca6afd61caea11c34108487bd4f2d11a8b961e4efd5dc299ca9bf08c5b9c6b"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-b/model.nkm",
+      "sha256": "63d02a6fc0b692dff0ad776baaf5240479c2d1f8782ebd3a8446bf291b4f014f"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-b/session.nks.json",
+      "sha256": "4e1124b0b4f67e69c0b80e078080f1b609c8dbe8af89fe13d264d4007d4cfe84"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko/model.nkm",
+      "sha256": "33bce43d65eed03979a23967b05bfed8d896d2f852422865be562ac8c051db02"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko/session.nks.json",
+      "sha256": "262147d3e0e396c34b3023231ff221dd1d5e62d0463ddc34a77cf40db9a18d12"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-a/model.nkm",
+      "sha256": "0f3a2c8dd4e7a975fbaed1f5266deb64a03c60208a03aa5dc296696a9b1790c4"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-a/session.nks.json",
+      "sha256": "fed18a0c193a410d2fae16d7462e80ef116daa4f711784cfda907759d97a93ec"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-b/model.nkm",
+      "sha256": "ed5e116cf948f5e2ca8d42a69a9f28808a23409b386adebc78a00e8c6078feb6"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-b/session.nks.json",
+      "sha256": "b7af491181d304e132e5d2f29acdad9c0c6a6c9a16021861d0699fb4fc9aeda7"
+    },
+    {
+      "path": "assets/characters/vanilla/lolita/model.nkm",
+      "sha256": "dd52616d5b484efc6505227eec7c9d9151ef97f474c75f7ef3f8adec15a0da44"
+    },
+    {
+      "path": "assets/characters/vanilla/lolita/session.nks.json",
+      "sha256": "7f88c437374c5c3675e0bd581881ddae0986d1b547995edc6d2fa1cb072189f8"
+    },
+    {
+      "path": "assets/characters/vanilla/maid/model.nkm",
+      "sha256": "e74540e65b9d076ce8257c85ce9798a0e86ad1b0936d5d4ee2fbbbb9bd2204fe"
+    },
+    {
+      "path": "assets/characters/vanilla/maid/session.nks.json",
+      "sha256": "7353520bb46fa72a30077285b786b7936185bfe4134f8a93bbca0aafb5acaaa4"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-no-bell/model.nkm",
+      "sha256": "37b49f0608d03b266c414e9187190c2c31fe86deb6f2f87bdfbf078060f391d7"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-no-bell/session.nks.json",
+      "sha256": "6115c507212ab4dd517bc367dab63c24f3e37753eb56c0f40e091c1740b4e916"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-with-bell/model.nkm",
+      "sha256": "52fde1f9de88317e26cdcd62e5b20bbdade6763caadd1fb167fce1ba3ece47f4"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-with-bell/session.nks.json",
+      "sha256": "6f21c9c31622f99947cd138dc55c255ce456d09bb56bccd809a2406df1b05345"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-no-bell/model.nkm",
+      "sha256": "940a9b08891223fb453c4c10f719673ca839b214cfea903dd4fe251962c61d01"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-no-bell/session.nks.json",
+      "sha256": "988c3f9014c3199169851e6810bb4cbdb11fa5aa928bf0566b723b6760fe1e64"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-with-bell/model.nkm",
+      "sha256": "3e6d7aeb22d07d35fb0c1a1755d629211ceb902bee245d039b357cc8abb6fdcb"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-with-bell/session.nks.json",
+      "sha256": "579b32ff3275f0ff3c5c8197d4c53828c830a705077a036f72f021b0b9c5f7ed"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama/model.nkm",
+      "sha256": "c7e1f21db72d32b52fbd93453933b8a423824cfaf11fbc0c5bc19635eafee5dc"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama/session.nks.json",
+      "sha256": "aa5de6e3091d64a882fc54777cdc961abc7a1dadabeaafb48726b58d2ed517ae"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-a/model.nkm",
+      "sha256": "dba3d56b7a489a75d3eb9d302346d08a13d90f8eaf3120b0c870f6e115ab029c"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-a/session.nks.json",
+      "sha256": "8bdfe8f5de14b55624a03003a554a55c4b221d838a12c8d7d29f67f4cc4f3d19"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-b/model.nkm",
+      "sha256": "1c2320fe5a6cbd6b0f84de0c70d3abda1435d35e9af64c023e790c4422fb08af"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-b/session.nks.json",
+      "sha256": "36eb79b8b4b4423fda4fb7bd138722c1bb220ef8bf48acbe203671cc5787719c"
+    },
+    {
+      "path": "assets/characters/vanilla/santa/model.nkm",
+      "sha256": "447225514d2098724e33410a08ef8215e24741d1c675f8567a69345b1bdd8c00"
+    },
+    {
+      "path": "assets/characters/vanilla/santa/session.nks.json",
+      "sha256": "17fc863366b060bce651138235ff61e382789dc0e36e6d2ed28df194387f7259"
+    },
+    {
+      "path": "assets/characters/vanilla/santa-b/model.nkm",
+      "sha256": "7b9893bcf7bc4b73eb24b4507e7c3d4e148f1bff628d5a26510f8480bcf9ae11"
+    },
+    {
+      "path": "assets/characters/vanilla/santa-b/session.nks.json",
+      "sha256": "8148d353a96745c71902b10e16f726793c94c11cb3c3a8d78b26199409a74061"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-a/model.nkm",
+      "sha256": "5b7dfba95398518b7a7aa38f8c8dd73d27379fb413b199d58755234a95d5dda6"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-a/session.nks.json",
+      "sha256": "53e811199a9d03121f2f44d4cf04a7467efdb7668afd39dc38353a00f91cc966"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-b/model.nkm",
+      "sha256": "1018d85f71b1df1b7d88747371fe971ad30633ad5dacef9aea623a031413b775"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-b/session.nks.json",
+      "sha256": "bca64367b31a683c9081b69ff70762e0921530ad7bf620b19753ec5e8f0267a1"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage/model.nkm",
+      "sha256": "74dfd7cb0a7dcd37282054684f34314bd049664fee4607f3077b1f033bbb9087"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage/session.nks.json",
+      "sha256": "f27c7d44100a1130b4f99c66cc577fed5746aaf710bdc3e57b2285ac221aaa93"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-a/model.nkm",
+      "sha256": "285353c00e956bf7fa438e704cb2a96fd3f4ac0087df025fed24126c2615c6d8"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-a/session.nks.json",
+      "sha256": "44a280bf79e9fe091ff1859086053fe4e508d94223487a73ea0ea5cbe52476cd"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-b/model.nkm",
+      "sha256": "61474b1e98b55e4094daf4dd81b00ebefd228486763428afbe4e728b3ca566a8"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-b/session.nks.json",
+      "sha256": "961dfb039a69b820ca7058939379eb36039396f67ebe87a96e642cd286799db9"
+    },
+    {
+      "path": "assets/characters/vanilla/winter/model.nkm",
+      "sha256": "756eb49ea14babd19a8bd3685ffc2c39c7914763e1931533121ef0650af34a0d"
+    },
+    {
+      "path": "assets/characters/vanilla/winter/session.nks.json",
+      "sha256": "b89245ec1e993ccc807b0f0e46b17dccd4eb156c4eedc84a88827b4673850c42"
+    },
+    {
+      "path": "assets/characters/vanilla/winter-b/model.nkm",
+      "sha256": "80787c76edbcb1773629eb43ade9ba4c74f39ae11e6710c5f001d0d1ae833fd0"
+    },
+    {
+      "path": "assets/characters/vanilla/winter-b/session.nks.json",
+      "sha256": "2d98a495199800402c83039942effca676c23a5895225688169e6a5596c9ce31"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid/model.nkm",
+      "sha256": "5d5f78d6a05cdc6df54bbe045b512093aaf49b2825614dfa6c74a2496a7ae902"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid/session.nks.json",
+      "sha256": "cd18eff8ba0f5816eea67ca76871752dcf25dc44aea852a9ba977f6eb200c6b8"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid-b/model.nkm",
+      "sha256": "d59522284695e3b225d4c7c7dacb74318b31247ccd98cc687719033dda80d835"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid-b/session.nks.json",
+      "sha256": "e985fff8cb0ffaf932d5cfbff9dad38b3710dbccd0ad73c10ef6706dfcb00d31"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata/model.nkm",
+      "sha256": "264f493145ea596409e236bb4182af1613a43122ee1a4a99bcc079eb241fdb19"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata/session.nks.json",
+      "sha256": "b22cef7d52ca787807a181e3722289cd677b704af37f620cddf1c6022a9c3039"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata-b/model.nkm",
+      "sha256": "5f283cb6df89ade985398fc7bf020c61d8cd7c5cf910ba3cbd1b0999117f9c68"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata-b/session.nks.json",
+      "sha256": "ea9902d5b9e4236d12c52d628d5492e6131aa17d4a7fff7bb2d69bdb694c6fdd"
+    }
+  ],
+  "performance_baseline_symbol": "GeometryInstance::evaluate()",
+  "performance_candidate_symbol": "GeometryInstance::evaluate(GeometryEvaluation)",
+  "initial_sources": {
+    "src/runtime/geometry_scene.cpp": "1cdf635d41ad925c2b5a1965033bb2f4b33bce58400f17fe354f4eedb5a20446",
+    "src/runtime/playback.cpp": "fbfd6b0cf79ccbdd6a8267f1d1b9fd575f314f8f0386e1744f6c3824b2140c18",
+    "include/nekomote/runtime/geometry_scene.hpp": "10c8cc9833a6fecf28a1ec4930bd165ef4e76c61d5c595f033234cee6f9e3c3b",
+    "tools/anchor_audit/main.cpp": "81f3e26e9632d09a3c30ff398a0ff31a4a0a259e73cad68308fadad14e18920d",
+    "docs/validation/compound-review-2026-11-08/runtime_probe.cpp": "47325e3633bd382e8f5b81a63458414fc6c97c51e69e59a8858d4b6ca8194afd",
+    "docs/validation/anchor-evaluation-2026-11-10/renderer_probe.cpp": "38ef896e9193e72597eef396d0ce769865a5363d690aa2a0e400b134fe8c9b42",
+    "docs/validation/anchor-evaluation-2026-11-10/vulkan_probe.cpp": "b157170f552eb907a6f8cc3855b7cfef77beb050d1846eed6c88dda1343dfb44"
+  },
+  "initial_binaries": {
+    "baseline": "fe4f99e65f7140585eaf1496d83babd45e972194391d041a924da18bbd8fe9c3",
+    "runtime-final": "4e7c4dd198442346762e174448c195f2170189688ee90abaeed4c35e8617f1cc",
+    "audit-before": "7c722e322c7b3b394108232a0497d679373595858608d800845123871e499f97",
+    "sharded-final-audit": "aa16b18f97798329e6808b02c2174379c0853fb26ab2212e60ad4c150208930d",
+    "sessions-before": "c0bf16d8cde7b8a670f6478455f5c887cf2c7cc5bf66159117777524dd5f18af",
+    "gl-before": "f2df6a0ef81f7feda0ba326b7c30b240945d1341f424ab2c139c19c5af35530b",
+    "gl-final": "43da7679521ed1fdd32e26e7a12a960acadec4fc83a67045ad095956898b9fc0",
+    "vk-before": "efe5150f18d1111cb7a3a7c54e3e13fe0983f9b60a07fc894b53ec93bfd4965e",
+    "vk-final": "0f015cb461b9d753bd40b682edde04f9435b247755c49c57c10a14741d19fc3c"
+  },
+  "binaries": {
+    "baseline": "fe4f99e65f7140585eaf1496d83babd45e972194391d041a924da18bbd8fe9c3",
+    "runtime-kernel": "946ce4f90a93782a503db9030d7be6b69a6b841c5c6099d14a4479cabe265385",
+    "audit-before": "7c722e322c7b3b394108232a0497d679373595858608d800845123871e499f97",
+    "kernel-audit": "387796d33f74e1ef047bdef5182c232e685a7cfbdb91a635f2bddd669f254d27",
+    "sessions-before": "c0bf16d8cde7b8a670f6478455f5c887cf2c7cc5bf66159117777524dd5f18af",
+    "gl-before": "f2df6a0ef81f7feda0ba326b7c30b240945d1341f424ab2c139c19c5af35530b",
+    "gl-kernel": "b916a28b4e3b0901f94a7049946924af1dcd2801d8e0fc03a02cc4c91861cf3b",
+    "vk-before": "efe5150f18d1111cb7a3a7c54e3e13fe0983f9b60a07fc894b53ec93bfd4965e",
+    "vk-kernel": "18ab1976ca830806423b0739738457a0cdbe1c4a253fc17b158096837545f82f"
+  }
+}

@@ -21,6 +21,14 @@ namespace nekomote::runtime
 {
 namespace
 {
+// GCC/LTO can fold the polynomial into the vertex loop after locator evaluation
+// is introduced, increasing build_frame cost. Keep the measured kernel boundary;
+// arithmetic and accumulation order remain in the shared implementation.
+[[gnu::noinline]] std::array<double, 2> evaluate_prepared_patch(const detail::PreparedPatch& patch,
+                                                                double u, double v) noexcept
+{
+    return detail::evaluate_precise(patch, u, v);
+}
 struct ResourceTag
 {
 };
@@ -104,6 +112,7 @@ struct CompiledData
     std::vector<Clamp> clamps;
     std::vector<CompiledMask> masks;
     std::vector<GeometryLocator> locators;
+    std::vector<bool> locator_dependencies;
     std::size_t mask_command_capacity{0};
     std::vector<std::string> diagnostics;
     std::size_t vertex_capacity{0}, index_capacity{0};
@@ -715,6 +724,14 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
             if (data->nodes[i].exported_locator)
                 data->locators.push_back(
                     {NodeId{static_cast<std::uint32_t>(i)}, data->nodes[i].source_label});
+        // All transform/combination selection still runs during evaluation, so
+        // only locator ancestors need the world matrices and prepared curves.
+        data->locator_dependencies.resize(data->nodes.size());
+        for (std::size_t i = 1; i < data->nodes.size(); ++i)
+            if (data->nodes[i].exported_locator)
+                for (NodeId id{static_cast<std::uint32_t>(i)}; id.valid();
+                     id = data->nodes[id.value].parent)
+                    data->locator_dependencies[id.value] = true;
         result.scene = std::unique_ptr<const GeometryScene>(new GeometryScene(std::move(data)));
     }
     catch (const std::runtime_error& e)
@@ -753,6 +770,7 @@ struct GeometryInstance::Impl
     std::vector<DrawCommand> node_commands;
     std::vector<bool> used_masks, needed_mask_sources;
     bool evaluated{false}, frame_ready{false};
+    GeometryEvaluation evaluation{GeometryEvaluation::Frame};
     std::uint64_t frame_revision{0}, index_revision{0};
     std::shared_ptr<const FrameProducer> frame_producer{std::make_shared<FrameProducer>()};
     Vec2 origin{};
@@ -814,7 +832,7 @@ struct GeometryInstance::Impl
                                          y * static_cast<double>(s.domain_inverse[2])),
                       static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
                                          y * static_cast<double>(s.domain_inverse[3]))};
-        const auto result = detail::evaluate_precise(*s.world_patch, uv.x, uv.y);
+        const auto result = evaluate_prepared_patch(*s.world_patch, uv.x, uv.y);
         return {static_cast<float>(result[0]), static_cast<float>(result[1])};
     }
 };
@@ -865,7 +883,7 @@ float GeometryInstance::scale() const noexcept
 {
     return impl_->scale;
 }
-GeometryStatus GeometryInstance::evaluate() noexcept
+GeometryStatus GeometryInstance::evaluate(GeometryEvaluation scope) noexcept
 {
     auto& instance = *impl_;
     instance.primitives.clear();
@@ -876,6 +894,9 @@ GeometryStatus GeometryInstance::evaluate() noexcept
     std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
     instance.evaluated = false;
     instance.frame_ready = false;
+    if (scope != GeometryEvaluation::Frame && scope != GeometryEvaluation::Locators)
+        return {GeometryError::UnsupportedTransform, {}, {}};
+    instance.evaluation = scope;
     std::copy(instance.input.begin(), instance.input.end(), instance.parameters.begin());
     const auto& scene = instance.scene;
     for (const auto id : scene.mirrored_parameters)
@@ -987,6 +1008,10 @@ GeometryStatus GeometryInstance::evaluate() noexcept
                 combined = true;
             }
         }
+        // Outside the closure, selected poses and all evaluate-time errors above
+        // remain checked. No descendant in the closure can depend on this state.
+        if (scope == GeometryEvaluation::Locators && !scene.locator_dependencies[i])
+            continue;
         // Rigid parents accumulate before any curve. Curves are evaluated in
         // placed world coordinates, with saved control points and saved UVs.
         // Local deformation followed by Float32 translations changes physics
@@ -1107,6 +1132,8 @@ GeometryStatus GeometryInstance::evaluate() noexcept
             state.attachment_offset =
                 instance.deform_attachment(state.excluded_curve, anchor) - anchor;
         }
+        if (scope == GeometryEvaluation::Locators)
+            continue;
         int division = n.division;
         if (division == 0 && n.priority == 2 && r.kind == ResourceKind::Sprite)
             // Priority-two automatic density is the maximum active ancestor
@@ -1126,6 +1153,11 @@ GeometryStatus GeometryInstance::evaluate() noexcept
                                            state.depth,
                                            division,
                                            {}});
+    }
+    if (scope == GeometryEvaluation::Locators)
+    {
+        instance.evaluated = true;
+        return {};
     }
     // Transparent helpers can supply visible stencil alpha; retain only those
     // needed by a currently visible masked draw. No colour command is emitted.
@@ -1157,7 +1189,8 @@ std::span<const GeometryPrimitive> GeometryInstance::primitives() const noexcept
 }
 Vec2 GeometryInstance::sample_atlas_point(NodeId node, Vec2 atlas_pixel) const noexcept
 {
-    assert(impl_->evaluated && node.valid() && node.value < impl_->states.size());
+    assert(impl_->evaluated && impl_->evaluation == GeometryEvaluation::Frame && node.valid() &&
+           node.value < impl_->states.size());
     const auto& state = impl_->states[node.value];
     const auto& r = impl_->scene.resources[state.pose.resource.value];
     assert(state.pose.active && r.kind == ResourceKind::Sprite);
@@ -1205,6 +1238,9 @@ std::optional<GeometryNodeObservation> GeometryInstance::observe_node(NodeId id)
     const auto& instance = *impl_;
     if (!instance.evaluated || !id.valid() || id.value >= instance.states.size())
         return std::nullopt;
+    if (instance.evaluation == GeometryEvaluation::Locators &&
+        !instance.scene.locator_dependencies[id.value])
+        return std::nullopt;
     const auto& s = instance.states[id.value];
     GeometryNodeObservation result;
     result.parent = instance.scene.nodes[id.value].parent;
@@ -1238,7 +1274,7 @@ GeometryStatus GeometryInstance::build_frame() noexcept
     std::fill(instance.masks.begin(), instance.masks.end(), MaskDefinition{});
     std::fill(instance.node_commands.begin(), instance.node_commands.end(), DrawCommand{});
     std::fill(instance.used_masks.begin(), instance.used_masks.end(), false);
-    if (!instance.evaluated)
+    if (!instance.evaluated || instance.evaluation != GeometryEvaluation::Frame)
         return {GeometryError::UnsupportedTransform, {}, {}};
     for (const auto& p : instance.primitives)
         if (p.mesh_division == 0 && instance.states[p.node.value].mesh_path &&

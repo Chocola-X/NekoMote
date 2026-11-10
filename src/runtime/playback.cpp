@@ -280,7 +280,7 @@ PlaybackStatus PlaybackInstance::step_tick(PhysicsInputs inputs, float drag_frac
             if (const auto status = data.geometry.set_origin(data.physics_origin); !status)
                 return data.fail({PlaybackError::Geometry, {}, status, {}});
         }
-        const auto geometry_status = data.geometry.evaluate();
+        const auto geometry_status = data.geometry.evaluate(GeometryEvaluation::Locators);
         PhysicsStatus physics_status;
         if (geometry_status)
             physics_status = data.physics->step(data.geometry, inputs, drag);

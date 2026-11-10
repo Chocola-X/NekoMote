@@ -106,6 +106,7 @@ if(NEKOMOTE_BUILD_TOOLS)
     add_subdirectory(tools/playback_probe)
     add_subdirectory(tools/session_probe)
     add_subdirectory(tools/runtime_audit)
+    add_subdirectory(tools/anchor_audit)
 endif()
 
 if(NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_ABI)

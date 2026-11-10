@@ -1,0 +1,26 @@
+--- a/src/runtime/geometry_scene.cpp
++++ b/src/runtime/geometry_scene.cpp
+@@ -21,6 +21,14 @@
+ {
+ namespace
+ {
++// GCC/LTO can fold the polynomial into the vertex loop after locator evaluation
++// is introduced, increasing build_frame cost. Keep the measured kernel boundary;
++// arithmetic and accumulation order remain in the shared implementation.
++[[gnu::noinline]] std::array<double, 2> evaluate_prepared_patch(const detail::PreparedPatch& patch,
++                                                                double u, double v) noexcept
++{
++    return detail::evaluate_precise(patch, u, v);
++}
+ struct ResourceTag
+ {
+ };
+@@ -824,7 +832,7 @@
+                                          y * static_cast<double>(s.domain_inverse[2])),
+                       static_cast<float>(x * static_cast<double>(s.domain_inverse[1]) +
+                                          y * static_cast<double>(s.domain_inverse[3]))};
+-        const auto result = detail::evaluate_precise(*s.world_patch, uv.x, uv.y);
++        const auto result = evaluate_prepared_patch(*s.world_patch, uv.x, uv.y);
+         return {static_cast<float>(result[0]), static_cast<float>(result[1])};
+     }
+ };

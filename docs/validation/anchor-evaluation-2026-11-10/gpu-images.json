@@ -1,0 +1,661 @@
+{
+  "pairs": 108,
+  "all_png_bytes_equal": true,
+  "all_have_visible_alpha": true,
+  "width": 3840,
+  "height": 2160,
+  "images": [
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work0-final.png",
+      "byte_equal": true,
+      "sha256": "351edde783d194860c651127afad2ad8d899fcc36f9af30cc06532cb72829604"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "4d21c5c4636ed7caa6912ec09bbf07440d703fcdc9ff81cfa65e05ec767909c2"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "94aeb59bef5439db8b953361e8b26954e120f582da55a02c005e3e159d69ed4a"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work1-final.png",
+      "byte_equal": true,
+      "sha256": "63afc94628503efd9c23770b6be99509154603521c1a04819e2829c020bbb16c"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "4a0fff9164852563a43730dec7c9af5326df215ba9dedaf4e7f09e0ce11a3411"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "8c66a6a398897e0379d15901963a27f767e291fe04fdf72b1127e5369bef5eb1"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work2-final.png",
+      "byte_equal": true,
+      "sha256": "efd9fbf334734219bb2153372819d8e03baefe65b61aeb0b8c6ee40e60631f3b"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "bb2f69cc633e8644534e0e84d29b77b86c6c35e61f5c712078751b5cf5004ca9"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2695bac4a236b8a1898de404ff5bd3f0be9c8cb34a4dbbee5311fdc98e7f012a"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work3-final.png",
+      "byte_equal": true,
+      "sha256": "cb11fa829e8538c0a7132e2fe663b5d896e897fb13ce3ad6918978ae1e4dcfc2"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "e4f9f786fa693b4de8a60ea4bd5e000368cad93188d0889c827f507e6dc73e97"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-date-a-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "a5e269d4df889bd86e9a56380a493fa08fb388aca906bdbc2a08e7c65c2ec5af"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work0-final.png",
+      "byte_equal": true,
+      "sha256": "f27a5e13227a06d7a031bc7054116202bee521ade9f93941c8dafe573053073d"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "df77f56ff1298092bf43abb1de24a68fb9a76c6dbad6371575a16f23d3a6ccff"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "453f8cf2c0c8dddc163169b32e56a7cb134139d27acb2008556771027540f368"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work1-final.png",
+      "byte_equal": true,
+      "sha256": "d81b72c76cbd4c3d9a0eaf4b8dfaeb54884962f9fdd6539f2175822d228b196a"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "b0a3e5def4fa46c178613cd4e0895dd79fd4a321b6a8a9f49959080dae018825"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "1b257f36e5450f102299644c50a2214b06c1b7e4fe5792ece0f199cf245281fb"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work2-final.png",
+      "byte_equal": true,
+      "sha256": "78692e160c0aee058ae9b3a40b091a5bea89d0a5228f9768a7e04c787e7459f6"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "755b825a6525019c15a1614eec3ad73ea810091c9a8cdaca796410468f18868a"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "92f51ab16b3baeaf6802cb33d91bb5c0f65d18b1a9e0b4322f32c3dc7a17a30c"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work3-final.png",
+      "byte_equal": true,
+      "sha256": "4869fa682671eb29b2a2747dcbb14b49b6b0097fcc02e1d22c0fc52f47a195de"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "323dce324d15b5ce6267b586e517cbed2299edce7671ead2353b2b84def9428f"
+    },
+    {
+      "api": "gl",
+      "image": "chocola-wintermaid-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "e820b52faa75ddf99556723116e695f33ca44449123c8618887a340b6cb69215"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work0-final.png",
+      "byte_equal": true,
+      "sha256": "056d9f47dcc8871c769f0f12db7616cdcf833beea4b38db65640c3e4b6dbd227"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "8d72e535732fc2c11c81021e79ec2addaf08a5f7c4f9b7b698f140bf01ebbdf0"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "2cb99b9d1363ad128c782d810563a3105149b1ae3117452fc6b31739d2d980bc"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work1-final.png",
+      "byte_equal": true,
+      "sha256": "ce69f581ef8f62a4f9ccbd9a18d595b2f1dcd830959e98c89fc35cc06c697040"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "42beeb0424279adcf7297cd9de42e2f9ade37b862c473a045823e3e2bc407ca5"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "d33afe8a837a81dbb064ec59acf82d3a63c151a99b754bb3b25023395bace3c4"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work2-final.png",
+      "byte_equal": true,
+      "sha256": "b59d4a37a8c478f973e2df39ebb83ea9f69a40a72bc11d8c6692f3c9155f84c1"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "da61711bfd903c187c34a66ced14d816f97ee5f8017a5a41c7869c315e7a427d"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2228d967fd8f3919f7d3a96d7ab857389ae9956550230362cdea7f38928031dc"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work3-final.png",
+      "byte_equal": true,
+      "sha256": "35672523180694c1cebf131a59d81a56d065d4974a262695fbfe5919b4a3edbb"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "2fa71af2a5c376b37c5d2c02949b2e2f3da90322415ac3e0e65ea3079036638a"
+    },
+    {
+      "api": "gl",
+      "image": "maple-yukata-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "583147c1efaaf3348d2a24850efa0d7de1ca412715e931a46f24385f2a75ee42"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work0-final.png",
+      "byte_equal": true,
+      "sha256": "351edde783d194860c651127afad2ad8d899fcc36f9af30cc06532cb72829604"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "4d21c5c4636ed7caa6912ec09bbf07440d703fcdc9ff81cfa65e05ec767909c2"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "94aeb59bef5439db8b953361e8b26954e120f582da55a02c005e3e159d69ed4a"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work1-final.png",
+      "byte_equal": true,
+      "sha256": "63afc94628503efd9c23770b6be99509154603521c1a04819e2829c020bbb16c"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "4a0fff9164852563a43730dec7c9af5326df215ba9dedaf4e7f09e0ce11a3411"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "8c66a6a398897e0379d15901963a27f767e291fe04fdf72b1127e5369bef5eb1"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work2-final.png",
+      "byte_equal": true,
+      "sha256": "efd9fbf334734219bb2153372819d8e03baefe65b61aeb0b8c6ee40e60631f3b"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "bb2f69cc633e8644534e0e84d29b77b86c6c35e61f5c712078751b5cf5004ca9"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2695bac4a236b8a1898de404ff5bd3f0be9c8cb34a4dbbee5311fdc98e7f012a"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work3-final.png",
+      "byte_equal": true,
+      "sha256": "cb11fa829e8538c0a7132e2fe663b5d896e897fb13ce3ad6918978ae1e4dcfc2"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "e4f9f786fa693b4de8a60ea4bd5e000368cad93188d0889c827f507e6dc73e97"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-date-a-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "a5e269d4df889bd86e9a56380a493fa08fb388aca906bdbc2a08e7c65c2ec5af"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work0-final.png",
+      "byte_equal": true,
+      "sha256": "f27a5e13227a06d7a031bc7054116202bee521ade9f93941c8dafe573053073d"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "df77f56ff1298092bf43abb1de24a68fb9a76c6dbad6371575a16f23d3a6ccff"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "453f8cf2c0c8dddc163169b32e56a7cb134139d27acb2008556771027540f368"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work1-final.png",
+      "byte_equal": true,
+      "sha256": "d81b72c76cbd4c3d9a0eaf4b8dfaeb54884962f9fdd6539f2175822d228b196a"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "b0a3e5def4fa46c178613cd4e0895dd79fd4a321b6a8a9f49959080dae018825"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "1b257f36e5450f102299644c50a2214b06c1b7e4fe5792ece0f199cf245281fb"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work2-final.png",
+      "byte_equal": true,
+      "sha256": "78692e160c0aee058ae9b3a40b091a5bea89d0a5228f9768a7e04c787e7459f6"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "755b825a6525019c15a1614eec3ad73ea810091c9a8cdaca796410468f18868a"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "92f51ab16b3baeaf6802cb33d91bb5c0f65d18b1a9e0b4322f32c3dc7a17a30c"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work3-final.png",
+      "byte_equal": true,
+      "sha256": "4869fa682671eb29b2a2747dcbb14b49b6b0097fcc02e1d22c0fc52f47a195de"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "323dce324d15b5ce6267b586e517cbed2299edce7671ead2353b2b84def9428f"
+    },
+    {
+      "api": "gles",
+      "image": "chocola-wintermaid-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "e820b52faa75ddf99556723116e695f33ca44449123c8618887a340b6cb69215"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work0-final.png",
+      "byte_equal": true,
+      "sha256": "056d9f47dcc8871c769f0f12db7616cdcf833beea4b38db65640c3e4b6dbd227"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "8d72e535732fc2c11c81021e79ec2addaf08a5f7c4f9b7b698f140bf01ebbdf0"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "2cb99b9d1363ad128c782d810563a3105149b1ae3117452fc6b31739d2d980bc"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work1-final.png",
+      "byte_equal": true,
+      "sha256": "ce69f581ef8f62a4f9ccbd9a18d595b2f1dcd830959e98c89fc35cc06c697040"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "42beeb0424279adcf7297cd9de42e2f9ade37b862c473a045823e3e2bc407ca5"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "d33afe8a837a81dbb064ec59acf82d3a63c151a99b754bb3b25023395bace3c4"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work2-final.png",
+      "byte_equal": true,
+      "sha256": "b59d4a37a8c478f973e2df39ebb83ea9f69a40a72bc11d8c6692f3c9155f84c1"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "da61711bfd903c187c34a66ced14d816f97ee5f8017a5a41c7869c315e7a427d"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2228d967fd8f3919f7d3a96d7ab857389ae9956550230362cdea7f38928031dc"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work3-final.png",
+      "byte_equal": true,
+      "sha256": "35672523180694c1cebf131a59d81a56d065d4974a262695fbfe5919b4a3edbb"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "2fa71af2a5c376b37c5d2c02949b2e2f3da90322415ac3e0e65ea3079036638a"
+    },
+    {
+      "api": "gles",
+      "image": "maple-yukata-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "583147c1efaaf3348d2a24850efa0d7de1ca412715e931a46f24385f2a75ee42"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work0-final.png",
+      "byte_equal": true,
+      "sha256": "351edde783d194860c651127afad2ad8d899fcc36f9af30cc06532cb72829604"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "4d21c5c4636ed7caa6912ec09bbf07440d703fcdc9ff81cfa65e05ec767909c2"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "94aeb59bef5439db8b953361e8b26954e120f582da55a02c005e3e159d69ed4a"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work1-final.png",
+      "byte_equal": true,
+      "sha256": "63afc94628503efd9c23770b6be99509154603521c1a04819e2829c020bbb16c"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "4a0fff9164852563a43730dec7c9af5326df215ba9dedaf4e7f09e0ce11a3411"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "8c66a6a398897e0379d15901963a27f767e291fe04fdf72b1127e5369bef5eb1"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work2-final.png",
+      "byte_equal": true,
+      "sha256": "efd9fbf334734219bb2153372819d8e03baefe65b61aeb0b8c6ee40e60631f3b"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "bb2f69cc633e8644534e0e84d29b77b86c6c35e61f5c712078751b5cf5004ca9"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2695bac4a236b8a1898de404ff5bd3f0be9c8cb34a4dbbee5311fdc98e7f012a"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work3-final.png",
+      "byte_equal": true,
+      "sha256": "cb11fa829e8538c0a7132e2fe663b5d896e897fb13ce3ad6918978ae1e4dcfc2"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "e4f9f786fa693b4de8a60ea4bd5e000368cad93188d0889c827f507e6dc73e97"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-date-a-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "a5e269d4df889bd86e9a56380a493fa08fb388aca906bdbc2a08e7c65c2ec5af"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work0-final.png",
+      "byte_equal": true,
+      "sha256": "f27a5e13227a06d7a031bc7054116202bee521ade9f93941c8dafe573053073d"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "df77f56ff1298092bf43abb1de24a68fb9a76c6dbad6371575a16f23d3a6ccff"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "453f8cf2c0c8dddc163169b32e56a7cb134139d27acb2008556771027540f368"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work1-final.png",
+      "byte_equal": true,
+      "sha256": "d81b72c76cbd4c3d9a0eaf4b8dfaeb54884962f9fdd6539f2175822d228b196a"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "b0a3e5def4fa46c178613cd4e0895dd79fd4a321b6a8a9f49959080dae018825"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "1b257f36e5450f102299644c50a2214b06c1b7e4fe5792ece0f199cf245281fb"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work2-final.png",
+      "byte_equal": true,
+      "sha256": "78692e160c0aee058ae9b3a40b091a5bea89d0a5228f9768a7e04c787e7459f6"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "755b825a6525019c15a1614eec3ad73ea810091c9a8cdaca796410468f18868a"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "92f51ab16b3baeaf6802cb33d91bb5c0f65d18b1a9e0b4322f32c3dc7a17a30c"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work3-final.png",
+      "byte_equal": true,
+      "sha256": "4869fa682671eb29b2a2747dcbb14b49b6b0097fcc02e1d22c0fc52f47a195de"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "323dce324d15b5ce6267b586e517cbed2299edce7671ead2353b2b84def9428f"
+    },
+    {
+      "api": "vk",
+      "image": "chocola-wintermaid-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "e820b52faa75ddf99556723116e695f33ca44449123c8618887a340b6cb69215"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work0-final.png",
+      "byte_equal": true,
+      "sha256": "056d9f47dcc8871c769f0f12db7616cdcf833beea4b38db65640c3e4b6dbd227"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work0-tick29.png",
+      "byte_equal": true,
+      "sha256": "8d72e535732fc2c11c81021e79ec2addaf08a5f7c4f9b7b698f140bf01ebbdf0"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work0-tick89.png",
+      "byte_equal": true,
+      "sha256": "2cb99b9d1363ad128c782d810563a3105149b1ae3117452fc6b31739d2d980bc"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work1-final.png",
+      "byte_equal": true,
+      "sha256": "ce69f581ef8f62a4f9ccbd9a18d595b2f1dcd830959e98c89fc35cc06c697040"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work1-tick29.png",
+      "byte_equal": true,
+      "sha256": "42beeb0424279adcf7297cd9de42e2f9ade37b862c473a045823e3e2bc407ca5"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work1-tick89.png",
+      "byte_equal": true,
+      "sha256": "d33afe8a837a81dbb064ec59acf82d3a63c151a99b754bb3b25023395bace3c4"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work2-final.png",
+      "byte_equal": true,
+      "sha256": "b59d4a37a8c478f973e2df39ebb83ea9f69a40a72bc11d8c6692f3c9155f84c1"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work2-tick29.png",
+      "byte_equal": true,
+      "sha256": "da61711bfd903c187c34a66ced14d816f97ee5f8017a5a41c7869c315e7a427d"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work2-tick89.png",
+      "byte_equal": true,
+      "sha256": "2228d967fd8f3919f7d3a96d7ab857389ae9956550230362cdea7f38928031dc"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work3-final.png",
+      "byte_equal": true,
+      "sha256": "35672523180694c1cebf131a59d81a56d065d4974a262695fbfe5919b4a3edbb"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work3-tick29.png",
+      "byte_equal": true,
+      "sha256": "2fa71af2a5c376b37c5d2c02949b2e2f3da90322415ac3e0e65ea3079036638a"
+    },
+    {
+      "api": "vk",
+      "image": "maple-yukata-work3-tick89.png",
+      "byte_equal": true,
+      "sha256": "583147c1efaaf3348d2a24850efa0d7de1ca412715e931a46f24385f2a75ee42"
+    }
+  ],
+  "candidate_binaries": [
+    "gl-kernel",
+    "vk-kernel"
+  ]
+}

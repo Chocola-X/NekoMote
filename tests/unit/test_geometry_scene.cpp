@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -378,6 +379,107 @@ TEST_CASE("Geometry key intervals follow jumps reversals and inactive boundaries
         }
         for (std::size_t i = 0; i < actual.commands.size(); ++i)
             REQUIRE(actual.commands[i].texture == expected.commands[i].texture);
+    }
+}
+
+TEST_CASE("Locator evaluation retains anchors errors and full frame boundary", "[runtime][scene]")
+{
+    using namespace runtime;
+    auto asset = interactive_rig();
+    const auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance full(*compiled.scene), partial(*compiled.scene);
+    for (float value : {0.0f, .5f, 1.0f, .25f, 0.0f})
+    {
+        for (auto* instance : {&full, &partial})
+        {
+            REQUIRE(instance->set_parameter(compiled.scene->find_variable("pick"), value));
+            REQUIRE(instance->set_origin({31, -27}));
+            REQUIRE(instance->set_scale(.75f));
+        }
+        REQUIRE(full.evaluate());
+        REQUIRE(partial.evaluate(GeometryEvaluation::Locators));
+        for (auto locator : compiled.scene->locators())
+        {
+            const auto a = full.sample_locator(locator.node),
+                       b = partial.sample_locator(locator.node);
+            REQUIRE(a.status.error == b.status.error);
+            REQUIRE(a.state == b.state);
+            REQUIRE(a.position == b.position);
+        }
+        REQUIRE(partial.primitives().empty());
+        REQUIRE_FALSE(partial.build_frame());
+        REQUIRE(partial.frame().commands.empty());
+        REQUIRE(partial.evaluate());
+        REQUIRE(partial.build_frame());
+        REQUIRE(full.build_frame());
+        REQUIRE(partial.frame().vertices.size() == full.frame().vertices.size());
+    }
+    // Unrelated selected errors must still reject at the same node before physics.
+    asset.parts[2].layers[0].frame_list[0].type = 1;
+    const auto invalid = compile_geometry_scene(asset);
+    REQUIRE(invalid.scene);
+    GeometryInstance a(*invalid.scene), b(*invalid.scene);
+    for (float value : {0.0f, 1.0f, 0.0f})
+    {
+        REQUIRE(a.set_parameter(invalid.scene->find_variable("pick"), value));
+        REQUIRE(b.set_parameter(invalid.scene->find_variable("pick"), value));
+        const auto x = a.evaluate(), y = b.evaluate(GeometryEvaluation::Locators);
+        REQUIRE(x.error ==
+                (value == 1 ? GeometryError::UnsupportedTransform : GeometryError::None));
+        REQUIRE(x.error == y.error);
+        REQUIRE(x.node == y.node);
+    }
+}
+
+TEST_CASE("Locator evaluation preserves unrelated combination validation", "[runtime][scene]")
+{
+    using namespace runtime;
+    auto asset = rig();
+    asset.parts.resize(1);
+    FrameContent blank;
+    blank.src = field(std::string{"blank"});
+    blank.icon = field(std::string{"16:16:8:8"});
+    auto helper = layer("unrelated combination", 0, blank);
+    helper.mesh_combine = 1;
+    auto nested = layer("nested unrelated combination", 0, blank);
+    nested.mesh_combine = 1;
+    nested.parameterize = field(0);
+    nested.parameter = {{"pick", 0, 1, 1, 0, true}};
+    auto invalid = blank;
+    invalid.coord = field(std::array<float, 3>{1, 0, 0});
+    nested.frame_list.push_back({1, 2, field(invalid)});
+    nested.children = {layer("sprite", 0, sprite())};
+    helper.children = {nested};
+    auto parent = layer("domain", 0, blank);
+    parent.children = {helper};
+    asset.parts[0].layers = {layer("independent locator", 1, FrameContent{}), parent};
+    const auto compiled = compile_geometry_scene(asset);
+    REQUIRE(compiled.scene);
+    GeometryInstance full(*compiled.scene), partial(*compiled.scene);
+    for (float pick : {0.0f, 1.0f, 0.0f})
+    {
+        REQUIRE(full.set_parameter(compiled.scene->find_variable("pick"), pick));
+        REQUIRE(partial.set_parameter(compiled.scene->find_variable("pick"), pick));
+        const auto a = full.evaluate(), b = partial.evaluate(GeometryEvaluation::Locators);
+        REQUIRE(a.error ==
+                (pick == 1 ? GeometryError::UnsupportedCombination : GeometryError::None));
+        REQUIRE(a.error == b.error);
+        REQUIRE(a.node == b.node);
+        REQUIRE_FALSE(partial.build_frame());
+        if (pick == 0)
+        {
+            REQUIRE(full.build_frame());
+            REQUIRE(partial.evaluate());
+            REQUIRE(partial.build_frame());
+            REQUIRE(full.frame().vertices.size() == partial.frame().vertices.size());
+            REQUIRE_FALSE(full.frame().vertices.empty());
+            for (std::size_t i = 0; i < full.frame().vertices.size(); ++i)
+            {
+                REQUIRE(full.frame().vertices[i].x == partial.frame().vertices[i].x);
+                REQUIRE(full.frame().vertices[i].y == partial.frame().vertices[i].y);
+            }
+        }
     }
 }
 
@@ -3662,7 +3764,10 @@ TEST_CASE("Combined nested surfaces match submitted reference corner positions",
         auto helper = layer("combined helper", 0, content(0, 0, true, false, -0.1f));
         helper.mesh_combine = 1;
         helper.mesh_sync_child_mask = 8;
-        helper.children = {tile};
+        // A non-neutral exported origin exercises the same nested combination
+        // and excluded attachment dependencies as the reference sprite.
+        auto marker = layer("nested locator", 1, tile_content);
+        helper.children = {tile, marker};
         auto inner = layer("inner boundary", 0,
                            content(5, 6, sample.at("own_curve").get<bool>(), true, 0.15f));
         inner.inherit_mask = 0x7fc;
@@ -3686,6 +3791,19 @@ TEST_CASE("Combined nested surfaces match submitted reference corner positions",
         runtime::GeometryInstance instance(*compiled.scene);
         REQUIRE(instance.evaluate());
         REQUIRE(instance.primitives().size() == 1);
+        runtime::GeometryInstance partial(*compiled.scene);
+        REQUIRE(partial.evaluate(runtime::GeometryEvaluation::Locators));
+        REQUIRE(compiled.scene->locators().size() == 1);
+        const auto locator = compiled.scene->locators()[0].node;
+        const auto a = instance.sample_locator(locator), b = partial.sample_locator(locator);
+        REQUIRE(a.status);
+        REQUIRE(b.status);
+        REQUIRE(a.state == runtime::LocatorState::Active);
+        REQUIRE(a.state == b.state);
+        REQUIRE(std::bit_cast<std::uint32_t>(a.position.x) ==
+                std::bit_cast<std::uint32_t>(b.position.x));
+        REQUIRE(std::bit_cast<std::uint32_t>(a.position.y) ==
+                std::bit_cast<std::uint32_t>(b.position.y));
         for (const auto& point : sample.at("samples"))
         {
             const auto actual = instance.sample_atlas_point(

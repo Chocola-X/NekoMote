@@ -1,0 +1,27 @@
+[
+  {
+    "variant": "baseline",
+    "binary": "baseline",
+    "build_frame_bytes": 6506,
+    "kernel_or_stack_calls": [
+      "5e135:\te8 96 b3 ff ff       \tcall   594d0 <std::array<double, 2ul> nekomote::runtime::detail::evaluate_precise<nekomote::runtime::detail::PatchControl>(std::array<nekomote::runtime::detail::PatchControl, 16ul> const&, double, double)>"
+    ]
+  },
+  {
+    "variant": "initial",
+    "binary": "runtime-final",
+    "build_frame_bytes": 7297,
+    "kernel_or_stack_calls": [
+      "2f0cd:\te8 be 52 fd ff       \tcall   4390 <__stack_chk_fail@plt>"
+    ]
+  },
+  {
+    "variant": "retained",
+    "binary": "runtime-kernel",
+    "build_frame_bytes": 6678,
+    "kernel_or_stack_calls": [
+      "2d397:\te8 34 cc fe ff       \tcall   19fd0 <nekomote::runtime::(anonymous namespace)::evaluate_prepared_patch(std::array<nekomote::runtime::detail::PatchControl, 16ul> const&, double, double) [clone .lto_priv.0]>",
+      "2e3b9:\te8 d2 5f fd ff       \tcall   4390 <__stack_chk_fail@plt>"
+    ]
+  }
+]

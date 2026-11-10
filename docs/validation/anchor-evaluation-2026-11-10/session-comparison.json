@@ -1,0 +1,29 @@
+{
+  "all_outcomes_equal": true,
+  "canonical_sha256": "13c6cf9ea35f83c8f955a59547e639524be799657c03e94e22a3b0f5b9e0c80b",
+  "models": [
+    "azuki/casual",
+    "chocola/casual-b-no-bell",
+    "chocola/date-a",
+    "chocola/wintermaid",
+    "coconut/casual",
+    "maple/yukata",
+    "vanilla/wintermaid"
+  ],
+  "cases": 150,
+  "successful_cases": 150,
+  "successful_display_steps": 54000,
+  "rejected_cases": 0,
+  "error_counts": {
+    "0": 150
+  },
+  "controller": [
+    {
+      "switch_hash": "5a7558c8c4154c96"
+    },
+    {
+      "switches": 24,
+      "fading_frames": 211
+    }
+  ]
+}

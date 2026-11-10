@@ -93,6 +93,11 @@ struct GeometryNodeObservation
     std::array<float, 4> domain_inverse{};
     Patch unit_patch{}, world_patch{};
 };
+enum class GeometryEvaluation
+{
+    Frame,
+    Locators
+};
 class GeometryInstance;
 struct GeometryCompileResult;
 // Diagnostic static scene, not a certified player. Source bindings/resources
@@ -146,13 +151,15 @@ class GeometryInstance
     // placement and the render view. Positive finite scale/inverse required.
     GeometryStatus set_scale(float scale) noexcept;
     float scale() const noexcept;
-    GeometryStatus evaluate() noexcept; // fixed variable pose, time=0; no heap allocation
+    // Locators computes world transforms/curves only for exported locator ancestors.
+    // All selected poses/combinations still validate; build_frame requires a later Frame pass.
+    GeometryStatus evaluate(GeometryEvaluation scope = GeometryEvaluation::Frame) noexcept;
     std::span<const GeometryPrimitive> primitives() const noexcept;
     // node must come from this instance's current primitives(). Samples an icon
     // in atlas pixel coordinates; useful for geometry evidence and inspection.
     Vec2 sample_atlas_point(NodeId node, Vec2 atlas_pixel) const noexcept;
     // ID must come from scene.locators(). Inactive resource branches are explicit.
-    // Valid after evaluate(); never substitutes zero for unverified inheritance.
+    // Valid after either evaluation scope; never substitutes zero for unverified inheritance.
     // Supports full inheritance and verified zero-local-origin type-one markers
     // with mask 0x200020c.
     LocatorSample sample_locator(NodeId node) const noexcept;
@@ -161,6 +168,7 @@ class GeometryInstance
     // Unknown automatic tessellation explicitly fails instead of drawing a quad.
     GeometryStatus build_frame() noexcept;
     RenderFrame frame() const noexcept;
+    // After Locators evaluation only nodes in its dependency closure are available.
     std::optional<GeometryNodeObservation> observe_node(NodeId id) const noexcept;
 
   private:
