@@ -1,0 +1,12 @@
+{
+  "baseline/libnekomote_plasma_qml.so": "86d8bb7f5911394e5c9df00f34b49d3a7f84618ee3c14915017c22d03234c8e5",
+  "baseline/pacing_measure": "4edf5f4d9f0f29bfb50121d4a1fe9da0cb6de2dcc80a3269b456dbf775d2b8f1",
+  "baseline/nekomote_qt_quick_host": "66be0761ec3fe516a4be55ba9ef5829c5c8de01ab35092c14d6c6f80f7d14e76",
+  "candidate/libnekomote_plasma_qml.so": "f256f54587d07450d88b2248194a431bf06784992ebc50e56819c985c6b9d7ae",
+  "candidate/nekomote_plasma_frame_pacing": "efd3516bccef4fd7b93adbb0186a292e6df093b580b8e01dbc607b371fa4405d",
+  "candidate/nekomote_qt_quick_host": "68d3bde70e84fa60d1b86efe1e24f0bf69abe3f819793574a32b8269c7502df9",
+  "pilot-candidate/libnekomote_plasma_qml.so": "1e153ffa2651ab485dbdb61d71e50c831a237a9d5adbb263ff7f9777945d4649",
+  "tests/render/plasma_frame_pacing.cpp": "1ef0db4806196288e7f562288ffd47e3572b9860e04ffc916956097ae19af03d",
+  "assets/characters/chocola/date-a/model.nkm": "c9408bb022d87c71be740e8b3154e921b0a36aa39b8562fd5c51b14276ccad3e",
+  "assets/characters/chocola/date-a/session.nks.json": "cc418a47c393847a0ddf19d200722da5493d18be29d88af4f61a4dd6b4e28769"
+}

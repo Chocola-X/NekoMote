@@ -74,6 +74,13 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             state_->renderer_destroyed.fetch_add(1);
         }
     }
+    QOpenGLFramebufferObject* createFramebufferObject(const QSize& size) override
+    {
+        // Qt may replace the FBO without changing its size (or GL handle).
+        // Application presentation state alone cannot validate its contents.
+        framebuffer_dirty_ = true;
+        return QQuickFramebufferObject::Renderer::createFramebufferObject(size);
+    }
     void synchronize(QQuickFramebufferObject* base) override
     {
         auto* item = static_cast<WallpaperItemBase*>(base);
@@ -123,6 +130,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             {
                 state_->loaded = false;
                 state_->initialized_time = false;
+                clock_attached_ = false;
             }
             config_applied_ = false;
             faulted_ = false;
@@ -280,7 +288,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             }
             const auto now = std::chrono::steady_clock::now();
             const bool first = !state_->initialized_time;
-            if (first || !clock_attached_ || state_->paused != paused_)
+            if (!clock_attached_ || state_->paused != paused_ || (first && !paused_))
             {
                 check(nekomote_wallpaper_set_paused(state_->wallpaper.get(), paused_ ? 1 : 0),
                       "set playback state");
@@ -303,34 +311,43 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                       "advance wallpaper");
             state_->initialized_time = state_->initialized_time || !paused_;
             state_->previous_time = now;
+            // needs_render tracks presentation changes, not animation playback.
+            // Keep advancing/polling and dispatching input before this check;
+            // only a paused, unchanged frame can reuse the existing FBO.
+            if (framebuffer_dirty_ || !nekomote_wallpaper_paused(state_->wallpaper.get()) ||
+                nekomote_wallpaper_needs_render(state_->wallpaper.get()))
             {
-                auto* gl = QOpenGLContext::currentContext()->functions();
-                gl->glDisable(GL_SCISSOR_TEST);
-                gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-                gl->glClearColor(0, 0, 0, 0);
-                gl->glClear(GL_COLOR_BUFFER_BIT);
-            }
+                {
+                    auto* gl = QOpenGLContext::currentContext()->functions();
+                    gl->glDisable(GL_SCISSOR_TEST);
+                    gl->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                    gl->glClearColor(0, 0, 0, 0);
+                    gl->glClear(GL_COLOR_BUFFER_BIT);
+                }
 #if defined(NEKOMOTE_HAS_VULKAN)
-            if (bridge_)
-                check(nekomote_wallpaper_set_vk_target(state_->wallpaper.get(),
-                                                       bridge_->begin_frame(size)),
-                      "set Vulkan frame target");
-            else
+                if (bridge_)
+                    check(nekomote_wallpaper_set_vk_target(state_->wallpaper.get(),
+                                                           bridge_->begin_frame(size)),
+                          "set Vulkan frame target");
+                else
 #endif
-                nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
-                                                     framebufferObject()->handle());
-            check(nekomote_wallpaper_render_frame(state_->wallpaper.get()), "render frame");
-            check(nekomote_wallpaper_render_ui(state_->wallpaper.get(),
-                                               paused_ ? 0.0f : static_cast<float>(elapsed)),
-                  "render UI");
+                    nekomote_wallpaper_set_render_target(state_->wallpaper.get(),
+                                                         framebufferObject()->handle());
+                check(nekomote_wallpaper_render_frame(state_->wallpaper.get()), "render frame");
+                check(nekomote_wallpaper_render_ui(state_->wallpaper.get(),
+                                                   paused_ ? 0.0f : static_cast<float>(elapsed)),
+                      "render UI");
+#if defined(NEKOMOTE_HAS_VULKAN)
+                if (bridge_)
+                    bridge_->present(framebufferObject()->handle());
+#endif
+                framebuffer_dirty_ = false;
+                state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
+            }
             const int fps_limit = nekomote_wallpaper_fps_limit(state_->wallpaper.get());
             if (fps_limit < 0)
                 throw std::runtime_error("query wallpaper frame limit");
             state_->fps_limit.store(fps_limit, std::memory_order_release);
-#if defined(NEKOMOTE_HAS_VULKAN)
-            if (bridge_)
-                bridge_->present(framebufferObject()->handle());
-#endif
             if (trace_frames_ > 0)
             {
                 --trace_frames_;
@@ -348,7 +365,6 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
                     std::chrono::duration<double, std::micro>(trace_end - trace_start).count(),
                     elapsed);
             }
-            state_->rendered_frames.fetch_add(1, std::memory_order_relaxed);
             if (notify_frames_ && state_->initialized_time)
             {
                 diagnostic_delta_ = elapsed;
@@ -443,6 +459,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     bool config_received_{false}, config_applied_{false};
     bool assets_applied_{false};
     bool needs_rebuild_{false};
+    bool framebuffer_dirty_{true};
     std::filesystem::path assets_dir_, config_path_, model_path_, session_path_;
     std::uint32_t seed_{0};
     int fixed_steps_{0}, trace_frames_{0};

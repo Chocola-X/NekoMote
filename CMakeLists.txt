@@ -200,6 +200,15 @@ if(NEKOMOTE_BUILD_TESTS)
                 $<TARGET_FILE:nekomote_plasma_item_safety>)
         set_tests_properties(plasma_item_safety PROPERTIES LABELS "qt;gpu" TIMEOUT 30)
     endif()
+    if(TARGET nekomote_plasma_frame_pacing)
+        find_program(NEKOMOTE_FLOCK_PACING flock REQUIRED)
+        add_test(NAME plasma_frame_pacing
+            COMMAND ${NEKOMOTE_FLOCK_PACING} ${CMAKE_SOURCE_DIR}/build/gpu-validation.lock
+                $<TARGET_FILE:nekomote_plasma_frame_pacing>)
+        set_tests_properties(plasma_frame_pacing PROPERTIES LABELS "qt;gpu;integration"
+            SKIP_RETURN_CODE 77 TIMEOUT 60
+            ENVIRONMENT "NEKOMOTE_TEST_ASSETS_DIR=${PROJECT_SOURCE_DIR}/assets;QT_SCALE_FACTOR=1")
+    endif()
     if(TARGET nekomote_plasma_config_reject)
         add_test(NAME plasma_config_reject
             COMMAND $<TARGET_FILE:nekomote_plasma_config_reject>)

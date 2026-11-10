@@ -107,6 +107,13 @@ if(NEKOMOTE_BUILD_PLASMA_PROBE)
 
 endif() # NEKOMOTE_BUILD_PLASMA_PROBE
 
+# These contracts need Qt Quick, not the optional KPackage diagnostic host.
+if(NEKOMOTE_BUILD_TESTS)
+    add_executable(nekomote_plasma_frame_pacing ../../tests/render/plasma_frame_pacing.cpp)
+    target_link_libraries(nekomote_plasma_frame_pacing PRIVATE
+        nekomote::plasma_qml Qt6::Quick nekomote_warnings)
+endif()
+
 # Install layout:
 #   <prefix>/lib/libnekomote_plasma_qml.so
 #   <prefix>/qml/NekoMote/Wallpaper/{qmldir,qmltypes,plugin.so}

@@ -1,0 +1,11 @@
+context=desktop version=3.3 screen_platform=xcb
+phase=limited60 wall_s=0.250201 cpu_s=0.012755 frames=14 timer_ticks=15 requests=0 present_p50_ms=16.960 present_p95_ms=17.853 present_p99_ms=17.853 peak_rss_kib=255660
+phase=paused_redundant wall_s=0.261329 cpu_s=0.010770 frames=0 timer_ticks=0 requests=39 present_p50_ms=16.572 present_p95_ms=16.765 present_p99_ms=16.765 peak_rss_kib=255660
+context=desktop version=3.3 screen_platform=xcb
+phase=paused_recreated wall_s=0.260570 cpu_s=0.005899 frames=0 timer_ticks=0 requests=37 present_p50_ms=16.420 present_p95_ms=17.483 present_p99_ms=17.483 peak_rss_kib=270336
+phase=paused_reloaded wall_s=0.250549 cpu_s=0.008451 frames=0 timer_ticks=0 requests=41 present_p50_ms=10.641 present_p95_ms=16.717 present_p99_ms=16.717 peak_rss_kib=280224
+phase=unlimited wall_s=0.250271 cpu_s=0.010179 frames=15 timer_ticks=0 requests=0 present_p50_ms=16.625 present_p95_ms=16.758 present_p99_ms=16.758 peak_rss_kib=280224
+phase=unlimited wall_s=0.250715 cpu_s=0.009292 frames=15 timer_ticks=0 requests=0 present_p50_ms=16.580 present_p95_ms=17.489 present_p99_ms=17.489 peak_rss_kib=280224
+context=desktop version=3.3 screen_platform=xcb
+context=desktop version=3.3 screen_platform=xcb
+frame pacing, pause, resume, hide, resize and recreation PASS

@@ -31,13 +31,7 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
     connect(timer_, &QTimer::timeout, this,
             [this]
             {
-                const int fps_limit = state_->fps_limit.load(std::memory_order_acquire);
-                const int interval =
-                    fps_limit == 0
-                        ? 0
-                        : (fps_limit > 0 ? std::max(1, (1000 + fps_limit / 2) / fps_limit) : 17);
-                if (timer_->interval() != interval)
-                    timer_->setInterval(interval);
+                start_timer();
                 update();
             });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
@@ -340,6 +334,7 @@ void NekoWallpaperItem::attach_window(QQuickWindow* host)
         host_window_->removeEventFilter(this);
     for (const auto& connection : window_connections_)
         disconnect(connection);
+    window_connections_[3] = {};
     host_window_ = host;
     backend_checked_ = false;
     ++playback_revision_;
@@ -417,7 +412,42 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32
 
 void NekoWallpaperItem::start_timer()
 {
-    if (timer_ && !timer_->isActive() && !effective_paused_)
+    if (!timer_ || effective_paused_)
+        return;
+    const int fps_limit = state_->fps_limit.load(std::memory_order_acquire);
+    if (fps_limit == 0)
+    {
+        stop_timer();
+        if (!window_connections_[3] && host_window_)
+        {
+            window_connections_[3] = connect(
+                host_window_.data(), &QQuickWindow::frameSwapped, this,
+                [this, source = host_window_]
+                {
+                    if (source != host_window_ || effective_paused_)
+                        return;
+                    // Unlimited playback requests one next frame after submission.
+                    // A zero-interval GUI timer otherwise spins between submissions.
+                    // Also restore the timer when the panel switches back to a limit.
+                    start_timer();
+                    if (state_->fps_limit.load(std::memory_order_acquire) == 0)
+                        update();
+                },
+                Qt::QueuedConnection);
+        }
+        return;
+    }
+    // Finite playback already has a timer. Avoid queueing a GUI notification on
+    // every host submission (including submissions caused by other items).
+    if (window_connections_[3])
+    {
+        disconnect(window_connections_[3]);
+        window_connections_[3] = {};
+    }
+    const int interval = fps_limit > 0 ? std::max(1, (1000 + fps_limit / 2) / fps_limit) : 17;
+    if (timer_->interval() != interval)
+        timer_->setInterval(interval);
+    if (!timer_->isActive())
         timer_->start();
 }
 

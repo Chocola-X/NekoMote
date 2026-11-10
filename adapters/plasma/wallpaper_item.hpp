@@ -103,6 +103,6 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     QTimer* timer_{nullptr};
     bool backend_checked_{false};
     QPointer<QQuickWindow> host_window_;
-    std::array<QMetaObject::Connection, 3> window_connections_{};
+    std::array<QMetaObject::Connection, 4> window_connections_{};
 };
 } // namespace nekomote::plasma

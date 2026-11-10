@@ -1,0 +1,11 @@
+context=desktop version=3.3 screen_platform=wayland
+phase=limited60 wall_s=0.251066 cpu_s=0.024176 frames=15 timer_ticks=15 requests=0 present_p50_ms=17.068 present_p95_ms=17.199 present_p99_ms=17.199 peak_rss_kib=286092
+phase=paused_redundant wall_s=0.250902 cpu_s=0.017053 frames=0 timer_ticks=0 requests=42 present_p50_ms=16.248 present_p95_ms=17.215 present_p99_ms=17.215 peak_rss_kib=286092
+context=desktop version=3.3 screen_platform=wayland
+phase=paused_recreated wall_s=0.250326 cpu_s=0.011042 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.726 present_p95_ms=17.108 present_p99_ms=17.108 peak_rss_kib=303632
+phase=paused_reloaded wall_s=0.250658 cpu_s=0.012980 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.210 present_p95_ms=17.315 present_p99_ms=17.315 peak_rss_kib=314636
+phase=unlimited wall_s=0.250699 cpu_s=0.020274 frames=15 timer_ticks=0 requests=0 present_p50_ms=16.617 present_p95_ms=17.466 present_p99_ms=17.466 peak_rss_kib=316048
+phase=unlimited wall_s=0.250985 cpu_s=0.021231 frames=16 timer_ticks=0 requests=0 present_p50_ms=16.436 present_p95_ms=17.598 present_p99_ms=17.598 peak_rss_kib=320160
+context=desktop version=3.3 screen_platform=wayland
+context=desktop version=3.3 screen_platform=wayland
+frame pacing, pause, resume, hide, resize and recreation PASS

@@ -1,0 +1,27 @@
+.............FF
+======================================================================
+FAIL: test_lifecycle_30_steps (tests.reference_capture.test_qt_quick_host.LifecycleCapture.test_lifecycle_30_steps) (gl_api='desktop')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/run/media/chocola/MIKU/NekoMote/tests/reference_capture/test_qt_quick_host.py", line 159, in test_lifecycle_30_steps
+    self.assertEqual(r.returncode, 0, r.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: -11 != 0 : Qt platform=wayland
+Qt context=OpenGL version=3.3 profile=1
+
+
+======================================================================
+FAIL: test_lifecycle_30_steps (tests.reference_capture.test_qt_quick_host.LifecycleCapture.test_lifecycle_30_steps) (gl_api='gles')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/run/media/chocola/MIKU/NekoMote/tests/reference_capture/test_qt_quick_host.py", line 159, in test_lifecycle_30_steps
+    self.assertEqual(r.returncode, 0, r.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: -11 != 0 : Qt platform=wayland
+Qt context=OpenGL ES version=3.2 profile=0
+
+
+----------------------------------------------------------------------
+Ran 14 tests in 6.294s
+
+FAILED (failures=2)

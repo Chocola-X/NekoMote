@@ -1,0 +1,11 @@
+context=gles version=3.2 screen_platform=wayland
+phase=limited60 wall_s=0.250112 cpu_s=0.021306 frames=14 timer_ticks=15 requests=0 present_p50_ms=16.709 present_p95_ms=17.262 present_p99_ms=17.262 peak_rss_kib=376608
+phase=paused_redundant wall_s=0.251007 cpu_s=0.021512 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.396 present_p95_ms=17.380 present_p99_ms=17.380 peak_rss_kib=376608
+context=gles version=3.2 screen_platform=wayland
+phase=paused_recreated wall_s=0.251039 cpu_s=0.012035 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.782 present_p95_ms=17.182 present_p99_ms=17.182 peak_rss_kib=390404
+phase=paused_reloaded wall_s=0.250209 cpu_s=0.014596 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.960 present_p95_ms=17.334 present_p99_ms=17.334 peak_rss_kib=397096
+phase=unlimited wall_s=0.250530 cpu_s=0.013758 frames=15 timer_ticks=0 requests=0 present_p50_ms=17.056 present_p95_ms=17.396 present_p99_ms=17.396 peak_rss_kib=398160
+phase=unlimited wall_s=0.250223 cpu_s=0.013450 frames=15 timer_ticks=0 requests=0 present_p50_ms=17.003 present_p95_ms=17.213 present_p99_ms=17.213 peak_rss_kib=398332
+context=gles version=3.2 screen_platform=wayland
+context=gles version=3.2 screen_platform=wayland
+frame pacing, pause, resume, hide, resize and recreation PASS
