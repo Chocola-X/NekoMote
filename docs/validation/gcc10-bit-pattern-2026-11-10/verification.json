@@ -1,0 +1,110 @@
+{
+  "baseline_commit": "5d75c872b54d5f6466c890b481dc56de4cef596f",
+  "compiler": "Ubuntu GCC 10.5.0-1ubuntu1~20.04, libstdc++10",
+  "host_libraries": true,
+  "full_focal_sysroot": false,
+  "architectures_tested": [
+    "x86_64"
+  ],
+  "source_checks": {
+    "tests/unit/test_geometry_scene.cpp": {
+      "before_exit": 1,
+      "after_exit": 0
+    },
+    "tools/anchor_audit/main.cpp": {
+      "before_exit": 1,
+      "after_exit": 0
+    }
+  },
+  "ci_logs": {
+    "evidence-native20-aarch64.zip": {
+      "sha256": "34ac2ca88d4368e3d1ca89a2ceffe2d07aaa476e2d03ffa3db6365f93c60eb9d",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    },
+    "evidence-native20-x86_64.zip": {
+      "sha256": "fceabef01754d2f9a79a32153242077f0d6ae20e81f49ab1fc73e758970e1b49",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    },
+    "evidence-plasma5-aarch64.zip": {
+      "sha256": "96f0713179d030e7cb00a87037bd511e90bc344b0dfa2991d1a2a24b878f20b6",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    },
+    "evidence-plasma5-x86_64.zip": {
+      "sha256": "c658e1557ee5498ad4a09b92308a12449af3b4f1d26caedc0fdf89e893356318",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    },
+    "evidence-x11-aarch64.zip": {
+      "sha256": "b7426fe41fce56dc48c43a8df08b0ec2b01a97c3d805eb400b3fe87ed1bd1b8f",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    },
+    "evidence-x11-x86_64.zip": {
+      "sha256": "af44ed8c09907773f6bb99706e9ad859082dd3ab4a61954f8776b36bfb2eba6c",
+      "errors": [
+        "expected primary-expression before ‘>’ token",
+        "‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?"
+      ]
+    }
+  },
+  "packages": {
+    "cpp-10_10.5.0-1ubuntu1~20.04_amd64.deb": "5ca3be09f0ad34b3627ead2a4cdbd1dd8589e209a456c8dbbca7e1971e8bd871",
+    "g++-10_10.5.0-1ubuntu1~20.04_amd64.deb": "97107e42e3f0864811c809c8c3b7251af6c971395338f9ea8d58d916f724df95",
+    "gcc-10_10.5.0-1ubuntu1~20.04_amd64.deb": "cb987362235a84e00f13586f84fee48b1a7bd59c8207d86a238b25e7e0843271",
+    "libgcc-10-dev_10.5.0-1ubuntu1~20.04_amd64.deb": "ebe5e967fca32ea5811946180f7822ee749857861eadaa29514e65857ce3b897",
+    "libgcc-s1_10.5.0-1ubuntu1~20.04_amd64.deb": "4aa7b9c9f3225df65a750ae0ff5c890fc6108c82a609b3c5abd45d211838bf3c",
+    "libisl22_0.22.1-1_amd64.deb": "67cadab06a50a29cde11c1c1d02847afbae6f0465686481c9106577777b88a44",
+    "libstdc++-10-dev_10.5.0-1ubuntu1~20.04_amd64.deb": "106ae470c9b34785f1b1ff06fa633d0899c8dd415979055aad8899b949ca2491",
+    "libstdc++6_10.5.0-1ubuntu1~20.04_amd64.deb": "7f9222342d3551d063bf651319ec397c39278eeeb9ab5950ae0e8c28ef0af431"
+  },
+  "sources": {
+    "tests/unit/test_geometry_scene.cpp": "96b549311c31123eab9f7770b0f36a06f2ab5b08e7a94566f0d415ed13c067d9",
+    "tools/anchor_audit/main.cpp": "3e8cacaaf6e7fb6265549cc45d1ab1fa13cc551e09b92a9a65246fc6a1d3621e"
+  },
+  "build": {
+    "configuration": "Release",
+    "lto": true,
+    "warnings_as_errors": true,
+    "targets": [
+      "nekomote_unit_tests",
+      "nekomote_anchor_audit"
+    ],
+    "exit": 0
+  },
+  "tests": {
+    "gcc10_core": {
+      "cases": 242,
+      "assertions": 54014,
+      "exit": 0
+    },
+    "gcc10_runtime": {
+      "cases": 91,
+      "assertions": 28820,
+      "exit": 0
+    },
+    "gcc15_cpu_ctest": {
+      "total": 267,
+      "skipped": 3,
+      "failed": 0
+    },
+    "serialization": {
+      "cases": 150,
+      "steps": 54000,
+      "gcc10_equal": true,
+      "gcc15_equal": true
+    }
+  }
+}

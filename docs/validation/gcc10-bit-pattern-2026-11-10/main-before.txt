@@ -1,0 +1,4 @@
+/tmp/nekomote-gcc10-fix/original_main.cpp: In function ‘void fingerprint(nekomote::RenderFrame, uint64_t&, std::ofstream*)’:
+/tmp/nekomote-gcc10-fix/original_main.cpp:39:18: error: ‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?
+   39 |         put(std::bit_cast<std::uint32_t>(v.x));
+      |                  ^~~~~~~~

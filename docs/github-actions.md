@@ -1,5 +1,23 @@
 # GitHub 自动构建与测试
 
+## 2026-11-10：锚点测试的 GCC10 标准库补修
+
+基线 `5d75c87`。用户提供的六份 `experiments/evidence-*.zip` 中，native20、Plasma5、
+X11 的 x86_64/aarch64 都在 `test_geometry_scene.cpp` 的 `std::bit_cast` 处失败。
+Ubuntu20 使用 GCC10.5，其标准库尚未提供该接口；Debian12/GCC12 通过不能替代旧基线检查。
+
+锚点测试现在用 `memcmp` 分别比较两个 float 的完整对象表示，仍区分正负零，不改用
+近似或浮点相等。审计工具中同类序列化统一用 `memcpy` 读取32位字，保留原指纹格式，
+不添加编译器条件分支、不升级基线、不修改求值与渲染实现。
+
+验证记录见 [证据](validation/gcc10-bit-pattern-2026-11-10/README.md)：Ubuntu官方
+GCC10.5 与 libstdc++10 的独立 x86_64 工具链复现两个文件的原始编译失败，修复后
+同参数通过；Release/LTO/Werror 构建实际单元测试和审计工具，并运行回归。
+另用本机GCC15验证CPU目录及150个反应/切换场景的指纹一致。
+
+该临时工具链使用主机glibc及其他开发库，不是完整focal容器或发行包ABI认证；
+aarch64、三个Ubuntu20完整工作流与远端Actions仍由后续重跑确认。未安装主机包或推送。
+
 ## 2026-10-21：Ubuntu20 Vulkan 故障测试链接补修
 
 基线 `29c9a0d`。用户保存在 `experiments/evidence-{native20,x11}-{x86_64,aarch64}/`

@@ -5,12 +5,12 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
-#include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -22,6 +22,13 @@ static void require(bool b, const char* msg)
         throw std::runtime_error(msg);
 }
 using namespace nekomote;
+static std::uint32_t float_bits(const float& value) noexcept
+{
+    static_assert(sizeof(value) == sizeof(std::uint32_t));
+    std::uint32_t bits;
+    std::memcpy(&bits, &value, sizeof(bits));
+    return bits;
+}
 static void word(std::uint64_t& hash, std::uint32_t v, std::ofstream* dump)
 {
     hash ^= v;
@@ -36,12 +43,12 @@ static void fingerprint(RenderFrame frame, std::uint64_t& hash, std::ofstream* d
     put(static_cast<std::uint32_t>(frame.indices.size()));
     for (const auto& v : frame.vertices)
     {
-        put(std::bit_cast<std::uint32_t>(v.x));
-        put(std::bit_cast<std::uint32_t>(v.y));
-        put(std::bit_cast<std::uint32_t>(v.u));
-        put(std::bit_cast<std::uint32_t>(v.v));
+        put(float_bits(v.x));
+        put(float_bits(v.y));
+        put(float_bits(v.u));
+        put(float_bits(v.v));
         for (float c : v.color)
-            put(std::bit_cast<std::uint32_t>(c));
+            put(float_bits(c));
     }
     for (auto i : frame.indices)
         put(i);
@@ -149,7 +156,7 @@ try
                         break;
                     fingerprint(session.frame(), hash, nullptr);
                     for (auto value : session.playback().values())
-                        word(hash, std::bit_cast<std::uint32_t>(value.value), nullptr);
+                        word(hash, float_bits(value.value), nullptr);
                     word(hash, static_cast<std::uint32_t>(session.reaction_phase()), nullptr);
                 }
                 const nlohmann::json row{
@@ -206,7 +213,7 @@ try
                     break;
                 fingerprint(player.frame(), hash, nullptr);
                 for (auto v : player.values())
-                    word(hash, std::bit_cast<std::uint32_t>(v.value), nullptr);
+                    word(hash, float_bits(v.value), nullptr);
             }
             char hex[17];
             std::snprintf(hex, sizeof(hex), "%016llx", static_cast<unsigned long long>(hash));
@@ -294,7 +301,7 @@ try
                 ++fading_frames;
                 fingerprint(old->frame(), hash, nullptr);
             }
-            word(hash, std::bit_cast<std::uint32_t>(controller.fade_alpha()), nullptr);
+            word(hash, float_bits(controller.fade_alpha()), nullptr);
         }
     }
     std::printf("{\"switch_hash\":\"%016llx\"}\n", static_cast<unsigned long long>(hash));

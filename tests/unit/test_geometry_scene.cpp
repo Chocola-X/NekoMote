@@ -13,9 +13,9 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <new>
@@ -3800,10 +3800,8 @@ TEST_CASE("Combined nested surfaces match submitted reference corner positions",
         REQUIRE(b.status);
         REQUIRE(a.state == runtime::LocatorState::Active);
         REQUIRE(a.state == b.state);
-        REQUIRE(std::bit_cast<std::uint32_t>(a.position.x) ==
-                std::bit_cast<std::uint32_t>(b.position.x));
-        REQUIRE(std::bit_cast<std::uint32_t>(a.position.y) ==
-                std::bit_cast<std::uint32_t>(b.position.y));
+        REQUIRE(std::memcmp(&a.position.x, &b.position.x, sizeof(float)) == 0);
+        REQUIRE(std::memcmp(&a.position.y, &b.position.y, sizeof(float)) == 0);
         for (const auto& point : sample.at("samples"))
         {
             const auto actual = instance.sample_atlas_point(

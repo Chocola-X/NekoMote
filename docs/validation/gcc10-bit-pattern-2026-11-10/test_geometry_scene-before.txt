@@ -1,0 +1,4 @@
+/tmp/nekomote-gcc10-fix/original_test_geometry_scene.cpp: In function ‘void CATCH2_INTERNAL_TEST_191()’:
+/tmp/nekomote-gcc10-fix/original_test_geometry_scene.cpp:3803:22: error: ‘bit_cast’ is not a member of ‘std’; did you mean ‘bad_cast’?
+ 3803 |         REQUIRE(std::bit_cast<std::uint32_t>(a.position.x) ==
+      |                      ^~~~~~~~
