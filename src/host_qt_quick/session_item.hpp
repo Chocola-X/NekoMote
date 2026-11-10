@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <span>
 
 namespace nekomote::qt_quick
 {
@@ -55,7 +56,13 @@ struct WallpaperState
     std::atomic<unsigned> rendered_frames{0};
     std::atomic<unsigned> fixed_steps_executed{0};
     std::atomic<int> fps_limit{60};
+    // Opt-in host diagnostics; input count is owned by the GUI thread.
+    bool profile{false};
+    unsigned profile_inputs{0};
 };
+
+// Keep complete drag paths and press/release boundaries between limited frames.
+inline constexpr std::size_t kInputCapacity = 1024;
 
 enum class InputKind
 {
@@ -76,14 +83,14 @@ struct Input
     std::uint64_t timestamp_ms{0};
 };
 
-// Snapshot of GUI-side state copied into the renderer during synchronize.
-// Inputs are bounded to 32 entries; exceeding capacity reports an error.
+// GUI-side state borrowed only during Renderer::synchronize, while Qt blocks the
+// GUI thread. The renderer copies inputs before clear_inputs; no view survives
+// synchronize. Inputs are bounded to kInputCapacity entries.
 struct ItemState
 {
     bool paused{false};
     std::uint64_t playback_revision{0};
-    std::array<Input, 32> inputs{};
-    std::size_t input_count{0};
+    std::span<const Input> inputs;
     bool notify_frames{false};
 };
 
@@ -136,7 +143,7 @@ class WallpaperItem final : public WallpaperItemBase
     std::shared_ptr<WallpaperState> state_;
     bool paused_{false};
     std::uint64_t playback_revision_{0};
-    std::array<Input, 32> inputs_{};
+    std::array<Input, kInputCapacity> inputs_{};
     std::size_t input_count_{0};
 };
 } // namespace nekomote::qt_quick

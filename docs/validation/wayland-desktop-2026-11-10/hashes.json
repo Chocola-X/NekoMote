@@ -1,0 +1,15 @@
+{
+  "original_actions": "d2ae04a03aa7d5d8fccd0c2e386618802ca1d21f1c02b0ed9814d737ba5f385d",
+  "instrumented_input_baseline": "4b96a779cf3d7d1f086459c22065ed2a18c886fdd384a4617b795a42633db8ac",
+  "final_candidate": "1299d79569e140e314a885c57790cd2046489ba486360196598a58a2bb6b5087",
+  "layer_actions": "10de393ff25fb7938b46f9540847e3971c71bc6aa49fdd3712e2b8fe548067b6",
+  "model": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304",
+  "actual_model": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304",
+  "BG_47_dynamic_files": {
+    "backgrounds/dynamic/BG_47/A.png": "12328fe36fb1a57011d5654a0869d92fa99c83576136730d5da11e87c4ad810d",
+    "backgrounds/dynamic/BG_47/B.png": "5174f845e965924a08e328dc02cf564f30aa2c630f82c5c507b460686307682f",
+    "backgrounds/dynamic/BG_47/C.png": "987366e424b4ae5d88c38149de9dc661533cf6c297e9f5a3c5a8e181fa6a424c",
+    "backgrounds/dynamic/BG_47/config.json": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+  },
+  "background_manifest": "6f7673548ebbd37c3e6168e677eb492f3ea06d2a70d3ccea21265f58822d5fcd"
+}

@@ -1,5 +1,9 @@
 # Plasma 帧调度与 Wayland CPU 复核
 
+后续已在用户授权的真实180 Hz Wayland桌面复核：
+[输入限帧修复、Qt basic重复提交与已知缺陷](wayland-desktop-cpu-2026-11-10.md)。
+下文虚拟60 Hz测量仍只代表其限定条件，不代表剩余桌面差距已经消除。
+
 2026-11-10，基线 `263f3eb`（生产代码同 `f08b7f3`）。原建议见
 [分析报告](wayland-cpu-analysis-2026-11-10.md)。本轮修复不限帧率的 GUI 忙轮询，
 并对暂停后无变化的 FBO 复用已有内容；不能据此宣布真实 Plasma 的 Wayland/X11

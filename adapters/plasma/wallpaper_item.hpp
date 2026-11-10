@@ -98,11 +98,12 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     QString instance_id_;
     QString render_backend_{QStringLiteral("opengl")};
     std::uint64_t playback_revision_{0};
-    std::array<nekomote::qt_quick::Input, 32> inputs_{};
+    std::array<nekomote::qt_quick::Input, nekomote::qt_quick::kInputCapacity> inputs_{};
     std::size_t input_count_{0};
     QTimer* timer_{nullptr};
     bool backend_checked_{false};
     QPointer<QQuickWindow> host_window_;
+    QMetaObject::Connection profile_swap_connection_;
     std::array<QMetaObject::Connection, 4> window_connections_{};
 };
 } // namespace nekomote::plasma

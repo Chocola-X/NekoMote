@@ -2,6 +2,7 @@
 
 #include <QEventLoop>
 #include <QGuiApplication>
+#include <QHoverEvent>
 #include <QImage>
 #include <QOpenGLContext>
 #include <QQuickItemGrabResult>
@@ -79,7 +80,60 @@ class ProbeItem final : public nekomote::plasma::NekoWallpaperItem
 {
   public:
     using NekoWallpaperItem::componentComplete;
+    using NekoWallpaperItem::hoverMoveEvent;
 };
+
+void verify_input_limit(const QString& assets)
+{
+    QTemporaryDir directory;
+    const auto path = directory.filePath("input-panel.json");
+    std::ofstream(path.toStdString())
+        << R"({"version":1,"character":"chocola/date-a","mute":true,"fps":30})";
+    ProbeItem item;
+    item.wallpaper_state()->no_save = true;
+    item.wallpaper_state()->config_path = path.toStdString();
+    item.setRenderBackend(qEnvironmentVariable("NEKOMOTE_TEST_BACKEND", "opengl"));
+    item.componentComplete();
+    item.setAssetsDir(assets);
+    item.setSize({640, 480});
+    QQuickWindow window;
+    window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
+    window.resize(640, 480);
+    item.setParentItem(window.contentItem());
+    window.show();
+    wait_for([&] { return item.queryRenderedFrames() >= 3 || item.status() == 2; });
+    require(item.status() == 1, "input fixture failed to load");
+    QTimer flood;
+    flood.setInterval(1);
+    unsigned events = 0;
+    QObject::connect(&flood, &QTimer::timeout, &window,
+                     [&]
+                     {
+                         // Replay only into this item's callback, never system input.
+                         for (int i = 0; i < 8; ++i)
+                         {
+                             const QPointF position(300 + (++events % 120), 200);
+                             QHoverEvent move(QEvent::HoverMove, position, position,
+                                              position - QPointF(1, 0));
+                             item.hoverMoveEvent(&move);
+                         }
+                     });
+    const auto before = item.queryRenderedFrames();
+    const auto started = std::chrono::steady_clock::now();
+    flood.start();
+    run_for(1000);
+    flood.stop();
+    const auto seconds =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+    const auto fps = (item.queryRenderedFrames() - before) / seconds;
+    require(events > 1024, "input pressure did not execute");
+    require(item.status() == 1, "limited input queue overflowed");
+    require(fps > 10 && fps <= 40, "pointer input bypassed the 30 FPS limit");
+    std::printf("pointer pressure: events=%u actual_fps=%.2f PASS\n", events, fps);
+    window.hide();
+    item.setParentItem(nullptr);
+    window.releaseResources();
+}
 } // namespace
 
 int main(int argc, char** argv)
@@ -105,6 +159,19 @@ int main(int argc, char** argv)
     {
         std::puts("SKIPPED: set NEKOMOTE_TEST_ASSETS_DIR with chocola/date-a");
         return 77;
+    }
+    if (qEnvironmentVariableIsSet("NEKOMOTE_INPUT_AUDIT_ONLY"))
+    {
+        try
+        {
+            verify_input_limit(source);
+            return 0;
+        }
+        catch (const std::exception& error)
+        {
+            std::fprintf(stderr, "%s\n", error.what());
+            return 1;
+        }
     }
     // Measurement mode also runs against the frozen, unfixed library. Never
     // capture/read back pixels during CPU measurements.
@@ -335,6 +402,8 @@ int main(int argc, char** argv)
         item->setParentItem(nullptr);
         window.releaseResources();
         item.reset();
+        if (!measure)
+            verify_input_limit(directory.path());
         std::puts("frame pacing, pause, resume, hide, resize and recreation PASS");
     }
     catch (const std::exception& error)

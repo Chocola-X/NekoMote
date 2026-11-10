@@ -18,6 +18,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QWheelEvent>
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <ctime>
@@ -168,8 +169,8 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             clock_attached_ = false;
             playback_revision_ = item_state.playback_revision;
         }
-        input_count_ = item_state.input_count;
-        inputs_ = item_state.inputs;
+        input_count_ = item_state.inputs.size();
+        std::copy_n(item_state.inputs.begin(), input_count_, inputs_.begin());
         item->clear_inputs();
         graphics_api_ = item->window()->rendererInterface()->graphicsApi();
     }
@@ -470,7 +471,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     std::unique_ptr<VulkanGlBridge> bridge_;
 #endif
     bool notify_frames_{false}, notifications_connected_{false};
-    std::array<Input, 32> inputs_{};
+    std::array<Input, kInputCapacity> inputs_{};
     std::size_t input_count_{0};
 };
 
@@ -500,7 +501,7 @@ void WallpaperItem::set_paused(bool paused)
 }
 ItemState WallpaperItem::get_item_state() const
 {
-    return {paused_, playback_revision_, inputs_, input_count_};
+    return {paused_, playback_revision_, std::span<const Input>(inputs_.data(), input_count_)};
 }
 std::shared_ptr<WallpaperState> WallpaperItem::wallpaper_state() const
 {

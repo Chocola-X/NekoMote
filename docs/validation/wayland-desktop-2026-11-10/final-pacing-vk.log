@@ -1,0 +1,42 @@
+UpdateCTestConfiguration  from :/run/media/chocola/MIKU/NekoMote/build/plasma/DartConfiguration.tcl
+Test project /run/media/chocola/MIKU/NekoMote/build/plasma
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 2
+    Start 2: plasma_frame_pacing
+
+2: Test command: /usr/bin/flock "/run/media/chocola/MIKU/NekoMote/build/gpu-validation.lock" "/run/media/chocola/MIKU/NekoMote/build/plasma/bin/nekomote_plasma_frame_pacing"
+2: Working Directory: /run/media/chocola/MIKU/NekoMote/build/plasma
+2: Environment variables:
+2:  NEKOMOTE_TEST_ASSETS_DIR=/run/media/chocola/MIKU/NekoMote/assets
+2:  QT_SCALE_FACTOR=1
+2: Test timeout computed to be: 60
+2: context=gles version=3.2 screen_platform=wayland
+2: phase=limited60 wall_s=0.251068 cpu_s=0.022150 frames=15 timer_ticks=15 requests=0 present_p50_ms=16.426 present_p95_ms=17.419 present_p99_ms=17.419 peak_rss_kib=378688
+2: phase=paused_redundant wall_s=0.250240 cpu_s=0.012517 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.705 present_p95_ms=16.733 present_p99_ms=16.733 peak_rss_kib=378688
+2: context=gles version=3.2 screen_platform=wayland
+2: phase=paused_recreated wall_s=0.250575 cpu_s=0.010808 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.639 present_p95_ms=16.706 present_p99_ms=16.706 peak_rss_kib=396672
+2: phase=paused_reloaded wall_s=0.250485 cpu_s=0.013187 frames=0 timer_ticks=0 requests=50 present_p50_ms=16.833 present_p95_ms=16.954 present_p99_ms=16.954 peak_rss_kib=403260
+2: phase=unlimited wall_s=0.250777 cpu_s=0.010235 frames=16 timer_ticks=0 requests=0 present_p50_ms=16.723 present_p95_ms=16.909 present_p99_ms=16.909 peak_rss_kib=404140
+2: phase=unlimited wall_s=0.250535 cpu_s=0.010321 frames=15 timer_ticks=0 requests=0 present_p50_ms=16.597 present_p95_ms=17.878 present_p99_ms=17.878 peak_rss_kib=404140
+2: context=gles version=3.2 screen_platform=wayland
+2: context=gles version=3.2 screen_platform=wayland
+2: pointer pressure: events=7544 actual_fps=29.98 PASS
+2: frame pacing, pause, resume, hide, resize and recreation PASS
+1/1 Test #2: plasma_frame_pacing ..............   Passed   13.93 sec
+
+The following tests passed:
+	plasma_frame_pacing
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gpu            =  13.93 sec*proc (1 test)
+integration    =  13.93 sec*proc (1 test)
+qt             =  13.93 sec*proc (1 test)
+
+Total Test time (real) =  13.94 sec

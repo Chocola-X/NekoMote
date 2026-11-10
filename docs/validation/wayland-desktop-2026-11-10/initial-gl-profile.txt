@@ -1,0 +1,311 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 523  of event 'cpu-clock:u'
+# Event count (approx.): 2628140375
+#
+# Overhead  Shared Object                      Symbol                                                                                                                                                                                                             IPC   [IPC Coverage]
+# ........  .................................  .................................................................................................................................................................................................................  ....................
+#
+    15.87%  libnekomote_plasma_qml.so          [.] nekomote::runtime::(anonymous namespace)::evaluate_prepared_patch(std::array<nekomote::runtime::detail::PatchControl, 16ul> const&, double, double) [clone .lto_priv.0]                                        -      -
+            |
+            ---nekomote::runtime::(anonymous namespace)::evaluate_prepared_patch(std::array<nekomote::runtime::detail::PatchControl, 16ul> const&, double, double) [clone .lto_priv.0]
+               nekomote::runtime::GeometryInstance::build_frame()
+               nekomote::runtime::PlaybackInstance::prepare_frame()
+               nekomote::application::SessionInstance::prepare_frame()
+               nekomote::application::WallpaperController::prepare_frame()
+               nekomote::abi::WallpaperInstance::render_frame()
+               nekomote_wallpaper_render_frame
+               nekomote::qt_quick::WallpaperRenderer::render()
+               0x7f7d84aa409f
+               0x7f7d82fd4a09
+               QQuickWindowPrivate::renderSceneGraph()
+               0x7f7d8492cde5
+               QQuickWindow::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QPlatformWindow::deliverUpdateRequest()
+               QObject::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+               0x7f7d832437f7
+               0x7f7d8198887f
+               0x7f7d81989cd6
+               g_main_context_iteration
+               QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+               QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+               QCoreApplication::exec()
+               0x5598f4517673
+               0x7f7d82627674
+               __libc_start_main
+               0x5598f4517b84
+
+    11.66%  libnekomote_plasma_qml.so          [.] nekomote::runtime::GeometryInstance::evaluate(nekomote::runtime::GeometryEvaluation)                                                                                                                           -      -
+            |
+            ---nekomote::runtime::GeometryInstance::evaluate(nekomote::runtime::GeometryEvaluation)
+               |
+               |--6.50%--nekomote::runtime::PlaybackInstance::prepare_frame()
+               |          nekomote::application::SessionInstance::prepare_frame()
+               |          nekomote::application::WallpaperController::prepare_frame()
+               |          nekomote::abi::WallpaperInstance::render_frame()
+               |          nekomote_wallpaper_render_frame
+               |          nekomote::qt_quick::WallpaperRenderer::render()
+               |          0x7f7d84aa409f
+               |          0x7f7d82fd4a09
+               |          QQuickWindowPrivate::renderSceneGraph()
+               |          0x7f7d8492cde5
+               |          QQuickWindow::event(QEvent*)
+               |          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               |          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               |          QPlatformWindow::deliverUpdateRequest()
+               |          QObject::event(QEvent*)
+               |          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               |          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               |          QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+               |          0x7f7d832437f7
+               |          0x7f7d8198887f
+               |          0x7f7d81989cd6
+               |          g_main_context_iteration
+               |          QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+               |          QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+               |          QCoreApplication::exec()
+               |          0x5598f4517673
+               |          0x7f7d82627674
+               |          __libc_start_main
+               |          0x5598f4517b84
+               |
+                --5.16%--nekomote::runtime::PlaybackInstance::step_tick(nekomote::runtime::PhysicsInputs, float)
+                          nekomote::runtime::PlaybackInstance::advance(double, nekomote::runtime::PhysicsInputs, nekomote::runtime::AuthorTickHandler)
+                          nekomote::application::SessionInstance::advance(double, nekomote::runtime::PhysicsInputs)
+                          nekomote::application::WallpaperController::advance(double)
+                          nekomote::abi::WallpaperInstance::advance(double)
+                          nekomote_wallpaper_advance
+                          nekomote::qt_quick::WallpaperRenderer::render()
+                          0x7f7d84aa409f
+                          0x7f7d82fd4a09
+                          QQuickWindowPrivate::renderSceneGraph()
+                          0x7f7d8492cde5
+                          QQuickWindow::event(QEvent*)
+                          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                          QPlatformWindow::deliverUpdateRequest()
+                          QObject::event(QEvent*)
+                          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                          QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+                          0x7f7d832437f7
+                          0x7f7d8198887f
+                          0x7f7d81989cd6
+                          g_main_context_iteration
+                          QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QCoreApplication::exec()
+                          0x5598f4517673
+                          0x7f7d82627674
+                          __libc_start_main
+                          0x5598f4517b84
+
+     7.65%  libnekomote_plasma_qml.so          [.] nekomote::runtime::GeometryInstance::build_frame()                                                                                                                                                             -      -
+            |
+            ---nekomote::runtime::GeometryInstance::build_frame()
+               nekomote::runtime::PlaybackInstance::prepare_frame()
+               nekomote::application::SessionInstance::prepare_frame()
+               nekomote::application::WallpaperController::prepare_frame()
+               nekomote::abi::WallpaperInstance::render_frame()
+               nekomote_wallpaper_render_frame
+               nekomote::qt_quick::WallpaperRenderer::render()
+               0x7f7d84aa409f
+               0x7f7d82fd4a09
+               QQuickWindowPrivate::renderSceneGraph()
+               0x7f7d8492cde5
+               QQuickWindow::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QPlatformWindow::deliverUpdateRequest()
+               QObject::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+               0x7f7d832437f7
+               0x7f7d8198887f
+               0x7f7d81989cd6
+               g_main_context_iteration
+               QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+               QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+               QCoreApplication::exec()
+               0x5598f4517673
+               0x7f7d82627674
+               __libc_start_main
+               0x5598f4517b84
+
+     4.78%  libc.so.6                          [.] 0x000000000009f042                                                                                                                                                                                             -      -
+            |
+            ---0x7f7d8269f042
+               0x7f7d826931ab
+               |
+                --4.21%--0x7f7d826931f3
+                          |
+                          |--1.72%--__close
+                          |          |
+                          |           --0.96%--0x7f7d752305cf
+                          |
+                           --0.76%--open64
+
+     2.49%  libc.so.6                          [.] 0x000000000010e687                                                                                                                                                                                             -      -
+            |
+            ---0x7f7d8270e687
+               __libc_fcntl64
+               |
+                --1.53%--0x7f7d752305f1
+                          0x7f7d75230706
+                          |
+                          |--0.76%--0x7f7d7523083c
+                          |
+                           --0.76%--0x7f7d75230791
+
+     2.10%  libc.so.6                          [.] dup3                                                                                                                                                                                                           -      -
+            |
+            ---dup3
+               |
+               |--1.34%--0x7f7d7523071f
+               |
+                --0.76%--0x7f7d76b842bf
+
+     2.10%  libnekomote_plasma_qml.so          [.] nekomote::runtime::add_patch_displacement(std::array<nekomote::Vec2, 16ul>&, std::array<nekomote::Vec2, 16ul> const&)                                                                                          -      -
+            |
+            ---nekomote::runtime::add_patch_displacement(std::array<nekomote::Vec2, 16ul>&, std::array<nekomote::Vec2, 16ul> const&)
+               nekomote::runtime::GeometryInstance::evaluate(nekomote::runtime::GeometryEvaluation)
+               |
+                --1.53%--nekomote::runtime::PlaybackInstance::step_tick(nekomote::runtime::PhysicsInputs, float)
+                          nekomote::runtime::PlaybackInstance::advance(double, nekomote::runtime::PhysicsInputs, nekomote::runtime::AuthorTickHandler)
+                          nekomote::application::SessionInstance::advance(double, nekomote::runtime::PhysicsInputs)
+                          nekomote::application::WallpaperController::advance(double)
+                          nekomote::abi::WallpaperInstance::advance(double)
+                          nekomote_wallpaper_advance
+                          nekomote::qt_quick::WallpaperRenderer::render()
+                          0x7f7d84aa409f
+                          0x7f7d82fd4a09
+                          QQuickWindowPrivate::renderSceneGraph()
+                          0x7f7d8492cde5
+                          QQuickWindow::event(QEvent*)
+                          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                          QPlatformWindow::deliverUpdateRequest()
+                          QObject::event(QEvent*)
+                          QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                          QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                          QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+                          0x7f7d832437f7
+                          0x7f7d8198887f
+                          0x7f7d81989cd6
+                          g_main_context_iteration
+                          QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QCoreApplication::exec()
+                          0x5598f4517673
+                          0x7f7d82627674
+                          __libc_start_main
+                          0x5598f4517b84
+
+     1.91%  libnekomote_plasma_qml.so          [.] nekomote::runtime::identity_patch()                                                                                                                                                                            -      -
+            |
+            ---nekomote::runtime::identity_patch()
+               |
+                --1.53%--nekomote::runtime::GeometryInstance::evaluate(nekomote::runtime::GeometryEvaluation)
+                          |
+                           --0.96%--nekomote::runtime::PlaybackInstance::step_tick(nekomote::runtime::PhysicsInputs, float)
+                                     nekomote::runtime::PlaybackInstance::advance(double, nekomote::runtime::PhysicsInputs, nekomote::runtime::AuthorTickHandler)
+                                     nekomote::application::SessionInstance::advance(double, nekomote::runtime::PhysicsInputs)
+                                     nekomote::application::WallpaperController::advance(double)
+                                     nekomote::abi::WallpaperInstance::advance(double)
+                                     nekomote_wallpaper_advance
+                                     nekomote::qt_quick::WallpaperRenderer::render()
+                                     0x7f7d84aa409f
+                                     0x7f7d82fd4a09
+                                     QQuickWindowPrivate::renderSceneGraph()
+                                     0x7f7d8492cde5
+                                     QQuickWindow::event(QEvent*)
+                                     QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                                     QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                                     QPlatformWindow::deliverUpdateRequest()
+                                     QObject::event(QEvent*)
+                                     QApplicationPrivate::notify_helper(QObject*, QEvent*)
+                                     QCoreApplication::notifyInternal2(QObject*, QEvent*)
+                                     QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+                                     0x7f7d832437f7
+                                     0x7f7d8198887f
+                                     0x7f7d81989cd6
+                                     g_main_context_iteration
+                                     QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+                                     QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+                                     QCoreApplication::exec()
+                                     0x5598f4517673
+                                     0x7f7d82627674
+                                     __libc_start_main
+                                     0x5598f4517b84
+
+     1.72%  libnekomote_plasma_qml.so          [.] nekomote::render_gl::Renderer::prepare(nekomote::RenderFrame)                                                                                                                                                  -      -
+            |
+            ---nekomote::render_gl::Renderer::prepare(nekomote::RenderFrame)
+               nekomote::abi::WallpaperInstance::render_frame()
+               nekomote_wallpaper_render_frame
+               nekomote::qt_quick::WallpaperRenderer::render()
+               0x7f7d84aa409f
+               0x7f7d82fd4a09
+               QQuickWindowPrivate::renderSceneGraph()
+               0x7f7d8492cde5
+               QQuickWindow::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QPlatformWindow::deliverUpdateRequest()
+               QObject::event(QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+               0x7f7d832437f7
+               0x7f7d8198887f
+               0x7f7d81989cd6
+               g_main_context_iteration
+               QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+               QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+               QCoreApplication::exec()
+               0x5598f4517673
+               0x7f7d82627674
+               __libc_start_main
+               0x5598f4517b84
+
+     1.34%  libQt6Core.so.6.9.2                [.] QCoreApplicationPrivate::sendThroughApplicationEventFilters(QObject*, QEvent*)                                                                                                                                 -      -
+            |
+            ---QCoreApplicationPrivate::sendThroughApplicationEventFilters(QObject*, QEvent*)
+               QApplicationPrivate::notify_helper(QObject*, QEvent*)
+               QCoreApplication::notifyInternal2(QObject*, QEvent*)
+               |
+                --0.96%--QCoreApplicationPrivate::sendPostedEvents(QObject*, int, QThreadData*)
+                          0x7f7d832437f7
+                          0x7f7d8198887f
+                          0x7f7d81989cd6
+                          g_main_context_iteration
+                          QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>)
+                          QCoreApplication::exec()
+                          0x5598f4517673
+                          0x7f7d82627674
+                          __libc_start_main
+                          0x5598f4517b84
+
+     0.96%  ld-linux-x86-64.so.2               [.] __tls_get_addr                                                                                                                                                                                                 -      -
+            |
+            ---__tls_get_addr
+
+     0.76%  libc.so.6                          [.] malloc                                                                                                                                                                                                         -      -
+            |
+            ---malloc
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

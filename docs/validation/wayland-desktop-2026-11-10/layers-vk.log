@@ -1,0 +1,1 @@
+PASS: background orientation, UI icon/open/settings/selection/wheel/resize/drag, left hold model drag and wheel zoom through Qt host; FPS/save/reopen/layout recovery; recorded-frame UI failure recovery

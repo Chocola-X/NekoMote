@@ -200,7 +200,7 @@ int main(int argc, char** argv)
             item->mousePressEvent(&press);
             require(static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)
                             ->get_item_state()
-                            .input_count > 0,
+                            .inputs.size() > 0,
                     "press callback did not enqueue");
             frames(2);
             QMouseEvent release(QEvent::MouseButtonRelease, position / dpi, position / dpi,
@@ -228,7 +228,7 @@ int main(int argc, char** argv)
             return QJsonDocument::fromJson(file.readAll()).object();
         };
         // Pick a nondefault value and verify both preference and GUI scheduling.
-        click({140, 494});
+        click({140, 480});
         require(saved_config()["fps"].toInt() == 120, "FPS selection not saved");
         require(item->wallpaper_state()->fps_limit.load() == 120, "FPS not published to GUI");
         require(item->findChild<QTimer*>()->interval() == 8, "FPS timer not updated");
@@ -332,7 +332,7 @@ int main(int argc, char** argv)
         item->mouseReleaseEvent(&model_release);
         require(static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)
                         ->get_item_state()
-                        .input_count >= 3,
+                        .inputs.size() >= 3,
                 "long hold replay was not batched");
         frames(2);
         const auto model_dragged = capture(item, output + "/model-dragged.png");

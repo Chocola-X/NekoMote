@@ -12,6 +12,7 @@
 #include <QWheelEvent>
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <utility>
 
 #include "qt_input.hpp"
@@ -35,6 +36,50 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
                 update();
             });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
+    state_->profile = qEnvironmentVariableIntValue("NEKOMOTE_QT_PROFILE") == 1;
+    if (state_->profile)
+    {
+        state_->trace_frames = 1;
+        auto swaps = std::make_shared<unsigned>(0);
+        connect(this, &QQuickItem::windowChanged, this,
+                [this, swaps](QQuickWindow* host)
+                {
+                    disconnect(profile_swap_connection_);
+                    if (host)
+                        profile_swap_connection_ = connect(
+                            host, &QQuickWindow::frameSwapped, this,
+                            [this, swaps, source = QPointer<QQuickWindow>(host)]
+                            {
+                                if (source && source == window())
+                                    ++*swaps;
+                            },
+                            Qt::QueuedConnection);
+                });
+        auto* diagnostics = new QTimer(this);
+        diagnostics->setInterval(5000);
+        connect(diagnostics, &QTimer::timeout, this,
+                [this, swaps, previous_draws = 0U, previous_swaps = 0U, previous_inputs = 0U,
+                 previous = std::chrono::steady_clock::now()]() mutable
+                {
+                    const auto now = std::chrono::steady_clock::now();
+                    const auto seconds = std::chrono::duration<double>(now - previous).count();
+                    const auto draws = state_->rendered_frames.load();
+                    std::fprintf(
+                        stderr,
+                        "NekoMote profile: draw_fps=%.2f window_fps=%.2f inputs_s=%.2f limit=%d "
+                        "paused=%d checked=%d visible=%d exposed=%d initialized=%d\n",
+                        (draws - previous_draws) / seconds, (*swaps - previous_swaps) / seconds,
+                        (state_->profile_inputs - previous_inputs) / seconds,
+                        state_->fps_limit.load(), effective_paused_, backend_checked_, isVisible(),
+                        window() ? window()->isExposed() : false,
+                        window() ? window()->isSceneGraphInitialized() : false);
+                    previous = now;
+                    previous_draws = draws;
+                    previous_swaps = *swaps;
+                    previous_inputs = state_->profile_inputs;
+                });
+        diagnostics->start();
+    }
 }
 
 NekoWallpaperItem::~NekoWallpaperItem()
@@ -212,7 +257,9 @@ void NekoWallpaperItem::set_error(const QString& value)
 
 nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
 {
-    return {effective_paused_, playback_revision_, inputs_, input_count_, diagnostic_notification_};
+    return {effective_paused_, playback_revision_,
+            std::span<const nekomote::qt_quick::Input>(inputs_.data(), input_count_),
+            diagnostic_notification_};
 }
 
 void NekoWallpaperItem::clear_inputs()
@@ -230,6 +277,8 @@ void NekoWallpaperItem::enqueue(nekomote::qt_quick::InputKind kind, QPointF posi
 {
     if (diagnostic_inputs_ || effective_paused_ || status_ != 1)
         return;
+    if (state_->profile)
+        ++state_->profile_inputs;
     if (input_count_ == inputs_.size())
     {
         emit failed(QStringLiteral("input queue capacity exceeded"));
@@ -246,7 +295,10 @@ void NekoWallpaperItem::enqueue(nekomote::qt_quick::InputKind kind, QPointF posi
             : static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
                                              std::chrono::steady_clock::now().time_since_epoch())
                                              .count())};
-    update();
+    // Input must not bypass the playback limit. The active timer consumes the
+    // queued events on its next frame, as the layer-shell host does.
+    if (!timer_->isActive() || state_->fps_limit.load(std::memory_order_acquire) == 0)
+        update();
 }
 
 void NekoWallpaperItem::hoverEnterEvent(QHoverEvent* event)

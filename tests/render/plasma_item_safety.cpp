@@ -92,7 +92,7 @@ void verify_playback(QQmlEngine& engine, const QString& assets_dir)
     QCoreApplication::sendEvent(item, &event);
     const auto snapshot =
         static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state();
-    if (timer->isActive() || item->status() != 2 || !snapshot.paused || snapshot.input_count != 0)
+    if (timer->isActive() || item->status() != 2 || !snapshot.paused || !snapshot.inputs.empty())
         throw std::runtime_error("failed item still scheduled or accepted pointer input");
     callbacks.reset();
     window->hide();
@@ -157,7 +157,7 @@ void verify(QQmlEngine& engine, const QByteArray& properties, int expected_statu
     deadline.stop();
     const auto snapshot =
         static_cast<nekomote::qt_quick::WallpaperItemBase*>(item)->get_item_state();
-    if (!snapshot.paused || snapshot.input_count != 0)
+    if (!snapshot.paused || !snapshot.inputs.empty())
         throw std::runtime_error("unconfigured/failed item did not suspend runtime input");
     window.hide();
     window.releaseResources();
