@@ -35,7 +35,7 @@ Item {
         color: "#ff6666"
         text: nativeSession.status >= 2 ? nativeSession.errorString
             : nativeSession.status === 0 ? (root.assetsDir.length === 0
-                ? "请在壁纸配置中设置 Assets 目录" : "正在加载…") : ""
+                ? qsTranslate("NekoMoteWallpaperMain", "Please set the Assets directory in the wallpaper configuration") : qsTranslate("NekoMoteWallpaperMain", "Loading…")) : ""
         visible: text.length > 0
     }
 }

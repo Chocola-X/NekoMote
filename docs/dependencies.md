@@ -7,6 +7,12 @@ GitHub Actions 保持默认固定版本模式，系统模式的查找规则见 [
 
 ## 当前依赖
 
+Plasma 5/6 的构建另需相同 Qt 主版本的 `LinguistTools`，用于把共享 `.ts` 目录编译成
+嵌入插件的 `.qm`；不增加部署时的翻译工具依赖。Ubuntu20 为 `qttools5-dev`
+与 `qttools5-dev-tools`，Debian12 为 `qt6-tools-dev` 与 `qt6-l10n-tools`，
+Arch 为 `qt6-tools`。固定依赖模式和系统依赖模式均显式查找，缺失时配置失败。
+详见[翻译核查](plasma-translations-2026-11-11.md)。
+
 | 依赖 | 版本 | 许可 | 用途 | 模块 |
 | --- | --- | --- | --- | --- |
 | [nlohmann/json](https://github.com/nlohmann/json) | v3.11.3 | MIT | JSON 解析 | asset_io / importer（P1 起） |

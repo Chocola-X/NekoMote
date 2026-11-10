@@ -11,9 +11,12 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources && \
       > /etc/apt/sources.list && \
     apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates git cmake make ninja-build g++ python3 binutils \
-      qt6-base-dev qt6-declarative-dev libpulse-dev libfontconfig1-dev libpng-dev \
+      qt6-base-dev qt6-declarative-dev qt6-tools-dev qt6-l10n-tools \
+      libpulse-dev libfontconfig1-dev libpng-dev \
       libvulkan-dev glslang-tools python3-jinja2 python3-pil nodejs fonts-dejavu-core \
       qml6-module-qtquick qml6-module-qtqml-workerscript \
+      qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-dialogs \
+      qml6-module-qtquick-templates qml6-module-qtqml-models \
       qml6-module-qtquick-window && \
     rm -rf /var/lib/apt/lists/*
 

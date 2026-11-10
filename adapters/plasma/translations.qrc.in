@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/nekomote/plasma/i18n">
+        <file alias="nekomote_plasma_zh_CN.qm">nekomote_plasma_zh_CN.qm</file>
+    </qresource>
+</RCC>

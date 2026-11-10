@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
+import NekoMote.Wallpaper 1.0
 import QtQuick.Dialogs 1.3
 
 ColumnLayout {
@@ -11,12 +12,12 @@ ColumnLayout {
 
     FileDialog {
         id: assetsDialog
-        title: "选择 NekoMote 资产根目录"
+        title: qsTranslate("NekoMoteWallpaperConfig", "Select NekoMote assets root directory")
         selectFolder: true
         onAccepted: cfg_assetsDir = fileUrl.toString()
     }
 
-    Label { text: "资产目录"; font.bold: true }
+    Label { text: qsTranslate("NekoMoteWallpaperConfig", "Assets Directory"); font.bold: true }
     RowLayout {
         Layout.fillWidth: true
         TextField {
@@ -26,41 +27,33 @@ ColumnLayout {
             placeholderText: "file:///…/assets"
         }
         Button {
-            text: "浏览…"
+            text: qsTranslate("NekoMoteWallpaperConfig", "Browse…")
             onClicked: assetsDialog.open()
         }
     }
     Label {
-        text: "选择 NekoMote 资产库的根目录，即包含 characters 子目录的文件夹，"
-              + "背景资源位于同级的 backgrounds 中。请勿选择单个角色或服装目录。\n"
-              + "应用后会自动加载角色；点击壁纸上的 NekoMote 控制图标，"
-              + "可以切换角色和背景、调整帧率与声音等设置。"
+        text: qsTranslate("NekoMoteWallpaperConfig", "Select the root directory of the NekoMote assets library, i.e. the folder containing the characters subdirectory. Background resources are in the sibling backgrounds directory. Do not select a single character or costume directory.\nAfter applying, characters will be loaded automatically; click the NekoMote control icon on the wallpaper to switch characters and backgrounds, adjust frame rate and sound settings.")
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
-    Label { text: "渲染后端"; font.bold: true }
+    Label { text: qsTranslate("NekoMoteWallpaperConfig", "Render Backend"); font.bold: true }
     ComboBox {
-        model: ["OpenGL（默认）", "Vulkan"]
+        model: [qsTranslate("NekoMoteWallpaperConfig", "OpenGL (default)"), "Vulkan"]
         currentIndex: cfg_renderBackend === "vulkan" ? 1 : 0
         onActivated: cfg_renderBackend = currentIndex === 1 ? "vulkan" : "opengl"
     }
     Label {
-        text: "选择 NekoMote 绘制角色和背景所使用的图形接口。OpenGL 为默认选项；"
-              + "Vulkan 需要显卡驱动支持 GPU 图像共享。\n"
-              + "应用更改后会重建壁纸渲染设备，不会更改整个桌面的渲染后端。"
-              + "如果 Vulkan 加载失败，请切回 OpenGL。"
+        text: qsTranslate("NekoMoteWallpaperConfig", "Select the graphics API used by NekoMote to render characters and backgrounds. OpenGL is the default option; Vulkan requires GPU image sharing support from the graphics driver.\nAfter applying changes, the wallpaper rendering device will be rebuilt; this does not change the desktop's render backend. If Vulkan fails to load, switch back to OpenGL.")
         wrapMode: Text.Wrap
         Layout.fillWidth: true
     }
     Label {
-        text: "项目与作者"
+        text: qsTranslate("NekoMoteWallpaperConfig", "Project & Authors")
         font.bold: true
         Layout.topMargin: 8
     }
     Label {
-        text: 'GitHub：<a href="https://github.com/Chocola-X/NekoMote">'
-              + 'github.com/Chocola-X/NekoMote</a><br>'
-              + '个人网站：<a href="https://www.nekopara.uk">www.nekopara.uk</a>'
+        text: qsTranslate("NekoMoteWallpaperConfig", 'GitHub: <a href="https://github.com/Chocola-X/NekoMote">github.com/Chocola-X/NekoMote</a><br>Website: <a href="https://www.nekopara.uk">www.nekopara.uk</a>')
         textFormat: Text.RichText
         linkColor: palette.link
         wrapMode: Text.Wrap

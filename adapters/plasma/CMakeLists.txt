@@ -1,5 +1,5 @@
 # Plasma wallpaper QML module and isolated probe. Default OFF; requires Qt and ABI.
-find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools)
 find_package(Python3 COMPONENTS Interpreter QUIET)
 
 if(NEKOMOTE_BUILD_PLASMA_PROBE)
@@ -19,7 +19,13 @@ if(TARGET nekomote_render_vk)
     set_target_properties(nekomote_render_vk PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp)
+qt6_add_translation(NEKOMOTE_PLASMA6_QM_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/nekomote_plasma_zh_CN.ts)
+configure_file(translations.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+qt6_add_resources(NEKOMOTE_PLASMA6_QRC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+
+add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp translations.cpp
+    ${NEKOMOTE_PLASMA6_QRC_SOURCES})
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES
     AUTOMOC ON
@@ -37,7 +43,12 @@ qt_add_qml_module(nekomote_plasma_qml
     URI NekoMote.Wallpaper
     VERSION 1.0
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/NekoMote/Wallpaper
+    NO_GENERATE_PLUGIN_SOURCE
+    NO_PLUGIN_OPTIONAL
 )
+target_sources(nekomote_plasma_qmlplugin PRIVATE plugin.cpp)
+set_target_properties(nekomote_plasma_qmlplugin PROPERTIES AUTOMOC ON)
+target_link_libraries(nekomote_plasma_qmlplugin PRIVATE nekomote_warnings)
 
 # QML plugin needs to find libnekomote_plasma_qml.so at runtime via relative RPATH.
 # The QML directory is configurable for distro packages; the default archive layout
@@ -157,3 +168,7 @@ add_custom_target(nekomote_plasma_stage
 add_custom_target(nekomote_plasma_stage_clean
     COMMAND ${CMAKE_COMMAND} -E rm -rf ${NEKOMOTE_STAGE_DIR}
     COMMENT "Cleaning Plasma stage")
+
+if(NEKOMOTE_BUILD_TESTS)
+    include(translation_tests.cmake)
+endif()

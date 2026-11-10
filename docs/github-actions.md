@@ -1,5 +1,14 @@
 # GitHub 自动构建与测试
 
+## 2026-11-11：Plasma 翻译构建与导入检查
+
+Plasma5/6镜像补齐对应Qt LinguistTools，Plasma6另补设置页测试所需的Controls、
+Dialogs、Layouts、Templates和Qml Models模块。`ci_build.sh`显式构建翻译测试，
+在无显示服务器的必选测试中执行三个语言环境的设置页优先导入检查；翻译目录嵌入
+原有共享库，发布包不新增宿主搜索路径或外部 `.qm` 安装位置。
+本机Qt5/Qt6共9个相关runner通过，远端及完整基线镜像未重跑，范围见
+[核查记录](plasma-translations-2026-11-11.md)。
+
 ## 2026-11-10：锚点测试的 GCC10 标准库补修
 
 基线 `5d75c87`。用户提供的六份 `experiments/evidence-*.zip` 中，native20、Plasma5、

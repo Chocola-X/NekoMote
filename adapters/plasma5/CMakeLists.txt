@@ -1,6 +1,6 @@
 # Plasma 5 has a distinct package/QML entry point. The native item and renderer
 # are shared with Plasma 6; no wallpaper/application policy is duplicated here.
-find_package(Qt5 5.12 REQUIRED COMPONENTS Qml Quick OpenGL)
+find_package(Qt5 5.12 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools)
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 if(NEKOMOTE_BUILD_PLASMA_PROBE)
     message(FATAL_ERROR "Plasma 6 probes are not Plasma 5 hosts; set NEKOMOTE_BUILD_PLASMA_PROBE=OFF")
@@ -14,7 +14,15 @@ if(TARGET nekomote_render_vk)
     set_target_properties(nekomote_render_vk PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-add_library(nekomote_plasma_qml SHARED ../plasma/wallpaper_item.cpp ../plasma/wallpaper_item.hpp)
+qt5_add_translation(NEKOMOTE_PLASMA5_QM_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plasma/translations/nekomote_plasma_zh_CN.ts)
+configure_file(../plasma/translations.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+qt5_add_resources(NEKOMOTE_PLASMA5_QRC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
+
+add_library(nekomote_plasma_qml SHARED
+    ../plasma/wallpaper_item.cpp ../plasma/wallpaper_item.hpp
+    ../plasma/translations.cpp
+    ${NEKOMOTE_PLASMA5_QRC_SOURCES})
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES AUTOMOC ON INSTALL_RPATH "")
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../plasma)
@@ -55,6 +63,7 @@ add_custom_target(nekomote_plasma_stage
     DEPENDS nekomote_plasma_qml nekomote_plasma_qmlplugin nekomote_plasma_package)
 
 if(NEKOMOTE_BUILD_TESTS)
+    include(../plasma/translation_tests.cmake)
     add_executable(nekomote_plasma5_package_test ../../tests/plasma/test_plasma5_package.cpp)
     set_target_properties(nekomote_plasma5_package_test PROPERTIES AUTOMOC ON)
     target_link_libraries(nekomote_plasma5_package_test PRIVATE Qt5::Qml Qt5::Quick nekomote_warnings)

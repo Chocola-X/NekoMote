@@ -9,7 +9,7 @@ url='https://github.com/Chocola-X/NekoMote'
 license=(AGPL-3.0-only)
 depends=(gcc-libs glibc fontconfig libpng libpulse zlib 'flac>=1.4')
 makedepends=(git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
-             libglvnd libx11 libxrandr libxext wayland qt6-base qt6-declarative
+             libglvnd libx11 libxrandr libxext wayland qt6-base qt6-declarative qt6-tools
              vulkan-headers vulkan-icd-loader glslang)
 checkdepends=(catch2 python-pillow nodejs)
 source=('nekomote::git+https://github.com/Chocola-X/NekoMote.git')

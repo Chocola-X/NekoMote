@@ -3,6 +3,7 @@
 #include <QQmlExtensionPlugin>
 #include <cstring>
 
+#include "translations.hpp"
 #include "wallpaper_item.hpp"
 
 class NekoMoteWallpaperPlugin final : public QQmlExtensionPlugin
@@ -13,7 +14,12 @@ class NekoMoteWallpaperPlugin final : public QQmlExtensionPlugin
     void registerTypes(const char* uri) override
     {
         Q_ASSERT(std::strcmp(uri, "NekoMote.Wallpaper") == 0);
+
         qmlRegisterType<nekomote::plasma::NekoWallpaperItem>(uri, 1, 0, "NekoWallpaperItem");
+    }
+    void initializeEngine(QQmlEngine*, const char*) override
+    {
+        nekomote::plasma::install_translations();
     }
 };
 

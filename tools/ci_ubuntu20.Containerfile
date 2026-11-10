@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libpng-dev zlib1g-dev libpulse-dev libfontconfig1-dev libgl1-mesa-dev \
       libx11-dev libxrandr-dev libxext-dev libxinerama-dev libxcursor-dev libxi-dev \
       libwayland-dev libxkbcommon-dev libvulkan-dev glslang-tools \
-      qtbase5-dev qtdeclarative5-dev libqt5opengl5-dev \
+      qtbase5-dev qtdeclarative5-dev libqt5opengl5-dev qttools5-dev qttools5-dev-tools \
       qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtquick-controls \
       qml-module-qtquick-controls2 \
       qml-module-qtquick-layouts qml-module-qtquick-dialogs \

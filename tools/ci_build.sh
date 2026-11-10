@@ -62,7 +62,7 @@ else
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=ON -DNEKOMOTE_BUILD_PLASMA=ON
         -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF "-DNEKOMOTE_QT_MAJOR=$QT_MAJOR")
-    TARGETS+=(nekomote_plasma_module_test)
+    TARGETS+=(nekomote_plasma_module_test nekomote_plasma_translation_test)
     [[ "$MODE" != plasma5 ]] || TARGETS+=(nekomote_plasma5_package_test)
 fi
 if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
