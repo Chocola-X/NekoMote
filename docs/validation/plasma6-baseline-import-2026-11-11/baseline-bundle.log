@@ -1,0 +1,83 @@
+{
+  "archive": "/run/media/chocola/MIKU/NekoMote/experiments/plasma6-baseline-fix/nekomote-plasma6-x86_64.tar.gz",
+  "compatibility": {
+    "architecture": "x86_64",
+    "baseline": {
+      "failures": [],
+      "limits": {
+        "CXXABI": "1.3.13",
+        "GLIBC": "2.36",
+        "GLIBCXX": "3.4.30"
+      },
+      "name": "debian12",
+      "passed": true
+    },
+    "binaries": {
+      "lib/libnekomote_plasma_qml.so": {
+        "architecture": "x86_64",
+        "needed": [
+          "libQt6Quick.so.6",
+          "libQt6Qml.so.6",
+          "libQt6OpenGL.so.6",
+          "libQt6Gui.so.6",
+          "libQt6Core.so.6",
+          "libpulse.so.0",
+          "libpng16.so.16",
+          "libz.so.1",
+          "libfontconfig.so.1",
+          "libvulkan.so.1",
+          "libstdc++.so.6",
+          "libm.so.6",
+          "libgcc_s.so.1",
+          "libc.so.6",
+          "ld-linux-x86-64.so.2"
+        ],
+        "public_qt5_renderer_exports": [],
+        "qt_symbol_minimum": "6.4",
+        "runpath": [],
+        "sha256": "d7949ac79d9e193cb52a12fb7b89d2271857f45d3260fcc43fe38e71d728bb90",
+        "versions": {
+          "CXXABI": "1.3.13",
+          "GLIBC": "2.35",
+          "GLIBCXX": "3.4.29"
+        }
+      },
+      "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so": {
+        "architecture": "x86_64",
+        "needed": [
+          "libnekomote_plasma_qml.so",
+          "libQt6Quick.so.6",
+          "libQt6OpenGL.so.6",
+          "libQt6Qml.so.6",
+          "libQt6Gui.so.6",
+          "libQt6Core.so.6",
+          "libstdc++.so.6",
+          "libm.so.6",
+          "libgcc_s.so.1",
+          "libc.so.6"
+        ],
+        "public_qt5_renderer_exports": [],
+        "qt_symbol_minimum": "6.4",
+        "runpath": [
+          "$ORIGIN/../../../lib"
+        ],
+        "sha256": "020aa2d4835d51786bab6f3909e7cb89620cc27f52d66721ed1498e323443c3c",
+        "versions": {
+          "CXXABI": "1.3.9",
+          "GLIBC": "2.4",
+          "GLIBCXX": "3.4.30"
+        }
+      }
+    },
+    "plasma_major": 6,
+    "qt_build_version": "6.4.2",
+    "requirements": {
+      "CXXABI": "1.3.13",
+      "GLIBC": "2.35",
+      "GLIBCXX": "3.4.30"
+    },
+    "schema": 1,
+    "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"
+  },
+  "sha256": "46aaeb9bf3ed76c4e6770e638d6c56b3e4800d0966a6081362cafc7acdb66472"
+}

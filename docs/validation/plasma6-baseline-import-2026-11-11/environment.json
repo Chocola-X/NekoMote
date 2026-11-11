@@ -1,0 +1,13 @@
+{
+  "base_commit": "8ca7c89ea48b1e3de743e71152b801ee115808b3",
+  "scope": "x86_64 Qt6.4.2 runtime/headers/moc with host compiler/libc; not a full Debian sysroot",
+  "host": "Linux-6.6.107-1-MANJARO-x86_64-with-glibc2.42",
+  "source_sha256": {
+    "adapters/plasma/plugin.cpp": "ad58f4ec826204a66a21f2161e90229e6b2bb3c8243f7b0bc5c6f7f0a6ae4df7",
+    "tools/plasma_distribution.py": "0cca4714c38d746282f04b40d0d0b9dc0283c8a211524b9a47c1ae43c04c1445",
+    "tests/reference_capture/test_plasma_distribution.py": "3b23b428a54db9a3f22f200fec449704ef3aa62a9656284d7e2782234609fe1f"
+  },
+  "baseline_backend_sha256": "d7949ac79d9e193cb52a12fb7b89d2271857f45d3260fcc43fe38e71d728bb90",
+  "baseline_wrapper_sha256": "020aa2d4835d51786bab6f3909e7cb89620cc27f52d66721ed1498e323443c3c",
+  "baseline_bundle_sha256": "46aaeb9bf3ed76c4e6770e638d6c56b3e4800d0966a6081362cafc7acdb66472"
+}

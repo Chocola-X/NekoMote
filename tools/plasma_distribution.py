@@ -205,11 +205,10 @@ def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
     for path in module.iterdir():
         if path.is_file():
             files["contents/ui/NekoMote/Wallpaper/" + path.name] = path.read_bytes()
-    if metadata["plasma_major"] == 5:
-        # Qt5 checks named module URIs against the filesystem import URI.
-        # A directory module registers its types under the latter instead.
-        name = "contents/ui/NekoMote/Wallpaper/qmldir"
-        files[name] = re.sub(rb"(?m)^module .*\n", b"", files[name])
+    # Directory imports use a filesystem URI on Qt5 and on the Qt6.4 baseline.
+    # Named-module/resource redirects belong to the source/distro stage only.
+    name = "contents/ui/NekoMote/Wallpaper/qmldir"
+    files[name] = re.sub(rb"(?m)^(?:module|prefer) [^\n]*(?:\n|$)", b"", files[name])
     # Preserve the audited $ORIGIN/../../../lib relationship, without ELF edits.
     files["contents/lib/libnekomote_plasma_qml.so"] = (stage / ELFS[0]).read_bytes()
     plugin_metadata = json.loads(files["metadata.json"])

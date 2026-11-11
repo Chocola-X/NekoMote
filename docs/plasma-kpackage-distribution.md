@@ -36,9 +36,11 @@ contents/compatibility.json
 `compatibility.json` 保留原stage的审计路径和二进制哈希，是构建证据，
 运行时检查和安装统一由外层的独立 `installer.py` 负责。
 
-Qt6的命名qmldir可直接用于目录导入；Qt5会校验目录URI，因此导出时删除Qt5
-qmldir的module声明，保留两页原来的1.0版本，Qt5注册器接受Qt传入的目录URI。
-Debug断言也支持这一合法入口；源码stage的命名模块仍可用于开发探针。
+Qt5 和 Qt6.4 都会核验目录 URI，因此导出副本统一删除 qmldir 的 `module` 与
+命名模块的 `prefer` 资源重定向，保留两页原来的 1.0 导入版本。插件在 Qt 传入的目录 URI
+下注册原生类型；Qt6 的源码/发行版命名导入继续交给生成注册器。
+早期 Qt6.9 本机目录导入通过并不能推出 Qt6.4 基线成立；错误和修复证据见下节。
+Debug 断言支持合法目录入口，源码 stage 的命名模块保持原状。
 
 ## 生成和取得安装包
 
@@ -128,3 +130,25 @@ Qt5/Qt6 的最终内层包目录导入通过。独立复核发现的新包 JSON/
 
 原始日志、环境与哈希见[本轮证据](validation/plasma-unified-distribution-2026-11-11/README.md)。
 本轮未改变帧路径，未采样性能；远端基线/ARM64、真实 Plasma5 和在线商店验收仍需分别完成。
+
+## Qt6.4 基线导入补修（2026-11-11）
+
+用户提供的两架构 CI 日志均显示编译和 258 个 CTest runner 通过，失败发生在最终包的
+`kpackage_import`：命名模块 `NekoMote.Wallpaper` 与安装目录生成的 URI 不匹配。
+该问题影响 Qt6.4 包内加载；本机 Qt6.9 的成功未覆盖这个版本边界。没有移除 CI 检查或提高基线。
+
+仅去掉 module 声明仍会令 `NekoWallpaperItem` 不可见：原 Qt6 插件只提供 engine 初始化，
+生成注册器固定使用命名 URI。修复将 Qt6 插件改为 `QQmlExtensionPlugin`，目录 URI 下
+显式注册同一原生类型，命名 URI 仍由生成注册器处理；翻译安装保持逐 engine 初始化。
+导出时统一去掉命名 module/prefer，stage、Qt5 插件实现及渲染/模型求值均不改。
+
+验证使用 Debian 官方 Qt6.4.2 开发/运行包在项目内解包，配合已有 Actions 的 Qt6.4 后端库：
+原包复现失败、仅删声明候选仍失败，重新编译的 Debug/Werror wrapper 加完整修复通过。
+最终新 bundle 的基线 ELF/Qt 审计、目录入口、命名入口、三语言（含第二 engine）和缺插件负例
+全部按预期完成；本机 Qt6.9 Release/LTO/Werror 重建、四个既有 Qt runner、Qt6.9/Qt5.15
+最终包目录导入和 180 项 Python 工具检查（12 项按环境跳过）通过。
+
+这是定向的 x86_64 Qt6.4 加载验证：系统 glibc、C++ 标准库及部分图形依赖来自主机，
+没有声称重跑完整 Debian12 容器或 aarch64。两架构远端工作流仍需推送后重跑，
+本轮没有改动真实桌面或执行网络发布。证据见
+[基线补修记录](validation/plasma6-baseline-import-2026-11-11/README.md)。

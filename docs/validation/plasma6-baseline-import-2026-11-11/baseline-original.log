@@ -1,0 +1,2 @@
+QQmlComponent: Component is not ready
+file:///run/media/chocola/MIKU/NekoMote/experiments/plasma6-baseline-fix/original-package/contents/ui/config.qml:4 Module namespace 'NekoMote.Wallpaper' does not match import URI '.run.media.chocola.MIKU.NekoMote.experiments.plasma6-baseline-fix.original-package.contents.ui.NekoMote.Wallpaper'

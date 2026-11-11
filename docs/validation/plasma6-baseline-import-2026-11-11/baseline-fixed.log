@@ -1,0 +1,2 @@
+Settings-first and native item directory imports PASS without a global module path
+Module '.run.media.chocola.MIKU.NekoMote.experiments.plasma6-baseline-fix.fixed-package.contents.ui.NekoMote.Wallpaper' does not contain a module identifier directive - it cannot be protected from external registrations.

@@ -1,0 +1,2 @@
+QQmlComponent: Component is not ready
+file:///tmp/nekomote-ci.g3Mz50/wallpaper/contents/ui/config.qml:4 Module namespace 'NekoMote.Wallpaper' does not match import URI '.tmp.nekomote-ci.wallpaper.contents.ui.NekoMote.Wallpaper'

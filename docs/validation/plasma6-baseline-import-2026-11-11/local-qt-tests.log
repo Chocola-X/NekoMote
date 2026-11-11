@@ -1,0 +1,16 @@
+Test project /run/media/chocola/MIKU/NekoMote/build/plasma
+    Start  1: plasma_module_import
+1/4 Test  #1: plasma_module_import .............   Passed    0.06 sec
+    Start  8: plasma_translations_en_US
+2/4 Test  #8: plasma_translations_en_US ........   Passed    0.16 sec
+    Start  9: plasma_translations_zh_CN
+3/4 Test  #9: plasma_translations_zh_CN ........   Passed    0.17 sec
+    Start 10: plasma_translations_zh_TW
+4/4 Test #10: plasma_translations_zh_TW ........   Passed    0.15 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+qt    =   0.53 sec*proc (4 tests)
+
+Total Test time (real) =   0.54 sec

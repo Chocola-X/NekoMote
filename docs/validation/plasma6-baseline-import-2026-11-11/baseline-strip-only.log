@@ -1,0 +1,3 @@
+Module '.run.media.chocola.MIKU.NekoMote.experiments.plasma6-baseline-fix.stripped-package.contents.ui.NekoMote.Wallpaper' does not contain a module identifier directive - it cannot be protected from external registrations.
+QQmlComponent: Component is not ready
+file:///run/media/chocola/MIKU/NekoMote/experiments/plasma6-baseline-fix/stripped-package/contents/ui/probe.qml:3 NekoWallpaperItem is not a type

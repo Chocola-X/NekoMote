@@ -6,6 +6,14 @@
 包内原生模块导入，清空全局 QML 搜索路径。结构、安装证据与商店上架边界见
 [KPackage分发](plasma-kpackage-distribution.md)。
 
+## 2026-11-11：Qt6.4 最终包导入补修
+
+`8ca7c89` 的 Plasma6 双架构编译、258 项 CTest 均通过，但最终包导入在
+Qt6.4.2 的 module/目录 URI 核验处失败。保留检查与 Qt6.4 基线，修复导出副本的
+qmldir 声明/重定向，并让 Qt6 插件支持目录 URI 注册，源码和发行版 named 入口保持可用。
+真实 Qt6.4 的原包负例与修复包、named 导入、三语言/第二 engine 均已定向验证，
+证据与隔离范围见[补修记录](validation/plasma6-baseline-import-2026-11-11/README.md)。
+
 ## 2026-11-11：Plasma 翻译构建与导入检查
 
 Plasma5/6镜像补齐对应Qt LinguistTools，Plasma6另补设置页测试所需的Controls、

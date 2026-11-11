@@ -70,7 +70,8 @@ class PlasmaDistributionTests(unittest.TestCase):
                                                                     "KPlugin": {"Id": "uk.nekopara.nekomote"}}))
         (root / "metadata.desktop").write_text("X-KDE-PluginInfo-Version=0.1.0\n")
         (self.stage / "qml/NekoMote/Wallpaper/qmldir").write_text(
-            "module NekoMote.Wallpaper\nplugin nekomote_plasma_qmlplugin\n")
+            "module NekoMote.Wallpaper\nplugin nekomote_plasma_qmlplugin\n"
+            "prefer :/qt/qml/NekoMote/Wallpaper/\n")
         for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
             (self.stage / name).write_text("license fixture\n")
         for major, qt in ((5, "5.12.8"), (6, "6.4.2")):
@@ -91,7 +92,10 @@ class PlasmaDistributionTests(unittest.TestCase):
                         self.assertIn(b'import "NekoMote/Wallpaper" 1.0', archive.read("contents/ui/main.qml"))
                     self.assertIn(b'import "NekoMote/Wallpaper" 1.0', archive.read("contents/ui/config.qml"))
                     qmldir = archive.read("contents/ui/NekoMote/Wallpaper/qmldir")
-                    self.assertEqual(b"module NekoMote.Wallpaper" in qmldir, major == 6)
+                    self.assertNotIn(b"module ", qmldir)
+                    self.assertNotIn(b"prefer ", qmldir)
+                    self.assertIn(b"module NekoMote.Wallpaper",
+                                  (self.stage / "qml/NekoMote/Wallpaper/qmldir").read_bytes())
                     self.assertIn(b"plugin nekomote_plasma_qmlplugin", qmldir)
                     self.assertEqual(archive.read("contents/lib/libnekomote_plasma_qml.so"),
                                      (self.stage / DIST.ELFS[0]).read_bytes())
