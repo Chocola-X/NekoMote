@@ -228,3 +228,13 @@
 - 定向旧 Qt 测试使用项目内解包的官方库、开发头和 moc，不替换系统 Qt 或安装到用户桌面。
   通过局部组件验证不能冒充完整容器、另一架构或 GPU 播放认证。
   前后证据及具体范围见[补修记录](validation/plasma6-baseline-import-2026-11-11/README.md)。
+
+## 后端设置后的 Loading 也可能是身份门控
+
+- 2026-11-11，KDE6后端应用后卡Loading的排查发现入口仍仅完成时生成UUID。
+  有后端值、有根资产路径，不代表native已拿到资产；应同时检查ID和native assetsDir。
+  原代码在同对象map替换中稳定呈现backend=vulkan、assets为空、status0。
+- 延迟修复需查询当前map，已有显式ID优先，空值不覆盖该对象记住的有效UUID；
+  组件完成时也只用非空ID更新记忆，避免抹掉构造期观察到的身份。回归包含不同显式ID、
+  清空、恢复、重建及不重复保存。测试status1只能说明配置链就绪，不能当作GPU播放证据。
+- [证据及未覆盖范围](validation/plasma6-backend-apply-2026-11-11/README.md)。

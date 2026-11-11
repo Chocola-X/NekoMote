@@ -171,4 +171,15 @@ add_custom_target(nekomote_plasma_stage_clean
 
 if(NEKOMOTE_BUILD_TESTS)
     include(translation_tests.cmake)
+    add_executable(nekomote_plasma6_configuration_test
+        ../../tests/plasma/test_plasma6_configuration.cpp)
+    set_target_properties(nekomote_plasma6_configuration_test PROPERTIES AUTOMOC ON)
+    target_link_libraries(nekomote_plasma6_configuration_test PRIVATE
+        Qt6::Quick Qt6::Qml nekomote_warnings)
+    add_dependencies(nekomote_plasma6_configuration_test nekomote_plasma_stage)
+    add_test(NAME plasma6_configuration_lifecycle COMMAND nekomote_plasma6_configuration_test
+        ${NEKOMOTE_STAGE_DIR}/${NEKOMOTE_INSTALL_QMLDIR}
+        ${NEKOMOTE_STAGE_DIR}/share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/main.qml)
+    set_tests_properties(plasma6_configuration_lifecycle PROPERTIES LABELS "qt" TIMEOUT 30
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software")
 endif()

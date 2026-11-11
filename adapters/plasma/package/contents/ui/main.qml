@@ -7,18 +7,38 @@ WallpaperItem {
     readonly property string assetsDir: configuration.assetsDir
     readonly property string renderBackend: configuration.renderBackend
 
-    Component.onCompleted: {
-        if (configuration.panelInstanceId.length === 0) {
-            configuration.panelInstanceId = wallpaper.createInstanceId();
+    readonly property string panelInstanceId: configuration.panelInstanceId
+    property bool configurationReady: false
+    property string retainedInstanceId: ""
+
+    // Applying settings can replace/reset the map while this item stays alive.
+    // Repair the active map after its dependent bindings have settled.
+    function ensureInstanceId() {
+        if (configurationReady && panelInstanceId.length === 0) {
+            // A map reset is still the same wallpaper instance. Preserve its
+            // known identity so applying a backend does not reset panel state.
+            configuration.panelInstanceId = retainedInstanceId.length > 0
+                ? retainedInstanceId : wallpaper.createInstanceId();
             configuration.writeConfig();
         }
+    }
+    onPanelInstanceIdChanged: {
+        if (panelInstanceId.length > 0)
+            retainedInstanceId = panelInstanceId;
+        Qt.callLater(ensureInstanceId);
+    }
+    Component.onCompleted: {
+        configurationReady = true;
+        if (panelInstanceId.length > 0)
+            retainedInstanceId = panelInstanceId;
+        ensureInstanceId();
     }
 
     NekoWallpaperItem {
         id: wallpaper
         objectName: "nativeSession"
         anchors.fill: parent
-        instanceId: configuration.panelInstanceId
+        instanceId: root.panelInstanceId
         // Do not load the shared default panel file before the persisted ID arrives.
         assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend

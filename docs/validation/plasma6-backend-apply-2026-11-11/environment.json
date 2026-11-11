@@ -1,0 +1,12 @@
+{
+  "base_commit": "de456c53016043305fc51ddf70fb9aafcace3278",
+  "scope": "configuration lifecycle and native property propagation; no GPU rendering",
+  "qt_local": "6.9.2",
+  "qt_baseline": "6.4.2 (extracted Debian Qt headers/runtime, host compiler/libc)",
+  "sources": {
+    "adapters/plasma/package/contents/ui/main.qml": "9bf997bbfb12a24a672a6331932cdb308da7f3fafbd6bdad5f8c0e47bb65bf56",
+    "tests/plasma/test_plasma6_configuration.cpp": "23fc7308059ad3ab26fe4cc717158da9f506a6aab1ffe13ea43736e4d0675d0d",
+    "adapters/plasma/CMakeLists.txt": "8004c247e4cee5a82395ffb25702b19a3d6e8a0204d0930a0ebd583dc30913f4",
+    "tools/ci_build.sh": "acfdb1b1e09c7090d4df0e59e9543e6f4b7d2ecdeb9c30353b3de45b7724418c"
+  }
+}

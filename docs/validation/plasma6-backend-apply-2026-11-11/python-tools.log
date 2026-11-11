@@ -1,0 +1,65 @@
+...........................usage: audit_atlas_sources.py [-h] --reference-root REFERENCE_ROOT
+                              --capture-tool CAPTURE_TOOL --browser BROWSER
+                              --output OUTPUT --report REPORT
+                              [--timeout TIMEOUT]
+audit_atlas_sources.py: error: catalog not found: /tmp/tmprntwdta2/config/model-catalog.json
+.usage: audit_atlas_sources.py [-h] --reference-root REFERENCE_ROOT
+                              --capture-tool CAPTURE_TOOL --browser BROWSER
+                              --output OUTPUT --report REPORT
+                              [--timeout TIMEOUT]
+audit_atlas_sources.py: error: --timeout requires 1..600
+usage: audit_atlas_sources.py [-h] --reference-root REFERENCE_ROOT
+                              --capture-tool CAPTURE_TOOL --browser BROWSER
+                              --output OUTPUT --report REPORT
+                              [--timeout TIMEOUT]
+audit_atlas_sources.py: error: --timeout requires 1..600
+...................................................usage: import_all_assets.py [-h] --reference-root REFERENCE_ROOT
+                            --importer IMPORTER [--converter CONVERTER]
+                            --output OUTPUT [--session-tool SESSION_TOOL]
+                            [--presentation PRESENTATION]
+                            [--runtime-auditor RUNTIME_AUDITOR]
+                            [--runtime-steps RUNTIME_STEPS] [--report REPORT]
+import_all_assets.py: error: catalog not found: /tmp/tmp70fq_t4a/config/model-catalog.json
+.usage: import_all_assets.py [-h] --reference-root REFERENCE_ROOT
+                            --importer IMPORTER [--converter CONVERTER]
+                            --output OUTPUT [--session-tool SESSION_TOOL]
+                            [--presentation PRESENTATION]
+                            [--runtime-auditor RUNTIME_AUDITOR]
+                            [--runtime-steps RUNTIME_STEPS] [--report REPORT]
+import_all_assets.py: error: importer not found: /tmp/tmphmi1x2aa/absent
+.usage: import_all_assets.py [-h] --reference-root REFERENCE_ROOT
+                            --importer IMPORTER [--converter CONVERTER]
+                            --output OUTPUT [--session-tool SESSION_TOOL]
+                            [--presentation PRESENTATION]
+                            [--runtime-auditor RUNTIME_AUDITOR]
+                            [--runtime-steps RUNTIME_STEPS] [--report REPORT]
+import_all_assets.py: error: --runtime-steps requires 1..36000
+.usage: import_all_assets.py [-h] --reference-root REFERENCE_ROOT
+                            --importer IMPORTER [--converter CONVERTER]
+                            --output OUTPUT [--session-tool SESSION_TOOL]
+                            [--presentation PRESENTATION]
+                            [--runtime-auditor RUNTIME_AUDITOR]
+                            [--runtime-steps RUNTIME_STEPS] [--report REPORT]
+import_all_assets.py: error: --runtime-steps requires 1..36000
+................................................................................ssssssss..ssss....
+----------------------------------------------------------------------
+Ran 180 tests in 7.568s
+
+OK (skipped=12)
+1 Install
+2 Reinstall
+3 Uninstall
+4 Status
+0 Exit
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+{"installed": true, "plasma_major": 6, "legacy_files": 0, "package_root": "/tmp/tmp5twmchet/data/plasma/wallpapers/uk.nekopara.nekomote"}
+reinstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+NekoMote is not installed
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.

@@ -444,3 +444,11 @@ MIT 要求在副本中保留版权及许可声明；GLAD 生成代码涉及的
 证据在 `build/ci-layer-shell/`、`build/ci-package-refresh/`；均为本地输出，不随软件分发。
 未执行 ARM64、远端 Actions/标签发布、GPU/目标合成器或长期测试；没有修改桌面。
 本轮调整仅影响构建、归档和部署声明，未修改运行时/帧路径，也未做性能收益测量。
+
+## Plasma6 配置生命周期回归（2026-11-11）
+
+新增必选 `plasma6_configuration_lifecycle`，CI显式构建对应测试target。
+使用真实包入口和native模块、最小宿主配置属性替身，覆盖后端应用时同对象换map/
+重置ID、UUID保留及重建。无需KDE6宿主或GPU，不能作为Live桌面或Vulkan画面验收。
+本机Qt6.9五项相关Qt检查和定向Qt6.4回归通过，详见
+[验证记录](validation/plasma6-backend-apply-2026-11-11/README.md)。
