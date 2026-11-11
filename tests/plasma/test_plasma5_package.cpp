@@ -76,6 +76,41 @@ int main(int argc, char** argv)
                 (!persisted_id.isEmpty() && persisted_id != id))
                 return 1;
             persisted_id = id;
+            // Applying the initial wallpaper configuration can replace the
+            // property's map while keeping the QML item alive.
+            ProbeConfiguration replacement;
+            replacement.insert(QStringLiteral("assetsDir"), QStringLiteral("/assets/first-use"));
+            replacement.insert(QStringLiteral("panelInstanceId"), QString{});
+            replacement.insert(QStringLiteral("renderBackend"), QStringLiteral("opengl"));
+            wallpaper.insert(QStringLiteral("configuration"),
+                             QVariant::fromValue<QObject*>(&replacement));
+            QCoreApplication::processEvents();
+            const auto replacement_id =
+                replacement.value(QStringLiteral("panelInstanceId")).toString();
+            if (QUuid(replacement_id).isNull() || replacement.writes != 1 ||
+                native->property("instanceId").toString() != replacement_id ||
+                native->property("assetsDir").toString() != "/assets/first-use" ||
+                native->property("status").toInt() != 1)
+            {
+                std::fprintf(stderr,
+                             "First-use config replacement stalled: id=%s assets=%s status=%d\n",
+                             replacement_id.toUtf8().constData(),
+                             native->property("assetsDir").toString().toUtf8().constData(),
+                             native->property("status").toInt());
+                return 1;
+            }
+            // Settled bindings and subsequent asset edits must retain the ID.
+            replacement.insert(QStringLiteral("assetsDir"), QStringLiteral("/assets/edited"));
+            QCoreApplication::processEvents();
+            if (replacement.writes != 1 ||
+                replacement.value(QStringLiteral("panelInstanceId")).toString() != replacement_id ||
+                native->property("assetsDir").toString() != "/assets/edited")
+                return 1;
+            wallpaper.insert(QStringLiteral("configuration"),
+                             QVariant::fromValue<QObject*>(&configuration));
+            QCoreApplication::processEvents();
+            if (configuration.writes != 1 || native->property("instanceId").toString() != id)
+                return 1;
         }
     }
     std::puts("Plasma 5 staged module, containment, context and configuration page imported "
