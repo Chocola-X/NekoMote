@@ -376,9 +376,10 @@ void FontMetrics::ensure_char(unsigned int codepoint)
 
 float FontMetrics::text_width(const char* text, float size)
 {
-    if (!initialized_)
+    if (!initialized_ || !text)
         return 0;
     const float eff_size = size * 1.30f;
+    const float size_ratio = eff_size / pixel_height_;
     float width = 0;
     for (const auto* p = text; *p;)
     {
@@ -387,7 +388,7 @@ float FontMetrics::text_width(const char* text, float size)
             continue;
         if (const auto cached = glyphs_.find(cp); cached != glyphs_.end())
         {
-            width += cached->second.value.advance * (eff_size / pixel_height_);
+            width += cached->second.value.advance * size_ratio;
             continue;
         }
         const auto* info = &font_for_codepoint(cp).value;
@@ -402,10 +403,11 @@ float FontMetrics::text_width(const char* text, float size)
 void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uvs, float x, float y,
                             const char* text, float size)
 {
-    if (!initialized_)
+    if (!initialized_ || !text)
         return;
     // Prepare every glyph before generating UVs. An atlas growth midway through
     // a string must not leave its first quads normalized to the old dimensions.
+    // Decoding UTF-8 in place avoids any heap allocation in steady-state rendering.
     std::size_t glyph_count = 0;
     for (const auto* p = text; *p;)
     {
@@ -416,7 +418,9 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
             ++glyph_count;
         }
     }
-    // Reserve once per string, retaining capacity across calls and frames.
+    if (glyph_count == 0)
+        return;
+
     const auto reserve_quads = [glyph_count](std::vector<float>& data)
     {
         const auto required = data.size() + glyph_count * 12;
@@ -425,26 +429,31 @@ void FontMetrics::draw_text(std::vector<float>& vertices, std::vector<float>& uv
     };
     reserve_quads(vertices);
     reserve_quads(uvs);
+
     const float eff_size = size * 1.30f;
     const float size_ratio = eff_size / pixel_height_;
     const float baseline = y + static_cast<float>(ascent_) * scale_ * size_ratio;
+    const float inv_tw = 1.0f / static_cast<float>(texture_width_);
+    const float inv_th = 1.0f / static_cast<float>(texture_height_);
     float pen_x = x;
+
     for (const auto* p = text; *p;)
     {
         const unsigned int cp = decode_utf8(p);
         if (cp == 0)
             continue;
-        const auto& g = glyphs_.at(cp).value;
+        const auto it = glyphs_.find(cp);
+        if (it == glyphs_.end())
+            continue;
+        const auto& g = it->second.value;
         const float gx0 = pen_x + static_cast<float>(g.x0) * size_ratio;
         const float gy0 = baseline + static_cast<float>(g.y0) * size_ratio;
         const float gx1 = gx0 + static_cast<float>(g.atlas_w) * size_ratio;
         const float gy1 = gy0 + static_cast<float>(g.atlas_h) * size_ratio;
-        const float tx0 = static_cast<float>(g.atlas_x) / static_cast<float>(texture_width_);
-        const float ty0 = static_cast<float>(g.atlas_y) / static_cast<float>(texture_height_);
-        const float tx1 =
-            static_cast<float>(g.atlas_x + g.atlas_w) / static_cast<float>(texture_width_);
-        const float ty1 =
-            static_cast<float>(g.atlas_y + g.atlas_h) / static_cast<float>(texture_height_);
+        const float tx0 = static_cast<float>(g.atlas_x) * inv_tw;
+        const float ty0 = static_cast<float>(g.atlas_y) * inv_th;
+        const float tx1 = static_cast<float>(g.atlas_x + g.atlas_w) * inv_tw;
+        const float ty1 = static_cast<float>(g.atlas_y + g.atlas_h) * inv_th;
         vertices.insert(vertices.end(),
                         {gx0, gy0, gx1, gy0, gx1, gy1, gx0, gy0, gx1, gy1, gx0, gy1});
         uvs.insert(uvs.end(), {tx0, ty0, tx1, ty0, tx1, ty1, tx0, ty0, tx1, ty1, tx0, ty1});

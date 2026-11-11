@@ -469,10 +469,13 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
                                    nekomote::ui::Color fill, nekomote::ui::Color border,
                                    float border_width)
 {
-    fill.a *= global_alpha_;
-    border.a *= global_alpha_;
     if (!initialized_)
         return;
+    if (clip_enabled_ &&
+        (x + w <= clip_left_ || x >= clip_right_ || y + h <= clip_top_ || y >= clip_bottom_))
+        return;
+    fill.a *= global_alpha_;
+    border.a *= global_alpha_;
     const float r = std::min(radius, std::min(w, h) * 0.5f);
     rect_vertices_.insert(rect_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
@@ -513,7 +516,10 @@ void UiRenderer::flush_rects()
 void UiRenderer::draw_text(float x, float y, const char* text, float size,
                            nekomote::ui::Color color)
 {
-    if (!initialized_ || !font_ready_)
+    if (!initialized_ || !font_ready_ || !text)
+        return;
+    if (clip_enabled_ &&
+        (y + size * 2.0f < clip_top_ || y - size > clip_bottom_ || x >= clip_right_))
         return;
     color.a *= global_alpha_;
     font_metrics_.draw_text(text_vertices_, text_uvs_, x, y, text, size);
@@ -611,9 +617,12 @@ void UiRenderer::draw_circle(float cx, float cy, float radius, nekomote::ui::Col
 
 void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::ui::Color color)
 {
-    color.a *= global_alpha_;
     if (!initialized_)
         return;
+    if (clip_enabled_ &&
+        (x + w <= clip_left_ || x >= clip_right_ || y + h <= clip_top_ || y >= clip_bottom_))
+        return;
+    color.a *= global_alpha_;
     const std::array<float, 12> tri_verts = {x, y, x + w, y,     x + w, y + h,
                                              x, y, x + w, y + h, x,     y + h};
     glBindVertexArray(vao_);
@@ -633,9 +642,12 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
 void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
                             nekomote::ui::Color fill)
 {
-    fill.a *= global_alpha_;
     if (!initialized_)
         return;
+    if (clip_enabled_ && (cx + size <= clip_left_ || cx - size >= clip_right_ ||
+                          cy + size <= clip_top_ || cy - size >= clip_bottom_))
+        return;
+    fill.a *= global_alpha_;
     std::array<float, 6> tri_verts{};
     if (points_up)
     {

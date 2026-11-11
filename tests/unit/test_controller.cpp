@@ -912,6 +912,23 @@ TEST_CASE("Catalog reads localized character names and group titles", "[catalog]
     fs::remove_all(root);
 }
 
+TEST_CASE("Catalog resolves real assets four-language character names if present",
+          "[catalog][assets]")
+{
+    if (!fs::exists("assets/characters/characters.json"))
+        return;
+    const auto catalog = AssetCatalog::scan("assets");
+    if (catalog.characters.empty())
+        return;
+    const auto* chocola = catalog.find_character("chocola/casual");
+    if (chocola)
+    {
+        REQUIRE(chocola->names.resolve(Language::English, chocola->name) == "Casual · Original");
+        REQUIRE(chocola->names.resolve(Language::ChineseSimplified, chocola->name) == "日常·原版");
+        REQUIRE(chocola->names.resolve(Language::Japanese, chocola->name) == "私服・オリジナル");
+    }
+}
+
 TEST_CASE("First launch without config picks the first background", "[controller][config]")
 {
     const auto root = fs::temp_directory_path() / "nekomote_first_launch_bg_test";

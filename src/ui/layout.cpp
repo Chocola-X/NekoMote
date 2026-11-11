@@ -12,6 +12,10 @@ void Context::init(Painter* painter, Style style)
 {
     painter_ = painter;
     style_ = style;
+    last_badge_ = nullptr;
+    last_badge_w_ = 22.0f;
+    last_slider_pct_ = -1;
+    last_slider_label_ = nullptr;
 }
 
 void Context::mouse_move(double x, double y)
@@ -295,8 +299,16 @@ bool Context::radio_row(const char* label, const char* badge, bool selected, flo
     painter_->draw_text(text_x, ty, label, style.font_size, text_col);
     if (badge && badge[0] != '\0')
     {
-        const float bw =
-            painter_->font() ? painter_->font()->text_width(badge, 11.0f) + 14.0f : 36.0f;
+        float badge_text_w = 22.0f;
+        if (badge == last_badge_)
+            badge_text_w = last_badge_w_;
+        else if (painter_->font())
+        {
+            badge_text_w = painter_->font()->text_width(badge, 11.0f);
+            last_badge_ = badge;
+            last_badge_w_ = badge_text_w;
+        }
+        const float bw = badge_text_w + 14.0f;
         const float bh = 18.0f;
         const float bx = x + w - bw - 16.0f;
         const float by = y + (h - bh) * 0.5f;
@@ -406,11 +418,16 @@ bool Context::slider_row(const char* label, float& value, bool& dragging, float 
     const float thumb_r = 9.0f;
 
     // Title with percentage at top-left of row (e.g. "音量：50%" or "Volume: 50%")
-    char title_buf[64];
-    const bool is_ascii = (label != nullptr && static_cast<unsigned char>(label[0]) < 0x80);
-    std::snprintf(title_buf, sizeof(title_buf), is_ascii ? "%s: %d%%" : "%s：%d%%",
-                  label ? label : "", static_cast<int>(std::round(clamped * 100.0f)));
-    painter_->draw_text(x + 30.0f, y + 6.0f, title_buf, style.font_size, text_col);
+    const int pct = static_cast<int>(std::round(clamped * 100.0f));
+    if (pct != last_slider_pct_ || label != last_slider_label_)
+    {
+        last_slider_pct_ = pct;
+        last_slider_label_ = label;
+        const bool is_ascii = (label != nullptr && static_cast<unsigned char>(label[0]) < 0x80);
+        std::snprintf(slider_title_buf_, sizeof(slider_title_buf_),
+                      is_ascii ? "%s: %d%%" : "%s：%d%%", label ? label : "", pct);
+    }
+    painter_->draw_text(x + 30.0f, y + 6.0f, slider_title_buf_, style.font_size, text_col);
 
     // Draw full track (gray background, matching switch off color)
     const Color off_bg{0.435f, 0.306f, 0.216f, 0.28f};

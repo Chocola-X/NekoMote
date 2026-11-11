@@ -605,6 +605,16 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
     if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
     auto& p = *impl_;
+    if (!p.clips.empty())
+    {
+        const auto& c = p.clips.back();
+        const float c_left = static_cast<float>(c.offset.x);
+        const float c_top = static_cast<float>(c.offset.y);
+        const float c_right = c_left + static_cast<float>(c.extent.width);
+        const float c_bottom = c_top + static_cast<float>(c.extent.height);
+        if (x + w <= c_left || x >= c_right || y + h <= c_top || y >= c_bottom)
+            return;
+    }
     const auto first = static_cast<std::uint32_t>(p.vertices.size());
     auto pc = p.constants(fill);
     pc.params0[2] = w;
@@ -626,6 +636,15 @@ void UiRenderer::draw_text(float x, float y, const char* text, float size,
     if (!impl_ || !impl_->initialized || !impl_->font_ready || !text || size <= 0)
         return;
     auto& p = *impl_;
+    if (!p.clips.empty())
+    {
+        const auto& c = p.clips.back();
+        const float c_top = static_cast<float>(c.offset.y);
+        const float c_bottom = c_top + static_cast<float>(c.extent.height);
+        const float c_right = static_cast<float>(c.offset.x) + static_cast<float>(c.extent.width);
+        if (y + size * 2.0f < c_top || y - size > c_bottom || x >= c_right)
+            return;
+    }
     p.text_vertices.clear();
     p.text_uvs.clear();
     p.font_metrics.draw_text(p.text_vertices, p.text_uvs, x, y, text, size);
@@ -663,6 +682,16 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
     if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
     auto& p = *impl_;
+    if (!p.clips.empty())
+    {
+        const auto& c = p.clips.back();
+        const float c_left = static_cast<float>(c.offset.x);
+        const float c_top = static_cast<float>(c.offset.y);
+        const float c_right = c_left + static_cast<float>(c.extent.width);
+        const float c_bottom = c_top + static_cast<float>(c.extent.height);
+        if (x + w <= c_left || x >= c_right || y + h <= c_top || y >= c_bottom)
+            return;
+    }
     const auto first = static_cast<std::uint32_t>(p.vertices.size());
     p.add_quad(x, y, w, h);
     p.record(Impl::Kind::Solid, first, p.constants(color));
@@ -674,6 +703,17 @@ void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
     if (!impl_ || !impl_->initialized || size <= 0)
         return;
     auto& p = *impl_;
+    if (!p.clips.empty())
+    {
+        const auto& c = p.clips.back();
+        const float c_left = static_cast<float>(c.offset.x);
+        const float c_top = static_cast<float>(c.offset.y);
+        const float c_right = c_left + static_cast<float>(c.extent.width);
+        const float c_bottom = c_top + static_cast<float>(c.extent.height);
+        if (cx + size <= c_left || cx - size >= c_right || cy + size <= c_top ||
+            cy - size >= c_bottom)
+            return;
+    }
     const auto first = static_cast<std::uint32_t>(p.vertices.size());
     const float edge = points_up ? size * 0.5f : -size * 0.5f;
     p.vertices.insert(

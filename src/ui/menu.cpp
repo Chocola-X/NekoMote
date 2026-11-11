@@ -250,13 +250,23 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         painter.push_clip_rect(sidebar_x + style.padding, footer_top,
                                std::max(0.0f, sidebar.width - 2.0f * style.padding), footer_h);
         float footer_y = footer_top + 10.0f;
-        const float atw =
-            painter.font() ? painter.font()->text_width(txt.author_line, 12.0f) : 160.0f;
+        static application::Language s_cached_footer_lang = static_cast<application::Language>(-1);
+        static const FontMetrics* s_cached_footer_font = nullptr;
+        static float s_cached_atw = 160.0f;
+        static float s_cached_gtw = 170.0f;
+        auto* font = painter.font();
+        if (font && (s_cached_footer_lang != lang || s_cached_footer_font != font))
+        {
+            s_cached_atw = font->text_width(txt.author_line, 12.0f);
+            s_cached_gtw = font->text_width(txt.github_line, 12.0f);
+            s_cached_footer_lang = lang;
+            s_cached_footer_font = font;
+        }
+        const float atw = font ? s_cached_atw : 160.0f;
         ctx.label(txt.author_line, sidebar_x + (sidebar.width - atw) * 0.5f, footer_y, 12.0f,
                   style.text);
         footer_y += 34.0f;
-        const float gtw =
-            painter.font() ? painter.font()->text_width(txt.github_line, 12.0f) : 170.0f;
+        const float gtw = font ? s_cached_gtw : 170.0f;
         ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, footer_y, 12.0f,
                   style.text);
         painter.pop_clip_rect();
@@ -269,6 +279,9 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
 
     painter.push_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
     ctx.set_input_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
+
+    const auto is_row_visible = [clip_y, clip_h](float y, float h) noexcept
+    { return (y + h > clip_y) && (y < clip_y + clip_h); };
 
     float curr_y = clip_y - sidebar.scroll_y;
 
@@ -285,12 +298,15 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         {
             for (const auto& item : group.items)
             {
-                const bool is_selected =
-                    (item.character_index == controller.current_character_index());
-                const std::string& item_label = item.names.resolve(lang, item.fallback_name);
-                if (ctx.drawer_item(item_label.c_str(), is_selected, sidebar_x, curr_y,
-                                    sidebar.width, kDrawerItemHeight, style))
-                    controller.request_switch_character(item.character_index);
+                if (is_row_visible(curr_y, kDrawerItemHeight))
+                {
+                    const bool is_selected =
+                        (item.character_index == controller.current_character_index());
+                    const std::string& item_label = item.names.resolve(lang, item.fallback_name);
+                    if (ctx.drawer_item(item_label.c_str(), is_selected, sidebar_x, curr_y,
+                                        sidebar.width, kDrawerItemHeight, style))
+                        controller.request_switch_character(item.character_index);
+                }
                 curr_y += kDrawerItemHeight;
             }
         }
@@ -312,20 +328,24 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                     has_any = true;
             if (!has_any)
                 return;
-            ctx.section_header(section_label, sidebar_x, curr_y, sidebar.width,
-                               kSectionHeaderHeight, style);
+            if (is_row_visible(curr_y, kSectionHeaderHeight))
+                ctx.section_header(section_label, sidebar_x, curr_y, sidebar.width,
+                                   kSectionHeaderHeight, style);
             curr_y += kSectionHeaderHeight;
             for (std::size_t b = 0; b < catalog.backgrounds.size(); ++b)
             {
                 if (catalog.backgrounds[b].type != type)
                     continue;
-                const auto& bg = catalog.backgrounds[b];
-                const bool selected =
-                    (static_cast<int>(b) == controller.current_background_index());
-                const std::string& bg_label = bg.names.resolve(lang, bg.name);
-                if (ctx.radio_row(bg_label.c_str(), "", selected, sidebar_x, curr_y, sidebar.width,
-                                  kRadioRowHeight, style))
-                    controller.request_switch_background(static_cast<int>(b));
+                if (is_row_visible(curr_y, kRadioRowHeight))
+                {
+                    const auto& bg = catalog.backgrounds[b];
+                    const bool selected =
+                        (static_cast<int>(b) == controller.current_background_index());
+                    const std::string& bg_label = bg.names.resolve(lang, bg.name);
+                    if (ctx.radio_row(bg_label.c_str(), "", selected, sidebar_x, curr_y,
+                                      sidebar.width, kRadioRowHeight, style))
+                        controller.request_switch_background(static_cast<int>(b));
+                }
                 curr_y += kRadioRowHeight;
             }
         };
@@ -340,8 +360,9 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     curr_y += kDrawerHeaderHeight;
     if (is_settings_open)
     {
-        ctx.section_header(txt.language_section, sidebar_x, curr_y, sidebar.width,
-                           kSectionHeaderHeight, style);
+        if (is_row_visible(curr_y, kSectionHeaderHeight))
+            ctx.section_header(txt.language_section, sidebar_x, curr_y, sidebar.width,
+                               kSectionHeaderHeight, style);
         curr_y += kSectionHeaderHeight;
         // Language options are labeled in their own language so users can
         // find their language regardless of the current setting.
@@ -355,69 +376,89 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                          {application::Language::Japanese, "日本語"}};
         for (const auto& opt : lang_opts)
         {
-            const bool selected = (lang == opt.lang);
-            if (ctx.radio_row(opt.label, "", selected, sidebar_x, curr_y, sidebar.width,
-                              kRadioRowHeight, style))
+            if (is_row_visible(curr_y, kRadioRowHeight))
             {
-                controller.config().language = opt.lang;
-                if (!controller.no_save())
-                    controller.save_config(controller.config_path());
+                const bool selected = (lang == opt.lang);
+                if (ctx.radio_row(opt.label, "", selected, sidebar_x, curr_y, sidebar.width,
+                                  kRadioRowHeight, style))
+                {
+                    controller.config().language = opt.lang;
+                    if (!controller.no_save())
+                        controller.save_config(controller.config_path());
+                }
             }
             curr_y += kRadioRowHeight;
         }
 
-        ctx.section_header(txt.fps_section, sidebar_x, curr_y, sidebar.width, kSectionHeaderHeight,
-                           style);
+        if (is_row_visible(curr_y, kSectionHeaderHeight))
+            ctx.section_header(txt.fps_section, sidebar_x, curr_y, sidebar.width,
+                               kSectionHeaderHeight, style);
         curr_y += kSectionHeaderHeight;
         for (const auto& opt : kFpsOptions)
         {
-            const bool selected = (menu.fps_limit == opt.fps);
-            const auto* label = opt.fps == 0 ? txt.unlimited : opt.label;
-            const auto* badge = opt.fps == 0 ? "∞" : (opt.fps == 60 ? txt.recommended : "");
-            if (ctx.radio_row(label, badge, selected, sidebar_x, curr_y, sidebar.width,
-                              kRadioRowHeight, style))
+            if (is_row_visible(curr_y, kRadioRowHeight))
             {
-                menu.fps_limit = opt.fps;
-                controller.config().fps = opt.fps;
-                if (!controller.no_save())
-                    controller.save_config(controller.config_path());
+                const bool selected = (menu.fps_limit == opt.fps);
+                const auto* label = opt.fps == 0 ? txt.unlimited : opt.label;
+                const auto* badge = opt.fps == 0 ? "∞" : (opt.fps == 60 ? txt.recommended : "");
+                if (ctx.radio_row(label, badge, selected, sidebar_x, curr_y, sidebar.width,
+                                  kRadioRowHeight, style))
+                {
+                    menu.fps_limit = opt.fps;
+                    controller.config().fps = opt.fps;
+                    if (!controller.no_save())
+                        controller.save_config(controller.config_path());
+                }
             }
             curr_y += kRadioRowHeight;
         }
 
-        ctx.section_header(txt.character_section, sidebar_x, curr_y, sidebar.width,
-                           kSectionHeaderHeight, style);
+        if (is_row_visible(curr_y, kSectionHeaderHeight))
+            ctx.section_header(txt.character_section, sidebar_x, curr_y, sidebar.width,
+                               kSectionHeaderHeight, style);
         curr_y += kSectionHeaderHeight;
-        if (ctx.switch_row(txt.lock_transform, menu.locked, sidebar_x, curr_y, sidebar.width,
-                           kSwitchRowHeight, style))
+        if (is_row_visible(curr_y, kSwitchRowHeight))
         {
-            controller.config().lock_transform = menu.locked;
-            if (!controller.no_save())
-                controller.save_config(controller.config_path());
+            if (ctx.switch_row(txt.lock_transform, menu.locked, sidebar_x, curr_y, sidebar.width,
+                               kSwitchRowHeight, style))
+            {
+                controller.config().lock_transform = menu.locked;
+                if (!controller.no_save())
+                    controller.save_config(controller.config_path());
+            }
         }
         curr_y += kSwitchRowHeight;
-        bool is_muted = menu.muted;
-        if (ctx.switch_row(txt.mute, is_muted, sidebar_x, curr_y, sidebar.width, kSwitchRowHeight,
-                           style))
+        if (is_row_visible(curr_y, kSwitchRowHeight))
         {
-            menu.muted = is_muted;
-            controller.config().mute = is_muted;
-            if (!controller.no_save())
-                controller.save_config(controller.config_path());
+            bool is_muted = menu.muted;
+            if (ctx.switch_row(txt.mute, is_muted, sidebar_x, curr_y, sidebar.width,
+                               kSwitchRowHeight, style))
+            {
+                menu.muted = is_muted;
+                controller.config().mute = is_muted;
+                if (!controller.no_save())
+                    controller.save_config(controller.config_path());
+            }
         }
         curr_y += kSwitchRowHeight;
         // Volume slider (below mute switch)
-        if (ctx.slider_row(txt.volume, menu.volume, menu.volume_dragging, sidebar_x, curr_y,
-                           sidebar.width, kSliderRowHeight, style))
+        if (is_row_visible(curr_y, kSliderRowHeight))
         {
-            controller.config().volume = menu.volume;
-            if (!controller.no_save())
-                controller.save_config(controller.config_path());
+            if (ctx.slider_row(txt.volume, menu.volume, menu.volume_dragging, sidebar_x, curr_y,
+                               sidebar.width, kSliderRowHeight, style))
+            {
+                controller.config().volume = menu.volume;
+                if (!controller.no_save())
+                    controller.save_config(controller.config_path());
+            }
         }
         curr_y += kSliderRowHeight;
-        if (ctx.reset_button(txt.reset_position, sidebar_x, curr_y, sidebar.width, kSwitchRowHeight,
-                             style))
-            controller.reset_character_transform();
+        if (is_row_visible(curr_y, kSwitchRowHeight))
+        {
+            if (ctx.reset_button(txt.reset_position, sidebar_x, curr_y, sidebar.width,
+                                 kSwitchRowHeight, style))
+                controller.reset_character_transform();
+        }
         curr_y += kSwitchRowHeight;
     }
 

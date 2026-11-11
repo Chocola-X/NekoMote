@@ -99,6 +99,11 @@ class Context
     bool input_clip_enabled_{false};
     float input_clip_left_{0}, input_clip_top_{0};
     float input_clip_right_{0}, input_clip_bottom_{0};
+    const char* last_badge_{nullptr};
+    float last_badge_w_{22.0f};
+    int last_slider_pct_{-1};
+    const char* last_slider_label_{nullptr};
+    char slider_title_buf_[64]{};
 };
 
 } // namespace nekomote::ui
