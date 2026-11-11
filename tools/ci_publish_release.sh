@@ -14,14 +14,18 @@ PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64
     nekomote-plasma6-x86_64 nekomote-plasma6-aarch64
     nekomote-layer-shell-debian12-x86_64 nekomote-layer-shell-debian12-aarch64
     nekomote-x11-ubuntu20-x86_64 nekomote-x11-ubuntu20-aarch64)
+ARCHIVES=()
+for package in "${PACKAGES[@]}"; do ARCHIVES+=("$package.tar.gz"); done
+for package in nekomote-plasma{5,6}-{x86_64,aarch64}; do
+    ARCHIVES+=("$package.wallpaper.zip")
+done
 FILES=(*)
-if [[ "${#FILES[@]}" != 20 ]]; then
-    echo 'Expected exactly ten packages and ten SHA256 files' >&2
+if [[ "${#FILES[@]}" != 28 ]]; then
+    echo 'Expected exactly fourteen packages and fourteen SHA256 files' >&2
     exit 1
 fi
 ASSETS=()
-for package in "${PACKAGES[@]}"; do
-    archive="$package.tar.gz"
+for archive in "${ARCHIVES[@]}"; do
     checksum="$archive.sha256"
     test -f "$archive" && test -s "$archive"
     test -f "$checksum" && test -s "$checksum"

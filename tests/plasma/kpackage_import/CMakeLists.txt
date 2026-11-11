@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.25)
+project(nekomote_kpackage_import LANGUAGES CXX)
+set(NEKOMOTE_QT_MAJOR 6 CACHE STRING "Qt major of the installed test package")
+if(NOT NEKOMOTE_QT_MAJOR MATCHES "^[56]$")
+    message(FATAL_ERROR "Qt major must be 5 or 6")
+endif()
+find_package(Qt${NEKOMOTE_QT_MAJOR} REQUIRED COMPONENTS Quick Qml)
+add_executable(kpackage_import main.cpp)
+target_compile_features(kpackage_import PRIVATE cxx_std_17)
+target_compile_options(kpackage_import PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(kpackage_import PRIVATE
+    Qt${NEKOMOTE_QT_MAJOR}::Quick Qt${NEKOMOTE_QT_MAJOR}::Qml)

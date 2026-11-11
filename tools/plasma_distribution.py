@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import zipfile
 from pathlib import Path
 
 
@@ -249,10 +250,56 @@ def package(stage, qt_version, output, baseline, ubuntu20=False):
     return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
 
 
+def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
+                     package_version="0.0.0"):
+    """Export the audited build as one native, relocatable Plasma/Wallpaper ZIP."""
+    if not re.fullmatch(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", package_version):
+        raise ValueError("package version must be a numeric major.minor.patch")
+    metadata = audit(stage, qt_version, baseline, ubuntu20)
+    root = stage / "share/plasma/wallpapers/uk.nekopara.nekomote"
+    files = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    for name in ("contents/ui/main.qml", "contents/ui/config.qml"):
+        text = files[name].decode("utf-8")
+        text, count = re.subn(r'^import NekoMote\.Wallpaper( 1\.0)?$',
+                             lambda match: 'import "NekoMote/Wallpaper"' + (match[1] or ""),
+                             text, flags=re.MULTILINE)
+        if count != 1:
+            raise ValueError("expected exactly one native module import in " + name)
+        files[name] = text.encode("utf-8")
+    module = stage / "qml/NekoMote/Wallpaper"
+    for path in module.iterdir():
+        if path.is_file():
+            files["contents/ui/NekoMote/Wallpaper/" + path.name] = path.read_bytes()
+    if metadata["plasma_major"] == 5:
+        # Qt5 checks named module URIs against the filesystem import URI.
+        # A directory module registers its types under the latter instead.
+        name = "contents/ui/NekoMote/Wallpaper/qmldir"
+        files[name] = re.sub(rb"(?m)^module .*\n", b"", files[name])
+    # Preserve the audited $ORIGIN/../../../lib relationship, without ELF edits.
+    files["contents/lib/libnekomote_plasma_qml.so"] = (stage / ELFS[0]).read_bytes()
+    plugin_metadata = json.loads(files["metadata.json"])
+    plugin_metadata["KPlugin"]["Version"] = package_version
+    files["metadata.json"] = (json.dumps(plugin_metadata, indent=2, ensure_ascii=False) + "\n").encode()
+    if "metadata.desktop" in files:
+        files["metadata.desktop"] = re.sub(
+            rb"(?m)^X-KDE-PluginInfo-Version=.*$",
+            b"X-KDE-PluginInfo-Version=" + package_version.encode(), files["metadata.desktop"])
+    for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+        files["contents/" + name] = (stage / name).read_bytes()
+    files["contents/compatibility.json"] = (json.dumps(metadata, indent=2, sort_keys=True) + "\n").encode()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, data in sorted(files.items()):
+            info = zipfile.ZipInfo(name, (1980, 1, 1, 0, 0, 0))
+            info.external_attr = 0o100644 << 16
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, data)
+    return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("audit", "package", "check-host"):
+    for name in ("audit", "package", "kpackage", "check-host"):
         command = commands.add_parser(name)
         command.add_argument("stage", type=Path)
         if name != "check-host":
@@ -260,8 +307,10 @@ def main():
             baselines = command.add_mutually_exclusive_group()
             baselines.add_argument("--baseline-debian12", action="store_true")
             baselines.add_argument("--baseline-ubuntu20", action="store_true")
-        if name == "package":
+        if name in ("package", "kpackage"):
             command.add_argument("--output", required=True, type=Path)
+            if name == "kpackage":
+                command.add_argument("--package-version", required=True)
         elif name == "audit":
             command.add_argument("--output", type=Path)
         else:
@@ -273,6 +322,10 @@ def main():
             result = audit(args.stage, args.qt_version, args.baseline_debian12, args.baseline_ubuntu20)
             if args.output:
                 args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+        elif args.command == "kpackage":
+            result = package_kpackage(args.stage, args.qt_version, args.output,
+                                      args.baseline_debian12, args.baseline_ubuntu20,
+                                      args.package_version)
         elif args.command == "package":
             result = package(args.stage, args.qt_version, args.output, args.baseline_debian12, args.baseline_ubuntu20)
         else:

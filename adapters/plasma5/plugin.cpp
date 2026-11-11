@@ -1,7 +1,6 @@
 #include <qqml.h>
 
 #include <QQmlExtensionPlugin>
-#include <cstring>
 
 #include "translations.hpp"
 #include "wallpaper_item.hpp"
@@ -13,7 +12,8 @@ class NekoMoteWallpaperPlugin final : public QQmlExtensionPlugin
   public:
     void registerTypes(const char* uri) override
     {
-        Q_ASSERT(std::strcmp(uri, "NekoMote.Wallpaper") == 0);
+        // Qt5 also supplies a filesystem URI for package-local directory imports.
+        Q_ASSERT(uri && *uri);
 
         qmlRegisterType<nekomote::plasma::NekoWallpaperItem>(uri, 1, 0, "NekoWallpaperItem");
     }

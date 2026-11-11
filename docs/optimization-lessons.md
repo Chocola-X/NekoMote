@@ -195,3 +195,12 @@
   `Qt.callLater`等待绑定更新，读取当前map并保留已有ID。初始成功不代表后续应用配置
   成功，软件导入测试与真实GPU/目标Live桌面仍需分别报告。
 - 证据与未确认的实机归因见[首次启用核查](plasma5-first-use-2026-11-11.md)。
+
+## 包内QML模块不能按Qt6经验直接套用Qt5
+
+- 2026-11-11，为KNewStuff导出包内原生模块时，Qt6目录导入通过，Qt5却报告
+  命名module与目录URI不符。移除导出副本的Qt5 module声明后还需保留1.0导入
+  版本；否则模块能载入但native类型不可见。Debug注册器也必须接受合法目录URI。
+- 设置页也显式导入模块用于翻译；只修main.qml会造成设置页单独加载失败。
+  验证必须在没有全局搜索路径的新进程中，先设置页、再创建native类型。
+- 证据与尚未覆盖的商店/桌面范围见[KPackage分发](plasma-kpackage-distribution.md)。

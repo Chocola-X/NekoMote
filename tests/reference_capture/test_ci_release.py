@@ -24,6 +24,9 @@ PACKAGES = (
     "nekomote-x11-ubuntu20-aarch64",
 )
 
+ARCHIVES = [f"{p}.tar.gz" for p in PACKAGES] + [
+    f"{p}.wallpaper.zip" for p in PACKAGES if "-plasma" in p]
+
 
 class ReleaseTests(unittest.TestCase):
     def setUp(self):
@@ -32,11 +35,11 @@ class ReleaseTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.assets = self.root / "packages"
         self.assets.mkdir()
-        for package in PACKAGES:
-            archive = self.assets / f"{package}.tar.gz"
-            archive.write_bytes(package.encode())
+        for name in ARCHIVES:
+            archive = self.assets / name
+            archive.write_bytes(name.encode())
             digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-            archive.with_suffix(".gz.sha256").write_text(f"{digest}  {archive.name}\n")
+            archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n")
         self.log = self.root / "calls.jsonl"
         mock = self.root / "gh"
         mock.write_text(f"#!{sys.executable}\n" + '''
@@ -75,7 +78,7 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         self.assertIn("--draft", calls[1])
         self.assertIn("--verify-tag", calls[1])
         self.assertIn("--generate-notes", calls[1])
-        expected = {f"{package}.tar.gz{suffix}" for package in PACKAGES
+        expected = {f"{name}{suffix}" for name in ARCHIVES
                     for suffix in ("", ".sha256")}
         self.assertEqual(set(calls[2][3:-1]), expected)
         self.assertIn("--draft=false", calls[3])

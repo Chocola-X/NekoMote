@@ -1,5 +1,9 @@
 # Plasma 插件分发
 
+2026-11-11：新增用于KDE“获取新壁纸”的自包含 `.wallpaper.zip`，与原tar同步构建。
+发布清单现为14份包及14份校验文件；结构、安装证据与商店上架边界见
+[KPackage分发](plasma-kpackage-distribution.md)。
+
 目标是每种 CPU 架构构建一份插件，在满足公开 ABI 与运行依赖的 Plasma 6
 发行版间复用。不能保证一个本机二进制覆盖全部 Linux：Qt 插件只能由相同 major、
 不低于构建 minor 的 Qt 加载；glibc、libstdc++、图形能力也有最低要求。

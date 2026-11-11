@@ -1,5 +1,9 @@
 # GitHub 自动构建与测试
 
+2026-11-11：新增用于KDE“获取新壁纸”的自包含 `.wallpaper.zip`，与原tar同步构建。
+发布清单现为14份包及14份校验文件；结构、安装证据与商店上架边界见
+[KPackage分发](plasma-kpackage-distribution.md)。
+
 ## 2026-11-11：Plasma 翻译构建与导入检查
 
 Plasma5/6镜像补齐对应Qt LinguistTools，Plasma6另补设置页测试所需的Controls、

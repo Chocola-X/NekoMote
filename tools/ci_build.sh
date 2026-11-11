@@ -126,6 +126,11 @@ else
     python3 "$WORK_DIR/src/tools/plasma_distribution.py" package "$STAGE_DIR" \
         --qt-version "$QT_VERSION" "$BASELINE" --output "$OUTPUT_DIR/$NAME.tar.gz" \
         > "$OUTPUT_DIR/compatibility.json"
+    python3 "$WORK_DIR/src/tools/plasma_distribution.py" kpackage "$STAGE_DIR" \
+        --qt-version "$QT_VERSION" "$BASELINE" \
+        --package-version "${NEKOMOTE_PACKAGE_VERSION:-0.0.0}" \
+        --output "$OUTPUT_DIR/$NAME.wallpaper.zip" > "$OUTPUT_DIR/kpackage.json"
+    (cd "$OUTPUT_DIR" && sha256sum "$NAME.wallpaper.zip" > "$NAME.wallpaper.zip.sha256")
 fi
 (cd "$OUTPUT_DIR" && sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
 echo "Package: $NAME.tar.gz"

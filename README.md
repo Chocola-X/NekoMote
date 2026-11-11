@@ -218,6 +218,11 @@ build/release/bin/nekomote_player --assets assets --character <角色名> --mute
 
 ## KDE Plasma 壁纸部署
 
+CI另提供 `nekomote-plasma{5,6}-{x86_64,aarch64}.wallpaper.zip` 自包含壁纸包，
+可供KDE“获取新壁纸”的KPackage安装机制使用，无需配置全局QML搜索路径。
+商店条目仍需单独上架；打包、架构选择、验证范围与迁移说明见
+[KDE壁纸包分发](docs/plasma-kpackage-distribution.md)。
+
 ### 从源码构建插件
 
 ```bash

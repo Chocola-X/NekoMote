@@ -9,6 +9,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 
@@ -60,6 +61,47 @@ class PlasmaDistributionTests(unittest.TestCase):
         report = DIST.audit(self.stage, "6.4.2", True)
         self.assertTrue(report["baseline"]["passed"])
         self.assertEqual(len(report["binaries"]), 2)
+
+    def test_kpackage_relocates_audited_module_and_preserves_payload(self):
+        root = self.stage / "share/plasma/wallpapers/uk.nekopara.nekomote"
+        (root / "metadata.json").write_text(json.dumps({"KPlugin": {"Id": "uk.nekopara.nekomote"}}))
+        (root / "metadata.desktop").write_text("X-KDE-PluginInfo-Version=0.1.0\n")
+        (self.stage / "qml/NekoMote/Wallpaper/qmldir").write_text(
+            "module NekoMote.Wallpaper\nplugin nekomote_plasma_qmlplugin\n")
+        for name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+            (self.stage / name).write_text("license fixture\n")
+        for major, qt in ((5, "5.12.8"), (6, "6.4.2")):
+            with self.subTest(major=major):
+                (root / "contents/ui/main.qml").write_text(
+                    "import QtQuick\nimport NekoMote.Wallpaper" + (" 1.0" if major == 5 else "") + "\n")
+                (root / "contents/ui/config.qml").write_text("import NekoMote.Wallpaper 1.0\n")
+                self.manifest()
+                output = self.directory / "wallpaper.zip"
+                DIST.package_kpackage(self.stage, qt, output, package_version="1.2.3")
+                first = output.read_bytes()
+                DIST.package_kpackage(self.stage, qt, output, package_version="1.2.3")
+                self.assertEqual(first, output.read_bytes())
+                with zipfile.ZipFile(output) as archive:
+                    for page in ("main.qml", "config.qml"):
+                        self.assertIn(b'import "NekoMote/Wallpaper"', archive.read("contents/ui/" + page))
+                    if major == 5:
+                        self.assertIn(b'import "NekoMote/Wallpaper" 1.0', archive.read("contents/ui/main.qml"))
+                    self.assertIn(b'import "NekoMote/Wallpaper" 1.0', archive.read("contents/ui/config.qml"))
+                    qmldir = archive.read("contents/ui/NekoMote/Wallpaper/qmldir")
+                    self.assertEqual(b"module NekoMote.Wallpaper" in qmldir, major == 6)
+                    self.assertIn(b"plugin nekomote_plasma_qmlplugin", qmldir)
+                    self.assertEqual(archive.read("contents/lib/libnekomote_plasma_qml.so"),
+                                     (self.stage / DIST.ELFS[0]).read_bytes())
+                    self.assertEqual(archive.read("contents/ui/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so"),
+                                     (self.stage / DIST.ELFS[1]).read_bytes())
+                    self.assertEqual(json.loads(archive.read("metadata.json"))["KPlugin"]["Version"], "1.2.3")
+                    self.assertIn(b"Version=1.2.3", archive.read("metadata.desktop"))
+                    self.assertFalse(any(name.startswith(("tools/", "stage/")) for name in archive.namelist()))
+        with self.assertRaisesRegex(ValueError, "package version"):
+            DIST.package_kpackage(self.stage, "6.4.2", output, package_version="main")
+        (self.stage / DIST.ELFS[0]).write_bytes(b"tampered")
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            DIST.package_kpackage(self.stage, "6.4.2", output)
 
     def test_higher_qt_rejected_by_baseline(self):
         with self.assertRaisesRegex(ValueError, "Qt 6.9.1 > 6.4.2"):

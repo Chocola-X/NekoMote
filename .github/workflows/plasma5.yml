@@ -43,7 +43,9 @@ jobs:
             2>&1 | tee build/ci-plasma5/toolchain-build.log
       - name: Release build, tests and dependency audit
         run: |
-          docker run --rm --user "$(id -u):$(id -g)" \
+          PACKAGE_VERSION=0.0.0
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then PACKAGE_VERSION="${GITHUB_REF_NAME#v}"; fi
+          docker run --rm -e NEKOMOTE_PACKAGE_VERSION="$PACKAGE_VERSION" --user "$(id -u):$(id -g)" \
             -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" \
             nekomote-plasma5 plasma5 2>&1 | tee build/ci-plasma5/build-test.log
           test -s build/ci-plasma5/tests.xml
@@ -56,6 +58,7 @@ jobs:
           name: nekomote-plasma5-${{ matrix.arch }}
           path: |
             build/ci-plasma5/*.tar.gz
+            build/ci-plasma5/*.wallpaper.zip
             build/ci-plasma5/*.sha256
           if-no-files-found: error
           retention-days: 30
