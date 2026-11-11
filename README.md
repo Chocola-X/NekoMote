@@ -6,7 +6,16 @@
 
 NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面动态壁纸：模型求值、时间线动画、变形、遮罩、物理与 GPU 渲染均为从零实现的完整原生播放链条，不依赖浏览器、JavaScript、asm.js 或任何专有核心。目前可完美对接《猫娘乐园》（NEKOPARA）的角色解包素材（FreeMote 解包后经本项目导入器规范化），在真实桌面上长期稳定运行。
 
+<img width="960" height="540" alt="demo" src="https://github.com/user-attachments/assets/b3ccfd23-35d0-459f-b272-4cdc56304f28" />
+
+
 支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经 KDE Plasma 插件、Wayland/X11 独立壁纸壳或普通窗口运行。
+
+效果演示视频：
+
+https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
+
+
 
 许可证：GNU AGPL-3.0（见 [LICENSE](LICENSE)）。
 
