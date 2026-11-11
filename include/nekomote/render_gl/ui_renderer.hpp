@@ -30,6 +30,14 @@ class FontAtlas
     {
         return texture_;
     }
+    int texture_width() const
+    {
+        return texture_width_;
+    }
+    int texture_height() const
+    {
+        return texture_height_;
+    }
 
   private:
     std::uint32_t texture_{0};
@@ -51,7 +59,7 @@ class UiRenderer : public nekomote::ui::Painter
 
     bool init(int viewport_width, int viewport_height);
     void resize(int viewport_width, int viewport_height);
-    // Backend-local host target; never exposed to application/ui contracts.
+    // Backend-local host target, bound by the next begin_frame().
     void set_render_target(std::uint32_t framebuffer);
     bool init_font(const std::string& font_path, float pixel_height);
 
@@ -131,8 +139,10 @@ class UiRenderer : public nekomote::ui::Painter
     std::vector<float> text_vertices_;
     std::vector<float> text_uvs_;
     std::vector<float> text_colors_;
+    nekomote::ui::Color text_color_{};
     std::vector<float> tri_vertices_;
     std::vector<float> tri_colors_;
+    nekomote::ui::Color tri_color_{};
     std::vector<float> icon_vertices_;
     std::vector<float> icon_uvs_;
     std::uint32_t icon_texture_{0};

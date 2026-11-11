@@ -1,0 +1,12 @@
+renderer=NVIDIA GeForce RTX 3080 Ti/PCIe/SSE2 version=3.3.0 NVIDIA 580.82.09 glfw_platform=393220
+character_groups=8 warmup=300 samples=1200 viewport=800x1080
+scene=0 mean_us=5.390 p50_us=2.352 p95_us=2.780 p99_us=3.454 cpu_us=5.404
+draw_calls=0
+scene=1 mean_us=128.925 p50_us=103.919 p95_us=301.295 p99_us=363.806 cpu_us=128.558
+draw_calls=25
+scene=2 mean_us=92.098 p50_us=85.289 p95_us=123.023 p99_us=132.882 cpu_us=91.863
+draw_calls=11
+scene=3 mean_us=230.770 p50_us=202.270 p95_us=361.517 p99_us=402.461 cpu_us=230.410
+draw_calls=48
+scene=4 mean_us=225.126 p50_us=191.483 p95_us=374.347 p99_us=400.550 cpu_us=224.749
+draw_calls=50

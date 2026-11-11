@@ -535,23 +535,36 @@ struct Surface
     bool captures_mouse() const noexcept
     {
         return ui_context && ui_icon && ui_sidebar &&
-               (ui_context->eval_captures_mouse(*ui_icon, *ui_sidebar) || volume_dragging);
+               (ui_context->eval_captures_mouse(*ui_icon, *ui_sidebar) ||
+                (volume_dragging && ui_context->mouse_down()));
+    }
+    void cancel_volume_drag() noexcept
+    {
+        volume_dragging = false;
+        if (ui_context)
+            ui_context->cancel_pointer_input();
     }
     void set_paused(bool value) noexcept
     {
         paused = value;
+        if (value)
+            cancel_volume_drag();
         presentation_dirty = true;
         controller->set_paused(value);
     }
     void set_minimized(bool value) noexcept
     {
         minimized = value;
+        if (value)
+            cancel_volume_drag();
         presentation_dirty = true;
         controller->set_minimized(value);
     }
     void set_output_unavailable(bool value) noexcept
     {
         output_unavailable = value;
+        if (value)
+            cancel_volume_drag();
         presentation_dirty = true;
         controller->set_output_unavailable(value);
     }
@@ -1364,6 +1377,8 @@ int run(int argc, char** argv)
                 ui_sidebar.animation > 0.05f &&
                 ui_context.mouse_in_rect(ui_sidebar.x, ui_sidebar.y, ui_sidebar.width,
                                          ui_sidebar.height);
+            if (!ui_sidebar.open)
+                surface.volume_dragging = false;
             ui_context.set_captures_mouse(mouse_over_icon || mouse_over_sidebar ||
                                           ui_icon.dragging || ui_sidebar.dragging ||
                                           surface.volume_dragging);
@@ -1375,7 +1390,8 @@ int run(int argc, char** argv)
                 menu.fps_limit = current_fps_limit;
                 menu.locked = surface.locked;
                 menu.muted = o.mute;
-                menu.volume = controller.config().volume;
+                const float previous_volume = controller.config().volume;
+                menu.volume = previous_volume;
                 menu.volume_dragging = surface.volume_dragging;
                 if (auto* p = ui_renderer.painter())
                     ui::build_sidebar(ui_context, *p, controller.catalog(), controller, menu, h);
@@ -1384,8 +1400,7 @@ int run(int argc, char** argv)
                 surface.locked = menu.locked;
                 surface.volume_dragging = menu.volume_dragging;
                 const bool muted_changed = o.mute != menu.muted;
-                const bool volume_changed =
-                    std::abs(controller.config().volume - menu.volume) > 0.0001f;
+                const bool volume_changed = std::abs(previous_volume - menu.volume) > 0.0001f;
                 o.mute = menu.muted;
                 if (muted_changed)
                 {

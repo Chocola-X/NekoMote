@@ -132,10 +132,10 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
                                  : config_path_override_;
     controller_.load_config(config_path);
     auto& config = controller_.config();
+    panel_.volume = config.volume;
     if (!mute_forced_)
     {
         panel_.muted = config.mute;
-        panel_.volume = config.volume;
         controller_cfg_.mute = config.mute;
         controller_cfg_.audio =
             config.mute ? application::AudioMode::Disabled : application::AudioMode::Device;
@@ -197,7 +197,6 @@ nekomote_error WallpaperInstance::set_muted(bool value)
                 else
                 {
                     device->set_volume(panel_.volume);
-                    device->set_volume(panel_.muted ? 0.0f : panel_.volume);
                     audio_device_ = std::move(device);
                 }
             }
@@ -261,6 +260,11 @@ nekomote_error WallpaperInstance::set_output_size(int width, int height)
 nekomote_error WallpaperInstance::set_paused(bool paused)
 {
     paused_ = paused;
+    if (paused)
+    {
+        panel_.volume_dragging = false;
+        ui_context_.cancel_pointer_input();
+    }
     presentation_dirty_ = true;
     controller_.set_paused(paused);
     return NEKOMOTE_OK;
@@ -269,6 +273,11 @@ nekomote_error WallpaperInstance::set_paused(bool paused)
 nekomote_error WallpaperInstance::set_output_available(bool available)
 {
     output_unavailable_ = !available;
+    if (!available)
+    {
+        panel_.volume_dragging = false;
+        ui_context_.cancel_pointer_input();
+    }
     presentation_dirty_ = true;
     controller_.set_output_unavailable(output_unavailable_);
     return NEKOMOTE_OK;
@@ -276,6 +285,8 @@ nekomote_error WallpaperInstance::set_output_available(bool available)
 
 nekomote_error WallpaperInstance::set_ui_open(bool open)
 {
+    if (!open)
+        panel_.volume_dragging = false;
     if (panel_.sidebar.open != open)
     {
         panel_.sidebar.open = open;
@@ -999,7 +1010,8 @@ bool WallpaperInstance::ui_captures_mouse()
          (panel_.sidebar.animation > .05f &&
           ui_context_.mouse_in_rect(panel_.sidebar.x, panel_.sidebar.y, panel_.sidebar.width,
                                     panel_.sidebar.height)) ||
-         panel_.icon.dragging || panel_.sidebar.dragging || panel_.volume_dragging);
+         panel_.icon.dragging || panel_.sidebar.dragging ||
+         (panel_.volume_dragging && ui_context_.mouse_down()));
     ui_context_.set_captures_mouse(captured);
     return captured;
 }
@@ -1008,6 +1020,8 @@ void WallpaperInstance::draw_ui(float dt)
 {
     if (!panel_.ui_ready)
         return;
+    if (!panel_.sidebar.open)
+        panel_.volume_dragging = false;
     ui_context_.begin_frame();
     if (ui_context_.toggle_icon(panel_.icon, panel_.icon_texture))
         panel_.sidebar.open = !panel_.sidebar.open;
@@ -1095,6 +1109,7 @@ nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 
 nekomote_error WallpaperInstance::pointer_leave()
 {
+    panel_.volume_dragging = false;
     if (!initialized_)
         return NEKOMOTE_OK;
     presentation_dirty_ = true;

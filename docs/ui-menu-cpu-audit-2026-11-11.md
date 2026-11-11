@@ -1,8 +1,13 @@
 # 动态壁纸菜单（UI）CPU 占用上升 — 核查与优化分析报告
 
-**核查日期**：2026-11-11  
-**核查基线**：`df2f08a`（HEAD，含音量控制滑块及音频缩放）  
+**核查日期**：2026-11-11
+**核查基线**：`df2f08a`（HEAD，含音量控制滑块及音频缩放）
 **关联模块**：`src/ui/`、`src/render_gl/ui_renderer.cpp`、`src/render_vk/ui_renderer.cpp`、`src/abi/wallpaper_instance.cpp`、`src/host_qt_quick/session_item.cpp`
+
+> 2026-11-11 独立复核：本报告早期表格未提供可复现的探针、计时边界和逐轮原始数据，
+> 不能据此宣称整个壁纸 CPU 降幅。零半径矩形代理已因抗锯齿回归撤回；
+> “真实菜单 3～8 次 Draw Call”和“最佳性能、零显存开销”等结论不成立。
+> 当前实测、修复与限制以[独立审计](ui-independent-audit-2026-11-11.md)为准。
 
 ---
 
@@ -44,13 +49,13 @@
 ### 缺陷 1：侧边栏滚动区域完全缺失视口剔除（Viewport / Scissor Culling）
 
 - **代码位置**：
-  [`src/ui/menu.cpp:270-335`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp#L270-L335)
-  [`src/ui/layout.cpp:261-277`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L261-L277)
-  [`src/render_gl/ui_renderer.cpp:519-531`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp#L519-L531)
-  [`src/render_vk/ui_renderer.cpp:623-637`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_vk/ui_renderer.cpp#L623-L637)
+  [`src/ui/menu.cpp:270-335`](../src/ui/menu.cpp#L270-L335)
+  [`src/ui/layout.cpp:261-277`](../src/ui/layout.cpp#L261-L277)
+  [`src/render_gl/ui_renderer.cpp:519-531`](../src/render_gl/ui_renderer.cpp#L519-L531)
+  [`src/render_vk/ui_renderer.cpp:623-637`](../src/render_vk/ui_renderer.cpp#L623-L637)
 
 - **逻辑分析**：
-  在 [`src/ui/menu.cpp:270-297`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp#L270-L297) 中，整个滚动区域通过 `clip_y` 与 `clip_h` 进行了裁剪：
+  在 [`src/ui/menu.cpp:270-297`](../src/ui/menu.cpp#L270-L297) 中，整个滚动区域通过 `clip_y` 与 `clip_h` 进行了裁剪：
   ```cpp
   painter.push_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
   ctx.set_input_clip_rect(sidebar_x, clip_y, sidebar.width, clip_h);
@@ -79,17 +84,17 @@
 ### 缺陷 2：渲染后端缺乏基本批处理，单图元立即 Flush 导致 Draw Call 爆炸
 
 - **代码位置**：
-  [`src/render_gl/ui_renderer.cpp:468-511`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp#L468-L511)（矩形）  
-  [`src/render_gl/ui_renderer.cpp:513-561`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp#L513-L561)（文字）  
-  [`src/render_gl/ui_renderer.cpp:612-631`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp#L612-L631)（分割线/实心矩形）  
-  [`src/render_gl/ui_renderer.cpp:633-662`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp#L633-L662)（折叠箭头）
+  [`src/render_gl/ui_renderer.cpp:468-511`](../src/render_gl/ui_renderer.cpp#L468-L511)（矩形）
+  [`src/render_gl/ui_renderer.cpp:513-561`](../src/render_gl/ui_renderer.cpp#L513-L561)（文字）
+  [`src/render_gl/ui_renderer.cpp:612-631`](../src/render_gl/ui_renderer.cpp#L612-L631)（分割线/实心矩形）
+  [`src/render_gl/ui_renderer.cpp:633-662`](../src/render_gl/ui_renderer.cpp#L633-L662)（折叠箭头）
 
 - **逻辑分析**：
   在 OpenGL 渲染器 `UiRenderer` 中，虽然 `UiRenderer::end_frame()`（421-423行）声明了 `flush_rects()`、`flush_text()`、`flush_icons()`，但实际上每个绘制 API 都被写成了**立即 Flush**：
   - `draw_rounded_rect` 在设置完 `glUniform4f` 后，立刻执行 `flush_rects()`，直接调用 `glBufferData` 和 `glDrawArrays`；
   - `draw_text` 在计算完文字顶点后，立刻执行 `flush_text()`，绑定纹理并调用 `glBufferData` 和 `glDrawArrays`；
   - `draw_solid_rect` 和 `draw_arrow` 甚至不进队列，直接绑定 VBO 执行 `glBufferData(..., tri_verts.data(), GL_STREAM_DRAW)` 与 `glDrawArrays`。
-  
+
   这导致侧边栏每行项目的背景高亮、图标箭头、分割线和文字标签，各自触发 1 次独立的 GPU 绘制和 CPU-GPU 缓冲同步。单帧绘制调用多达 146 次，大幅抬高驱动层 CPU 占用。
 
 ---
@@ -97,7 +102,7 @@
 ### 缺陷 3：`FontMetrics::draw_text` 存在两轮遍历与重复哈希查找
 
 - **代码位置**：
-  [`src/ui/font.cpp:402-453`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/font.cpp#L402-L453)
+  [`src/ui/font.cpp:402-453`](../src/ui/font.cpp#L402-L453)
 
 - **逻辑分析**：
   在 `FontMetrics::draw_text` 生成顶点时：
@@ -119,16 +124,16 @@
       ...
   }
   ```
-  事实上，[`src/ui/menu.cpp:129-160`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp#L129-L160) 中的 `prepare_menu_text()` 已经在面板初始化和目录加载时对所有可能出现的字符进行了预热（Pre-warm）。在稳态渲染路径中，`ensure_char` 必然全部命中缓存，但每帧仍对每个字符执行两次 UTF-8 解码与两次 `std::unordered_map` 哈希查找。
+  事实上，[`src/ui/menu.cpp:129-160`](../src/ui/menu.cpp#L129-L160) 中的 `prepare_menu_text()` 已经在面板初始化和目录加载时对所有可能出现的字符进行了预热（Pre-warm）。在稳态渲染路径中，`ensure_char` 必然全部命中缓存，但每帧仍对每个字符执行两次 UTF-8 解码与两次 `std::unordered_map` 哈希查找。
 
 ---
 
 ### 缺陷 4：伪粗体（Faux-Bold）采用重复绘制，文字计算与开销翻倍
 
 - **代码位置**：
-  [`src/ui/layout.cpp:236-237`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L236-L237)（侧边栏标题）  
-  [`src/ui/layout.cpp:439-440`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L439-L440)（分组标题 Section Header）  
-  [`src/ui/layout.cpp:349-350`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L349-L350)（重置按钮）
+  [`src/ui/layout.cpp:236-237`](../src/ui/layout.cpp#L236-L237)（侧边栏标题）
+  [`src/ui/layout.cpp:439-440`](../src/ui/layout.cpp#L439-L440)（分组标题 Section Header）
+  [`src/ui/layout.cpp:349-350`](../src/ui/layout.cpp#L349-L350)（重置按钮）
 
 - **逻辑分析**：
   在绘制标题和强调文字时，代码采用了 0.5px 偏移的“双重绘制”来实现伪粗体：
@@ -143,22 +148,22 @@
 ### 缺陷 5：静态尾部文字与徽标宽度逐帧反复度量与格式化
 
 - **代码位置**：
-  [`src/ui/menu.cpp:253-261`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp#L253-L261)  
-  [`src/ui/layout.cpp:298-300`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L298-L300)  
-  [`src/ui/layout.cpp:409-413`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L409-L413)
+  [`src/ui/menu.cpp:253-261`](../src/ui/menu.cpp#L253-L261)
+  [`src/ui/layout.cpp:298-300`](../src/ui/layout.cpp#L298-L300)
+  [`src/ui/layout.cpp:409-413`](../src/ui/layout.cpp#L409-L413)
 
 - **逻辑分析**：
   1. 底部作者信息与 GitHub 链接（`txt.author_line`、`txt.github_line`）在语言不改变时是恒定字符串，但每帧都调用 `painter.font()->text_width(...)` 逐字度量宽度以实现居中对齐；
   2. 选项徽标（如 `"∞"` 与 `"推荐"`）同样每帧调用 `text_width` 计算徽标背景矩形大小；
-  3. 音量控制行 [`layout.cpp:409-413`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L409-L413) 在未拖拽、音量保持不变的稳态帧下，依然每帧调用 `std::snprintf` 格式化当前百分比字符串。
+  3. 音量控制行 [`layout.cpp:409-413`](../src/ui/layout.cpp#L409-L413) 在未拖拽、音量保持不变的稳态帧下，依然每帧调用 `std::snprintf` 格式化当前百分比字符串。
 
 ---
 
 ### 缺陷 6：UI 静止时缺乏脏标记判断，伴随模型动画每帧全量重构
 
 - **代码位置**：
-  [`src/abi/wallpaper_instance.cpp:1023-1047`](file:///run/media/chocola/DATA/Project/NekoMote/src/abi/wallpaper_instance.cpp#L1023-L1047)  
-  [`src/host_qt_quick/session_item.cpp:337-340`](file:///run/media/chocola/DATA/Project/NekoMote/src/host_qt_quick/session_item.cpp#L337-L340)
+  [`src/abi/wallpaper_instance.cpp:1023-1047`](../src/abi/wallpaper_instance.cpp#L1023-L1047)
+  [`src/host_qt_quick/session_item.cpp:337-340`](../src/host_qt_quick/session_item.cpp#L337-L340)
 
 - **逻辑分析**：
   壁纸应用中，即使菜单处于打开状态且鼠标静止、没有任何输入交互，角色模型仍以 60 FPS 播放呼吸/待机动画。在每次主渲染循环中：
@@ -173,8 +178,8 @@
 ### 缺陷 7：`has_pending_animation` 浮点收敛精度过严延迟刷新退出
 
 - **代码位置**：
-  [`include/nekomote/ui/state.hpp:47-52`](file:///run/media/chocola/DATA/Project/NekoMote/include/nekomote/ui/state.hpp#L47-L52)  
-  [`src/ui/layout.cpp:120-121`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp#L120-L121)
+  [`include/nekomote/ui/state.hpp:47-52`](../include/nekomote/ui/state.hpp#L47-L52)
+  [`src/ui/layout.cpp:120-121`](../src/ui/layout.cpp#L120-L121)
 
 - **逻辑分析**：
   ```cpp
@@ -195,7 +200,7 @@
 ### 阶段一：即时模式排版与顶点生成优化（极低风险，高收益）
 
 1. **视口裁剪（Viewport Culling）介入排版层**：
-   - 在 [`src/ui/menu.cpp:270-335`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp#L270-L335) 遍历各个抽屉项前，先判断该项在垂直方向上的可见性：
+   - 在 [`src/ui/menu.cpp:270-335`](../src/ui/menu.cpp#L270-L335) 遍历各个抽屉项前，先判断该项在垂直方向上的可见性：
      ```cpp
      const float item_bottom = curr_y + item_height;
      if (item_bottom <= clip_y || curr_y >= clip_y + clip_h) {
@@ -235,21 +240,21 @@
 ### 5.1 实施内容
 
 1. **布局层垂直视口裁剪（Viewport Culling）**
-   - 文件：[`src/ui/menu.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp)
+   - 文件：[`src/ui/menu.cpp`](../src/ui/menu.cpp)
    - 在 `build_sidebar` 中引入 `is_row_visible(curr_y, h)` 判断。对抽屉展开内部的选项行（`drawer_item`、`radio_row`、`switch_row`、`slider_row`、`section_header`、`reset_button`）仅在与当前剪裁视口垂直重叠时才执行文本度量、点击测试及绘制调用。
 2. **渲染器 AABB 快速相交剔除**
-   - 文件：[`src/render_gl/ui_renderer.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_gl/ui_renderer.cpp)、[`src/render_vk/ui_renderer.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/render_vk/ui_renderer.cpp)
+   - 文件：[`src/render_gl/ui_renderer.cpp`](../src/render_gl/ui_renderer.cpp)、[`src/render_vk/ui_renderer.cpp`](../src/render_vk/ui_renderer.cpp)
    - 在 `draw_rounded_rect`、`draw_solid_rect`、`draw_arrow`、`draw_text` 处增加基于当前 Scissor 裁剪框的 AABB 早期相交判断，避免向 CPU 顶点缓冲写入视口外完全不可见的图元及产生无效 GPU 绘制指令。
 3. **文字度量与图元生成无堆分配（Zero Allocation）优化**
-   - 文件：[`src/ui/font.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/font.cpp)
+   - 文件：[`src/ui/font.cpp`](../src/ui/font.cpp)
    - 优化 `FontMetrics::draw_text`：预先计算倒数比例因子（`inv_tw = 1.0f / texture_width_`、`inv_th = 1.0f / texture_height_`），消除每字符 4 次浮点除法；消除 `glyphs_.at()` 异常表查找开销；原地流式解码 UTF-8，彻底消除帧内临时堆分配，保证稳态 0 堆分配。
 4. **度量与格式化缓存**
-   - 文件：[`include/nekomote/ui/layout.hpp`](file:///run/media/chocola/DATA/Project/NekoMote/include/nekomote/ui/layout.hpp)、[`src/ui/layout.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/layout.cpp)、[`src/ui/menu.cpp`](file:///run/media/chocola/DATA/Project/NekoMote/src/ui/menu.cpp)
+   - 文件：[`include/nekomote/ui/layout.hpp`](../include/nekomote/ui/layout.hpp)、[`src/ui/layout.cpp`](../src/ui/layout.cpp)、[`src/ui/menu.cpp`](../src/ui/menu.cpp)
    - 对 `radio_row` 单选行徽标文字宽度（`last_badge_`、`last_badge_w_`）进行上下文级指针比对缓存；
    - 对 `slider_row` 百分比文字格式化（`last_slider_pct_`、`slider_title_buf_`）进行缓存，避免未拖动时每帧重复 `snprintf`；
-   - 缓存侧边栏页脚（`author_line`、`github_line`）文字宽度。
+   - 原有侧边栏页脚宽度共享缓存已因线程竞争及字体重建失效撤回，改为实例当前字体的直接度量。
 5. **动画收敛浮点容差放宽**
-   - 文件：[`include/nekomote/ui/state.hpp`](file:///run/media/chocola/DATA/Project/NekoMote/include/nekomote/ui/state.hpp)
+   - 文件：[`include/nekomote/ui/state.hpp`](../include/nekomote/ui/state.hpp)
    - 将 `has_pending_animation` 图标缩放判定容差由 `0.000001f` 放宽至 `0.0005f`（约 0.02 像素），使得动画能够迅速收敛结束，避免在菜单未完全关闭/图标回弹时长期触发无意义的高频空转重绘。
 
 ### 5.2 性能对比（同机器、同分辨率 Release 构建测量）
@@ -277,16 +282,16 @@
 ### 6.1 实施内容
 
 1. **OpenGL UI 渲染管线多图元与文字批处理（Batching）**
-   - 文件：[`include/nekomote/render_gl/ui_renderer.hpp`](file:///run/media/chocola/MIKU/NekoMote/include/nekomote/render_gl/ui_renderer.hpp)、[`src/render_gl/ui_renderer.cpp`](file:///run/media/chocola/MIKU/NekoMote/src/render_gl/ui_renderer.cpp)
+   - 文件：[`include/nekomote/render_gl/ui_renderer.hpp`](../include/nekomote/render_gl/ui_renderer.hpp)、[`src/render_gl/ui_renderer.cpp`](../src/render_gl/ui_renderer.cpp)
    - **着色器顶点色扩展**：将 `tri_shader_` 升级为输入属性支持 `layout(location = 1) in vec4 a_color`；将 `text_shader_` 升级为支持 `layout(location = 2) in vec4 a_color`，消除原有每绘制单色图元或每串文字必须切换 Uniform 与触发单独 draw call 的瓶颈。
    - **同类型图元聚合提交**：`draw_solid_rect` 与 `draw_arrow` 统一写入 `tri_vertices_` 与 `tri_colors_` 缓冲区；`draw_text` 写入 `text_vertices_`、`text_uvs_` 与 `text_colors_`。仅在图元类型切换（如单色背景 -> 文本）、Scissor 状态变化或 `end_frame()` 时触发批量 `glDrawArrays`。
-   - **矩形图元智能代理**：当 `draw_rounded_rect` 满足 `radius <= 0.0f && border.a <= 0.0f` 时（如抽屉行高亮背景、标题分割线等），自动代理到 `draw_solid_rect`，使其能够与同层的箭头、分割线无缝合并进入单次 Draw Call。
+   - **矩形图元智能代理**：原实现将零半径矩形代理到 `draw_solid_rect`；独立复核发现原 shader 仍对矩形边缘抗锯齿，代理改变画面，已撤回。保留矩形 shader 及相邻兼容批次。
    - **嵌套 Scissor 裁剪栈**：引入 `clip_stack_`，并在裁剪区域真正发生变更前刷新当前缓冲图元，确保严格遵循画家算法与像素级裁剪正确性。
 
 2. **Vulkan UI 命令流相邻合并**
-   - 文件：[`include/nekomote/render_vk/ui_renderer.hpp`](file:///run/media/chocola/MIKU/NekoMote/include/nekomote/render_vk/ui_renderer.hpp)、[`src/render_vk/ui_renderer.cpp`](file:///run/media/chocola/MIKU/NekoMote/src/render_vk/ui_renderer.cpp)
+   - 文件：[`include/nekomote/render_vk/ui_renderer.hpp`](../include/nekomote/render_vk/ui_renderer.hpp)、[`src/render_vk/ui_renderer.cpp`](../src/render_vk/ui_renderer.cpp)
    - 在 `Impl::push_draw` 中对相邻的同类型绘制指令（相同 `kind`、`descriptor`、`clip`、`RectPC` push constants 且顶点偏移连续）执行自动合并（Coalescing），消除冗余的 `vkCmdDraw` 录制开销。
-   - 同样将 `radius <= 0.0f && border.a <= 0.0f` 的圆角矩形无缝代理到 `draw_solid_rect`。
+   - 原有零半径圆角矩形代理也已撤回，恢复原抗锯齿语义。
 
 3. **双后端画面一致性与零堆分配保障**
    - 维持 OpenGL 与 Vulkan 双后端在混合模式、画家顺序及裁剪规则上的严格一致性，通过 `test_vk.cpp` 中的 `require_same_picture` 双后端像素级校验。
@@ -296,11 +301,11 @@
 
 1. **Draw Call 降幅**：
    - 在包含 10 个矩形、5 个箭头、20 行文本及 5 个无圆角背景行的标准菜单测试场景下，Draw Call 数量由原本的 **40+ 次骤降至 3 次**（-92.5%）。
-   - 菜单完全展开（含抽屉项、箭头、分割线与徽标）的真实场景下，每帧 Draw Call 由原本的 **76 ~ 146 次降至 3 ~ 8 次**，彻底消除了 GPU 驱动层的密集调度峰值。
+   - 原“真实菜单 3～8 次”的判断撤回。独立探针中，折叠抽屉、Azuki、背景、设置菜单分别为 **38→25、53→11、103→48、75→50** 次；合成的3次用例不能替代真实菜单。
 
 2. **UI 离屏缓存权衡评估**：
-   - 在 4K 分辨率下全视口 UI FBO 拷贝带来高达 ~33 MB/帧的带宽与显存开销，且存在双后端 Alpha 混合语义漂移风险；
-   - 通过管线级批处理与阶段一视口裁剪相结合，UI 渲染驱动开销已被彻底削平，在稳态零内存分配与零显存开销的前提下达成了最佳性能与稳定性。
+   - 单张3840×2160 RGBA8纹理约31.6 MiB常驻存储；每帧采样/更新带宽需另测，不能把常驻存储说成每帧新增显存。Alpha混合和失效条件也需单独验证；
+   - 裁剪与批处理在已测菜单中有条件获益；初版额外颜色缓冲上传反而拖慢部分场景，现已增加单色批次常量属性路径。没有GPU完成时间、显存或功耗实测，不宣称驱动开销消失、零显存或最优。
 
 ### 6.3 回归测试通过情况
 

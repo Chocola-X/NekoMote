@@ -36,6 +36,14 @@ void Context::mouse_button(int button, int action)
     }
 }
 
+void Context::cancel_pointer_input() noexcept
+{
+    mouse_down_ = false;
+    mouse_pressed_ = false;
+    mouse_released_ = false;
+    captures_mouse_ = false;
+}
+
 void Context::mouse_scroll(double amount)
 {
     scroll_delta_ += static_cast<float>(amount);
@@ -384,31 +392,17 @@ bool Context::slider_row(const char* label, float& value, bool& dragging, float 
     // Handle drag input
     bool changed = false;
     const bool in_row = mouse_in_rect(x, y, w, h);
-    if (dragging)
+    if (dragging || (in_row && mouse_pressed_))
     {
-        if (mouse_down_)
-        {
-            const float new_val = std::clamp((mouse_x_ - track_x) / track_w, 0.0f, 1.0f);
-            if (new_val != value)
-            {
-                value = new_val;
-                changed = true;
-            }
-        }
-        else
-        {
-            dragging = false;
-        }
-    }
-    else if (in_row && mouse_pressed_)
-    {
-        dragging = true;
         const float new_val = std::clamp((mouse_x_ - track_x) / track_w, 0.0f, 1.0f);
         if (new_val != value)
         {
             value = new_val;
             changed = true;
         }
+        // A press and release can arrive in the same limited frame. Apply its
+        // final position without retaining capture after the button is up.
+        dragging = mouse_down_;
     }
 
     // Thumb position after potential update

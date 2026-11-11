@@ -611,6 +611,42 @@ TEST_CASE("Vulkan warmed model and UI frame paths reuse CPU allocations", "[gpu]
     REQUIRE(pixel(image, 32, 32)[3] > 0);
 }
 
+TEST_CASE("Vulkan UI retains antialiased zero-radius rectangle edges", "[gpu][vulkan][ui]")
+{
+    Fixture f;
+    render_gl::UiRenderer gl_ui;
+    render_vk::UiRenderer vk_ui;
+    struct CompletionGuard
+    {
+        player::VkHost& host;
+        ~CompletionGuard()
+        {
+            host.wait_noexcept();
+        }
+    } completion{f.host};
+    REQUIRE(gl_ui.init(64, 64));
+    REQUIRE(vk_ui.init(f.host.context(), 64, 64));
+    for (float x : {16.0f, 16.25f})
+    {
+        f.host.wait_ready();
+        const auto target = f.draw({{}, {}, {}}, {0, 0, 1, {0, 0, 0, 0}}, 64, 64);
+        gl_ui.set_render_target(f.framebuffer);
+        vk_ui.set_render_target(target);
+        for (ui::Painter* painter :
+             {static_cast<ui::Painter*>(&gl_ui), static_cast<ui::Painter*>(&vk_ui)})
+        {
+            painter->begin_frame();
+            painter->draw_rounded_rect(x, 16, 32, 32, 0, {1, 1, 1, 1});
+            painter->end_frame();
+        }
+        const auto images = f.capture();
+        require_same_picture(images);
+        REQUIRE(pixel(images.second, 32, 32)[3] == 255);
+        REQUIRE(pixel(images.second, 16, 32)[3] > 128);
+        REQUIRE(pixel(images.second, 16, 32)[3] < 220);
+    }
+}
+
 TEST_CASE("Vulkan UI batches consecutive compatible draws into minimal GPU draw calls",
           "[gpu][vulkan][ui][batching]")
 {

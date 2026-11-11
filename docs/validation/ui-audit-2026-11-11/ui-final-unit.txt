@@ -1,0 +1,21 @@
+Cannot switch to azuki/casual-a: test rejection; current session retained
+Cannot switch to azuki/casual-a: simulated GPU failure; current session retained
+Randomness seeded to: 4029672364
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nekomote_unit_tests is a Catch2 v3.5.3 host application.
+Run with -? for options
+
+-------------------------------------------------------------------------------
+Real model chocola-date-a imports
+-------------------------------------------------------------------------------
+/run/media/chocola/MIKU/NekoMote/tests/unit/test_import.cpp:134
+...............................................................................
+
+/run/media/chocola/MIKU/NekoMote/tests/unit/test_import.cpp:139: SKIPPED:
+explicitly with message:
+  NEKOMOTE_TEST_REAL_ASSET is not set
+
+================================================================================
+test cases:   259 |   258 passed | 1 skipped
+assertions: 59023 | 59023 passed

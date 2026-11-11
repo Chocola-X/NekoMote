@@ -195,3 +195,24 @@ TEST_CASE("Wallpaper valid handle rejects invalid CPU inputs and seals OOM", "[a
     REQUIRE(error == NEKOMOTE_ERROR_OUT_OF_MEMORY);
     REQUIRE(nekomote_last_error() == NEKOMOTE_ERROR_OUT_OF_MEMORY);
 }
+
+TEST_CASE("Explicit mute preserves persisted volume including zero", "[abi][wallpaper][config]")
+{
+    Fixture fixture;
+    const auto root = fixture.path / "wallpaper";
+    fs::create_directories(root / "characters/chocola/casual");
+    std::ofstream(root / "characters/chocola/casual/model.nkm").put('x');
+    std::ofstream(root / "characters/chocola/casual/session.nks.json").put('x');
+    const auto config = root / "panel.json";
+    for (float volume : {0.0f, 0.35f})
+    {
+        std::ofstream(config) << nlohmann::json{{"version", 1}, {"volume", volume}};
+        std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
+            nekomote_wallpaper_create(null_wallpaper_loader), nekomote_wallpaper_destroy};
+        REQUIRE(wallpaper);
+        REQUIRE(nekomote_wallpaper_set_config_path(wallpaper.get(), config.c_str()) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_set_muted(wallpaper.get(), 1) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_set_assets_dir(wallpaper.get(), root.c_str()) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_volume(wallpaper.get()) == Catch::Approx(volume));
+    }
+}

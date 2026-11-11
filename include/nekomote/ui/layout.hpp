@@ -21,6 +21,8 @@ class Context
     void mouse_move(double x, double y);
     void mouse_button(int button, int action);
     void mouse_scroll(double amount);
+    // Abort a host-lost gesture without synthesizing a click on the next frame.
+    void cancel_pointer_input() noexcept;
     bool mouse_in_rect(float x, float y, float w, float h) const;
     // Single content clip for hit-testing, paired with the Painter's draw clip.
     void set_input_clip_rect(float x, float y, float w, float h);
@@ -71,6 +73,11 @@ class Context
     void label(const char* text, float x, float y, float size, Color color);
     void draw_scrollbar(float x, float y, float w, float h, float content_height, float scroll_y,
                         const Style& style);
+
+    bool mouse_down() const
+    {
+        return mouse_down_;
+    }
 
     float mouse_x() const
     {

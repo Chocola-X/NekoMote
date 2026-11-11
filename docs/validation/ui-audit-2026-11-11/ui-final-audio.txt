@@ -1,0 +1,19 @@
+Randomness seeded to: 689034865
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nekomote_audio_device_tests is a Catch2 v3.5.3 host application.
+Run with -? for options
+
+-------------------------------------------------------------------------------
+Audio event waits preserve playback, pause clocks and worker teardown
+-------------------------------------------------------------------------------
+/run/media/chocola/MIKU/NekoMote/tests/unit/test_audio_device.cpp:113
+...............................................................................
+
+/run/media/chocola/MIKU/NekoMote/tests/unit/test_audio_device.cpp:120: SKIPPED:
+explicitly with message:
+  requires an explicitly configured private null-sink server
+
+===============================================================================
+test cases:  6 |  5 passed | 1 skipped
+assertions: 30 | 30 passed

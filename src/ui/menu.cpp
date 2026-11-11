@@ -163,6 +163,9 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                    application::WallpaperController& controller, MenuState& menu, int output_height)
 {
     auto& sidebar = menu.sidebar;
+    const int settings_drawer_index = static_cast<int>(catalog.character_groups.size()) + 1;
+    if (!sidebar.open || sidebar.expanded_drawer != settings_drawer_index)
+        menu.volume_dragging = false;
     if (sidebar.animation <= 0.001f)
         return;
 
@@ -174,7 +177,6 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     const UiStrings& txt = ui_strings(lang);
 
     const int background_drawer_index = static_cast<int>(catalog.character_groups.size());
-    const int settings_drawer_index = background_drawer_index + 1;
 
     float content_scrollable_h = 0.0f;
     for (std::size_t g = 0; g < catalog.character_groups.size(); ++g)
@@ -250,29 +252,21 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         painter.push_clip_rect(sidebar_x + style.padding, footer_top,
                                std::max(0.0f, sidebar.width - 2.0f * style.padding), footer_h);
         float footer_y = footer_top + 10.0f;
-        static application::Language s_cached_footer_lang = static_cast<application::Language>(-1);
-        static const FontMetrics* s_cached_footer_font = nullptr;
-        static float s_cached_atw = 160.0f;
-        static float s_cached_gtw = 170.0f;
+        // Metrics belong to this painter's current font. Recompute these two
+        // short lines rather than share mutable cache state across output threads.
         auto* font = painter.font();
-        if (font && (s_cached_footer_lang != lang || s_cached_footer_font != font))
-        {
-            s_cached_atw = font->text_width(txt.author_line, 12.0f);
-            s_cached_gtw = font->text_width(txt.github_line, 12.0f);
-            s_cached_footer_lang = lang;
-            s_cached_footer_font = font;
-        }
-        const float atw = font ? s_cached_atw : 160.0f;
+        const float atw = font ? font->text_width(txt.author_line, 12.0f) : 160.0f;
         ctx.label(txt.author_line, sidebar_x + (sidebar.width - atw) * 0.5f, footer_y, 12.0f,
                   style.text);
         footer_y += 34.0f;
-        const float gtw = font ? s_cached_gtw : 170.0f;
+        const float gtw = font ? font->text_width(txt.github_line, 12.0f) : 170.0f;
         ctx.label(txt.github_line, sidebar_x + (sidebar.width - gtw) * 0.5f, footer_y, 12.0f,
                   style.text);
         painter.pop_clip_rect();
     }
     if (clip_h <= 0.0f)
     {
+        menu.volume_dragging = false;
         painter.set_global_alpha(1.0f);
         return;
     }
@@ -452,6 +446,8 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                     controller.save_config(controller.config_path());
             }
         }
+        else
+            menu.volume_dragging = false;
         curr_y += kSliderRowHeight;
         if (is_row_visible(curr_y, kSwitchRowHeight))
         {

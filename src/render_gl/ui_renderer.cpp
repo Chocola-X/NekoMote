@@ -19,6 +19,24 @@ namespace nekomote::render_gl
 namespace
 {
 
+// Most menu batches contain just one color. Keep the attribute constant until
+// a different color actually requires a per-vertex buffer.
+void append_colors(std::vector<float>& colors, ui::Color& uniform, std::size_t previous_vertices,
+                   std::size_t new_vertices, ui::Color color)
+{
+    const auto append = [&](std::size_t count, ui::Color value)
+    {
+        for (std::size_t i = 0; i < count; ++i)
+            colors.insert(colors.end(), {value.r, value.g, value.b, value.a});
+    };
+    if (previous_vertices == 0)
+        uniform = color;
+    else if (colors.empty() && uniform != color)
+        append(previous_vertices, uniform);
+    if (!colors.empty())
+        append(new_vertices, color);
+}
+
 constexpr const char* kRectVertexShader = R"(
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in vec2 a_uv;
@@ -298,6 +316,9 @@ bool UiRenderer::init(int viewport_width, int viewport_height)
 
 bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
 {
+    // Queued glyphs still refer to the current font and atlas.
+    flush_text();
+    font_ready_ = false;
     if (!font_metrics_.init(font_path, pixel_height))
         return false;
     if (!font_atlas_.init(font_metrics_.texture_width(), font_metrics_.texture_height()))
@@ -306,7 +327,17 @@ bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
     { font_atlas_.upload_glyph(g, bitmap); };
     font_metrics_.on_atlas_resized = [this](int w, int h)
     {
-        flush_text();
+        // FontMetrics prepares every glyph before appending the new string.
+        // Renormalize queued UVs without clearing vectors borrowed by draw_text.
+        const float scale_x =
+            static_cast<float>(font_atlas_.texture_width()) / static_cast<float>(w);
+        const float scale_y =
+            static_cast<float>(font_atlas_.texture_height()) / static_cast<float>(h);
+        for (std::size_t i = 0; i < text_uvs_.size(); i += 2)
+        {
+            text_uvs_[i] *= scale_x;
+            text_uvs_[i + 1] *= scale_y;
+        }
         font_atlas_.resize_atlas(w, h);
     };
     font_ready_ = true;
@@ -332,6 +363,8 @@ std::uint32_t UiRenderer::upload_icon(ImageViewRgba8 image)
 
 void UiRenderer::destroy_icon(std::uint32_t id)
 {
+    if (id == icon_texture_)
+        flush_icons();
     if (id)
         glDeleteTextures(1, &id);
 }
@@ -399,6 +432,9 @@ bool UiRenderer::create_tri_shader()
 
 void UiRenderer::resize(int viewport_width, int viewport_height)
 {
+    // Preserve the viewport used by any already queued draws.
+    if (viewport_width != viewport_width_ || viewport_height != viewport_height_)
+        flush_all();
     viewport_width_ = viewport_width;
     viewport_height_ = viewport_height;
 }
@@ -522,11 +558,6 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
     if (clip_enabled_ &&
         (x + w <= clip_left_ || x >= clip_right_ || y + h <= clip_top_ || y >= clip_bottom_))
         return;
-    if (radius <= 0.0f && (border.a <= 0.0f || border_width <= 0.0f))
-    {
-        draw_solid_rect(x, y, w, h, fill);
-        return;
-    }
     flush_triangles();
     flush_text();
     flush_icons();
@@ -623,13 +654,7 @@ void UiRenderer::draw_text(float x, float y, const char* text, float size,
         }
     }
     const std::size_t num_verts = (text_vertices_.size() - start_vert) / 2;
-    for (std::size_t i = 0; i < num_verts; ++i)
-    {
-        text_colors_.push_back(color.r);
-        text_colors_.push_back(color.g);
-        text_colors_.push_back(color.b);
-        text_colors_.push_back(color.a);
-    }
+    append_colors(text_colors_, text_color_, start_vert / 2, num_verts, color);
 }
 
 void UiRenderer::flush_text()
@@ -647,11 +672,19 @@ void UiRenderer::flush_text()
                  text_uvs_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(text_colors_.size() * sizeof(float)),
-                 text_colors_.data(), GL_STREAM_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if (text_colors_.empty())
+    {
+        glDisableVertexAttribArray(2);
+        glVertexAttrib4f(2, text_color_.r, text_color_.g, text_color_.b, text_color_.a);
+    }
+    else
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(text_colors_.size() * sizeof(float)),
+                     text_colors_.data(), GL_STREAM_DRAW);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    }
     glUseProgram(text_shader_);
     glUniform2f(text_uniforms_.viewport, static_cast<float>(viewport_width_),
                 static_cast<float>(viewport_height_));
@@ -731,15 +764,9 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
     flush_rects();
     flush_icons();
     color.a *= global_alpha_;
+    append_colors(tri_colors_, tri_color_, tri_vertices_.size() / 2, 6, color);
     tri_vertices_.insert(tri_vertices_.end(),
                          {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
-    for (int i = 0; i < 6; ++i)
-    {
-        tri_colors_.push_back(color.r);
-        tri_colors_.push_back(color.g);
-        tri_colors_.push_back(color.b);
-        tri_colors_.push_back(color.a);
-    }
 }
 
 void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
@@ -754,16 +781,10 @@ void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
     flush_rects();
     flush_icons();
     fill.a *= global_alpha_;
+    append_colors(tri_colors_, tri_color_, tri_vertices_.size() / 2, 3, fill);
     const float edge = points_up ? size * 0.5f : -size * 0.5f;
     tri_vertices_.insert(tri_vertices_.end(),
                          {cx - size, cy + edge, cx + size, cy + edge, cx, cy - edge});
-    for (int i = 0; i < 3; ++i)
-    {
-        tri_colors_.push_back(fill.r);
-        tri_colors_.push_back(fill.g);
-        tri_colors_.push_back(fill.b);
-        tri_colors_.push_back(fill.a);
-    }
 }
 
 void UiRenderer::flush_triangles()
@@ -776,11 +797,19 @@ void UiRenderer::flush_triangles()
                  tri_vertices_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_colors_.size() * sizeof(float)),
-                 tri_colors_.data(), GL_STREAM_DRAW);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if (tri_colors_.empty())
+    {
+        glDisableVertexAttribArray(1);
+        glVertexAttrib4f(1, tri_color_.r, tri_color_.g, tri_color_.b, tri_color_.a);
+    }
+    else
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_colors_.size() * sizeof(float)),
+                     tri_colors_.data(), GL_STREAM_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    }
     glDisableVertexAttribArray(2);
     glUseProgram(tri_shader_);
     glUniform2f(tri_uniforms_.viewport, static_cast<float>(viewport_width_),

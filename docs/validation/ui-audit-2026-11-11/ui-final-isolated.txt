@@ -1,0 +1,4 @@
+Filters: "UI batches consecutive*"
+Randomness seeded to: 1433308123
+===============================================================================
+All tests passed (6 assertions in 1 test case)

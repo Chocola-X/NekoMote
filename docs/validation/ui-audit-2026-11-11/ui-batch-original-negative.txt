@@ -1,0 +1,6 @@
+Filters: "UI retains antialiased edges for zero-radius rounded rectangles","UI flushes queued resource and viewport users before changes"
+RNG seed: 749270441
+/run/media/chocola/MIKU/NekoMote/tests/render/test_renderer.cpp:936: failed: pixel(image, 16, 32)[3] < 220 for: 'ÿ' < 220
+/run/media/chocola/MIKU/NekoMote/tests/render/test_renderer.cpp:978: failed: unexpected exception with message: 'capture: GL error 1282'; expression was: {Unknown expression after the reported line}
+test cases:  2 |  0 passed | 2 failed
+assertions: 19 | 17 passed | 2 failed

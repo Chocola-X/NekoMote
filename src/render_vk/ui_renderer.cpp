@@ -623,11 +623,6 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
 {
     if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
-    if (radius <= 0.0f && (border.a <= 0.0f || border_width <= 0.0f))
-    {
-        draw_solid_rect(x, y, w, h, fill);
-        return;
-    }
     auto& p = *impl_;
     if (!p.clips.empty())
     {

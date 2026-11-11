@@ -21,6 +21,7 @@ class RecordingPainter : public Painter
 {
   public:
     int vw{800}, vh{1080};
+    FontMetrics* metrics{nullptr};
     struct TextCall
     {
         float x;
@@ -88,7 +89,7 @@ class RecordingPainter : public Painter
     }
     FontMetrics* font() override
     {
-        return nullptr;
+        return metrics;
     }
     bool is_initialized() const override
     {
@@ -551,5 +552,124 @@ TEST_CASE("Volume slider defaults to 50% and persists after adjustment", "[ui_me
 
     fixture.ctx.mouse_button(0, 0);
     fixture.render();
+    REQUIRE_FALSE(fixture.menu.volume_dragging);
+}
+
+TEST_CASE("Volume capture ends when its control is hidden or cancelled", "[ui_menu][input]")
+{
+    MenuFixture fixture;
+    fixture.controller.set_no_save(true);
+    fixture.click_drawer(2);
+    const auto* label = fixture.painter.find("Volume: 50%");
+    REQUIRE(label);
+    fixture.ctx.mouse_move(label->x + 80, label->y + 27);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE(fixture.menu.volume_dragging);
+
+    SECTION("release outside the row")
+    {
+        fixture.ctx.mouse_move(1000, 1000);
+        fixture.ctx.mouse_button(0, 0);
+    }
+    SECTION("host cancels the gesture")
+    {
+        fixture.ctx.cancel_pointer_input();
+    }
+    SECTION("scrolling or resize culls the slider")
+    {
+        fixture.painter.vh = 240;
+    }
+    SECTION("settings drawer collapses")
+    {
+        fixture.menu.sidebar.expanded_drawer = -1;
+    }
+    SECTION("menu closes before another slider draw")
+    {
+        fixture.menu.sidebar.open = false;
+        fixture.menu.sidebar.animation = 0;
+    }
+    SECTION("output has no content viewport")
+    {
+        fixture.painter.vh = 1;
+    }
+    fixture.render();
+    REQUIRE_FALSE(fixture.menu.volume_dragging);
+}
+
+TEST_CASE("Volume click released within one frame does not retain capture", "[ui_menu][input]")
+{
+    MenuFixture fixture;
+    fixture.controller.set_no_save(true);
+    fixture.click_drawer(2);
+    const auto* label = fixture.painter.find("Volume: 50%");
+    REQUIRE(label);
+    fixture.ctx.mouse_move(label->x, label->y + 27);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    REQUIRE(fixture.menu.volume == 0.0f);
+    REQUIRE_FALSE(fixture.menu.volume_dragging);
+}
+
+TEST_CASE("Footer centering follows initialization of the same font object", "[ui_menu][font]")
+{
+    MenuFixture fixture;
+    FontMetrics metrics;
+    fixture.painter.metrics = &metrics;
+    fixture.render();
+    if (!metrics.init("", 24))
+        SKIP("No system font available for footer metric integration");
+    fixture.render();
+    const char* author = "Author: GTX690战术核显卡导弹";
+    const auto* label = fixture.painter.find(author);
+    REQUIRE(label);
+    const auto width = metrics.text_width(author, 12);
+    REQUIRE(width > 0.0f);
+    REQUIRE(label->x ==
+            Catch::Approx(fixture.menu.sidebar.x + (fixture.menu.sidebar.width - width) * .5f));
+}
+
+TEST_CASE("Cancelling UI input does not turn a held icon into a click", "[ui_menu][input]")
+{
+    RecordingPainter painter;
+    Context ctx;
+    ctx.init(&painter);
+    IconState icon;
+    REQUIRE_FALSE(ctx.toggle_icon(icon, 0));
+    ctx.mouse_move(icon.x + 10, icon.y + 10);
+    ctx.mouse_button(0, 1);
+    REQUIRE_FALSE(ctx.toggle_icon(icon, 0));
+    REQUIRE(icon.dragging);
+    ctx.end_frame();
+    ctx.cancel_pointer_input();
+    REQUIRE_FALSE(ctx.toggle_icon(icon, 0));
+    REQUIRE_FALSE(icon.dragging);
+    REQUIRE_FALSE(ctx.mouse_down());
+}
+
+TEST_CASE("Volume release applies its final position without an intermediate move frame",
+          "[ui_menu][input]")
+{
+    MenuFixture fixture;
+    fixture.controller.set_no_save(true);
+    fixture.click_drawer(2);
+    const auto* label = fixture.painter.find("Volume: 50%");
+    REQUIRE(label);
+    const float track_x = label->x;
+    const float track_y = label->y + 27;
+    const float track_w = fixture.menu.sidebar.width - 60;
+    fixture.ctx.mouse_move(track_x + track_w * .25f, track_y);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE(fixture.menu.volume_dragging);
+    REQUIRE(fixture.menu.volume == Catch::Approx(.25f));
+    // Hosts apply the coordinates carried by Release before the button edge;
+    // no separate Move event or intervening menu frame is required.
+    fixture.ctx.mouse_move(track_x + track_w * .9f, track_y);
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    REQUIRE(fixture.menu.volume == Catch::Approx(.9f));
+    REQUIRE(fixture.controller.config().volume == Catch::Approx(.9f));
     REQUIRE_FALSE(fixture.menu.volume_dragging);
 }

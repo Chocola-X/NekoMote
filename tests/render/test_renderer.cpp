@@ -914,10 +914,198 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
     }
 }
 
+TEST_CASE("UI retains antialiased edges for zero-radius rounded rectangles", "[gpu][ui]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(64, 64);
+    render_gl::UiRenderer ui;
+    REQUIRE(ui.init(64, 64));
+    ui.set_render_target(output.framebuffer);
+    for (float x : {16.0f, 16.25f})
+    {
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ui.begin_frame();
+        ui.draw_rounded_rect(x, 16, 32, 32, 0, {1, 1, 1, 1}, {0, 0, 0, 0}, 0);
+        ui.end_frame();
+        const auto image = reader.capture({output.framebuffer, 64, 64});
+        REQUIRE(pixel(image, 32, 32)[3] == 255);
+        REQUIRE(pixel(image, 16, 32)[3] > 128);
+        REQUIRE(pixel(image, 16, 32)[3] < 220);
+    }
+}
+
+TEST_CASE("UI queued text survives atlas growth during another draw", "[gpu][ui][font]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(512, 128);
+    std::string incoming;
+    for (char c = '!'; c <= '~'; ++c)
+        incoming.push_back(c);
+    const std::string pending(160, 'A');
+    const auto paint = [&](bool flush_before_growth)
+    {
+        render_gl::UiRenderer ui;
+        REQUIRE(ui.init(512, 128));
+        REQUIRE(ui.init_font("", 256));
+        ui.set_render_target(output.framebuffer);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ui.begin_frame();
+        ui.draw_text(2, 2, pending.c_str(), 14, {1, 0, 0, 1});
+        if (flush_before_growth)
+        {
+            ui.push_clip_rect(0, 0, 512, 128);
+            ui.pop_clip_rect();
+        }
+        ui.set_global_alpha(.5f);
+        ui.draw_text(2, 36, incoming.c_str(), 14, {0, 1, 1, 1});
+        REQUIRE(ui.font()->texture_height() > 1024);
+        ui.end_frame();
+        return reader.capture({output.framebuffer, 512, 128});
+    };
+    const auto reference = paint(true), batched = paint(false);
+    REQUIRE(batched.pixels == reference.pixels);
+    REQUIRE(std::any_of(batched.pixels.begin(), batched.pixels.end(),
+                        [](auto value) { return value != 0; }));
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("UI flushes queued resource and viewport users before changes", "[gpu][ui]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(128, 128);
+    const auto paint = [&](bool explicit_flush)
+    {
+        render_gl::UiRenderer ui;
+        REQUIRE(ui.init(128, 128));
+        REQUIRE(ui.init_font("", 36));
+        REQUIRE(ui.font()->prepare_text("AAA"));
+        const ImageRgba8 icon{1, 1, {0, 255, 0, 255}};
+        const auto texture = ui.upload_icon(icon);
+        REQUIRE(texture != 0);
+        ui.set_render_target(output.framebuffer);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ui.begin_frame();
+        const auto flush = [&]
+        {
+            if (explicit_flush)
+            {
+                ui.push_clip_rect(0, 0, 128, 128);
+                ui.pop_clip_rect();
+            }
+        };
+        ui.draw_icon(90, 4, 24, 24, texture, {1, 1, 1, 1});
+        flush();
+        ui.destroy_icon(texture);
+        ui.draw_text(2, 2, "AAA", 18, {1, 0, 0, 1});
+        flush();
+        REQUIRE(ui.init_font("", 48));
+        REQUIRE(ui.font()->prepare_text("BBB"));
+        ui.set_global_alpha(.5f);
+        ui.draw_text(2, 50, "BBB", 18, {0, 0, 1, 1});
+        flush();
+        ui.resize(256, 256);
+        ui.end_frame();
+        return reader.capture({output.framebuffer, 128, 128});
+    };
+    const auto reference = paint(true), batched = paint(false);
+    REQUIRE(batched.pixels == reference.pixels);
+    REQUIRE(pixel(batched, 100, 16) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
+TEST_CASE("UI target changes take effect at the next begin frame", "[gpu][ui]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output first, second;
+    first.resize(64, 64);
+    second.resize(64, 64);
+    render_gl::UiRenderer ui;
+    REQUIRE(ui.init(64, 64));
+    ui.set_render_target(first.framebuffer);
+    ui.begin_frame();
+    ui.draw_solid_rect(0, 0, 64, 64, {1, 0, 0, 1});
+    ui.set_render_target(second.framebuffer);
+    ui.end_frame();
+    REQUIRE(pixel(reader.capture({first.framebuffer, 64, 64}), 32, 32) ==
+            std::array<std::uint8_t, 4>{255, 0, 0, 255});
+    ui.begin_frame();
+    ui.draw_solid_rect(0, 0, 64, 64, {0, 0, 1, 1});
+    ui.end_frame();
+    REQUIRE(pixel(reader.capture({second.framebuffer, 64, 64}), 32, 32) ==
+            std::array<std::uint8_t, 4>{0, 0, 255, 255});
+}
+
+TEST_CASE("UI preserves colors when batches switch between constant and mixed attributes",
+          "[gpu][ui][batching]")
+{
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(128, 128);
+    const auto paint = [&](bool flush_each_draw)
+    {
+        render_gl::UiRenderer ui;
+        REQUIRE(ui.init(128, 128));
+        REQUIRE(ui.init_font("", 36));
+        REQUIRE(ui.font()->prepare_text("ABC"));
+        ui.set_render_target(output.framebuffer);
+        ui.begin_frame();
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        const auto flush = [&]
+        {
+            if (flush_each_draw)
+            {
+                ui.push_clip_rect(0, 0, 128, 128);
+                ui.pop_clip_rect();
+            }
+        };
+        for (int group = 0; group < 3; ++group)
+        {
+            const float y = static_cast<float>(group) * 40;
+            const ui::Color first{1, 0, 0, 1};
+            const ui::Color last = group == 1 ? ui::Color{0, 1, 0, 1} : first;
+            ui.set_global_alpha(1);
+            ui.draw_solid_rect(2, y + 2, 18, 10, first);
+            flush();
+            ui.draw_arrow(32, y + 7, 5, false, first);
+            flush();
+            ui.draw_solid_rect(42, y + 2, 18, 10, last);
+            flush();
+            ui.draw_text(2, y + 16, "A", 14, first);
+            flush();
+            ui.draw_text(22, y + 16, "B", 14, first);
+            flush();
+            ui.set_global_alpha(group == 1 ? .5f : 1.0f);
+            ui.draw_text(42, y + 16, "C", 14, last);
+            flush();
+        }
+        ui.end_frame();
+        return reader.capture({output.framebuffer, 128, 128});
+    };
+    const auto reference = paint(true), batched = paint(false);
+    REQUIRE(batched.pixels == reference.pixels);
+    REQUIRE(pixel(batched, 10, 5) == std::array<std::uint8_t, 4>{255, 0, 0, 255});
+    REQUIRE(pixel(batched, 50, 45) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
+    REQUIRE(glGetError() == GL_NO_ERROR);
+}
+
 TEST_CASE("UI batches consecutive text, solid rects and arrows into minimal GPU draw calls",
           "[gpu][ui][batching]")
 {
     Context context;
+    // Resolve entry points for this context, including when this case runs alone.
+    render_gl::Renderer loader(glfwGetProcAddress);
     Output output;
     output.resize(400, 600);
     render_gl::UiRenderer ui;
@@ -945,7 +1133,7 @@ TEST_CASE("UI batches consecutive text, solid rects and arrows into minimal GPU 
         ui.draw_text(20, 150 + static_cast<float>(i) * 18, label.c_str(), 14,
                      {0.2f, 0.8f, 0.1f * static_cast<float>(i % 10), 1.0f});
     }
-    // Radius 0 rounded rects should batch as solid rects (draw call 2 flushed, batch 3 queued)
+    // Identical rounded rectangles retain their antialiasing shader in batch 3.
     for (int i = 0; i < 5; ++i)
         ui.draw_rounded_rect(200, 150 + static_cast<float>(i) * 20, 120, 16, 0.0f,
                              {0.8f, 0.3f, 0.4f, 0.5f}, {0, 0, 0, 0}, 0);

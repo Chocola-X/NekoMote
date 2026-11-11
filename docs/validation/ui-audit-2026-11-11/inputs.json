@@ -1,0 +1,949 @@
+{
+  "benchmark_source_sha256": "6cfcaabbb81b02b6afa16035be19ab21da5fdde1f1185274ee95889512d3b63f",
+  "tracked_formatted_source_sha256": "6cfcaabbb81b02b6afa16035be19ab21da5fdde1f1185274ee95889512d3b63f",
+  "asset_catalog_metadata": [
+    {
+      "path": "assets/backgrounds/background.json",
+      "sha256": "6f7673548ebbd37c3e6168e677eb492f3ea06d2a70d3ccea21265f58822d5fcd"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_01/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_02/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_03/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_04/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_05/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_06/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_08/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_09/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_10/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_11/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_12/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_15/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_16/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_17/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_18/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_19/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_20/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_21/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_23/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_25/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_28/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_34/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_35/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_36/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_37/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_38/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_39/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_40/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_41/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_42/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_43/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_44/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_45/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_47/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/BG_49/config.json",
+      "sha256": "134649b429f2d1bdf01d3d8fbc6275942cc19634e50df1731355df45ebe51538"
+    },
+    {
+      "path": "assets/backgrounds/dynamic/background.json",
+      "sha256": "81b3136d4f59936e7200fad566c758a681a18b97ca1da4a25f6f2ed0395d6d75"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a-ohtoro/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/casual-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/casual-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/casual/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/dress-a/meta.json",
+      "sha256": "2504b8e02edaaedf6caade6005a4a803b7aee485f405a4304bef0fe031f81872"
+    },
+    {
+      "path": "assets/characters/azuki/dress/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/hawaii-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a-custard/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/maid-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b-custard/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/maid-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/maid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/santa-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/santa/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/swimsuit-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/teenage-b/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/azuki/teenage/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/winter-b/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/azuki/winter/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/wintermaid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/yukata-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/azuki/yukata/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/characters.json",
+      "sha256": "006a1f6ee63b9c822a53c0f86a4f08113ed6649728d8acd5bfc1b04ccce7b31f"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/casual-a-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-no-bell/meta.json",
+      "sha256": "7b1cd4bb6c88a9e97f66a7ce2da8878a9d2de3ae6c16484aa1b62943fbf63cce"
+    },
+    {
+      "path": "assets/characters/chocola/casual-b-with-bell/meta.json",
+      "sha256": "7b1cd4bb6c88a9e97f66a7ce2da8878a9d2de3ae6c16484aa1b62943fbf63cce"
+    },
+    {
+      "path": "assets/characters/chocola/casual/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/date-a/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/chocola/date-b/meta.json",
+      "sha256": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40"
+    },
+    {
+      "path": "assets/characters/chocola/dress-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/dress/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-a/meta.json",
+      "sha256": "7e8755e632f193565659ee8cc2059c88ebcc8348d547cd0799be6ba012896323"
+    },
+    {
+      "path": "assets/characters/chocola/hawaii-b/meta.json",
+      "sha256": "cbde7e7effc52abd4564d02b479f210bacf71a686ab252f6d017a1d2fcc09ff9"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-a/meta.json",
+      "sha256": "2504b8e02edaaedf6caade6005a4a803b7aee485f405a4304bef0fe031f81872"
+    },
+    {
+      "path": "assets/characters/chocola/koneko-b/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/chocola/koneko/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/lolita/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/maid-a-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-no-bell/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/chocola/maid-b-with-bell/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/chocola/maid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/pajama-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/chocola/pajama/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/santa-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/chocola/santa/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-a/meta.json",
+      "sha256": "7e8755e632f193565659ee8cc2059c88ebcc8348d547cd0799be6ba012896323"
+    },
+    {
+      "path": "assets/characters/chocola/swimsuit-b/meta.json",
+      "sha256": "cbde7e7effc52abd4564d02b479f210bacf71a686ab252f6d017a1d2fcc09ff9"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/teenage-b/meta.json",
+      "sha256": "2504b8e02edaaedf6caade6005a4a803b7aee485f405a4304bef0fe031f81872"
+    },
+    {
+      "path": "assets/characters/chocola/teenage/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/winter-b/meta.json",
+      "sha256": "7b1cd4bb6c88a9e97f66a7ce2da8878a9d2de3ae6c16484aa1b62943fbf63cce"
+    },
+    {
+      "path": "assets/characters/chocola/winter/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/chocola/wintermaid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/chocola/yukata-b/meta.json",
+      "sha256": "7b1cd4bb6c88a9e97f66a7ce2da8878a9d2de3ae6c16484aa1b62943fbf63cce"
+    },
+    {
+      "path": "assets/characters/chocola/yukata/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/casual/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/dress/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/hawaii-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/maid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/santa/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/swimsuit-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/teenage/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/winter/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/wintermaid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata-b/meta.json",
+      "sha256": "c0e6389d486f274b6a637ecb8f9877253518bf382d9271a0bd6346146de9ef5a"
+    },
+    {
+      "path": "assets/characters/cinnamon/yukata/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a-4yo/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/casual-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b-4yo/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/casual-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/casual/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/dress-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/dress/meta.json",
+      "sha256": "5f81d2377771d4a25f5f0d1691c49183feb7f69f61c0a3d698fc85846a24ba83"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/hawaii-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/koneko-b/meta.json",
+      "sha256": "b259e947b8c6d122a47b85703b10f9b38dfe3be4415d4258f4ee7381d43a83a5"
+    },
+    {
+      "path": "assets/characters/coconut/koneko/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a-4yo/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/maid-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b-4yo/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/maid-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/maid/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/pajama/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/santa-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/santa/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/shirt-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/swimsuit-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/teenage-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/teenage/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/winter-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/winter/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/wintermaid/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/yukata-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/coconut/yukata/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/fraise/casual-a/meta.json",
+      "sha256": "74566748814e3ea55689bb0935ebd88aafadf9f954d501874cc8c3f60550cbf2"
+    },
+    {
+      "path": "assets/characters/fraise/casual-b/meta.json",
+      "sha256": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-a/meta.json",
+      "sha256": "b722331616ba741acb8abcf590437b5a98a2a8e89d98c7eb6154e79c34ac819b"
+    },
+    {
+      "path": "assets/characters/fraise/france-maid-b/meta.json",
+      "sha256": "d118c2212aafb848fd5c8aee6ac1b230acf512c6de75abd8a0f4d0197784f84d"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-a/meta.json",
+      "sha256": "74566748814e3ea55689bb0935ebd88aafadf9f954d501874cc8c3f60550cbf2"
+    },
+    {
+      "path": "assets/characters/fraise/hawaii-b/meta.json",
+      "sha256": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40"
+    },
+    {
+      "path": "assets/characters/fraise/maid-a/meta.json",
+      "sha256": "74566748814e3ea55689bb0935ebd88aafadf9f954d501874cc8c3f60550cbf2"
+    },
+    {
+      "path": "assets/characters/fraise/maid-b/meta.json",
+      "sha256": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-a/meta.json",
+      "sha256": "bae59294341f8d77600e96b477a10ace598a2b5cdfbe9dd8f423f8ef1a5d700a"
+    },
+    {
+      "path": "assets/characters/fraise/pajama-b/meta.json",
+      "sha256": "2c0ed96aaf39eaec012385987ddc7ad138ccc1fded61d4feadd0ae403d1ba1f7"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-a/meta.json",
+      "sha256": "74566748814e3ea55689bb0935ebd88aafadf9f954d501874cc8c3f60550cbf2"
+    },
+    {
+      "path": "assets/characters/fraise/swimsuit-b/meta.json",
+      "sha256": "0132e948ddd2f8f32f19f3f944d254cf368eba6e195f31f982d3fbf1c92d4f40"
+    },
+    {
+      "path": "assets/characters/maple/casual-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/casual-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/casual/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/dress-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/dress-b/meta.json",
+      "sha256": "66a4e538bae68b1762d24f9924012ea1ec00f14aa88ee9dba6e17199c0232dfc"
+    },
+    {
+      "path": "assets/characters/maple/dress/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-a/meta.json",
+      "sha256": "e90eefd1537bc302d1d92e0fd34432a6fe4274159f1b1e64c59d72b80709ce28"
+    },
+    {
+      "path": "assets/characters/maple/hawaii-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/maid-a/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/maid-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/maid/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/santa-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/santa/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-a/meta.json",
+      "sha256": "e90eefd1537bc302d1d92e0fd34432a6fe4274159f1b1e64c59d72b80709ce28"
+    },
+    {
+      "path": "assets/characters/maple/swimsuit-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/teenage-a/meta.json",
+      "sha256": "e90eefd1537bc302d1d92e0fd34432a6fe4274159f1b1e64c59d72b80709ce28"
+    },
+    {
+      "path": "assets/characters/maple/teenage-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/teenage/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/winter-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/winter/meta.json",
+      "sha256": "e90eefd1537bc302d1d92e0fd34432a6fe4274159f1b1e64c59d72b80709ce28"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/wintermaid/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/yukata-b/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/maple/yukata/meta.json",
+      "sha256": "4a24c5ae0243bc04e0410f72622b0c7ccc9f15d9e0f7980466b98860e9ca3efb"
+    },
+    {
+      "path": "assets/characters/milk/summer/meta.json",
+      "sha256": "0dc537aca181b218c8b198f5f6404b19fe6b465ba307d71c345e6ab5a552fb5c"
+    },
+    {
+      "path": "assets/characters/milk/teenage-4yo/meta.json",
+      "sha256": "ef886e2704626b73ffe9438121d95e3402e8cffd04222f3f5120760c2a502cc1"
+    },
+    {
+      "path": "assets/characters/milk/teenage/meta.json",
+      "sha256": "c052fa0f6ae8a95147af6d18b9572cd482bf278cd6e2c4706af69038e5c2bc68"
+    },
+    {
+      "path": "assets/characters/milk/winter/meta.json",
+      "sha256": "0dc537aca181b218c8b198f5f6404b19fe6b465ba307d71c345e6ab5a552fb5c"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-a-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell-tail-pin/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/casual-b-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/casual/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/date-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/date-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/dress-a/meta.json",
+      "sha256": "cfc87126cdcda85a461065ecc914ea370addd1705cc001a63c38781ce40cdb5c"
+    },
+    {
+      "path": "assets/characters/vanilla/dress/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/hawaii-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-a/meta.json",
+      "sha256": "de25294affdbd25ed07a6c31ef528c8520a21076afaf57741ac17d201fded745"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko-b/meta.json",
+      "sha256": "de25294affdbd25ed07a6c31ef528c8520a21076afaf57741ac17d201fded745"
+    },
+    {
+      "path": "assets/characters/vanilla/koneko/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/lolita/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-a-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-no-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/maid-b-with-bell/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/maid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-a/meta.json",
+      "sha256": "93fea3324dc9e9d89c54ab203e50d48562109f58d99cdf5f678af9f57143bf8e"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/pajama/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/santa-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/santa/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-a/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/swimsuit-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-a/meta.json",
+      "sha256": "2504b8e02edaaedf6caade6005a4a803b7aee485f405a4304bef0fe031f81872"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage-b/meta.json",
+      "sha256": "7b1cd4bb6c88a9e97f66a7ce2da8878a9d2de3ae6c16484aa1b62943fbf63cce"
+    },
+    {
+      "path": "assets/characters/vanilla/teenage/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/winter-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/winter/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/wintermaid/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata-b/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/characters/vanilla/yukata/meta.json",
+      "sha256": "19ea902a55c609f806abc2a3f008fa67a3d2024572fe261e6dba1f68fd0d9790"
+    },
+    {
+      "path": "assets/config.json",
+      "sha256": "1a2f7b4741f437570ab289380c12858c2a84633ef839b87a7420bdb5cd2bc008"
+    }
+  ],
+  "reference_image_sha256": {
+    "0": "e3773fe3fdb304eacad65fb514a4a2e9e90194ae39b0beb082ac5d2008b87cf4",
+    "1": "6bd15fcc16582bb25d4c29ae15a665010c501570014d26191a69929d52ef7447",
+    "2": "c0d91629454b06e2a1947fed464abc79934766270fec40fc4d1d80615343db09",
+    "3": "e1e9a47d7eeb903ab8f28987fe0f326e11314daa5a3322a79e3bb6a306962ef4",
+    "4": "598a09d854124bd0635f28c62ca31b34c8f5c3edac116248b6390e93c51f8ed0"
+  }
+}

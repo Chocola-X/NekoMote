@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "path": "experiments/ui-independent-audit/baseline_probe",
+    "sha256": "56455ccc86fae7f689848bebb6a6c5c2dd4d7fb15ba9c11deae661976bf554be"
+  },
+  "layout": {
+    "path": "experiments/ui-independent-audit/layout_probe",
+    "sha256": "db8dd6e2de06a0df80bb72a23e8a78e11a4d5345f3ab1e6a4fb77dc997a13f77"
+  },
+  "candidate": {
+    "path": "build/release/ui_independent_probe",
+    "sha256": "e285c1a9136470a84c992f48f70529bd499c5a7af4fa57b6ba9ee137538aaa5e"
+  }
+}

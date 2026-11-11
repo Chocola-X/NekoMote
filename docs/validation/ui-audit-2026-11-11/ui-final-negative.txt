@@ -1,0 +1,26 @@
+C ABI negative tests (no assets, no GPU)
+
+  version ... ok
+  error: clear on fresh state ... ok
+  error: model_load NULL sets error ... ok
+  error: clear resets ... ok
+  null: model_load(NULL) ... ok
+  null: session_asset_load(NULL) ... ok
+  null: program_compile(NULL,NULL) ... ok
+  null: session_create(NULL) ... ok
+  null: renderer_create(NULL) ... ok
+  null: wallpaper_fps_limit(NULL) ... ok
+  null: wallpaper_needs_render(NULL) ... ok
+  null: image_load_png(NULL) ... ok
+  null: destroy accepts NULL ... ok
+  null: session functions on NULL ... ok
+  null: renderer functions on NULL ... ok
+  raii: renderer_create with NULL loader returns NULL ... ok
+  raii: renderer_create with null_loader stub returns NULL ... ok
+  raii: no leak after repeated failed creates ... ok
+  vk: create_vk with null instance ... ok
+  vk: create_vk with partial null (missing device) ... ok
+  vk: set_vk_target on NULL wallpaper ... ok
+  vk: create_vk with fake handles does not crash ... ok
+
+22 tests run, 0 failed
