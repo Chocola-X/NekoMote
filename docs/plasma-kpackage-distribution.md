@@ -34,11 +34,11 @@ contents/compatibility.json
 两个QML页面都改用包内目录导入；仅调整归档副本，不修改原stage。
 插件原有 `$ORIGIN/../../../lib` 在新布局仍指向正确库目录，无需修改ELF。
 `compatibility.json` 保留原stage的审计路径和二进制哈希，是构建证据，
-不能把原来的 `check-host stage` 命令直接应用于解压后的KPackage目录。
+运行时检查和安装统一由外层的独立 `installer.py` 负责。
 
 Qt6的命名qmldir可直接用于目录导入；Qt5会校验目录URI，因此导出时删除Qt5
 qmldir的module声明，保留两页原来的1.0版本，Qt5注册器接受Qt传入的目录URI。
-Debug断言也支持这一合法入口，原tar的命名模块仍按原方式注册。
+Debug断言也支持这一合法入口；源码stage的命名模块仍可用于开发探针。
 
 ## 生成和取得安装包
 
@@ -52,14 +52,16 @@ python3 tools/plasma_distribution.py kpackage <stage> \
 `--qt-version` 必须为实际构建版本，版本和架构不能靠改文件名降级。
 stage需已由 `ci_package_licenses.py` 添加许可，再生成manifest。
 
-Plasma5/6的x86_64/aarch64 CI各额外输出 `.wallpaper.zip` 和 `.sha256`。
-标签工作流把稳定tag版本传入包元数据；普通分支产物使用0.0.0供开发检查。
-Release现在要求10份原tar、4份壁纸ZIP及14份校验文件，共28个附件完整后才发布。
-GitHub下载artifact外层ZIP包含多个附件；提交KDE Store的是里面的
-**`.wallpaper.zip`**，不是artifact外层ZIP或原部署tar。
+Plasma5/6 的 x86_64/aarch64 CI 现统一输出 `.tar.gz` 和外层 `.sha256`。
+每个 tar 内只有一个带版本的 `.wallpaper.zip`、内层 `.sha256` 和 `installer.py`，
+不再分发旧 stage 部署工具。安装器支持安装、同版本重装、卸载和旧分离布局迁移，
+具体操作与回滚边界见 [统一分发说明](plasma-distribution.md)。
+标签工作流把稳定 tag 版本传入包元数据；普通分支使用 0.0.0。
+Release 要求十个 tar.gz 及十个校验文件，共二十个附件；四个 Plasma 包还须通过内层版本、
+平台及哈希校验，完整后才发布。GitHub artifact 外层下载 ZIP 中先取出 tar.gz，
+提交 KDE Store 的是 tar 里面的 **`.wallpaper.zip`**。
 
-已有tar部署继续用于系统依赖预检和命令行管理，这两种归档复用同一套原生实现。
-不需要另一个Web播放器、shell下载器或第二套模型业务。
+两条下载渠道使用同一份原生实现和完全相同的内层包；商店不需要执行 Python 安装器。
 
 ## KDE Store上架步骤与约束
 
@@ -81,7 +83,7 @@ GitHub下载artifact外层ZIP包含多个附件；提交KDE Store的是里面的
 安装后仍需选择资产目录。原生插件已载入后更新，或从旧tar部署迁移到包内模块时，
 需要重启plasmashell或重新登录，避免同一进程继续使用旧模块缓存。
 
-## 本轮验收
+## 初始 KPackage 导出验收（`b136df2`）
 
 - 30项分发/CI打包/Release拒绝和完整清单测试通过，使用实际合成ELF；覆盖确定性ZIP、
   审计失败拒绝、原生库字节保持、Qt5/6 qmldir差异、两个页面导入版本与发布清单。
@@ -111,3 +113,18 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QML_IMPORT_PATH= QML2_IMPORT
 ```
 
 这是QML/动态库加载验证，不表示已经创建GPU renderer或实际呈现模型。
+
+## 统一外层分发与迁移验收（2026-11-11）
+
+从 `b136df2` 收敛为一个外层 tar：商店 ZIP、内层 SHA256、独立安装器。
+旧 stage 安装器和验证器已移除，只在新安装器中保留一次性迁移和卸载识别。
+CI 现在从最终归档解包，运行设置页优先和 native 目录导入，Release 校验全部十个外层包，
+并核对四个内层壁纸的平台、版本和原生库哈希。
+
+全量 Python 工具检查 180 项、12 项按环境跳过；17 项安装器事务用例通过。
+真实隔离 KPackage6 首装、同版本重装、旧 do_install 布局迁移、卸载及资产/配置保留通过。
+Qt5/Qt6 的最终内层包目录导入通过。独立复核发现的新包 JSON/desktop 身份回退已修复；
+安装器还验证 KPackage 成功后的目标文件，避免返回成功但未安装时提前清理旧文件。
+
+原始日志、环境与哈希见[本轮证据](validation/plasma-unified-distribution-2026-11-11/README.md)。
+本轮未改变帧路径，未采样性能；远端基线/ARM64、真实 Plasma5 和在线商店验收仍需分别完成。

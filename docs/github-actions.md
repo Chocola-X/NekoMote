@@ -1,7 +1,9 @@
 # GitHub 自动构建与测试
 
-2026-11-11：新增用于KDE“获取新壁纸”的自包含 `.wallpaper.zip`，与原tar同步构建。
-发布清单现为14份包及14份校验文件；结构、安装证据与商店上架边界见
+2026-11-11：Plasma 统一发布外层 tar.gz，内含自包含 `.wallpaper.zip`、内层校验和及
+独立安装器。Release 为十份 tar.gz 与十份校验文件；发布前额外验证四个 Plasma
+内层包的版本、平台和二进制哈希。CI 还从最终包解出壁纸，在新进程中验证设置页优先、
+包内原生模块导入，清空全局 QML 搜索路径。结构、安装证据与商店上架边界见
 [KPackage分发](plasma-kpackage-distribution.md)。
 
 ## 2026-11-11：Plasma 翻译构建与导入检查
@@ -176,8 +178,8 @@ Plasma5 注入的 `wallpaper.configuration` 和旧 `FileDialog`。KDE6 继续使
 共享桥仅对输入坐标 API、GL 状态恢复和诊断通知做 Qt major 条件编译。
 Qt6 继续用 `afterFrameEnd`；Qt5 诊断用 `afterRendering`，不能当成实际呈现时间。
 Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使两处纹理查找在
-解引用前显式报告丢失资源，而不是允许空指针继续绘制；未宣称其性能收益。部署工具按平台使用 `QML2_IMPORT_PATH` /
-`QML_IMPORT_PATH` 和 KDE5 / KDE6 缓存及激活工具。
+解引用前显式报告丢失资源，而不是允许空指针继续绘制；未宣称其性能收益。当前分发使用包内 QML 模块与原生 KPackage，
+旧全局 `QML2_IMPORT_PATH` / `QML_IMPORT_PATH` 部署配置由安装器在迁移时清理。
 
 ## 测试与下载
 

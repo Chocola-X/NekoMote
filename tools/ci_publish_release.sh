@@ -8,6 +8,7 @@ if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
     exit 1
 fi
 
+TOOLS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PACKAGES_DIR"
 PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64
     nekomote-plasma5-x86_64 nekomote-plasma5-aarch64
@@ -16,12 +17,9 @@ PACKAGES=(nekomote-native-ubuntu20-x86_64 nekomote-native-ubuntu20-aarch64
     nekomote-x11-ubuntu20-x86_64 nekomote-x11-ubuntu20-aarch64)
 ARCHIVES=()
 for package in "${PACKAGES[@]}"; do ARCHIVES+=("$package.tar.gz"); done
-for package in nekomote-plasma{5,6}-{x86_64,aarch64}; do
-    ARCHIVES+=("$package.wallpaper.zip")
-done
 FILES=(*)
-if [[ "${#FILES[@]}" != 28 ]]; then
-    echo 'Expected exactly fourteen packages and fourteen SHA256 files' >&2
+if [[ "${#FILES[@]}" != 20 ]]; then
+    echo 'Expected exactly ten packages and ten SHA256 files' >&2
     exit 1
 fi
 ASSETS=()
@@ -36,6 +34,10 @@ for archive in "${ARCHIVES[@]}"; do
         exit 1
     fi
     sha256sum --check --strict "$checksum"
+    if [[ "$archive" == nekomote-plasma*.tar.gz ]]; then
+        python3 "$TOOLS_DIR/plasma_distribution.py" verify-bundle "$archive" \
+            --package-version "${TAG#v}"
+    fi
     ASSETS+=("$archive" "$checksum")
 done
 

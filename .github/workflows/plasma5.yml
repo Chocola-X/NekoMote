@@ -58,7 +58,6 @@ jobs:
           name: nekomote-plasma5-${{ matrix.arch }}
           path: |
             build/ci-plasma5/*.tar.gz
-            build/ci-plasma5/*.wallpaper.zip
             build/ci-plasma5/*.sha256
           if-no-files-found: error
           retention-days: 30

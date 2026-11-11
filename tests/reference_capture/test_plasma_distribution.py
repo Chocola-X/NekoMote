@@ -1,6 +1,8 @@
 """Distribution checks use real synthetic ELF files, without Qt or a desktop."""
 
 import importlib.util
+import hashlib
+import io
 import json
 import os
 import shlex
@@ -64,7 +66,8 @@ class PlasmaDistributionTests(unittest.TestCase):
 
     def test_kpackage_relocates_audited_module_and_preserves_payload(self):
         root = self.stage / "share/plasma/wallpapers/uk.nekopara.nekomote"
-        (root / "metadata.json").write_text(json.dumps({"KPlugin": {"Id": "uk.nekopara.nekomote"}}))
+        (root / "metadata.json").write_text(json.dumps({"KPackageStructure": "Plasma/Wallpaper",
+                                                                    "KPlugin": {"Id": "uk.nekopara.nekomote"}}))
         (root / "metadata.desktop").write_text("X-KDE-PluginInfo-Version=0.1.0\n")
         (self.stage / "qml/NekoMote/Wallpaper/qmldir").write_text(
             "module NekoMote.Wallpaper\nplugin nekomote_plasma_qmlplugin\n")
@@ -156,18 +159,37 @@ class PlasmaDistributionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "non-relative RPATH"):
             DIST.audit(self.stage, "6.4.2")
 
-    def test_reproducible_archive_contains_preflight_and_manifest(self):
-        first = self.directory / "first.tar.gz"
-        second = self.directory / "second.tar.gz"
-        DIST.package(self.stage, "6.4.2", first, True)
-        DIST.package(self.stage, "6.4.2", second, True)
-        self.assertEqual(DIST.digest(first), DIST.digest(second))
+    def test_reproducible_bundle_contains_exact_store_payload_and_installer(self):
+        root = self.stage / "share/plasma/wallpapers/uk.nekopara.nekomote"
+        (root / "metadata.json").write_text(json.dumps({"KPackageStructure": "Plasma/Wallpaper",
+            "KPlugin": {"Id": "uk.nekopara.nekomote"}}))
+        for page in ("main.qml", "config.qml"):
+            (root / "contents/ui" / page).write_text("import NekoMote.Wallpaper\n")
+        for license_name in ("LICENSE", "THIRD_PARTY_NOTICES"):
+            (self.stage / license_name).write_text("license fixture\n")
+        self.manifest()
+        metadata = DIST.audit(self.stage, "6.4.2", True)
+        name = "nekomote-plasma6-" + metadata["architecture"]
+        first = self.directory / (name + ".tar.gz")
+        DIST.package_bundle(self.stage, "6.4.2", first, True, package_version="1.2.3")
+        before = first.read_bytes()
+        DIST.package_bundle(self.stage, "6.4.2", first, True, package_version="1.2.3")
+        self.assertEqual(before, first.read_bytes())
+        self.assertTrue(DIST.verify_bundle(first, "1.2.3")["passed"])
+        with self.assertRaisesRegex(ValueError, "identity/version"):
+            DIST.verify_bundle(first, "1.2.4")
         with tarfile.open(first) as archive:
-            names = archive.getnames()
-            self.assertFalse(any(Path(name).name.lower() == "readme.md" for name in names))
-            self.assertIn("nekomote-plasma/stage/compatibility.json", names)
-            self.assertIn("nekomote-plasma/tools/plasma_distribution.py", names)
-            self.assertIn("nekomote-plasma/tools/plasma_deploy.py", names)
+            zip_name = name + ".wallpaper.zip"
+            self.assertEqual(set(archive.getnames()), {
+                name + "/" + zip_name, name + "/" + zip_name + ".sha256", name + "/installer.py"})
+            payload = archive.extractfile(name + "/" + zip_name).read()
+            self.assertEqual(archive.extractfile(name + "/" + zip_name + ".sha256").read(),
+                             (hashlib.sha256(payload).hexdigest() + "  " + zip_name + "\n").encode())
+            self.assertEqual(archive.extractfile(name + "/installer.py").read(),
+                             (REPO / "tools/installer.py").read_bytes())
+            self.assertEqual(archive.getmember(name + "/installer.py").mode, 0o755)
+        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+            self.assertEqual(json.loads(archive.read("metadata.json"))["KPlugin"]["Version"], "1.2.3")
 
     def private_export_fixture(self, symbol, major=5):
         provider = self.directory / "provider.c"

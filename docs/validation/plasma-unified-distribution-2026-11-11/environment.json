@@ -1,0 +1,19 @@
+{
+  "base_commit": "b136df2ec87808d08d7539314aea0926ad6141ea",
+  "scope": "unified Plasma distribution; packaging/import/isolated install only",
+  "host": "Linux-6.6.107-1-MANJARO-x86_64-with-glibc2.42",
+  "python": "3.13.7",
+  "plasmashell": "plasmashell 6.3.6",
+  "qt5": "5.15.17",
+  "qt6": "6.9.2",
+  "sources": {
+    "tools/installer.py": "75cf88eb119e6dd711c9b9c944d89769e25fc67340e0fad0a656c8dbe324639a",
+    "tools/plasma_distribution.py": "ac4ac4fa40893d002e7f5076a7732066c8d40bf8bef69d400feb63c6a3d3488a",
+    "tools/ci_build.sh": "2639813f48e15ce3247074ac92f3e475b2fdba42e4d37bc6f63062f73178134b",
+    "tools/ci_publish_release.sh": "33d39d20f98111b2b1f3424108b80e707939228040280672ddde3a03a88e6bbd"
+  },
+  "bundles": {
+    "nekomote-plasma6-x86_64.tar.gz": "540f6cc1274e7c29be0af3dc41926ee2c6c8e0c70492a25ad1204b72c6c0db4b",
+    "nekomote-plasma5-x86_64.tar.gz": "5e0332e9a6f9ea828aa3c1ff864086d898baade39a8c95f62775f8a4ebcf784d"
+  }
+}

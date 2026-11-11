@@ -1,0 +1,22 @@
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.108s
+
+OK
+1 Install
+2 Reinstall
+3 Uninstall
+4 Status
+0 Exit
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+{"installed": true, "plasma_major": 6, "legacy_files": 0, "package_root": "/tmp/tmpudcwgy4g/data/plasma/wallpapers/uk.nekopara.nekomote"}
+reinstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.
+NekoMote is not installed
+install complete; assets and panel configuration retained. Restart Plasma manually when ready.
+uninstall complete; assets and panel configuration retained. Restart Plasma manually when ready.

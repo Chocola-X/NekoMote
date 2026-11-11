@@ -218,31 +218,46 @@ build/release/bin/nekomote_player --assets assets --character <角色名> --mute
 
 ## KDE Plasma 壁纸部署
 
-CI另提供 `nekomote-plasma{5,6}-{x86_64,aarch64}.wallpaper.zip` 自包含壁纸包，
-可供KDE“获取新壁纸”的KPackage安装机制使用，无需配置全局QML搜索路径。
-商店条目仍需单独上架；打包、架构选择、验证范围与迁移说明见
-[KDE壁纸包分发](docs/plasma-kpackage-distribution.md)。
+GitHub 的 Plasma 分发统一为 `nekomote-plasma{5,6}-{x86_64,aarch64}.tar.gz`。
+解压后包含同名 `.wallpaper.zip`、它的 `.sha256` 和独立安装器 `installer.py`。
+KDE Store 使用里面的 **`.wallpaper.zip`**，GitHub 用户使用安装器；两者安装相同内容，
+无需配置全局 QML 搜索路径。商店条目仍需维护者单独上架，详见
+[KDE 壁纸包分发](docs/plasma-kpackage-distribution.md)。
+
+### 安装、重装和卸载
+
+下载匹配桌面 major 与 CPU 架构的可信发行包，例如 Plasma 6 / x86_64：
+
+```bash
+tar -xzf nekomote-plasma6-x86_64.tar.gz
+cd nekomote-plasma6-x86_64
+python3 installer.py              # 交互菜单：安装 / 重装 / 卸载 / 状态
+# 也可直接执行：
+python3 installer.py install
+python3 installer.py reinstall
+python3 installer.py uninstall
+python3 installer.py status
+```
+
+安装器需要 Python ≥ 3.8、对应的 `kpackagetool5` 或 `kpackagetool6` 及系统运行依赖。
+安装前自动校验包、桌面版本和动态库依赖；安装位置为
+`$XDG_DATA_HOME/plasma/wallpapers/uk.nekopara.nekomote/`（默认 `~/.local/share/…`）。
+`reinstall` 支持同版本重装，并识别旧分离式安装记录，清理旧库、模块和由旧工具创建的
+环境配置；失败恢复原文件。旧安装文件有修改时会停止并说明原因，避免丢失用户改动。
+更新或迁移后请重新登录以释放已载入的旧模块；安装器不会自动重启桌面。
+
+安装后在桌面右键 → 配置壁纸 → 选择 NekoMote，并设置资产目录。模型资产独立提供，
+重装与卸载保留资产、面板配置和桌面配置。
 
 ### 从源码构建插件
 
 ```bash
 cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
-cmake --build --preset plasma
+cmake --build --preset plasma --target nekomote_plasma_stage
 ```
 
-`NEKOMOTE_BUILD_PLASMA_PROBE=OFF` 关闭需要 KF6/Plasma 开发包的本地探针，仅构建可分发的 QML 模块与插件。产物在 `build/plasma/adapters/plasma/`。
-
-### 安装到桌面
-
-使用统一部署工具（`install`/`reinstall`/`uninstall`/`status`/`verify`）：
-
-```bash
-python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stage
-```
-
-安装到 `$XDG_DATA_HOME/nekomote/`（默认 `~/.local/share/nekomote/`），自动写入 `environment.d` 的 `QML_IMPORT_PATH` 并刷新 KPackage 缓存。注销重新登录后生效；要立即生效加 `--restart-shell`。
-
-安装后在 Plasma 桌面右键 → 配置壁纸 → 选择 NekoMote，在壁纸配置中设置 assets 目录路径。
+Plasma 5 使用 `plasma5` preset。stage 是打包中间产物；生成统一安装包的命令见
+[Plasma 分发](docs/plasma-distribution.md)，原 `plasma_deploy.py` 部署方式已移除。
 
 ### 分发包
 
@@ -263,14 +278,8 @@ Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 推送 `v0.5.0` 这样的 `vX.Y.Z` 稳定版本标签后，发布工作流会构建上述全部平台，
 校验十份归档及 SHA256，自动发布到 GitHub Releases。
 归档不附带 README；项目许可证为 AGPL-v3，依赖必须保留的声明合并在
-`THIRD_PARTY_NOTICES`。配置和兼容范围见 [自动构建说明](docs/github-actions.md)。目标机器安装前先检查：
-
-```bash
-tar -xzf nekomote-plasma6-x86_64.tar.gz
-cd nekomote-plasma
-python3 tools/plasma_distribution.py check-host stage
-python3 tools/plasma_deploy.py install --stage stage
-```
+`THIRD_PARTY_NOTICES`。Plasma 包的许可证和依赖声明保存在内层壁纸包的 `contents/` 中。
+配置和兼容范围见 [自动构建说明](docs/github-actions.md)；安装步骤见上文。
 
 插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt/KDE/glibc/GPU 驱动。一个二进制不能覆盖所有 Linux 发行版：Qt 插件要求相同 major、不低于构建 minor 的 Qt。详见 [Plasma 分发](docs/plasma-distribution.md)。Plasma 5 包（`nekomote-plasma5-*`）步骤相同，但必须装进 Plasma 5 桌面，不得装进 Plasma 6。
 

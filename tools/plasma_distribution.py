@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Audit/package a staged public-Qt Plasma plugin; never change desktop settings.
 
-Requires Python 3.8+ and binutils. check-host only examines trusted local builds
-with the system dynamic loader (ldd); it does not load the plugin into Plasma.
+Requires Python 3.8+ and binutils. Runtime installation and host preflight
+are owned by the standalone installer.py shipped in the release wrapper.
 """
 
 import argparse
@@ -10,13 +10,11 @@ import gzip
 import hashlib
 import io
 import json
-import os
-import platform
 import re
-import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -187,69 +185,6 @@ def audit(stage, qt_version, baseline=False, ubuntu20=False):
             "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"}
 
 
-def host_qt_version(shell, major=6):
-    # Use the Qt library actually resolved by plasmashell, not an unrelated qmake.
-    libraries = run("ldd", shell)
-    match = re.search(rf"libQt{major}Core\.so\.{major}\s+=>\s+(\S+)", libraries)
-    if not match:
-        raise ValueError(f"plasmashell does not resolve libQt{major}Core.so.{major}")
-    target = Path(match.group(1)).resolve()
-    match = re.search(rf"libQt{major}Core\.so\.({major}\.\d+\.\d+)$", target.name)
-    if not match:
-        raise ValueError(f"cannot infer plasmashell Qt version from {target}; use --host-qt-version")
-    return match.group(1)
-
-
-def check_host(stage, host_qt=None, shell=None):
-    metadata = json.loads((stage / "compatibility.json").read_text())
-    actual = audit(stage, metadata["qt_build_version"])
-    if actual != metadata:
-        raise ValueError("compatibility metadata differs from audited staged binaries")
-    machine = platform.machine()
-    if machine != metadata["architecture"]:
-        raise ValueError(f"architecture mismatch: host {machine}, bundle {metadata['architecture']}")
-    major = metadata["plasma_major"]
-    shell = shell or shutil.which("plasmashell")
-    if not shell:
-        raise ValueError(f"plasmashell not found (Plasma {major} is required)")
-    shell_version = run(shell, "--version")
-    if not re.search(rf"plasmashell\s+{major}\.", shell_version):
-        raise ValueError(f"Plasma {major} required: {shell_version.strip()}")
-    host_qt = host_qt or host_qt_version(shell, major)
-    if version(host_qt)[0] != major or version(host_qt)[:2] < version(metadata["qt_build_version"])[:2]:
-        raise ValueError(f"host Qt {host_qt} cannot load plugin built with Qt {metadata['qt_build_version']}")
-    env = dict(os.environ)
-    env.pop("LD_LIBRARY_PATH", None)
-    env.pop("LD_PRELOAD", None)
-    for name in ELFS:
-        result = run("ldd", "-r", str(stage / name), env=env)
-        if re.search(r"not found|undefined symbol", result):
-            raise ValueError(f"host dependency/symbol failure for {name}:\n{result}")
-    return {"passed": True, "architecture": machine, "qt": host_qt,
-            "plasma": shell_version.strip(), "gpu_validation": "not performed"}
-
-
-def package(stage, qt_version, output, baseline, ubuntu20=False):
-    metadata = audit(stage, qt_version, baseline, ubuntu20)
-    extras = {
-        "stage/compatibility.json": json.dumps(metadata, indent=2, sort_keys=True).encode() + b"\n",
-    }
-    sources = {f"stage/{path.relative_to(stage)}": path for path in stage_files(stage)
-               if path.name != "compatibility.json"}
-    for name in ("plasma_distribution.py", "plasma_deploy.py"):
-        sources[f"tools/{name}"] = Path(__file__).parent / name
-    with output.open("wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0, filename="") as compressed:
-        with tarfile.open(fileobj=compressed, mode="w") as archive:
-            for name in sorted(set(sources) | set(extras)):
-                data = extras[name] if name in extras else sources[name].read_bytes()
-                info = tarfile.TarInfo(f"nekomote-plasma/{name}")
-                info.size = len(data)
-                info.mode = 0o644
-                info.mtime = 0
-                archive.addfile(info, io.BytesIO(data))
-    return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
-
-
 def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
                      package_version="0.0.0"):
     """Export the audited build as one native, relocatable Plasma/Wallpaper ZIP."""
@@ -278,6 +213,9 @@ def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
     # Preserve the audited $ORIGIN/../../../lib relationship, without ELF edits.
     files["contents/lib/libnekomote_plasma_qml.so"] = (stage / ELFS[0]).read_bytes()
     plugin_metadata = json.loads(files["metadata.json"])
+    if (plugin_metadata.get("KPackageStructure") != "Plasma/Wallpaper" or
+            plugin_metadata.get("KPlugin", {}).get("Id") != "uk.nekopara.nekomote"):
+        raise ValueError("stage wallpaper identity/type mismatch")
     plugin_metadata["KPlugin"]["Version"] = package_version
     files["metadata.json"] = (json.dumps(plugin_metadata, indent=2, ensure_ascii=False) + "\n").encode()
     if "metadata.desktop" in files:
@@ -296,43 +234,97 @@ def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
     return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
 
 
+def package_bundle(stage, qt_version, output, baseline=False, ubuntu20=False,
+                   package_version="0.0.0"):
+    """One release wrapper, containing exactly the Store payload and installer."""
+    with tempfile.TemporaryDirectory(prefix="nekomote-bundle-") as temporary:
+        payload = Path(temporary) / "wallpaper.zip"
+        result = package_kpackage(stage, qt_version, payload, baseline, ubuntu20, package_version)
+        metadata = result["compatibility"]
+        name = f"nekomote-plasma{metadata['plasma_major']}-{metadata['architecture']}"
+        zip_name = name + ".wallpaper.zip"
+        files = {
+            zip_name: payload.read_bytes(),
+            zip_name + ".sha256": (result["sha256"] + "  " + zip_name + "\n").encode(),
+            "installer.py": (Path(__file__).parent / "installer.py").read_bytes(),
+        }
+        with output.open("wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", mtime=0, filename="") as compressed:
+            with tarfile.open(fileobj=compressed, mode="w") as archive:
+                for relative, data in sorted(files.items()):
+                    info = tarfile.TarInfo(name + "/" + relative)
+                    info.size = len(data)
+                    info.mode = 0o755 if relative == "installer.py" else 0o644
+                    archive.addfile(info, io.BytesIO(data))
+    return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
+
+
+def verify_bundle(path, package_version):
+    match = re.fullmatch(r"nekomote-plasma([56])-(x86_64|aarch64)\.tar\.gz", path.name)
+    if not match:
+        raise ValueError("unexpected Plasma bundle filename")
+    name = path.name[:-7]
+    zip_name = name + ".wallpaper.zip"
+    expected = {name + "/" + entry for entry in (zip_name, zip_name + ".sha256", "installer.py")}
+    with tarfile.open(path, "r:gz") as archive:
+        members = archive.getmembers()
+        if len(members) != 3 or {m.name for m in members} != expected or any(not m.isfile() for m in members):
+            raise ValueError("bundle must contain exactly the wallpaper ZIP, checksum and installer")
+        payload = archive.extractfile(name + "/" + zip_name).read()
+        checksum = archive.extractfile(name + "/" + zip_name + ".sha256").read().decode().split()
+        if checksum != [hashlib.sha256(payload).hexdigest(), zip_name]:
+            raise ValueError("inner wallpaper checksum mismatch")
+        if not archive.extractfile(name + "/installer.py").read():
+            raise ValueError("empty installer")
+    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+        plugin = json.loads(archive.read("metadata.json"))
+        metadata = json.loads(archive.read("contents/compatibility.json"))
+        if (plugin.get("KPackageStructure") != "Plasma/Wallpaper" or
+                plugin.get("KPlugin", {}).get("Id") != "uk.nekopara.nekomote" or
+                plugin["KPlugin"].get("Version") != package_version):
+            raise ValueError("wallpaper identity/version does not match release")
+        if metadata.get("plasma_major") != int(match[1]) or metadata.get("architecture") != match[2]:
+            raise ValueError("wallpaper platform does not match bundle name")
+        for source, destination in zip(ELFS, ("contents/lib/libnekomote_plasma_qml.so",
+                "contents/ui/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so")):
+            if hashlib.sha256(archive.read(destination)).hexdigest() != metadata["binaries"][source]["sha256"]:
+                raise ValueError("wallpaper binary hash mismatch")
+    return {"passed": True, "archive": str(path), "payload_sha256": checksum[0]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("audit", "package", "kpackage", "check-host"):
+    verifier = commands.add_parser("verify-bundle")
+    verifier.add_argument("archive", type=Path)
+    verifier.add_argument("--package-version", required=True)
+    for name in ("audit", "bundle", "kpackage"):
         command = commands.add_parser(name)
         command.add_argument("stage", type=Path)
-        if name != "check-host":
-            command.add_argument("--qt-version", required=True, help="actual build Qt version")
-            baselines = command.add_mutually_exclusive_group()
-            baselines.add_argument("--baseline-debian12", action="store_true")
-            baselines.add_argument("--baseline-ubuntu20", action="store_true")
-        if name in ("package", "kpackage"):
+        command.add_argument("--qt-version", required=True, help="actual build Qt version")
+        baselines = command.add_mutually_exclusive_group()
+        baselines.add_argument("--baseline-debian12", action="store_true")
+        baselines.add_argument("--baseline-ubuntu20", action="store_true")
+        if name in ("bundle", "kpackage"):
             command.add_argument("--output", required=True, type=Path)
-            if name == "kpackage":
-                command.add_argument("--package-version", required=True)
-        elif name == "audit":
-            command.add_argument("--output", type=Path)
+            command.add_argument("--package-version", required=True)
         else:
-            command.add_argument("--host-qt-version", help="only if actual plasmashell Qt cannot be detected")
-            command.add_argument("--plasmashell", help="explicit trusted host executable")
+            command.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
-        if args.command == "audit":
+        if args.command == "verify-bundle":
+            result = verify_bundle(args.archive, args.package_version)
+        elif args.command == "audit":
             result = audit(args.stage, args.qt_version, args.baseline_debian12, args.baseline_ubuntu20)
             if args.output:
                 args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-        elif args.command == "kpackage":
-            result = package_kpackage(args.stage, args.qt_version, args.output,
-                                      args.baseline_debian12, args.baseline_ubuntu20,
-                                      args.package_version)
-        elif args.command == "package":
-            result = package(args.stage, args.qt_version, args.output, args.baseline_debian12, args.baseline_ubuntu20)
         else:
-            result = check_host(args.stage, args.host_qt_version, args.plasmashell)
+            exporter = package_bundle if args.command == "bundle" else package_kpackage
+            result = exporter(args.stage, args.qt_version, args.output,
+                              args.baseline_debian12, args.baseline_ubuntu20, args.package_version)
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
-    except (OSError, ValueError, KeyError, subprocess.TimeoutExpired) as error:
+    except (OSError, ValueError, KeyError, tarfile.TarError, zipfile.BadZipFile,
+            subprocess.TimeoutExpired) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
 

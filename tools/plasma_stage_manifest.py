@@ -2,7 +2,7 @@
 """Generate manifest.json for a staged Plasma deployment directory.
 
 Records every file with sha256 and size, plus readelf RUNPATH/NEEDED for ELF
-binaries. The manifest is consumed by the verifier and installer to detect
+binaries. The manifest is consumed by the distribution auditor to detect
 corruption, missing files, and build-tree RPATH leakage.
 """
 import hashlib

@@ -1,0 +1,9 @@
+install: 12 files to /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6
+  KPackage:  /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6/plasma/wallpapers/uk.nekopara.nekomote/
+  Plasmoid:   /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6/plasma/plasmoids/org.nekomote.validation/
+  Native lib: /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6/nekomote/lib/libnekomote_plasma_qml.so
+  QML module: /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6/nekomote/qml/NekoMote/Wallpaper/
+  Session env: /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/config6/environment.d/nekomote.conf
+  Activate: log out and back in, or restart plasmashell
+  Record:     /run/media/chocola/MIKU/NekoMote/experiments/unified-plasma/data6/nekomote/.install-record.json
+PASS: final bundles, KPackage6 install/reinstall/migrate/uninstall, Qt5/Qt6 directory imports; assets/config retained

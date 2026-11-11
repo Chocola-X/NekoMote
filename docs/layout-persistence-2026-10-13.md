@@ -58,11 +58,7 @@
 
 ## 当前桌面启用
 
-在仓库根目录执行：
-
-```sh
-python3 tools/plasma_deploy.py reinstall --stage build/plasma/adapters/plasma/stage --restart-shell
-```
-
-这会更新用户插件并重启 plasmashell；仅重编译或关闭设置菜单不会卸载旧 native 库。
-重装工具保留用户业务配置，正式启用后需要用户检查当前桌面的保存与恢复行为。
+2026-11-11：当期的 `plasma_deploy.py --restart-shell` 部署方式已移除。
+请按 [统一分发说明](plasma-distribution.md) 使用外层包的 `installer.py reinstall`，
+随后手动重新登录。仅重编译或关闭设置菜单不会卸载已加载的原生库。
+重装保留用户业务配置，正式启用后仍需检查桌面的保存与恢复行为。

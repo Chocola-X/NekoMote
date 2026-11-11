@@ -44,16 +44,8 @@ cmake --build --preset plasma --target nekomote_plasma_stage -j4
 
 本轮隔离构建位于 `build/plasma-dual`，本机测试归档：
 `build/evidence/plasma-dual-20261012/nekomote-plasma-local-x86_64.tar.gz`。
-在 **miku 登录会话** 解压后执行随包工具（Codex 没有安装到该账户）：
-
-```sh
-tar -xzf /path/to/nekomote-plasma-local-x86_64.tar.gz
-cd nekomote-plasma
-python3 tools/plasma_distribution.py check-host stage
-python3 tools/plasma_deploy.py install --stage stage
-```
-
-安装工具会自动配置 QML 导入路径；首次安装后可用 `--restart-shell` 立即加载，或注销并重新登录。
+以上为当期测试归档，不再使用旧部署脚本。当前包的安装/重装、旧布局迁移与
+手动重新登录步骤见 [统一分发说明](plasma-distribution.md)。
 壁纸设置中的素材
 目录填真实 `assets`，先用默认 GL，再选 Vulkan；背景和控制 UI 由共享应用绘制。
 包不包含模型素材。本机包实际要求 Qt 6.9.1、glibc 2.38、GLIBCXX 3.4.31、

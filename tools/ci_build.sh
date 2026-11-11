@@ -123,14 +123,22 @@ else
         QT_VERSION="$(qmake6 -query QT_VERSION)"
         BASELINE=--baseline-debian12
     fi
-    python3 "$WORK_DIR/src/tools/plasma_distribution.py" package "$STAGE_DIR" \
-        --qt-version "$QT_VERSION" "$BASELINE" --output "$OUTPUT_DIR/$NAME.tar.gz" \
-        > "$OUTPUT_DIR/compatibility.json"
-    python3 "$WORK_DIR/src/tools/plasma_distribution.py" kpackage "$STAGE_DIR" \
+    python3 "$WORK_DIR/src/tools/plasma_distribution.py" bundle "$STAGE_DIR" \
         --qt-version "$QT_VERSION" "$BASELINE" \
         --package-version "${NEKOMOTE_PACKAGE_VERSION:-0.0.0}" \
-        --output "$OUTPUT_DIR/$NAME.wallpaper.zip" > "$OUTPUT_DIR/kpackage.json"
-    (cd "$OUTPUT_DIR" && sha256sum "$NAME.wallpaper.zip" > "$NAME.wallpaper.zip.sha256")
+        --output "$OUTPUT_DIR/$NAME.tar.gz" > "$OUTPUT_DIR/compatibility.json"
+    python3 "$WORK_DIR/src/tools/plasma_distribution.py" verify-bundle "$OUTPUT_DIR/$NAME.tar.gz" \
+        --package-version "${NEKOMOTE_PACKAGE_VERSION:-0.0.0}" > "$OUTPUT_DIR/bundle-verification.json"
+    # Exercise the exported directory module, not only the build-tree named
+    # import. Do not require a Plasma session or install into the runner's home.
+    tar -xzf "$OUTPUT_DIR/$NAME.tar.gz" -C "$WORK_DIR/package"
+    python3 -m zipfile -e "$WORK_DIR/package/$NAME/$NAME.wallpaper.zip" "$WORK_DIR/wallpaper"
+    cmake -S "$WORK_DIR/src/tests/plasma/kpackage_import" -B "$WORK_DIR/kpackage-import" \
+        -G Ninja -DCMAKE_BUILD_TYPE=Release "-DNEKOMOTE_QT_MAJOR=$QT_MAJOR"
+    cmake --build "$WORK_DIR/kpackage-import" -j "$JOBS"
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QML_IMPORT_PATH= QML2_IMPORT_PATH= \
+        "$WORK_DIR/kpackage-import/kpackage_import" "$WORK_DIR/wallpaper" \
+        > "$OUTPUT_DIR/kpackage-import.log" 2>&1
 fi
 (cd "$OUTPUT_DIR" && sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
 echo "Package: $NAME.tar.gz"

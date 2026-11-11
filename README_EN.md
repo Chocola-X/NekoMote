@@ -209,26 +209,47 @@ The UI and asset display names support English, Simplified Chinese, Traditional 
 
 ## KDE Plasma Wallpaper Deployment
 
+GitHub distributes `nekomote-plasma{5,6}-{x86_64,aarch64}.tar.gz`. Each archive contains
+one `.wallpaper.zip`, its `.sha256`, and a standalone `installer.py`.
+Upload the inner **`.wallpaper.zip`** to KDE Store; GitHub users install the same payload
+with the script. No global QML import path is required. Store listings still need to be
+published separately; see [KPackage distribution](docs/plasma-kpackage-distribution.md).
+
+### Install, Reinstall, and Uninstall
+
+Choose the package matching your Plasma major and CPU architecture:
+
+```bash
+tar -xzf nekomote-plasma6-x86_64.tar.gz
+cd nekomote-plasma6-x86_64
+python3 installer.py              # interactive install/reinstall/uninstall/status menu
+# Or run an action directly:
+python3 installer.py install
+python3 installer.py reinstall
+python3 installer.py uninstall
+python3 installer.py status
+```
+
+Requires Python ≥ 3.8, the matching `kpackagetool5` or `kpackagetool6`, and host runtime
+libraries. The installer checks checksums, host versions, and dynamic dependencies before
+installing into `$XDG_DATA_HOME/plasma/wallpapers/uk.nekopara.nekomote/`
+(default `~/.local/share/…`). Reinstall supports the same version and migrates recorded
+legacy split installations, removing their old libraries, modules, and generated environment
+file. Failure restores the original files; modified legacy files stop the operation before
+any changes. Assets, panel state, and desktop configuration are retained.
+After an update or migration, log out and back in to release loaded modules; the installer
+does not restart the desktop. Select NekoMote in Configure Wallpaper and choose your assets directory.
+
 ### Building the Plugin from Source
 
 ```bash
 cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
-cmake --build --preset plasma
+cmake --build --preset plasma --target nekomote_plasma_stage
 ```
 
-`NEKOMOTE_BUILD_PLASMA_PROBE=OFF` disables the local probe that requires KF6/Plasma development packages, building only the distributable QML modules and plugin. Artifacts land in `build/plasma/adapters/plasma/`.
-
-### Installing to the Desktop
-
-Use the unified deployment tool (`install`/`reinstall`/`uninstall`/`status`/`verify`):
-
-```bash
-python3 tools/plasma_deploy.py install --stage build/plasma/adapters/plasma/stage
-```
-
-This installs to `$XDG_DATA_HOME/nekomote/` (default `~/.local/share/nekomote/`), automatically writes `QML_IMPORT_PATH` to `environment.d`, and refreshes the KPackage cache. It takes effect after logout/login; add `--restart-shell` to apply immediately.
-
-After installation, on the Plasma desktop right-click → Configure Wallpaper → select NekoMote, and set the assets directory path in the wallpaper config.
+For Plasma 5 use the `plasma5` preset. The stage is a packaging intermediate;
+see [Plasma distribution](docs/plasma-distribution.md) for bundle generation.
+The previous `plasma_deploy.py` deployment path has been removed.
 
 ### Distribution Packages
 
@@ -249,14 +270,9 @@ After build, tests, and dependency audit pass, Actions artifacts are uploaded; f
 Pushing a stable `vX.Y.Z` tag such as `v0.5.0` triggers the release workflow, which builds all the above platforms,
 verifies the ten archives and their SHA256, and publishes to GitHub Releases automatically.
 Archives do not bundle the README; the project license is AGPL-v3, and the required dependency notices are merged into
-`THIRD_PARTY_NOTICES`. Configuration and compatibility scope are in [Automated Build Notes](docs/github-actions.md). Before installing on a target machine, check:
-
-```bash
-tar -xzf nekomote-plasma6-x86_64.tar.gz
-cd nekomote-plasma
-python3 tools/plasma_distribution.py check-host stage
-python3 tools/plasma_deploy.py install --stage stage
-```
+`THIRD_PARTY_NOTICES`. Plasma licenses and notices live in `contents/` inside the wallpaper ZIP.
+See [Automated Build Notes](docs/github-actions.md) for configuration and compatibility;
+installation commands are listed above.
 
 The plugin uses the host Qt public Quick API; distribution packages do not bundle Qt/KDE/glibc/GPU drivers. A single binary cannot cover all Linux distributions: a Qt plugin requires the same Qt major and a Qt minor no lower than the build. See [Plasma Distribution](docs/plasma-distribution.md). The Plasma 5 package (`nekomote-plasma5-*`) follows the same steps but must be installed into a Plasma 5 desktop, never Plasma 6.
 

@@ -1,12 +1,15 @@
 """Exercise release gates without a token, network, or real GitHub writes."""
 
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import tarfile
+import zipfile
 import unittest
 
 
@@ -24,8 +27,7 @@ PACKAGES = (
     "nekomote-x11-ubuntu20-aarch64",
 )
 
-ARCHIVES = [f"{p}.tar.gz" for p in PACKAGES] + [
-    f"{p}.wallpaper.zip" for p in PACKAGES if "-plasma" in p]
+ARCHIVES = [f"{p}.tar.gz" for p in PACKAGES]
 
 
 class ReleaseTests(unittest.TestCase):
@@ -37,7 +39,10 @@ class ReleaseTests(unittest.TestCase):
         self.assets.mkdir()
         for name in ARCHIVES:
             archive = self.assets / name
-            archive.write_bytes(name.encode())
+            if "-plasma" in name:
+                self.plasma_bundle(archive)
+            else:
+                archive.write_bytes(name.encode())
             digest = hashlib.sha256(archive.read_bytes()).hexdigest()
             archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n")
         self.log = self.root / "calls.jsonl"
@@ -60,6 +65,37 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
                         GH_REPO="test/nekomote", GH_TOKEN="offline-test-token",
                         MOCK_GH_LOG=str(self.log), MOCK_GH_STATE="missing",
                         MOCK_GH_UPLOAD_FAIL="")
+
+    def plasma_bundle(self, archive, version="0.5.0", architecture=None, corrupt_binary=False,
+                      corrupt_checksum=False):
+        name = archive.name[:-7]
+        major = int(name.split("-")[1][-1])
+        payload = io.BytesIO()
+        library = b"synthetic native library"
+        metadata = {"KPackageStructure": "Plasma/Wallpaper", "KPlugin": {
+            "Id": "uk.nekopara.nekomote", "Version": version}}
+        binaries = {source: {"sha256": hashlib.sha256(library).hexdigest()} for source in (
+            "lib/libnekomote_plasma_qml.so", "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so")}
+        compatibility = {"plasma_major": major, "architecture": architecture or name.split("-")[-1],
+                         "binaries": binaries}
+        with zipfile.ZipFile(payload, "w") as inner:
+            inner.writestr("metadata.json", json.dumps(metadata))
+            inner.writestr("contents/compatibility.json", json.dumps(compatibility))
+            inner.writestr("contents/lib/libnekomote_plasma_qml.so", library)
+            inner.writestr("contents/ui/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so",
+                           b"damaged" if corrupt_binary else library)
+        zip_name = name + ".wallpaper.zip"
+        files = {zip_name: payload.getvalue(), "installer.py": b"# installer fixture\n",
+                 zip_name + ".sha256": (("0" * 64 if corrupt_checksum else
+                                        hashlib.sha256(payload.getvalue()).hexdigest()) +
+                                       "  " + zip_name + "\n").encode()}
+        with tarfile.open(archive, "w:gz") as outer:
+            for relative, data in files.items():
+                info = tarfile.TarInfo(name + "/" + relative)
+                info.size = len(data)
+                outer.addfile(info, io.BytesIO(data))
+        archive.with_name(archive.name + ".sha256").write_text(
+            hashlib.sha256(archive.read_bytes()).hexdigest() + "  " + archive.name + "\n")
 
     def run_release(self, tag="v0.5.0"):
         return subprocess.run(["bash", str(SCRIPT), tag, str(self.assets)],
@@ -122,6 +158,15 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         (self.assets / f"{PACKAGES[0]}.tar.gz.sha256").write_text(f"{digest}  stale-name.tar.gz\n")
         self.assertNotEqual(self.run_release().returncode, 0)
         self.assertEqual(self.calls(), [])
+
+    def test_inner_version_platform_and_binary_hash_rejected_before_github_access(self):
+        archive = self.assets / "nekomote-plasma6-x86_64.tar.gz"
+        for kwargs in ({"version": "0.0.0"}, {"architecture": "aarch64"},
+                       {"corrupt_binary": True}, {"corrupt_checksum": True}):
+            with self.subTest(kwargs=kwargs):
+                self.plasma_bundle(archive, **kwargs)
+                self.assertNotEqual(self.run_release().returncode, 0)
+                self.assertEqual(self.calls(), [])
 
     def test_invalid_versions_are_rejected_before_github_access(self):
         for tag in ("main", "v0.5", "v01.5.0", "v0.5.0-rc.1", "v0.5.0;false"):
