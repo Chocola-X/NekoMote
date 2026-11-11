@@ -914,6 +914,75 @@ TEST_CASE("UI draws to its explicit host target and reinitializes its font", "[g
     }
 }
 
+TEST_CASE("UI batches consecutive text, solid rects and arrows into minimal GPU draw calls",
+          "[gpu][ui][batching]")
+{
+    Context context;
+    Output output;
+    output.resize(400, 600);
+    render_gl::UiRenderer ui;
+    REQUIRE(ui.init(400, 600));
+    REQUIRE(ui.init_font("", 24));
+    std::string charset;
+    for (int i = 0; i < 30; ++i)
+        charset += "Item " + std::to_string(i) + " ";
+    REQUIRE(ui.font()->prepare_text(charset.c_str()));
+    ui.set_render_target(output.framebuffer);
+
+    ui.begin_frame();
+    ui.push_clip_rect(10, 10, 380, 580);
+    // 10 solid rects and 5 arrows of various colors
+    for (int i = 0; i < 10; ++i)
+        ui.draw_solid_rect(20, 20 + static_cast<float>(i) * 10, 100, 8,
+                           {0.1f * static_cast<float>(i), 0.5f, 0.8f, 1.0f});
+    for (int i = 0; i < 5; ++i)
+        ui.draw_arrow(150 + static_cast<float>(i) * 20, 30, 6.0f, i % 2 == 0,
+                      {0.9f, 0.2f * static_cast<float>(i), 0.1f, 1.0f});
+    // Switching to text should flush the triangle batch (draw call 1)
+    for (int i = 0; i < 20; ++i)
+    {
+        const std::string label = "Item " + std::to_string(i);
+        ui.draw_text(20, 150 + static_cast<float>(i) * 18, label.c_str(), 14,
+                     {0.2f, 0.8f, 0.1f * static_cast<float>(i % 10), 1.0f});
+    }
+    // Radius 0 rounded rects should batch as solid rects (draw call 2 flushed, batch 3 queued)
+    for (int i = 0; i < 5; ++i)
+        ui.draw_rounded_rect(200, 150 + static_cast<float>(i) * 20, 120, 16, 0.0f,
+                             {0.8f, 0.3f, 0.4f, 0.5f}, {0, 0, 0, 0}, 0);
+    ui.pop_clip_rect(); // flushes batch 3 (draw call 3)
+    ui.end_frame();
+
+    REQUIRE(ui.draw_call_count() == 3);
+
+    // Verify steady-state zero allocation
+    for (int i = 0; i < 10; ++i)
+    {
+        ui.begin_frame();
+        ui.push_clip_rect(10, 10, 380, 580);
+        for (int j = 0; j < 5; ++j)
+            ui.draw_solid_rect(20, 20 + static_cast<float>(j) * 10, 100, 8, {1, 1, 1, 1});
+        for (int j = 0; j < 10; ++j)
+            ui.draw_text(20, 150 + static_cast<float>(j) * 18, "Item 1", 14, {1, 1, 1, 1});
+        ui.pop_clip_rect();
+        ui.end_frame();
+    }
+    allocation_count = 0;
+    track_allocations = true;
+    for (int frame = 0; frame < 120; ++frame)
+    {
+        ui.begin_frame();
+        ui.push_clip_rect(10, 10, 380, 580);
+        for (int j = 0; j < 5; ++j)
+            ui.draw_solid_rect(20, 20 + static_cast<float>(j) * 10, 100, 8, {1, 1, 1, 1});
+        for (int j = 0; j < 10; ++j)
+            ui.draw_text(20, 150 + static_cast<float>(j) * 18, "Item 1", 14, {1, 1, 1, 1});
+        ui.pop_clip_rect();
+        ui.end_frame();
+    }
+    track_allocations = false;
+    REQUIRE(allocation_count == 0);
+}
+
 #ifdef NEKOMOTE_HAS_ABI
 TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][integration]")
 {

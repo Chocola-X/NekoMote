@@ -611,6 +611,54 @@ TEST_CASE("Vulkan warmed model and UI frame paths reuse CPU allocations", "[gpu]
     REQUIRE(pixel(image, 32, 32)[3] > 0);
 }
 
+TEST_CASE("Vulkan UI batches consecutive compatible draws into minimal GPU draw calls",
+          "[gpu][vulkan][ui][batching]")
+{
+    Fixture f(player::ValidationPolicy::Disabled);
+    render_vk::UiRenderer ui;
+    struct CompletionGuard
+    {
+        player::VkHost& host;
+        ~CompletionGuard()
+        {
+            host.wait_noexcept();
+        }
+    } completion{f.host};
+    REQUIRE(ui.init(f.host.context(), 400, 600));
+    REQUIRE(ui.init_font("", 24));
+    std::string charset;
+    for (int i = 0; i < 30; ++i)
+        charset += "Item " + std::to_string(i) + " ";
+    REQUIRE(ui.font()->prepare_text(charset.c_str()));
+
+    f.host.wait_ready();
+    const auto target = f.host.begin_frame(400, 600, false);
+    ui.set_render_target(target);
+    ui.begin_frame();
+    ui.push_clip_rect(10, 10, 380, 580);
+    // 10 solid rects and 5 arrows of identical color
+    for (int i = 0; i < 10; ++i)
+        ui.draw_solid_rect(20, 20 + static_cast<float>(i) * 10, 100, 8, {0.2f, 0.5f, 0.8f, 1.0f});
+    for (int i = 0; i < 5; ++i)
+        ui.draw_arrow(150 + static_cast<float>(i) * 20, 30, 6.0f, i % 2 == 0,
+                      {0.2f, 0.5f, 0.8f, 1.0f});
+    // 20 text items of identical color
+    for (int i = 0; i < 20; ++i)
+    {
+        const std::string label = "Item " + std::to_string(i);
+        ui.draw_text(20, 150 + static_cast<float>(i) * 18, label.c_str(), 14,
+                     {0.9f, 0.9f, 0.9f, 1.0f});
+    }
+    // Radius 0 rounded rects of identical color
+    for (int i = 0; i < 5; ++i)
+        ui.draw_rounded_rect(200, 150 + static_cast<float>(i) * 20, 120, 16, 0.0f,
+                             {0.8f, 0.3f, 0.4f, 0.5f}, {0, 0, 0, 0}, 0);
+    ui.pop_clip_rect();
+    ui.end_frame();
+
+    REQUIRE(ui.draw_call_count() == 3);
+}
+
 #if defined(NEKOMOTE_HAS_ABI)
 TEST_CASE("Vulkan wallpaper ABI validates borrowed targets and retains model after failed load",
           "[gpu][vulkan][abi]")

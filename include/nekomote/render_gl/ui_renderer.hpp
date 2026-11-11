@@ -83,12 +83,22 @@ class UiRenderer : public nekomote::ui::Painter
     nekomote::ui::FontMetrics* font() override;
     bool is_initialized() const override;
 
+    std::size_t draw_call_count() const
+    {
+        return draw_call_count_;
+    }
+    void reset_draw_call_count()
+    {
+        draw_call_count_ = 0;
+    }
+
   private:
     bool initialized_{false};
     std::uint32_t framebuffer_{0};
     float global_alpha_{1.0f};
     int viewport_width_{0};
     int viewport_height_{0};
+    std::size_t draw_call_count_{0};
 
     nekomote::ui::FontMetrics font_metrics_;
     FontAtlas font_atlas_;
@@ -109,19 +119,37 @@ class UiRenderer : public nekomote::ui::Painter
     } text_uniforms_, icon_uniforms_;
     struct TriangleUniforms
     {
-        int viewport{-1}, color{-1};
+        int viewport{-1};
     } tri_uniforms_;
     std::uint32_t vao_{0};
     std::uint32_t vbo_{0};
     std::uint32_t uv_vbo_{0};
+    std::uint32_t color_vbo_{0};
 
     std::vector<float> rect_vertices_;
     std::vector<float> rect_uvs_;
     std::vector<float> text_vertices_;
     std::vector<float> text_uvs_;
+    std::vector<float> text_colors_;
+    std::vector<float> tri_vertices_;
+    std::vector<float> tri_colors_;
     std::vector<float> icon_vertices_;
     std::vector<float> icon_uvs_;
     std::uint32_t icon_texture_{0};
+    nekomote::ui::Color icon_tint_{1, 1, 1, 1};
+    nekomote::ui::Color rect_cur_fill_{};
+    nekomote::ui::Color rect_cur_border_{};
+    float rect_cur_border_width_{0};
+    float rect_cur_w_{0};
+    float rect_cur_h_{0};
+    float rect_cur_radius_{0};
+
+    struct ClipRect
+    {
+        float left{0}, top{0}, right{0}, bottom{0};
+        int sx{0}, sy{0}, sw{0}, sh{0};
+    };
+    std::vector<ClipRect> clip_stack_;
     bool clip_enabled_{false};
     float clip_left_{0}, clip_top_{0}, clip_right_{0}, clip_bottom_{0};
 
@@ -129,10 +157,11 @@ class UiRenderer : public nekomote::ui::Painter
     bool create_text_shader();
     bool create_icon_shader();
     bool create_tri_shader();
+    void flush_all();
     void flush_rects();
     void flush_text();
+    void flush_triangles();
     void flush_icons();
-    bool outside_clip(const std::vector<float>& vertices) const;
 };
 
 } // namespace nekomote::render_gl

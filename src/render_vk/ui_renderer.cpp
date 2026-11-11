@@ -224,6 +224,7 @@ struct UiRenderer::Impl
     std::vector<Icon> icons;
     int width{0}, height{0};
     float alpha{1};
+    std::size_t draw_call_count{0};
 
     ~Impl()
     {
@@ -378,8 +379,24 @@ struct UiRenderer::Impl
                 VkDescriptorSet descriptor = VK_NULL_HANDLE)
     {
         const auto count = static_cast<std::uint32_t>(vertices.size()) - first;
-        if (count)
-            draws.push_back({kind, first, count, pc, current_clip(), descriptor});
+        if (!count)
+            return;
+        const auto clip = current_clip();
+        if (!draws.empty())
+        {
+            auto& prev = draws.back();
+            if (prev.kind == kind && prev.descriptor == descriptor &&
+                prev.clip.offset.x == clip.offset.x && prev.clip.offset.y == clip.offset.y &&
+                prev.clip.extent.width == clip.extent.width &&
+                prev.clip.extent.height == clip.extent.height &&
+                std::memcmp(&prev.constants, &pc, sizeof(RectPC)) == 0 &&
+                prev.first + prev.count == first)
+            {
+                prev.count += count;
+                return;
+            }
+        }
+        draws.push_back({kind, first, count, pc, clip, descriptor});
     }
 
     void ensure_vertex_buffer(std::size_t required)
@@ -537,6 +554,7 @@ void UiRenderer::begin_frame()
     impl_->vertices.clear();
     impl_->draws.clear();
     impl_->clips.clear();
+    impl_->draw_call_count = 0;
 }
 
 void UiRenderer::end_frame()
@@ -593,6 +611,7 @@ void UiRenderer::end_frame()
             vkCmdBindDescriptorSets(commands, VK_PIPELINE_BIND_POINT_GRAPHICS, p.layout, 0, 1,
                                     &draw.descriptor, 0, nullptr);
         vkCmdDraw(commands, draw.count, 1, draw.first, 0);
+        ++p.draw_call_count;
     }
     vkCmdEndRenderPass(commands);
     p.alpha = 1;
@@ -604,6 +623,11 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
 {
     if (!impl_ || !impl_->initialized || w <= 0 || h <= 0)
         return;
+    if (radius <= 0.0f && (border.a <= 0.0f || border_width <= 0.0f))
+    {
+        draw_solid_rect(x, y, w, h, fill);
+        return;
+    }
     auto& p = *impl_;
     if (!p.clips.empty())
     {
@@ -782,6 +806,17 @@ nekomote::ui::FontMetrics* UiRenderer::font()
 bool UiRenderer::is_initialized() const
 {
     return impl_ && impl_->initialized;
+}
+
+std::size_t UiRenderer::draw_call_count() const
+{
+    return impl_ ? impl_->draw_call_count : 0;
+}
+
+void UiRenderer::reset_draw_call_count()
+{
+    if (impl_)
+        impl_->draw_call_count = 0;
 }
 
 } // namespace nekomote::render_vk

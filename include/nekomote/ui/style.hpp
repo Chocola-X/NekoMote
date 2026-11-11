@@ -10,6 +10,7 @@ struct Color
         : r(r_), g(g_), b(b_), a(a_)
     {
     }
+    bool operator==(const Color& o) const = default;
 };
 
 struct Style

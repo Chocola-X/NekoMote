@@ -63,10 +63,13 @@ void main() {
 constexpr const char* kTextVertexShader = R"(
 layout(location = 0) in vec2 a_pos;
 layout(location = 1) in vec2 a_uv;
+layout(location = 2) in vec4 a_color;
 uniform vec2 u_viewport;
 out vec2 v_uv;
+out vec4 v_color;
 void main() {
     v_uv = a_uv;
+    v_color = a_color;
     vec2 ndc = (a_pos / u_viewport) * 2.0 - 1.0;
     gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
 }
@@ -74,12 +77,12 @@ void main() {
 
 constexpr const char* kTextFragmentShader = R"(
 in vec2 v_uv;
+in vec4 v_color;
 out vec4 frag;
-uniform vec4 u_color;
 uniform sampler2D u_atlas;
 void main() {
     float a = texture(u_atlas, v_uv).r;
-    frag = vec4(u_color.rgb, u_color.a * a);
+    frag = vec4(v_color.rgb, v_color.a * a);
 }
 )";
 
@@ -108,18 +111,21 @@ void main() {
 
 constexpr const char* kTriVertexShader = R"(
 layout(location = 0) in vec2 a_pos;
+layout(location = 1) in vec4 a_color;
 uniform vec2 u_viewport;
+out vec4 v_color;
 void main() {
+    v_color = a_color;
     vec2 ndc = (a_pos / u_viewport) * 2.0 - 1.0;
     gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
 }
 )";
 
 constexpr const char* kTriFragmentShader = R"(
+in vec4 v_color;
 out vec4 frag;
-uniform vec4 u_color;
 void main() {
-    frag = u_color;
+    frag = v_color;
 }
 )";
 
@@ -239,18 +245,25 @@ void UiRenderer::reset()
         glDeleteBuffers(1, &vbo_);
     if (uv_vbo_)
         glDeleteBuffers(1, &uv_vbo_);
+    if (color_vbo_)
+        glDeleteBuffers(1, &color_vbo_);
     rect_shader_ = text_shader_ = icon_shader_ = tri_shader_ = 0;
-    vao_ = vbo_ = uv_vbo_ = 0;
+    vao_ = vbo_ = uv_vbo_ = color_vbo_ = 0;
     initialized_ = false;
     font_ready_ = false;
     icon_texture_ = 0;
     clip_enabled_ = false;
+    clip_stack_.clear();
     rect_vertices_.clear();
     rect_uvs_.clear();
     text_vertices_.clear();
     text_uvs_.clear();
+    text_colors_.clear();
+    tri_vertices_.clear();
+    tri_colors_.clear();
     icon_vertices_.clear();
     icon_uvs_.clear();
+    draw_call_count_ = 0;
 }
 
 bool UiRenderer::init(int viewport_width, int viewport_height)
@@ -268,12 +281,17 @@ bool UiRenderer::init(int viewport_width, int viewport_height)
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
     glGenBuffers(1, &uv_vbo_);
+    glGenBuffers(1, &color_vbo_);
     rect_vertices_.reserve(12);
     rect_uvs_.reserve(12);
     icon_vertices_.reserve(12);
     icon_uvs_.reserve(12);
-    text_vertices_.reserve(1024);
-    text_uvs_.reserve(1024);
+    text_vertices_.reserve(4096);
+    text_uvs_.reserve(4096);
+    text_colors_.reserve(8192);
+    tri_vertices_.reserve(1024);
+    tri_colors_.reserve(2048);
+    clip_stack_.reserve(16);
     initialized_ = true;
     return true;
 }
@@ -286,7 +304,11 @@ bool UiRenderer::init_font(const std::string& font_path, float pixel_height)
         return false;
     font_metrics_.on_glyph_added = [this](const nekomote::ui::Glyph& g, const unsigned char* bitmap)
     { font_atlas_.upload_glyph(g, bitmap); };
-    font_metrics_.on_atlas_resized = [this](int w, int h) { font_atlas_.resize_atlas(w, h); };
+    font_metrics_.on_atlas_resized = [this](int w, int h)
+    {
+        flush_text();
+        font_atlas_.resize_atlas(w, h);
+    };
     font_ready_ = true;
     return true;
 }
@@ -343,7 +365,6 @@ bool UiRenderer::create_text_shader()
     if (!text_shader_)
         return false;
     text_uniforms_.viewport = glGetUniformLocation(text_shader_, "u_viewport");
-    text_uniforms_.color = glGetUniformLocation(text_shader_, "u_color");
     text_uniforms_.sampler = glGetUniformLocation(text_shader_, "u_atlas");
     return true;
 }
@@ -373,7 +394,6 @@ bool UiRenderer::create_tri_shader()
     if (!tri_shader_)
         return false;
     tri_uniforms_.viewport = glGetUniformLocation(tri_shader_, "u_viewport");
-    tri_uniforms_.color = glGetUniformLocation(tri_shader_, "u_color");
     return true;
 }
 
@@ -392,6 +412,8 @@ void UiRenderer::begin_frame()
 {
     global_alpha_ = 1.0f;
     clip_enabled_ = false;
+    clip_stack_.clear();
+    draw_call_count_ = 0;
     if (!initialized_)
         return;
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -406,6 +428,9 @@ void UiRenderer::begin_frame()
     rect_uvs_.clear();
     text_vertices_.clear();
     text_uvs_.clear();
+    text_colors_.clear();
+    tri_vertices_.clear();
+    tri_colors_.clear();
     icon_vertices_.clear();
     icon_uvs_.clear();
     icon_texture_ = 0;
@@ -413,11 +438,18 @@ void UiRenderer::begin_frame()
 
 void UiRenderer::end_frame()
 {
+    flush_all();
     global_alpha_ = 1.0f;
     if (!initialized_)
         return;
     glDisable(GL_SCISSOR_TEST);
     clip_enabled_ = false;
+    clip_stack_.clear();
+}
+
+void UiRenderer::flush_all()
+{
+    flush_triangles();
     flush_rects();
     flush_text();
     flush_icons();
@@ -427,42 +459,58 @@ void UiRenderer::push_clip_rect(float x, float y, float w, float h)
 {
     if (!initialized_)
         return;
+    flush_all();
+    GLint sx = static_cast<GLint>(x);
+    GLint sy = static_cast<GLint>(static_cast<float>(viewport_height_) - (y + h));
+    GLsizei sw = static_cast<GLsizei>(std::max(0.0f, w));
+    GLsizei sh = static_cast<GLsizei>(std::max(0.0f, h));
+    if (!clip_stack_.empty())
+    {
+        const auto& prev = clip_stack_.back();
+        const GLint x1 = std::max(sx, prev.sx);
+        const GLint y1 = std::max(sy, prev.sy);
+        const GLint x2 = std::min(sx + sw, prev.sx + prev.sw);
+        const GLint y2 = std::min(sy + sh, prev.sy + prev.sh);
+        sx = x1;
+        sy = y1;
+        sw = std::max(0, x2 - x1);
+        sh = std::max(0, y2 - y1);
+    }
     glEnable(GL_SCISSOR_TEST);
-    const GLint sx = static_cast<GLint>(x);
-    const GLint sy = static_cast<GLint>(static_cast<float>(viewport_height_) - (y + h));
-    const GLsizei sw = static_cast<GLsizei>(std::max(0.0f, w));
-    const GLsizei sh = static_cast<GLsizei>(std::max(0.0f, h));
     glScissor(sx, sy, sw, sh);
-    // Match the actual integer scissor, including fractional scrolling. Glyph
-    // quads can extend outside their logical row, so cull their real bounds.
+    const float left = static_cast<float>(sx);
+    const float right = left + static_cast<float>(sw);
+    const float bottom = static_cast<float>(viewport_height_) - static_cast<float>(sy);
+    const float top = bottom - static_cast<float>(sh);
+    clip_stack_.push_back({left, top, right, bottom, sx, sy, sw, sh});
     clip_enabled_ = true;
-    clip_left_ = static_cast<float>(sx);
-    clip_right_ = clip_left_ + static_cast<float>(sw);
-    clip_bottom_ = static_cast<float>(viewport_height_) - static_cast<float>(sy);
-    clip_top_ = clip_bottom_ - static_cast<float>(sh);
+    clip_left_ = left;
+    clip_right_ = right;
+    clip_top_ = top;
+    clip_bottom_ = bottom;
 }
 
 void UiRenderer::pop_clip_rect()
 {
-    clip_enabled_ = false;
-    if (!initialized_)
-        return;
-    glDisable(GL_SCISSOR_TEST);
-}
-
-bool UiRenderer::outside_clip(const std::vector<float>& vertices) const
-{
-    if (!clip_enabled_ || vertices.empty())
-        return false;
-    float left = vertices[0], right = left, top = vertices[1], bottom = top;
-    for (std::size_t i = 2; i < vertices.size(); i += 2)
+    flush_all();
+    if (!clip_stack_.empty())
+        clip_stack_.pop_back();
+    if (!clip_stack_.empty())
     {
-        left = std::min(left, vertices[i]);
-        right = std::max(right, vertices[i]);
-        top = std::min(top, vertices[i + 1]);
-        bottom = std::max(bottom, vertices[i + 1]);
+        const auto& prev = clip_stack_.back();
+        glScissor(prev.sx, prev.sy, prev.sw, prev.sh);
+        clip_enabled_ = true;
+        clip_left_ = prev.left;
+        clip_right_ = prev.right;
+        clip_top_ = prev.top;
+        clip_bottom_ = prev.bottom;
     }
-    return right <= clip_left_ || left >= clip_right_ || bottom <= clip_top_ || top >= clip_bottom_;
+    else
+    {
+        clip_enabled_ = false;
+        if (initialized_)
+            glDisable(GL_SCISSOR_TEST);
+    }
 }
 
 void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float radius,
@@ -474,20 +522,32 @@ void UiRenderer::draw_rounded_rect(float x, float y, float w, float h, float rad
     if (clip_enabled_ &&
         (x + w <= clip_left_ || x >= clip_right_ || y + h <= clip_top_ || y >= clip_bottom_))
         return;
+    if (radius <= 0.0f && (border.a <= 0.0f || border_width <= 0.0f))
+    {
+        draw_solid_rect(x, y, w, h, fill);
+        return;
+    }
+    flush_triangles();
+    flush_text();
+    flush_icons();
     fill.a *= global_alpha_;
     border.a *= global_alpha_;
     const float r = std::min(radius, std::min(w, h) * 0.5f);
+    if (!rect_vertices_.empty() && (rect_cur_fill_ != fill || rect_cur_border_ != border ||
+                                    rect_cur_border_width_ != border_width || rect_cur_w_ != w ||
+                                    rect_cur_h_ != h || rect_cur_radius_ != r))
+    {
+        flush_rects();
+    }
+    rect_cur_fill_ = fill;
+    rect_cur_border_ = border;
+    rect_cur_border_width_ = border_width;
+    rect_cur_w_ = w;
+    rect_cur_h_ = h;
+    rect_cur_radius_ = r;
     rect_vertices_.insert(rect_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     rect_uvs_.insert(rect_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
-    glUseProgram(rect_shader_);
-    glUniform4f(rect_uniforms_.fill, fill.r, fill.g, fill.b, fill.a);
-    glUniform4f(rect_uniforms_.border, border.r, border.g, border.b, border.a);
-    glUniform1f(rect_uniforms_.border_width, border_width);
-    glUniform2f(rect_uniforms_.rect_size, w, h);
-    glUniform1f(rect_uniforms_.radius, r);
-    glUniform1f(rect_uniforms_.pixel_scale, 1.0f);
-    flush_rects();
 }
 
 void UiRenderer::flush_rects()
@@ -505,10 +565,20 @@ void UiRenderer::flush_rects()
                  rect_uvs_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDisableVertexAttribArray(2);
     glUseProgram(rect_shader_);
+    glUniform4f(rect_uniforms_.fill, rect_cur_fill_.r, rect_cur_fill_.g, rect_cur_fill_.b,
+                rect_cur_fill_.a);
+    glUniform4f(rect_uniforms_.border, rect_cur_border_.r, rect_cur_border_.g, rect_cur_border_.b,
+                rect_cur_border_.a);
+    glUniform1f(rect_uniforms_.border_width, rect_cur_border_width_);
+    glUniform2f(rect_uniforms_.rect_size, rect_cur_w_, rect_cur_h_);
+    glUniform1f(rect_uniforms_.radius, rect_cur_radius_);
+    glUniform1f(rect_uniforms_.pixel_scale, 1.0f);
     glUniform2f(rect_uniforms_.viewport, static_cast<float>(viewport_width_),
                 static_cast<float>(viewport_height_));
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(rect_vertices_.size() / 2));
+    ++draw_call_count_;
     rect_vertices_.clear();
     rect_uvs_.clear();
 }
@@ -521,23 +591,45 @@ void UiRenderer::draw_text(float x, float y, const char* text, float size,
     if (clip_enabled_ &&
         (y + size * 2.0f < clip_top_ || y - size > clip_bottom_ || x >= clip_right_))
         return;
+    flush_triangles();
+    flush_rects();
+    flush_icons();
     color.a *= global_alpha_;
+    const std::size_t start_vert = text_vertices_.size();
     font_metrics_.draw_text(text_vertices_, text_uvs_, x, y, text, size);
-    if (text_vertices_.empty())
+    if (text_vertices_.size() == start_vert)
         return;
     // Origins inside the clip are common and need no bounds scan. For text
     // outside it, inspect generated glyphs rather than assuming a line height.
-    if (clip_enabled_ &&
-        (x < clip_left_ || x >= clip_right_ || y < clip_top_ || y >= clip_bottom_) &&
-        outside_clip(text_vertices_))
+    if (clip_enabled_ && (x < clip_left_ || x >= clip_right_ || y < clip_top_ || y >= clip_bottom_))
     {
-        text_vertices_.clear();
-        text_uvs_.clear();
-        return;
+        float left = text_vertices_[start_vert];
+        float right = left;
+        float top = text_vertices_[start_vert + 1];
+        float bottom = top;
+        for (std::size_t i = start_vert + 2; i < text_vertices_.size(); i += 2)
+        {
+            left = std::min(left, text_vertices_[i]);
+            right = std::max(right, text_vertices_[i]);
+            top = std::min(top, text_vertices_[i + 1]);
+            bottom = std::max(bottom, text_vertices_[i + 1]);
+        }
+        if (right <= clip_left_ || left >= clip_right_ || bottom <= clip_top_ ||
+            top >= clip_bottom_)
+        {
+            text_vertices_.resize(start_vert);
+            text_uvs_.resize(start_vert);
+            return;
+        }
     }
-    glUseProgram(text_shader_);
-    glUniform4f(text_uniforms_.color, color.r, color.g, color.b, color.a);
-    flush_text();
+    const std::size_t num_verts = (text_vertices_.size() - start_vert) / 2;
+    for (std::size_t i = 0; i < num_verts; ++i)
+    {
+        text_colors_.push_back(color.r);
+        text_colors_.push_back(color.g);
+        text_colors_.push_back(color.b);
+        text_colors_.push_back(color.a);
+    }
 }
 
 void UiRenderer::flush_text()
@@ -555,6 +647,11 @@ void UiRenderer::flush_text()
                  text_uvs_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(text_colors_.size() * sizeof(float)),
+                 text_colors_.data(), GL_STREAM_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
     glUseProgram(text_shader_);
     glUniform2f(text_uniforms_.viewport, static_cast<float>(viewport_width_),
                 static_cast<float>(viewport_height_));
@@ -562,23 +659,28 @@ void UiRenderer::flush_text()
     glBindTexture(GL_TEXTURE_2D, font_atlas_.texture_id());
     glUniform1i(text_uniforms_.sampler, 0);
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(text_vertices_.size() / 2));
+    ++draw_call_count_;
     text_vertices_.clear();
     text_uvs_.clear();
+    text_colors_.clear();
 }
 
 void UiRenderer::draw_icon(float x, float y, float w, float h, std::uint32_t texture_id,
                            nekomote::ui::Color tint)
 {
-    tint.a *= global_alpha_;
     if (!initialized_)
         return;
+    tint.a *= global_alpha_;
+    flush_triangles();
+    flush_rects();
+    flush_text();
+    if (icon_texture_ != 0 && (icon_texture_ != texture_id || icon_tint_ != tint))
+        flush_icons();
+    icon_texture_ = texture_id;
+    icon_tint_ = tint;
     icon_vertices_.insert(icon_vertices_.end(),
                           {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
     icon_uvs_.insert(icon_uvs_.end(), {0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
-    icon_texture_ = texture_id;
-    glUseProgram(icon_shader_);
-    glUniform4f(icon_uniforms_.color, tint.r, tint.g, tint.b, tint.a);
-    flush_icons();
 }
 
 void UiRenderer::flush_icons()
@@ -596,13 +698,16 @@ void UiRenderer::flush_icons()
                  icon_uvs_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDisableVertexAttribArray(2);
     glUseProgram(icon_shader_);
     glUniform2f(icon_uniforms_.viewport, static_cast<float>(viewport_width_),
                 static_cast<float>(viewport_height_));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, icon_texture_);
     glUniform1i(icon_uniforms_.sampler, 0);
+    glUniform4f(icon_uniforms_.color, icon_tint_.r, icon_tint_.g, icon_tint_.b, icon_tint_.a);
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(icon_vertices_.size() / 2));
+    ++draw_call_count_;
     icon_vertices_.clear();
     icon_uvs_.clear();
     icon_texture_ = 0;
@@ -622,21 +727,19 @@ void UiRenderer::draw_solid_rect(float x, float y, float w, float h, nekomote::u
     if (clip_enabled_ &&
         (x + w <= clip_left_ || x >= clip_right_ || y + h <= clip_top_ || y >= clip_bottom_))
         return;
+    flush_text();
+    flush_rects();
+    flush_icons();
     color.a *= global_alpha_;
-    const std::array<float, 12> tri_verts = {x, y, x + w, y,     x + w, y + h,
-                                             x, y, x + w, y + h, x,     y + h};
-    glBindVertexArray(vao_);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_verts.size() * sizeof(float)),
-                 tri_verts.data(), GL_STREAM_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glDisableVertexAttribArray(1);
-    glUseProgram(tri_shader_);
-    glUniform2f(tri_uniforms_.viewport, static_cast<float>(viewport_width_),
-                static_cast<float>(viewport_height_));
-    glUniform4f(tri_uniforms_.color, color.r, color.g, color.b, color.a);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    tri_vertices_.insert(tri_vertices_.end(),
+                         {x, y, x + w, y, x + w, y + h, x, y, x + w, y + h, x, y + h});
+    for (int i = 0; i < 6; ++i)
+    {
+        tri_colors_.push_back(color.r);
+        tri_colors_.push_back(color.g);
+        tri_colors_.push_back(color.b);
+        tri_colors_.push_back(color.a);
+    }
 }
 
 void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
@@ -647,30 +750,45 @@ void UiRenderer::draw_arrow(float cx, float cy, float size, bool points_up,
     if (clip_enabled_ && (cx + size <= clip_left_ || cx - size >= clip_right_ ||
                           cy + size <= clip_top_ || cy - size >= clip_bottom_))
         return;
+    flush_text();
+    flush_rects();
+    flush_icons();
     fill.a *= global_alpha_;
-    std::array<float, 6> tri_verts{};
-    if (points_up)
+    const float edge = points_up ? size * 0.5f : -size * 0.5f;
+    tri_vertices_.insert(tri_vertices_.end(),
+                         {cx - size, cy + edge, cx + size, cy + edge, cx, cy - edge});
+    for (int i = 0; i < 3; ++i)
     {
-        tri_verts = {cx - size, cy + size * 0.5f, cx + size, cy + size * 0.5f,
-                     cx,        cy - size * 0.5f};
+        tri_colors_.push_back(fill.r);
+        tri_colors_.push_back(fill.g);
+        tri_colors_.push_back(fill.b);
+        tri_colors_.push_back(fill.a);
     }
-    else
-    {
-        tri_verts = {cx - size, cy - size * 0.5f, cx + size, cy - size * 0.5f,
-                     cx,        cy + size * 0.5f};
-    }
+}
+
+void UiRenderer::flush_triangles()
+{
+    if (!initialized_ || tri_vertices_.empty())
+        return;
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_verts.size() * sizeof(float)),
-                 tri_verts.data(), GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_vertices_.size() * sizeof(float)),
+                 tri_vertices_.data(), GL_STREAM_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glDisableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, color_vbo_);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(tri_colors_.size() * sizeof(float)),
+                 tri_colors_.data(), GL_STREAM_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glDisableVertexAttribArray(2);
     glUseProgram(tri_shader_);
     glUniform2f(tri_uniforms_.viewport, static_cast<float>(viewport_width_),
                 static_cast<float>(viewport_height_));
-    glUniform4f(tri_uniforms_.color, fill.r, fill.g, fill.b, fill.a);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(tri_vertices_.size() / 2));
+    ++draw_call_count_;
+    tri_vertices_.clear();
+    tri_colors_.clear();
 }
 
 void UiRenderer::set_global_alpha(float alpha)

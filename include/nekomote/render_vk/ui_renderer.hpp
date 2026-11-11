@@ -57,6 +57,9 @@ class UiRenderer : public nekomote::ui::Painter
     nekomote::ui::FontMetrics* font() override;
     bool is_initialized() const override;
 
+    std::size_t draw_call_count() const;
+    void reset_draw_call_count();
+
   private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
