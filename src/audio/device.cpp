@@ -29,6 +29,7 @@ struct Device::Impl
     std::atomic<bool> quitting{false};
     std::atomic<DeviceState> state{DeviceState::Connecting};
     std::atomic<float> rms{0};
+    std::atomic<float> volume{1.0f};
     std::atomic<int> error{0};
     std::atomic<std::uint32_t> underruns{0};
     std::thread worker;
@@ -105,11 +106,35 @@ struct Device::Impl
                                     clip->samples.size() - sample_offset);
         if (count == 0)
             return;
-        if (pa_stream_write(stream, clip->samples.data() + sample_offset, count * sizeof(float),
-                            nullptr, 0, PA_SEEK_RELATIVE) < 0)
-            fail(pa_context_errno(context));
-        else
-            sample_offset += count;
+        const float vol = volume.load(std::memory_order_relaxed);
+        // Write directly when volume is effectively 1.0 to avoid buffer copy.
+        if (std::abs(vol - 1.0f) < 0.001f)
+        {
+            if (pa_stream_write(stream, clip->samples.data() + sample_offset, count * sizeof(float),
+                                nullptr, 0, PA_SEEK_RELATIVE) < 0)
+                fail(pa_context_errno(context));
+            else
+                sample_offset += count;
+            return;
+        }
+        // Apply volume scaling using a fixed stack buffer.
+        constexpr std::size_t kBufFloats = 4096;
+        std::array<float, kBufFloats> buf;
+        std::size_t written_total = 0;
+        while (written_total < count)
+        {
+            const std::size_t batch = std::min(count - written_total, kBufFloats);
+            for (std::size_t i = 0; i < batch; ++i)
+                buf[i] = clip->samples[sample_offset + written_total + i] * vol;
+            if (pa_stream_write(stream, buf.data(), batch * sizeof(float), nullptr, 0,
+                                PA_SEEK_RELATIVE) < 0)
+            {
+                fail(pa_context_errno(context));
+                return;
+            }
+            written_total += batch;
+        }
+        sample_offset += count;
     }
     static void requested(pa_stream*, std::size_t bytes, void* userdata) noexcept
     {
@@ -319,5 +344,9 @@ Snapshot Device::snapshot() const noexcept
     const auto state = impl_->state.load(std::memory_order_acquire);
     return {state, state == DeviceState::Playing ? impl_->rms.load(std::memory_order_relaxed) : 0,
             impl_->error.load(std::memory_order_relaxed)};
+}
+void Device::set_volume(float v) noexcept
+{
+    impl_->volume.store(std::clamp(v, 0.0f, 1.0f), std::memory_order_relaxed);
 }
 } // namespace nekomote::audio

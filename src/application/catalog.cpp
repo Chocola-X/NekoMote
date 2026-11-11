@@ -386,10 +386,26 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
     if (json.is_discarded())
         return config;
     config_io::validate_keys(json,
-                             {"character", "background", "language", "lock_transform", "scale",
-                              "origin_x", "origin_y", "fps", "mute", "fit", "transform_saved",
-                              "icon_position_saved", "icon_x", "icon_y", "sidebar_position_saved",
-                              "sidebar_x", "sidebar_y", "sidebar_free", "background_fade_seconds"},
+                             {"character",
+                              "background",
+                              "language",
+                              "lock_transform",
+                              "scale",
+                              "origin_x",
+                              "origin_y",
+                              "fps",
+                              "mute",
+                              "volume",
+                              "fit",
+                              "transform_saved",
+                              "icon_position_saved",
+                              "icon_x",
+                              "icon_y",
+                              "sidebar_position_saved",
+                              "sidebar_x",
+                              "sidebar_y",
+                              "sidebar_free",
+                              "background_fade_seconds"},
                              path);
     const auto fail = [&](const std::string& key)
     { throw std::invalid_argument(path.string() + ": invalid panel config field '" + key + "'"); };
@@ -420,6 +436,7 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
                               {"icon_y", &config.icon_y},
                               {"sidebar_x", &config.sidebar_x},
                               {"sidebar_y", &config.sidebar_y},
+                              {"volume", &config.volume},
                               {"background_fade_seconds", &config.background_fade_seconds}})
     {
         if (!json.contains(key))
@@ -434,6 +451,7 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
         fail("scale");
     if (config.background_fade_seconds < 0)
         fail("background_fade_seconds");
+    config.volume = std::clamp(config.volume, 0.0f, 1.0f);
     if (json.contains("fps"))
     {
         if (!json["fps"].is_number_integer() ||
@@ -472,11 +490,12 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
 
 void WallpaperConfig::save(const fs::path& path) const
 {
-    for (float value :
-         {scale, origin_x, origin_y, icon_x, icon_y, sidebar_x, sidebar_y, background_fade_seconds})
+    for (float value : {scale, origin_x, origin_y, icon_x, icon_y, sidebar_x, sidebar_y, volume,
+                        background_fade_seconds})
         if (!std::isfinite(value))
             throw std::invalid_argument(path.string() + ": cannot save non-finite panel values");
-    if (scale <= 0 || background_fade_seconds < 0 || (fps != 0 && (fps < 5 || fps > 240)))
+    if (scale <= 0 || background_fade_seconds < 0 || volume < 0.0f || volume > 1.0f ||
+        (fps != 0 && (fps < 5 || fps > 240)))
         throw std::invalid_argument(path.string() + ": cannot save invalid panel scale/fade/FPS");
     if (character.find('\0') != std::string::npos || background.find('\0') != std::string::npos)
         throw std::invalid_argument(path.string() + ": cannot save panel strings containing NUL");
@@ -490,6 +509,7 @@ void WallpaperConfig::save(const fs::path& path) const
     json["origin_y"] = origin_y;
     json["fps"] = fps;
     json["mute"] = mute;
+    json["volume"] = volume;
     json["lock_transform"] = lock_transform;
     json["fit"] = fit;
     json["transform_saved"] = transform_saved;

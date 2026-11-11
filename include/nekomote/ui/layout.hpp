@@ -60,6 +60,10 @@ class Context
                    float h, const Style& style);
     bool switch_row(const char* label, bool& value, float x, float y, float w, float h,
                     const Style& style);
+    // Returns true if value changed. `dragging` persists across frames (store in MenuState).
+    // Title and percentage are displayed at top-left (e.g. "音量：50%"), slider track below.
+    bool slider_row(const char* label, float& value, bool& dragging, float x, float y, float w,
+                    float h, const Style& style);
     bool reset_button(const char* label, float x, float y, float w, float h, const Style& style);
 
     void section_header(const char* label, float x, float y, float w, float h, const Style& style);

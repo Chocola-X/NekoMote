@@ -1569,6 +1569,21 @@ extern "C"
         return wallpaper_call([&] { return wp->instance->set_muted(muted != 0); });
     }
 
+    nekomote_error nekomote_wallpaper_set_volume(nekomote_wallpaper* wp, float volume)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wallpaper_call([&] { return wp->instance->set_volume(volume); });
+    }
+
+    float nekomote_wallpaper_volume(const nekomote_wallpaper* wp)
+    {
+        return (wp && wp->instance) ? wp->instance->volume() : 0.5f;
+    }
+
     nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed)
     {
         if (!wp || !wp->instance)

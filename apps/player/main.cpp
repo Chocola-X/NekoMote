@@ -531,10 +531,11 @@ struct Surface
     ui::Context* ui_context{nullptr};
     const ui::IconState* ui_icon{nullptr};
     const ui::SidebarState* ui_sidebar{nullptr};
+    bool volume_dragging{false};
     bool captures_mouse() const noexcept
     {
         return ui_context && ui_icon && ui_sidebar &&
-               ui_context->eval_captures_mouse(*ui_icon, *ui_sidebar);
+               (ui_context->eval_captures_mouse(*ui_icon, *ui_sidebar) || volume_dragging);
     }
     void set_paused(bool value) noexcept
     {
@@ -1240,6 +1241,7 @@ int run(int argc, char** argv)
             surface.presentation_dirty = true;
         if (gpu.device)
         {
+            gpu.device->set_volume(o.mute ? 0.0f : controller.config().volume);
             while (const auto audio_command = controller.pop_audio_command())
                 if (!gpu.device->submit(*audio_command))
                     throw std::runtime_error("audio command queue full or device failed");
@@ -1363,7 +1365,8 @@ int run(int argc, char** argv)
                 ui_context.mouse_in_rect(ui_sidebar.x, ui_sidebar.y, ui_sidebar.width,
                                          ui_sidebar.height);
             ui_context.set_captures_mouse(mouse_over_icon || mouse_over_sidebar ||
-                                          ui_icon.dragging || ui_sidebar.dragging);
+                                          ui_icon.dragging || ui_sidebar.dragging ||
+                                          surface.volume_dragging);
 
             if (ui_sidebar.animation > 0.001f)
             {
@@ -1372,12 +1375,17 @@ int run(int argc, char** argv)
                 menu.fps_limit = current_fps_limit;
                 menu.locked = surface.locked;
                 menu.muted = o.mute;
+                menu.volume = controller.config().volume;
+                menu.volume_dragging = surface.volume_dragging;
                 if (auto* p = ui_renderer.painter())
                     ui::build_sidebar(ui_context, *p, controller.catalog(), controller, menu, h);
                 ui_sidebar = menu.sidebar;
                 current_fps_limit = menu.fps_limit;
                 surface.locked = menu.locked;
+                surface.volume_dragging = menu.volume_dragging;
                 const bool muted_changed = o.mute != menu.muted;
+                const bool volume_changed =
+                    std::abs(controller.config().volume - menu.volume) > 0.0001f;
                 o.mute = menu.muted;
                 if (muted_changed)
                 {
@@ -1390,12 +1398,17 @@ int run(int argc, char** argv)
                         try
                         {
                             gpu.device = create_audio_device(gpu.audio_clips);
+                            gpu.device->set_volume(o.mute ? 0.0f : controller.config().volume);
                         }
                         catch (const std::exception& error)
                         {
                             std::fprintf(stderr, "Cannot restore audio: %s\n", error.what());
                         }
                     }
+                }
+                else if (volume_changed && gpu.device)
+                {
+                    gpu.device->set_volume(o.mute ? 0.0f : controller.config().volume);
                 }
             }
             if ((ui_icon.moved || ui_sidebar.moved) && !ui_icon.dragging && !ui_sidebar.dragging)

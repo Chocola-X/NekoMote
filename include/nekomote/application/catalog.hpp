@@ -164,6 +164,7 @@ struct WallpaperConfig
     float origin_y{400};
     int fps{60};
     bool mute{false};
+    float volume{0.5f};
     bool lock_transform{false};
     bool fit{false};
     bool transform_saved{false};

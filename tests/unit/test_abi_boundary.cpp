@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/asset_io/asset_file.hpp>
@@ -169,6 +170,13 @@ TEST_CASE("Wallpaper valid handle rejects invalid CPU inputs and seals OOM", "[a
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 999) == NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 0) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_volume(wallpaper.get(), -0.1f) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_volume(wallpaper.get(), 1.1f) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(
+        nekomote_wallpaper_set_volume(wallpaper.get(), std::numeric_limits<float>::quiet_NaN()) ==
+        NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_volume(wallpaper.get(), 0.75f) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_volume(wallpaper.get()) == Catch::Approx(0.75f));
     REQUIRE(nekomote_wallpaper_set_output_size(wallpaper.get(), -1, 32) ==
             NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), -1) == NEKOMOTE_ERROR_INVALID_INPUT);

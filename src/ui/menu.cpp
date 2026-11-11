@@ -14,6 +14,7 @@ constexpr float kDrawerItemHeight = 34.0f;
 constexpr float kSectionHeaderHeight = 30.0f;
 constexpr float kRadioRowHeight = 32.0f;
 constexpr float kSwitchRowHeight = 34.0f;
+constexpr float kSliderRowHeight = 50.0f;
 constexpr float kSidebarHeaderHeight = 44.0f;
 constexpr float kFooterHeight = 68.0f;
 constexpr float kSidebarMaxHeightRatio = 4.0f / 5.0f;
@@ -39,6 +40,7 @@ struct UiStrings
     const char* character_section;
     const char* lock_transform;
     const char* mute;
+    const char* volume;
     const char* reset_position;
     const char* static_bg;
     const char* dynamic_bg;
@@ -55,6 +57,7 @@ constexpr UiStrings kStringsEn{"Background",
                                "Character",
                                "Lock position and size",
                                "Mute",
+                               "Volume",
                                "Reset position",
                                "Static backgrounds",
                                "Dynamic backgrounds",
@@ -69,6 +72,7 @@ constexpr UiStrings kStringsZhCn{"背景选择",
                                  "角色",
                                  "锁定人物位置与大小",
                                  "关闭声音",
+                                 "音量",
                                  "重设角色位置",
                                  "固定背景",
                                  "动态背景",
@@ -83,6 +87,7 @@ constexpr UiStrings kStringsZhTw{"背景選擇",
                                  "角色",
                                  "鎖定人物位置與大小",
                                  "關閉聲音",
+                                 "音量",
                                  "重設角色位置",
                                  "固定背景",
                                  "動態背景",
@@ -97,6 +102,7 @@ constexpr UiStrings kStringsJa{"背景",
                                "キャラクター",
                                "位置とサイズを固定",
                                "ミュート",
+                               "音量",
                                "位置をリセット",
                                "静止画背景",
                                "動的背景",
@@ -122,7 +128,7 @@ const UiStrings& ui_strings(application::Language lang) noexcept
 
 bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catalog)
 {
-    std::string text = "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ ";
+    std::string text = "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ 0123456789% : ： ";
     const auto append = [&text](const auto& value)
     {
         text += value;
@@ -134,7 +140,7 @@ bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catal
         for (const auto* label :
              {strings->background_drawer, strings->settings_drawer, strings->language_section,
               strings->fps_section, strings->unlimited, strings->recommended,
-              strings->character_section, strings->lock_transform, strings->mute,
+              strings->character_section, strings->lock_transform, strings->mute, strings->volume,
               strings->reset_position, strings->static_bg, strings->dynamic_bg,
               strings->author_line, strings->github_line})
             append(label);
@@ -202,7 +208,8 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
         content_scrollable_h += kSectionHeaderHeight + 4.0f * kRadioRowHeight;
         content_scrollable_h +=
             kSectionHeaderHeight + static_cast<float>(std::size(kFpsOptions)) * kRadioRowHeight;
-        content_scrollable_h += kSectionHeaderHeight + 2.0f * kSwitchRowHeight + kSwitchRowHeight;
+        content_scrollable_h +=
+            kSectionHeaderHeight + 2.0f * kSwitchRowHeight + kSwitchRowHeight + kSliderRowHeight;
     }
 
     const float max_sidebar_h =
@@ -399,6 +406,15 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                 controller.save_config(controller.config_path());
         }
         curr_y += kSwitchRowHeight;
+        // Volume slider (below mute switch)
+        if (ctx.slider_row(txt.volume, menu.volume, menu.volume_dragging, sidebar_x, curr_y,
+                           sidebar.width, kSliderRowHeight, style))
+        {
+            controller.config().volume = menu.volume;
+            if (!controller.no_save())
+                controller.save_config(controller.config_path());
+        }
+        curr_y += kSliderRowHeight;
         if (ctx.reset_button(txt.reset_position, sidebar_x, curr_y, sidebar.width, kSwitchRowHeight,
                              style))
             controller.reset_character_transform();

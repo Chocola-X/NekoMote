@@ -61,6 +61,16 @@ TEST_CASE("Device recreation reuses the host bank without replacing PCM", "[audi
     }
 }
 
+TEST_CASE("Device set_volume clamps and does not mutate published bank", "[audio-device]")
+{
+    const auto bank = std::make_shared<const nekomote::model::AudioBank>(clips(0.5f));
+    nekomote::audio::Device device(bank);
+    device.set_volume(0.8f);
+    device.set_volume(-0.5f);
+    device.set_volume(1.5f);
+    REQUIRE(bank->front().samples.front() == 0.5f);
+}
+
 TEST_CASE("Replacing a host bank preserves the previous device lifetime", "[audio-device]")
 {
     auto bank = std::make_shared<const nekomote::model::AudioBank>(clips(0.25f));

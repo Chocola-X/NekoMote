@@ -507,6 +507,8 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_assets_dir(nekomote_wallpaper* wp, const char* dir);
     nekomote_error nekomote_wallpaper_set_no_save(nekomote_wallpaper* wp, int no_save);
     nekomote_error nekomote_wallpaper_set_muted(nekomote_wallpaper* wp, int muted);
+    nekomote_error nekomote_wallpaper_set_volume(nekomote_wallpaper* wp, float volume);
+    float nekomote_wallpaper_volume(const nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_set_seed(nekomote_wallpaper* wp, uint32_t seed);
     nekomote_error nekomote_wallpaper_set_output_size(nekomote_wallpaper* wp, int width,
                                                       int height);

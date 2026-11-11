@@ -135,6 +135,7 @@ nekomote_error WallpaperInstance::set_assets_dir(const std::filesystem::path& di
     if (!mute_forced_)
     {
         panel_.muted = config.mute;
+        panel_.volume = config.volume;
         controller_cfg_.mute = config.mute;
         controller_cfg_.audio =
             config.mute ? application::AudioMode::Disabled : application::AudioMode::Device;
@@ -194,15 +195,43 @@ nekomote_error WallpaperInstance::set_muted(bool value)
                 if (snapshot.state == audio::DeviceState::Failed)
                     audio_failed_ = true;
                 else
+                {
+                    device->set_volume(panel_.volume);
+                    device->set_volume(panel_.muted ? 0.0f : panel_.volume);
                     audio_device_ = std::move(device);
+                }
             }
             catch (const std::exception&)
             {
                 audio_failed_ = true;
             }
         }
+        else if (audio_device_)
+        {
+            audio_device_->set_volume(panel_.volume);
+        }
     }
     return NEKOMOTE_OK;
+}
+
+nekomote_error WallpaperInstance::set_volume(float value)
+{
+    if (!std::isfinite(value) || value < 0.0f || value > 1.0f)
+        return NEKOMOTE_ERROR_INVALID_INPUT;
+    if (std::abs(panel_.volume - value) > 0.0001f)
+        presentation_dirty_ = true;
+    panel_.volume = value;
+    controller_.config().volume = value;
+    if (audio_device_)
+        audio_device_->set_volume(panel_.muted ? 0.0f : panel_.volume);
+    if (!controller_.no_save() && !controller_.config_path().empty())
+        controller_.save_config(controller_.config_path());
+    return NEKOMOTE_OK;
+}
+
+float WallpaperInstance::volume() const noexcept
+{
+    return panel_.volume;
 }
 
 nekomote_error WallpaperInstance::set_seed(std::uint32_t seed)
@@ -449,6 +478,7 @@ void WallpaperInstance::create_audio_device(application::CandidateCpu& candidate
                             "); continuing muted";
             return;
         }
+        device->set_volume(panel_.muted ? 0.0f : panel_.volume);
         audio_device_ = std::move(device);
     }
     catch (const std::exception& error)
@@ -641,6 +671,7 @@ nekomote_error WallpaperInstance::advance(double dt)
         return NEKOMOTE_OK;
     if (audio_device_)
     {
+        audio_device_->set_volume(panel_.muted ? 0.0f : panel_.volume);
         while (const auto audio_command = controller_.pop_audio_command())
         {
             if (!audio_device_->submit(*audio_command))
@@ -968,7 +999,7 @@ bool WallpaperInstance::ui_captures_mouse()
          (panel_.sidebar.animation > .05f &&
           ui_context_.mouse_in_rect(panel_.sidebar.x, panel_.sidebar.y, panel_.sidebar.width,
                                     panel_.sidebar.height)) ||
-         panel_.icon.dragging || panel_.sidebar.dragging);
+         panel_.icon.dragging || panel_.sidebar.dragging || panel_.volume_dragging);
     ui_context_.set_captures_mouse(captured);
     return captured;
 }
@@ -988,7 +1019,7 @@ void WallpaperInstance::draw_ui(float dt)
         ui_context_.mouse_in_rect(panel_.sidebar.x, panel_.sidebar.y, panel_.sidebar.width,
                                   panel_.sidebar.height);
     ui_context_.set_captures_mouse(mouse_over_icon || mouse_over_sidebar || panel_.icon.dragging ||
-                                   panel_.sidebar.dragging);
+                                   panel_.sidebar.dragging || panel_.volume_dragging);
     if (panel_.sidebar.animation > 0.001f)
     {
         ui::MenuState menu;
@@ -996,6 +1027,8 @@ void WallpaperInstance::draw_ui(float dt)
         menu.fps_limit = panel_.fps_limit;
         menu.locked = panel_.locked;
         menu.muted = panel_.muted;
+        menu.volume = panel_.volume;
+        menu.volume_dragging = panel_.volume_dragging;
         if (auto* p = painter())
             ui::build_sidebar(ui_context_, *p, controller_.catalog(), controller_, menu,
                               output_height_);
@@ -1004,8 +1037,13 @@ void WallpaperInstance::draw_ui(float dt)
         panel_.locked = menu.locked;
         const bool muted_changed = panel_.muted != menu.muted;
         panel_.muted = menu.muted;
+        const bool volume_changed = std::abs(panel_.volume - menu.volume) > 0.0001f;
+        panel_.volume = menu.volume;
+        panel_.volume_dragging = menu.volume_dragging;
         if (muted_changed)
             set_muted(panel_.muted);
+        else if (volume_changed && audio_device_)
+            audio_device_->set_volume(panel_.muted ? 0.0f : panel_.volume);
     }
     if ((panel_.icon.moved || panel_.sidebar.moved) && !panel_.icon.dragging &&
         !panel_.sidebar.dragging)

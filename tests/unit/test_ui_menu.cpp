@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <nekomote/ui/menu.hpp>
 
@@ -399,6 +400,7 @@ TEST_CASE("Sidebar localizes drawer and settings strings per config language", "
         REQUIRE(fixture.painter.contains("Recommended"));
         REQUIRE(fixture.painter.contains("Character"));
         REQUIRE(fixture.painter.contains("Mute"));
+        REQUIRE(fixture.painter.contains("Volume: 50%"));
         REQUIRE(fixture.painter.contains("Reset position"));
     }
 
@@ -414,6 +416,7 @@ TEST_CASE("Sidebar localizes drawer and settings strings per config language", "
         REQUIRE(fixture.painter.contains("推荐"));
         REQUIRE(fixture.painter.contains("角色"));
         REQUIRE(fixture.painter.contains("关闭声音"));
+        REQUIRE(fixture.painter.contains("音量：50%"));
         REQUIRE(fixture.painter.contains("重设角色位置"));
     }
 
@@ -425,6 +428,7 @@ TEST_CASE("Sidebar localizes drawer and settings strings per config language", "
         REQUIRE(fixture.painter.contains("設定"));
         REQUIRE(fixture.painter.contains("幀率限制"));
         REQUIRE(fixture.painter.contains("關閉聲音"));
+        REQUIRE(fixture.painter.contains("音量：50%"));
 
         fixture.controller.config().language = Language::Japanese;
         fixture.click_drawer(settings_drawer);
@@ -432,6 +436,7 @@ TEST_CASE("Sidebar localizes drawer and settings strings per config language", "
         REQUIRE(fixture.painter.contains("言語"));
         REQUIRE(fixture.painter.contains("フレームレート"));
         REQUIRE(fixture.painter.contains("ミュート"));
+        REQUIRE(fixture.painter.contains("音量：50%"));
     }
 
     SECTION("background drawer renders before settings drawer")
@@ -516,4 +521,35 @@ TEST_CASE("Position lock preference persists only after a panel action", "[ui_me
     fixture.render();
     REQUIRE_FALSE(fixture.menu.locked);
     REQUIRE(nekomote::application::WallpaperConfig::load(path).lock_transform);
+}
+
+TEST_CASE("Volume slider defaults to 50% and persists after adjustment", "[ui_menu][config]")
+{
+    MenuFixture fixture;
+    const auto path = fixture.root / "panel.json";
+    fixture.controller.load_config(path);
+    REQUIRE(fixture.menu.volume == 0.5f);
+    REQUIRE(fixture.controller.config().volume == 0.5f);
+
+    fixture.click_drawer(2);
+    REQUIRE(fixture.painter.contains("Volume: 50%"));
+
+    const auto* volume_label = fixture.painter.find("Volume: 50%");
+    REQUIRE(volume_label != nullptr);
+    const float track_y = volume_label->y + 27.0f;
+    const float track_x = volume_label->x;
+    const float track_w = fixture.menu.sidebar.width - 60.0f;
+
+    fixture.ctx.mouse_move(track_x + track_w * 0.75f, track_y);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE(fixture.menu.volume == Catch::Approx(0.75f).margin(0.01f));
+    REQUIRE(fixture.controller.config().volume == Catch::Approx(0.75f).margin(0.01f));
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).volume ==
+            Catch::Approx(0.75f).margin(0.01f));
+    REQUIRE(fixture.painter.contains("Volume: 75%"));
+
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    REQUIRE_FALSE(fixture.menu.volume_dragging);
 }

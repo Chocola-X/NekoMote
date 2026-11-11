@@ -39,6 +39,7 @@ class Device
     Device& operator=(const Device&) = delete;
     bool submit(application::AudioCommand command) noexcept;
     Snapshot snapshot() const noexcept;
+    void set_volume(float volume) noexcept;
 
   private:
     struct Impl;

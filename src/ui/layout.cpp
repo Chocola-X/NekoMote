@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 namespace nekomote::ui
 {
@@ -348,6 +349,85 @@ bool Context::reset_button(const char* label, float x, float y, float w, float h
     painter_->draw_text(x + 30.0f, ty, label, style.font_size, style.reset_text);
     painter_->draw_text(x + 30.5f, ty, label, style.font_size, style.reset_text);
     return hover && mouse_pressed_;
+}
+
+bool Context::slider_row(const char* label, float& value, bool& dragging, float x, float y, float w,
+                         float h, const Style& style)
+{
+    if (!painter_)
+        return false;
+
+    const bool hover = mouse_in_rect(x, y, w, h);
+    if (hover || dragging)
+        painter_->draw_rounded_rect(x, y, w, h, 0, style.hover_bg, {0, 0, 0, 0});
+    const Color text_col = (hover || dragging) ? style.text_hover : style.text;
+
+    // Track geometry (slender bar with rounded ends)
+    const float track_h = 4.0f;
+    const float track_x = x + 30.0f;
+    const float track_w = w - 60.0f;
+    const float track_y = y + 33.0f;
+    const float track_cy = track_y + track_h * 0.5f;
+
+    // Handle drag input
+    bool changed = false;
+    const bool in_row = mouse_in_rect(x, y, w, h);
+    if (dragging)
+    {
+        if (mouse_down_)
+        {
+            const float new_val = std::clamp((mouse_x_ - track_x) / track_w, 0.0f, 1.0f);
+            if (new_val != value)
+            {
+                value = new_val;
+                changed = true;
+            }
+        }
+        else
+        {
+            dragging = false;
+        }
+    }
+    else if (in_row && mouse_pressed_)
+    {
+        dragging = true;
+        const float new_val = std::clamp((mouse_x_ - track_x) / track_w, 0.0f, 1.0f);
+        if (new_val != value)
+        {
+            value = new_val;
+            changed = true;
+        }
+    }
+
+    // Thumb position after potential update
+    const float clamped = std::clamp(value, 0.0f, 1.0f);
+    const float thumb_cx = track_x + clamped * track_w;
+    const float thumb_cy = track_cy;
+    const float thumb_r = 9.0f;
+
+    // Title with percentage at top-left of row (e.g. "音量：50%" or "Volume: 50%")
+    char title_buf[64];
+    const bool is_ascii = (label != nullptr && static_cast<unsigned char>(label[0]) < 0x80);
+    std::snprintf(title_buf, sizeof(title_buf), is_ascii ? "%s: %d%%" : "%s：%d%%",
+                  label ? label : "", static_cast<int>(std::round(clamped * 100.0f)));
+    painter_->draw_text(x + 30.0f, y + 6.0f, title_buf, style.font_size, text_col);
+
+    // Draw full track (gray background, matching switch off color)
+    const Color off_bg{0.435f, 0.306f, 0.216f, 0.28f};
+    painter_->draw_rounded_rect(track_x, track_y, track_w, track_h, track_h * 0.5f, off_bg,
+                                {0, 0, 0, 0});
+
+    // Draw filled portion (pink accent color, from left to thumb)
+    const float filled_w = std::clamp(thumb_cx - track_x, 0.0f, track_w);
+    if (filled_w > 0.0f)
+        painter_->draw_rounded_rect(track_x, track_y, filled_w, track_h, track_h * 0.5f,
+                                    style.accent, {0, 0, 0, 0});
+
+    // Draw thumb (white circle, protrudes beyond track)
+    painter_->draw_circle(thumb_cx, thumb_cy, thumb_r, Color(1, 1, 1, 1),
+                          Color(0.3f, 0.2f, 0.2f, 0.20f), 1.0f);
+
+    return changed;
 }
 
 void Context::section_header(const char* label, float x, float y, float /*w*/, float h,

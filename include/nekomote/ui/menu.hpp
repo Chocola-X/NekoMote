@@ -14,6 +14,8 @@ struct MenuState
     int fps_limit{60};
     bool locked{false};
     bool muted{false};
+    float volume{0.5f};
+    bool volume_dragging{false};
 };
 
 // Prepare all supported UI languages and catalog labels once after font/catalog

@@ -34,6 +34,8 @@ struct WallpaperPanelState
     int fps_limit{60};
     bool locked{false};
     bool muted{false};
+    float volume{0.5f};
+    bool volume_dragging{false};
     std::uint32_t icon_texture{0};
     bool ui_ready{false};
     bool text_ready{false};
@@ -55,6 +57,8 @@ class WallpaperInstance
     nekomote_error set_assets_dir(const std::filesystem::path& dir);
     nekomote_error set_no_save(bool value);
     nekomote_error set_muted(bool value);
+    nekomote_error set_volume(float value);
+    float volume() const noexcept;
     nekomote_error set_seed(std::uint32_t seed);
     nekomote_error set_output_size(int width, int height);
     nekomote_error set_paused(bool paused);
