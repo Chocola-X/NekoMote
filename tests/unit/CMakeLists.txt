@@ -23,7 +23,8 @@ add_executable(nekomote_unit_tests
     test_startup_config.cpp
     test_controller.cpp
     test_ui_layout.cpp
-    test_ui_menu.cpp)
+    test_ui_menu.cpp
+    test_plasma_adapters.cpp)
 
 target_link_libraries(nekomote_unit_tests
     PRIVATE
@@ -36,7 +37,9 @@ target_link_libraries(nekomote_unit_tests
         nlohmann_json::nlohmann_json)
 
 target_compile_features(nekomote_unit_tests PRIVATE cxx_std_20)
-target_include_directories(nekomote_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/asset_io)
+target_include_directories(nekomote_unit_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/asset_io
+    ${PROJECT_SOURCE_DIR}/adapters/plasma)
 target_link_libraries(nekomote_unit_tests PRIVATE ZLIB::ZLIB)
 
 target_compile_definitions(nekomote_unit_tests PRIVATE

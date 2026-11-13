@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QPointF>
 #include <QPointer>
 #include <QQuickItem>
 #include <QString>
@@ -7,6 +8,8 @@
 #include <QUrl>
 #include <memory>
 
+#include "occlusion_provider.hpp"
+#include "pointer_provider.hpp"
 #include "session_item.hpp"
 
 namespace nekomote::plasma
@@ -80,6 +83,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void clear_inputs() override;
     void enqueue(nekomote::qt_quick::InputKind kind, QPointF position = {}, float scroll = 0,
                  int button = 0, std::uint64_t timestamp_ms = 0);
+    bool global_pointer_active() const;
     void set_status(int value);
     void set_error(const QString& value);
     void check_backend();
@@ -87,6 +91,12 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void refresh_playback();
     void start_timer();
     void stop_timer();
+    void poll_global_pointer();
+    void start_pointer_timer();
+    void stop_pointer_timer();
+    void poll_occlusion();
+    void start_occlusion_timer();
+    void stop_occlusion_timer();
 
     std::shared_ptr<nekomote::qt_quick::WallpaperState> state_;
     bool paused_{false};
@@ -101,6 +111,13 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     std::array<nekomote::qt_quick::Input, nekomote::qt_quick::kInputCapacity> inputs_{};
     std::size_t input_count_{0};
     QTimer* timer_{nullptr};
+    std::unique_ptr<PointerProvider> pointer_provider_;
+    QTimer* pointer_timer_{nullptr};
+    QPointF last_pointer_position_;
+    bool has_last_pointer_{false};
+    std::unique_ptr<OcclusionProvider> occlusion_provider_;
+    QTimer* occlusion_timer_{nullptr};
+    bool occluded_{false};
     bool backend_checked_{false};
     QPointer<QQuickWindow> host_window_;
     QMetaObject::Connection profile_swap_connection_;

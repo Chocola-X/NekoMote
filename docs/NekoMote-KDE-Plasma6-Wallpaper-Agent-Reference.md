@@ -761,6 +761,13 @@ enum class PointerCapability {
 
 NekoMote 已有 `PointerScope::LocalSurface`，这正好是合理降级。
 
+### 24.1 Plasma 适配器的可选实现（2026-11）
+
+X11 使用 `XQueryPointer` 提供全局指针；完全遮挡使用 X11 `VisibilityNotify`
+事件暂停渲染。Wayland 按标准保持 `LocalSurface`，不查询全局指针，也不做遮挡
+检测。空闲帧率/pacing 属于 `application` 层，不放在 Plasma adapter。实现、
+测试和限制见 [plasma-pointer-occlusion.md](plasma-pointer-occlusion.md)。
+
 ---
 
 ## 25. [重要] 全局到局部坐标、多屏、DPI
