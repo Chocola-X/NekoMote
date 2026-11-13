@@ -1,0 +1,688 @@
+[
+  {
+    "model": "chocola/date-a",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4189,
+    "indices": 20832,
+    "nodes": 431,
+    "repeats": 3,
+    "fingerprints": [
+      "92d030bf30814e1f",
+      "92d030bf30814e1f",
+      "92d030bf30814e1f"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 74.48888,
+      "p50": 73.725,
+      "p95": 75.855,
+      "p99": 85.202
+    },
+    "prepare_us": {
+      "mean": 483.882,
+      "p50": 483.905,
+      "p95": 506.942,
+      "p99": 542.215
+    },
+    "total_us": {
+      "mean": 558.210275,
+      "p50": 559.782,
+      "p95": 581.652,
+      "p99": 617.932
+    },
+    "geometry_evaluate_us": {
+      "mean": 84.984312,
+      "p50": 83.796,
+      "p95": 86.547,
+      "p99": 98.966
+    },
+    "geometry_build_us": {
+      "mean": 399.035835,
+      "p50": 399.372,
+      "p95": 417.094,
+      "p99": 455.545
+    }
+  },
+  {
+    "model": "chocola/date-a",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4224,
+    "indices": 20976,
+    "nodes": 431,
+    "repeats": 3,
+    "fingerprints": [
+      "b425cf7a4e9945b3",
+      "b425cf7a4e9945b3",
+      "b425cf7a4e9945b3"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 91.876968,
+      "p50": 90.54,
+      "p95": 93.34,
+      "p99": 106.893
+    },
+    "prepare_us": {
+      "mean": 611.923312,
+      "p50": 604.293,
+      "p95": 665.792,
+      "p99": 671.955
+    },
+    "total_us": {
+      "mean": 703.80028,
+      "p50": 696.384,
+      "p95": 757.245,
+      "p99": 767.204
+    },
+    "geometry_evaluate_us": {
+      "mean": 100.053485,
+      "p50": 98.474,
+      "p95": 101.373,
+      "p99": 115.044
+    },
+    "geometry_build_us": {
+      "mean": 512.234742,
+      "p50": 505.826,
+      "p95": 566.806,
+      "p99": 568.397
+    }
+  },
+  {
+    "model": "chocola/wintermaid",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4861,
+    "indices": 24204,
+    "nodes": 480,
+    "repeats": 3,
+    "fingerprints": [
+      "5d6b0cc1b440b3a9",
+      "5d6b0cc1b440b3a9",
+      "5d6b0cc1b440b3a9"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 86.715257,
+      "p50": 85.938,
+      "p95": 87.383,
+      "p99": 98.964
+    },
+    "prepare_us": {
+      "mean": 541.354062,
+      "p50": 543.828,
+      "p95": 562.467,
+      "p99": 603.773
+    },
+    "total_us": {
+      "mean": 628.069318,
+      "p50": 629.702,
+      "p95": 652.186,
+      "p99": 690.469
+    },
+    "geometry_evaluate_us": {
+      "mean": 99.500693,
+      "p50": 98.667,
+      "p95": 100.381,
+      "p99": 107.425
+    },
+    "geometry_build_us": {
+      "mean": 442.46318,
+      "p50": 444.95,
+      "p95": 460.048,
+      "p99": 504.167
+    }
+  },
+  {
+    "model": "chocola/wintermaid",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4861,
+    "indices": 24204,
+    "nodes": 480,
+    "repeats": 3,
+    "fingerprints": [
+      "22ffe1324d1d97fa",
+      "22ffe1324d1d97fa",
+      "22ffe1324d1d97fa"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 102.78042,
+      "p50": 101.686,
+      "p95": 106.197,
+      "p99": 113.848
+    },
+    "prepare_us": {
+      "mean": 687.803695,
+      "p50": 681.049,
+      "p95": 747.232,
+      "p99": 754.773
+    },
+    "total_us": {
+      "mean": 790.584115,
+      "p50": 783.026,
+      "p95": 849.153,
+      "p99": 865.226
+    },
+    "geometry_evaluate_us": {
+      "mean": 112.799493,
+      "p50": 112.143,
+      "p95": 114.91,
+      "p99": 121.615
+    },
+    "geometry_build_us": {
+      "mean": 574.866752,
+      "p50": 568.219,
+      "p95": 635.161,
+      "p99": 641.729
+    }
+  },
+  {
+    "model": "chocola/casual-b-no-bell",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4118,
+    "indices": 20466,
+    "nodes": 425,
+    "repeats": 3,
+    "fingerprints": [
+      "2ac02b54c6f2bc74",
+      "2ac02b54c6f2bc74",
+      "2ac02b54c6f2bc74"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 74.784792,
+      "p50": 74.079,
+      "p95": 75.72,
+      "p99": 80.511
+    },
+    "prepare_us": {
+      "mean": 369.175883,
+      "p50": 362.762,
+      "p95": 431.87,
+      "p99": 470.653
+    },
+    "total_us": {
+      "mean": 443.732893,
+      "p50": 436.916,
+      "p95": 506.88,
+      "p99": 546.471
+    },
+    "geometry_evaluate_us": {
+      "mean": 83.528262,
+      "p50": 83.003,
+      "p95": 84.85,
+      "p99": 90.6
+    },
+    "geometry_build_us": {
+      "mean": 285.169467,
+      "p50": 278.709,
+      "p95": 343.024,
+      "p99": 386.683
+    }
+  },
+  {
+    "model": "chocola/casual-b-no-bell",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4118,
+    "indices": 20466,
+    "nodes": 425,
+    "repeats": 3,
+    "fingerprints": [
+      "2a0d4fb474e3f797",
+      "2a0d4fb474e3f797",
+      "2a0d4fb474e3f797"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 93.18918,
+      "p50": 92.169,
+      "p95": 95.015,
+      "p99": 102.032
+    },
+    "prepare_us": {
+      "mean": 533.643473,
+      "p50": 522.147,
+      "p95": 580.965,
+      "p99": 631.255
+    },
+    "total_us": {
+      "mean": 626.491715,
+      "p50": 614.1,
+      "p95": 676.47,
+      "p99": 726.221
+    },
+    "geometry_evaluate_us": {
+      "mean": 99.102302,
+      "p50": 98.674,
+      "p95": 100.661,
+      "p99": 105.293
+    },
+    "geometry_build_us": {
+      "mean": 434.344115,
+      "p50": 422.367,
+      "p95": 483.243,
+      "p99": 531.852
+    }
+  },
+  {
+    "model": "vanilla/wintermaid",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4895,
+    "indices": 24408,
+    "nodes": 477,
+    "repeats": 3,
+    "fingerprints": [
+      "7e5a169ab2087d95",
+      "7e5a169ab2087d95",
+      "7e5a169ab2087d95"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 85.126133,
+      "p50": 84.432,
+      "p95": 86.439,
+      "p99": 93.275
+    },
+    "prepare_us": {
+      "mean": 549.098253,
+      "p50": 553.757,
+      "p95": 571.423,
+      "p99": 612.922
+    },
+    "total_us": {
+      "mean": 634.224387,
+      "p50": 637.514,
+      "p95": 656.953,
+      "p99": 701.281
+    },
+    "geometry_evaluate_us": {
+      "mean": 97.061498,
+      "p50": 96.578,
+      "p95": 99.124,
+      "p99": 104.229
+    },
+    "geometry_build_us": {
+      "mean": 452.99588,
+      "p50": 454.347,
+      "p95": 473.254,
+      "p99": 512.078
+    }
+  },
+  {
+    "model": "vanilla/wintermaid",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4895,
+    "indices": 24408,
+    "nodes": 477,
+    "repeats": 3,
+    "fingerprints": [
+      "ccde1c9811b526b3",
+      "ccde1c9811b526b3",
+      "ccde1c9811b526b3"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 100.343713,
+      "p50": 99.283,
+      "p95": 102.786,
+      "p99": 110.665
+    },
+    "prepare_us": {
+      "mean": 698.534458,
+      "p50": 692.025,
+      "p95": 758.754,
+      "p99": 765.18
+    },
+    "total_us": {
+      "mean": 798.878172,
+      "p50": 791.658,
+      "p95": 857.955,
+      "p99": 866.72
+    },
+    "geometry_evaluate_us": {
+      "mean": 109.486567,
+      "p50": 108.848,
+      "p95": 110.982,
+      "p99": 118.959
+    },
+    "geometry_build_us": {
+      "mean": 589.818563,
+      "p50": 583.844,
+      "p95": 648.929,
+      "p99": 650.937
+    }
+  },
+  {
+    "model": "maple/yukata",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4129,
+    "indices": 20616,
+    "nodes": 403,
+    "repeats": 3,
+    "fingerprints": [
+      "3e168a9ae4bd4d07",
+      "3e168a9ae4bd4d07",
+      "3e168a9ae4bd4d07"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 69.794803,
+      "p50": 69.581,
+      "p95": 70.912,
+      "p99": 75.159
+    },
+    "prepare_us": {
+      "mean": 406.972208,
+      "p50": 405.021,
+      "p95": 475.962,
+      "p99": 515.635
+    },
+    "total_us": {
+      "mean": 476.767012,
+      "p50": 474.519,
+      "p95": 546.224,
+      "p99": 586.249
+    },
+    "geometry_evaluate_us": {
+      "mean": 77.657808,
+      "p50": 77.526,
+      "p95": 79.151,
+      "p99": 83.103
+    },
+    "geometry_build_us": {
+      "mean": 329.553195,
+      "p50": 327.874,
+      "p95": 397.468,
+      "p99": 430.96
+    }
+  },
+  {
+    "model": "maple/yukata",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4129,
+    "indices": 20616,
+    "nodes": 403,
+    "repeats": 3,
+    "fingerprints": [
+      "427f287e92a4df0b",
+      "427f287e92a4df0b",
+      "427f287e92a4df0b"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 86.152347,
+      "p50": 85.299,
+      "p95": 87.784,
+      "p99": 95.196
+    },
+    "prepare_us": {
+      "mean": 540.31591,
+      "p50": 527.523,
+      "p95": 592.718,
+      "p99": 636.349
+    },
+    "total_us": {
+      "mean": 626.468257,
+      "p50": 613.058,
+      "p95": 679.223,
+      "p99": 736.681
+    },
+    "geometry_evaluate_us": {
+      "mean": 91.67538,
+      "p50": 91.079,
+      "p95": 92.87,
+      "p99": 98.251
+    },
+    "geometry_build_us": {
+      "mean": 449.01587,
+      "p50": 436.528,
+      "p95": 500.691,
+      "p99": 545.809
+    }
+  },
+  {
+    "model": "coconut/casual",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4457,
+    "indices": 22170,
+    "nodes": 442,
+    "repeats": 3,
+    "fingerprints": [
+      "d4dff972cc775a5a",
+      "d4dff972cc775a5a",
+      "d4dff972cc775a5a"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 75.853672,
+      "p50": 75.147,
+      "p95": 76.483,
+      "p99": 82.185
+    },
+    "prepare_us": {
+      "mean": 427.141698,
+      "p50": 421.587,
+      "p95": 499.325,
+      "p99": 540.475
+    },
+    "total_us": {
+      "mean": 502.99537,
+      "p50": 496.815,
+      "p95": 575.646,
+      "p99": 617.114
+    },
+    "geometry_evaluate_us": {
+      "mean": 85.77585,
+      "p50": 85.028,
+      "p95": 87.213,
+      "p99": 98.429
+    },
+    "geometry_build_us": {
+      "mean": 341.319193,
+      "p50": 336.647,
+      "p95": 412.369,
+      "p99": 435.567
+    }
+  },
+  {
+    "model": "coconut/casual",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4457,
+    "indices": 22170,
+    "nodes": 442,
+    "repeats": 3,
+    "fingerprints": [
+      "b8c53605f00f31fc",
+      "b8c53605f00f31fc",
+      "b8c53605f00f31fc"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 90.194352,
+      "p50": 89.391,
+      "p95": 91.883,
+      "p99": 105.323
+    },
+    "prepare_us": {
+      "mean": 588.63241,
+      "p50": 575.454,
+      "p95": 641.848,
+      "p99": 688.393
+    },
+    "total_us": {
+      "mean": 678.763203,
+      "p50": 664.952,
+      "p95": 733.306,
+      "p99": 790.451
+    },
+    "geometry_evaluate_us": {
+      "mean": 97.670743,
+      "p50": 96.913,
+      "p95": 99.022,
+      "p99": 110.504
+    },
+    "geometry_build_us": {
+      "mean": 491.531198,
+      "p50": 478.113,
+      "p95": 543.151,
+      "p99": 584.302
+    }
+  },
+  {
+    "model": "azuki/casual",
+    "moving": false,
+    "samples": 600,
+    "vertices": 4568,
+    "indices": 22722,
+    "nodes": 451,
+    "repeats": 3,
+    "fingerprints": [
+      "2bee6ca72e9e3aae",
+      "2bee6ca72e9e3aae",
+      "2bee6ca72e9e3aae"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 78.84033,
+      "p50": 78.23,
+      "p95": 79.684,
+      "p99": 88.384
+    },
+    "prepare_us": {
+      "mean": 574.313265,
+      "p50": 578.213,
+      "p95": 585.25,
+      "p99": 624.072
+    },
+    "total_us": {
+      "mean": 653.153595,
+      "p50": 656.556,
+      "p95": 670.661,
+      "p99": 703.179
+    },
+    "geometry_evaluate_us": {
+      "mean": 91.820287,
+      "p50": 91.044,
+      "p95": 92.441,
+      "p99": 106.242
+    },
+    "geometry_build_us": {
+      "mean": 484.118968,
+      "p50": 488.142,
+      "p95": 496.0,
+      "p99": 531.179
+    }
+  },
+  {
+    "model": "azuki/casual",
+    "moving": true,
+    "samples": 600,
+    "vertices": 4568,
+    "indices": 22722,
+    "nodes": 451,
+    "repeats": 3,
+    "fingerprints": [
+      "121378c894c0ce97",
+      "121378c894c0ce97",
+      "121378c894c0ce97"
+    ],
+    "allocations": [
+      0,
+      0,
+      0
+    ],
+    "advance_us": {
+      "mean": 94.050075,
+      "p50": 93.291,
+      "p95": 96.234,
+      "p99": 106.589
+    },
+    "prepare_us": {
+      "mean": 686.861527,
+      "p50": 681.094,
+      "p95": 745.358,
+      "p99": 751.639
+    },
+    "total_us": {
+      "mean": 780.793012,
+      "p50": 774.508,
+      "p95": 838.359,
+      "p99": 848.083
+    },
+    "geometry_evaluate_us": {
+      "mean": 103.372757,
+      "p50": 102.572,
+      "p95": 105.296,
+      "p99": 126.257
+    },
+    "geometry_build_us": {
+      "mean": 584.39105,
+      "p50": 579.12,
+      "p95": 641.571,
+      "p99": 648.278
+    }
+  }
+]

@@ -353,6 +353,40 @@ Panel data is saved only on user action; first launch and exit do not create a f
 
 ## Performance
 
+### Low-end hardware: i5-2410M / Intel HD 3000
+
+On 2026-11-13, NekoMote was tested on a Debian 12 machine with a **2-core/4-thread
+i5-2410M, Intel HD 3000 integrated graphics, and 3.7 GiB RAM**, using Mesa 22.3.6,
+OpenGL 3.3, and a native Release/LTO build. Intel GPU hardware acceleration was
+verified. The standalone player used 1920×1080 at a 60 FPS limit, one character,
+a flat background, muted audio, and a closed control panel. Each run warmed up for
+120 frames and measured 600 frames; the table shows medians across three runs.
+
+| Model | Measured frame-loop FPS | Player CPU (% of all four logical CPUs) | Player sampled peak RSS |
+| --- | ---: | ---: | ---: |
+| Chocola `chocola/date-a` | 59.05 | 6.43% | 79.66 MiB |
+| Chocola `chocola/wintermaid` | 58.98 | 7.62% | 79.32 MiB |
+| Coconut `coconut/casual` | 58.89 | 6.49% | 79.70 MiB |
+
+CPU figures cover the player process alone, equivalent to 25.7%–30.5% of one
+logical CPU; Xorg used another 1.6%–1.7% of total CPU capacity. Additional single
+runs at 1080p / 30 FPS used about 3.5%–3.9% of total CPU capacity for the player.
+A separate CPU probe covering seven models in idle and drag/gaze workloads measured
+evaluation and frame preparation at P50 0.44–0.79 ms, with zero ordinary C++
+`new/new[]` allocations in the measured paths after warmup. This allocation scope
+excludes GPU, UI, audio, and the rest of the application.
+
+For these models, the player reached a frame-loop rate close to 60 FPS on Sandy
+Bridge integrated graphics with around 80 MiB RSS. Measurements used headless X11,
+with no physical display connected and no VNC running. Frame-loop FPS does not
+establish physical display presentation rates or the full desktop cost of the
+Plasma plugin. These were short samples, without whole-machine power measurements,
+long-term validation, or a before/after optimization comparison. Full conditions,
+percentiles, correctness checks, and reproducible data are in the
+[Low-End Hardware Test Report](docs/headless-lowend-test-2026-11-13.md) (Chinese).
+
+### Real Plasma desktop and historical measurements
+
 On 2026-10-18, the current build was reinstalled on a real Wayland / KDE6 desktop and compared against a static-image background and the dynamic wallpaper.
 The machine is a Xeon E5-1680 v4 / RTX 3080 Ti, single monitor 2560×1440, 180 Hz, wallpaper target 60 FPS.
 Two-round sampling mean, **Plasma Shell delta** relative to a clean static baseline before and after:

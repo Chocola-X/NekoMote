@@ -1,0 +1,226 @@
+[
+  {
+    "case": "azuki-casual-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 116,
+    "max_absolute_difference": {
+      "x": 3.0517578125e-05,
+      "y": 6.103515625e-05,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "azuki-casual-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 210,
+    "max_absolute_difference": {
+      "x": 6.103515625e-05,
+      "y": 6.103515625e-05,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-casual-b-no-bell-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 38,
+    "max_absolute_difference": {
+      "x": 9.918212890625e-05,
+      "y": 3.0517578125e-05,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-casual-b-no-bell-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 210,
+    "max_absolute_difference": {
+      "x": 0.0001220703125,
+      "y": 0.0001220703125,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-date-a-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 193,
+    "max_absolute_difference": {
+      "x": 0.0001220703125,
+      "y": 0.000244140625,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-date-a-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 129,
+    "max_absolute_difference": {
+      "x": 0.0001220703125,
+      "y": 0.0001220703125,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-wintermaid-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 362,
+    "max_absolute_difference": {
+      "x": 5.7220458984375e-05,
+      "y": 0.0001220703125,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "chocola-wintermaid-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 659,
+    "max_absolute_difference": {
+      "x": 0.00018310546875,
+      "y": 0.00048828125,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "coconut-casual-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 0,
+    "max_absolute_difference": {
+      "x": 0.0,
+      "y": 0.0,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "coconut-casual-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 687,
+    "max_absolute_difference": {
+      "x": 0.0001220703125,
+      "y": 0.0001220703125,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "maple-yukata-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 104,
+    "max_absolute_difference": {
+      "x": 5.078315734863281e-05,
+      "y": 6.103515625e-05,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "maple-yukata-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 447,
+    "max_absolute_difference": {
+      "x": 9.1552734375e-05,
+      "y": 0.0001068115234375,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "vanilla-wintermaid-idle.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 0,
+    "max_absolute_difference": {
+      "x": 0.0,
+      "y": 0.0,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  },
+  {
+    "case": "vanilla-wintermaid-moving.bin",
+    "sampled_frames": 10,
+    "integer_fields_equal": true,
+    "unequal_float_values": 294,
+    "max_absolute_difference": {
+      "x": 0.000244140625,
+      "y": 6.103515625e-05,
+      "u": 0.0,
+      "v": 0.0,
+      "r": 0.0,
+      "g": 0.0,
+      "b": 0.0,
+      "a": 0.0
+    }
+  }
+]

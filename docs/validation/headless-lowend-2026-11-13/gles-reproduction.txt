@@ -1,0 +1,5 @@
+Filters: "GPU atlas orientation*"
+RNG seed: 1259260268
+/home/rin/nekomote-test-2026-11-13/src/tests/render/test_renderer.cpp:324: failed: sample[0] < 4 for: 4 < 4
+test cases:  1 |  0 passed | 1 failed
+assertions: 20 | 19 passed | 1 failed

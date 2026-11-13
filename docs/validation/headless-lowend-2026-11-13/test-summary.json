@@ -1,0 +1,24 @@
+{
+  "cpu": {
+    "cases": 289,
+    "passed": 288,
+    "failed": [],
+    "skipped": [
+      "Real model chocola-date-a imports"
+    ]
+  },
+  "gl": {
+    "cases": 28,
+    "passed": 28,
+    "failed": [],
+    "skipped": []
+  },
+  "gles": {
+    "cases": 28,
+    "passed": 27,
+    "failed": [
+      "GPU atlas orientation, alpha, host target and resize"
+    ],
+    "skipped": []
+  }
+}

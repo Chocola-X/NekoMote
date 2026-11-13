@@ -1,0 +1,407 @@
+[
+  {
+    "model": "chocola/date-a",
+    "run": 0,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.080608520999931,
+    "cpu_one_core_percent": 25.95364859576109,
+    "cpu_machine_percent": 6.488412148940273,
+    "rss_peak_kib": 83788,
+    "steady_seconds": 7.821636300999899,
+    "xorg_cpu_one_core_percent": 6.26463743323602,
+    "cpu_frame_ms": {
+      "p50": 3.318017,
+      "p95": 3.515799,
+      "p99": 3.879524
+    },
+    "actual_fps": 59.049,
+    "cadence_ms": {
+      "p50": 16.917358,
+      "p95": 16.965567,
+      "p99": 17.009422
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/wintermaid",
+    "run": 0,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.33521127799986,
+    "cpu_one_core_percent": 30.461495392299216,
+    "cpu_machine_percent": 7.615373848074804,
+    "rss_peak_kib": 81228,
+    "steady_seconds": 8.075768993999873,
+    "xorg_cpu_one_core_percent": 6.810590138627456,
+    "cpu_frame_ms": {
+      "p50": 4.114152,
+      "p95": 4.285906,
+      "p99": 4.664831
+    },
+    "actual_fps": 58.978,
+    "cadence_ms": {
+      "p50": 16.938871,
+      "p95": 16.991511,
+      "p99": 17.029252
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "coconut/casual",
+    "run": 0,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.084679783999945,
+    "cpu_one_core_percent": 25.94428995704695,
+    "cpu_machine_percent": 6.486072489261738,
+    "rss_peak_kib": 81520,
+    "steady_seconds": 7.8244577259999915,
+    "xorg_cpu_one_core_percent": 6.134618133946781,
+    "cpu_frame_ms": {
+      "p50": 3.203837,
+      "p95": 3.586284,
+      "p99": 4.004704
+    },
+    "actual_fps": 58.886,
+    "cadence_ms": {
+      "p50": 16.966069,
+      "p95": 17.011471,
+      "p99": 17.077325
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/date-a",
+    "run": 1,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 13.574203776000104,
+    "cpu_one_core_percent": 25.702803675797043,
+    "cpu_machine_percent": 6.425700918949261,
+    "rss_peak_kib": 81524,
+    "steady_seconds": 7.314377154000113,
+    "xorg_cpu_one_core_percent": 6.562387849176063,
+    "cpu_frame_ms": {
+      "p50": 3.301048,
+      "p95": 3.48063,
+      "p99": 3.818747
+    },
+    "actual_fps": 59.062,
+    "cadence_ms": {
+      "p50": 16.91622,
+      "p95": 16.966499,
+      "p99": 17.002932
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/wintermaid",
+    "run": 1,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.331970352000099,
+    "cpu_one_core_percent": 30.224339527163945,
+    "cpu_machine_percent": 7.556084881790986,
+    "rss_peak_kib": 81204,
+    "steady_seconds": 8.072963836999861,
+    "xorg_cpu_one_core_percent": 6.688976698025753,
+    "cpu_frame_ms": {
+      "p50": 4.093275,
+      "p95": 4.230165,
+      "p99": 4.598616
+    },
+    "actual_fps": 59.006,
+    "cadence_ms": {
+      "p50": 16.93584,
+      "p95": 16.965788,
+      "p99": 17.0218
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "coconut/casual",
+    "run": 1,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.079038116999982,
+    "cpu_one_core_percent": 25.83402793190498,
+    "cpu_machine_percent": 6.458506982976245,
+    "rss_peak_kib": 81612,
+    "steady_seconds": 7.819144599999845,
+    "xorg_cpu_one_core_percent": 6.649761721703372,
+    "cpu_frame_ms": {
+      "p50": 3.207155,
+      "p95": 3.557645,
+      "p99": 3.883649
+    },
+    "actual_fps": 58.92,
+    "cadence_ms": {
+      "p50": 16.956352,
+      "p95": 16.98904,
+      "p99": 17.043745
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/date-a",
+    "run": 2,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 13.571347808000155,
+    "cpu_one_core_percent": 25.71030601953372,
+    "cpu_machine_percent": 6.42757650488343,
+    "rss_peak_kib": 81568,
+    "steady_seconds": 7.3122427969999535,
+    "xorg_cpu_one_core_percent": 6.564205129078509,
+    "cpu_frame_ms": {
+      "p50": 3.295786,
+      "p95": 3.468437,
+      "p99": 3.883448
+    },
+    "actual_fps": 59.053,
+    "cadence_ms": {
+      "p50": 16.919262,
+      "p95": 16.960546,
+      "p99": 16.992538
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/wintermaid",
+    "run": 2,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.3291774610002,
+    "cpu_one_core_percent": 30.483810202307406,
+    "cpu_machine_percent": 7.620952550576852,
+    "rss_peak_kib": 81872,
+    "steady_seconds": 8.069857356000057,
+    "xorg_cpu_one_core_percent": 6.4436970684121775,
+    "cpu_frame_ms": {
+      "p50": 4.07345,
+      "p95": 4.22156,
+      "p99": 4.590382
+    },
+    "actual_fps": 58.951,
+    "cadence_ms": {
+      "p50": 16.950388,
+      "p95": 16.987788,
+      "p99": 17.026706
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "coconut/casual",
+    "run": 2,
+    "width": 1920,
+    "height": 1080,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.082830694999984,
+    "cpu_one_core_percent": 25.947856262015787,
+    "cpu_machine_percent": 6.486964065503947,
+    "rss_peak_kib": 83720,
+    "steady_seconds": 7.823382323000033,
+    "xorg_cpu_one_core_percent": 6.391050915514756,
+    "cpu_frame_ms": {
+      "p50": 3.204063,
+      "p95": 3.552197,
+      "p99": 3.957341
+    },
+    "actual_fps": 58.883,
+    "cadence_ms": {
+      "p50": 16.968985,
+      "p95": 17.000065,
+      "p99": 17.040296
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/date-a",
+    "run": 3,
+    "width": 1280,
+    "height": 720,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 13.81678432900003,
+    "cpu_one_core_percent": 26.00239497796047,
+    "cpu_machine_percent": 6.500598744490118,
+    "rss_peak_kib": 83496,
+    "steady_seconds": 7.307019224999976,
+    "xorg_cpu_one_core_percent": 6.021439312502349,
+    "cpu_frame_ms": {
+      "p50": 3.352409,
+      "p95": 3.517088,
+      "p99": 3.725405
+    },
+    "actual_fps": 58.929,
+    "cadence_ms": {
+      "p50": 16.955755,
+      "p95": 16.986675,
+      "p99": 17.009858
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/wintermaid",
+    "run": 3,
+    "width": 1280,
+    "height": 720,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.07103615699998,
+    "cpu_one_core_percent": 28.41437164646535,
+    "cpu_machine_percent": 7.103592911616338,
+    "rss_peak_kib": 83720,
+    "steady_seconds": 7.8129477140000745,
+    "xorg_cpu_one_core_percent": 5.7597064580809185,
+    "cpu_frame_ms": {
+      "p50": 3.747285,
+      "p95": 3.7936,
+      "p99": 4.162682
+    },
+    "actual_fps": 58.91,
+    "cadence_ms": {
+      "p50": 16.9601,
+      "p95": 16.982956,
+      "p99": 17.011391
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "coconut/casual",
+    "run": 3,
+    "width": 1280,
+    "height": 720,
+    "fps": 60,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 14.06995814700008,
+    "cpu_one_core_percent": 25.60162978418643,
+    "cpu_machine_percent": 6.400407446046607,
+    "rss_peak_kib": 81732,
+    "steady_seconds": 7.812002660999951,
+    "xorg_cpu_one_core_percent": 5.888375463169826,
+    "cpu_frame_ms": {
+      "p50": 3.26258,
+      "p95": 3.501712,
+      "p99": 3.654214
+    },
+    "actual_fps": 58.924,
+    "cadence_ms": {
+      "p50": 16.958045,
+      "p95": 16.977459,
+      "p99": 17.013987
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/date-a",
+    "run": 4,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 25.665305644,
+    "cpu_one_core_percent": 14.119176622388034,
+    "cpu_machine_percent": 3.5297941555970085,
+    "rss_peak_kib": 81800,
+    "steady_seconds": 19.406230782999955,
+    "xorg_cpu_one_core_percent": 3.0402412588706986,
+    "cpu_frame_ms": {
+      "p50": 3.705631,
+      "p95": 3.903434,
+      "p99": 4.235993
+    },
+    "actual_fps": 29.72,
+    "cadence_ms": {
+      "p50": 33.635945,
+      "p95": 33.651314,
+      "p99": 33.707161
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "chocola/wintermaid",
+    "run": 4,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 26.17031235799982,
+    "cpu_one_core_percent": 15.568532711354123,
+    "cpu_machine_percent": 3.892133177838531,
+    "rss_peak_kib": 81704,
+    "steady_seconds": 19.911959960999866,
+    "xorg_cpu_one_core_percent": 3.163901284169232,
+    "cpu_frame_ms": {
+      "p50": 4.156007,
+      "p95": 4.225856,
+      "p99": 4.566714
+    },
+    "actual_fps": 29.718,
+    "cadence_ms": {
+      "p50": 33.637113,
+      "p95": 33.651776,
+      "p99": 33.696031
+    },
+    "intel_renderer_verified": true
+  },
+  {
+    "model": "coconut/casual",
+    "run": 4,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "exit_status": 0,
+    "timed_out": false,
+    "wall_seconds": 26.170190993000006,
+    "cpu_one_core_percent": 14.011486492682796,
+    "cpu_machine_percent": 3.502871623170699,
+    "rss_peak_kib": 81864,
+    "steady_seconds": 19.912234162000004,
+    "xorg_cpu_one_core_percent": 3.1638718202427736,
+    "cpu_frame_ms": {
+      "p50": 3.586239,
+      "p95": 3.87992,
+      "p99": 4.081673
+    },
+    "actual_fps": 29.719,
+    "cadence_ms": {
+      "p50": 33.635594,
+      "p95": 33.649891,
+      "p99": 33.693535
+    },
+    "intel_renderer_verified": true
+  }
+]
