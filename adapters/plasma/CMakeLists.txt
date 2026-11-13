@@ -1,6 +1,7 @@
 # Plasma wallpaper QML module and isolated probe. Default OFF; requires Qt and ABI.
-find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools DBus)
 find_package(Python3 COMPONENTS Interpreter QUIET)
+find_package(X11 QUIET)
 
 if(NEKOMOTE_BUILD_PLASMA_PROBE)
     find_package(KF6Config CONFIG REQUIRED)
@@ -24,8 +25,9 @@ qt6_add_translation(NEKOMOTE_PLASMA6_QM_FILES
 configure_file(translations.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 qt6_add_resources(NEKOMOTE_PLASMA6_QRC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
-add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp translations.cpp
-    ${NEKOMOTE_PLASMA6_QRC_SOURCES})
+add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp
+    pointer_provider.cpp pointer_provider.hpp kwin_pointer_provider.cpp kwin_pointer_provider.hpp
+    occlusion_provider.cpp occlusion_provider.hpp translations.cpp ${NEKOMOTE_PLASMA6_QRC_SOURCES})
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES
     AUTOMOC ON
@@ -33,8 +35,12 @@ set_target_properties(nekomote_plasma_qml PROPERTIES
     INSTALL_RPATH "")
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nekomote_plasma_qml PUBLIC
-    nekomote::host_qt_quick Qt6::Quick Qt6::OpenGL)
+    nekomote::host_qt_quick Qt6::Quick Qt6::OpenGL Qt6::DBus)
 target_link_libraries(nekomote_plasma_qml PRIVATE nekomote_warnings)
+if(X11_FOUND)
+    target_compile_definitions(nekomote_plasma_qml PRIVATE NEKOMOTE_PLASMA_X11)
+    target_link_libraries(nekomote_plasma_qml PRIVATE X11::X11)
+endif()
 
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.5)
     qt_policy(SET QTP0001 NEW)

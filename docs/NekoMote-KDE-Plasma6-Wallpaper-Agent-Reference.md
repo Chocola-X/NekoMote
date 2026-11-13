@@ -761,6 +761,14 @@ enum class PointerCapability {
 
 NekoMote 已有 `PointerScope::LocalSurface`，这正好是合理降级。
 
+### 24.1 Plasma 适配器的可选实现（2026-11）
+
+X11 使用 `XQueryPointer`。Wayland 在 KWin 6 中可由适配器加载一个本地 KWin
+脚本，把 `workspace.cursorPos` / `cursorPosChanged` 和每个输出的窗口覆盖状态
+通过 session DBus 送入 plasmashell。该方案不是 Wayland 标准，也不是全局指针
+保证；KWin 禁用脚本、API 变化或更换合成器时退回 `LocalSurface`。实现、测试和
+限制见 [plasma-pointer-occlusion.md](plasma-pointer-occlusion.md)。
+
 ---
 
 ## 25. [重要] 全局到局部坐标、多屏、DPI
