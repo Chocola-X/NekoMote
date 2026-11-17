@@ -190,3 +190,11 @@ python3 tools/testing/run_reliability_test.py \
 [GL六轮复测](validation/wallpaper-reliability-2026-11-17/steady-layer-gl-repeat.json)、
 [含启动的初次比较](validation/wallpaper-reliability-2026-11-17/frames-with-startup.json)、
 [环境与二进制/输入hash](validation/wallpaper-reliability-2026-11-17/hotplug-environment.json)。
+
+
+### CI 后续补修
+
+用户推送后的六份CI日志均显示编译成功、仅 `host_session_contract` 失败：
+容器通过数值UID运行，但没有对应passwd记录，私有D-Bus因此启动失败。
+已补齐镜像构建时的UID/GID账户创建及编译前检查；私有未知UID复现和修复后的3轮契约通过。
+具体证据、手动构建参数与远端复验边界见[CI说明](github-actions.md#2026-11-17私有-d-bus-测试与容器-uid)。

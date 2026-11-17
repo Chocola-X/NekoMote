@@ -280,17 +280,20 @@ Ubuntu20 分发包，不用于冻结基线符号需求。
 
 ```bash
 mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell build/ci-x11
-docker build -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
+docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+  -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" nekomote-focal native20
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" nekomote-focal plasma5
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" nekomote-focal x11
-docker build -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
+docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+  -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma6:/output:rw" nekomote-bookworm plasma6
-docker build -f tools/ci_layer_shell.Containerfile -t nekomote-layer-shell tools
+docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+  -f tools/ci_layer_shell.Containerfile -t nekomote-layer-shell tools
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-layer-shell:/output:rw" nekomote-layer-shell layer-shell
 ```
@@ -487,3 +490,30 @@ MIT 要求在副本中保留版权及许可声明；GLAD 生成代码涉及的
 重置ID、UUID保留及重建。无需KDE6宿主或GPU，不能作为Live桌面或Vulkan画面验收。
 本机Qt6.9五项相关Qt检查和定向Qt6.4回归通过，详见
 [验证记录](validation/plasma6-backend-apply-2026-11-11/README.md)。
+
+
+## 2026-11-17：私有 D-Bus 测试与容器 UID
+
+可靠性改进后，用户提供的6份失败日志覆盖X11、layer-shell和Plasma5的x86_64/aarch64。
+这些任务均完成编译；每份只有新增的 `host_session_contract` 失败，其余260或263项通过。
+首先出现的是“无法获取当前UID的passwd信息”，随后D-Bus才报告“Memory allocation failure”。
+因此本次可确认的原因是容器NSS用户记录缺失，没有证据归因于内存耗尽或网络故障。
+
+工作流使用 `docker run --user "$(id -u):$(id -g)"` 保证输出归runner所有，但此参数
+只指定数值UID/GID，不会自动创建容器内的账户。新增测试需要启动私有 `dbus-daemon`，
+缺少用户记录时会在测试服务启动前失败。普通本机构建拥有真实用户记录，因而之前未复现。
+
+五份构建工作流现将相同UID/GID作为 `CI_UID` / `CI_GID` 传给镜像构建；三份基线镜像
+通过共享 `ci_create_build_user.sh` 在构建时建立必要的用户/组，已存在的数值ID复用。
+运行阶段仍使用原来的非root UID/GID，不修改runner账户，不放宽D-Bus认证，不跳过测试。
+`ci_build.sh` 在编译前检查账户记录，失配时提示重建镜像，避免编译结束后才失败。
+本地复现命令已同步；手动使用其他 `--user` 时应以对应的构建参数重建镜像。
+
+本地bubblewrap以UID/GID 1001:1001运行，隔离passwd/group、总线、PID、网络和临时目录：
+缺少账户时复现相同D-Bus错误；执行共享建用户脚本后，完整锁屏/解锁/休眠合并/服务重启
+契约连续3次通过。未知UID的CI预检正确以状态2拒绝，重复建用户及复用root账户通过。
+正常本机 `host_session_contract`、工作流YAML解析和所有run步骤的bash语法检查通过。
+[原始日志摘要与本地结果](validation/wallpaper-reliability-2026-11-17/ci-uid-fix.json)。
+
+本地没有Docker/Podman，本轮没有重建完整Ubuntu20/Debian12镜像，未复跑远端Actions或ARM64；
+上述命名空间测试不作为完整基线构建/打包认证。正式运行代码未变，不涉及播放性能变化。

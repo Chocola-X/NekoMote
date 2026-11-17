@@ -9,6 +9,10 @@ ARCH_NAME="$(uname -m)"
 case "$MODE" in native20|plasma5|plasma6|layer-shell|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
 test -f "$SOURCE_DIR/CMakeLists.txt"
 test -d "$OUTPUT_DIR"
+if ! getent passwd "$(id -u)" >/dev/null || ! getent group "$(id -g)" >/dev/null; then
+    echo 'Build UID/GID has no account record; rebuild the image with CI_UID/CI_GID matching --user.' >&2
+    exit 2
+fi
 WORK_DIR="$(mktemp -d /tmp/nekomote-ci.XXXXXX)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 mkdir -p "$WORK_DIR/src/build" "$WORK_DIR/runtime"
@@ -21,6 +25,7 @@ dpkg-query -W -f='${Package}\t${Version}\n' > "$OUTPUT_DIR/toolchain-packages.tx
 # GNU LTO invokes make even though Ninja drives the outer build. Check the
 # complete CPU/tool test environment before starting an expensive compilation.
 {
+    id
     cmake --version
     "${CC:-cc}" --version
     "${CXX:-c++}" --version

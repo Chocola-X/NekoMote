@@ -1,0 +1,156 @@
+{
+  "base_commit": "93592cf",
+  "scope": "CI logs and local isolated UID/NSS reproduction; no full Docker build or remote Actions rerun",
+  "provided_ci_jobs": [
+    {
+      "archive": "evidence-layer-shell-aarch64.zip",
+      "sha256": "6414ad2cafdf582f7cc55466709be40aa069bfe01dd462470b1dcaced236e9f8",
+      "tests": 261,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3218]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3218]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    },
+    {
+      "archive": "evidence-layer-shell-x86_64.zip",
+      "sha256": "fce6c20cc053d5a3f35570ed8e865cb50d1eeb7b760704a036e8c18f9a0eb1bc",
+      "tests": 261,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3197]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3197]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    },
+    {
+      "archive": "evidence-plasma5-aarch64.zip",
+      "sha256": "a73132afeb8ba4efc93215b14c054f7d3f87ae293b8b6b028c41d23e9c03bf7d",
+      "tests": 264,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3217]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3217]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    },
+    {
+      "archive": "evidence-plasma5-x86_64.zip",
+      "sha256": "760b7ffcb948599b721437e4ef13c50312545ec9c29da61c165738f51c80539a",
+      "tests": 264,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3204]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3204]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    },
+    {
+      "archive": "evidence-x11-aarch64.zip",
+      "sha256": "b669ad2309664596e51faf6c27457bd56bd245278994eba1e025f1a000c86e96",
+      "tests": 261,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3256]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3256]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    },
+    {
+      "archive": "evidence-x11-x86_64.zip",
+      "sha256": "60c6c092ba894de467647647903b3f2a50b4a84c0e925e7a7c86f1e954ebbaf6",
+      "tests": 261,
+      "failures": 1,
+      "failed_tests": [
+        "host_session_contract"
+      ],
+      "dbus_error": [
+        "dbus[3240]: Could not get password database information for UID of current process: User \"???\" unknown or no memory to allocate password entry",
+        "dbus[3240]: Failed to start message bus: Memory allocation failure in message bus"
+      ]
+    }
+  ],
+  "local_uid_reproduction": {
+    "scope": "bubblewrap private passwd/group and user namespace; host toolchain, no Docker",
+    "cases": [
+      {
+        "name": "unknown-uid-reproduces-ci-failure",
+        "uid": 1001,
+        "gid": 1001,
+        "returncode": 1,
+        "expected": 1,
+        "passed": true
+      },
+      {
+        "name": "preflight-rejects-unknown-uid",
+        "uid": 1001,
+        "gid": 1001,
+        "returncode": 2,
+        "expected": 2,
+        "passed": true
+      },
+      {
+        "name": "create-runner-account",
+        "uid": 0,
+        "gid": 0,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      },
+      {
+        "name": "fixed-uid-contract-0",
+        "uid": 1001,
+        "gid": 1001,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      },
+      {
+        "name": "fixed-uid-contract-1",
+        "uid": 1001,
+        "gid": 1001,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      },
+      {
+        "name": "fixed-uid-contract-2",
+        "uid": 1001,
+        "gid": 1001,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      },
+      {
+        "name": "reuse-account",
+        "uid": 0,
+        "gid": 0,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      },
+      {
+        "name": "reuse-root-account",
+        "uid": 0,
+        "gid": 0,
+        "returncode": 0,
+        "expected": 0,
+        "passed": true
+      }
+    ]
+  },
+  "local_ctest": "host_session_contract: PASS",
+  "static_checks": "six workflow YAML documents and extracted run-step bash syntax; sh/bash -n; git diff --check: PASS",
+  "runtime_code_changed": false
+}

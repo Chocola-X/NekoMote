@@ -39,7 +39,8 @@ jobs:
       - name: Build baseline toolchain image
         run: |
           mkdir -p build/ci-layer-shell
-          docker build -f tools/ci_layer_shell.Containerfile -t nekomote-layer-shell tools \
+          docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+            -f tools/ci_layer_shell.Containerfile -t nekomote-layer-shell tools \
             2>&1 | tee build/ci-layer-shell/toolchain-build.log
       - name: Release build, tests and dependency audit
         run: |

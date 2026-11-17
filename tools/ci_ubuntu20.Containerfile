@@ -41,5 +41,11 @@ RUN case "$(dpkg --print-architecture)" in \
     rm /tmp/node.tar.gz
 ENV PATH="/opt/node/bin:${PATH}"
 
+# Match the unprivileged runner used by docker run --user (D-Bus needs NSS).
+ARG CI_UID=1000
+ARG CI_GID=1000
+COPY ci_create_build_user.sh /usr/local/libexec/nekomote-ci-create-build-user.sh
+RUN sh /usr/local/libexec/nekomote-ci-create-build-user.sh "$CI_UID" "$CI_GID"
+
 WORKDIR /work
 ENTRYPOINT ["bash", "/source/tools/ci_build.sh"]

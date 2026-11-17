@@ -16,6 +16,12 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources && \
       python3-jinja2 python3-pil nodejs fonts-dejavu-core && \
     rm -rf /var/lib/apt/lists/*
 
+# Match the unprivileged runner used by docker run --user (D-Bus needs NSS).
+ARG CI_UID=1000
+ARG CI_GID=1000
+COPY ci_create_build_user.sh /usr/local/libexec/nekomote-ci-create-build-user.sh
+RUN sh /usr/local/libexec/nekomote-ci-create-build-user.sh "$CI_UID" "$CI_GID"
+
 WORKDIR /work
 # Source mounted read-only at /source; artifacts written to explicit /output.
 ENTRYPOINT ["bash", "/source/tools/ci_build.sh"]
