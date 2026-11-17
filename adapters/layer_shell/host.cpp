@@ -3,6 +3,7 @@
 #include "nekomote/abi.h"
 
 #include <nekomote/host_gpu/gpu.hpp>
+#include <nekomote/host_session/monitor.hpp>
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "nekomote/host_vulkan/host.h"
 #endif
@@ -290,6 +291,9 @@ class Host::Impl
     Clock::time_point last_frame_{};
     Clock::time_point next_frame_{};
     bool idle_wait_{false};
+    std::unique_ptr<nekomote::host_session::Monitor> session_monitor_;
+    bool host_unavailable_ = false, session_unavailable_ = false;
+    Clock::time_point next_session_query_{};
 };
 
 const wl_registry_listener& Host::Impl::registry_listener()
@@ -816,6 +820,7 @@ void Host::Impl::initialize_vulkan()
 
 void Host::Impl::initialize_graphics()
 {
+    session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     resize();
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (options_.backend == Backend::vulkan)
@@ -859,7 +864,7 @@ void Host::Impl::initialize_graphics()
               << (options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
-              << "; global pointer and automatic occlusion pause unavailable\n";
+              << "; global pointer and arbitrary occlusion pause unavailable\n";
 }
 
 void Host::Impl::resize()
@@ -1140,12 +1145,29 @@ void Host::Impl::run()
             if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
                 throw std::runtime_error("wait for Vulkan frame before input/resize failed");
 #endif
+            if (Clock::now() >= next_session_query_)
+            {
+                next_session_query_ = Clock::now() + std::chrono::seconds(1);
+                session_unavailable_ = session_monitor_->poll();
+            }
+            const bool unavailable = session_unavailable_;
+            if (host_unavailable_ != unavailable)
+            {
+                host_unavailable_ = unavailable;
+                check(nekomote_wallpaper_set_output_available(wallpaper_, !unavailable),
+                      "set session availability");
+                check(nekomote_wallpaper_advance(wallpaper_, 0),
+                      "flush availability audio commands");
+                last_frame_ = next_frame_ = Clock::now();
+                input_count_ = 0;
+                std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
+            }
             resize();
             process_input();
             if (idle_wait_ && (nekomote_wallpaper_needs_render(wallpaper_) ||
                                !nekomote_wallpaper_paused(wallpaper_)))
                 next_frame_ = Clock::now();
-            if (frame_ready_ && Clock::now() >= next_frame_)
+            if (!host_unavailable_ && frame_ready_ && Clock::now() >= next_frame_)
                 render();
         }
         if (closed_ || stop_requested)
@@ -1153,7 +1175,7 @@ void Host::Impl::run()
         if (options_.frames && Clock::now() - started >= std::chrono::seconds(30))
             throw std::runtime_error("diagnostic frame deadline exceeded");
         int timeout = 1000;
-        if (configured_ && frame_ready_)
+        if (configured_ && !host_unavailable_ && frame_ready_)
         {
             const auto remaining =
                 std::chrono::ceil<std::chrono::milliseconds>(next_frame_ - Clock::now()).count();

@@ -8,7 +8,7 @@ arch=(x86_64 aarch64)
 url='https://github.com/Chocola-X/NekoMote'
 license=(AGPL-3.0-only)
 depends=(gcc-libs glibc fontconfig libpng libpulse zlib 'flac>=1.4')
-makedepends=(git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
+makedepends=(dbus git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
              libglvnd libx11 libxrandr libxext wayland qt6-base qt6-declarative qt6-tools
              vulkan-headers vulkan-icd-loader glslang)
 checkdepends=(catch2 python-pillow nodejs)
@@ -94,7 +94,7 @@ package_nekomote-git() {
 
 package_nekomote-layer-shell-git() {
     pkgdesc='NekoMote Wayland layer-shell live wallpaper (OpenGL/EGL and Vulkan)'
-    depends+=(wayland libglvnd vulkan-icd-loader)
+    depends+=(dbus wayland libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote-layer-shell)
     conflicts=(nekomote-layer-shell)
@@ -105,7 +105,7 @@ package_nekomote-layer-shell-git() {
 
 package_nekomote-x11-git() {
     pkgdesc='NekoMote X11/EWMH live wallpaper (OpenGL/GLX and Vulkan)'
-    depends+=(libx11 libxrandr libxext libglvnd vulkan-icd-loader)
+    depends+=(dbus libx11 libxrandr libxext libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote-x11)
     conflicts=(nekomote-x11)
@@ -115,7 +115,7 @@ package_nekomote-x11-git() {
 
 package_nekomote-plasma6-git() {
     pkgdesc='NekoMote Plasma 6 live wallpaper plugin'
-    depends+=(qt6-base qt6-declarative plasma-workspace libglvnd vulkan-icd-loader)
+    depends+=(dbus qt6-base qt6-declarative plasma-workspace libglvnd vulkan-icd-loader)
     optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
     provides=(nekomote-plasma6)
     conflicts=(nekomote-plasma6)

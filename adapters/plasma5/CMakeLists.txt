@@ -26,7 +26,7 @@ add_library(nekomote_plasma_qml SHARED
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES AUTOMOC ON INSTALL_RPATH "")
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../plasma)
-target_link_libraries(nekomote_plasma_qml PUBLIC nekomote::host_qt_quick
+target_link_libraries(nekomote_plasma_qml PUBLIC nekomote::host_qt_quick nekomote::host_session
     Qt5::Quick Qt5::OpenGL PRIVATE nekomote_warnings)
 
 add_library(nekomote_plasma_qmlplugin MODULE plugin.cpp)

@@ -2,7 +2,7 @@ find_package(X11 REQUIRED COMPONENTS Xrandr Xext)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL GLX)
 
 add_executable(nekomote_x11 main.cpp options.cpp host.cpp)
-target_link_libraries(nekomote_x11 PRIVATE nekomote::abi nekomote::host_gpu nekomote_warnings
+target_link_libraries(nekomote_x11 PRIVATE nekomote::abi nekomote::host_gpu nekomote::host_session nekomote_warnings
     X11::X11 X11::Xrandr X11::Xext OpenGL::OpenGL OpenGL::GLX)
 target_compile_features(nekomote_x11 PRIVATE cxx_std_20)
 if(NEKOMOTE_BUILD_VULKAN)

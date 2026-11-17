@@ -66,6 +66,9 @@ else
     [[ "$MODE" != plasma5 ]] || TARGETS+=(nekomote_plasma5_package_test)
     [[ "$MODE" != plasma6 ]] || TARGETS+=(nekomote_plasma6_configuration_test)
 fi
+if [[ "$MODE" != native20 ]]; then
+    TARGETS+=(nekomote_session_probe)
+fi
 if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
     TARGETS+=(nekomote_host_vulkan_failure_tests)
 fi

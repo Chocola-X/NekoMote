@@ -32,6 +32,7 @@ Build:
 - Python 3 + Jinja2 (GL loader generation)
 - libpng 1.6 development package + zlib
 - pkg-config + libpulse ≥ 13.99 development package (audio)
+- X11 / layer-shell / Plasma builds also require libdbus ≥ 1.12 development files (passive session observation)
 - First-time configuration requires network access (CMake FetchContent pulls pinned-version dependencies)
 
 Runtime:

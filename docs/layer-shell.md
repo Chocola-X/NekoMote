@@ -121,8 +121,9 @@ OpenGL 路径使用 EGL/desktop GL；Vulkan 路径在同一 layer surface 上创
 buffer scale 和 frame callback 节奏。每次修改共享实例（包括输入、resize、advance）前
 等待上一帧 GPU 工作完成，帧回调在实际 present 前申请；正式帧不读回。
 整数缩放受支持；尚未实现
-fractional-scale/viewporter，分数缩放效果由合成器重采样。没有通用遮挡检测或显式
-锁屏通知；依赖合成器是否抑制不可见 surface 的帧回调，不能保证所有桌面都自动暂停。
+fractional-scale/viewporter，分数缩放效果由合成器重采样。没有通用的任意遮挡通知。现在宿主被动观察 ScreenSaver/logind 锁屏与休眠状态；未提供
+这些服务时记录能力不足并保持基础播放。关屏仍依赖合成器抑制不可见 surface 的帧回调，
+不能保证所有桌面都自动暂停。验证范围见[可靠性报告](wallpaper-reliability-2026-11-17.md)。
 
 ## 验证入口
 

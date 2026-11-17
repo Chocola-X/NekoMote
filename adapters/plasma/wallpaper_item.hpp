@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nekomote/host_session/monitor.hpp>
+
 #include <QPointer>
 #include <QQuickItem>
 #include <QString>
@@ -89,6 +91,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void stop_timer();
 
     std::shared_ptr<nekomote::qt_quick::WallpaperState> state_;
+    nekomote::host_session::Monitor session_monitor_;
+    bool session_unavailable_{false};
     bool paused_{false};
     bool effective_paused_{true};
     bool diagnostic_inputs_{false}, diagnostic_notification_{false};

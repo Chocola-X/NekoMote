@@ -33,7 +33,7 @@ set_target_properties(nekomote_plasma_qml PROPERTIES
     INSTALL_RPATH "")
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nekomote_plasma_qml PUBLIC
-    nekomote::host_qt_quick Qt6::Quick Qt6::OpenGL)
+    nekomote::host_qt_quick nekomote::host_session Qt6::Quick Qt6::OpenGL)
 target_link_libraries(nekomote_plasma_qml PRIVATE nekomote_warnings)
 
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.5)
@@ -120,6 +120,8 @@ endif() # NEKOMOTE_BUILD_PLASMA_PROBE
 
 # These contracts need Qt Quick, not the optional KPackage diagnostic host.
 if(NEKOMOTE_BUILD_TESTS)
+    add_executable(nekomote_plasma_session_test ../../tests/render/plasma_session.cpp)
+    target_link_libraries(nekomote_plasma_session_test PRIVATE nekomote::plasma_qml Qt6::Quick nekomote_warnings)
     add_executable(nekomote_plasma_frame_pacing ../../tests/render/plasma_frame_pacing.cpp)
     target_link_libraries(nekomote_plasma_frame_pacing PRIVATE
         nekomote::plasma_qml Qt6::Quick nekomote_warnings)

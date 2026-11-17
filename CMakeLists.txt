@@ -90,6 +90,9 @@ if(NEKOMOTE_BUILD_QT_QUICK)
     endif()
 endif()
 
+if(NEKOMOTE_BUILD_X11 OR NEKOMOTE_BUILD_LAYER_SHELL OR NEKOMOTE_BUILD_PLASMA)
+    add_subdirectory(src/host_session)
+endif()
 add_subdirectory(src/host_gpu)
 add_subdirectory(src/model)
 add_subdirectory(src/runtime)
@@ -227,6 +230,15 @@ if(NEKOMOTE_BUILD_TESTS)
             ENVIRONMENT "NEKOMOTE_TEST_MODEL=${CMAKE_SOURCE_DIR}/assets/characters/coconut/casual/model.nkm;NEKOMOTE_TEST_SESSION=${CMAKE_SOURCE_DIR}/assets/characters/coconut/casual/session.nks.json;NEKOMOTE_PLASMA_PROBE=$<TARGET_FILE:nekomote_plasma_package_probe>;NEKOMOTE_PLASMA_STAGE=${CMAKE_BINARY_DIR}/adapters/plasma/stage;NEKOMOTE_EVIDENCE_DIR=${CMAKE_BINARY_DIR}/evidence/plasma-tests")
     endif()
     if(Python3_Interpreter_FOUND)
+        if(TARGET nekomote_session_probe)
+            find_program(NEKOMOTE_DBUS_DAEMON dbus-daemon)
+            if(NEKOMOTE_DBUS_DAEMON)
+                add_test(NAME host_session_contract
+                    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/host_session/test_monitor.py
+                        --probe $<TARGET_FILE:nekomote_session_probe>)
+                set_tests_properties(host_session_contract PROPERTIES TIMEOUT 45)
+            endif()
+        endif()
         add_test(NAME python_tools
             COMMAND ${Python3_EXECUTABLE} -m unittest discover -s ${CMAKE_SOURCE_DIR}/tests/reference_capture
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

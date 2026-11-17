@@ -1,0 +1,54 @@
+{
+  "scope": "private KWin virtual outputs; no physical power or login lock",
+  "cases": [
+    {
+      "name": "layer-opengl-before",
+      "active_cpu_seconds": 0.23,
+      "locked_cpu_seconds": 0.21,
+      "resumed_cpu_seconds": 0.2
+    },
+    {
+      "name": "layer-opengl-after",
+      "active_cpu_seconds": 0.26,
+      "locked_cpu_seconds": 0.0,
+      "resumed_cpu_seconds": 0.33
+    },
+    {
+      "name": "layer-vulkan-before",
+      "active_cpu_seconds": 0.15,
+      "locked_cpu_seconds": 0.18,
+      "resumed_cpu_seconds": 0.17
+    },
+    {
+      "name": "layer-vulkan-after",
+      "active_cpu_seconds": 0.17,
+      "locked_cpu_seconds": 0.0,
+      "resumed_cpu_seconds": 0.19
+    },
+    {
+      "name": "x11-opengl-before",
+      "active_cpu_seconds": 0.2,
+      "locked_cpu_seconds": 0.17,
+      "resumed_cpu_seconds": 0.15
+    },
+    {
+      "name": "x11-opengl-after",
+      "active_cpu_seconds": 0.2,
+      "locked_cpu_seconds": 0.0,
+      "resumed_cpu_seconds": 0.16
+    },
+    {
+      "name": "x11-vulkan-before",
+      "active_cpu_seconds": 0.17,
+      "locked_cpu_seconds": 0.19,
+      "resumed_cpu_seconds": 0.18
+    },
+    {
+      "name": "x11-vulkan-after",
+      "active_cpu_seconds": 0.2,
+      "locked_cpu_seconds": 0.0,
+      "resumed_cpu_seconds": 0.22
+    }
+  ],
+  "passed": true
+}

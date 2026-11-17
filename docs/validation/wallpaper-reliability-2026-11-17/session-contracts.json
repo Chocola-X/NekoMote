@@ -1,0 +1,22 @@
+{
+  "scope": "private KWin virtual outputs; no physical power or login lock",
+  "cases": [
+    {
+      "name": "plasma-opengl",
+      "passed": true
+    },
+    {
+      "name": "plasma-vulkan",
+      "passed": true
+    },
+    {
+      "name": "virtual-output-dpms",
+      "active_cpu_seconds": 0.29,
+      "off_cpu_seconds": 0.26,
+      "on_cpu_seconds": 0.3,
+      "supported": false,
+      "skipped_reason": "KWin virtual outputs report DPMS supported(0)"
+    }
+  ],
+  "passed": true
+}

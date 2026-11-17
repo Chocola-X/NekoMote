@@ -3,6 +3,7 @@
 #include "nekomote/abi.h"
 
 #include <nekomote/host_gpu/gpu.hpp>
+#include <nekomote/host_session/monitor.hpp>
 
 #include <GL/gl.h>
 #include <GL/glx.h>
@@ -11,6 +12,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/extensions/dpms.h>
 #include <X11/extensions/shape.h>
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "nekomote/host_vulkan/host.h"
@@ -251,6 +253,7 @@ class Host::Impl
     void render();
     void capture();
     void set_mapped(bool mapped);
+    void refresh_availability();
 
     Options options_;
     Display* display_ = nullptr;
@@ -266,6 +269,10 @@ class Host::Impl
     Output output_;
     int width_ = 0, height_ = 0;
     bool mapped_ = false, closed_ = false;
+    std::unique_ptr<nekomote::host_session::Monitor> session_monitor_;
+    bool host_unavailable_ = true;
+    bool power_off_ = false, dpms_supported_ = false, session_unavailable_ = false;
+    Clock::time_point next_power_query_{};
     uint64_t rendered_frames_ = 0;
     Clock::time_point last_frame_{}, next_frame_{};
     bool idle_wait_{false};
@@ -281,6 +288,9 @@ void Host::Impl::initialize_display()
     if (!XRRQueryExtension(display_, &randr_event_, &error_base) ||
         !XRRQueryVersion(display_, &major, &minor) || major < 1 || (major == 1 && minor < 3))
         throw std::runtime_error("XRandR 1.3 or newer is required");
+    int dpms_event = 0, dpms_error = 0;
+    dpms_supported_ =
+        DPMSQueryExtension(display_, &dpms_event, &dpms_error) && DPMSCapable(display_);
     const auto available = outputs(display_, root_);
     if (options_.list_outputs)
     {
@@ -558,9 +568,29 @@ void Host::Impl::set_mapped(bool mapped)
     if (mapped_ == mapped)
         return;
     mapped_ = mapped;
-    check(nekomote_wallpaper_set_output_available(wallpaper_, mapped_), "set host availability");
+    refresh_availability();
+}
+
+void Host::Impl::refresh_availability()
+{
+    if (Clock::now() >= next_power_query_)
+    {
+        next_power_query_ = Clock::now() + std::chrono::seconds(1);
+        CARD16 power = DPMSModeOn;
+        BOOL enabled = False;
+        session_unavailable_ = session_monitor_ && session_monitor_->poll();
+        if (dpms_supported_ && DPMSInfo(display_, &power, &enabled))
+            power_off_ = enabled && power != DPMSModeOn;
+    }
+    const bool unavailable = !mapped_ || power_off_ || session_unavailable_;
+    if (!wallpaper_ || host_unavailable_ == unavailable)
+        return;
+    host_unavailable_ = unavailable;
+    check(nekomote_wallpaper_set_output_available(wallpaper_, !unavailable),
+          "set host availability");
     check(nekomote_wallpaper_advance(wallpaper_, 0), "flush host availability audio commands");
     last_frame_ = next_frame_ = Clock::now();
+    std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
 }
 
 void Host::Impl::update_output()
@@ -799,6 +829,7 @@ void Host::Impl::run()
     validate_wm();
     create_window();
     initialize_wallpaper();
+    session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     last_frame_ = next_frame_ = Clock::now();
     while (!closed_ && !stop_requested)
     {
@@ -819,17 +850,19 @@ void Host::Impl::run()
         }
         if (closed_ || stop_requested)
             break;
+        refresh_availability();
         if (idle_wait_ &&
             (nekomote_wallpaper_needs_render(wallpaper_) || !nekomote_wallpaper_paused(wallpaper_)))
             next_frame_ = Clock::now();
-        if (mapped_ && width_ > 0 && height_ > 0 && Clock::now() >= next_frame_)
+        if (!host_unavailable_ && width_ > 0 && height_ > 0 && Clock::now() >= next_frame_)
             render();
         if (closed_ || XPending(display_))
             continue;
         const auto wait =
             std::chrono::ceil<std::chrono::milliseconds>(next_frame_ - Clock::now()).count();
         // Bound signal latency even when unmapped. No per-frame XSync/glFinish.
-        const int timeout = mapped_ ? static_cast<int>(std::clamp<int64_t>(wait, 0, 250)) : 250;
+        const int timeout =
+            !host_unavailable_ ? static_cast<int>(std::clamp<int64_t>(wait, 0, 250)) : 1000;
         pollfd descriptor{ConnectionNumber(display_), POLLIN, 0};
         const int result = poll(&descriptor, 1, timeout);
         if (result < 0 && errno != EINTR)

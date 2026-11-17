@@ -41,6 +41,7 @@ https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 - Python 3 + Jinja2（GL loader 生成）
 - libpng 1.6 开发包 + zlib
 - pkg-config + libpulse ≥ 13.99 开发包（音频）
+- X11 / layer-shell / Plasma 构建另需 libdbus ≥ 1.12 开发包（被动会话状态通知）
 - 首次配置需联网（CMake FetchContent 拉取固定版本依赖）
 
 运行时：

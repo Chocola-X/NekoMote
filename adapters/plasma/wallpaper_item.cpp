@@ -36,6 +36,19 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
                 update();
             });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
+    auto* session_timer = new QTimer(this);
+    session_timer->setInterval(1000);
+    connect(session_timer, &QTimer::timeout, this,
+            [this]
+            {
+                const bool unavailable = session_monitor_.poll();
+                if (session_unavailable_ != unavailable)
+                {
+                    session_unavailable_ = unavailable;
+                    refresh_playback();
+                }
+            });
+    session_timer->start();
     state_->profile = qEnvironmentVariableIntValue("NEKOMOTE_QT_PROFILE") == 1;
     if (state_->profile)
     {
@@ -423,8 +436,8 @@ bool NekoWallpaperItem::eventFilter(QObject* watched, QEvent* event)
 
 void NekoWallpaperItem::refresh_playback()
 {
-    const bool suspended = paused_ || status_ != 1 || !backend_checked_ || !isVisible() ||
-                           !host_window_ || !host_window_->isVisible() ||
+    const bool suspended = session_unavailable_ || paused_ || status_ != 1 || !backend_checked_ ||
+                           !isVisible() || !host_window_ || !host_window_->isVisible() ||
                            !host_window_->isExposed();
     if (suspended != effective_paused_)
     {

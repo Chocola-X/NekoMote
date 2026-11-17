@@ -4,7 +4,7 @@ FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2faf
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git gcc-10 g++-10 make ninja-build pkg-config binutils \
-      libpng-dev zlib1g-dev libpulse-dev libfontconfig1-dev libgl1-mesa-dev \
+      libpng-dev zlib1g-dev dbus libdbus-1-dev libpulse-dev libfontconfig1-dev libgl1-mesa-dev \
       libx11-dev libxrandr-dev libxext-dev libxinerama-dev libxcursor-dev libxi-dev \
       libwayland-dev libxkbcommon-dev libvulkan-dev glslang-tools \
       qtbase5-dev qtdeclarative5-dev libqt5opengl5-dev qttools5-dev qttools5-dev-tools \
