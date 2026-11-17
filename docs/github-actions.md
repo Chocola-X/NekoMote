@@ -6,6 +6,24 @@
 包内原生模块导入，清空全局 QML 搜索路径。结构、安装证据与商店上架边界见
 [KPackage分发](plasma-kpackage-distribution.md)。
 
+## 2026-11-17：GPU 宿主测试构建清单补修
+
+基线 `accd011`。用户提供的 `experiments/evidence-x11-x86_64.zip` 中编译已成功，
+257 项必选测试只有 `host_gpu_selection` 未运行：CTest 已注册测试，但 CI 的显式
+目标清单未构建 `nekomote_host_gpu_tests`。现在将它加入五种模式共用的目标清单。
+同时将仅为预览渲染测试启用 Vulkan 宿主的条件限定为测试与预览均开启，避免
+Plasma5/6 注册不属于该构建模式的 `host_vulkan_failures`；独立程序保留该测试。
+
+本机使用 CI 的实际参数与目标清单，在全新目录完成 X11 Release/LTO/Werror
+构建，257 项必选 CTest 全部通过。native20、X11、layer-shell、Plasma5、Plasma6
+均完成全新配置、必选测试二进制的构建依赖核对，以及共 8 项 GPU 宿主定向测试。
+本地证据保存在 `build/evidence/ci-gpu-target-20261117/`，包括
+`mode-validation.json`、各模式日志及 `x11-full-tests.xml`。
+
+验证使用本机工具链与已有固定依赖源码，Qt5 LinguistTools 仅解压到证据目录；
+未安装系统包，未重跑完整基线容器、打包审计、ARM64 或远端 Actions。
+本次只调整构建目标与模块启用条件，没有修改运行时或帧路径。
+
 ## 2026-11-11：Qt6.4 最终包导入补修
 
 `8ca7c89` 的 Plasma6 双架构编译、258 项 CTest 均通过，但最终包导入在
