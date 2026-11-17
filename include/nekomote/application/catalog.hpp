@@ -154,6 +154,14 @@ struct AssetCatalog
     const BackgroundEntry* find_background(const std::string& name) const;
 };
 
+enum class FpsPosition
+{
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+};
+
 struct WallpaperConfig
 {
     std::string character;
@@ -163,6 +171,8 @@ struct WallpaperConfig
     float origin_x{0};
     float origin_y{400};
     int fps{60};
+    bool show_fps{false};
+    FpsPosition fps_position{FpsPosition::TopLeft};
     bool mute{false};
     float volume{0.5f};
     bool lock_transform{false};

@@ -8,6 +8,7 @@
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
+#include <nekomote/ui/fps_overlay.hpp>
 #include <nekomote/ui/layout.hpp>
 
 #include <glad/gl.h>
@@ -1568,4 +1569,35 @@ TEST_CASE("GPU index revisions preserve animation, validation and resource inval
             return renderer.capture({output.framebuffer, 64, 64});
         },
         [&](RenderFrame frame) { renderer.prepare(frame); }, reserve);
+}
+
+TEST_CASE("FPS outline stays in one text batch without warmed C++ allocations", "[gpu][ui][fps]")
+{
+    Context context;
+    render_gl::Renderer loader(glfwGetProcAddress);
+    Output output;
+    output.resize(320, 180);
+    render_gl::UiRenderer painter;
+    REQUIRE(painter.init(320, 180));
+    REQUIRE(painter.init_font("", 36));
+    REQUIRE(painter.font()->prepare_text("0123456789. FPS"));
+    painter.set_render_target(output.framebuffer);
+    for (int i = 0; i < 10; ++i)
+    {
+        painter.begin_frame();
+        ui::draw_fps_overlay(painter, application::FpsPosition::TopLeft, 99999.9);
+        painter.end_frame();
+    }
+    allocation_count = 0;
+    track_allocations = true;
+    for (int i = 0; i < 120; ++i)
+    {
+        painter.begin_frame();
+        ui::draw_fps_overlay(painter, application::FpsPosition::BottomRight, 59.0 + i * 0.1);
+        painter.end_frame();
+    }
+    track_allocations = false;
+    REQUIRE(allocation_count == 0);
+    REQUIRE(painter.draw_call_count() == 1);
+    REQUIRE(glGetError() == GL_NO_ERROR);
 }

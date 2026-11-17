@@ -1,11 +1,13 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <nekomote/ui/fps_overlay.hpp>
 #include <nekomote/ui/menu.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -27,6 +29,7 @@ class RecordingPainter : public Painter
         float x;
         float y;
         std::string text;
+        Color color;
     };
     std::vector<TextCall> texts;
     struct Rect
@@ -49,9 +52,9 @@ class RecordingPainter : public Painter
     {
         rects.push_back({x, y, w, h});
     }
-    void draw_text(float x, float y, const char* text, float, Color) override
+    void draw_text(float x, float y, const char* text, float, Color color) override
     {
-        texts.push_back({x, y, text});
+        texts.push_back({x, y, text, color});
     }
     void draw_icon(float, float, float, float, std::uint32_t, Color) override
     {
@@ -672,4 +675,96 @@ TEST_CASE("Volume release applies its final position without an intermediate mov
     REQUIRE(fixture.menu.volume == Catch::Approx(.9f));
     REQUIRE(fixture.controller.config().volume == Catch::Approx(.9f));
     REQUIRE_FALSE(fixture.menu.volume_dragging);
+}
+
+TEST_CASE("FPS measurement uses rendered intervals and resets across inactivity", "[fps][ui_menu]")
+{
+    nekomote::application::FrameRate rate;
+    REQUIRE(rate.observe(10) == 0);
+    for (int i = 1; i <= 30; ++i)
+        rate.observe(10 + static_cast<double>(i) / 60);
+    REQUIRE(rate.observe(10.5) == Catch::Approx(60));
+    REQUIRE(rate.observe(20) == 0);
+    for (int i = 1; i <= 8; ++i)
+        rate.observe(20 + static_cast<double>(i) / 30);
+    REQUIRE(rate.observe(20.27) == Catch::Approx(30));
+    REQUIRE(rate.observe(1) == 0);
+    REQUIRE(rate.observe(std::numeric_limits<double>::quiet_NaN()) == 0);
+    rate.reset();
+    REQUIRE(rate.observe(100) == 0);
+}
+
+TEST_CASE("FPS settings reveal positions and save only user actions", "[ui_menu][config][fps]")
+{
+    MenuFixture fixture;
+    fixture.painter.vh = 2000;
+    const auto path = fixture.root / "panel.json";
+    fixture.controller.load_config(path);
+    fixture.click_drawer(2);
+    REQUIRE(fixture.painter.contains("Show FPS"));
+    REQUIRE_FALSE(fixture.painter.contains("Top left"));
+    REQUIRE_FALSE(fs::exists(path));
+    const auto toggle = *fixture.painter.find("Show FPS");
+    fixture.ctx.mouse_move(toggle.x + 20, toggle.y + 7);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    REQUIRE(fixture.painter.contains("Top left"));
+    REQUIRE(fixture.painter.contains("Bottom right"));
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).show_fps);
+    const auto corner = *fixture.painter.find("Bottom right");
+    fixture.ctx.mouse_move(corner.x + 20, corner.y + 7);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).fps_position ==
+            nekomote::application::FpsPosition::BottomRight);
+    fixture.ctx.mouse_button(0, 0);
+    fixture.render();
+    fixture.controller.set_no_save(true);
+    fixture.ctx.mouse_move(toggle.x + 20, toggle.y + 7);
+    fixture.ctx.mouse_button(0, 1);
+    fixture.render();
+    REQUIRE_FALSE(fixture.controller.config().show_fps);
+    REQUIRE(nekomote::application::WallpaperConfig::load(path).show_fps);
+}
+
+TEST_CASE("FPS overlay draws rounded pink text with white outline at four corners",
+          "[fps][font][ui_menu]")
+{
+    RecordingPainter painter;
+    FontMetrics font;
+    if (!font.init("", 36))
+        SKIP("No system font for FPS text metrics");
+    REQUIRE(font.prepare_text("0123456789. FPS"));
+    painter.metrics = &font;
+    using nekomote::application::FpsPosition;
+    for (auto position : {FpsPosition::TopLeft, FpsPosition::TopRight, FpsPosition::BottomLeft,
+                          FpsPosition::BottomRight})
+    {
+        painter.texts.clear();
+        draw_fps_overlay(painter, position, 59.96);
+        REQUIRE(painter.texts.size() == 9);
+        const auto& fill = painter.texts.back();
+        REQUIRE(fill.text == "60.0 FPS");
+        REQUIRE(fill.color == Style{}.reset_text);
+        for (std::size_t i = 0; i < 8; ++i)
+            REQUIRE(painter.texts[i].color == Color(1, 1, 1, 1));
+        const bool right =
+            position == FpsPosition::TopRight || position == FpsPosition::BottomRight;
+        const bool bottom =
+            position == FpsPosition::BottomLeft || position == FpsPosition::BottomRight;
+        REQUIRE((fill.x > 400) == right);
+        REQUIRE((fill.y > 540) == bottom);
+        REQUIRE(fill.x + font.text_width(fill.text.c_str(), 18) <= 800.0f);
+        REQUIRE(fill.y + 18 * 1.3f <= 1080.0f);
+    }
+    painter.texts.clear();
+    draw_fps_overlay(painter, FpsPosition::TopLeft, 59.94);
+    REQUIRE(painter.texts.back().text == "59.9 FPS");
+    painter.texts.clear();
+    FpsOverlay overlay;
+    nekomote::application::WallpaperConfig config;
+    overlay.render(painter, config);
+    REQUIRE(painter.texts.empty());
 }

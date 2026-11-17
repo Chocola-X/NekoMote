@@ -189,15 +189,21 @@ TEST_CASE("Panel config has a strict schema and never saves launch dimensions", 
     WallpaperConfig config;
     const auto path = fixture.root / "panel.json";
     config.fps = 90;
+    config.show_fps = true;
+    config.fps_position = FpsPosition::BottomRight;
     config.save(path);
     const auto json = nlohmann::json::parse(std::ifstream(path));
     REQUIRE(json["version"] == 1);
     REQUIRE_FALSE(json.contains("width"));
     REQUIRE_FALSE(json.contains("height"));
     REQUIRE(WallpaperConfig::load(path).fps == 90);
+    REQUIRE(WallpaperConfig::load(path).show_fps);
+    REQUIRE(WallpaperConfig::load(path).fps_position == FpsPosition::BottomRight);
     for (const auto* document :
          {R"({"fps":30})", R"({"version":2})", R"({"version":1,"assets_dir":"a"})",
-          R"({"version":1,"fps":1})", R"({"version":1,"mute":1})", R"({"version":1,"scale":0})",
+          R"({"version":1,"show_fps":1})", R"({"version":1,"fps_position":"center"})",
+          R"({"version":1,"fps_position":1})", R"({"version":1,"fps":1})",
+          R"({"version":1,"mute":1})", R"({"version":1,"scale":0})",
           R"({"version":1,"language":"invalid"})", R"({"version":1,"transform_saved":true})"})
     {
         INFO(document);

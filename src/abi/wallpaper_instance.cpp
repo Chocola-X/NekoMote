@@ -259,6 +259,8 @@ nekomote_error WallpaperInstance::set_output_size(int width, int height)
 
 nekomote_error WallpaperInstance::set_paused(bool paused)
 {
+    if (paused_ != paused)
+        fps_overlay_.reset();
     paused_ = paused;
     if (paused)
     {
@@ -272,6 +274,8 @@ nekomote_error WallpaperInstance::set_paused(bool paused)
 
 nekomote_error WallpaperInstance::set_output_available(bool available)
 {
+    if (output_unavailable_ != !available)
+        fps_overlay_.reset();
     output_unavailable_ = !available;
     if (!available)
     {
@@ -304,6 +308,7 @@ void WallpaperInstance::set_render_target_fbo(std::uint32_t fbo)
 
 void WallpaperInstance::reset_gpu_resources()
 {
+    fps_overlay_.reset();
 #if defined(NEKOMOTE_HAS_VULKAN)
     vk_target_set_ = false;
 #endif
@@ -1023,6 +1028,7 @@ void WallpaperInstance::draw_ui(float dt)
     if (!panel_.sidebar.open)
         panel_.volume_dragging = false;
     ui_context_.begin_frame();
+    fps_overlay_.render(*painter(), controller_.config());
     if (ui_context_.toggle_icon(panel_.icon, panel_.icon_texture))
         panel_.sidebar.open = !panel_.sidebar.open;
     ui_context_.sidebar(panel_.sidebar, dt);

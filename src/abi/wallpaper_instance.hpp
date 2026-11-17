@@ -5,6 +5,7 @@
 #include <nekomote/model/audio_clip.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
+#include <nekomote/ui/fps_overlay.hpp>
 #include <nekomote/ui/layout.hpp>
 
 #include <nekomote/abi.h>
@@ -144,6 +145,7 @@ class WallpaperInstance
     render_vk::UiRenderer vk_ui_renderer_;
 #endif
     ui::Context ui_context_;
+    ui::FpsOverlay fps_overlay_;
     WallpaperPanelState panel_;
 
     TextureId current_background_id_{0};

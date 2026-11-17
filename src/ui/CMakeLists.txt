@@ -1,4 +1,4 @@
-add_library(nekomote_ui STATIC easing.cpp font.cpp layout.cpp menu.cpp)
+add_library(nekomote_ui STATIC easing.cpp font.cpp layout.cpp menu.cpp fps_overlay.cpp)
 add_library(nekomote::ui ALIAS nekomote_ui)
 target_include_directories(nekomote_ui PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(nekomote_ui PUBLIC nekomote::application)

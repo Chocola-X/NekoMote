@@ -394,6 +394,8 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
                               "origin_x",
                               "origin_y",
                               "fps",
+                              "show_fps",
+                              "fps_position",
                               "mute",
                               "volume",
                               "fit",
@@ -459,7 +461,24 @@ WallpaperConfig WallpaperConfig::load(const fs::path& path)
             fail("fps");
         config.fps = json["fps"].get<int>();
     }
+    if (json.contains("fps_position"))
+    {
+        if (!json["fps_position"].is_string())
+            fail("fps_position");
+        const auto position = json["fps_position"].get<std::string>();
+        if (position == "top_left")
+            config.fps_position = FpsPosition::TopLeft;
+        else if (position == "top_right")
+            config.fps_position = FpsPosition::TopRight;
+        else if (position == "bottom_left")
+            config.fps_position = FpsPosition::BottomLeft;
+        else if (position == "bottom_right")
+            config.fps_position = FpsPosition::BottomRight;
+        else
+            fail("fps_position");
+    }
     for (auto [key, value] : {std::pair{"mute", &config.mute},
+                              {"show_fps", &config.show_fps},
                               {"lock_transform", &config.lock_transform},
                               {"fit", &config.fit},
                               {"transform_saved", &config.transform_saved},
@@ -508,6 +527,24 @@ void WallpaperConfig::save(const fs::path& path) const
     json["origin_x"] = origin_x;
     json["origin_y"] = origin_y;
     json["fps"] = fps;
+    json["show_fps"] = show_fps;
+    switch (fps_position)
+    {
+        case FpsPosition::TopLeft:
+            json["fps_position"] = "top_left";
+            break;
+        case FpsPosition::TopRight:
+            json["fps_position"] = "top_right";
+            break;
+        case FpsPosition::BottomLeft:
+            json["fps_position"] = "bottom_left";
+            break;
+        case FpsPosition::BottomRight:
+            json["fps_position"] = "bottom_right";
+            break;
+        default:
+            throw std::invalid_argument(path.string() + ": invalid FPS position");
+    }
     json["mute"] = mute;
     json["volume"] = volume;
     json["lock_transform"] = lock_transform;

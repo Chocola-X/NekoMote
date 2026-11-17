@@ -1,0 +1,279 @@
+{
+  "source_base": "5d5a45dbffc11c81bc30ded54bd8047afdc115cc",
+  "changes": "Uncommitted FPS overlay implementation in this workspace",
+  "environment": "Xeon E5-1680 v4 / RTX 3080 Ti / NVIDIA 580.82.09 / KDE X11; Release -O3 LTO player",
+  "measurement": "OpenGL; chocola/date-a; 1920x1080; 60 FPS; flat background; fit; muted; closed controls; seed 1; 120 warmup + 300 measured frames; 3 runs per state; no readback/profiler in measurement",
+  "scope": "CPU advance+prepare+GL submission including UI, not completed GPU time; frame loop including swap/wait, not scanout; clocks not locked; no process CPU/RSS/VRAM/power certification",
+  "runs": [
+    {
+      "run": 0,
+      "enabled": false,
+      "cpu_ms": {
+        "p50": 1.907237,
+        "p95": 2.306385,
+        "p99": 2.962483
+      },
+      "fps": 59.655,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/off.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ],
+      "note": "Initial run and first repeat excluded due to overlapping validation work; final repeat isolated."
+    },
+    {
+      "run": 0,
+      "enabled": true,
+      "cpu_ms": {
+        "p50": 0.853679,
+        "p95": 1.895031,
+        "p99": 2.260546
+      },
+      "fps": 59.684,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/bottom_left.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ]
+    },
+    {
+      "run": 1,
+      "enabled": true,
+      "cpu_ms": {
+        "p50": 1.491774,
+        "p95": 1.866334,
+        "p99": 2.052693
+      },
+      "fps": 59.647,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/bottom_left.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ]
+    },
+    {
+      "run": 1,
+      "enabled": false,
+      "cpu_ms": {
+        "p50": 0.7685,
+        "p95": 1.983346,
+        "p99": 2.198734
+      },
+      "fps": 59.696,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/off.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ]
+    },
+    {
+      "run": 2,
+      "enabled": false,
+      "cpu_ms": {
+        "p50": 1.268157,
+        "p95": 2.112382,
+        "p99": 2.373828
+      },
+      "fps": 59.676,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/off.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ]
+    },
+    {
+      "run": 2,
+      "enabled": true,
+      "cpu_ms": {
+        "p50": 1.142522,
+        "p95": 1.959245,
+        "p99": 2.301891
+      },
+      "fps": 59.67,
+      "command": [
+        "build/release/bin/nekomote_player",
+        "--assets",
+        "assets",
+        "--character",
+        "chocola/date-a",
+        "--backend",
+        "opengl",
+        "--state",
+        "experiments/fps-overlay-2026-11-17/bottom_left.json",
+        "--no-save",
+        "--mute",
+        "--fit",
+        "--width",
+        "1920",
+        "--height",
+        "1080",
+        "--fps",
+        "60",
+        "--seed",
+        "1",
+        "--measure-frames",
+        "300"
+      ]
+    }
+  ],
+  "tests": {
+    "cpu": {
+      "passed": 261,
+      "skipped": 1
+    },
+    "abi_boundary": {
+      "passed": 14
+    },
+    "gl_gpu": {
+      "passed": 29
+    },
+    "vulkan_gpu": {
+      "passed": 17
+    }
+  },
+  "fps_gl_allocations": {
+    "ordinary_cpp_new_and_new_array": 0,
+    "warmup_frames": 10,
+    "measured_frames": 120,
+    "text_batches_per_frame": 1,
+    "scope": "draw_fps_overlay + OpenGL UI begin/end; excludes driver malloc and other threads; Vulkan allocation behavior not separately measured"
+  },
+  "image_audit": {
+    "size": [
+      960,
+      540
+    ],
+    "fixed_steps": 120,
+    "seed": 1,
+    "changed_bounds_vs_disabled": {
+      "top_left": [
+        11,
+        16,
+        74,
+        33
+      ],
+      "top_right": [
+        887,
+        16,
+        949,
+        33
+      ],
+      "bottom_left": [
+        11,
+        508,
+        74,
+        525
+      ],
+      "bottom_right": [
+        887,
+        508,
+        949,
+        525
+      ]
+    },
+    "matching_gl_vulkan_bottom_left": true,
+    "scope": "One model at one fixed step; capture UI drawn once gives initial 0.0 FPS"
+  },
+  "uncovered": [
+    "Real Plasma desktop install/reload",
+    "Long-term and multi-output",
+    "Other hardware/drivers",
+    "Physical presentation FPS",
+    "Whole-application allocation certification"
+  ]
+}

@@ -9,6 +9,7 @@
 #include <nekomote/host_gpu/gpu.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
+#include <nekomote/ui/fps_overlay.hpp>
 #include <nekomote/ui/layout.hpp>
 #include <nekomote/ui/menu.hpp>
 
@@ -987,6 +988,7 @@ int run(int argc, char** argv)
     surface.locked = controller.config().lock_transform;
     player::BackendUiRenderer ui_renderer;
     ui::Context ui_context;
+    ui::FpsOverlay fps_overlay;
     ui::IconState ui_icon{};
     ui::SidebarState ui_sidebar{};
     if (o.ui_open)
@@ -1395,6 +1397,8 @@ int run(int argc, char** argv)
         if (ui_ready && (o.capture.empty() || !o.capture_ui.empty()) && o.check_window.empty())
         {
             ui_context.begin_frame();
+            if (auto* p = ui_renderer.painter())
+                fps_overlay.render(*p, controller.config());
 
             if (ui_context.toggle_icon(ui_icon, ui_icon_texture))
                 ui_sidebar.open = !ui_sidebar.open;

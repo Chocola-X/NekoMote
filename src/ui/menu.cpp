@@ -46,6 +46,10 @@ struct UiStrings
     const char* dynamic_bg;
     const char* author_line;
     const char* github_line;
+    const char* fps_display;
+    const char* enable_fps;
+    const char* fps_position;
+    const char* corners[4];
 };
 
 constexpr UiStrings kStringsEn{"Background",
@@ -62,7 +66,11 @@ constexpr UiStrings kStringsEn{"Background",
                                "Static backgrounds",
                                "Dynamic backgrounds",
                                "Author: GTX690战术核显卡导弹",
-                               "GitHub project: NekoMote"};
+                               "GitHub project: NekoMote",
+                               "FPS display",
+                               "Show FPS",
+                               "Position",
+                               {"Top left", "Top right", "Bottom left", "Bottom right"}};
 constexpr UiStrings kStringsZhCn{"背景选择",
                                  "设置",
                                  "语言",
@@ -77,7 +85,11 @@ constexpr UiStrings kStringsZhCn{"背景选择",
                                  "固定背景",
                                  "动态背景",
                                  "作者：GTX690战术核显卡导弹",
-                                 "Github项目：NekoMote"};
+                                 "Github项目：NekoMote",
+                                 "帧数显示",
+                                 "开启帧数显示",
+                                 "帧数显示位置",
+                                 {"左上角", "右上角", "左下角", "右下角"}};
 constexpr UiStrings kStringsZhTw{"背景選擇",
                                  "設定",
                                  "語言",
@@ -92,7 +104,11 @@ constexpr UiStrings kStringsZhTw{"背景選擇",
                                  "固定背景",
                                  "動態背景",
                                  "作者：GTX690战术核显卡导弹",
-                                 "Github項目：NekoMote"};
+                                 "Github項目：NekoMote",
+                                 "幀數顯示",
+                                 "開啟幀數顯示",
+                                 "幀數顯示位置",
+                                 {"左上角", "右上角", "左下角", "右下角"}};
 constexpr UiStrings kStringsJa{"背景",
                                "設定",
                                "言語",
@@ -107,7 +123,11 @@ constexpr UiStrings kStringsJa{"背景",
                                "静止画背景",
                                "動的背景",
                                "作者：GTX690战术核显卡导弹",
-                               "GitHubプロジェクト：NekoMote"};
+                               "GitHubプロジェクト：NekoMote",
+                               "FPS表示",
+                               "FPSを表示",
+                               "表示位置",
+                               {"左上", "右上", "左下", "右下"}};
 
 const UiStrings& ui_strings(application::Language lang) noexcept
 {
@@ -128,7 +148,7 @@ const UiStrings& ui_strings(application::Language lang) noexcept
 
 bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catalog)
 {
-    std::string text = "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ 0123456789% : ： ";
+    std::string text = "NekoMote Wallpaper English 简体中文 繁體中文 日本語 ∞ 0123456789% . : ： ";
     const auto append = [&text](const auto& value)
     {
         text += value;
@@ -137,12 +157,28 @@ bool prepare_menu_text(FontMetrics& font, const application::AssetCatalog& catal
     for (const auto& option : kFpsOptions)
         append(option.label);
     for (const auto* strings : {&kStringsEn, &kStringsZhCn, &kStringsZhTw, &kStringsJa})
-        for (const auto* label :
-             {strings->background_drawer, strings->settings_drawer, strings->language_section,
-              strings->fps_section, strings->unlimited, strings->recommended,
-              strings->character_section, strings->lock_transform, strings->mute, strings->volume,
-              strings->reset_position, strings->static_bg, strings->dynamic_bg,
-              strings->author_line, strings->github_line})
+        for (const auto* label : {strings->background_drawer,
+                                  strings->settings_drawer,
+                                  strings->language_section,
+                                  strings->fps_section,
+                                  strings->unlimited,
+                                  strings->recommended,
+                                  strings->character_section,
+                                  strings->lock_transform,
+                                  strings->mute,
+                                  strings->volume,
+                                  strings->reset_position,
+                                  strings->static_bg,
+                                  strings->dynamic_bg,
+                                  strings->author_line,
+                                  strings->github_line,
+                                  strings->fps_display,
+                                  strings->enable_fps,
+                                  strings->fps_position,
+                                  strings->corners[0],
+                                  strings->corners[1],
+                                  strings->corners[2],
+                                  strings->corners[3]})
             append(label);
     for (std::size_t i = 0; i < application::kLanguageCount; ++i)
     {
@@ -207,6 +243,9 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
     content_scrollable_h += kDrawerHeaderHeight;
     if (sidebar.expanded_drawer == settings_drawer_index)
     {
+        content_scrollable_h += kSectionHeaderHeight + kSwitchRowHeight;
+        if (controller.config().show_fps)
+            content_scrollable_h += kSectionHeaderHeight + 4.0f * kRadioRowHeight;
         content_scrollable_h += kSectionHeaderHeight + 4.0f * kRadioRowHeight;
         content_scrollable_h +=
             kSectionHeaderHeight + static_cast<float>(std::size(kFpsOptions)) * kRadioRowHeight;
@@ -405,6 +444,40 @@ void build_sidebar(Context& ctx, Painter& painter, const application::AssetCatal
                 }
             }
             curr_y += kRadioRowHeight;
+        }
+
+        if (is_row_visible(curr_y, kSectionHeaderHeight))
+            ctx.section_header(txt.fps_display, sidebar_x, curr_y, sidebar.width,
+                               kSectionHeaderHeight, style);
+        curr_y += kSectionHeaderHeight;
+        if (is_row_visible(curr_y, kSwitchRowHeight) &&
+            ctx.switch_row(txt.enable_fps, controller.config().show_fps, sidebar_x, curr_y,
+                           sidebar.width, kSwitchRowHeight, style))
+        {
+            if (!controller.no_save())
+                controller.save_config(controller.config_path());
+        }
+        curr_y += kSwitchRowHeight;
+        if (controller.config().show_fps)
+        {
+            if (is_row_visible(curr_y, kSectionHeaderHeight))
+                ctx.section_header(txt.fps_position, sidebar_x, curr_y, sidebar.width,
+                                   kSectionHeaderHeight, style);
+            curr_y += kSectionHeaderHeight;
+            for (int corner = 0; corner < 4; ++corner)
+            {
+                const auto position = static_cast<application::FpsPosition>(corner);
+                if (is_row_visible(curr_y, kRadioRowHeight) &&
+                    ctx.radio_row(txt.corners[corner], "",
+                                  controller.config().fps_position == position, sidebar_x, curr_y,
+                                  sidebar.width, kRadioRowHeight, style))
+                {
+                    controller.config().fps_position = position;
+                    if (!controller.no_save())
+                        controller.save_config(controller.config_path());
+                }
+                curr_y += kRadioRowHeight;
+            }
         }
 
         if (is_row_visible(curr_y, kSectionHeaderHeight))

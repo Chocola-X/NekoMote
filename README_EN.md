@@ -21,6 +21,7 @@ License: GNU AGPL-3.0 (see [LICENSE](LICENSE)).
 - Voice and lip-sync (PulseAudio), mutable
 - PNG static backgrounds and time-of-day dynamic backgrounds (day/dusk/night three-phase)
 - Runtime UI control panel: character/background switching, mute toggle, FPS, lock, position adjustment
+- FPS overlay: optional corner placement, pink text with a white outline, updated with one decimal place
 - Configuration persistence: explicitly saved startup settings, panel preferences saved independently and automatically, asset directory read-only
 
 ## System Requirements
