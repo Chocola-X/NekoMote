@@ -280,3 +280,24 @@ TEST_CASE("Layer shell copied launch profiles derive separate panel files",
     REQUIRE_FALSE(std::filesystem::exists(saved.state));
     REQUIRE_FALSE(std::filesystem::exists(copied.state));
 }
+
+TEST_CASE("Layer-shell GPU options are ephemeral and enumeration skips config",
+          "[layer_shell][options][gpu]")
+{
+    const auto options = parse({"--model", "model", "--gpu", "pci:0000:03:00.0"});
+    REQUIRE(options.gpu == "pci:0000:03:00.0");
+    REQUIRE(parse({"--model", "model"}).gpu.empty());
+    const auto missing = environment.root / "gpu-enumeration-does-not-read.json";
+    const auto list = parse({"--list-gpus", "--config", missing.string()});
+    REQUIRE(list.list_gpus);
+    REQUIRE_FALSE(std::filesystem::exists(missing));
+    REQUIRE_THROWS(parse({"--model", "model", "--gpu"}));
+    for (const auto* selector : {"0", "GeForce", "pci:03:00.0", "pci:0000:03:20.0",
+                                 "pci:0000:03:00.8", "pci:0000:03:00.0suffix"})
+        REQUIRE_THROWS(parse({"--model", "model", "--gpu", selector}));
+    const auto output = environment.root / "gpu-save-must-not-create.json";
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--config", output.string(), "--gpu",
+                               "pci:0000:03:00.0", "--save-config"}),
+                        "--gpu is per-process and cannot be combined with --save-config");
+    REQUIRE_FALSE(std::filesystem::exists(output));
+}

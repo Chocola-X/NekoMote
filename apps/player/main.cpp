@@ -6,10 +6,13 @@
 #include <nekomote/asset_io/image.hpp>
 #include <nekomote/asset_io/session_asset.hpp>
 #include <nekomote/audio/device.hpp>
+#include <nekomote/host_gpu/gpu.hpp>
 #include <nekomote/render_gl/renderer.hpp>
 #include <nekomote/render_gl/ui_renderer.hpp>
 #include <nekomote/ui/layout.hpp>
 #include <nekomote/ui/menu.hpp>
+
+#include <EGL/egl.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -50,6 +53,8 @@ struct Options
     fs::path state;
     std::optional<application::LaunchConfig> launch;
     bool save_launch{false};
+    bool list_gpus{false};
+    std::string gpu;
     std::string reaction, character, background_name;
     int width{1920}, height{1080}, steps{0}, measure{0}, fps{0}, ui_drawer{-1};
     bool mute{false}, transparent{false}, fit{false}, no_save{false}, ui_open{false};
@@ -78,10 +83,16 @@ std::optional<Options> options(int argc, char** argv)
                 throw std::runtime_error("missing value for --config");
             launch_path = argv[i];
         }
+        else if (argument == "--list-gpus")
+            o.list_gpus = true;
         else if (argument == "--help")
             help = true;
+        else if (argument != "--save-config" && argument != "--no-save" && argument != "--mute" &&
+                 argument != "--fit" && argument != "--transparent" &&
+                 argument != "--show-touch-regions" && argument != "--ui-open")
+            ++i; // Skip option values during the discovery/config pre-scan.
     }
-    if (!help)
+    if (!help && !o.list_gpus)
     {
         o.launch = application::LaunchConfig::load(application::LaunchKind::Player, launch_path);
         const auto& saved = o.launch->values();
@@ -115,7 +126,11 @@ std::optional<Options> options(int argc, char** argv)
                 throw std::runtime_error("missing value for " + key);
             return argv[i];
         };
-        if (key == "--model")
+        if (key == "--gpu")
+            o.gpu = host_gpu::normalize_selector(value());
+        else if (key == "--list-gpus")
+            o.list_gpus = true;
+        else if (key == "--model")
         {
             o.model = value();
         }
@@ -213,6 +228,7 @@ std::optional<Options> options(int argc, char** argv)
         {
             std::puts(
                 "nekomote_player --assets <dir> [--character name] [--background-name name]\n"
+                "  [--gpu pci:dddd:bb:dd.f] [--list-gpus] (this process only)\n"
                 "  [--config launch.json] [--state panel.json] [--save-config]\n"
                 "  Saved launch settings load first; explicit arguments override them.\n"
                 "  --save-config writes launch settings and exits without opening a window.\n"
@@ -239,6 +255,10 @@ std::optional<Options> options(int argc, char** argv)
         else
             throw std::runtime_error("unknown option " + key);
     }
+    if (o.list_gpus)
+        return o;
+    if (o.save_launch && !o.gpu.empty())
+        throw std::runtime_error("--gpu is process-only and cannot be combined with --save-config");
     if (!o.capture_ui.empty())
     {
         o.capture = o.capture_ui;
@@ -747,6 +767,11 @@ int run(int argc, char** argv)
     if (!parsed)
         return 0;
     auto o = std::move(*parsed);
+    if (o.list_gpus)
+    {
+        host_gpu::list_gpus();
+        return 0;
+    }
     if (o.save_launch)
     {
         auto saved = o.launch->values();
@@ -822,6 +847,8 @@ int run(int argc, char** argv)
             config.fit = o.fit || config.fit;
         }
     }
+    if (!o.vulkan())
+        host_gpu::prepare_opengl(o.gpu, host_gpu::GlPlatform::Egl);
     Glfw glfw;
     std::unique_ptr<GLFWwindow, DestroyWindow> window;
 #if defined(NEKOMOTE_HAS_VULKAN)
@@ -855,7 +882,7 @@ int run(int argc, char** argv)
         if (glfwCreateWindowSurface(vk_host->instance, window.get(), nullptr, &surface) !=
             VK_SUCCESS)
             throw std::runtime_error("failed to create Vulkan surface");
-        vk_host->select_physical_device(surface);
+        vk_host->select_physical_device(surface, o.gpu.empty() ? nullptr : o.gpu.c_str());
         vk_host->create_device();
         vk_ctx = vk_host->context();
         vk_ctx_ptr = &vk_ctx;
@@ -881,6 +908,7 @@ int run(int argc, char** argv)
         if (!window)
             throw std::runtime_error("OpenGL window creation failed");
         glfwMakeContextCurrent(window.get());
+        host_gpu::verify_opengl(o.gpu, glfwGetProcAddress, eglGetCurrentDisplay());
         // Measurement uses the explicit application FPS budget. On some EGL
         // hosts an unfocused window's vblank wait stalls independently of work.
         glfwSwapInterval(o.capture.empty() && o.check_window.empty() && o.measure == 0 ? 1 : 0);

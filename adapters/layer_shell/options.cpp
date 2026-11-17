@@ -1,5 +1,7 @@
 #include "options.hpp"
 
+#include <nekomote/host_gpu/gpu.hpp>
+
 #include <nekomote/abi.h>
 
 #include <charconv>
@@ -33,6 +35,10 @@ Options parse_options(int argc, char** argv)
         };
         if (option == "--help")
             result.help = true;
+        else if (option == "--list-gpus")
+            result.list_gpus = true;
+        else if (option == "--gpu")
+            result.gpu = nekomote::host_gpu::normalize_selector(value());
         else if (option == "--list-outputs")
             result.list_outputs = true;
         else if (option == "--mute")
@@ -114,11 +120,13 @@ Options parse_options(int argc, char** argv)
         else
             throw std::runtime_error("unknown option: " + std::string(option));
     }
-    if (result.help || result.list_outputs)
+    if (result.help || result.list_outputs || result.list_gpus)
     {
         result.save_config = false;
         return result;
     }
+    if (result.save_config && !result.gpu.empty())
+        throw std::runtime_error("--gpu is per-process and cannot be combined with --save-config");
     if (assets_set && model_set)
         throw std::runtime_error("select exactly one of --assets PATH or --model PATH");
     if (result.save_config && (result.no_save || result.frames || !result.capture.empty() ||
@@ -202,6 +210,8 @@ void print_help()
            "  --config FILE                 launch configuration (default XDG config)\n"
            "  --state FILE                  panel state (default CONFIG_STEM.panel.json)\n"
            "  --save-config                 save merged launch settings and exit\n"
+           "  --gpu pci:DDDD:BB:DD.F         select a GPU for this process only\n"
+           "  --list-gpus                   list PCI graphics hardware, without assets\n"
            "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
            "  --mute                        disable audio\n"

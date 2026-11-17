@@ -61,7 +61,12 @@ extern "C"
     /* Returns 0 on success, -1 on error (operation + VkResult to stderr).
      * Call destroy after any partial initialization failure. */
     int vk_host_c_create_instance(VkHostC* host, const char** extensions, uint32_t ext_count);
-    int vk_host_c_select_device(VkHostC* host, VkSurfaceKHR surface);
+    /* Optional PCI identification requires KHR properties2 at instance creation.
+     * Returns 1 if available, 0 if unsupported, -1 on enumeration failure. */
+    int vk_host_c_supports_properties2(void);
+    /* NULL/empty keeps default scoring. Explicit PCI identity must match exactly
+     * and support graphics/presentation; no fallback. Takes surface ownership. */
+    int vk_host_c_select_device(VkHostC* host, VkSurfaceKHR surface, const char* pci_selector);
     int vk_host_c_create_device(VkHostC* host);
 
     /* Per-frame: begin returns a target for nekomote_wallpaper_set_vk_target. */

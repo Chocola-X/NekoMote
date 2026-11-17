@@ -20,7 +20,7 @@ if(NEKOMOTE_BUILD_VULKAN)
     target_include_directories(nekomote_vk_tests PRIVATE
         ${PROJECT_SOURCE_DIR}/apps/player ${PROJECT_SOURCE_DIR}/src/render_vk)
     target_link_libraries(nekomote_vk_tests PRIVATE
-        nekomote::render_vk nekomote::render_gl nekomote::runtime nekomote::ui nekomote::importer glfw
+        nekomote::render_vk nekomote::host_vulkan nekomote::render_gl nekomote::runtime nekomote::ui nekomote::importer glfw
         nekomote_gl_loader Vulkan::Vulkan Catch2::Catch2WithMain nekomote_warnings)
     if(NEKOMOTE_BUILD_ABI)
         target_link_libraries(nekomote_vk_tests PRIVATE nekomote::abi)

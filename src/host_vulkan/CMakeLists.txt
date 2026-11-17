@@ -16,7 +16,7 @@ if(NEKOMOTE_BUILD_TESTS)
     target_link_libraries(nekomote_host_vulkan_failure_tests PRIVATE
         nekomote::host_vulkan nekomote_warnings)
     target_compile_features(nekomote_host_vulkan_failure_tests PRIVATE c_std_11)
-    foreach(symbol malloc calloc free vkEnumeratePhysicalDevices
+    foreach(symbol malloc calloc free vkGetInstanceProcAddr vkEnumeratePhysicalDevices
             vkEnumerateDeviceExtensionProperties vkGetPhysicalDeviceQueueFamilyProperties
             vkGetPhysicalDeviceProperties vkGetPhysicalDeviceSurfaceSupportKHR vkDeviceWaitIdle
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceFormatsKHR

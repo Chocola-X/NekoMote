@@ -441,3 +441,7 @@ tools            导入、分发与验证脚本
 ```
 
 模块边界、性能规范与开发约定见 [AGENTS.md](AGENTS.md)；开发路线图见 [ROADMAP.md](ROADMAP.md)；构建细节见 [docs/building.md](docs/building.md)。
+
+独立 player、X11 和 layer-shell 可用 `--list-gpus` 枚举 PCI 显卡，使用
+`--gpu pci:dddd:bb:dd.f` 指定本次进程的渲染 GPU。参数不保存到配置；不指定时保持原有
+选择策略。能力限制与示例见 [GPU 选择说明](docs/gpu-selection.md)。Plasma 继续跟随宿主。

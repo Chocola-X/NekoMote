@@ -2,6 +2,8 @@
 
 #include "nekomote/abi.h"
 
+#include <nekomote/host_gpu/gpu.hpp>
+
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <GL/glxext.h>
@@ -445,6 +447,7 @@ void Host::Impl::create_window()
             throw std::runtime_error("cannot create OpenGL 3.3 core context");
         if (!glXMakeCurrent(display_, window_, context_))
             throw std::runtime_error("cannot make GLX context current");
+        nekomote::host_gpu::verify_opengl(options_.gpu, load_gl);
         if (extension(extensions, "GLX_EXT_swap_control"))
         {
             auto interval =
@@ -543,7 +546,9 @@ void Host::Impl::initialize_vulkan()
         throw std::runtime_error("cannot create Vulkan X11 surface: " +
                                  std::to_string(static_cast<int>(result)));
     // select_device takes ownership of the surface even on failure.
-    if (vk_host_c_select_device(&vk_host_, surface) != 0 || vk_host_c_create_device(&vk_host_) != 0)
+    if (vk_host_c_select_device(&vk_host_, surface,
+                                options_.gpu.empty() ? nullptr : options_.gpu.c_str()) != 0 ||
+        vk_host_c_create_device(&vk_host_) != 0)
         throw std::runtime_error("cannot initialize Vulkan X11 device");
 }
 #endif
@@ -786,6 +791,8 @@ void Host::Impl::render()
 
 void Host::Impl::run()
 {
+    if (!options_.list_outputs && options_.backend == Backend::opengl)
+        nekomote::host_gpu::prepare_opengl(options_.gpu, nekomote::host_gpu::GlPlatform::Glx);
     initialize_display();
     if (options_.list_outputs)
         return;

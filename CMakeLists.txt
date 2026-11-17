@@ -90,6 +90,7 @@ if(NEKOMOTE_BUILD_QT_QUICK)
     endif()
 endif()
 
+add_subdirectory(src/host_gpu)
 add_subdirectory(src/model)
 add_subdirectory(src/runtime)
 add_subdirectory(src/asset_io)
@@ -114,8 +115,9 @@ if(NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_ABI)
 endif()
 if(NEKOMOTE_BUILD_VULKAN)
     add_subdirectory(src/render_vk)
-    if(NEKOMOTE_BUILD_ABI AND
-       (NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_X11 OR NEKOMOTE_BUILD_LAYER_SHELL))
+    if(NEKOMOTE_BUILD_PLAYER OR NEKOMOTE_BUILD_TESTS OR
+       (NEKOMOTE_BUILD_ABI AND
+        (NEKOMOTE_BUILD_PREVIEW OR NEKOMOTE_BUILD_X11 OR NEKOMOTE_BUILD_LAYER_SHELL)))
         add_subdirectory(src/host_vulkan)
     endif()
 endif()

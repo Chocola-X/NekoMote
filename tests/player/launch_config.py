@@ -26,6 +26,18 @@ class PlayerLaunchTests(unittest.TestCase):
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return result
 
+    def test_gpu_discovery_skips_configuration_and_gpu_cannot_be_saved(self):
+        profile = self.root / "invalid.json"
+        profile.write_text("broken JSON")
+        result = self.run_player("--config", profile, "--list-gpus")
+        self.assertIn("PCI", result.stdout)
+        self.assertEqual(profile.read_text(), "broken JSON")
+        target = self.root / "new.json"
+        self.run_player("--config", target, "--assets", "assets", "--gpu",
+                        "pci:0000:01:00.0", "--save-config", success=False)
+        self.assertFalse(target.exists())
+        self.run_player("--gpu", "pci:wrong", success=False)
+
     def test_explicit_save_and_reload_without_a_display_or_default_assets(self):
         default = self.root / "configuration/nekomote/player.json"
         self.run_player(success=False)

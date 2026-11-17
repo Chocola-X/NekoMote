@@ -1,5 +1,10 @@
 # NekoMote 开发路线图
 
+2026-11-17 GPU1：从 `d6a8e38` 为 player、X11、layer-shell 新增进程级 PCI 选卡和硬件枚举。
+保持默认策略及 Plasma 宿主设备，共享宿主核验真实身份；双卡隔离 GL/Vulkan、CPU、
+GL-only 和 GCC10 定向结果见 [验收](docs/gpu-selection-2026-11-17.md)，
+使用与限制见 [说明](docs/gpu-selection.md)。未执行远端/ARM64/其他桌面与长期验收。
+
 2026-10-21 CFG1：从 `e72e3fd` 分离显式保存的启动配置与用户操作保存的面板偏好。
 player、X11、layer-shell 使用 `--config` / `--state` / `--save-config`，默认无资产路径；
 Plasma 5/6 由插件持久保存壁纸 UUID，面板经同一 C ABI 按实例隔离。共享配置不再读写

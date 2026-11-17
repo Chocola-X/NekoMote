@@ -23,6 +23,12 @@ static void* allocations[16];
 static VkResult present_result;
 static unsigned present_calls;
 static int failures;
+static int multiple_devices;
+static int reverse_devices;
+static int cannot_present;
+static int no_pci;
+static int no_properties2;
+PFN_vkVoidFunction __wrap_vkGetInstanceProcAddr(VkInstance instance, const char* name);
 
 void* __real_malloc(size_t size);
 void* __real_calloc(size_t count, size_t size);
@@ -97,12 +103,14 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkEnumeratePhysicalDevices(VkInstance inst
                                                                  VkPhysicalDevice* devices)
 {
     (void)instance;
-    *count = 1;
+    *count = multiple_devices ? 2U : 1U;
     if (devices)
     {
         if (failure == FAIL_DEVICE_READ)
             return VK_INCOMPLETE;
-        devices[0] = (VkPhysicalDevice)(uintptr_t)1;
+        devices[0] = (VkPhysicalDevice)(uintptr_t)(reverse_devices ? 2 : 1);
+        if (multiple_devices)
+            devices[1] = (VkPhysicalDevice)(uintptr_t)(reverse_devices ? 1 : 2);
     }
     return VK_SUCCESS;
 }
@@ -112,7 +120,7 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkEnumerateDeviceExtensionProperties(
 {
     (void)device;
     (void)layer;
-    *count = 1;
+    *count = multiple_devices && !no_pci ? 2U : 1U;
     if (!extensions && failure == FAIL_EXTENSION_COUNT)
         return VK_ERROR_OUT_OF_HOST_MEMORY;
     if (extensions)
@@ -121,6 +129,8 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkEnumerateDeviceExtensionProperties(
             return VK_INCOMPLETE;
         memset(extensions, 0, sizeof(*extensions));
         strcpy(extensions[0].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        if (multiple_devices && !no_pci)
+            strcpy(extensions[1].extensionName, VK_EXT_PCI_BUS_INFO_EXTENSION_NAME);
     }
     return VK_SUCCESS;
 }
@@ -143,7 +153,10 @@ VKAPI_ATTR void VKAPI_CALL __wrap_vkGetPhysicalDeviceProperties(
 {
     (void)device;
     memset(properties, 0, sizeof(*properties));
-    strcpy(properties->deviceName, "synthetic failure-path device");
+    strcpy(properties->deviceName, "same-model synthetic device");
+    properties->deviceType = device == (VkPhysicalDevice)(uintptr_t)2
+                                 ? VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+                                 : VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice device,
@@ -154,7 +167,7 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceSupportKHR(VkPhy
     (void)device;
     (void)family;
     (void)surface;
-    *supported = VK_TRUE;
+    *supported = cannot_present ? VK_FALSE : VK_TRUE;
     return failure == FAIL_QUEUE_SUPPORT ? VK_ERROR_SURFACE_LOST_KHR : VK_SUCCESS;
 }
 
@@ -195,6 +208,24 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkQueuePresentKHR(VkQueue queue, const VkP
     return present_result;
 }
 
+static VKAPI_ATTR void VKAPI_CALL pci_properties(VkPhysicalDevice device,
+                                                 VkPhysicalDeviceProperties2* properties)
+{
+    VkPhysicalDevicePCIBusInfoPropertiesEXT* pci = properties->pNext;
+    pci->pciDomain = 0;
+    pci->pciBus = device == (VkPhysicalDevice)(uintptr_t)2 ? 3U : 0U;
+    pci->pciDevice = device == (VkPhysicalDevice)(uintptr_t)2 ? 0U : 2U;
+    pci->pciFunction = 0;
+}
+
+PFN_vkVoidFunction __wrap_vkGetInstanceProcAddr(VkInstance instance, const char* name)
+{
+    (void)instance;
+    if (!no_properties2 && !strcmp(name, "vkGetPhysicalDeviceProperties2KHR"))
+        return (PFN_vkVoidFunction)pci_properties;
+    return NULL;
+}
+
 static void expect(int condition, const char* context)
 {
     if (!condition)
@@ -218,7 +249,7 @@ static void selection_case(enum Failure selected, unsigned allocation)
     reset(selected, allocation);
     VkHostC host = {0};
     const VkSurfaceKHR surface = (VkSurfaceKHR)(uintptr_t)1;
-    const int result = vk_host_c_select_device(&host, surface);
+    const int result = vk_host_c_select_device(&host, surface, NULL);
     expect(result == (selected == FAIL_NONE && !allocation ? 0 : -1),
            "selection reports injected error");
     const unsigned expected_attempts =
@@ -264,6 +295,18 @@ static void presentation_case(VkResult injected, int expected, int recreate)
     }
 }
 
+static void pci_selection_case(const char* selector, uintptr_t expected)
+{
+    reset(FAIL_NONE, 0);
+    VkHostC host = {0};
+    host.instance = (VkInstance)(uintptr_t)1;
+    const int result = vk_host_c_select_device(&host, (VkSurfaceKHR)(uintptr_t)1, selector);
+    expect((result == 0) == (expected != 0), "PCI selection reports success only for target");
+    expect(host.physical_device == (VkPhysicalDevice)expected,
+           "PCI selection does not substitute another device");
+    expect(live_allocations == 0, "PCI selection frees all temporary allocations");
+}
+
 int main(void)
 {
     selection_case(FAIL_NONE, 0);
@@ -279,6 +322,23 @@ int main(void)
     presentation_case(VK_SUBOPTIMAL_KHR, 0, 1);
     presentation_case(VK_ERROR_OUT_OF_DATE_KHR, 1, 1);
     presentation_case(VK_ERROR_SURFACE_LOST_KHR, -1, 0);
+    multiple_devices = 1;
+    for (reverse_devices = 0; reverse_devices < 2; ++reverse_devices)
+    {
+        pci_selection_case(NULL, 2);
+        pci_selection_case("pci:0000:00:02.0", 1);
+        pci_selection_case("pci:0000:03:00.0", 2);
+        pci_selection_case("pci:0000:04:00.0", 0);
+    }
+    pci_selection_case("pci:0000:03:00.8", 0);
+    cannot_present = 1;
+    pci_selection_case("pci:0000:00:02.0", 0);
+    cannot_present = 0;
+    no_pci = 1;
+    pci_selection_case("pci:0000:00:02.0", 0);
+    no_pci = 0;
+    no_properties2 = 1;
+    pci_selection_case("pci:0000:00:02.0", 0);
     if (failures)
         return EXIT_FAILURE;
     puts("host_vulkan synthetic failure paths passed (no GPU/display)");

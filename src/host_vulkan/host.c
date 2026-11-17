@@ -333,11 +333,68 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL validation_report(VkDebugReportFlagsEXT fl
     return VK_FALSE;
 }
 
+int vk_host_c_supports_properties2(void)
+{
+    uint32_t count = 0;
+    VK_CHECK(vkEnumerateInstanceExtensionProperties(NULL, &count, NULL),
+             "enumerate instance extensions");
+    VkExtensionProperties* extensions = calloc(count ? count : 1, sizeof(*extensions));
+    if (!extensions)
+        return -1;
+    VkResult status = vkEnumerateInstanceExtensionProperties(NULL, &count, extensions);
+    int found = 0;
+    if (status == VK_SUCCESS)
+        for (uint32_t i = 0; i < count; ++i)
+            if (!strcmp(extensions[i].extensionName,
+                        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+                found = 1;
+    free(extensions);
+    if (status != VK_SUCCESS)
+    {
+        fprintf(stderr, "[host_vulkan] read instance extensions: VkResult %d\n", (int)status);
+        return -1;
+    }
+    return found;
+}
+
+static int read_pci(VkInstance instance, VkPhysicalDevice device, int supported, char out[32])
+{
+    if (!instance || !supported)
+        return 0;
+    PFN_vkGetPhysicalDeviceProperties2KHR query =
+        (PFN_vkGetPhysicalDeviceProperties2KHR)vkGetInstanceProcAddr(
+            instance, "vkGetPhysicalDeviceProperties2KHR");
+    if (!query)
+        return 0;
+    VkPhysicalDevicePCIBusInfoPropertiesEXT pci = {0};
+    pci.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT;
+    VkPhysicalDeviceProperties2KHR properties = {0};
+    properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR;
+    properties.pNext = &pci;
+    query(device, &properties);
+    snprintf(out, 32, "pci:%04x:%02x:%02x.%x", pci.pciDomain, pci.pciBus, pci.pciDevice,
+             pci.pciFunction);
+    return 1;
+}
+
+static int valid_pci(const char* selector)
+{
+    unsigned domain, bus, device, function;
+    char normalized[32];
+    if (strlen(selector) != 16 ||
+        sscanf(selector, "pci:%4x:%2x:%2x.%1x", &domain, &bus, &device, &function) != 4 ||
+        domain > 0xffff || bus > 0xff || device > 31 || function > 7)
+        return 0;
+    snprintf(normalized, sizeof(normalized), "pci:%04x:%02x:%02x.%x", domain, bus, device,
+             function);
+    return !strcmp(selector, normalized);
+}
+
 int vk_host_c_create_instance(VkHostC* h, const char** extensions, uint32_t ext_count)
 {
     const char* validation = getenv("NEKOMOTE_VK_VALIDATION");
     const int enable_validation = validation && strcmp(validation, "1") == 0;
-    if (!h || h->instance || (ext_count && !extensions) || ext_count == UINT32_MAX ||
+    if (!h || h->instance || (ext_count && !extensions) || ext_count > UINT32_MAX - 2 ||
         (validation && *validation && strcmp(validation, "0") && !enable_validation))
     {
         fprintf(stderr, "[host_vulkan] invalid instance input or NEKOMOTE_VK_VALIDATION (0|1)\n");
@@ -359,19 +416,26 @@ int vk_host_c_create_instance(VkHostC* h, const char** extensions, uint32_t ext_
     VkInstanceCreateInfo info = {0};
     info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     info.pApplicationInfo = &app;
+    const int properties2 = vk_host_c_supports_properties2();
+    if (properties2 < 0)
+        return -1;
+    const char** enabled_extensions = calloc((size_t)ext_count + 2, sizeof(*enabled_extensions));
+    if (!enabled_extensions)
+        return -1;
+    if (ext_count)
+        memcpy(enabled_extensions, extensions, (size_t)ext_count * sizeof(*extensions));
     info.enabledExtensionCount = ext_count;
-    info.ppEnabledExtensionNames = extensions;
-    const char** enabled_extensions = NULL;
+    info.ppEnabledExtensionNames = enabled_extensions;
+    int already_properties2 = 0;
+    for (uint32_t i = 0; i < ext_count; ++i)
+        if (!strcmp(extensions[i], VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME))
+            already_properties2 = 1;
+    if (properties2 && !already_properties2)
+        enabled_extensions[info.enabledExtensionCount++] =
+            VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME;
     if (enable_validation)
     {
-        enabled_extensions = calloc((size_t)ext_count + 1, sizeof(*enabled_extensions));
-        if (!enabled_extensions)
-            return -1;
-        if (ext_count)
-            memcpy(enabled_extensions, extensions, (size_t)ext_count * sizeof(*extensions));
-        enabled_extensions[ext_count] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-        info.enabledExtensionCount++;
-        info.ppEnabledExtensionNames = enabled_extensions;
+        enabled_extensions[info.enabledExtensionCount++] = VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
         info.enabledLayerCount = 1;
         info.ppEnabledLayerNames = &layer;
         info.pNext = &callback;
@@ -401,9 +465,19 @@ int vk_host_c_create_instance(VkHostC* h, const char** extensions, uint32_t ext_
     return 0;
 }
 
-int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
+int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface, const char* pci_selector)
 {
+    if (!h)
+        return -1;
     h->surface = surface;
+    h->physical_device = VK_NULL_HANDLE;
+    if (pci_selector && *pci_selector && !valid_pci(pci_selector))
+    {
+        fprintf(stderr, "[host_vulkan] invalid PCI selector: %s\n", pci_selector);
+        return -1;
+    }
+    const int explicit_pci = pci_selector && *pci_selector;
+    char selected_pci[32] = "unavailable";
     uint32_t count = 0;
     VkPhysicalDevice* devices = NULL;
     VkExtensionProperties* extensions = NULL;
@@ -440,12 +514,21 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
         SELECT_CHECK(vkEnumerateDeviceExtensionProperties(devices[d], NULL, &n, extensions),
                      "read device extensions");
         int has_swapchain = 0;
+        int has_pci = 0;
         for (uint32_t i = 0; i < n; ++i)
+        {
             if (strcmp(extensions[i].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
                 has_swapchain = 1;
+            if (!strcmp(extensions[i].extensionName, VK_EXT_PCI_BUS_INFO_EXTENSION_NAME))
+                has_pci = 1;
+        }
         free(extensions);
         extensions = NULL;
         if (!has_swapchain)
+            continue;
+        char candidate_pci[32] = "unavailable";
+        const int identified = read_pci(h->instance, devices[d], has_pci, candidate_pci);
+        if (explicit_pci && (!identified || strcmp(pci_selector, candidate_pci)))
             continue;
         vkGetPhysicalDeviceQueueFamilyProperties(devices[d], &n, NULL);
         if (!n)
@@ -469,6 +552,7 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
                 best = score;
                 h->physical_device = devices[d];
                 h->graphics_family = i;
+                memcpy(selected_pci, candidate_pci, sizeof(selected_pci));
             }
         }
         free(queues);
@@ -478,7 +562,8 @@ int vk_host_c_select_device(VkHostC* h, VkSurfaceKHR surface)
     {
         VkPhysicalDeviceProperties properties;
         vkGetPhysicalDeviceProperties(h->physical_device, &properties);
-        fprintf(stderr, "[host_vulkan] Vulkan 1.0 device=%s\n", properties.deviceName);
+        fprintf(stderr, "[host_vulkan] Vulkan 1.0 device=%s id=%s\n", properties.deviceName,
+                selected_pci);
         result = 0;
     }
 cleanup:
@@ -486,7 +571,12 @@ cleanup:
     free(extensions);
     free(devices);
     if (result)
-        fprintf(stderr, "[host_vulkan] cannot select graphics/present device\n");
+    {
+        h->physical_device = VK_NULL_HANDLE;
+        fprintf(stderr, "[host_vulkan] cannot select graphics/present device%s%s%s\n",
+                explicit_pci ? " for " : "", explicit_pci ? pci_selector : "",
+                explicit_pci ? " (requires PCI identification and target surface support)" : "");
+    }
 #undef SELECT_CHECK
     return result;
 }

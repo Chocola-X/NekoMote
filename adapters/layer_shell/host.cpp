@@ -1,6 +1,8 @@
 #include "host.hpp"
 
 #include "nekomote/abi.h"
+
+#include <nekomote/host_gpu/gpu.hpp>
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "nekomote/host_vulkan/host.h"
 #endif
@@ -780,6 +782,7 @@ void Host::Impl::initialize_egl()
         throw std::runtime_error("cannot create EGL window surface");
     egl_check(eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_),
               "make EGL context current");
+    nekomote::host_gpu::verify_opengl(options_.gpu, load_gl, egl_display_);
     // wl_surface.frame owns pacing. Avoid an additional swap-interval wait.
     egl_check(eglSwapInterval(egl_display_, 0), "set EGL swap interval");
     wallpaper_ = nekomote_wallpaper_create(load_gl);
@@ -800,7 +803,8 @@ void Host::Impl::initialize_vulkan()
         vkCreateWaylandSurfaceKHR(vk_host_.instance, &surface_info, nullptr, &vk_host_.surface);
     if (result != VK_SUCCESS)
         throw std::runtime_error("cannot create Vulkan Wayland surface: " + std::to_string(result));
-    if (vk_host_c_select_device(&vk_host_, vk_host_.surface) != 0 ||
+    if (vk_host_c_select_device(&vk_host_, vk_host_.surface,
+                                options_.gpu.empty() ? nullptr : options_.gpu.c_str()) != 0 ||
         vk_host_c_create_device(&vk_host_) != 0)
         throw std::runtime_error("cannot initialize Vulkan device for Wayland surface");
     const nekomote_vk_device_context context{vk_host_.instance,        vk_host_.physical_device,
@@ -1107,6 +1111,8 @@ void Host::Impl::wait_events(int timeout)
 
 void Host::Impl::run()
 {
+    if (!options_.list_outputs && options_.backend == Backend::opengl)
+        nekomote::host_gpu::prepare_opengl(options_.gpu, nekomote::host_gpu::GlPlatform::Egl);
     initialize_wayland();
     if (options_.list_outputs)
     {

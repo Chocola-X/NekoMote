@@ -2,6 +2,8 @@
 
 #include <nekomote/render_vk/renderer.hpp>
 
+#include <nekomote/host_vulkan/host.h>
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -78,6 +80,17 @@ class VkHost
             throw std::runtime_error("requested Vulkan validation layer is unavailable");
         if (validation_enabled)
             extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        const int properties2 = vk_host_c_supports_properties2();
+        if (properties2 < 0)
+            throw std::runtime_error("cannot enumerate Vulkan instance extensions");
+        if (properties2 &&
+            std::none_of(extensions.begin(), extensions.end(),
+                         [](const char* name)
+                         {
+                             return !std::strcmp(
+                                 name, VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+                         }))
+            extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         VkApplicationInfo app{};
         app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         app.pApplicationName = "NekoMote";
@@ -111,55 +124,18 @@ class VkHost
         }
     }
 
-    void select_physical_device(VkSurfaceKHR owned_surface)
+    void select_physical_device(VkSurfaceKHR owned_surface, const char* pci_selector = nullptr)
     {
         surface = owned_surface;
-        std::uint32_t count = 0;
-        render_vk::check_vk(vkEnumeratePhysicalDevices(instance, &count, nullptr),
-                            "enumerate devices");
-        std::vector<VkPhysicalDevice> devices(count);
-        render_vk::check_vk(vkEnumeratePhysicalDevices(instance, &count, devices.data()),
-                            "read devices");
-        int best = -1;
-        for (auto candidate : devices)
-        {
-            std::uint32_t n = 0;
-            render_vk::check_vk(
-                vkEnumerateDeviceExtensionProperties(candidate, nullptr, &n, nullptr),
-                "enumerate device extensions");
-            std::vector<VkExtensionProperties> extensions(n);
-            render_vk::check_vk(
-                vkEnumerateDeviceExtensionProperties(candidate, nullptr, &n, extensions.data()),
-                "read device extensions");
-            if (!std::any_of(
-                    extensions.begin(), extensions.end(), [](const auto& e)
-                    { return std::strcmp(e.extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0; }))
-                continue;
-            vkGetPhysicalDeviceQueueFamilyProperties(candidate, &n, nullptr);
-            std::vector<VkQueueFamilyProperties> queues(n);
-            vkGetPhysicalDeviceQueueFamilyProperties(candidate, &n, queues.data());
-            VkPhysicalDeviceProperties properties{};
-            vkGetPhysicalDeviceProperties(candidate, &properties);
-            const int score = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU     ? 3
-                              : properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU ? 2
-                                                                                                : 1;
-            for (std::uint32_t i = 0; i < n; ++i)
-            {
-                VkBool32 present = VK_FALSE;
-                render_vk::check_vk(
-                    vkGetPhysicalDeviceSurfaceSupportKHR(candidate, i, surface, &present),
-                    "query presentation queue");
-                if ((queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) && present && score > best)
-                {
-                    best = score;
-                    physical_device = candidate;
-                    graphics_family = i;
-                    device_name = properties.deviceName;
-                }
-            }
-        }
-        if (!physical_device)
-            throw std::runtime_error("no Vulkan graphics/presentation device");
+        VkHostC selection{};
+        selection.instance = instance;
+        if (vk_host_c_select_device(&selection, owned_surface, pci_selector) != 0)
+            throw std::runtime_error("cannot select requested Vulkan graphics/presentation device");
+        physical_device = selection.physical_device;
+        graphics_family = selection.graphics_family;
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physical_device, &properties);
+        device_name = properties.deviceName;
     }
 
     void create_device()

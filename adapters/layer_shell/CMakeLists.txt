@@ -24,7 +24,7 @@ target_link_libraries(nekomote_layer_shell_protocols PRIVATE PkgConfig::WAYLAND_
 add_executable(nekomote_layer_shell main.cpp options.cpp host.cpp)
 add_dependencies(nekomote_layer_shell nekomote_layer_shell_protocols)
 target_include_directories(nekomote_layer_shell PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(nekomote_layer_shell PRIVATE nekomote::abi nekomote_warnings
+target_link_libraries(nekomote_layer_shell PRIVATE nekomote::abi nekomote::host_gpu nekomote_warnings
     nekomote_layer_shell_protocols PkgConfig::WAYLAND_CLIENT PkgConfig::WAYLAND_EGL
     PkgConfig::WAYLAND_CURSOR PkgConfig::EGL)
 target_compile_features(nekomote_layer_shell PRIVATE cxx_std_20)
@@ -43,7 +43,7 @@ if(NEKOMOTE_BUILD_TESTS)
         ${PROJECT_SOURCE_DIR}/tests/layer_shell/test_options.cpp options.cpp)
     target_include_directories(nekomote_layer_shell_option_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(nekomote_layer_shell_option_tests PRIVATE
-        Catch2::Catch2WithMain nekomote_warnings nekomote::abi)
+        Catch2::Catch2WithMain nekomote_warnings nekomote::abi nekomote::host_gpu)
     if(NEKOMOTE_BUILD_VULKAN)
         target_compile_definitions(nekomote_layer_shell_option_tests PRIVATE NEKOMOTE_HAS_VULKAN)
     endif()

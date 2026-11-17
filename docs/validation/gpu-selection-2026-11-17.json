@@ -1,0 +1,879 @@
+{
+  "base": "d6a8e3834c60b6c308c616951181b37d8d793067",
+  "kernel": "6.12.39-1-MANJARO",
+  "hardware": [
+    "pci:0000:01:00.0 NVIDIA RTX 3060 Laptop GPU, proprietary 575.64.03",
+    "pci:0000:06:00.0 AMD Cezanne, Mesa 25.1.6 / RADV 25.1.6"
+  ],
+  "matrix": {
+    "cases": [
+      {
+        "name": "player-opengl-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-default.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-default.png",
+          "--steps",
+          "4"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-opengl-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_0000_01_00.0.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_0000_01_00.0.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-opengl-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_0000_06_00.0.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_0000_06_00.0.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-opengl-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-opengl-pci_ffff_ff_1f.7.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "player-vulkan-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-default.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-default.png",
+          "--steps",
+          "4"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-vulkan-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_0000_01_00.0.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_0000_01_00.0.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-vulkan-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_0000_06_00.0.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_0000_06_00.0.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "player-vulkan-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_player",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--width",
+          "320",
+          "--height",
+          "240",
+          "--fit",
+          "--no-save",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/player-vulkan-pci_ffff_ff_1f.7.png",
+          "--steps",
+          "4",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "x11-opengl-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-default.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-default.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-opengl-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_0000_01_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_0000_01_00.0.ppm",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-opengl-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_0000_06_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_0000_06_00.0.ppm",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-opengl-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-opengl-pci_ffff_ff_1f.7.ppm",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "x11-vulkan-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-default.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-default.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-vulkan-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_0000_01_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_0000_01_00.0.ppm",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-vulkan-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_0000_06_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_0000_06_00.0.ppm",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "x11-vulkan-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_x11",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/x11-vulkan-pci_ffff_ff_1f.7.ppm",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-opengl-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-default.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-default.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-opengl-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_0000_01_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_0000_01_00.0.ppm",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-opengl-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_0000_06_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_0000_06_00.0.ppm",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-opengl-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "opengl",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-opengl-pci_ffff_ff_1f.7.ppm",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-vulkan-default",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-default.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-default.ppm"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-vulkan-pci_0000_01_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_0000_01_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_0000_01_00.0.ppm",
+          "--gpu",
+          "pci:0000:01:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-vulkan-pci_0000_06_00.0",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_0000_06_00.0.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_0000_06_00.0.ppm",
+          "--gpu",
+          "pci:0000:06:00.0"
+        ],
+        "exit_code": 0,
+        "passed": true
+      },
+      {
+        "name": "layer_shell-vulkan-pci_ffff_ff_1f.7",
+        "command": [
+          "/run/media/chocola/DATA/Project/NekoMote/build/vulkan-release/bin/nekomote_layer_shell",
+          "--model",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/model.nkm",
+          "--session",
+          "/run/media/chocola/DATA/Project/NekoMote/assets/characters/chocola/date-a/session.nks.json",
+          "--backend",
+          "vulkan",
+          "--config",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_ffff_ff_1f.7.json",
+          "--mute",
+          "--frames",
+          "4",
+          "--capture",
+          "/run/media/chocola/DATA/Project/NekoMote/build/evidence/gpu-selection-20261117/final-matrix/layer_shell-vulkan-pci_ffff_ff_1f.7.ppm",
+          "--gpu",
+          "pci:ffff:ff:1f.7"
+        ],
+        "exit_code": 1,
+        "passed": true
+      }
+    ],
+    "binary_sha256": {
+      "player": "e370a6d59e17b25b4ccecff993b1208bbc05629636281868c1464a0c87f5ca75",
+      "x11": "1f90ef9e770720a396a8b2147e51dcbe6f0fd630558e21ee597034bb93fa9490",
+      "layer_shell": "1477122c50618eaaf7061e9e04343aad6361b3269506bdfd92eb0b195587df63"
+    },
+    "passed": true
+  },
+  "image_comparisons": [
+    {
+      "entry": "player",
+      "backend": "opengl",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.017291666666666667,
+        0.0201953125,
+        0.0180859375,
+        0.0
+      ],
+      "max_channel_error": [
+        3,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "entry": "player",
+      "backend": "opengl",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "player",
+      "backend": "vulkan",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "player",
+      "backend": "vulkan",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.008059895833333334,
+        0.008893229166666667,
+        0.0089453125,
+        0.0
+      ],
+      "max_channel_error": [
+        2,
+        2,
+        2,
+        0
+      ]
+    },
+    {
+      "entry": "x11",
+      "backend": "opengl",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.053525390625,
+        0.05375,
+        0.24794270833333334,
+        0.0
+      ],
+      "max_channel_error": [
+        2,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "entry": "x11",
+      "backend": "opengl",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "x11",
+      "backend": "vulkan",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "x11",
+      "backend": "vulkan",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.050413411458333335,
+        0.049895833333333334,
+        0.24505533854166667,
+        0.0
+      ],
+      "max_channel_error": [
+        3,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "entry": "layer_shell",
+      "backend": "opengl",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.05326171875,
+        0.05346028645833333,
+        0.24765950520833332,
+        0.0
+      ],
+      "max_channel_error": [
+        2,
+        3,
+        3,
+        0
+      ]
+    },
+    {
+      "entry": "layer_shell",
+      "backend": "opengl",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "layer_shell",
+      "backend": "vulkan",
+      "gpu": "pci_0000_01_00.0",
+      "mean_channel_error": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_channel_error": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "entry": "layer_shell",
+      "backend": "vulkan",
+      "gpu": "pci_0000_06_00.0",
+      "mean_channel_error": [
+        0.05021809895833333,
+        0.049680989583333335,
+        0.244814453125,
+        0.0
+      ],
+      "max_channel_error": [
+        3,
+        3,
+        3,
+        0
+      ]
+    }
+  ],
+  "measurement": [
+    {
+      "case": "measure-opengl-default",
+      "metrics": [
+        "CPU advance+prepare+OpenGL submission after 120 warmup frames: n=120 P50=0.669357 P95=1.038328 P99=1.115851 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.588 fps P50=16.750342 P95=16.984589 P99=17.139846 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_gpu] backend=opengl renderer=AMD Radeon Graphics (radeonsi, renoir, ACO, DRM 3.61, 6.12.39-1-MANJARO) device=pci:0000:06:00.0"
+      ]
+    },
+    {
+      "case": "measure-opengl-pci_0000_01_00.0",
+      "metrics": [
+        "CPU advance+prepare+OpenGL submission after 120 warmup frames: n=120 P50=0.747999 P95=0.872246 P99=0.914779 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.864 fps P50=16.697195 P95=16.702922 P99=16.710604 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_gpu] backend=opengl renderer=NVIDIA GeForce RTX 3060 Laptop GPU/PCIe/SSE2 device=pci:0000:01:00.0"
+      ]
+    },
+    {
+      "case": "measure-opengl-pci_0000_06_00.0",
+      "metrics": [
+        "CPU advance+prepare+OpenGL submission after 120 warmup frames: n=120 P50=0.661326 P95=0.809738 P99=0.846963 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.675 fps P50=16.745247 P95=16.773184 P99=16.784079 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_gpu] backend=opengl renderer=AMD Radeon Graphics (radeonsi, renoir, ACO, DRM 3.61, 6.12.39-1-MANJARO) device=pci:0000:06:00.0"
+      ]
+    },
+    {
+      "case": "measure-vulkan-default",
+      "metrics": [
+        "CPU advance+prepare+Vulkan command recording after 120 warmup frames: n=120 P50=0.707281 P95=0.900811 P99=1.015141 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.640 fps P50=16.748461 P95=16.772486 P99=16.781286 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_vulkan] Vulkan 1.0 device=NVIDIA GeForce RTX 3060 Laptop GPU id=pci:0000:01:00.0"
+      ]
+    },
+    {
+      "case": "measure-vulkan-pci_0000_01_00.0",
+      "metrics": [
+        "CPU advance+prepare+Vulkan command recording after 120 warmup frames: n=120 P50=0.683536 P95=0.862957 P99=0.937617 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.629 fps P50=16.751675 P95=16.780729 P99=16.785758 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_vulkan] Vulkan 1.0 device=NVIDIA GeForce RTX 3060 Laptop GPU id=pci:0000:01:00.0"
+      ]
+    },
+    {
+      "case": "measure-vulkan-pci_0000_06_00.0",
+      "metrics": [
+        "CPU advance+prepare+Vulkan command recording after 120 warmup frames: n=120 P50=0.751631 P95=0.958150 P99=0.984341 ms",
+        "Frame loop cadence (swap+wait), target 60: 59.535 fps P50=16.762153 P95=16.796724 P99=17.118971 ms; audio RMS max 0.000000"
+      ],
+      "device": [
+        "[host_vulkan] Vulkan 1.0 device=AMD Radeon Graphics (RADV RENOIR) id=pci:0000:06:00.0"
+      ]
+    }
+  ],
+  "cpu_ctest": "259/259",
+  "gl_only_checks": "4/4",
+  "vulkan_synthetic_scenarios": 26,
+  "radv_test_package_sha256": "a6aa94f5685b17598071316265ccb1dc2d33248521a62127c32950d331e95aa8",
+  "scope": "Private KWin/XWayland client renders; RADV extracted only into project. No final compositor pixel, other compositor/driver/ARM64/remote/long-term/power certification."
+}

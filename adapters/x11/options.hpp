@@ -24,6 +24,7 @@ struct Options
     std::string model;
     std::string session;
     std::string output;
+    std::string gpu;
     std::filesystem::path config;
     std::filesystem::path state;
     std::filesystem::path capture;
@@ -35,6 +36,7 @@ struct Options
     bool no_save = false;
     bool save_config = false;
     bool list_outputs = false;
+    bool list_gpus = false;
     bool help = false;
 };
 

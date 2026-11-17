@@ -640,7 +640,7 @@ int main(int argc, char** argv)
         }
         if (vk_host_c_create_instance(&vk_host, glfw_exts, glfw_ext_count) != 0 ||
             glfwCreateWindowSurface(vk_host.instance, window, NULL, &vk_surface) != VK_SUCCESS ||
-            vk_host_c_select_device(&vk_host, vk_surface) != 0 ||
+            vk_host_c_select_device(&vk_host, vk_surface, NULL) != 0 ||
             vk_host_c_create_device(&vk_host) != 0)
         {
             fprintf(stderr, "Error: Vulkan initialization failed\n");

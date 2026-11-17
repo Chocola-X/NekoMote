@@ -1,3 +1,5 @@
+#include <nekomote/host_gpu/gpu.hpp>
+
 #include <csignal>
 #include <exception>
 #include <iostream>
@@ -23,6 +25,11 @@ int main(int argc, char** argv)
         if (options.help)
         {
             nekomote::layer_shell::print_help();
+            return 0;
+        }
+        if (options.list_gpus)
+        {
+            nekomote::host_gpu::list_gpus();
             return 0;
         }
         if (options.save_config)

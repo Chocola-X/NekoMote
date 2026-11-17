@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| GPU1 独立进程选卡 | base `d6a8e38`，进程级 `--gpu` / `--list-gpus`，宿主身份核验，双卡 GL/Vulkan 24项和259 CPU通过，见[验收](gpu-selection-2026-11-17.md) | RADV为项目隔离驱动；其他合成器/驱动/ARM64/远端/长期与功耗未验收；Plasma跟随宿主 |
 | CFG1 配置规范化 | base `e72e3fd`，共享启动/面板配置分离、C ABI 0.7.0、Plasma 持久 UUID；独立复核和本机 CPU/隔离 GPU 验证 | 使用与迁移见[说明](configuration.md)，范围见[报告](configuration-2026-10-21.md)；真实多屏/远端/ARM64 未验收 |
 | SV1 X11 / layer-shell Vulkan | base `4dbe7c2`；原生 Xlib/Wayland WSI、高层 C ABI、共享呈现宿主；Release/LTO、225 既有 CPU + 新增失败回归、私有 GPU 与 14 对图像一致，见 [报告](shell-vulkan-2026-10-21.md) | 未安装真实桌面；目标合成器/原生 Xorg/最终合成像素/ARM64/远端/长期分别验收。启动/面板配置分离由 CFG1 接续 |
 | C21 PNG 打包/异机资产复核 | 输入主库 `86da860`/资产库 `4bced9e`；补齐 native20 PNG 工具构建/审计，Ubuntu20 x86_64 全流程 210 检查、安装/审计/归档和工具实跑通过；324 PNG 双路径像素一致，恢复三份旧名称字典并 amend 资产库为 `faa78f6`，见 [报告](png-ci-assets-audit-2026-10-19.md) | 本地已处理用户指定新资产树；未推送或重跑远端/ARM64，未新增桌面/GPU/长期认证 |
