@@ -186,8 +186,7 @@ std::vector<Output> outputs(Display* display, Window root)
                           static_cast<int>(crtc->height), resources->outputs[i] == primary});
     }
     if (transaction.finish())
-        throw std::runtime_error(
-            "XRandR topology changed during output discovery; restart to retry");
+        throw std::runtime_error("XRandR topology changed during output discovery");
     return result;
 }
 } // namespace
@@ -268,7 +267,8 @@ class Host::Impl
     int randr_event_ = 0;
     Output output_;
     int width_ = 0, height_ = 0;
-    bool mapped_ = false, closed_ = false;
+    bool mapped_ = false, closed_ = false, output_present_ = true;
+    Clock::time_point next_output_retry_{};
     std::unique_ptr<nekomote::host_session::Monitor> session_monitor_;
     bool host_unavailable_ = true;
     bool power_off_ = false, dpms_supported_ = false, session_unavailable_ = false;
@@ -582,7 +582,7 @@ void Host::Impl::refresh_availability()
         if (dpms_supported_ && DPMSInfo(display_, &power, &enabled))
             power_off_ = enabled && power != DPMSModeOn;
     }
-    const bool unavailable = !mapped_ || power_off_ || session_unavailable_;
+    const bool unavailable = !output_present_ || !mapped_ || power_off_ || session_unavailable_;
     if (!wallpaper_ || host_unavailable_ == unavailable)
         return;
     host_unavailable_ = unavailable;
@@ -595,25 +595,53 @@ void Host::Impl::refresh_availability()
 
 void Host::Impl::update_output()
 {
-    const auto available = outputs(display_, root_);
-    const auto selected =
-        std::find_if(available.begin(), available.end(), [&](const Output& value)
-                     { return value.id == output_.id && value.name == output_.name; });
+    std::vector<Output> available;
+    try
+    {
+        available = outputs(display_, root_);
+    }
+    catch (const std::runtime_error& error)
+    {
+        if (output_present_)
+            std::cerr << "XRandR query interrupted: " << error.what() << "; waiting\n";
+    }
+    const auto selected = std::find_if(available.begin(), available.end(), [&](const Output& value)
+                                       { return value.name == output_.name; });
     if (selected == available.end())
     {
-        std::cerr << "Selected XRandR output removed; stopping\n";
-        closed_ = true;
+        if (output_present_)
+        {
+            std::cerr << "Selected XRandR output " << output_.name
+                      << " removed; waiting for reconnect\n";
+            output_present_ = false;
+            set_mapped(false);
+            check(nekomote_wallpaper_pointer_leave(wallpaper_), "cancel lost-output pointer");
+            refresh_availability();
+            XUnmapWindow(display_, window_);
+            XFlush(display_);
+        }
+        next_output_retry_ = Clock::now() + std::chrono::seconds(1);
         return;
     }
-    if (selected->x != output_.x || selected->y != output_.y || selected->width != output_.width ||
-        selected->height != output_.height)
+    const bool recovered = !output_present_;
+    const bool changed = recovered || selected->x != output_.x || selected->y != output_.y ||
+                         selected->width != output_.width || selected->height != output_.height;
+    output_ = *selected; // RandR XIDs may change when the same named connector returns.
+    output_present_ = true;
+    if (changed)
     {
-        output_ = *selected;
         XMoveResizeWindow(display_, window_, output_.x, output_.y,
                           static_cast<unsigned>(output_.width),
                           static_cast<unsigned>(output_.height));
+        if (recovered)
+        {
+            std::cerr << "Selected XRandR output " << output_.name << " reconnected\n";
+            XMapWindow(display_, window_);
+            XLowerWindow(display_, window_);
+        }
         XFlush(display_);
     }
+    refresh_availability();
 }
 
 void Host::Impl::handle_event(const XEvent& event)
@@ -850,6 +878,8 @@ void Host::Impl::run()
         }
         if (closed_ || stop_requested)
             break;
+        if (!output_present_ && Clock::now() >= next_output_retry_)
+            update_output();
         refresh_availability();
         if (idle_wait_ &&
             (nekomote_wallpaper_needs_render(wallpaper_) || !nekomote_wallpaper_paused(wallpaper_)))

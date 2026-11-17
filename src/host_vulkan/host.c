@@ -160,11 +160,8 @@ static int create_output_image(VkHostC* h, int w, int hgt)
     return 0;
 }
 
-static int create_swapchain(VkHostC* h, int w, int hgt)
+static void destroy_swapchain(VkHostC* h)
 {
-    VK_CHECK(vkDeviceWaitIdle(h->device), "wait swapchain rebuild");
-    h->pending = 0;
-
     for (uint32_t i = 0; i < h->swap_image_count; ++i)
         if (h->swap_finished[i])
             vkDestroySemaphore(h->device, h->swap_finished[i], NULL);
@@ -176,6 +173,14 @@ static int create_swapchain(VkHostC* h, int w, int hgt)
     if (h->swapchain)
         vkDestroySwapchainKHR(h->device, h->swapchain, NULL);
     h->swapchain = VK_NULL_HANDLE;
+}
+
+static int create_swapchain(VkHostC* h, int w, int hgt)
+{
+    VK_CHECK(vkDeviceWaitIdle(h->device), "wait swapchain rebuild");
+    h->pending = 0;
+
+    destroy_swapchain(h);
 
     VkSurfaceCapabilitiesKHR caps;
     VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(h->physical_device, h->surface, &caps),
@@ -662,6 +667,46 @@ int vk_host_c_create_device(VkHostC* h)
     return 0;
 }
 
+int vk_host_c_replace_surface(VkHostC* h, VkSurfaceKHR replacement)
+{
+    if (h->recording || !h->device || (replacement && replacement == h->surface))
+    {
+        fprintf(stderr, "[host_vulkan] replace surface requires an initialized, idle host\n");
+        if (replacement && replacement != h->surface)
+            vkDestroySurfaceKHR(h->instance, replacement, NULL);
+        return -1;
+    }
+    if (replacement)
+    {
+        VkBool32 supported = VK_FALSE;
+        const VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
+            h->physical_device, h->graphics_family, replacement, &supported);
+        if (result != VK_SUCCESS || !supported)
+        {
+            fprintf(stderr, "[host_vulkan] replacement surface cannot use selected queue: %d\n",
+                    (int)result);
+            vkDestroySurfaceKHR(h->instance, replacement, NULL);
+            return -1;
+        }
+    }
+    const VkResult result = vkDeviceWaitIdle(h->device);
+    if (result != VK_SUCCESS)
+    {
+        fprintf(stderr, "[host_vulkan] wait for surface replacement: %d\n", (int)result);
+        if (replacement)
+            vkDestroySurfaceKHR(h->instance, replacement, NULL);
+        return -1;
+    }
+    h->pending = 0;
+    destroy_swapchain(h);
+    if (h->surface)
+        vkDestroySurfaceKHR(h->instance, h->surface, NULL);
+    h->surface = replacement;
+    h->recreate = 1;
+    h->present_frame = 0;
+    return 0;
+}
+
 int vk_host_c_wait_ready(VkHostC* h)
 {
     if (h->pending)
@@ -681,7 +726,7 @@ int vk_host_c_begin_frame(VkHostC* h, int w, int hgt, int present, nekomote_vk_t
         fprintf(stderr, "[host_vulkan] frame already recording\n");
         return -1;
     }
-    if (!out_target || w <= 0 || hgt <= 0)
+    if (!out_target || w <= 0 || hgt <= 0 || (present && !h->surface))
     {
         fprintf(stderr, "[host_vulkan] invalid frame size\n");
         return -1;
@@ -957,13 +1002,7 @@ void vk_host_c_destroy(VkHostC* h)
         vkDestroyImage(h->device, h->output_image, NULL);
     if (h->output_memory)
         vkFreeMemory(h->device, h->output_memory, NULL);
-    for (uint32_t i = 0; i < h->swap_image_count; ++i)
-        if (h->swap_finished[i])
-            vkDestroySemaphore(h->device, h->swap_finished[i], NULL);
-    free(h->swap_finished);
-    free(h->swap_images);
-    if (h->swapchain)
-        vkDestroySwapchainKHR(h->device, h->swapchain, NULL);
+    destroy_swapchain(h);
     if (h->render_pass)
         vkDestroyRenderPass(h->device, h->render_pass, NULL);
     if (h->acquired)

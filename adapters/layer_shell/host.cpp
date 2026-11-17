@@ -176,7 +176,7 @@ class Host::Impl
         uint32_t global = 0;
         std::string name;
         int scale = 1;
-        bool entered = false;
+        bool entered = false, complete = false;
     };
     enum class InputKind
     {
@@ -224,6 +224,10 @@ class Host::Impl
     }
     void initialize_wayland();
     void create_surface();
+    void process_output_lifecycle();
+    void detach_surface();
+    void reconnect_graphics();
+    void refresh_availability();
     void initialize_egl();
     void initialize_graphics();
 #if defined(NEKOMOTE_HAS_VULKAN)
@@ -265,7 +269,10 @@ class Host::Impl
     wl_callback* frame_callback_ = nullptr;
     std::vector<std::unique_ptr<Output>> outputs_;
     Output* selected_ = nullptr;
+    std::string target_output_name_;
+    bool output_missing_ = false, surface_closed_ = false, graphics_detached_ = false;
     EGLDisplay egl_display_ = EGL_NO_DISPLAY;
+    EGLConfig egl_config_ = nullptr;
     EGLContext egl_context_ = EGL_NO_CONTEXT;
     EGLSurface egl_surface_ = EGL_NO_SURFACE;
     wl_egl_window* egl_window_ = nullptr;
@@ -365,10 +372,9 @@ const wl_registry_listener& Host::Impl::registry_listener()
                                   {
                                       if (output->global != name)
                                           return false;
-                                      if (self.selected_ == output.get() || output->entered)
+                                      if (self.selected_ == output.get())
                                       {
-                                          std::cerr << "wallpaper output removed; closing\n";
-                                          self.closed_ = true;
+                                          self.output_missing_ = true;
                                           self.selected_ = nullptr;
                                       }
                                       return true;
@@ -395,7 +401,12 @@ const wl_output_listener& Host::Impl::output_listener()
         value.done = [](void* data, wl_output*)
         {
             auto& output = *static_cast<Output*>(data);
-            output.host->callback([&] { output.host->update_scale(); });
+            output.host->callback(
+                [&]
+                {
+                    output.complete = true;
+                    output.host->update_scale();
+                });
         };
         value.scale = [](void* data, wl_output*, int32_t factor)
         {
@@ -432,7 +443,16 @@ const wl_surface_listener& Host::Impl::surface_listener()
                 {
                     for (const auto& output : self.outputs_)
                         if (output->object == target)
+                        {
                             output->entered = true;
+                            if (!self.selected_ && !self.output_missing_)
+                            {
+                                self.selected_ = output.get();
+                                self.target_output_name_ = output->name;
+                                std::cerr << "wallpaper target output=" << self.target_output_name_
+                                          << '\n';
+                            }
+                        }
                     self.update_scale();
                 });
         };
@@ -663,7 +683,8 @@ const zwlr_layer_surface_v1_listener& Host::Impl::layer_listener()
                     self.needs_resize_ = true;
                 });
         },
-        [](void* data, zwlr_layer_surface_v1*) { static_cast<Impl*>(data)->closed_ = true; }};
+        [](void* data, zwlr_layer_surface_v1*)
+        { static_cast<Impl*>(data)->surface_closed_ = true; }};
     return listener;
 }
 
@@ -701,15 +722,19 @@ void Host::Impl::create_surface()
 {
     if (!compositor_ || !shell_)
         throw std::runtime_error("compositor does not provide wlr-layer-shell");
-    if (!options_.output.empty())
+    if (target_output_name_.empty())
+        target_output_name_ = options_.output;
+    if (!target_output_name_.empty())
     {
         for (const auto& output : outputs_)
-            if (output->object && output->name == options_.output)
+            if (output->object && output->name == target_output_name_)
                 selected_ = output.get();
         if (!selected_)
-            throw std::runtime_error("output not found: " + options_.output +
+            throw std::runtime_error("output not found: " + target_output_name_ +
                                      " (named outputs require wl_output version 4)");
     }
+    if (selected_)
+        std::cerr << "wallpaper target output=" << target_output_name_ << '\n';
     update_scale();
     surface_ = wl_compositor_create_surface(compositor_);
     if (!surface_)
@@ -740,6 +765,141 @@ void Host::Impl::create_surface()
     wl_surface_commit(surface_);
 }
 
+void Host::Impl::refresh_availability()
+{
+    const bool unavailable =
+        output_missing_ || graphics_detached_ || !configured_ || session_unavailable_;
+    if (!wallpaper_ || host_unavailable_ == unavailable)
+        return;
+    host_unavailable_ = unavailable;
+    check(nekomote_wallpaper_set_output_available(wallpaper_, !unavailable),
+          "set host availability");
+    check(nekomote_wallpaper_advance(wallpaper_, 0), "flush availability audio commands");
+    last_frame_ = next_frame_ = Clock::now();
+    input_count_ = 0;
+    std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
+}
+
+void Host::Impl::detach_surface()
+{
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (vk_host_.device && vk_host_c_wait_ready(&vk_host_) != 0)
+        throw std::runtime_error("wait before output removal failed");
+#endif
+    // CPU playback state and GPU textures survive. Pause/flush while the old
+    // graphics context is still valid; advance can retire an old crossfade.
+    refresh_availability();
+    if (wallpaper_)
+        check(nekomote_wallpaper_pointer_leave(wallpaper_), "cancel lost-output pointer");
+    if (egl_surface_ != EGL_NO_SURFACE)
+    {
+        // EGL 1.5 / KHR_surfaceless_context keeps a valid GL context for resource
+        // teardown while no native window exists. Never render a default FBO here.
+        egl_check(eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context_),
+                  "park GL context after output removal");
+        egl_check(eglDestroySurface(egl_display_, egl_surface_), "release lost EGL surface");
+        egl_surface_ = EGL_NO_SURFACE;
+        wl_egl_window_destroy(egl_window_);
+        egl_window_ = nullptr;
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    if (vk_host_.device && vk_host_c_replace_surface(&vk_host_, VK_NULL_HANDLE) != 0)
+        throw std::runtime_error("detach Vulkan output failed");
+#endif
+    if (frame_callback_)
+    {
+        wl_callback_destroy(frame_callback_);
+        frame_callback_ = nullptr;
+    }
+    if (layer_surface_)
+        zwlr_layer_surface_v1_destroy(layer_surface_);
+    if (surface_)
+        wl_surface_destroy(surface_);
+    layer_surface_ = nullptr;
+    surface_ = nullptr;
+    configured_ = false;
+    surface_closed_ = false;
+    graphics_detached_ = wallpaper_ != nullptr;
+    needs_resize_ = true;
+    frame_ready_ = true;
+    retry_frame_ = false;
+    pointer_inside_ = false;
+    input_count_ = 0;
+    for (auto& output : outputs_)
+        output->entered = false;
+    std::cerr << "wallpaper output " << target_output_name_ << " removed; waiting for reconnect\n";
+}
+
+void Host::Impl::process_output_lifecycle()
+{
+    if (surface_closed_ && !output_missing_)
+    {
+        // closed and global_remove may span separate reads. Complete that
+        // topology transaction before deciding whether this was a hot unplug.
+        if (wl_display_roundtrip(display_) < 0)
+            throw std::runtime_error("output-close roundtrip failed");
+        rethrow_failure();
+        if (!output_missing_)
+        {
+            closed_ = true; // A compositor close unrelated to removal is final.
+            return;
+        }
+    }
+    if (!output_missing_)
+        return;
+    if (surface_)
+        detach_surface();
+    if (target_output_name_.empty())
+        throw std::runtime_error("cannot recover unnamed output; wl_output version 4 is required");
+    for (const auto& output : outputs_)
+    {
+        if (output->complete && output->name == target_output_name_)
+        {
+            selected_ = output.get();
+            output_missing_ = false;
+            create_surface();
+            std::cerr << "wallpaper output " << target_output_name_ << " reconnected\n";
+            break;
+        }
+    }
+}
+
+void Host::Impl::reconnect_graphics()
+{
+    resize();
+    if (options_.backend == Backend::opengl)
+    {
+        egl_window_ = wl_egl_window_create(surface_, pixel_width_, pixel_height_);
+        if (!egl_window_)
+            throw std::runtime_error("cannot recreate Wayland EGL window");
+        egl_surface_ = eglCreateWindowSurface(
+            egl_display_, egl_config_, reinterpret_cast<EGLNativeWindowType>(egl_window_), nullptr);
+        if (egl_surface_ == EGL_NO_SURFACE)
+            throw std::runtime_error("cannot recreate EGL output surface");
+        egl_check(eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_),
+                  "restore GL context to output");
+        egl_check(eglSwapInterval(egl_display_, 0), "restore EGL swap interval");
+    }
+#if defined(NEKOMOTE_HAS_VULKAN)
+    else
+    {
+        VkWaylandSurfaceCreateInfoKHR info{};
+        info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
+        info.display = display_;
+        info.surface = surface_;
+        VkSurfaceKHR replacement = VK_NULL_HANDLE;
+        const auto result =
+            vkCreateWaylandSurfaceKHR(vk_host_.instance, &info, nullptr, &replacement);
+        if (result != VK_SUCCESS)
+            throw std::runtime_error("cannot recreate Vulkan Wayland surface: " +
+                                     std::to_string(result));
+        if (vk_host_c_replace_surface(&vk_host_, replacement) != 0)
+            throw std::runtime_error("cannot restore Vulkan output on selected device");
+    }
+#endif
+    graphics_detached_ = false;
+}
+
 void Host::Impl::initialize_egl()
 {
     egl_display_ = eglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR, display_, nullptr);
@@ -760,9 +920,8 @@ void Host::Impl::initialize_egl()
                                             EGL_ALPHA_SIZE,
                                             8,
                                             EGL_NONE};
-    EGLConfig config = nullptr;
     EGLint count = 0;
-    egl_check(eglChooseConfig(egl_display_, config_attributes, &config, 1, &count),
+    egl_check(eglChooseConfig(egl_display_, config_attributes, &egl_config_, 1, &count),
               "choose EGL config");
     if (count != 1)
         throw std::runtime_error("no desktop OpenGL EGL window configuration");
@@ -773,7 +932,7 @@ void Host::Impl::initialize_egl()
                                              EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR,
                                              EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR,
                                              EGL_NONE};
-    egl_context_ = eglCreateContext(egl_display_, config, EGL_NO_CONTEXT, context_attributes);
+    egl_context_ = eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT, context_attributes);
     if (egl_context_ == EGL_NO_CONTEXT)
         throw std::runtime_error("cannot create desktop OpenGL 3.3 context");
     resize();
@@ -781,7 +940,7 @@ void Host::Impl::initialize_egl()
     if (!egl_window_)
         throw std::runtime_error("cannot create Wayland EGL window");
     egl_surface_ = eglCreateWindowSurface(
-        egl_display_, config, reinterpret_cast<EGLNativeWindowType>(egl_window_), nullptr);
+        egl_display_, egl_config_, reinterpret_cast<EGLNativeWindowType>(egl_window_), nullptr);
     if (egl_surface_ == EGL_NO_SURFACE)
         throw std::runtime_error("cannot create EGL window surface");
     egl_check(eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_),
@@ -1135,10 +1294,15 @@ void Host::Impl::run()
         rethrow_failure();
         if (closed_ || stop_requested)
             break;
+        process_output_lifecycle();
+        if (closed_)
+            break;
         if (configured_)
         {
             if (!wallpaper_)
                 initialize_graphics();
+            else if (graphics_detached_)
+                reconnect_graphics();
 #if defined(NEKOMOTE_HAS_VULKAN)
             // Input and resize can replace GPU resources too, so synchronize
             // before any wallpaper mutation, not just command recording.
@@ -1150,18 +1314,7 @@ void Host::Impl::run()
                 next_session_query_ = Clock::now() + std::chrono::seconds(1);
                 session_unavailable_ = session_monitor_->poll();
             }
-            const bool unavailable = session_unavailable_;
-            if (host_unavailable_ != unavailable)
-            {
-                host_unavailable_ = unavailable;
-                check(nekomote_wallpaper_set_output_available(wallpaper_, !unavailable),
-                      "set session availability");
-                check(nekomote_wallpaper_advance(wallpaper_, 0),
-                      "flush availability audio commands");
-                last_frame_ = next_frame_ = Clock::now();
-                input_count_ = 0;
-                std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
-            }
+            refresh_availability();
             resize();
             process_input();
             if (idle_wait_ && (nekomote_wallpaper_needs_render(wallpaper_) ||

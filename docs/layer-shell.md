@@ -75,7 +75,7 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | 参数 | 含义 |
 | --- | --- |
 | `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
-| `--output NAME` | 固定输出，移除该输出后正常退出 |
+| `--output NAME` | 固定输出，移除后暂停并等待同名输出恢复 |
 | `--config FILE` | 启动配置文件，显式参数覆盖已保存值 |
 | `--state FILE` | 面板偏好文件，默认由启动文件路径派生 |
 | `--save-config` | 显式保存启动设置并退出，无需显示服务器 |
@@ -110,7 +110,10 @@ Wayland 连接、图形设备、输入队列和壁纸实例由同一个线程拥
 GPU 读回或忙循环。帧回调暂停期间不推进求值，恢复时传入的 delta 最大 250ms。
 角色渐变沿用共享 application 的同一推进预算，不恢复墙钟渐变。
 
-配置变化触发尺寸/缩放更新；layer close 或目标输出移除结束进程，合成器连接断开
+配置变化触发尺寸/缩放更新；目标输出移除后暂停，等待同名输出恢复并重建原生surface，
+保留模型、面板、设备及纹理。默认输出首次确定后也按该名称恢复，不自动迁移到其他屏幕。
+恢复要求 `wl_output` v4稳定名称；OpenGL保留上下文需要EGL无surface上下文能力，
+不支持时明确失败。非输出移除引起的layer close仍结束进程，合成器连接断开
 报告失败，SIGINT/SIGTERM 正常退出。Vulkan 路径先等待 GPU 完成，再销毁壁纸实例
 及工作线程，之后释放图形设备、surface 和 Wayland 连接。启动连接中的同步
 roundtrip 没有独立内部超时。
@@ -197,3 +200,7 @@ NVIDIA 580.82.09 + 虚拟 OpenGL 合成器出现 EGLImage/texture-target 不兼�
 未覆盖：Sway/Hyprland/niri 实机、最终合成画面、物理输出、真实指针交互、运行中
 resize/热插拔、音频播放、多进程同时输出、完整动画、长期与功耗。没有测量性能收益，
 不能将软件渲染验证当作实际壁纸的资源消耗证据。
+
+2026-11-17补充：私有KWin双输出下，OpenGL/Vulkan分别验证指定/默认输出的两次移除恢复、
+固定帧画面一致及断开时退出；属于协议输出测试，物理拔插、GPU设备移除及合成器重启
+仍未验收。具体条件和性能范围见[可靠性报告](wallpaper-reliability-2026-11-17.md)。

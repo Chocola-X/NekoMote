@@ -68,6 +68,11 @@ extern "C"
      * and support graphics/presentation; no fallback. Takes surface ownership. */
     int vk_host_c_select_device(VkHostC* host, VkSurfaceKHR surface, const char* pci_selector);
     int vk_host_c_create_device(VkHostC* host);
+    /* Lifecycle boundary only, with no frame recording. NULL detaches a lost
+     * native output; a replacement must support the existing device/queue.
+     * Takes a distinct replacement's ownership even on failure. Retains wallpaper/device
+     * resources and the offscreen target; never silently switches GPUs. */
+    int vk_host_c_replace_surface(VkHostC* host, VkSurfaceKHR replacement);
 
     /* Per-frame: begin returns a target for nekomote_wallpaper_set_vk_target. */
     int vk_host_c_wait_ready(VkHostC* host);

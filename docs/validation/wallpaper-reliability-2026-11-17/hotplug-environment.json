@@ -1,0 +1,20 @@
+{
+  "baseline_commit": "a516f68",
+  "current": "stage 3 uncommitted changes based on a516f68",
+  "build": "Release -O3 -DNDEBUG LTO Werror; fixed project dependencies, system graphics/libdbus",
+  "hardware": "Xeon E5-1680 v4; RTX 3080 Ti; NVIDIA 580.82.09",
+  "host": "Arch Linux; owned KWin virtual dual 800x600 outputs and XWayland",
+  "test_model": "Chocola casual-b-with-bell",
+  "fps_limit": 60,
+  "audio": "muted; private mocked ScreenSaver/logind",
+  "physical_power_or_scanout_validated": false,
+  "sha256": {
+    "experiments/reliability/layer-stage3-before": "f768f21b410b86f6c27725d8d71f71e3e38bdaaf41bcfc335b7d4f177a3f3aee",
+    "experiments/reliability/x11-stage3-before": "bfaf44f41b19bf834ec206929ee96c5d1efcfad91ea73650a75fd4d432451703",
+    "build/release/bin/nekomote_layer_shell": "1af54049cc1beb98c1c4f627b218ae06e3e215cf2df927efa570bcb549e13e96",
+    "build/release/bin/nekomote_x11": "763e06350eb006ef0a59e6d7b3a22fa9f8d086285dc9dc4b718c036bbba06dcc",
+    "build/release/lib/libnekomote_host_present_metrics.so": "8f58afb1c52ae49421fd605ab0ac21cbec88a8ec7740d336af2be51f4a3c1a69",
+    "assets/characters/chocola/casual-b-with-bell/model.nkm": "4244270f57ca50f7f1fd283d5269f64612663f78bb64bd6ea38480f3dfbf7304",
+    "assets/characters/chocola/casual-b-with-bell/session.nks.json": "8397595a51fe3affbf7c6b5bc648cdc1cdb8e180325d483682804e0f1b334768"
+  }
+}

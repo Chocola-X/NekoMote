@@ -1,0 +1,198 @@
+{
+  "scope": "private KWin virtual outputs; no physical power or login lock",
+  "cases": [
+    {
+      "name": "frames-layer-opengl-before-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.017997,
+      "wall_seconds": 6.768691,
+      "cpu_ms_per_frame": 2.827769,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-opengl-after-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.073995,
+      "wall_seconds": 6.76925,
+      "cpu_ms_per_frame": 2.983319,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-opengl-after-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.959952,
+      "wall_seconds": 6.719393,
+      "cpu_ms_per_frame": 2.666533,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-opengl-before-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.967353,
+      "wall_seconds": 6.669653,
+      "cpu_ms_per_frame": 2.687092,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-opengl-before-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.946192,
+      "wall_seconds": 6.668686,
+      "cpu_ms_per_frame": 2.628311,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-opengl-after-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.058557,
+      "wall_seconds": 6.668937,
+      "cpu_ms_per_frame": 2.940436,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-before-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.972565,
+      "wall_seconds": 6.769571,
+      "cpu_ms_per_frame": 2.701569,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-after-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.009286,
+      "wall_seconds": 6.769543,
+      "cpu_ms_per_frame": 2.803572,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-after-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.904696,
+      "wall_seconds": 6.718298,
+      "cpu_ms_per_frame": 2.513044,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-before-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.886802,
+      "wall_seconds": 6.819195,
+      "cpu_ms_per_frame": 2.463339,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-before-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.967653,
+      "wall_seconds": 6.818546,
+      "cpu_ms_per_frame": 2.687925,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-layer-vulkan-after-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.942121,
+      "wall_seconds": 6.818765,
+      "cpu_ms_per_frame": 2.617003,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-before-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.919864,
+      "wall_seconds": 6.619027,
+      "cpu_ms_per_frame": 2.555178,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-after-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.911062,
+      "wall_seconds": 6.618749,
+      "cpu_ms_per_frame": 2.530728,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-after-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.773529,
+      "wall_seconds": 6.569311,
+      "cpu_ms_per_frame": 2.148692,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-before-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.864212,
+      "wall_seconds": 6.569317,
+      "cpu_ms_per_frame": 2.400589,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-before-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.871214,
+      "wall_seconds": 6.568409,
+      "cpu_ms_per_frame": 2.420039,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-opengl-after-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.830751,
+      "wall_seconds": 6.56918,
+      "cpu_ms_per_frame": 2.307642,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-before-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.078196,
+      "wall_seconds": 6.869301,
+      "cpu_ms_per_frame": 2.994989,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-after-0",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.049886,
+      "wall_seconds": 6.869228,
+      "cpu_ms_per_frame": 2.91635,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-after-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.036311,
+      "wall_seconds": 6.86938,
+      "cpu_ms_per_frame": 2.878642,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-before-1",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.107781,
+      "wall_seconds": 6.969272,
+      "cpu_ms_per_frame": 3.077169,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-before-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 0.93525,
+      "wall_seconds": 6.819205,
+      "cpu_ms_per_frame": 2.597917,
+      "includes_startup_and_teardown": true
+    },
+    {
+      "name": "frames-x11-vulkan-after-2",
+      "submitted_frames": 360,
+      "process_cpu_seconds": 1.235719,
+      "wall_seconds": 6.918911,
+      "cpu_ms_per_frame": 3.432553,
+      "includes_startup_and_teardown": true
+    }
+  ],
+  "passed": true
+}

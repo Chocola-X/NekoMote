@@ -100,6 +100,53 @@ def worker(args):
                         stop(child)
                         log.close()
                     print(json.dumps(case), flush=True)
+        if args.frame_benchmark:
+            import resource
+            for shell, current, baseline, target in [('layer', args.layer, args.before_layer, output),
+                                                       ('x11', args.x11, args.before_x11, xoutput)]:
+                if shell not in args.benchmark_shells:
+                    continue
+                if not baseline:
+                    raise RuntimeError('frame benchmark requires both frozen baseline binaries')
+                for backend in args.backends:
+                    for round_index in range(args.benchmark_rounds):
+                        versions = [('before', baseline), ('after', current)]
+                        if round_index % 2:
+                            versions.reverse()
+                        for version, binary in versions:
+                            name = f'frames-{shell}-{backend}-{version}-{round_index}'
+                            command = [str(binary), '--backend', backend, '--model', str(args.model),
+                                '--session', str(args.session), '--output', target, '--mute', '--no-save',
+                                '--state', str(panel), '--input', 'passthrough', '--frames', '600' if args.present_metrics else '360']
+                            with (root / (name + '.log')).open('w') as log:
+                                before_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
+                                started = time.monotonic()
+                                metrics = root / (name + '-metrics.json')
+                                benchmark_env = dict(env)
+                                if args.present_metrics:
+                                    benchmark_env.update(LD_PRELOAD=str(args.present_metrics),
+                                        NEKOMOTE_PRESENT_METRICS_FILE=str(metrics))
+                                child = subprocess.Popen(command, env=benchmark_env, stdout=log, stderr=log)
+                                try:
+                                    if child.wait(timeout=35):
+                                        raise RuntimeError(name + ' failed')
+                                finally:
+                                    stop(child)
+                                elapsed = time.monotonic() - started
+                                after_cpu = resource.getrusage(resource.RUSAGE_CHILDREN)
+                            cpu = after_cpu.ru_utime + after_cpu.ru_stime - before_cpu.ru_utime - before_cpu.ru_stime
+                            case = dict(name=name, submitted_frames=360, process_cpu_seconds=round(cpu, 6),
+                                        wall_seconds=round(elapsed, 6), cpu_ms_per_frame=round(cpu * 1000 / 360, 6),
+                                        includes_startup_and_teardown=True)
+                            if args.present_metrics:
+                                case['steady'] = json.loads(metrics.read_text())
+                                case['submitted_frames'] = 600
+                                case.pop('cpu_ms_per_frame')
+                            results['cases'].append(case)
+                            print(json.dumps(case), flush=True)
+        if args.hotplug:
+            from hotplug_checks import check_hotplug
+            check_hotplug(args, env, output, xoutput, panel, results, cpu_seconds)
         if args.plasma_probe:
             for backend in args.backends:
                 completed = subprocess.run([str(args.plasma_probe)],
@@ -153,6 +200,11 @@ def main():
     for name in ['layer', 'x11', 'probe', 'model', 'session', 'before-layer', 'before-x11']:
         parser.add_argument('--' + name, type=lambda value: Path(value).resolve(strict=True),
                             required=not name.startswith('before'))
+    parser.add_argument('--present-metrics', type=lambda value: Path(value).resolve(strict=True))
+    parser.add_argument('--frame-benchmark', action='store_true')
+    parser.add_argument('--benchmark-rounds', type=int, choices=range(1, 21), default=3)
+    parser.add_argument('--benchmark-shells', nargs='+', choices=['layer', 'x11'], default=['layer', 'x11'])
+    parser.add_argument('--hotplug', action='store_true')
     parser.add_argument('--skip-native', action='store_true')
     parser.add_argument('--plasma-probe', type=lambda value: Path(value).resolve(strict=True))
     parser.add_argument('--plasma-pacing', type=lambda value: Path(value).resolve(strict=True))
@@ -186,7 +238,7 @@ def main():
                 '--no-kactivities', '--exit-with-session', str(script)], env=env,
                 stdout=log, stderr=log, start_new_session=True)
             try:
-                code = compositor.wait(timeout=400)
+                code = compositor.wait(timeout=1000 if args.frame_benchmark else 400)
             finally:
                 try:
                     os.killpg(compositor.pid, signal.SIGTERM)

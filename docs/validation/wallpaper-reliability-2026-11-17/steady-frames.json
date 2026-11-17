@@ -1,0 +1,390 @@
+{
+  "scope": "private KWin virtual outputs; no physical power or login lock",
+  "cases": [
+    {
+      "name": "frames-layer-opengl-before-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.377975,
+      "wall_seconds": 10.823759,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.725725418,
+        "submission_fps": 58.083385,
+        "p50_ms": 17.259733,
+        "p95_ms": 18.168661,
+        "p99_ms": 18.811863
+      }
+    },
+    {
+      "name": "frames-layer-opengl-after-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.421639,
+      "wall_seconds": 10.823683,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.790981554,
+        "submission_fps": 57.881937,
+        "p50_ms": 17.377864,
+        "p95_ms": 18.154169,
+        "p99_ms": 18.678335
+      }
+    },
+    {
+      "name": "frames-layer-opengl-after-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.459603,
+      "wall_seconds": 10.821788,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.813965943,
+        "submission_fps": 58.118855,
+        "p50_ms": 17.295935,
+        "p95_ms": 18.252931,
+        "p99_ms": 18.750317
+      }
+    },
+    {
+      "name": "frames-layer-opengl-before-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.319469,
+      "wall_seconds": 10.773008,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.717088532,
+        "submission_fps": 58.15346,
+        "p50_ms": 17.211366,
+        "p95_ms": 18.100594,
+        "p99_ms": 18.704494
+      }
+    },
+    {
+      "name": "frames-layer-opengl-before-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.360876,
+      "wall_seconds": 10.773455,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.716058776,
+        "submission_fps": 58.352989,
+        "p50_ms": 17.018234,
+        "p95_ms": 18.069957,
+        "p99_ms": 18.538211
+      }
+    },
+    {
+      "name": "frames-layer-opengl-after-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.333208,
+      "wall_seconds": 10.822209,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.709199036,
+        "submission_fps": 57.951282,
+        "p50_ms": 17.366882,
+        "p95_ms": 18.110176,
+        "p99_ms": 18.928767
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-before-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.305541,
+      "wall_seconds": 10.921353,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.627330866,
+        "submission_fps": 57.984642,
+        "p50_ms": 17.272123,
+        "p95_ms": 17.967487,
+        "p99_ms": 18.4928
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-after-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.284104,
+      "wall_seconds": 10.9713,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.520341328,
+        "submission_fps": 57.939824,
+        "p50_ms": 17.321408,
+        "p95_ms": 17.737252,
+        "p99_ms": 18.408466
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-after-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.307954,
+      "wall_seconds": 10.92238,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.618471256,
+        "submission_fps": 58.068495,
+        "p50_ms": 17.206972,
+        "p95_ms": 18.052461,
+        "p99_ms": 18.448349
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-before-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.292456,
+      "wall_seconds": 10.871417,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.626047637,
+        "submission_fps": 57.998175,
+        "p50_ms": 17.244148,
+        "p95_ms": 17.825485,
+        "p99_ms": 18.58902
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-before-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.106237,
+      "wall_seconds": 10.871885,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.49706747,
+        "submission_fps": 58.118274,
+        "p50_ms": 17.232672,
+        "p95_ms": 17.701299,
+        "p99_ms": 18.267361
+      }
+    },
+    {
+      "name": "frames-layer-vulkan-after-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.275105,
+      "wall_seconds": 10.92102,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.626143754,
+        "submission_fps": 58.002948,
+        "p50_ms": 17.289571,
+        "p95_ms": 17.712428,
+        "p99_ms": 18.258676
+      }
+    },
+    {
+      "name": "frames-x11-opengl-before-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.034819,
+      "wall_seconds": 10.67103,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.401898201,
+        "submission_fps": 58.976215,
+        "p50_ms": 16.827631,
+        "p95_ms": 17.786853,
+        "p99_ms": 18.016323
+      }
+    },
+    {
+      "name": "frames-x11-opengl-after-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.031945,
+      "wall_seconds": 10.720969,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.426408175,
+        "submission_fps": 58.917648,
+        "p50_ms": 16.841317,
+        "p95_ms": 17.812046,
+        "p99_ms": 17.988665
+      }
+    },
+    {
+      "name": "frames-x11-opengl-after-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.183347,
+      "wall_seconds": 10.672115,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.546028877,
+        "submission_fps": 58.917037,
+        "p50_ms": 16.864906,
+        "p95_ms": 17.788066,
+        "p99_ms": 18.030427
+      }
+    },
+    {
+      "name": "frames-x11-opengl-before-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.207666,
+      "wall_seconds": 10.772146,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.550439671,
+        "submission_fps": 58.520087,
+        "p50_ms": 16.866209,
+        "p95_ms": 17.823356,
+        "p99_ms": 18.258103
+      }
+    },
+    {
+      "name": "frames-x11-opengl-before-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.144608,
+      "wall_seconds": 10.672156,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.55876979,
+        "submission_fps": 58.701156,
+        "p50_ms": 16.863997,
+        "p95_ms": 17.781978,
+        "p99_ms": 18.272023
+      }
+    },
+    {
+      "name": "frames-x11-opengl-after-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 0.952907,
+      "wall_seconds": 10.621116,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.448746786,
+        "submission_fps": 59.024556,
+        "p50_ms": 16.837915,
+        "p95_ms": 17.7817,
+        "p99_ms": 17.97939
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-before-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.283181,
+      "wall_seconds": 10.972016,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.513582471,
+        "submission_fps": 58.056912,
+        "p50_ms": 17.259835,
+        "p95_ms": 17.844769,
+        "p99_ms": 18.429517
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-after-0",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.396692,
+      "wall_seconds": 11.071272,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.492622961,
+        "submission_fps": 58.064795,
+        "p50_ms": 17.263998,
+        "p95_ms": 17.863684,
+        "p99_ms": 18.357584
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-after-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.361359,
+      "wall_seconds": 11.071761,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.503775634,
+        "submission_fps": 58.080746,
+        "p50_ms": 17.215824,
+        "p95_ms": 17.794818,
+        "p99_ms": 18.439599
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-before-1",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.19802,
+      "wall_seconds": 11.021839,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.445014124,
+        "submission_fps": 58.004183,
+        "p50_ms": 17.290902,
+        "p95_ms": 17.724894,
+        "p99_ms": 18.307486
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-before-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.233766,
+      "wall_seconds": 10.971478,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.491459337,
+        "submission_fps": 57.996939,
+        "p50_ms": 17.293848,
+        "p95_ms": 17.789545,
+        "p99_ms": 18.359646
+      }
+    },
+    {
+      "name": "frames-x11-vulkan-after-2",
+      "submitted_frames": 600,
+      "process_cpu_seconds": 1.19262,
+      "wall_seconds": 11.019806,
+      "includes_startup_and_teardown": true,
+      "steady": {
+        "warmup": 120,
+        "samples": 480,
+        "cpu_seconds": 0.420236142,
+        "submission_fps": 58.14029,
+        "p50_ms": 17.232063,
+        "p95_ms": 17.793817,
+        "p99_ms": 18.299787
+      }
+    }
+  ],
+  "passed": true
+}

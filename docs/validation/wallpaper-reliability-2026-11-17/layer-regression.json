@@ -1,0 +1,424 @@
+{
+  "scope": "KWin virtual output layer-shell protocol/GPU smoke",
+  "binary": "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+  "backend": "opengl",
+  "binary_sha256": "1af54049cc1beb98c1c4f627b218ae06e3e215cf2df927efa570bcb549e13e96",
+  "compositor": "/usr/bin/kwin_wayland",
+  "cases": [
+    {
+      "name": "missing-display",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--frames",
+        "1"
+      ],
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "name": "missing-layer-shell",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--frames",
+        "1"
+      ],
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "name": "outputs-base",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--list-outputs"
+      ],
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "unknown-output",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "NEKOMOTE-MISSING",
+        "--frames",
+        "1"
+      ],
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "name": "base-passthrough",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--input",
+        "passthrough",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/base-passthrough.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 320,
+      "height": 240,
+      "material_pixels": 1024,
+      "pixels_sha256": "c50c87c708102387e1d0e36948a53aaeaa0c32a413047211a16dc533fac46966"
+    },
+    {
+      "name": "base-interactive",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-1",
+        "--input",
+        "interactive",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/base-interactive.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 320,
+      "height": 240,
+      "material_pixels": 1024,
+      "pixels_sha256": "c50c87c708102387e1d0e36948a53aaeaa0c32a413047211a16dc533fac46966"
+    },
+    {
+      "name": "profile-opengl-first",
+      "passed": true,
+      "launch_sha256": "e438524f81e654580e4dfa71265af7d4a98ff27cdf7aaa2f3d631dee333ea5f2",
+      "existing_panel": false
+    },
+    {
+      "name": "profile-opengl-existing",
+      "passed": true,
+      "launch_sha256": "e438524f81e654580e4dfa71265af7d4a98ff27cdf7aaa2f3d631dee333ea5f2",
+      "existing_panel": true
+    },
+    {
+      "name": "runtime-scale",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--input",
+        "passthrough",
+        "--frames",
+        "120",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/runtime-scale.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 320,
+      "height": 240,
+      "material_pixels": 1024,
+      "pixels_sha256": "c50c87c708102387e1d0e36948a53aaeaa0c32a413047211a16dc533fac46966"
+    },
+    {
+      "name": "existing-capture",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--frames",
+        "1",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/existing-capture.ppm"
+      ],
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "name": "base-repeat",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/base-repeat.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "assets-catalog",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--assets",
+        "/tmp/nekomote-layer-regression-1117/assets",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/assets-catalog.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 320,
+      "height": 240,
+      "material_pixels": 25600,
+      "pixels_sha256": "724130b09e02d60bf1c97840338c364f8522a57dd71bc774ab06a52d99667da5"
+    },
+    {
+      "name": "compositor-disconnect",
+      "exit_code": 1,
+      "passed": true
+    },
+    {
+      "name": "outputs-resized",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--list-outputs"
+      ],
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "resized-passthrough",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--input",
+        "passthrough",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/resized-passthrough.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 400,
+      "height": 300,
+      "material_pixels": 1024,
+      "pixels_sha256": "f59bff0eda56f284935e6c24cd06742059b2151b2cc4d9d69e3e83f85b33c91e"
+    },
+    {
+      "name": "outputs-scaled",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--list-outputs"
+      ],
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "scaled-passthrough",
+      "command": [
+        "/run/media/chocola/MIKU/NekoMote/build/release/bin/nekomote_layer_shell",
+        "--backend",
+        "opengl",
+        "--model",
+        "/tmp/nekomote-layer-regression-1117/synthetic-model/model.nkm",
+        "--session",
+        "/tmp/nekomote-layer-regression-1117/session.nks.json",
+        "--config",
+        "/tmp/nekomote-layer-regression-1117/wallpaper.json",
+        "--output",
+        "Virtual-0",
+        "--input",
+        "passthrough",
+        "--frames",
+        "4",
+        "--capture",
+        "/tmp/nekomote-layer-regression-1117/scaled-passthrough.ppm"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "width": 640,
+      "height": 480,
+      "material_pixels": 1024,
+      "pixels_sha256": "6dc4ef41a2815672f1a37e431974cc04ddfc815bdf10cb6195aeabf66a8dde96"
+    },
+    {
+      "name": "signal-cleanup",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "environment": {
+    "LIBGL_ALWAYS_SOFTWARE": null,
+    "__EGL_VENDOR_LIBRARY_FILENAMES": null,
+    "KWIN_COMPOSE": null
+  },
+  "not_covered": [
+    "Sway",
+    "Hyprland",
+    "niri",
+    "physical outputs",
+    "real input",
+    "hotplug",
+    "physical mode resize while running",
+    "real-model animation",
+    "performance",
+    "long-term",
+    "compositor final output pixels"
+  ],
+  "optional_checks": {
+    "runtime_scale": {
+      "executed": true,
+      "passed": true,
+      "output_tool_runs": [
+        {
+          "command": [
+            "/usr/bin/kscreen-doctor",
+            "output.Virtual-0.scale.2"
+          ],
+          "exit_code": 0
+        },
+        {
+          "command": [
+            "/usr/bin/kscreen-doctor",
+            "output.Virtual-0.scale.1"
+          ],
+          "exit_code": 0
+        }
+      ],
+      "layer_configure_ack_observed": true,
+      "width": 320,
+      "height": 240
+    }
+  },
+  "inputs_sha256": {
+    "synthetic-model/model.nkm": "7bdb651d0e4d835adcb304f0877fdff778d47a6542d25498a313392c91d24398",
+    "session.nks.json": "3c3a8363fc8c329906ea78ac05a4505ca980382ac6083a405826a834f9e6a01d",
+    "synthetic-source/model.json": "d0189c9d3bc2026f6c3ced13a01e5dbeb5ddad6c5f933bf955646a0d43c29d39",
+    "synthetic-source/model.resx.json": "a45c939ae1331c4a42e90272cb6de5e797ebde0c5494cc54db488303a5c48360",
+    "synthetic-source/texture.png": "e42fcb84792c9985b4d63869a481c422e187f92d8cba9a4f5615472c6e7319c4"
+  },
+  "compositor_runs": [
+    [
+      "/usr/bin/kwin_wayland",
+      "--virtual",
+      "--width",
+      "320",
+      "--height",
+      "240",
+      "--scale",
+      "1",
+      "--output-count",
+      "2",
+      "--socket",
+      "nekomote-base",
+      "--no-lockscreen",
+      "--no-global-shortcuts",
+      "--no-kactivities"
+    ],
+    [
+      "/usr/bin/kwin_wayland",
+      "--virtual",
+      "--width",
+      "400",
+      "--height",
+      "300",
+      "--scale",
+      "1",
+      "--output-count",
+      "2",
+      "--socket",
+      "nekomote-resized",
+      "--no-lockscreen",
+      "--no-global-shortcuts",
+      "--no-kactivities"
+    ],
+    [
+      "/usr/bin/kwin_wayland",
+      "--virtual",
+      "--width",
+      "320",
+      "--height",
+      "240",
+      "--scale",
+      "2",
+      "--output-count",
+      "2",
+      "--socket",
+      "nekomote-scaled",
+      "--no-lockscreen",
+      "--no-global-shortcuts",
+      "--no-kactivities"
+    ]
+  ]
+}

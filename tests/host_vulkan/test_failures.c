@@ -12,7 +12,8 @@ enum Failure
     FAIL_EXTENSION_COUNT,
     FAIL_EXTENSION_READ,
     FAIL_QUEUE_SUPPORT,
-    FAIL_FORMAT_READ
+    FAIL_FORMAT_READ,
+    FAIL_DEVICE_IDLE
 };
 
 static enum Failure failure;
@@ -22,6 +23,7 @@ static unsigned live_allocations;
 static void* allocations[16];
 static VkResult present_result;
 static unsigned present_calls;
+static unsigned destroyed_surfaces, destroyed_swapchains, destroyed_semaphores;
 static int failures;
 static int multiple_devices;
 static int reverse_devices;
@@ -50,6 +52,12 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceSupportKHR(VkPhy
                                                                            VkSurfaceKHR surface,
                                                                            VkBool32* supported);
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkDeviceWaitIdle(VkDevice device);
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface,
+                                                      const VkAllocationCallbacks* allocator);
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,
+                                                        const VkAllocationCallbacks* allocator);
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySemaphore(VkDevice device, VkSemaphore semaphore,
+                                                     const VkAllocationCallbacks* allocator);
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
     VkPhysicalDevice device, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* capabilities);
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceFormatsKHR(
@@ -174,7 +182,31 @@ VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceSupportKHR(VkPhy
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkDeviceWaitIdle(VkDevice device)
 {
     (void)device;
-    return VK_SUCCESS;
+    return failure == FAIL_DEVICE_IDLE ? VK_ERROR_DEVICE_LOST : VK_SUCCESS;
+}
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface,
+                                                      const VkAllocationCallbacks* allocator)
+{
+    (void)instance;
+    (void)surface;
+    (void)allocator;
+    ++destroyed_surfaces;
+}
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain,
+                                                        const VkAllocationCallbacks* allocator)
+{
+    (void)device;
+    (void)swapchain;
+    (void)allocator;
+    ++destroyed_swapchains;
+}
+VKAPI_ATTR void VKAPI_CALL __wrap_vkDestroySemaphore(VkDevice device, VkSemaphore semaphore,
+                                                     const VkAllocationCallbacks* allocator)
+{
+    (void)device;
+    (void)semaphore;
+    (void)allocator;
+    ++destroyed_semaphores;
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL __wrap_vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
@@ -266,6 +298,9 @@ static void format_case(unsigned allocation)
 {
     reset(FAIL_FORMAT_READ, allocation);
     VkHostC host = {0};
+    host.device = (VkDevice)(uintptr_t)1;
+    host.physical_device = (VkPhysicalDevice)(uintptr_t)2;
+    host.surface = (VkSurfaceKHR)(uintptr_t)3;
     nekomote_vk_target target = {0};
     expect(vk_host_c_begin_frame(&host, 64, 64, 1, &target) == -1,
            "swapchain reports injected format error");
@@ -307,8 +342,62 @@ static void pci_selection_case(const char* selector, uintptr_t expected)
     expect(live_allocations == 0, "PCI selection frees all temporary allocations");
 }
 
+static void surface_replacement_case(enum Failure selected, int recording, int unsupported)
+{
+    reset(selected, 0);
+    destroyed_surfaces = destroyed_swapchains = destroyed_semaphores = 0;
+    cannot_present = unsupported;
+    VkHostC host = {0};
+    host.instance = (VkInstance)(uintptr_t)1;
+    host.device = (VkDevice)(uintptr_t)2;
+    host.physical_device = (VkPhysicalDevice)(uintptr_t)3;
+    host.surface = (VkSurfaceKHR)(uintptr_t)4;
+    host.swapchain = (VkSwapchainKHR)(uintptr_t)5;
+    host.output_image = (VkImage)(uintptr_t)6;
+    host.recording = recording;
+    host.pending = 1;
+    host.swap_finished = __wrap_calloc(1, sizeof(VkSemaphore));
+    host.swap_images = __wrap_calloc(1, sizeof(VkImage));
+    host.swap_finished[0] = (VkSemaphore)(uintptr_t)7;
+    host.swap_image_count = 1;
+    const int success = selected == FAIL_NONE && !recording && !unsupported;
+    expect(vk_host_c_replace_surface(&host, (VkSurfaceKHR)(uintptr_t)8) == (success ? 0 : -1),
+           "replacement reports queue/idle/recording failures");
+    expect(destroyed_surfaces == 1, "replacement releases exactly old or rejected surface");
+    expect(host.surface == (VkSurfaceKHR)(uintptr_t)(success ? 8 : 4),
+           "failed replacement retains old surface");
+    expect(host.device == (VkDevice)(uintptr_t)2 && host.output_image == (VkImage)(uintptr_t)6,
+           "replacement retains wallpaper device and target");
+    expect(destroyed_swapchains == (success ? 1U : 0U) &&
+               destroyed_semaphores == (success ? 1U : 0U),
+           "only successful replacement retires presentation resources");
+    if (success)
+    {
+        expect(host.swapchain == VK_NULL_HANDLE && host.swap_image_count == 0 && !host.pending,
+               "replacement clears stale presentation state");
+        expect(vk_host_c_replace_surface(&host, VK_NULL_HANDLE) == 0 && !host.surface,
+               "NULL detaches surface while retaining selected device");
+        expect(destroyed_surfaces == 2, "detached surface released once");
+        nekomote_vk_target target = {0};
+        expect(vk_host_c_begin_frame(&host, 64, 64, 1, &target) == -1,
+               "detached output cannot start a presenting frame");
+    }
+    else
+    {
+        __wrap_free(host.swap_finished);
+        __wrap_free(host.swap_images);
+    }
+    cannot_present = 0;
+    expect(live_allocations == 0, "surface cases release host arrays");
+}
+
 int main(void)
 {
+    surface_replacement_case(FAIL_NONE, 0, 0);
+    surface_replacement_case(FAIL_QUEUE_SUPPORT, 0, 0);
+    surface_replacement_case(FAIL_DEVICE_IDLE, 0, 0);
+    surface_replacement_case(FAIL_NONE, 1, 0);
+    surface_replacement_case(FAIL_NONE, 0, 1);
     selection_case(FAIL_NONE, 0);
     selection_case(FAIL_DEVICE_READ, 0);
     selection_case(FAIL_EXTENSION_COUNT, 0);

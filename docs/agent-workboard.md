@@ -6,6 +6,7 @@
 
 | 范围 | 当前状态 | 下一步 |
 | --- | --- | --- |
+| REL1 壁纸可靠性 | base `7430f20`，音频失联隔离/重连、宿主锁屏/休眠监听、独立壳同名输出热插拔恢复分阶段交付，见[可靠性验证](wallpaper-reliability-2026-11-17.md) | 私有服务与虚拟输出通过；真实关屏/锁屏器、物理拔插、其他驱动/合成器及长期仍需实机验收；Qt/Wayland/GLES暂停中强制释放场景图的旧失败另列 |
 | GPU1 独立进程选卡 | base `d6a8e38`，进程级 `--gpu` / `--list-gpus`，宿主身份核验，双卡 GL/Vulkan 24项和259 CPU通过，见[验收](gpu-selection-2026-11-17.md) | RADV为项目隔离驱动；其他合成器/驱动/ARM64/远端/长期与功耗未验收；Plasma跟随宿主 |
 | CFG1 配置规范化 | base `e72e3fd`，共享启动/面板配置分离、C ABI 0.7.0、Plasma 持久 UUID；独立复核和本机 CPU/隔离 GPU 验证 | 使用与迁移见[说明](configuration.md)，范围见[报告](configuration-2026-10-21.md)；真实多屏/远端/ARM64 未验收 |
 | SV1 X11 / layer-shell Vulkan | base `4dbe7c2`；原生 Xlib/Wayland WSI、高层 C ABI、共享呈现宿主；Release/LTO、225 既有 CPU + 新增失败回归、私有 GPU 与 14 对图像一致，见 [报告](shell-vulkan-2026-10-21.md) | 未安装真实桌面；目标合成器/原生 Xorg/最终合成像素/ARM64/远端/长期分别验收。启动/面板配置分离由 CFG1 接续 |

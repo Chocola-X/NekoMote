@@ -92,3 +92,101 @@ Qt/Wayland/GLES上的同一程序在“暂停后隐藏并释放场景图”环�
 已撤销；没有借本轮加入无收益补丁，也没有把该路径标为通过。
 新增锁屏/解锁及隐藏恢复测试在Qt/Wayland/GLES的GL/Vulkan两后端均通过，
 但不覆盖上述暂停中强制销毁的既有问题。结果见[Plasma回归](validation/wallpaper-reliability-2026-11-17/plasma-regression.json)。
+
+
+## 3. 独立壳输出移除与恢复
+
+基线 `a516f68`。X11和layer-shell现在在目标输出消失后暂停，等待原来同名输出；
+启动时仍须有活动输出，不自动选择另一屏幕。默认输出在首次确定后也记住其名称。
+用户暂停、面板配置、模型实例、物理状态和GPU纹理保留，恢复重置宿主时钟，
+不补算断开期间的墙钟时间。等待期间按事件/最多1Hz处理，SIGTERM可正常退出。
+这部分只修改宿主生命周期，不修改模型求值、绘制公式或配置schema。
+
+X11隐藏原窗口，重连按名称重新查询RandR XID、位置及尺寸，不依赖旧XID。
+layer-shell释放失效的layer/EGL窗口或Vulkan surface/交换链，重建同名输出上的
+原生surface；OpenGL将原上下文停放为无surface上下文，Vulkan保留既有设备和
+离屏目标。替换Vulkan surface显式验证原物理设备/队列支持，不重新选卡。
+替换失败释放新surface并报告错误；CPU用例覆盖录制中拒绝、队列不支持/查询失败、
+设备等待失败及新旧surface/交换链/信号量的所有权。
+
+恢复要求输出名称稳定；layer-shell需要 `wl_output` v4，OpenGL还需要
+EGL1.5或KHR无surface上下文能力。不支持时明确失败。非输出移除引起的layer关闭、
+合成器/显示服务器断开、GPU设备丢失仍退出；本轮没有实现这些重连，也不承诺拔掉
+实际渲染GPU后仍可使用原设备。等待期间保留模型和纹理，因此不宣称释放全部内存/显存。
+
+同机Release/LTO、真实Chocola `casual-b-with-bell`、800×600、60FPS限制，
+使用私有KWin双虚拟输出及其XWayland，通过私有 `kscreen-doctor` 禁用/启用输出：
+
+- 两壳×GL/Vulkan×指定/默认输出，共8组，每组恢复两次。固定1/60步长、初态/随机种子
+  一致，在第240帧读取客户端画面；与冻结基线正常播放的对照逐字节一致，SHA256均为
+  `610c3ae9b37fa659aec81d82c99fd4533501b6496d5f26d9afff093834cb7003`。
+  截图只用于正确性，不参与性能采样。最终独立复测还直接启动冻结基线，确认四条
+  旧路径在输出移除后均退出；新版8组图像恢复和4组失联退出再次全部通过。
+  [最终16项记录](validation/wallpaper-reliability-2026-11-17/hotplug-final.json)。
+- Vulkan另开Khronos及同步验证，指定/默认输出恢复和失联退出均为0错误、0警告。
+- 首次失联退出采样中，layer GL/Vulkan、X11 GL/Vulkan的等待CPU秒/3秒分别为
+  0、0.02、0、0.01；`/proc`分辨率0.01秒，不解释为绝对零开销。
+  等待中SIGTERM到正常退出约0.113秒。该测量不包含截图、协议跟踪或验证层。
+- Release/LTO/Werror双壳构建和6组宿主/会话/音频/ABI契约通过。
+  [既有layer-shell隔离OpenGL集成检查](validation/wallpaper-reliability-2026-11-17/layer-regression.json)
+  通过，涵盖协议缺失、缩放、输入及退出等。
+- 另行启用开发工具和双壳、关闭Vulkan的Debug构建通过。此组合发现并修复了新增
+  会话监听测试探针与既有模型诊断工具的CMake名称冲突：新增目标改为
+  `nekomote_host_session_probe`，原 `nekomote_session_probe` 模型工具保持原职责；
+  CI构建目标、CTest及文档入口同步，并实际构建两个工具验证可共存。
+
+协议输出禁用/重启能真实触发原生对象移除和新建，但**不等同物理线缆拔插**；
+原生Xorg、不同合成器/驱动、输出名称变更、全部输出同时消失、实际GPU设备移除、
+长期循环及内存/显存增长尚未覆盖。沿用第二阶段的虚拟合成器限制，不据客户端截图
+认证最终屏幕合成像素。
+
+
+### 正常播放开销复核
+
+为避免把加载/退出和实际提交数混在一起，新增显式构建的诊断库
+`nekomote_host_present_metrics`，仅以 `LD_PRELOAD` 注入被测客户端。
+GLX/EGL交换和Vulkan accepted present使用同一边界，预热120次，采样随后480次；
+采样路径只计数和读取单调时钟，进程CPU时钟只在区间两端读取，不读回像素，
+最终退出才排序/写文件。它不链接正式壳、不安装、不在CI/正式运行默认启用。
+本表计整个客户端进程的CPU时间，包括驱动线程；间隔是**宿主提交间隔，非物理呈现时间**，
+不含合成器CPU。无验证层，每组新旧交错各3轮，表中为各指标中位数：
+
+| 壳/后端 | CPU秒/480次：旧→新 | 提交FPS：旧→新 | P95间隔ms：旧→新 | P99间隔ms：旧→新 |
+| --- | ---: | ---: | ---: | ---: |
+| layer/opengl | 0.7171 → 0.7910 | 58.15 → 57.95 | 18.101 → 18.154 | 18.704 → 18.750 |
+| layer/vulkan | 0.6260 → 0.6185 | 58.00 → 58.00 | 17.825 → 17.737 | 18.493 → 18.408 |
+| x11/opengl | 0.5504 → 0.4487 | 58.70 → 58.92 | 17.787 → 17.788 | 18.258 → 17.989 |
+| x11/vulkan | 0.4915 → 0.4926 | 58.00 → 58.08 | 17.790 → 17.795 | 18.360 → 18.358 |
+
+第一批layer/OpenGL CPU中位数上升10.3%，不能直接接受为无回退。随后专门对该组合
+交错复测各6轮，中位数为0.7671→0.6844秒（方向反转，约−10.8%）；
+P95为18.057→18.027ms，P99为18.676→18.625ms，FPS为57.94→58.14。
+两批合计各9轮的CPU取值范围明显重叠，尚不能将这些差值归因为代码的稳定收益/损失。
+结论是提交节奏未见持续回退，新增恢复路径可保留；**不宣称正常播放性能提升**。
+初次包含启动/退出的360帧结果也保留，避免只报告有利样本。
+未测整桌面CPU、功耗、RSS/显存趋势或物理呈现，不能由这些短样本外推长期节能。
+
+可复现入口（真实资产与图形环境可用时）：
+
+```sh
+cmake --build build/release --target nekomote_host_present_metrics
+python3 tools/testing/run_reliability_test.py \
+  --layer build/release/bin/nekomote_layer_shell --x11 build/release/bin/nekomote_x11 \
+  --probe build/release/bin/nekomote_host_session_probe \
+  --model /path/to/model.nkm --session /path/to/session.nks.json \
+  --before-layer /path/to/frozen-layer --before-x11 /path/to/frozen-x11 \
+  --skip-native --frame-benchmark \
+  --present-metrics build/release/lib/libnekomote_host_present_metrics.so \
+  --evidence-dir /path/to/new-evidence-directory
+```
+
+使用 `--hotplug` 替换性能参数可执行输出移除恢复/固定帧画面对照；
+`--benchmark-shells layer --backends opengl --benchmark-rounds 6` 可进行针对性复测。
+工具依赖本机KWin、XWayland、D-Bus与kscreen-doctor，自建隔离会话，不能用于认证其他合成器。
+
+原始记录：[输出恢复](validation/wallpaper-reliability-2026-11-17/hotplug.json)、
+[Vulkan验证](validation/wallpaper-reliability-2026-11-17/hotplug-validation.json)、
+[稳态三轮](validation/wallpaper-reliability-2026-11-17/steady-frames.json)、
+[GL六轮复测](validation/wallpaper-reliability-2026-11-17/steady-layer-gl-repeat.json)、
+[含启动的初次比较](validation/wallpaper-reliability-2026-11-17/frames-with-startup.json)、
+[环境与二进制/输入hash](validation/wallpaper-reliability-2026-11-17/hotplug-environment.json)。

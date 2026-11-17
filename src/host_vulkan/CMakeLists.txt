@@ -20,7 +20,7 @@ if(NEKOMOTE_BUILD_TESTS)
             vkEnumerateDeviceExtensionProperties vkGetPhysicalDeviceQueueFamilyProperties
             vkGetPhysicalDeviceProperties vkGetPhysicalDeviceSurfaceSupportKHR vkDeviceWaitIdle
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR vkGetPhysicalDeviceSurfaceFormatsKHR
-            vkQueuePresentKHR)
+            vkQueuePresentKHR vkDestroySurfaceKHR vkDestroySwapchainKHR vkDestroySemaphore)
         # GCC 10 / binutils 2.34 LTO can discard wrappers before ld rewrites host calls.
         # Mark them as link roots so fault injection survives whole-program analysis.
         target_link_options(nekomote_host_vulkan_failure_tests PRIVATE

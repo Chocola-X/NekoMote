@@ -7,6 +7,6 @@ target_include_directories(nekomote_host_session PUBLIC ${PROJECT_SOURCE_DIR}/in
 target_link_libraries(nekomote_host_session PRIVATE PkgConfig::DBUS nekomote_warnings)
 target_compile_features(nekomote_host_session PRIVATE cxx_std_20)
 if(NEKOMOTE_BUILD_TESTS)
-    add_executable(nekomote_session_probe ${PROJECT_SOURCE_DIR}/tests/host_session/probe.cpp)
-    target_link_libraries(nekomote_session_probe PRIVATE nekomote::host_session PkgConfig::DBUS nekomote_warnings)
+    add_executable(nekomote_host_session_probe ${PROJECT_SOURCE_DIR}/tests/host_session/probe.cpp)
+    target_link_libraries(nekomote_host_session_probe PRIVATE nekomote::host_session PkgConfig::DBUS nekomote_warnings)
 endif()

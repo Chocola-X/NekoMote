@@ -165,6 +165,13 @@ if(NEKOMOTE_BUILD_PREVIEW)
 endif()
 
 if(NEKOMOTE_BUILD_TESTS)
+    if(TARGET nekomote_x11 AND TARGET nekomote_layer_shell AND NEKOMOTE_BUILD_VULKAN)
+        add_library(nekomote_host_present_metrics SHARED EXCLUDE_FROM_ALL
+            tests/render/host_present_metrics.c)
+        target_link_libraries(nekomote_host_present_metrics PRIVATE
+            Vulkan::Headers ${CMAKE_DL_LIBS} nekomote_warnings)
+        target_compile_features(nekomote_host_present_metrics PRIVATE c_std_11)
+    endif()
     add_subdirectory(tests/unit)
     if(NEKOMOTE_BUILD_PLASMA)
         add_executable(nekomote_plasma_module_test tests/plasma/test_qml_module.cpp)
@@ -230,12 +237,12 @@ if(NEKOMOTE_BUILD_TESTS)
             ENVIRONMENT "NEKOMOTE_TEST_MODEL=${CMAKE_SOURCE_DIR}/assets/characters/coconut/casual/model.nkm;NEKOMOTE_TEST_SESSION=${CMAKE_SOURCE_DIR}/assets/characters/coconut/casual/session.nks.json;NEKOMOTE_PLASMA_PROBE=$<TARGET_FILE:nekomote_plasma_package_probe>;NEKOMOTE_PLASMA_STAGE=${CMAKE_BINARY_DIR}/adapters/plasma/stage;NEKOMOTE_EVIDENCE_DIR=${CMAKE_BINARY_DIR}/evidence/plasma-tests")
     endif()
     if(Python3_Interpreter_FOUND)
-        if(TARGET nekomote_session_probe)
+        if(TARGET nekomote_host_session_probe)
             find_program(NEKOMOTE_DBUS_DAEMON dbus-daemon)
             if(NEKOMOTE_DBUS_DAEMON)
                 add_test(NAME host_session_contract
                     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/host_session/test_monitor.py
-                        --probe $<TARGET_FILE:nekomote_session_probe>)
+                        --probe $<TARGET_FILE:nekomote_host_session_probe>)
                 set_tests_properties(host_session_contract PROPERTIES TIMEOUT 45)
             endif()
         endif()

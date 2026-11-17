@@ -1,0 +1,44 @@
+{
+  "scope": "private KWin virtual outputs; no physical power or login lock",
+  "cases": [
+    {
+      "name": "hotplug-layer-vulkan-named",
+      "cycles": 2,
+      "passed": true,
+      "image_sha256": "610c3ae9b37fa659aec81d82c99fd4533501b6496d5f26d9afff093834cb7003"
+    },
+    {
+      "name": "hotplug-layer-vulkan-default",
+      "cycles": 2,
+      "passed": true,
+      "image_sha256": "610c3ae9b37fa659aec81d82c99fd4533501b6496d5f26d9afff093834cb7003"
+    },
+    {
+      "name": "hotplug-layer-vulkan-waiting-shutdown",
+      "passed": true,
+      "waiting_cpu_seconds": 0.01,
+      "sample_seconds": 3,
+      "shutdown_seconds": 0.1135
+    },
+    {
+      "name": "hotplug-x11-vulkan-named",
+      "cycles": 2,
+      "passed": true,
+      "image_sha256": "610c3ae9b37fa659aec81d82c99fd4533501b6496d5f26d9afff093834cb7003"
+    },
+    {
+      "name": "hotplug-x11-vulkan-default",
+      "cycles": 2,
+      "passed": true,
+      "image_sha256": "610c3ae9b37fa659aec81d82c99fd4533501b6496d5f26d9afff093834cb7003"
+    },
+    {
+      "name": "hotplug-x11-vulkan-waiting-shutdown",
+      "passed": true,
+      "waiting_cpu_seconds": 0.01,
+      "sample_seconds": 3,
+      "shutdown_seconds": 0.1133
+    }
+  ],
+  "passed": true
+}
