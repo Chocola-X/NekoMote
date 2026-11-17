@@ -6,6 +6,23 @@
 包内原生模块导入，清空全局 QML 搜索路径。结构、安装证据与商店上架边界见
 [KPackage分发](plasma-kpackage-distribution.md)。
 
+## 2026-11-17：native20 player 的 EGL 头文件宏隔离
+
+基线 `07a0e7f`。用户提供的 native20 x86_64/aarch64 日志均在 player 编译时失败：
+Ubuntu20 的 `libegl-dev 1.3.2-1~ubuntu0.20.04.2` 默认包含 Xlib，其 `None` 宏污染
+`GeometryError::None`。player 的原生窗口由 GLFW 管理，不使用 EGL 原生窗口类型；
+现在于 EGL include 前定义 `EGL_NO_X11`，保留 EGL display 查询与实际 GPU 核验。
+
+使用 GCC10.5 与日志中同版本的官方 Ubuntu EGL 头文件，对真实 player 翻译单元
+复现原报错；修复后 Vulkan 开启、关闭两种编译均通过。另以本机工具链和同一旧版
+EGL 头文件完成 native20 的全部 CI 目标 Release/LTO/Werror 构建，257 项必选
+CTest 全部通过。上一轮的完整目标构建仅覆盖 X11，本轮补齐 player 的旧头文件检查。
+证据保存在 `build/evidence/ci-player-egl-20261117/`，包括前后编译日志、实际命令、
+`native20-tests.xml` 与头文件来源；依赖仅解压到工作区，没有安装系统包。
+
+本次没有修改运行时帧路径。完整 Ubuntu20 容器、发行包审计、ARM64 编译与远端
+Actions 尚未重跑，不将本机混合工具链检查作为这些项目的通过证据。
+
 ## 2026-11-17：GPU 宿主测试构建清单补修
 
 基线 `accd011`。用户提供的 `experiments/evidence-x11-x86_64.zip` 中编译已成功，

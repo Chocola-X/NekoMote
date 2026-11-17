@@ -12,6 +12,8 @@
 #include <nekomote/ui/layout.hpp>
 #include <nekomote/ui/menu.hpp>
 
+// GLFW owns native windows; keep EGL headers from importing Xlib macros.
+#define EGL_NO_X11
 #include <EGL/egl.h>
 
 #include <cstdlib>
