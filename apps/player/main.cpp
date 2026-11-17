@@ -417,16 +417,7 @@ void finish_candidate_gpu(GpuHolder& gpu, const application::CandidateCpu& candi
 
 std::unique_ptr<audio::Device> create_audio_device(std::shared_ptr<const model::AudioBank> clips)
 {
-    auto device = std::make_unique<audio::Device>(std::move(clips));
-    const auto deadline = Clock::now() + std::chrono::seconds(6);
-    while (device->snapshot().state == audio::DeviceState::Connecting && Clock::now() < deadline)
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    const auto snapshot = device->snapshot();
-    if (snapshot.state != audio::DeviceState::Ready)
-        throw std::runtime_error("audio device unavailable (error " +
-                                 std::to_string(snapshot.error) +
-                                 "); use --mute for silent playback");
-    return device;
+    return std::make_unique<audio::Device>(std::move(clips));
 }
 
 struct GpuCandidate
@@ -1284,18 +1275,18 @@ int run(int argc, char** argv)
         }
         if (w != last_width || h != last_height)
             surface.presentation_dirty = true;
+        while (const auto audio_command = controller.pop_audio_command())
+            if (gpu.device)
+                (void)gpu.device->submit(*audio_command);
         if (gpu.device)
         {
             gpu.device->set_volume(o.mute ? 0.0f : controller.config().volume);
-            while (const auto audio_command = controller.pop_audio_command())
-                if (!gpu.device->submit(*audio_command))
-                    throw std::runtime_error("audio command queue full or device failed");
             const auto snapshot = gpu.device->snapshot();
-            if (snapshot.state == audio::DeviceState::Failed)
-                throw std::runtime_error("audio device failed " + std::to_string(snapshot.error));
             maximum_audio_rms = std::max(maximum_audio_rms, snapshot.rms);
             controller.set_audio_level(snapshot.rms);
         }
+        else
+            controller.set_audio_level(0);
         const auto begin = Clock::now();
         if (o.capture.empty())
         {

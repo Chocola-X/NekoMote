@@ -30,6 +30,10 @@ struct Snapshot
 // joins the worker before releasing its bank. Device recreation may reuse it.
 // Ready/paused workers wait for device events; submit and destruction wake them.
 // Playing/connecting retain bounded polling, including the connection deadline.
+// Connection/stream failures retry on the worker with 1..30s exponential backoff.
+// Offline Play/Stop commands are rejected (never replayed); Pause/Resume remember
+// desired host state even while offline. submit also rejects a full queue. Hosts
+// must consume discarded commands and continue animation with zero audio RMS.
 class Device
 {
   public:

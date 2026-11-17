@@ -166,7 +166,6 @@ class WallpaperInstance
     bool assets_scanned_{false};
     bool config_path_locked_{false};
     bool initialized_{false};
-    bool audio_failed_{false};
     bool mute_forced_{false};
     bool presentation_dirty_{true};
     std::string error_string_;

@@ -5,6 +5,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -157,7 +159,7 @@ TEST_CASE("Audio event waits preserve playback, pause clocks and worker teardown
     const auto await_rms = [&]
     {
         const auto deadline = Clock::now() + std::chrono::seconds(1);
-        while (device->snapshot().rms == 0 && Clock::now() < deadline)
+        while (device->snapshot().rms == 0.0f && Clock::now() < deadline)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         REQUIRE(device->snapshot().state == DeviceState::Playing);
         REQUIRE(device->snapshot().rms == .25f);
@@ -201,4 +203,78 @@ TEST_CASE("Audio event waits preserve playback, pause clocks and worker teardown
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     device.reset();
     REQUIRE(bank.use_count() == 1);
+}
+
+TEST_CASE("Audio failures recover without replaying offline voices",
+          "[pulse-integration][pulse-recovery]")
+{
+    const auto* control = std::getenv("NEKOMOTE_TEST_PULSE_CONTROL");
+    if (!control)
+        SKIP("requires tools/test_audio_recovery.py and its private server");
+    const auto* server = std::getenv("NEKOMOTE_TEST_PULSE_SERVER");
+    REQUIRE(server != nullptr);
+    REQUIRE(std::getenv("PULSE_SERVER") != nullptr);
+    REQUIRE(std::string(server) == std::getenv("PULSE_SERVER"));
+    using namespace std::chrono_literals;
+    using nekomote::application::AudioCommandKind;
+    using nekomote::audio::DeviceState;
+    using Clock = std::chrono::steady_clock;
+    const std::filesystem::path directory(control);
+    const auto handshake = [&](const char* action)
+    {
+        std::ofstream(directory / action).put('1');
+        const auto deadline = Clock::now() + 8s;
+        while (!std::filesystem::exists(directory / (std::string(action) + ".done")) &&
+               Clock::now() < deadline)
+            std::this_thread::sleep_for(5ms);
+        REQUIRE(std::filesystem::exists(directory / (std::string(action) + ".done")));
+    };
+    auto decoded = clips();
+    decoded.front().samples.assign(80000, .25f);
+    decoded.front().rms.assign(
+        (80000 + nekomote::model::kAudioRmsFrames - 1) / nekomote::model::kAudioRmsFrames, .25f);
+    auto device = std::make_unique<nekomote::audio::Device>(
+        std::make_shared<const nekomote::model::AudioBank>(std::move(decoded)));
+    const auto await_state = [&](DeviceState expected)
+    {
+        const auto deadline = Clock::now() + 8s;
+        while (device->snapshot().state != expected && Clock::now() < deadline)
+            std::this_thread::sleep_for(2ms);
+        INFO(device->snapshot().error);
+        REQUIRE(device->snapshot().state == expected);
+    };
+    const auto send = [&](AudioCommandKind kind)
+    { return device->submit({kind, nekomote::AudioClipId{1}}); };
+    await_state(DeviceState::Failed);
+    REQUIRE(device->snapshot().rms == 0.0f);
+    REQUIRE_FALSE(send(AudioCommandKind::Play));
+    REQUIRE(send(AudioCommandKind::Pause));
+    handshake("start");
+    await_state(DeviceState::Ready);
+    REQUIRE(send(AudioCommandKind::Play));
+    await_state(DeviceState::Paused); // Pause submitted while disconnected survives recovery.
+    REQUIRE(device->snapshot().rms == 0.0f);
+    REQUIRE(send(AudioCommandKind::Resume));
+    await_state(DeviceState::Playing);
+    const auto deadline = Clock::now() + 2s;
+    while (device->snapshot().rms == 0.0f && Clock::now() < deadline)
+        std::this_thread::sleep_for(2ms);
+    REQUIRE(device->snapshot().rms == .25f);
+    handshake("stop");
+    await_state(DeviceState::Failed);
+    REQUIRE(device->snapshot().rms == 0.0f);
+    for (int i = 0; i < 100; ++i)
+        REQUIRE_FALSE(send(AudioCommandKind::Play));
+    handshake("restart");
+    await_state(DeviceState::Ready);
+    std::this_thread::sleep_for(200ms);
+    REQUIRE(device->snapshot().state == DeviceState::Ready);
+    REQUIRE(device->snapshot().error == 0);
+    REQUIRE(send(AudioCommandKind::Play));
+    await_state(DeviceState::Playing);
+    handshake("stop_again");
+    await_state(DeviceState::Failed);
+    const auto before = Clock::now();
+    device.reset();
+    REQUIRE(Clock::now() - before < 250ms); // Retry timer must not delay teardown.
 }

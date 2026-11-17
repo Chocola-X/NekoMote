@@ -181,29 +181,11 @@ nekomote_error WallpaperInstance::set_muted(bool value)
         audio_device_.reset();
     else
     {
-        audio_failed_ = false;
         if (!audio_device_ && audio_clips_ && !audio_clips_->empty())
         {
-            try
-            {
-                auto device = std::make_unique<audio::Device>(audio_clips_);
-                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
-                while (device->snapshot().state == audio::DeviceState::Connecting &&
-                       std::chrono::steady_clock::now() < deadline)
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                const auto snapshot = device->snapshot();
-                if (snapshot.state == audio::DeviceState::Failed)
-                    audio_failed_ = true;
-                else
-                {
-                    device->set_volume(panel_.volume);
-                    audio_device_ = std::move(device);
-                }
-            }
-            catch (const std::exception&)
-            {
-                audio_failed_ = true;
-            }
+            auto device = std::make_unique<audio::Device>(audio_clips_);
+            device->set_volume(panel_.volume);
+            audio_device_ = std::move(device);
         }
         else if (audio_device_)
         {
@@ -477,32 +459,9 @@ void WallpaperInstance::create_audio_device(application::CandidateCpu& candidate
     if (candidate.audio_clips.empty())
         return;
     audio_clips_ = std::make_shared<const model::AudioBank>(std::move(candidate.audio_clips));
-    if (audio_failed_)
-        return;
-    try
-    {
-        auto device = std::make_unique<audio::Device>(audio_clips_);
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(6);
-        while (device->snapshot().state == audio::DeviceState::Connecting &&
-               std::chrono::steady_clock::now() < deadline)
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        const auto snapshot = device->snapshot();
-        if (snapshot.state == audio::DeviceState::Failed)
-        {
-            audio_failed_ = true;
-            error_string_ = "audio device unavailable (error " + std::to_string(snapshot.error) +
-                            "); continuing muted";
-            return;
-        }
-        device->set_volume(panel_.muted ? 0.0f : panel_.volume);
-        audio_device_ = std::move(device);
-    }
-    catch (const std::exception& error)
-    {
-        audio_failed_ = true;
-        error_string_ =
-            std::string("audio device creation failed: ") + error.what() + "; continuing muted";
-    }
+    auto device = std::make_unique<audio::Device>(audio_clips_);
+    device->set_volume(panel_.muted ? 0.0f : panel_.volume);
+    audio_device_ = std::move(device);
 }
 
 void WallpaperInstance::apply_background(const std::filesystem::path& path, double fade_duration,
@@ -685,27 +644,14 @@ nekomote_error WallpaperInstance::advance(double dt)
     handle_background_poll();
     if (output_width_ <= 0 || output_height_ <= 0 || minimized_)
         return NEKOMOTE_OK;
+    // Audio availability never gates animation. Expired commands are consumed even
+    // while muted/disconnected; reconnect starts with future reactions only.
+    while (const auto audio_command = controller_.pop_audio_command())
+        if (audio_device_)
+            (void)audio_device_->submit(*audio_command);
     if (audio_device_)
-    {
         audio_device_->set_volume(panel_.muted ? 0.0f : panel_.volume);
-        while (const auto audio_command = controller_.pop_audio_command())
-        {
-            if (!audio_device_->submit(*audio_command))
-            {
-                error_string_ = "audio command queue full or device failed";
-                set_error(NEKOMOTE_ERROR_PLAYBACK, error_string_.c_str());
-                return NEKOMOTE_ERROR_PLAYBACK;
-            }
-        }
-        const auto snapshot = audio_device_->snapshot();
-        if (snapshot.state == audio::DeviceState::Failed)
-        {
-            error_string_ = "audio device failed " + std::to_string(snapshot.error);
-            set_error(NEKOMOTE_ERROR_PLAYBACK, error_string_.c_str());
-            return NEKOMOTE_ERROR_PLAYBACK;
-        }
-        controller_.set_audio_level(snapshot.rms);
-    }
+    controller_.set_audio_level(audio_device_ ? audio_device_->snapshot().rms : 0.0f);
     controller_.advance(dt);
     return check_session();
 }

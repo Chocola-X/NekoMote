@@ -7,6 +7,9 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
+#include <cstdio>
+#include <mutex>
 #include <stdexcept>
 #include <thread>
 
@@ -24,9 +27,18 @@ void release(pa_operation* operation) noexcept
 struct Device::Impl
 {
     std::shared_ptr<const model::AudioBank> clips;
-    std::array<application::AudioCommand, kCommands> commands{};
+    struct QueuedCommand
+    {
+        application::AudioCommand value;
+        std::uint64_t epoch;
+    };
+    std::array<QueuedCommand, kCommands> commands{};
+    std::atomic<std::uint64_t> epoch{0};
+    std::atomic<bool> requested_pause{false};
     std::atomic<std::size_t> read{0}, write{0};
     std::atomic<bool> quitting{false};
+    std::mutex retry_mutex;
+    std::condition_variable retry_wakeup;
     std::atomic<DeviceState> state{DeviceState::Connecting};
     std::atomic<float> rms{0};
     std::atomic<float> volume{1.0f};
@@ -42,6 +54,7 @@ struct Device::Impl
     const model::AudioClip* clip{nullptr};
     std::size_t sample_offset{0};
     bool paused{false}, stream_paused{false};
+    bool connected_once{false};
     explicit Impl(std::shared_ptr<const model::AudioBank> data) : clips(std::move(data))
     {
         if (!clips)
@@ -71,7 +84,11 @@ struct Device::Impl
     }
     ~Impl()
     {
-        quitting.store(true, std::memory_order_release);
+        {
+            std::lock_guard lock(retry_mutex);
+            quitting.store(true, std::memory_order_release);
+        }
+        retry_wakeup.notify_one();
         if (loop)
             pa_mainloop_wakeup(loop.get());
         if (worker.joinable())
@@ -82,6 +99,7 @@ struct Device::Impl
         error.store(code == 0 ? PA_ERR_INTERNAL : code, std::memory_order_relaxed);
         rms.store(0, std::memory_order_relaxed);
         state.store(DeviceState::Failed, std::memory_order_release);
+        epoch.fetch_add(1, std::memory_order_acq_rel);
     }
     void close_stream() noexcept
     {
@@ -255,7 +273,7 @@ struct Device::Impl
             rms.store(clip->rms[static_cast<std::size_t>(frame / model::kAudioRmsFrames)],
                       std::memory_order_relaxed);
     }
-    void run() noexcept
+    void run_connection() noexcept
     {
         context = pa_context_new(pa_mainloop_get_api(loop.get()), "NekoMote");
         if (!context || pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr) < 0)
@@ -286,18 +304,32 @@ struct Device::Impl
             if (connection == PA_CONTEXT_READY)
             {
                 if (state.load(std::memory_order_relaxed) == DeviceState::Connecting)
+                {
+                    connected_once = true;
+                    paused = requested_pause.load(std::memory_order_acquire);
+                    error.store(0, std::memory_order_relaxed);
                     state.store(DeviceState::Ready, std::memory_order_release);
+                }
                 auto position = read.load(std::memory_order_relaxed);
                 const auto end = write.load(std::memory_order_acquire);
                 while (position != end)
                 {
-                    command(commands[position % kCommands]);
+                    const auto queued = commands[position % kCommands];
+                    if (queued.epoch == epoch.load(std::memory_order_acquire))
+                        command(queued.value);
                     ++position;
                     read.store(position, std::memory_order_release);
                     if (state.load(std::memory_order_relaxed) == DeviceState::Failed)
                         break;
                 }
-                observe();
+                const bool desired_pause = requested_pause.load(std::memory_order_acquire);
+                if (state.load(std::memory_order_acquire) != DeviceState::Failed &&
+                    paused != desired_pause)
+                    command({desired_pause ? application::AudioCommandKind::Pause
+                                           : application::AudioCommandKind::Resume,
+                             {}});
+                if (state.load(std::memory_order_acquire) != DeviceState::Failed)
+                    observe();
             }
             else if (std::chrono::steady_clock::now() > deadline)
                 fail(PA_ERR_TIMEOUT);
@@ -310,6 +342,30 @@ struct Device::Impl
         {
             pa_context_disconnect(context);
             pa_context_unref(context);
+            context = nullptr;
+        }
+    }
+    void run() noexcept
+    {
+        unsigned delay = 1;
+        while (!quitting.load(std::memory_order_acquire))
+        {
+            connected_once = false;
+            state.store(DeviceState::Connecting, std::memory_order_release);
+            run_connection();
+            if (connected_once)
+                delay = 1;
+            if (quitting.load(std::memory_order_acquire))
+                break;
+            std::fprintf(stderr, "NekoMote audio unavailable (Pulse error %d); retry in %u s\n",
+                         error.load(std::memory_order_relaxed), delay);
+            // After disconnect, Pulse may retain immediate housekeeping events.
+            // Use an interruptible timer instead of dispatching that loop during
+            // backoff. This mutex is never acquired by submit/snapshot/set_volume.
+            std::unique_lock lock(retry_mutex);
+            retry_wakeup.wait_for(lock, std::chrono::seconds(delay),
+                                  [this] { return quitting.load(std::memory_order_acquire); });
+            delay = std::min(delay * 2, 30u);
         }
     }
 };
@@ -329,12 +385,19 @@ bool Device::submit(application::AudioCommand command) noexcept
     if (kind == application::AudioCommandKind::Play &&
         (!command.clip.valid() || command.clip.value > impl_->clips->size()))
         return false;
-    if (impl_->state.load(std::memory_order_acquire) == DeviceState::Failed)
-        return false;
+    if (kind == application::AudioCommandKind::Pause ||
+        kind == application::AudioCommandKind::Resume)
+        impl_->requested_pause.store(kind == application::AudioCommandKind::Pause,
+                                     std::memory_order_release);
+    const auto epoch = impl_->epoch.load(std::memory_order_acquire);
+    const auto state = impl_->state.load(std::memory_order_acquire);
+    if (!impl_->loop || state == DeviceState::Failed || state == DeviceState::Connecting)
+        return kind == application::AudioCommandKind::Pause ||
+               kind == application::AudioCommandKind::Resume;
     const auto position = impl_->write.load(std::memory_order_relaxed);
     if (position - impl_->read.load(std::memory_order_acquire) == kCommands)
         return false;
-    impl_->commands[position % kCommands] = command;
+    impl_->commands[position % kCommands] = {command, epoch};
     impl_->write.store(position + 1, std::memory_order_release);
     pa_mainloop_wakeup(impl_->loop.get());
     return true;
