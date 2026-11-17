@@ -195,7 +195,7 @@ build/release/bin/nekomote_player \
 build/release/bin/nekomote_player --assets assets --character <character_name> --mute
 ```
 
-Common arguments: `--backend opengl|vulkan`, `--fit`, `--scale`, `--origin-x/--origin-y`, `--width/--height`, `--fps`, `--seed`, 640×64 range. See `--help` for the full list.
+Common arguments: `--backend opengl|vulkan`, `--fit`, `--scale`, `--origin-x/--origin-y`, `--width/--height`, `--fps`, `--seed`, `--list-gpus`, `--gpu`, 640×64 range. See `--help` for the full list.
 
 Controls:
 
@@ -304,6 +304,8 @@ Both share a largely identical command-line contract:
 | --- | --- |
 | `--assets DIR` | Formal asset directory, shares character/background scanning, switching, and control panel |
 | `--backend opengl\|vulkan` | Selects backend, default OpenGL; fails explicitly if Vulkan is not compiled or initialization fails |
+| `--list-gpus` | Lists PCI GPU models, addresses, and drivers; no assets or display server required |
+| `--gpu pci:dddd:bb:dd.f` | Selects the rendering GPU for this process only; never saved to config |
 | `--output NAME` | Binds to the specified output; the process exits cleanly when that output is removed. If unspecified, layer-shell lets the compositor choose, X11 picks the primary output |
 | `--input interactive` | Default; receives local pointer where the background is visible, forwarding to shared UI and model interaction |
 | `--input passthrough` | Empty input region, fully transparent; cannot operate the control panel or touch interaction |
@@ -319,6 +321,39 @@ Both shells support `--ui-open`, which expands the control panel on interactive-
 For multi-monitor setups, launch one process per output with an explicit `--output`; secondary monitors should add `--mute` to avoid simultaneous audio from each instance. Do not run multiple wallpaper programs on the same output. Independent instances should each specify `--config FILE`; config identity is not derived from the output name.
 
 Both shells are off by default and do not depend on Qt/GLFW; missing protocol capabilities (a compositor without layer-shell, a WM without EWMH support) cause an explicit failure exit rather than degrading to a normal window. Applicable scope and validation boundaries are in [layer-shell notes](docs/layer-shell.md) and [X11 notes](docs/x11.md) (the latter covers the known XFCE desktop-icon coexistence limitation).
+
+### Selecting a Rendering GPU
+
+The standalone player, X11 shell, and layer-shell shell support GPU selection at
+startup. List local devices first, then pass the reported `pci:…` address to
+`--gpu`. Replace the example address below with one from your own device list:
+
+```bash
+# List devices; nekomote_x11 and nekomote_layer_shell also support --list-gpus
+build/release/bin/nekomote_player --list-gpus
+
+# Standalone player / X11 wallpaper shell, using the default OpenGL backend
+build/release/bin/nekomote_player --assets assets --gpu pci:0000:03:00.0
+build/x11/bin/nekomote_x11 --assets /path/to/assets --gpu pci:0000:03:00.0
+
+# Wayland layer-shell wallpaper shell, using Vulkan
+build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets \
+  --backend vulkan --gpu pci:0000:03:00.0
+```
+
+Omitting `--gpu` preserves the existing selection policy and driver environment;
+Vulkan still prefers discrete GPUs by default. The option applies only to the
+current process and cannot be combined with `--save-config`. For a persistent
+choice, add it to your autostart command or systemd user service. Changing GPUs
+requires restarting the process; live switching is not supported.
+
+The actual selected device is reported in process logs. Explicit selection fails
+if the device is missing, cannot be verified, or cannot present to the target
+output; it never silently chooses another GPU. `--list-gpus` lists PCI hardware
+and does not establish driver or presentation support. GPU selection is separate
+from monitor selection via `--output`. **The Plasma plugin follows its host GPU
+and does not support this option.** Driver-specific and multi-GPU limitations and
+validation scope are in [GPU Selection](docs/gpu-selection.md) (Chinese).
 
 ## Configuration
 

@@ -204,7 +204,7 @@ build/release/bin/nekomote_player \
 build/release/bin/nekomote_player --assets assets --character <角色名> --mute
 ```
 
-常用参数：`--backend opengl|vulkan`、`--fit`、`--scale`、`--origin-x/--origin-y`、`--width/--height`、`--fps`、`--seed`、640×64 范围。完整列表见 `--help`。
+常用参数：`--backend opengl|vulkan`、`--fit`、`--scale`、`--origin-x/--origin-y`、`--width/--height`、`--fps`、`--seed`、`--list-gpus`、`--gpu`、640×64 范围。完整列表见 `--help`。
 
 操作：
 
@@ -311,6 +311,8 @@ build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vu
 | --- | --- |
 | `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
 | `--backend opengl\|vulkan` | 选择后端，默认 OpenGL；Vulkan 未编译或初始化失败时明确报错 |
+| `--list-gpus` | 列出 PCI 显卡型号、地址及驱动，无需资产或显示服务器 |
+| `--gpu pci:dddd:bb:dd.f` | 指定本次进程的渲染 GPU，不保存到配置 |
 | `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
 | `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
@@ -326,6 +328,34 @@ build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vu
 多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。独立实例分别指定 `--config FILE`，不按输出名称生成配置标识。
 
 两个壳默认关闭，不依赖 Qt/GLFW；协议能力缺失（无 layer-shell 的合成器、无 EWMH 支持的 WM）时明确失败退出，不退化为普通窗口。适用范围与验收边界见 [layer-shell 说明](docs/layer-shell.md)与 [X11 说明](docs/x11.md)（后者含 XFCE 桌面图标共存的已知限制）。
+
+### 指定渲染 GPU
+
+普通播放器、X11 和 layer-shell 壁纸壳均支持启动时选卡。先枚举本机设备，再把输出中
+的 `pci:…` 地址传给 `--gpu`；以下地址仅为示例，需替换为本机枚举结果：
+
+```bash
+# 枚举设备；nekomote_x11 和 nekomote_layer_shell 也支持 --list-gpus
+build/release/bin/nekomote_player --list-gpus
+
+# 普通播放器 / X11 壁纸壳，默认 OpenGL
+build/release/bin/nekomote_player --assets assets --gpu pci:0000:03:00.0
+build/x11/bin/nekomote_x11 --assets /path/to/assets --gpu pci:0000:03:00.0
+
+# Wayland layer-shell 壁纸壳，使用 Vulkan
+build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets \
+  --backend vulkan --gpu pci:0000:03:00.0
+```
+
+不传 `--gpu` 时保持现有选择策略和驱动环境；Vulkan 默认仍优先独显。
+GPU 参数只对本次进程生效，不能与 `--save-config` 合用。长期固定设备可把参数写进
+自启动命令或 systemd 用户服务；更换 GPU 需重启进程，不支持热切换。
+
+实际选中的设备信息输出到进程日志。明确指定后，设备不存在、无法核验或不支持目标
+输出呈现时会报错，不会静默改选其他 GPU。`--list-gpus` 列出的是 PCI 硬件，
+不代表驱动或呈现能力已通过验证；GPU 选择也不等于 `--output` 的显示器选择。
+**Plasma 插件继续跟随宿主 GPU，不支持此参数。**具体驱动、多卡限制及验证范围见
+[GPU 选择说明](docs/gpu-selection.md)。
 
 ## 配置
 
@@ -442,7 +472,3 @@ tools            导入、分发与验证脚本
 ```
 
 模块边界、性能规范与开发约定见 [AGENTS.md](AGENTS.md)；开发路线图见 [ROADMAP.md](ROADMAP.md)；构建细节见 [docs/building.md](docs/building.md)。
-
-独立 player、X11 和 layer-shell 可用 `--list-gpus` 枚举 PCI 显卡，使用
-`--gpu pci:dddd:bb:dd.f` 指定本次进程的渲染 GPU。参数不保存到配置；不指定时保持原有
-选择策略。能力限制与示例见 [GPU 选择说明](docs/gpu-selection.md)。Plasma 继续跟随宿主。
