@@ -8,8 +8,8 @@ nekomote_x11 --assets /path/to/assets --gpu pci:0000:06:00.0
 nekomote_layer_shell --config ~/.config/nekomote/right.json --backend vulkan --gpu pci:0000:01:00.0
 ```
 
-`--list-gpus` 无需资产、启动配置或显示服务器，列出 PCI 显示类硬件、驱动和 vendor/device
-ID。硬件列表不表示当前 OpenGL/Vulkan 驱动已识别它，也不表示已验证目标输出的呈现能力。
+`--list-gpus` 无需资产、启动配置或显示服务器，列出 PCI 显示类硬件的型号、驱动和 vendor/device
+ID。型号来自发行版的 `pci.ids` 数据库；数据库缺失或未收录时标为未知，仍保留 PCI 地址和数字 ID。硬件列表不表示当前 OpenGL/Vulkan 驱动已识别它，也不表示已验证目标输出的呈现能力。
 地址取自本机枚举，不使用示例地址猜测自己的设备；PCI 拓扑变化后需重新确认。
 
 不传参数时保持既有驱动环境和设备选择策略。Vulkan 默认仍按设备类型评分、优先独显。

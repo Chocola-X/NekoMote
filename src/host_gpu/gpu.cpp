@@ -15,6 +15,7 @@
 #include <system_error>
 
 #include "identity.hpp"
+#include "pci_names.hpp"
 
 namespace nekomote::host_gpu
 {
@@ -196,9 +197,25 @@ std::vector<Device> discover(const std::filesystem::path& pci_root)
 void list_gpus()
 {
     std::puts("PCI display hardware (backend recognition and presentation are not verified):");
-    for (const auto& gpu : discover())
-        std::printf("%s vendor=%04x device=%04x driver=%s\n", gpu.selector.c_str(), gpu.vendor,
-                    gpu.device, gpu.driver.c_str());
+    const auto devices = discover();
+    std::vector<std::string> names(devices.size(), "Unknown GPU");
+    // Use the distribution database without requiring libpci, lspci or a graphics driver.
+    for (const auto* path :
+         {"/usr/share/hwdata/pci.ids", "/usr/share/misc/pci.ids", "/usr/share/pci.ids"})
+    {
+        std::ifstream database(path);
+        if (database)
+        {
+            names = detail::pci_names(devices, database);
+            break;
+        }
+    }
+    for (std::size_t i = 0; i < devices.size(); ++i)
+    {
+        const auto& gpu = devices[i];
+        std::printf("%s  %s  vendor=%04x device=%04x driver=%s\n", gpu.selector.c_str(),
+                    names[i].c_str(), gpu.vendor, gpu.device, gpu.driver.c_str());
+    }
 }
 void prepare_opengl(std::string_view selector, GlPlatform platform)
 {

@@ -6,10 +6,12 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
 #include "identity.hpp"
+#include "pci_names.hpp"
 
 namespace
 {
@@ -74,6 +76,21 @@ int main()
                 devices[0].driver == "nvidia");
         require(devices[1].driver == "unbound");
         require(gpu::detail::unique_pci_identity(devices, 0x10de, 0x2560) == "pci:0000:01:00.0");
+        std::istringstream database(
+            "# synthetic PCI database\n"
+            "1002  AMD Vendor\n\t1638  Integrated GPU\n"
+            "\t\t1234 5678  Subsystem must not replace the GPU name\n"
+            "10de  NVIDIA Vendor\n\t2560  Discrete GPU\n"
+            "C 03  Display controller\n\t2560  Class record must not replace GPU name\n");
+        const auto names = gpu::detail::pci_names(devices, database);
+        require(names[0] == "NVIDIA Vendor Discrete GPU");
+        require(names[1] == "AMD Vendor Integrated GPU");
+        std::istringstream unknown("10de  NVIDIA Vendor\n\t1638  Different device\n");
+        const auto missing = gpu::detail::pci_names(devices, unknown);
+        require(missing[0] == "NVIDIA Vendor (unknown GPU)");
+        require(missing[1] == "Unknown GPU");
+        std::istringstream absent;
+        require(gpu::detail::pci_names(devices, absent)[0] == "Unknown GPU");
         auto duplicate = devices;
         duplicate.push_back({"pci:0000:02:00.0", 0x10de, 0x2560, "nvidia"});
         require(gpu::detail::unique_pci_identity(duplicate, 0x10de, 0x2560).empty());
