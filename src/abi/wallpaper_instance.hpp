@@ -150,7 +150,6 @@ class WallpaperInstance
 
     TextureId current_background_id_{0};
     int current_background_width_{0}, current_background_height_{0};
-    std::filesystem::path current_background_path_;
     std::filesystem::path assets_dir_;
     std::filesystem::path config_path_override_;
     mutable std::string name_buffer_;

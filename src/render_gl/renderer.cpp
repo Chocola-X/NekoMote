@@ -301,10 +301,22 @@ struct Renderer::Impl
     GLuint vao{0}, vbo{0}, ebo{0};
     ColorComposition composition{ColorComposition::PremultipliedOver};
     std::unique_ptr<Intermediate> color_target, mask_target;
+    struct AtlasImage
+    {
+        GLuint handle{0};
+        AtlasImage() = default;
+        AtlasImage(const AtlasImage&) = delete;
+        AtlasImage& operator=(const AtlasImage&) = delete;
+        ~AtlasImage()
+        {
+            if (handle)
+                glDeleteTextures(1, &handle);
+        }
+    };
     struct Texture
     {
         TextureId id;
-        GLuint handle;
+        std::shared_ptr<const AtlasImage> image;
         std::array<float, 4> texel_transform;
         std::array<float, 2> extent;
     };
@@ -321,8 +333,6 @@ struct Renderer::Impl
     bool has_prepared_frame{false};
     ~Impl()
     {
-        for (const auto& t : textures)
-            glDeleteTextures(1, &t.handle);
         if (ebo)
             glDeleteBuffers(1, &ebo);
         if (vbo)
@@ -353,17 +363,22 @@ struct Renderer::Impl
             return;
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
-        glBindTexture(shared->atlas_target, it->handle);
+        glBindTexture(shared->atlas_target, it->image->handle);
         glUniform4fv(shared->atlas_texels, 1, it->texel_transform.data());
         if (shared->atlas_target == GL_TEXTURE_2D)
             glUniform2fv(shared->atlas_extent, 1, it->extent.data());
         uv_texture = id;
     }
-    GLuint texture(TextureId id) const
+    const Texture* find_texture(TextureId id) const
     {
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
-        return it == textures.end() ? 0 : it->handle;
+        return it == textures.end() ? nullptr : &*it;
+    }
+    void check_texture_slot(TextureId id) const
+    {
+        if (!id.valid() || find_texture(id) || textures.size() >= texture_capacity)
+            throw std::runtime_error("invalid, duplicate or excessive texture ID");
     }
 };
 Renderer::Renderer(GlLoader loader)
@@ -450,8 +465,7 @@ void Renderer::reserve(Capacity capacity)
 void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
     auto& p = *impl_;
-    if (!id.valid() || p.texture(id) || p.textures.size() >= p.texture_capacity)
-        throw std::runtime_error("invalid, duplicate or excessive texture ID");
+    p.check_texture_slot(id);
     GLint max_size = 0;
     glGetIntegerv(p.shared->atlas_target == GL_TEXTURE_RECTANGLE ? GL_MAX_RECTANGLE_TEXTURE_SIZE
                                                                  : GL_MAX_TEXTURE_SIZE,
@@ -463,16 +477,11 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
         throw std::runtime_error("invalid or unsupported texture dimensions");
     if (!region.valid_for(image.width, image.height))
         throw std::runtime_error("invalid texture crop region");
+    auto atlas = std::make_shared<Impl::AtlasImage>();
     const RectangleBinding rectangle_binding(p.shared->atlas_target);
-    GLuint handle = 0;
-    glGenTextures(1, &handle);
-    // Register ownership before any subsequent operation can fail.
-    p.textures.push_back({id,
-                          handle,
-                          region.texel_transform(image.width, image.height),
-                          {static_cast<float>(image.width), static_cast<float>(image.height)}});
+    glGenTextures(1, &atlas->handle);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(p.shared->atlas_target, handle);
+    glBindTexture(p.shared->atlas_target, atlas->handle);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -506,6 +515,21 @@ void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion 
     glTexParameteri(p.shared->atlas_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(p.shared->atlas_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     check_gl("upload texture");
+    p.textures.push_back({id,
+                          std::move(atlas),
+                          region.texel_transform(image.width, image.height),
+                          {static_cast<float>(image.width), static_cast<float>(image.height)}});
+}
+void Renderer::retain_texture(const Renderer& peer, TextureId source, TextureId destination)
+{
+    auto& p = *impl_;
+    if (p.shared != peer.impl_->shared)
+        throw std::runtime_error("texture source is not in this renderer family");
+    p.check_texture_slot(destination);
+    const auto* texture = peer.impl_->find_texture(source);
+    if (!texture)
+        throw std::runtime_error("texture source is unavailable");
+    p.textures.push_back({destination, texture->image, texture->texel_transform, texture->extent});
 }
 void Renderer::prepare(RenderFrame frame)
 {
@@ -544,7 +568,7 @@ void Renderer::prepare(RenderFrame frame)
             throw std::runtime_error("frame vertex index out of range");
     const auto validate = [&p, &frame](const DrawCommand& command)
     {
-        if (!p.texture(command.texture) || command.first_index > frame.indices.size() ||
+        if (!p.find_texture(command.texture) || command.first_index > frame.indices.size() ||
             command.index_count > frame.indices.size() - command.first_index ||
             command.index_count > static_cast<std::uint32_t>(std::numeric_limits<GLsizei>::max()))
             throw std::runtime_error("invalid draw command");
@@ -644,7 +668,6 @@ std::size_t Renderer::release_unused_textures()
             ++texture;
             continue;
         }
-        glDeleteTextures(1, &texture->handle);
         texture = p.textures.erase(texture);
         ++released;
     }

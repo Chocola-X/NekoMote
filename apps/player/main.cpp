@@ -510,20 +510,12 @@ void apply_background_gpu(GpuHolder& gpu, const fs::path& bg_path, double fade_d
     if (!new_image.ok)
         throw std::runtime_error(new_image.error);
     const bool fade = controller.has_background() && fade_duration > 0;
-    std::optional<asset_io::DecodedImageRgba8> old_image;
-    if (fade)
-    {
-        auto loaded = asset_io::load_png(gpu.current_background_path);
-        if (!loaded.ok)
-            throw std::runtime_error(loaded.error);
-        old_image = std::move(loaded.image);
-    }
     auto ready_path = bg_path;
     auto renderer = std::make_unique<player::BackendRenderer>(gpu.renderer->create_peer());
     renderer->reserve({8, 12, 2, 2});
     const TextureId old_id{1}, new_id{fade ? 2U : 1U};
-    if (old_image)
-        renderer->upload_texture(old_id, *old_image);
+    if (fade)
+        renderer->retain_texture(*gpu.background_renderer, gpu.current_background_id, old_id);
     renderer->upload_texture(new_id, new_image.image);
     // CPU confirmation cannot discover an unsupported texture after this point.
     controller.confirm_background(bg_index, old_id, new_id, new_image.image.width,

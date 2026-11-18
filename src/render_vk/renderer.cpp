@@ -325,7 +325,7 @@ struct Renderer::Impl
     struct Texture
     {
         TextureId id;
-        Image image;
+        std::shared_ptr<const Image> image;
         std::array<float, 4> texel_transform;
         VkDescriptorSet unmasked{VK_NULL_HANDLE}, masked{VK_NULL_HANDLE};
     };
@@ -414,6 +414,31 @@ struct Renderer::Impl
         const auto it = std::find_if(textures.begin(), textures.end(),
                                      [id](const Texture& t) { return t.id == id; });
         return it == textures.end() ? nullptr : &*it;
+    }
+
+    void check_texture_slot(TextureId id) const
+    {
+        if (!id.valid() || find_texture(id) || textures.size() >= texture_capacity)
+            throw std::runtime_error("invalid, duplicate or excessive texture ID");
+    }
+
+    void add_texture(TextureId id, std::shared_ptr<const Image> image,
+                     std::array<float, 4> texel_transform)
+    {
+        // Allocate both bindings together so failure cannot consume one slot.
+        const std::array layouts{shared->set_layout, shared->set_layout};
+        std::array<VkDescriptorSet, 2> sets{};
+        VkDescriptorSetAllocateInfo info{};
+        info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        info.descriptorPool = descriptor_pool;
+        info.descriptorSetCount = static_cast<std::uint32_t>(layouts.size());
+        info.pSetLayouts = layouts.data();
+        check_vk(vkAllocateDescriptorSets(ctx.device, &info, sets.data()),
+                 "allocate model texture descriptors");
+        write_descriptor_set(sets[0], image->view, dummy.view, shared->atlas_sampler);
+        write_descriptor_set(sets[1], image->view, mask_target.view ? mask_target.view : dummy.view,
+                             shared->atlas_sampler);
+        textures.push_back({id, std::move(image), texel_transform, sets[0], sets[1]});
     }
 
     Image upload_image(ImageViewRgba8 image)
@@ -615,22 +640,23 @@ void Renderer::reserve(Capacity capacity)
 void Renderer::upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region)
 {
     auto& p = *impl_;
-    if (!id.valid() || p.find_texture(id) || p.textures.size() >= p.texture_capacity)
-        throw std::runtime_error("invalid, duplicate or excessive texture ID");
+    p.check_texture_slot(id);
     if (!region.valid_for(image.width, image.height))
         throw std::runtime_error("invalid texture crop region");
-    Impl::Texture texture;
-    texture.id = id;
-    texture.texel_transform = region.texel_transform(image.width, image.height);
-    texture.image = p.upload_image(image);
-    texture.unmasked = p.allocate_descriptor_set();
-    texture.masked = p.allocate_descriptor_set();
-    p.write_descriptor_set(texture.unmasked, texture.image.view, p.dummy.view,
-                           p.shared->atlas_sampler);
-    p.write_descriptor_set(texture.masked, texture.image.view,
-                           p.mask_target.view ? p.mask_target.view : p.dummy.view,
-                           p.shared->atlas_sampler);
-    p.textures.push_back(std::move(texture));
+    p.add_texture(id, std::make_shared<const Image>(p.upload_image(image)),
+                  region.texel_transform(image.width, image.height));
+}
+
+void Renderer::retain_texture(const Renderer& peer, TextureId source, TextureId destination)
+{
+    auto& p = *impl_;
+    if (p.shared != peer.impl_->shared)
+        throw std::runtime_error("texture source is not in this renderer family");
+    p.check_texture_slot(destination);
+    const auto* texture = peer.impl_->find_texture(source);
+    if (!texture)
+        throw std::runtime_error("texture source is unavailable");
+    p.add_texture(destination, texture->image, texture->texel_transform);
 }
 
 void Renderer::prepare(RenderFrame frame)
@@ -833,7 +859,7 @@ void Renderer::resize_output(int width, int height)
     p.output_height = height;
     p.write_descriptor_set(p.blit_set, p.color_target.view, p.dummy.view, p.shared->sampler);
     for (const auto& texture : p.textures)
-        p.write_descriptor_set(texture.masked, texture.image.view, p.mask_target.view,
+        p.write_descriptor_set(texture.masked, texture.image->view, p.mask_target.view,
                                p.shared->atlas_sampler);
 }
 

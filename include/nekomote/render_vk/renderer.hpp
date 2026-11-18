@@ -70,9 +70,9 @@ class Renderer
     Renderer(Renderer&&) noexcept;
     Renderer& operator=(Renderer&&) noexcept;
     // Creates an empty renderer sharing only this context/device's programs and
-    // fixed pipeline state. Textures, geometry, descriptors and intermediates
-    // remain independent. All peers use the same serial graphics thread and
-    // completion contract; the source may die first. The final peer must be
+    // fixed pipeline state. Geometry, descriptors and intermediates remain
+    // independent. All peers use the same serial graphics thread and completion
+    // contract; the source may die first. The final peer must be
     // destroyed before its context/device. No global or cross-context cache.
     Renderer create_peer() const;
     Renderer(const Renderer&) = delete;
@@ -80,12 +80,15 @@ class Renderer
 
     void reserve(Capacity capacity);
     void upload_texture(TextureId id, ImageViewRgba8 image, TextureRegion region = {});
+    // Retain an immutable image from the same peer family under a local ID.
+    // Counts against reserve(). The source remains usable and may die first.
+    void retain_texture(const Renderer& peer, TextureId source, TextureId destination);
     void prepare(RenderFrame frame);
     // Explicit resource-retirement boundary after a successful prepare, before
     // render. Keeps textures referenced by normal or mask commands in that
-    // prepared frame; releases every other uploaded texture without reuploading
-    // retained pixels. Uses the same context/thread and host-completion contract
-    // as prepare. No per-frame allocation; returns the number released.
+    // prepared frame; drops the other local bindings. Shared images survive
+    // while another peer retains them. Uses the same context/thread and
+    // completion contract as prepare. No allocation; returns bindings dropped.
     std::size_t release_unused_textures();
     void resize_output(int width, int height);
     void render(Target target, const View& view, TargetContents contents = TargetContents::Clear);

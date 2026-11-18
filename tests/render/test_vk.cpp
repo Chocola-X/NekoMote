@@ -934,11 +934,27 @@ TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask",
     REQUIRE(pixel(f.capture().second, 8, 32) == std::array<std::uint8_t, 4>{0, 255, 0, 255});
 }
 
-TEST_CASE("Vulkan background texture retirement preserves fades and reuses descriptors",
+TEST_CASE("Vulkan peer background textures survive the source and retire their bindings",
           "[gpu][vulkan][background][lifecycle]")
 {
     Fixture f;
-    f.upload(TextureId{1}, {1, 1, {255, 0, 0, 255}});
+    f.upload(TextureId{7}, {1, 1, {255, 0, 0, 255}});
+    auto next_gl = std::make_unique<render_gl::Renderer>(f.gl->create_peer());
+    auto next_vk = std::make_unique<render_vk::Renderer>(f.vk->create_peer());
+    next_gl->reserve({8, 12, 2, 2});
+    next_vk->reserve({8, 12, 2, 2});
+    {
+        render_vk::Renderer unrelated(f.host.context());
+        unrelated.reserve({0, 0, 0, 1});
+        unrelated.upload_texture(TextureId{7}, ImageRgba8{1, 1, {0, 255, 0, 255}});
+        REQUIRE_THROWS(next_vk->retain_texture(unrelated, TextureId{7}, TextureId{1}));
+    }
+    REQUIRE_THROWS(next_vk->retain_texture(*f.vk, TextureId{6}, TextureId{1}));
+    next_gl->retain_texture(*f.gl, TextureId{7}, TextureId{1});
+    next_vk->retain_texture(*f.vk, TextureId{7}, TextureId{1});
+    REQUIRE_THROWS(next_vk->retain_texture(*f.vk, TextureId{7}, TextureId{1}));
+    f.gl = std::move(next_gl);
+    f.vk = std::move(next_vk);
     f.upload(TextureId{2}, {1, 1, {0, 0, 255, 255}});
     const auto old_quad = quad();
     const auto next_quad = quad(0, 0, 64, 64, .5f, .5f, .5f, .5f, .5f);

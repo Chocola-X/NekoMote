@@ -473,64 +473,29 @@ void WallpaperInstance::apply_background(const std::filesystem::path& path, doub
         error_string_ = new_image.error;
         return;
     }
-    if (!controller_.has_background() || fade_duration <= 0)
+    const bool fade = controller_.has_background() && fade_duration > 0;
+    const TextureId old_id{1}, new_id{fade ? 2U : 1U};
+    // The active renderer stays intact until the candidate owns both images.
+    const auto replace = [&](const auto& model, auto& current)
     {
-        const TextureId id{1};
-        if (backend_ == WallpaperBackend::OpenGL)
-        {
-            auto next = std::make_unique<render_gl::Renderer>(renderer_->create_peer());
-            next->reserve({8, 12, 2, 2});
-            next->upload_texture(id, new_image.image);
-            background_renderer_ = std::move(next);
-        }
-#if defined(NEKOMOTE_HAS_VULKAN)
-        else
-        {
-            auto next = std::make_unique<render_vk::Renderer>(vk_renderer_->create_peer());
-            next->reserve({8, 12, 2, 2});
-            next->upload_texture(id, new_image.image);
-            vk_background_renderer_ = std::move(next);
-        }
-#endif
-        controller_.confirm_background(bg_index, id, id, new_image.image.width,
-                                       new_image.image.height, 0);
-        current_background_id_ = id;
-        current_background_width_ = new_image.image.width;
-        current_background_height_ = new_image.image.height;
-        current_background_path_ = path;
-        return;
-    }
-    auto old_image = asset_io::load_png(current_background_path_);
-    if (!old_image.ok)
-    {
-        error_string_ = old_image.error;
-        return;
-    }
-    const TextureId old_id{1}, new_id{2};
+        auto next = model.create_peer();
+        next.reserve({8, 12, 2, 2});
+        if (fade)
+            next.retain_texture(*current, current_background_id_, old_id);
+        next.upload_texture(new_id, new_image.image);
+        current = std::make_unique<decltype(next)>(std::move(next));
+    };
     if (backend_ == WallpaperBackend::OpenGL)
-    {
-        auto next = std::make_unique<render_gl::Renderer>(renderer_->create_peer());
-        next->reserve({8, 12, 2, 2});
-        next->upload_texture(old_id, old_image.image);
-        next->upload_texture(new_id, new_image.image);
-        background_renderer_ = std::move(next);
-    }
+        replace(*renderer_, background_renderer_);
 #if defined(NEKOMOTE_HAS_VULKAN)
     else
-    {
-        auto next = std::make_unique<render_vk::Renderer>(vk_renderer_->create_peer());
-        next->reserve({8, 12, 2, 2});
-        next->upload_texture(old_id, old_image.image);
-        next->upload_texture(new_id, new_image.image);
-        vk_background_renderer_ = std::move(next);
-    }
+        replace(*vk_renderer_, vk_background_renderer_);
 #endif
     controller_.confirm_background(bg_index, old_id, new_id, new_image.image.width,
-                                   new_image.image.height, fade_duration);
+                                   new_image.image.height, fade ? fade_duration : 0);
     current_background_id_ = new_id;
     current_background_width_ = new_image.image.width;
     current_background_height_ = new_image.image.height;
-    current_background_path_ = path;
 }
 
 void WallpaperInstance::handle_switch_poll()
@@ -618,7 +583,6 @@ void WallpaperInstance::handle_background_poll()
 #endif
         current_background_id_ = {};
         current_background_width_ = current_background_height_ = 0;
-        current_background_path_.clear();
     }
 }
 

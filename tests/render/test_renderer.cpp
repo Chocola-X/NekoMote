@@ -1391,16 +1391,28 @@ TEST_CASE("Scratch masks survive ordinary draws and rebuild after another mask",
     REQUIRE(glGetError() == GL_NO_ERROR);
 }
 
-TEST_CASE("Background texture retirement keeps transition pixels and frees settled storage",
+TEST_CASE("Peer background texture survives its source and is retired after the fade",
           "[gpu][background][lifecycle]")
 {
     Context context;
-    render_gl::Renderer renderer(glfwGetProcAddress);
+    auto source = std::make_unique<render_gl::Renderer>(glfwGetProcAddress);
+    auto renderer = source->create_peer();
     Output output;
     output.resize(64, 64);
+    source->reserve({0, 0, 0, 1});
+    source->upload_texture(TextureId{7}, ImageRgba8{1, 1, {255, 0, 0, 255}});
     renderer.reserve({8, 12, 2, 2});
-    renderer.upload_texture(TextureId{1}, ImageRgba8{1, 1, {255, 0, 0, 255}});
+    {
+        render_gl::Renderer unrelated(glfwGetProcAddress);
+        unrelated.reserve({0, 0, 0, 1});
+        unrelated.upload_texture(TextureId{7}, ImageRgba8{1, 1, {0, 255, 0, 255}});
+        REQUIRE_THROWS(renderer.retain_texture(unrelated, TextureId{7}, TextureId{1}));
+    }
+    REQUIRE_THROWS(renderer.retain_texture(*source, TextureId{6}, TextureId{1}));
+    renderer.retain_texture(*source, TextureId{7}, TextureId{1});
+    REQUIRE_THROWS(renderer.retain_texture(*source, TextureId{7}, TextureId{1}));
     renderer.upload_texture(TextureId{2}, ImageRgba8{1, 1, {0, 0, 255, 255}});
+    source.reset();
     const auto old_quad = quad(.5f, .5f, .5f, .5f);
     const auto next_quad = quad(.5f, .5f, .5f, .5f, .5f);
     std::array<RenderVertex, 8> vertices{};

@@ -107,6 +107,16 @@ class BackendRenderer
             vk_->upload_texture(id, image, region);
 #endif
     }
+    void retain_texture(const BackendRenderer& peer, TextureId source, TextureId destination)
+    {
+        if (gl_ && peer.gl_)
+            return gl_->retain_texture(*peer.gl_, source, destination);
+#if defined(NEKOMOTE_HAS_VULKAN)
+        if (vk_ && peer.vk_)
+            return vk_->retain_texture(*peer.vk_, source, destination);
+#endif
+        throw std::runtime_error("texture source uses a different renderer backend");
+    }
     void prepare(RenderFrame frame)
     {
         if (gl_)
