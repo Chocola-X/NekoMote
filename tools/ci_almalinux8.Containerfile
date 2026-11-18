@@ -53,7 +53,8 @@ WORKDIR /work
 ENTRYPOINT ["bash", "/source/tools/ci_build.sh"]
 
 FROM toolchain AS plasma5
-RUN dnf -y --setopt=install_weak_deps=False install gcc-c++ perl xz && dnf clean all
+# Qt 5.12's configure uses which to locate make, Perl and awk.
+RUN dnf -y --setopt=install_weak_deps=False install gcc-c++ perl which xz && dnf clean all
 COPY ci_plasma5_sdk.sh /usr/local/libexec/nekomote-ci-plasma5-sdk.sh
 RUN bash /usr/local/libexec/nekomote-ci-plasma5-sdk.sh && \
     echo /opt/qt5.12/lib > /etc/ld.so.conf.d/nekomote-qt5.conf && ldconfig

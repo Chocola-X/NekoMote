@@ -8,6 +8,14 @@ Qt 5.12.8 源码构建独立 SDK。发布包仍由宿主提供 Qt，包名和发
 AlmaLinux 自带 Qt5.15.3 的版本标签差异仍存在；参见 [兼容范围](plasma-distribution.md#基线与兼容范围)。
 ARM64 实编、GitHub 首跑和真实桌面 GPU 渲染未在这轮验收。
 
+GitHub 首跑中，Plasma 5 两个架构均已安装 `make`，但 Qt 5.12.8 的
+`configure` 通过外部命令 `which` 定位 `make`、Perl 和 awk。最小镜像没有
+`which`，因此在构建 SDK 时误报找不到 `make`。只在 Plasma 5 镜像阶段补装
+`which`；发布符号上限与宿主 Qt 要求不变。
+在最小 EL8 x86_64 隔离根复现报错后，使用仓库 SDK 脚本重新从源码构建，再执行
+`ci_build.sh plasma5`：265 项必选测试、ELF 审计、归档校验和离屏导入均通过。
+已核对 BaseOS 提供 aarch64 的 `which`，该架构完整构建待 GitHub 复跑。
+
 2026-11-18：原生应用和 X11 的正式发布基线切换到 AlmaLinux 8.10，归档名改用
 `almalinux8`。继续在 x86_64 和 ARM64 的原生 runner 上构建；Plasma 6 和 layer-shell
 仍使用 Debian 12。
