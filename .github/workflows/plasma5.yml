@@ -36,14 +36,40 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Build baseline toolchain image
+      - name: Read runner account
+        id: account
         run: |
-          mkdir -p build/ci-plasma5
-          docker build --target plasma5 --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
-            -f tools/ci_almalinux8.Containerfile -t nekomote-plasma5 tools \
-            2>&1 | tee build/ci-plasma5/toolchain-build.log
+          {
+            echo "uid=$(id -u)"
+            echo "gid=$(id -g)"
+          } >> "$GITHUB_OUTPUT"
+      - name: Set up Docker Buildx
+        # docker/setup-buildx-action v3.11.1
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - name: Build or restore baseline toolchain image
+        # docker/build-push-action v6.18.0
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        env:
+          DOCKER_BUILD_RECORD_RETENTION_DAYS: 14
+        with:
+          context: tools
+          file: tools/ci_almalinux8.Containerfile
+          target: plasma5
+          tags: nekomote-plasma5
+          load: true
+          build-args: |
+            CI_UID=${{ steps.account.outputs.uid }}
+            CI_GID=${{ steps.account.outputs.gid }}
+          cache-from: type=gha,version=2,scope=nekomote-plasma5-${{ matrix.arch }}
+          # Only trusted default-branch runs seed the shared toolchain cache.
+          cache-to: >-
+            ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+                && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+                && format('type=gha,version=2,scope=nekomote-plasma5-{0},mode=min,ignore-error=true,timeout=3m', matrix.arch)
+                || '' }}
       - name: Release build, tests and dependency audit
         run: |
+          mkdir -p build/ci-plasma5
           PACKAGE_VERSION=0.0.0
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then PACKAGE_VERSION="${GITHUB_REF_NAME#v}"; fi
           docker run --rm -e NEKOMOTE_PACKAGE_VERSION="$PACKAGE_VERSION" --user "$(id -u):$(id -g)" \

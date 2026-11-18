@@ -14,7 +14,22 @@ GitHub 首跑中，Plasma 5 两个架构均已安装 `make`，但 Qt 5.12.8 的
 `which`；发布符号上限与宿主 Qt 要求不变。
 在最小 EL8 x86_64 隔离根复现报错后，使用仓库 SDK 脚本重新从源码构建，再执行
 `ci_build.sh plasma5`：265 项必选测试、ELF 审计、归档校验和离屏导入均通过。
-已核对 BaseOS 提供 aarch64 的 `which`，该架构完整构建待 GitHub 复跑。
+
+修复后两种架构均在 [GitHub 构建](https://github.com/Chocola-X/NekoMote/actions/runs/44241200617)
+通过。AlmaLinux 工具链镜像步骤用时 x86_64 32 分 18 秒、aarch64 14 分 21 秒，
+同一批插件发布步骤为 3 分 19 秒和 2 分 3 秒。相比之下，原
+[Ubuntu 20.04 CI](https://github.com/Chocola-X/NekoMote/actions/runs/44231220099)
+直接安装预编译 Qt，两套工具链镜像只花 56 秒和 62 秒。
+AlmaLinux 冷构建中，Qt SDK 阶段用时 x86_64
+18 分 41 秒、aarch64 12 分 16 秒，其中下载和解包 Qt 源码分别约 27 秒和 19 秒。
+x86_64 的第一轮 RPM 安装另外用了 10 分 54 秒，日志记录了镜像超时和连接中断；
+aarch64 的同一步骤约 43 秒。两边必选测试本身均不足 8 秒。
+
+Plasma 5 现在用 Buildx 将工具链镜像的层按架构缓存在 GitHub Actions。默认分支的
+推送和手动构建可更新缓存；PR 和标签发布在可访问时只读取。命中时跳过 Qt SDK 编译
+和 RPM 安装，插件仍每次从当前源码编译并执行测试、ELF 校验及打包。首次构建、缓存
+过期或工具链变更时仍会从源码构建。镜像步骤的耗时和缓存命中可在 Actions 日志及
+构建摘要的 Buildx 记录中查看；插件和测试日志仍由 `evidence-plasma5-*` 提供。
 
 2026-11-18：原生应用和 X11 的正式发布基线切换到 AlmaLinux 8.10，归档名改用
 `almalinux8`。继续在 x86_64 和 ARM64 的原生 runner 上构建；Plasma 6 和 layer-shell
