@@ -30,7 +30,7 @@
 
 Debian 12 / Ubuntu 22.04 及更新系统的相关开发包通常为
 `libwayland-dev libwayland-bin libegl1-mesa-dev libgl-dev`。
-Ubuntu 20.04 原版 Wayland 1.18 不满足本适配器的构建下限；已有 Ubuntu20 本体和
+Ubuntu 20.04 原版 Wayland 1.18 不满足本适配器的构建下限；已有原生应用和
 Plasma5 CI 配方不启用此目标，不受影响。
 
 ```bash

@@ -18,7 +18,7 @@ def write_licenses(source, build, stage, mode):
     for dependency, filename in dependencies:
         notices.append(f"=== {dependency} ===\n\n" +
                        (build / "_deps" / f"{dependency}-src" / filename).read_text())
-    if mode == "native20":
+    if mode == "native":
         notices.append("=== GLFW ===\n\n" + (build / "_deps/glfw-src/LICENSE.md").read_text())
     for name in ("Apache-2.0", "CC0-1.0"):
         notices.append(f"=== GLAD generated code: {name} ===\n\n" +
@@ -42,6 +42,6 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path)
     parser.add_argument("build", type=Path)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("mode", choices=("native20", "plasma5", "plasma6", "layer-shell", "x11"))
+    parser.add_argument("mode", choices=("native", "plasma5", "plasma6", "layer-shell", "x11"))
     args = parser.parse_args()
     write_licenses(args.source, args.build, args.stage, args.mode)

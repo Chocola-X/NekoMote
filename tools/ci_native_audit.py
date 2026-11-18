@@ -7,21 +7,23 @@ import subprocess
 import sys
 from pathlib import Path
 
-from plasma_distribution import BASELINE, UBUNTU20_BASELINE, elf_info, version
+from plasma_distribution import BASELINE, elf_info, version
+
+ALMALINUX8_BASELINE = {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"}
 
 
 def audit(stage, mode):
     binaries = {}
-    if mode == "native20":
+    if mode == "native":
         names = {"nekomote_player", "nekomote_import", "nekomote_audio_convert",
                  "nekomote_model_convert", "nekomote_png_recompress", "nekomote_abi_host"}
-        baseline, limits = "ubuntu20", UBUNTU20_BASELINE
+        baseline, limits = "almalinux8", ALMALINUX8_BASELINE
     elif mode == "layer-shell":
         names = {"nekomote_layer_shell"}
         baseline, limits = "debian12", BASELINE
     elif mode == "x11":
         names = {"nekomote_x11"}
-        baseline, limits = "ubuntu20", UBUNTU20_BASELINE
+        baseline, limits = "almalinux8", ALMALINUX8_BASELINE
     else:
         raise ValueError(f"unknown standalone package mode: {mode}")
     if {path.name for path in (stage / "bin").iterdir()} != names:
@@ -51,7 +53,7 @@ def audit(stage, mode):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("--mode", choices=("native20", "layer-shell", "x11"), required=True)
+    parser.add_argument("--mode", choices=("native", "layer-shell", "x11"), required=True)
     args = parser.parse_args()
     try:
         print(json.dumps(audit(args.stage, args.mode), indent=2, sort_keys=True))

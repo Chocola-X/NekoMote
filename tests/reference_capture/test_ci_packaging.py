@@ -59,11 +59,11 @@ class NoticeTests(unittest.TestCase):
                          {"LICENSE", "THIRD_PARTY_NOTICES"})
 
     def test_only_native_package_includes_glfw(self):
-        for mode in ("native20", "plasma5", "plasma6", "x11"):
+        for mode in ("native", "plasma5", "plasma6", "x11"):
             with self.subTest(mode=mode):
                 write_licenses(REPO, self.build, self.stage, mode)
                 self.assertEqual("fixture glfw" in (self.stage / "THIRD_PARTY_NOTICES").read_text(),
-                                 mode == "native20")
+                                 mode == "native")
 
     def test_missing_required_notice_fails_before_creating_package(self):
         (self.build / "_deps/glad-src/LICENSE").unlink()
@@ -112,7 +112,7 @@ class StandaloneAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly"):
             AUDIT.audit(self.stage, "layer-shell")
 
-    def test_x11_package_uses_ubuntu20_limits_and_single_program(self):
+    def test_x11_package_uses_almalinux8_limits_and_single_program(self):
         fixture = self.stage / "bin/nekomote_layer_shell"
         shutil.copyfile(fixture, self.stage / "bin/nekomote_x11")
         (self.stage / "bin/nekomote_x11").chmod(0o755)
@@ -120,16 +120,19 @@ class StandaloneAuditTests(unittest.TestCase):
         # The host compiler may target a newer glibc; freeze versions at the
         # declared x11 baseline while keeping real ELF parsing and ldd checks.
         info = AUDIT.elf_info(self.stage / "bin/nekomote_x11")
-        info["versions"] = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.11"}
+        limits = {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"}
+        info["versions"] = limits.copy()
         with patch.object(AUDIT, "elf_info", return_value=info):
             report = AUDIT.audit(self.stage, "x11")
-            self.assertEqual(report["baseline"], "ubuntu20")
-            self.assertEqual(report["limits"]["GLIBC"], "2.31")
-            self.assertEqual(report["limits"]["GLIBCXX"], "3.4.28")
+            self.assertEqual(report["baseline"], "almalinux8")
+            self.assertEqual(report["limits"], limits)
             self.assertEqual(set(report["binaries"]), {"nekomote_x11"})
-            info["versions"]["GLIBC"] = "2.32"
-            with self.assertRaisesRegex(ValueError, "exceeds ubuntu20"):
-                AUDIT.audit(self.stage, "x11")
+            for family, required in (("GLIBC", "2.29"), ("GLIBCXX", "3.4.26"),
+                                     ("CXXABI", "1.3.12")):
+                with self.subTest(family=family):
+                    info["versions"] = {**limits, family: required}
+                    with self.assertRaisesRegex(ValueError, f"{family}_.*exceeds almalinux8"):
+                        AUDIT.audit(self.stage, "x11")
         (self.stage / "bin/unexpected").write_text("extra")
         with self.assertRaisesRegex(ValueError, "exactly"):
             AUDIT.audit(self.stage, "x11")
@@ -145,17 +148,17 @@ class StandaloneAuditTests(unittest.TestCase):
         # The host compiler may target a newer glibc. Keep real ELF dependency
         # parsing and ldd, but freeze versions at the declared native baseline.
         info = AUDIT.elf_info(self.stage / "bin/nekomote_player")
-        info["versions"] = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.11"}
+        info["versions"] = {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"}
         with patch.object(AUDIT, "elf_info", return_value=info):
-            report = AUDIT.audit(self.stage, "native20")
-            self.assertEqual(report["baseline"], "ubuntu20")
+            report = AUDIT.audit(self.stage, "native")
+            self.assertEqual(report["baseline"], "almalinux8")
             self.assertEqual(set(report["binaries"]), programs)
             info["needed"].append("libFLAC.so.12")
             with self.assertRaisesRegex(ValueError, "statically link pinned FLAC"):
-                AUDIT.audit(self.stage, "native20")
+                AUDIT.audit(self.stage, "native")
         (self.stage / "bin/nekomote_png_recompress").unlink()
         with self.assertRaisesRegex(ValueError, "exactly"):
-            AUDIT.audit(self.stage, "native20")
+            AUDIT.audit(self.stage, "native")
 
 
 if __name__ == "__main__":

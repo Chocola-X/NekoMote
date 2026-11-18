@@ -1,5 +1,16 @@
 # GitHub 自动构建与测试
 
+2026-11-18：原生应用和 X11 的正式发布基线切换到 AlmaLinux 8.10，归档名改用
+`almalinux8`。继续在 x86_64 和 ARM64 的原生 runner 上构建；Plasma 5 仍使用
+Ubuntu 20.04 / Qt 5.12.8，Plasma 6 和 layer-shell 仍使用 Debian 12。
+
+本地从固定镜像的 x86_64 文件系统准备工具链，以有 NSS 记录的非 root UID 分别执行
+`ci_build.sh native` 和 `ci_build.sh x11`。依赖源码使用同一 Git pin 的本地缓存，
+原生 261 项、X11 262 项必选测试全部通过，归档、SHA256、`ldd -r` 和符号审计通过。
+七个可执行文件的最高符号需求为 GLIBC2.28、GLIBCXX3.4.22、CXXABI1.3.11，
+均从系统加载 libstdc++。已核对固定镜像摘要包含 ARM64；GitHub 首跑、ARM64 实编和
+实际桌面呈现未在本地验证。
+
 2026-11-11：Plasma 统一发布外层 tar.gz，内含自包含 `.wallpaper.zip`、内层校验和及
 独立安装器。Release 为十份 tar.gz 与十份校验文件；发布前额外验证四个 Plasma
 内层包的版本、平台和二进制哈希。CI 还从最终包解出壁纸，在新进程中验证设置页优先、
@@ -135,14 +146,13 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
-| [native-linux.yml](../.github/workflows/native-linux.yml) | Ubuntu 20.04 / GCC 10.5 / CMake 3.28.4，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
+| [native-linux.yml](../.github/workflows/native-linux.yml) | AlmaLinux 8.10 / GCC Toolset 13 / CMake 3.26.5，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
 | [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 与 aarch64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
-| [x11.yml](../.github/workflows/x11.yml) | Ubuntu 20.04 / GCC10.5，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH OpenGL/Vulkan 程序 |
+| [x11.yml](../.github/workflows/x11.yml) | AlmaLinux 8.10 / GCC Toolset 13，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH OpenGL/Vulkan 程序 |
 
-GitHub 当前的 [托管 runner 列表](https://github.com/actions/runner-images#available-images)
-不包含 Ubuntu 20.04，因此使用 `ubuntu-24.04` runner 的 Docker 运行 focal 构建。
+流程使用 `ubuntu-24.04` 和 `ubuntu-24.04-arm` 托管 runner 启动相应架构的基线容器。
 runner 的系统库不会被用于容器内编译。全部模式开启 Release、LTO、Werror 和 OpenGL/Vulkan 双后端；layer-shell 使用 EGL 或
 原生 Wayland Vulkan surface，X11 使用 GLX 或原生 Xlib Vulkan surface。
 测试失败或依赖审计失败时不上传发行包。2026-10-21 壳双后端改造保留原基线和包名，
@@ -170,19 +180,19 @@ git push origin v0.5.0
 
 | Release 附件 | 内容 |
 | --- | --- |
-| `nekomote-native-ubuntu20-x86_64.tar.gz` | Intel/AMD 64 位 Linux 的六个原生程序 |
-| `nekomote-native-ubuntu20-aarch64.tar.gz` | ARM64 Linux 的六个原生程序 |
+| `nekomote-native-almalinux8-x86_64.tar.gz` | Intel/AMD 64 位 Linux 的六个原生程序 |
+| `nekomote-native-almalinux8-aarch64.tar.gz` | ARM64 Linux 的六个原生程序 |
 | `nekomote-plasma5-x86_64.tar.gz` | KDE5 x86_64 插件 |
 | `nekomote-plasma5-aarch64.tar.gz` | KDE5 ARM64 插件 |
 | `nekomote-plasma6-x86_64.tar.gz` | KDE6 x86_64 插件 |
 | `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
 | `nekomote-layer-shell-debian12-x86_64.tar.gz` | Layer-shell x86_64 独立程序 |
 | `nekomote-layer-shell-debian12-aarch64.tar.gz` | Layer-shell ARM64 独立程序 |
-| `nekomote-x11-ubuntu20-x86_64.tar.gz` | X11 x86_64 独立程序 |
-| `nekomote-x11-ubuntu20-aarch64.tar.gz` | X11 ARM64 独立程序 |
+| `nekomote-x11-almalinux8-x86_64.tar.gz` | X11 x86_64 独立程序 |
+| `nekomote-x11-almalinux8-aarch64.tar.gz` | X11 ARM64 独立程序 |
 
 本体、KDE5、KDE6、layer-shell 和 X11 的 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
-固定基线镜像中编译。focal 的 Python / Node 工具下载按架构选择固定 URL 与 SHA256；
+固定基线镜像中编译。focal 的 Python 和两个镜像中的 Node 下载按架构校验 SHA256；
 不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
 
 发布前检查附件齐全且 SHA256 一致；之后创建 draft、上传全部附件，上传成功后转为
@@ -198,7 +208,13 @@ Release 页面可直接下载归档；Actions 中继续保留各平台测试、�
 
 ## 工具链与源码边界
 
-Ubuntu20 镜像固定 digest，使用官方 focal 包中的 GCC10；系统自带 GCC9 与
+原生应用及 X11 使用固定 digest 的 AlmaLinux 8.10 镜像。GCC Toolset 13 提供 C++20
+编译器；链接器优先使用系统 `libstdc++.so.6`，较新的接口由 Toolset 的
+`libstdc++_nonshared` 补齐。审计仍使用系统 `readelf` 和 `ldd`，运行不依赖 Toolset。
+镜像使用官方 RPM，并以 SHA256 固定 Node 22.14.0 和 glslang 12.0.0；后者在镜像内
+编译为着色器工具，不随发行包发布。RPM 实际版本记在 `toolchain-packages.txt`，包仓库未冻结。
+
+Plasma 5 的 Ubuntu20 镜像固定 digest，使用官方 focal 包中的 GCC10；系统自带 GCC9 与
 CMake3.16 不满足项目要求。CMake 和 Python 构建工具另行固定版本；独立 Python3.11
 下载校验 SHA256，仅用于构建和测试，不随本体分发。focal apt 包实际版本保存在
 `toolchain-packages.txt`，APT 仓库没有冻结快照，不宣称每次镜像重建逐字节一致。
@@ -228,13 +244,13 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 进入仓库 Actions，选中成功的运行，在 Artifacts 下载对应包：
 
-- `nekomote-native-ubuntu20-x86_64` / `nekomote-native-ubuntu20-aarch64`：归档内
+- `nekomote-native-almalinux8-x86_64` / `nekomote-native-almalinux8-aarch64`：归档内
   `nekomote-native/bin/` 仅包含六个请求的程序。
 - `nekomote-plasma5-x86_64` / `nekomote-plasma5-aarch64`：Qt5 插件，不得装进 Plasma6。
 - `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
 - `nekomote-layer-shell-debian12-x86_64` / `nekomote-layer-shell-debian12-aarch64`：
   独立背景进程，归档内 `nekomote-layer-shell/bin/nekomote_layer_shell`。
-- `nekomote-x11-ubuntu20-x86_64` / `nekomote-x11-ubuntu20-aarch64`：
+- `nekomote-x11-almalinux8-x86_64` / `nekomote-x11-almalinux8-aarch64`：
   独立背景进程，归档内 `nekomote-x11/bin/nekomote_x11`，桌面共存限制见 [说明](x11.md)。
 - `evidence-*`：日志、JUnit `tests.xml`、兼容报告、包版本与未执行测试清单；失败也保存。
 
@@ -249,8 +265,9 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 ## 二进制兼容范围
 
-原生程序与 KDE5 插件严格检查符号需求不超过 GLIBC2.31、GLIBCXX3.4.28、
-CXXABI1.3.12；KDE5 构建 Qt 不超过5.12.8。原生程序另在容器内执行 `ldd -r`，
+原生程序和 X11 严格检查符号需求不超过 GLIBC2.28、GLIBCXX3.4.25、CXXABI1.3.11。
+KDE5 插件保持 Ubuntu20 的 GLIBC2.31、GLIBCXX3.4.28、CXXABI1.3.12 上限，
+构建 Qt 不超过5.12.8。原生程序另在容器内执行 `ldd -r`，
 检查传递的系统依赖能够解析。归档不捆绑系统库，目标仍需安装 OpenGL、Vulkan loader、
 PulseAudio、PNG/zlib、Fontconfig 及相关窗口依赖，可从兼容报告查看实际依赖。
 
@@ -271,7 +288,7 @@ C++ ABI、不附带另一套 Qt，不能将其称为覆盖全部 KDE6 桌面的�
 这项静态检查不代替跨 Qt5 minor 的实际加载与桌面验收。
 
 项目核心库以静态库参与最终链接；Qt、libstdc++、PulseAudio、PNG 等系统库由宿主提供。
-CI 检查三个程序和插件本体的 `DT_NEEDED`，拒绝意外静态链接 libstdc++。
+CI 检查独立程序和插件本体的 `DT_NEEDED`，要求动态链接系统 libstdc++。
 本地曾将 GCC10 deb 解包到临时目录做兼容编译，缺失动态库链接目标导致它选中
 `libstdc++.a`、文件变大；已经修正本地链接路径。这些混合本机 SDK 的产物不是
 Ubuntu20 分发包，不用于冻结基线符号需求。
@@ -279,15 +296,17 @@ Ubuntu20 分发包，不用于冻结基线符号需求。
 ## 本地复现容器构建
 
 ```bash
-mkdir -p build/ci-native20 build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell build/ci-x11
+mkdir -p build/ci-native build/ci-plasma5 build/ci-plasma6 build/ci-layer-shell build/ci-x11
+docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+  -f tools/ci_almalinux8.Containerfile -t nekomote-almalinux8 tools
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD:/source:ro" -v "$PWD/build/ci-native:/output:rw" nekomote-almalinux8 native
+docker run --rm --user "$(id -u):$(id -g)" \
+  -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" nekomote-almalinux8 x11
 docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
   -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
 docker run --rm --user "$(id -u):$(id -g)" \
-  -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" nekomote-focal native20
-docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" nekomote-focal plasma5
-docker run --rm --user "$(id -u):$(id -g)" \
-  -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" nekomote-focal x11
 docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
   -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
 docker run --rm --user "$(id -u):$(id -g)" \

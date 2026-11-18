@@ -15,16 +15,16 @@ import unittest
 
 SCRIPT = Path(__file__).resolve().parents[2] / "tools/ci_publish_release.sh"
 PACKAGES = (
-    "nekomote-native-ubuntu20-x86_64",
-    "nekomote-native-ubuntu20-aarch64",
+    "nekomote-native-almalinux8-x86_64",
+    "nekomote-native-almalinux8-aarch64",
     "nekomote-plasma5-x86_64",
     "nekomote-plasma5-aarch64",
     "nekomote-plasma6-x86_64",
     "nekomote-plasma6-aarch64",
     "nekomote-layer-shell-debian12-x86_64",
     "nekomote-layer-shell-debian12-aarch64",
-    "nekomote-x11-ubuntu20-x86_64",
-    "nekomote-x11-ubuntu20-aarch64",
+    "nekomote-x11-almalinux8-x86_64",
+    "nekomote-x11-almalinux8-aarch64",
 )
 
 ARCHIVES = [f"{p}.tar.gz" for p in PACKAGES]

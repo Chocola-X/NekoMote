@@ -1,4 +1,4 @@
-name: Ubuntu 20.04 native programs
+name: AlmaLinux 8.10 native programs
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-native20-${{ github.ref }}
+  group: ${{ github.workflow }}-native-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -38,37 +38,37 @@ jobs:
           persist-credentials: false
       - name: Build baseline toolchain image
         run: |
-          mkdir -p build/ci-native20
+          mkdir -p build/ci-native
           docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
-            -f tools/ci_ubuntu20.Containerfile -t nekomote-native20 tools \
-            2>&1 | tee build/ci-native20/toolchain-build.log
+            -f tools/ci_almalinux8.Containerfile -t nekomote-native-almalinux8 tools \
+            2>&1 | tee build/ci-native/toolchain-build.log
       - name: Release build, tests and dependency audit
         run: |
           docker run --rm --user "$(id -u):$(id -g)" \
-            -v "$PWD:/source:ro" -v "$PWD/build/ci-native20:/output:rw" \
-            nekomote-native20 native20 2>&1 | tee build/ci-native20/build-test.log
-          test -s build/ci-native20/tests.xml
-          test -s build/ci-native20/compatibility.json
-          test -s build/ci-native20/nekomote-native-ubuntu20-${{ matrix.arch }}.tar.gz
+            -v "$PWD:/source:ro" -v "$PWD/build/ci-native:/output:rw" \
+            nekomote-native-almalinux8 native 2>&1 | tee build/ci-native/build-test.log
+          test -s build/ci-native/tests.xml
+          test -s build/ci-native/compatibility.json
+          test -s build/ci-native/nekomote-native-almalinux8-${{ matrix.arch }}.tar.gz
       - name: Upload release package
         # actions/upload-artifact v4.6.2; publication belongs to release.yml.
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: nekomote-native-ubuntu20-${{ matrix.arch }}
+          name: nekomote-native-almalinux8-${{ matrix.arch }}
           path: |
-            build/ci-native20/*.tar.gz
-            build/ci-native20/*.sha256
+            build/ci-native/*.tar.gz
+            build/ci-native/*.sha256
           if-no-files-found: error
           retention-days: 30
       - name: Upload tests and build evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: evidence-native20-${{ matrix.arch }}
+          name: evidence-native-${{ matrix.arch }}
           path: |
-            build/ci-native20/*.log
-            build/ci-native20/*.xml
-            build/ci-native20/*.json
-            build/ci-native20/*.txt
+            build/ci-native/*.log
+            build/ci-native/*.xml
+            build/ci-native/*.json
+            build/ci-native/*.txt
           if-no-files-found: warn
           retention-days: 14

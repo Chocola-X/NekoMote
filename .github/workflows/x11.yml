@@ -1,4 +1,4 @@
-name: X11 wallpaper Ubuntu 20.04 baseline
+name: X11 wallpaper AlmaLinux 8.10 baseline
 
 on:
   push:
@@ -40,21 +40,21 @@ jobs:
         run: |
           mkdir -p build/ci-x11
           docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
-            -f tools/ci_ubuntu20.Containerfile -t nekomote-x11-ubuntu20 tools \
+            -f tools/ci_almalinux8.Containerfile -t nekomote-x11-almalinux8 tools \
             2>&1 | tee build/ci-x11/toolchain-build.log
       - name: Release build, tests and dependency audit
         run: |
           docker run --rm --user "$(id -u):$(id -g)" \
             -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" \
-            nekomote-x11-ubuntu20 x11 2>&1 | tee build/ci-x11/build-test.log
+            nekomote-x11-almalinux8 x11 2>&1 | tee build/ci-x11/build-test.log
           test -s build/ci-x11/tests.xml
           test -s build/ci-x11/compatibility.json
-          test -s build/ci-x11/nekomote-x11-ubuntu20-${{ matrix.arch }}.tar.gz
+          test -s build/ci-x11/nekomote-x11-almalinux8-${{ matrix.arch }}.tar.gz
       - name: Upload release package
         # actions/upload-artifact v4.6.2; publication belongs to release.yml.
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: nekomote-x11-ubuntu20-${{ matrix.arch }}
+          name: nekomote-x11-almalinux8-${{ matrix.arch }}
           path: |
             build/ci-x11/*.tar.gz
             build/ci-x11/*.sha256

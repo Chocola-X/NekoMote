@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 - OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
 - KDE Plasma 6 壁纸插件；独立 Plasma 5 适配器（Qt5）
 - 独立 Wayland layer-shell 壁纸壳（OpenGL/Vulkan，面向支持该协议的合成器），见 [使用与验收范围](docs/layer-shell.md)
-- 独立 X11/EWMH 壁纸壳（OpenGL/GLX 与 Vulkan，Ubuntu 20.04 基线），见 [使用与桌面共存限制](docs/x11.md)
+- 独立 X11/EWMH 壁纸壳（OpenGL/GLX 与 Vulkan，AlmaLinux 8.10 基线），见 [使用与桌面共存限制](docs/x11.md)
 - 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
 - 声音与口型（PulseAudio），可静音
 - PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
@@ -274,11 +274,11 @@ Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 
 五个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 
-- Ubuntu 20.04：x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`。
+- 原生应用：AlmaLinux 8.10 / GCC Toolset 13，x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`。
 - KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 与 ARM64 插件。
 - KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 ARM64 插件。
 - Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 ARM64 独立程序。
-- X11：Ubuntu 20.04 / EWMH/GLX 的 x86_64 与 ARM64 独立程序。
+- X11：AlmaLinux 8.10 / EWMH/GLX 的 x86_64 与 ARM64 独立程序。
 
 构建、测试与依赖审计通过后上传 Actions artifacts；失败日志与测试报告单独保存。
 推送 `v0.5.0` 这样的 `vX.Y.Z` 稳定版本标签后，发布工作流会构建上述全部平台，
@@ -294,7 +294,7 @@ Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 不使用 Plasma 插件时，可经两个独立进程壳把同一壁纸本体接到其他桌面。两者都只通过 C ABI 复用共享的模型、背景、声音、控制面板与配置，不重复任何业务逻辑：
 
 - **`nekomote_layer_shell`**：面向实现 [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) 协议的 Wayland 合成器（Sway、Hyprland、niri 等），支持 OpenGL/EGL 或原生 Wayland Vulkan 输出。
-- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，支持 OpenGL/GLX 或原生 Xlib Vulkan 输出，Ubuntu 20.04 基线。
+- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，支持 OpenGL/GLX 或原生 Xlib Vulkan 输出，AlmaLinux 8.10 基线。
 
 ### 构建与运行
 

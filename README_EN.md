@@ -16,7 +16,7 @@ License: GNU AGPL-3.0 (see [LICENSE](LICENSE)).
 - Dual OpenGL 3.3 and Vulkan 1.0 backends with runtime switching
 - KDE Plasma 6 wallpaper plugin; standalone Plasma 5 adapter (Qt5)
 - Standalone Wayland layer-shell wallpaper shell (OpenGL/Vulkan, for compositors supporting the protocol), see [Usage and Validation Scope](docs/layer-shell.md)
-- Standalone X11/EWMH wallpaper shell (OpenGL/GLX and Vulkan, Ubuntu 20.04 baseline), see [Usage and Desktop Coexistence Limitations](docs/x11.md)
+- Standalone X11/EWMH wallpaper shell (OpenGL/GLX and Vulkan, AlmaLinux 8.10 baseline), see [Usage and Desktop Coexistence Limitations](docs/x11.md)
 - Normal window player (GLFW, auto-selects X11 or Wayland)
 - Voice and lip-sync (PulseAudio), mutable
 - PNG static backgrounds and time-of-day dynamic backgrounds (day/dusk/night three-phase)
@@ -267,11 +267,11 @@ Arch's three-package PKGBUILD is in [packaging notes](packaging/arch/README.md).
 
 Five independent GitHub Actions workflows build on branch push, PR, or manual trigger:
 
-- Ubuntu 20.04: x86_64 / ARM64 Release builds of `nekomote_player`, `nekomote_import`, `nekomote_audio_convert`, `nekomote_model_convert`, `nekomote_png_recompress`, `nekomote_abi_host`.
+- Native programs: AlmaLinux 8.10 / GCC Toolset 13, x86_64 / ARM64 Release builds of `nekomote_player`, `nekomote_import`, `nekomote_audio_convert`, `nekomote_model_convert`, `nekomote_png_recompress`, `nekomote_abi_host`.
 - KDE5: Ubuntu 20.04 / Qt5.12.8 x86_64 and ARM64 plugins.
 - KDE6: Debian 12 / Qt6.4.2 x86_64 and ARM64 plugins.
 - Layer-shell: Debian 12 / Wayland 1.21 x86_64 and ARM64 standalone programs.
-- X11: Ubuntu 20.04 / EWMH/GLX x86_64 and ARM64 standalone programs.
+- X11: AlmaLinux 8.10 / EWMH/GLX x86_64 and ARM64 standalone programs.
 
 After build, tests, and dependency audit pass, Actions artifacts are uploaded; failure logs and test reports are saved separately.
 Pushing a stable `vX.Y.Z` tag such as `v0.5.0` triggers the release workflow, which builds all the above platforms,
@@ -288,7 +288,7 @@ The plugin uses the host Qt public Quick API; distribution packages do not bundl
 When not using the Plasma plugin, two standalone process shells can connect the same wallpaper body to other desktops. Both reuse the shared model, background, voice, control panel, and config via the C ABI only, duplicating no business logic:
 
 - **`nekomote_layer_shell`**: targets Wayland compositors that implement the [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) protocol (Sway, Hyprland, niri, etc.), supporting OpenGL/EGL or native Wayland Vulkan output.
-- **`nekomote_x11`**: targets any X11 window manager implementing EWMH, persisting as a desktop-layer window (`_NET_WM_WINDOW_TYPE_DESKTOP`), supporting OpenGL/GLX or native Xlib Vulkan output, Ubuntu 20.04 baseline.
+- **`nekomote_x11`**: targets any X11 window manager implementing EWMH, persisting as a desktop-layer window (`_NET_WM_WINDOW_TYPE_DESKTOP`), supporting OpenGL/GLX or native Xlib Vulkan output, AlmaLinux 8.10 baseline.
 
 ### Build and Run
 

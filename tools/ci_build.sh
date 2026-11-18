@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build/test/package inside an explicit baseline container. Never install a desktop.
 set -euo pipefail
-MODE="${1:?native20, plasma5, plasma6, layer-shell or x11 required}"
+MODE="${1:?native, plasma5, plasma6, layer-shell or x11 required}"
 SOURCE_DIR="${2:-/source}"
 OUTPUT_DIR="${3:-/output}"
 JOBS="${NEKOMOTE_BUILD_JOBS:-4}"
 ARCH_NAME="$(uname -m)"
-case "$MODE" in native20|plasma5|plasma6|layer-shell|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
+case "$MODE" in native|plasma5|plasma6|layer-shell|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
 test -f "$SOURCE_DIR/CMakeLists.txt"
 test -d "$OUTPUT_DIR"
 if ! getent passwd "$(id -u)" >/dev/null || ! getent group "$(id -g)" >/dev/null; then
@@ -21,7 +21,12 @@ export XDG_RUNTIME_DIR="$WORK_DIR/runtime"
 tar -C "$SOURCE_DIR" --exclude='./.git' --exclude='./build' --exclude='./assets' \
     --exclude='./refer' --exclude='./experiments' --exclude='./node_modules' \
     -cf - . | tar -C "$WORK_DIR/src" -xf -
-dpkg-query -W -f='${Package}\t${Version}\n' > "$OUTPUT_DIR/toolchain-packages.txt"
+if [[ "$MODE" == native || "$MODE" == x11 ]]; then
+    rpm -qa --queryformat '%{NAME}\t%{VERSION}-%{RELEASE}.%{ARCH}\n' | LC_ALL=C sort \
+        > "$OUTPUT_DIR/toolchain-packages.txt"
+else
+    dpkg-query -W -f='${Package}\t${Version}\n' > "$OUTPUT_DIR/toolchain-packages.txt"
+fi
 # GNU LTO invokes make even though Ninja drives the outer build. Check the
 # complete CPU/tool test environment before starting an expensive compilation.
 {
@@ -46,7 +51,7 @@ OPTIONS=(-DCMAKE_BUILD_TYPE=Release -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
     -DNEKOMOTE_BUILD_ABI=ON -DNEKOMOTE_BUILD_VULKAN=ON)
 TARGETS=(nekomote_unit_tests nekomote_audio_device_tests nekomote_font_probe
     nekomote_abi_negative_test nekomote_abi_boundary_tests nekomote_host_gpu_tests)
-if [[ "$MODE" == native20 ]]; then
+if [[ "$MODE" == native ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=ON -DNEKOMOTE_BUILD_PLAYER=ON
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF)
     TARGETS+=(nekomote_player nekomote_import nekomote_audio_convert nekomote_model_convert
@@ -71,10 +76,10 @@ else
     [[ "$MODE" != plasma5 ]] || TARGETS+=(nekomote_plasma5_package_test)
     [[ "$MODE" != plasma6 ]] || TARGETS+=(nekomote_plasma6_configuration_test)
 fi
-if [[ "$MODE" != native20 ]]; then
+if [[ "$MODE" != native ]]; then
     TARGETS+=(nekomote_host_session_probe)
 fi
-if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
+if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
     TARGETS+=(nekomote_host_vulkan_failure_tests)
 fi
 cmake -S "$WORK_DIR/src" -B "$WORK_DIR/build" -G Ninja "${OPTIONS[@]}"
@@ -95,10 +100,10 @@ ctest --test-dir "$WORK_DIR/build" -LE 'gpu|integration' --no-tests=error \
 ctest --test-dir "$WORK_DIR/build" -N -L 'gpu|integration' \
     > "$OUTPUT_DIR/excluded-tests.txt"
 mkdir "$WORK_DIR/package"
-if [[ "$MODE" == native20 ]]; then
+if [[ "$MODE" == native ]]; then
     STAGE_DIR="$WORK_DIR/package/nekomote-native"
     cmake --install "$WORK_DIR/build" --prefix "$STAGE_DIR" --component runtime
-    NAME="nekomote-native-ubuntu20-$ARCH_NAME"
+    NAME="nekomote-native-almalinux8-$ARCH_NAME"
 elif [[ "$MODE" == layer-shell ]]; then
     STAGE_DIR="$WORK_DIR/package/nekomote-layer-shell"
     # Protocol notices are consolidated below; XML source and README stay in the repository.
@@ -108,7 +113,7 @@ elif [[ "$MODE" == x11 ]]; then
     STAGE_DIR="$WORK_DIR/package/nekomote-x11"
     # Xlib protocols belong to the system; ship only the program and notices below.
     install -D "$WORK_DIR/build/bin/nekomote_x11" "$STAGE_DIR/bin/nekomote_x11"
-    NAME="nekomote-x11-ubuntu20-$ARCH_NAME"
+    NAME="nekomote-x11-almalinux8-$ARCH_NAME"
 else
     STAGE_DIR="$WORK_DIR/build/adapters/plasma/stage"
     if [[ "$MODE" == plasma5 ]]; then
@@ -119,7 +124,7 @@ fi
 
 python3 "$WORK_DIR/src/tools/ci_package_licenses.py" "$WORK_DIR/src" \
     "$WORK_DIR/build" "$STAGE_DIR" "$MODE"
-if [[ "$MODE" == native20 || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
+if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
     python3 "$WORK_DIR/src/tools/ci_native_audit.py" "$STAGE_DIR" --mode "$MODE" \
         > "$OUTPUT_DIR/compatibility.json"
     tar -C "$WORK_DIR/package" -czf "$OUTPUT_DIR/$NAME.tar.gz" "$(basename "$STAGE_DIR")"
