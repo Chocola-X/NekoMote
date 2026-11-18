@@ -114,12 +114,12 @@ elif [[ "$MODE" == x11 ]]; then
     # Xlib protocols belong to the system; ship only the program and notices below.
     install -D "$WORK_DIR/build/bin/nekomote_x11" "$STAGE_DIR/bin/nekomote_x11"
     NAME="nekomote-x11-almalinux8-$ARCH_NAME"
+elif [[ "$MODE" == plasma5 ]]; then
+    STAGE_DIR="$WORK_DIR/build/adapters/plasma5/stage"
+    NAME="nekomote-plasma5-ubuntu20-$ARCH_NAME"
 else
     STAGE_DIR="$WORK_DIR/build/adapters/plasma/stage"
-    if [[ "$MODE" == plasma5 ]]; then
-        STAGE_DIR="$WORK_DIR/build/adapters/plasma5/stage"
-    fi
-    NAME="nekomote-$MODE-$ARCH_NAME"
+    NAME="nekomote-plasma6-debian12-$ARCH_NAME"
 fi
 
 python3 "$WORK_DIR/src/tools/ci_package_licenses.py" "$WORK_DIR/src" \

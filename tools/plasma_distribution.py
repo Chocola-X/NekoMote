@@ -33,6 +33,7 @@ REQUIRED = ELFS + (
 )
 UBUNTU20_BASELINE = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.12"}
 BASELINE = {"GLIBC": "2.36", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}
+PLASMA_BASELINE_NAMES = {5: "ubuntu20", 6: "debian12"}
 MACHINES = {"Advanced Micro Devices X86-64": "x86_64", "AArch64": "aarch64"}
 # Some Qt5 builds version-tag the public nested Renderer exports as PRIVATE_API.
 # Its Q_QUICK_EXPORT interface is identical in upstream 5.12/5.15 headers.
@@ -138,7 +139,7 @@ def audit(stage, qt_version, baseline=False, ubuntu20=False):
         raise ValueError("baseline must match the Qt/Plasma major")
     limits = UBUNTU20_BASELINE if major == 5 else BASELINE
     qt_limit = "5.12.8" if major == 5 else "6.4.2"
-    baseline_name = "ubuntu20" if major == 5 else "debian12"
+    baseline_name = PLASMA_BASELINE_NAMES[major]
     check_manifest(stage)
     required_files = list(REQUIRED)
     if major == 5:
@@ -240,7 +241,10 @@ def package_bundle(stage, qt_version, output, baseline=False, ubuntu20=False,
         payload = Path(temporary) / "wallpaper.zip"
         result = package_kpackage(stage, qt_version, payload, baseline, ubuntu20, package_version)
         metadata = result["compatibility"]
-        name = f"nekomote-plasma{metadata['plasma_major']}-{metadata['architecture']}"
+        name = (f"nekomote-plasma{metadata['plasma_major']}-{metadata['baseline']['name']}"
+                f"-{metadata['architecture']}")
+        if output.name != name + ".tar.gz":
+            raise ValueError(f"expected Plasma bundle filename: {name}.tar.gz")
         zip_name = name + ".wallpaper.zip"
         files = {
             zip_name: payload.read_bytes(),
@@ -258,8 +262,8 @@ def package_bundle(stage, qt_version, output, baseline=False, ubuntu20=False,
 
 
 def verify_bundle(path, package_version):
-    match = re.fullmatch(r"nekomote-plasma([56])-(x86_64|aarch64)\.tar\.gz", path.name)
-    if not match:
+    match = re.fullmatch(r"nekomote-plasma([56])-([a-z0-9]+)-(x86_64|aarch64)\.tar\.gz", path.name)
+    if not match or match[2] != PLASMA_BASELINE_NAMES[int(match[1])]:
         raise ValueError("unexpected Plasma bundle filename")
     name = path.name[:-7]
     zip_name = name + ".wallpaper.zip"
@@ -281,7 +285,9 @@ def verify_bundle(path, package_version):
                 plugin.get("KPlugin", {}).get("Id") != "uk.nekopara.nekomote" or
                 plugin["KPlugin"].get("Version") != package_version):
             raise ValueError("wallpaper identity/version does not match release")
-        if metadata.get("plasma_major") != int(match[1]) or metadata.get("architecture") != match[2]:
+        if (metadata.get("plasma_major") != int(match[1]) or
+                metadata.get("baseline", {}).get("name") != match[2] or
+                metadata.get("architecture") != match[3]):
             raise ValueError("wallpaper platform does not match bundle name")
         for source, destination in zip(ELFS, ("contents/lib/libnekomote_plasma_qml.so",
                 "contents/ui/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so")):

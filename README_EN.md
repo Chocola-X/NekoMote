@@ -216,7 +216,8 @@ The UI and asset display names support English, Simplified Chinese, Traditional 
 
 ## KDE Plasma Wallpaper Deployment
 
-GitHub distributes `nekomote-plasma{5,6}-{x86_64,aarch64}.tar.gz`. Each archive contains
+GitHub distributes `nekomote-plasma5-ubuntu20-<arch>.tar.gz` and
+`nekomote-plasma6-debian12-<arch>.tar.gz` for `x86_64` and `aarch64`. Each archive contains
 one `.wallpaper.zip`, its `.sha256`, and a standalone `installer.py`.
 Upload the inner **`.wallpaper.zip`** to KDE Store; GitHub users install the same payload
 with the script. No global QML import path is required. Store listings still need to be
@@ -227,8 +228,8 @@ published separately; see [KPackage distribution](docs/plasma-kpackage-distribut
 Choose the package matching your Plasma major and CPU architecture:
 
 ```bash
-tar -xzf nekomote-plasma6-x86_64.tar.gz
-cd nekomote-plasma6-x86_64
+tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
+cd nekomote-plasma6-debian12-x86_64
 python3 installer.py              # interactive install/reinstall/uninstall/status menu
 # Or run an action directly:
 python3 installer.py install

@@ -47,7 +47,7 @@ Debug 断言支持合法目录入口，源码 stage 的命名模块保持原状�
 ```bash
 python3 tools/plasma_distribution.py kpackage <stage> \
   --qt-version 6.4.2 --baseline-debian12 --package-version 0.5.9 \
-  --output nekomote-plasma6-x86_64.wallpaper.zip
+  --output nekomote-plasma6-debian12-x86_64.wallpaper.zip
 # Plasma5对应实际Qt5.12.8、--baseline-ubuntu20。
 ```
 

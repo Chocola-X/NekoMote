@@ -182,10 +182,10 @@ git push origin v0.5.0
 | --- | --- |
 | `nekomote-native-almalinux8-x86_64.tar.gz` | Intel/AMD 64 位 Linux 的六个原生程序 |
 | `nekomote-native-almalinux8-aarch64.tar.gz` | ARM64 Linux 的六个原生程序 |
-| `nekomote-plasma5-x86_64.tar.gz` | KDE5 x86_64 插件 |
-| `nekomote-plasma5-aarch64.tar.gz` | KDE5 ARM64 插件 |
-| `nekomote-plasma6-x86_64.tar.gz` | KDE6 x86_64 插件 |
-| `nekomote-plasma6-aarch64.tar.gz` | KDE6 ARM64 插件 |
+| `nekomote-plasma5-ubuntu20-x86_64.tar.gz` | KDE5 x86_64 插件 |
+| `nekomote-plasma5-ubuntu20-aarch64.tar.gz` | KDE5 ARM64 插件 |
+| `nekomote-plasma6-debian12-x86_64.tar.gz` | KDE6 x86_64 插件 |
+| `nekomote-plasma6-debian12-aarch64.tar.gz` | KDE6 ARM64 插件 |
 | `nekomote-layer-shell-debian12-x86_64.tar.gz` | Layer-shell x86_64 独立程序 |
 | `nekomote-layer-shell-debian12-aarch64.tar.gz` | Layer-shell ARM64 独立程序 |
 | `nekomote-x11-almalinux8-x86_64.tar.gz` | X11 x86_64 独立程序 |
@@ -246,8 +246,8 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 - `nekomote-native-almalinux8-x86_64` / `nekomote-native-almalinux8-aarch64`：归档内
   `nekomote-native/bin/` 仅包含六个请求的程序。
-- `nekomote-plasma5-x86_64` / `nekomote-plasma5-aarch64`：Qt5 插件，不得装进 Plasma6。
-- `nekomote-plasma6-x86_64` / `nekomote-plasma6-aarch64`：Qt6 插件，不得装进 Plasma5。
+- `nekomote-plasma5-ubuntu20-x86_64` / `nekomote-plasma5-ubuntu20-aarch64`：Qt5 插件，不得装进 Plasma6。
+- `nekomote-plasma6-debian12-x86_64` / `nekomote-plasma6-debian12-aarch64`：Qt6 插件，不得装进 Plasma5。
 - `nekomote-layer-shell-debian12-x86_64` / `nekomote-layer-shell-debian12-aarch64`：
   独立背景进程，归档内 `nekomote-layer-shell/bin/nekomote_layer_shell`。
 - `nekomote-x11-almalinux8-x86_64` / `nekomote-x11-almalinux8-aarch64`：

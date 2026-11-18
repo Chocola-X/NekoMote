@@ -224,7 +224,8 @@ Wayland 上的关屏帧回调由合成器控制，选项不改变宿主的可见
 
 ## KDE Plasma 壁纸部署
 
-GitHub 的 Plasma 分发统一为 `nekomote-plasma{5,6}-{x86_64,aarch64}.tar.gz`。
+GitHub 上的 Plasma 5 包名为 `nekomote-plasma5-ubuntu20-<架构>.tar.gz`，
+Plasma 6 为 `nekomote-plasma6-debian12-<架构>.tar.gz`，架构为 `x86_64` 或 `aarch64`。
 解压后包含同名 `.wallpaper.zip`、它的 `.sha256` 和独立安装器 `installer.py`。
 KDE Store 使用里面的 **`.wallpaper.zip`**，GitHub 用户使用安装器；两者安装相同内容，
 无需配置全局 QML 搜索路径。商店条目仍需维护者单独上架，详见
@@ -235,8 +236,8 @@ KDE Store 使用里面的 **`.wallpaper.zip`**，GitHub 用户使用安装器；
 下载匹配桌面 major 与 CPU 架构的可信发行包，例如 Plasma 6 / x86_64：
 
 ```bash
-tar -xzf nekomote-plasma6-x86_64.tar.gz
-cd nekomote-plasma6-x86_64
+tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
+cd nekomote-plasma6-debian12-x86_64
 python3 installer.py              # 交互菜单：安装 / 重装 / 卸载 / 状态
 # 也可直接执行：
 python3 installer.py install

@@ -7,13 +7,15 @@
 
 ## 包结构与安装
 
+包名按「插件-构建基线-架构」排列：Plasma 5 用 `ubuntu20`，Plasma 6 用 `debian12`。
+系统字段表示 CI 构建环境，安装仍以宿主的 Plasma/Qt、架构和依赖检查为准。
 以 Plasma 6 / x86_64 为例：
 
 ```text
-nekomote-plasma6-x86_64.tar.gz
-└── nekomote-plasma6-x86_64/
-    ├── nekomote-plasma6-x86_64.wallpaper.zip
-    ├── nekomote-plasma6-x86_64.wallpaper.zip.sha256
+nekomote-plasma6-debian12-x86_64.tar.gz
+└── nekomote-plasma6-debian12-x86_64/
+    ├── nekomote-plasma6-debian12-x86_64.wallpaper.zip
+    ├── nekomote-plasma6-debian12-x86_64.wallpaper.zip.sha256
     └── installer.py
 ```
 
@@ -22,8 +24,8 @@ GitHub Release 另附 tar.gz 的 SHA256。Actions artifact 本身还有平台提
 兼容审计报告在内层 `contents/`，不依赖外层文件。
 
 ```bash
-tar -xzf nekomote-plasma6-x86_64.tar.gz
-cd nekomote-plasma6-x86_64
+tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
+cd nekomote-plasma6-debian12-x86_64
 python3 installer.py              # 无参数打开交互菜单
 python3 installer.py install      # 首次安装，也可迁移有记录的旧安装
 python3 installer.py reinstall    # 同版本重装或更换版本；也支持迁移旧安装
@@ -87,7 +89,7 @@ CI 的 [Plasma5](../.github/workflows/plasma5.yml)、
 分支包版本为 `0.0.0`；稳定标签将 `vX.Y.Z` 转为 KPackage 的 `X.Y.Z`。
 发布工作流要求十个 tar.gz 与十个校验文件完整；四个 Plasma 包另外校验内层版本与发布标签一致。
 
-本机 Plasma6 源码构建和打包示例：
+在 Debian 12 基线环境中构建和打包 Plasma6 的示例：
 
 ```bash
 cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
@@ -96,11 +98,12 @@ mkdir -p build/distribution
 python3 tools/ci_package_licenses.py . build/plasma build/plasma/adapters/plasma/stage plasma6
 python3 tools/plasma_stage_manifest.py build/plasma/adapters/plasma/stage
 python3 tools/plasma_distribution.py bundle build/plasma/adapters/plasma/stage \
-  --qt-version "$(qmake6 -query QT_VERSION)" --package-version 0.5.9 \
-  --output build/distribution/nekomote-plasma6-x86_64.tar.gz
+  --qt-version "$(qmake6 -query QT_VERSION)" --baseline-debian12 --package-version 0.5.9 \
+  --output build/distribution/nekomote-plasma6-debian12-x86_64.tar.gz
 ```
 
-Plasma5 对应 `plasma5` preset、stage 路径、许可证模式和 `qmake`。
+Plasma5 对应 Ubuntu 20.04 基线、`plasma5` preset 和 stage 路径、`plasma5` 许可证模式、
+`qmake` 及 `nekomote-plasma5-ubuntu20-<架构>.tar.gz`。
 `--qt-version` 必须是实际构建版本，架构也必须匹配；不要把本地新 Qt 包改名冒充低版本基线包。
 正式分发需分别添加 `--baseline-ubuntu20` 或 `--baseline-debian12`，超过上限会拒绝生成。
 `kpackage` 子命令可以单独导出商店 ZIP，但 GitHub CI 只发布包含它的统一外层包。

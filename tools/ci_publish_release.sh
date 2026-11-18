@@ -11,8 +11,8 @@ fi
 TOOLS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PACKAGES_DIR"
 PACKAGES=(nekomote-native-almalinux8-x86_64 nekomote-native-almalinux8-aarch64
-    nekomote-plasma5-x86_64 nekomote-plasma5-aarch64
-    nekomote-plasma6-x86_64 nekomote-plasma6-aarch64
+    nekomote-plasma5-ubuntu20-x86_64 nekomote-plasma5-ubuntu20-aarch64
+    nekomote-plasma6-debian12-x86_64 nekomote-plasma6-debian12-aarch64
     nekomote-layer-shell-debian12-x86_64 nekomote-layer-shell-debian12-aarch64
     nekomote-x11-almalinux8-x86_64 nekomote-x11-almalinux8-aarch64)
 ARCHIVES=()

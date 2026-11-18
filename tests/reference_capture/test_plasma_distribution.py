@@ -171,29 +171,40 @@ class PlasmaDistributionTests(unittest.TestCase):
             (root / "contents/ui" / page).write_text("import NekoMote.Wallpaper\n")
         for license_name in ("LICENSE", "THIRD_PARTY_NOTICES"):
             (self.stage / license_name).write_text("license fixture\n")
+        (root / "metadata.desktop").write_text("X-KDE-PluginInfo-Version=0.1.0\n")
         self.manifest()
-        metadata = DIST.audit(self.stage, "6.4.2", True)
-        name = "nekomote-plasma6-" + metadata["architecture"]
-        first = self.directory / (name + ".tar.gz")
-        DIST.package_bundle(self.stage, "6.4.2", first, True, package_version="1.2.3")
-        before = first.read_bytes()
-        DIST.package_bundle(self.stage, "6.4.2", first, True, package_version="1.2.3")
-        self.assertEqual(before, first.read_bytes())
-        self.assertTrue(DIST.verify_bundle(first, "1.2.3")["passed"])
-        with self.assertRaisesRegex(ValueError, "identity/version"):
-            DIST.verify_bundle(first, "1.2.4")
-        with tarfile.open(first) as archive:
-            zip_name = name + ".wallpaper.zip"
-            self.assertEqual(set(archive.getnames()), {
-                name + "/" + zip_name, name + "/" + zip_name + ".sha256", name + "/installer.py"})
-            payload = archive.extractfile(name + "/" + zip_name).read()
-            self.assertEqual(archive.extractfile(name + "/" + zip_name + ".sha256").read(),
-                             (hashlib.sha256(payload).hexdigest() + "  " + zip_name + "\n").encode())
-            self.assertEqual(archive.extractfile(name + "/installer.py").read(),
-                             (REPO / "tools/installer.py").read_bytes())
-            self.assertEqual(archive.getmember(name + "/installer.py").mode, 0o755)
-        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-            self.assertEqual(json.loads(archive.read("metadata.json"))["KPlugin"]["Version"], "1.2.3")
+        for major, system, qt, baseline_flags in (
+                (5, "ubuntu20", "5.12.8", {"ubuntu20": True}),
+                (6, "debian12", "6.4.2", {"baseline": True})):
+            with self.subTest(major=major):
+                metadata = DIST.audit(self.stage, qt, **baseline_flags)
+                name = f"nekomote-plasma{major}-{system}-" + metadata["architecture"]
+                first = self.directory / (name + ".tar.gz")
+                DIST.package_bundle(self.stage, qt, first, package_version="1.2.3", **baseline_flags)
+                wrong = self.directory / (name.replace(system, "almalinux8") + ".tar.gz")
+                with self.assertRaisesRegex(ValueError, "expected Plasma bundle filename"):
+                    DIST.package_bundle(self.stage, qt, wrong, package_version="1.2.3", **baseline_flags)
+                self.assertFalse(wrong.exists())
+                before = first.read_bytes()
+                DIST.package_bundle(self.stage, qt, first, package_version="1.2.3", **baseline_flags)
+                self.assertEqual(before, first.read_bytes())
+                self.assertTrue(DIST.verify_bundle(first, "1.2.3")["passed"])
+                with self.assertRaisesRegex(ValueError, "identity/version"):
+                    DIST.verify_bundle(first, "1.2.4")
+                with tarfile.open(first) as archive:
+                    zip_name = name + ".wallpaper.zip"
+                    self.assertEqual(set(archive.getnames()), {
+                        name + "/" + zip_name, name + "/" + zip_name + ".sha256", name + "/installer.py"})
+                    payload = archive.extractfile(name + "/" + zip_name).read()
+                    self.assertEqual(archive.extractfile(name + "/" + zip_name + ".sha256").read(),
+                                     (hashlib.sha256(payload).hexdigest() + "  " + zip_name + "\n").encode())
+                    self.assertEqual(archive.extractfile(name + "/installer.py").read(),
+                                     (REPO / "tools/installer.py").read_bytes())
+                    self.assertEqual(archive.getmember(name + "/installer.py").mode, 0o755)
+                with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+                    compatibility = json.loads(archive.read("contents/compatibility.json"))
+                    self.assertEqual(compatibility["baseline"]["name"], system)
+                    self.assertEqual(json.loads(archive.read("metadata.json"))["KPlugin"]["Version"], "1.2.3")
 
     def private_export_fixture(self, symbol, major=5):
         provider = self.directory / "provider.c"

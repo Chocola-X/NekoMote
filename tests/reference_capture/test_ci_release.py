@@ -17,10 +17,10 @@ SCRIPT = Path(__file__).resolve().parents[2] / "tools/ci_publish_release.sh"
 PACKAGES = (
     "nekomote-native-almalinux8-x86_64",
     "nekomote-native-almalinux8-aarch64",
-    "nekomote-plasma5-x86_64",
-    "nekomote-plasma5-aarch64",
-    "nekomote-plasma6-x86_64",
-    "nekomote-plasma6-aarch64",
+    "nekomote-plasma5-ubuntu20-x86_64",
+    "nekomote-plasma5-ubuntu20-aarch64",
+    "nekomote-plasma6-debian12-x86_64",
+    "nekomote-plasma6-debian12-aarch64",
     "nekomote-layer-shell-debian12-x86_64",
     "nekomote-layer-shell-debian12-aarch64",
     "nekomote-x11-almalinux8-x86_64",
@@ -66,8 +66,8 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
                         MOCK_GH_LOG=str(self.log), MOCK_GH_STATE="missing",
                         MOCK_GH_UPLOAD_FAIL="")
 
-    def plasma_bundle(self, archive, version="0.5.0", architecture=None, corrupt_binary=False,
-                      corrupt_checksum=False):
+    def plasma_bundle(self, archive, version="0.5.0", architecture=None, baseline=None,
+                      corrupt_binary=False, corrupt_checksum=False):
         name = archive.name[:-7]
         major = int(name.split("-")[1][-1])
         payload = io.BytesIO()
@@ -77,6 +77,7 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         binaries = {source: {"sha256": hashlib.sha256(library).hexdigest()} for source in (
             "lib/libnekomote_plasma_qml.so", "qml/NekoMote/Wallpaper/libnekomote_plasma_qmlplugin.so")}
         compatibility = {"plasma_major": major, "architecture": architecture or name.split("-")[-1],
+                         "baseline": {"name": baseline or name.split("-")[2]},
                          "binaries": binaries}
         with zipfile.ZipFile(payload, "w") as inner:
             inner.writestr("metadata.json", json.dumps(metadata))
@@ -160,12 +161,15 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         self.assertEqual(self.calls(), [])
 
     def test_inner_version_platform_and_binary_hash_rejected_before_github_access(self):
-        archive = self.assets / "nekomote-plasma6-x86_64.tar.gz"
-        for kwargs in ({"version": "0.0.0"}, {"architecture": "aarch64"},
+        archive = self.assets / "nekomote-plasma6-debian12-x86_64.tar.gz"
+        for kwargs in ({"version": "0.0.0"}, {"architecture": "aarch64"}, {"baseline": "ubuntu20"},
                        {"corrupt_binary": True}, {"corrupt_checksum": True}):
             with self.subTest(kwargs=kwargs):
                 self.plasma_bundle(archive, **kwargs)
-                self.assertNotEqual(self.run_release().returncode, 0)
+                result = self.run_release()
+                self.assertNotEqual(result.returncode, 0)
+                if "baseline" in kwargs:
+                    self.assertIn("wallpaper platform does not match bundle name", result.stderr)
                 self.assertEqual(self.calls(), [])
 
     def test_invalid_versions_are_rejected_before_github_access(self):
