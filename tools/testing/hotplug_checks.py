@@ -65,7 +65,8 @@ def check_hotplug(args, env, output, xoutput, panel, results, cpu_seconds):
                                    env=env, stdout=log, stderr=log, check=True, timeout=35)
                 path = root / (name + '.log')
                 with path.open('w') as log:
-                    child = subprocess.Popen([str(binary), *common, '--frames', '240', '--capture', str(after)],
+                    child = subprocess.Popen([str(binary), *common, '--no-session-pause',
+                                              '--frames', '240', '--capture', str(after)],
                                              env=env, stdout=log, stderr=log)
                     chosen = target
                     try:
@@ -85,6 +86,9 @@ def check_hotplug(args, env, output, xoutput, panel, results, cpu_seconds):
                             time.sleep(.25)
                         if child.wait(timeout=30):
                             raise RuntimeError('hotplug capture client failed: ' + str(path))
+                        events = path.read_text()
+                        if events.count('waiting for reconnect') != 2 or events.count(' reconnected') != 2:
+                            raise RuntimeError('unexpected output transition logs: ' + name)
                         validate(path, backend)
                         if before.read_bytes() != after.read_bytes():
                             raise RuntimeError('fixed-step image changed after reconnect: ' + name)

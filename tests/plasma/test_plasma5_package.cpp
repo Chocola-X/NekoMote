@@ -68,7 +68,8 @@ int main(int argc, char** argv)
         {
             auto* native = object->findChild<QQuickItem*>(QStringLiteral("nativeSession"));
             if (!native || native->property("status").toInt() != 0 ||
-                native->property("renderBackend").toString() != "opengl")
+                native->property("renderBackend").toString() != "opengl" ||
+                !native->property("pauseOnSessionEvents").toBool())
                 return 1;
             const auto id = configuration.value(QStringLiteral("panelInstanceId")).toString();
             if (configuration.writes != 1 || QUuid(id).isNull() ||
@@ -82,6 +83,7 @@ int main(int argc, char** argv)
             replacement.insert(QStringLiteral("assetsDir"), QStringLiteral("/assets/first-use"));
             replacement.insert(QStringLiteral("panelInstanceId"), QString{});
             replacement.insert(QStringLiteral("renderBackend"), QStringLiteral("opengl"));
+            replacement.insert(QStringLiteral("pauseOnSessionEvents"), false);
             wallpaper.insert(QStringLiteral("configuration"),
                              QVariant::fromValue<QObject*>(&replacement));
             QCoreApplication::processEvents();
@@ -90,6 +92,7 @@ int main(int argc, char** argv)
             if (QUuid(replacement_id).isNull() || replacement.writes != 1 ||
                 native->property("instanceId").toString() != replacement_id ||
                 native->property("assetsDir").toString() != "/assets/first-use" ||
+                native->property("pauseOnSessionEvents").toBool() ||
                 native->property("status").toInt() != 1)
             {
                 std::fprintf(stderr,
@@ -109,9 +112,12 @@ int main(int argc, char** argv)
             wallpaper.insert(QStringLiteral("configuration"),
                              QVariant::fromValue<QObject*>(&configuration));
             QCoreApplication::processEvents();
-            if (configuration.writes != 1 || native->property("instanceId").toString() != id)
+            if (configuration.writes != 1 || native->property("instanceId").toString() != id ||
+                !native->property("pauseOnSessionEvents").toBool())
                 return 1;
         }
+        else if (!object->property("cfg_pauseOnSessionEvents").toBool())
+            return 1;
     }
     std::puts("Plasma 5 staged module, containment, context and configuration page imported "
               "successfully");

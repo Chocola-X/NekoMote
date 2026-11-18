@@ -7,6 +7,7 @@ import QtQuick.Dialogs 1.3
 ColumnLayout {
     property string cfg_assetsDir: ""
     property string cfg_renderBackend: "opengl"
+    property bool cfg_pauseOnSessionEvents: true
 
     spacing: 8
 
@@ -46,6 +47,11 @@ ColumnLayout {
         text: qsTranslate("NekoMoteWallpaperConfig", "Select the graphics API used by NekoMote to render characters and backgrounds. OpenGL is the default option; Vulkan requires GPU image sharing support from the graphics driver.\nAfter applying changes, the wallpaper rendering device will be rebuilt; this does not change the desktop's render backend. If Vulkan fails to load, switch back to OpenGL.")
         wrapMode: Text.Wrap
         Layout.fillWidth: true
+    }
+    CheckBox {
+        text: qsTranslate("NekoMoteWallpaperConfig", "Pause on lock, sleep or screen off")
+        checked: cfg_pauseOnSessionEvents
+        onToggled: cfg_pauseOnSessionEvents = checked
     }
     Label {
         text: qsTranslate("NekoMoteWallpaperConfig", "Project & Authors")

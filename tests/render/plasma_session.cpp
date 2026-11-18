@@ -84,6 +84,23 @@ int main(int argc, char** argv)
         const auto locked_frames = item.queryRenderedFrames();
         wait(1600);
         require(item.queryRenderedFrames() > locked_frames + 3, "unlock did not resume");
+        control("sleep");
+        wait(1600);
+        assert_stopped();
+        item.setPauseOnSessionEvents(false);
+        const auto asleep_frames = item.queryRenderedFrames();
+        wait(500);
+        require(item.queryRenderedFrames() > asleep_frames + 3, "disabling pause did not resume");
+        control("wake");
+        control("lock");
+        const auto disabled_frames = item.queryRenderedFrames();
+        wait(1600);
+        require(item.queryRenderedFrames() > disabled_frames + 3, "disabled pause blocked lock");
+        item.setPauseOnSessionEvents(true);
+        wait(2500);
+        assert_stopped(); // Re-enabling must query a lock that is already active.
+        control("unlock");
+        wait(1600);
         // Host resume must preserve a user's separate pause preference.
         item.setPaused(true);
         control("lock");

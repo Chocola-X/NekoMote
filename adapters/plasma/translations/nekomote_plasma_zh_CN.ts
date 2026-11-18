@@ -36,6 +36,10 @@ After applying changes, the wallpaper rendering device will be rebuilt; this doe
 应用更改后会重建壁纸渲染设备，不会更改整个桌面的渲染后端。如果 Vulkan 加载失败，请切回 OpenGL。</translation>
     </message>
     <message>
+        <source>Pause on lock, sleep or screen off</source>
+        <translation>锁屏、休眠或关屏时暂停</translation>
+    </message>
+    <message>
         <source>Project &amp; Authors</source>
         <translation>项目与作者</translation>
     </message>

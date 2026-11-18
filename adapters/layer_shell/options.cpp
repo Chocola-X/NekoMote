@@ -43,6 +43,8 @@ Options parse_options(int argc, char** argv)
             result.list_outputs = true;
         else if (option == "--mute")
             result.muted = true;
+        else if (option == "--no-session-pause")
+            result.pause_on_session_events = false;
         else if (option == "--no-save")
             result.no_save = true;
         else if (option == "--ui-open")
@@ -127,6 +129,8 @@ Options parse_options(int argc, char** argv)
     }
     if (result.save_config && !result.gpu.empty())
         throw std::runtime_error("--gpu is per-process and cannot be combined with --save-config");
+    if (result.save_config && !result.pause_on_session_events)
+        throw std::runtime_error("--no-session-pause is per-process and cannot be saved");
     if (assets_set && model_set)
         throw std::runtime_error("select exactly one of --assets PATH or --model PATH");
     if (result.save_config && (result.no_save || result.frames || !result.capture.empty() ||
@@ -215,6 +219,7 @@ void print_help()
            "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
            "  --mute                        disable audio\n"
+           "  --no-session-pause            do not pause for lock or sleep notifications\n"
            "  --no-save                     do not persist panel changes\n"
            "  --ui-open                     open shared controls after loading assets\n"
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"

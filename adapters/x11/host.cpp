@@ -289,8 +289,9 @@ void Host::Impl::initialize_display()
         !XRRQueryVersion(display_, &major, &minor) || major < 1 || (major == 1 && minor < 3))
         throw std::runtime_error("XRandR 1.3 or newer is required");
     int dpms_event = 0, dpms_error = 0;
-    dpms_supported_ =
-        DPMSQueryExtension(display_, &dpms_event, &dpms_error) && DPMSCapable(display_);
+    dpms_supported_ = options_.pause_on_session_events &&
+                      DPMSQueryExtension(display_, &dpms_event, &dpms_error) &&
+                      DPMSCapable(display_);
     const auto available = outputs(display_, root_);
     if (options_.list_outputs)
     {
@@ -573,14 +574,20 @@ void Host::Impl::set_mapped(bool mapped)
 
 void Host::Impl::refresh_availability()
 {
-    if (Clock::now() >= next_power_query_)
+    if (session_monitor_ && Clock::now() >= next_power_query_)
     {
         next_power_query_ = Clock::now() + std::chrono::seconds(1);
+        const bool was_paused = session_unavailable_ || power_off_;
         CARD16 power = DPMSModeOn;
         BOOL enabled = False;
-        session_unavailable_ = session_monitor_ && session_monitor_->poll();
+        session_unavailable_ = session_monitor_->poll();
         if (dpms_supported_ && DPMSInfo(display_, &power, &enabled))
             power_off_ = enabled && power != DPMSModeOn;
+        const bool pause = session_unavailable_ || power_off_;
+        if (pause != was_paused)
+            std::fputs(pause ? "[host_session] pause engaged (lock, sleep or DPMS)\n"
+                             : "[host_session] pause released (lock, sleep or DPMS)\n",
+                       stderr);
     }
     const bool unavailable = !output_present_ || !mapped_ || power_off_ || session_unavailable_;
     if (!wallpaper_ || host_unavailable_ == unavailable)
@@ -590,7 +597,6 @@ void Host::Impl::refresh_availability()
           "set host availability");
     check(nekomote_wallpaper_advance(wallpaper_, 0), "flush host availability audio commands");
     last_frame_ = next_frame_ = Clock::now();
-    std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
 }
 
 void Host::Impl::update_output()
@@ -857,7 +863,8 @@ void Host::Impl::run()
     validate_wm();
     create_window();
     initialize_wallpaper();
-    session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
+    if (options_.pause_on_session_events)
+        session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     last_frame_ = next_frame_ = Clock::now();
     while (!closed_ && !stop_requested)
     {

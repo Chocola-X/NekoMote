@@ -70,7 +70,7 @@ def worker(args):
                                                  ('x11', args.x11, args.before_x11, xoutput)]
         for shell, current, baseline, target in shells:
             for backend in args.backends:
-                versions = [('after', current)]
+                versions = [('after', current), ('pause-disabled', current)]
                 if baseline:
                     versions.insert(0, ('before', baseline))
                 for version, binary in versions:
@@ -78,6 +78,8 @@ def worker(args):
                     command = [str(binary), '--backend', backend, '--model', str(args.model),
                                '--session', str(args.session), '--output', target,
                                '--mute', '--no-save', '--state', str(panel)]
+                    if version == 'pause-disabled':
+                        command.append('--no-session-pause')
                     log = (root / (name + '.log')).open('w')
                     child = subprocess.Popen(command, env=env, stdout=log, stderr=log)
                     try:
@@ -86,19 +88,33 @@ def worker(args):
                         control('lock')
                         time.sleep(1.5)
                         case['locked_cpu_seconds'] = sample(child, 3)
+                        control('sleep')
                         control('unlock')
+                        time.sleep(1.5)
+                        case['sleeping_cpu_seconds'] = sample(child, 3)
+                        control('wake')
                         time.sleep(1.5)
                         case['resumed_cpu_seconds'] = sample(child, 3)
                         if version == 'after':
-                            if case['locked_cpu_seconds'] > .04:
-                                raise RuntimeError(name + ': excessive CPU while locked')
+                            if max(case['locked_cpu_seconds'], case['sleeping_cpu_seconds']) > .04:
+                                raise RuntimeError(name + ': excessive CPU while suspended')
                             if case['resumed_cpu_seconds'] <= .02:
                                 raise RuntimeError(name + ': playback did not resume')
+                        elif version == 'pause-disabled':
+                            if min(case['locked_cpu_seconds'], case['sleeping_cpu_seconds']) <= .02:
+                                raise RuntimeError(name + ': playback stopped with pause disabled')
                         results['cases'].append(case)
                     finally:
                         control('unlock')
+                        control('wake')
                         stop(child)
                         log.close()
+                    expected = 1 if version == 'after' else 0
+                    if version != 'before':
+                        text = (root / (name + '.log')).read_text()
+                        if any(text.count('[host_session] pause ' + event) != expected
+                               for event in ('engaged', 'released')):
+                            raise RuntimeError(name + ': unexpected session pause logs')
                     print(json.dumps(case), flush=True)
         if args.frame_benchmark:
             import resource

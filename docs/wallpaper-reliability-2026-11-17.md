@@ -257,3 +257,18 @@ X11 / layer-shell Release/LTO 构建及 18 项定向 CTest 通过，覆盖背景
 
 证据：[54 次性能采样](validation/wallpaper-reliability-2026-11-17/x11-native-performance.json)、
 [双后端画面哈希和 OpenGL 上传计数](validation/wallpaper-reliability-2026-11-17/static-background-frame60.json)。
+
+### 暂停选项与状态日志
+
+X11 / layer-shell 默认启用会话监听，`--no-session-pause` 关闭本次监听及 X11 的
+DPMS 查询。Plasma 5/6 的壁纸设置提供默认勾选的同一策略，可即时应用。取消勾选只解除
+会话暂停，用户暂停、宿主显隐与输出可用性仍各自生效。Wayland 关屏时的帧回调由合成器控制。
+
+音频在首次不可用、连接成功或已连接后断开时记录日志，连续失败继续执行原退避策略。
+会话暂停生效及解除分别记录；输出移除和同名输出返回仍单独打印输出名。
+
+本地 Release 构建与 12 项定向 CTest 通过。私有 D-Bus / KWin 双虚拟输出的 22 组
+检查通过，覆盖双壳 GL/Vulkan 的默认与禁用状态、休眠与锁屏交叠、关闭会话暂停时仍能
+处理输出移除和重连，以及 Plasma 6 播放中切换开关。恢复后的固定帧与对照一致；
+Plasma 5 检查了实际打包 QML 的默认与应用行为。私有 PulseAudio 空接收器验证两次失联
+期间的退避无重复日志以及重连后声音可用。未对真实桌面执行锁屏、休眠或物理关屏。

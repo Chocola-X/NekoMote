@@ -32,6 +32,7 @@ struct Options
     InputMode input = InputMode::interactive;
     uint64_t frames = 0;
     bool muted = false;
+    bool pause_on_session_events = true;
     bool no_save = false;
     bool save_config = false;
     bool ui_open = false;

@@ -63,6 +63,7 @@ int main(int argc, char** argv)
     ProbeConfiguration initial;
     ProbeConfiguration replacement;
     replacement.insert("renderBackend", QStringLiteral("vulkan"));
+    replacement.insert("pauseOnSessionEvents", false);
     QQmlComponent component(&engine, QUrl::fromLocalFile(QString::fromLocal8Bit(argv[2])));
     std::unique_ptr<QObject> object(component.createWithInitialProperties(
         {{"configuration", QVariant::fromValue<QObject*>(&initial)}}));
@@ -72,7 +73,8 @@ int main(int argc, char** argv)
         return 1;
     }
     auto* native = object->findChild<QQuickItem*>("nativeSession");
-    if (!native || native->property("status").toInt() != 1 || initial.writes != 1)
+    if (!native || native->property("status").toInt() != 1 || initial.writes != 1 ||
+        !native->property("pauseOnSessionEvents").toBool())
         return 2;
     const auto initial_id = native->property("instanceId").toString();
     if (QUuid(initial_id).isNull())
@@ -86,6 +88,7 @@ int main(int argc, char** argv)
         native->property("instanceId").toString() != id ||
         native->property("assetsDir").toString() != "/assets/configuration-test" ||
         native->property("renderBackend").toString() != "vulkan" ||
+        native->property("pauseOnSessionEvents").toBool() ||
         native->property("status").toInt() != 1)
     {
         std::fprintf(stderr, "Backend apply stalled: id=%s assets=%s backend=%s status=%d\n",
@@ -95,9 +98,11 @@ int main(int argc, char** argv)
         return 3;
     }
     replacement.insert("renderBackend", QStringLiteral("opengl"));
+    replacement.insert("pauseOnSessionEvents", true);
     settle();
     if (replacement.writes != 1 || native->property("instanceId").toString() != id ||
-        native->property("renderBackend").toString() != "opengl")
+        native->property("renderBackend").toString() != "opengl" ||
+        !native->property("pauseOnSessionEvents").toBool())
         return 4;
     replacement.insert("panelInstanceId", QString{});
     settle();

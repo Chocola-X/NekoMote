@@ -42,6 +42,7 @@ WallpaperItem {
         // Do not load the shared default panel file before the persisted ID arrives.
         assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend
+        pauseOnSessionEvents: root.configuration.pauseOnSessionEvents !== false
         paused: !root.visible
     }
 

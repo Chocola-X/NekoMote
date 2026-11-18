@@ -43,7 +43,9 @@ int main(int argc, char** argv)
     collect_text(page.get(), texts);
     if (!texts.contains(chinese ? QStringLiteral("资产目录")
                                 : QStringLiteral("Assets Directory")) ||
-        !texts.contains(chinese ? QStringLiteral("渲染后端") : QStringLiteral("Render Backend")))
+        !texts.contains(chinese ? QStringLiteral("渲染后端") : QStringLiteral("Render Backend")) ||
+        !texts.contains(chinese ? QStringLiteral("锁屏、休眠或关屏时暂停")
+                                : QStringLiteral("Pause on lock, sleep or screen off")))
         return 2;
     const auto loading = QCoreApplication::translate("NekoMoteWallpaperMain", "Loading…");
     if (loading != (chinese ? QStringLiteral("正在加载…") : QStringLiteral("Loading…")))

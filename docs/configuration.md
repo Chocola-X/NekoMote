@@ -32,9 +32,14 @@ player 另使用窗口宽高。只有 `--save-config` 会写入启动配置，�
 默认派生路径不写进启动文件，复制 `left.json` 为 `right.json` 后会改用
 `right.panel.json`。显式保存了自定义 `state_path` 的文件仍使用该指定路径。
 
-Plasma 在每个壁纸配置中持久保存 UUID，区分不同桌面背景实例。资产目录、后端和 UUID
-仍由插件 KConfig 管理，面板数据通过同一壁纸 C ABI 保存，不维护第二套面板业务。
+Plasma 在每个壁纸配置中持久保存 UUID，区分不同桌面背景实例。资产目录、后端、UUID
+和「锁屏、休眠或关屏时暂停」开关由插件 KConfig 管理。面板数据通过同一壁纸 C ABI
+保存，不维护第二套面板业务。暂停开关默认开启，应用更改时无需重建渲染器。
 手工复制 Plasma 的整份 KConfig 时应清空 `panelInstanceId`，使新实例生成自己的 UUID。
+
+X11 和 layer-shell 的 `--no-session-pause` 仅关闭当次启动的锁屏、休眠与可用的 DPMS
+监听，不能与 `--save-config` 同用。它不改变显隐、输出热插拔和用户暂停行为；Wayland
+合成器仍可在关屏时停止发送帧回调。
 
 Plasma 5 / 6 的壁纸列表显示 **NekoMote Wallpaper**（简体中文：**NekoMote 壁纸**），
 附带的简洁桌面布局显示 **NekoMote Desktop**（简体中文：**NekoMote 桌面**）。名称随

@@ -777,7 +777,6 @@ void Host::Impl::refresh_availability()
     check(nekomote_wallpaper_advance(wallpaper_, 0), "flush availability audio commands");
     last_frame_ = next_frame_ = Clock::now();
     input_count_ = 0;
-    std::cerr << "host availability=" << (unavailable ? "suspended" : "active") << '\n';
 }
 
 void Host::Impl::detach_surface()
@@ -979,7 +978,8 @@ void Host::Impl::initialize_vulkan()
 
 void Host::Impl::initialize_graphics()
 {
-    session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
+    if (options_.pause_on_session_events)
+        session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     resize();
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (options_.backend == Backend::vulkan)
@@ -1309,10 +1309,17 @@ void Host::Impl::run()
             if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
                 throw std::runtime_error("wait for Vulkan frame before input/resize failed");
 #endif
-            if (Clock::now() >= next_session_query_)
+            if (session_monitor_ && Clock::now() >= next_session_query_)
             {
                 next_session_query_ = Clock::now() + std::chrono::seconds(1);
-                session_unavailable_ = session_monitor_->poll();
+                const bool pause = session_monitor_->poll();
+                if (pause != session_unavailable_)
+                {
+                    session_unavailable_ = pause;
+                    std::fputs(pause ? "[host_session] pause engaged (lock or sleep)\n"
+                                     : "[host_session] pause released (lock or sleep)\n",
+                               stderr);
+                }
             }
             refresh_availability();
             resize();

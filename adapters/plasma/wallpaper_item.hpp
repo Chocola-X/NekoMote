@@ -22,6 +22,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
 {
     Q_OBJECT
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(bool pauseOnSessionEvents READ pauseOnSessionEvents WRITE setPauseOnSessionEvents
+                   NOTIFY pauseOnSessionEventsChanged)
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
@@ -41,6 +43,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     unsigned queryRenderedFrames() const;
 
     bool paused() const;
+    bool pauseOnSessionEvents() const;
     int status() const;
     QString errorString() const;
     QString assetsDir() const;
@@ -49,6 +52,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     Q_INVOKABLE QString createInstanceId() const;
 
     void setPaused(bool value);
+    void setPauseOnSessionEvents(bool value);
     void setAssetsDir(const QString& value);
     void setRenderBackend(const QString& value);
     void setInstanceId(const QString& value);
@@ -59,6 +63,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
 
   signals:
     void pausedChanged();
+    void pauseOnSessionEventsChanged();
     void statusChanged();
     void errorStringChanged();
     void assetsDirChanged();
@@ -87,11 +92,15 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void check_backend();
     void attach_window(QQuickWindow* window);
     void refresh_playback();
+    void configure_session_monitor();
+    void set_session_unavailable(bool unavailable);
     void start_timer();
     void stop_timer();
 
     std::shared_ptr<nekomote::qt_quick::WallpaperState> state_;
-    nekomote::host_session::Monitor session_monitor_;
+    std::unique_ptr<nekomote::host_session::Monitor> session_monitor_;
+    QTimer* session_timer_{nullptr};
+    bool pause_on_session_events_{true};
     bool session_unavailable_{false};
     bool paused_{false};
     bool effective_paused_{true};

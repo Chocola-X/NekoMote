@@ -60,7 +60,8 @@ def main():
                 subprocess.run([str(args.tests.resolve()),
                                 '[pulse-integration]~[pulse-recovery]'], env=env, check=True)
                 stop()
-                test = subprocess.Popen([str(args.tests.resolve()), '[pulse-recovery]'], env=env)
+                test = subprocess.Popen([str(args.tests.resolve()), '[pulse-recovery]'], env=env,
+                                        stderr=subprocess.PIPE, text=True)
                 for action, operation in [('start', start), ('stop', stop),
                                           ('restart', start), ('stop_again', stop)]:
                     deadline = time.monotonic() + 15
@@ -68,10 +69,20 @@ def main():
                         if test.poll() is not None or time.monotonic() > deadline:
                             raise RuntimeError('missing handshake: ' + action)
                         time.sleep(.01)
+                    if action in ('start', 'restart'):
+                        # Keep the server down through the first one-second retry.
+                        time.sleep(1.25)
                     operation()
                     (root / (action + '.done')).touch()
-                if test.wait(timeout=15) != 0:
+                _, diagnostics = test.communicate(timeout=15)
+                print(diagnostics, end='')
+                if test.returncode != 0:
                     raise RuntimeError('audio recovery assertions failed')
+                transitions = [line.split()[1] for line in diagnostics.splitlines()
+                               if line.startswith('[audio] ')]
+                if transitions != ['unavailable', 'connected', 'disconnected', 'connected',
+                                   'disconnected'] or 'retry in' in diagnostics:
+                    raise RuntimeError('unexpected audio recovery logs: ' + repr(transitions))
             except Exception:
                 log.seek(0)
                 print(log.read())

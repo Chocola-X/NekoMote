@@ -5,5 +5,6 @@
     <entry name="panelInstanceId" type="String"><default></default></entry>
     <entry name="assetsDir" type="String"><default></default></entry>
     <entry name="renderBackend" type="String"><default>opengl</default></entry>
+    <entry name="pauseOnSessionEvents" type="Bool"><default>true</default></entry>
   </group>
 </kcfg>

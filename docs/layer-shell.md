@@ -127,6 +127,8 @@ buffer scale 和 frame callback 节奏。每次修改共享实例（包括输入
 fractional-scale/viewporter，分数缩放效果由合成器重采样。没有通用的任意遮挡通知。现在宿主被动观察 ScreenSaver/logind 锁屏与休眠状态；未提供
 这些服务时记录能力不足并保持基础播放。关屏仍依赖合成器抑制不可见 surface 的帧回调，
 不能保证所有桌面都自动暂停。验证范围见[可靠性报告](wallpaper-reliability-2026-11-17.md)。
+`--no-session-pause` 可在本次启动关闭默认启用的会话监听，不写入配置，也不会改变合成器
+的帧回调或输出恢复。日志记录会话暂停与解除、输出移除与重连；音频退避期间的重复失败不输出。
 
 ## 验证入口
 

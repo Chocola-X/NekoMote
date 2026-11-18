@@ -36,19 +36,10 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
                 update();
             });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
-    auto* session_timer = new QTimer(this);
-    session_timer->setInterval(1000);
-    connect(session_timer, &QTimer::timeout, this,
-            [this]
-            {
-                const bool unavailable = session_monitor_.poll();
-                if (session_unavailable_ != unavailable)
-                {
-                    session_unavailable_ = unavailable;
-                    refresh_playback();
-                }
-            });
-    session_timer->start();
+    session_timer_ = new QTimer(this);
+    session_timer_->setInterval(1000);
+    connect(session_timer_, &QTimer::timeout, this,
+            [this] { set_session_unavailable(session_monitor_->poll()); });
     state_->profile = qEnvironmentVariableIntValue("NEKOMOTE_QT_PROFILE") == 1;
     if (state_->profile)
     {
@@ -112,6 +103,10 @@ QQuickFramebufferObject::Renderer* NekoWallpaperItem::createRenderer() const
 bool NekoWallpaperItem::paused() const
 {
     return paused_;
+}
+bool NekoWallpaperItem::pauseOnSessionEvents() const
+{
+    return pause_on_session_events_;
 }
 int NekoWallpaperItem::status() const
 {
@@ -236,6 +231,16 @@ void NekoWallpaperItem::setPaused(bool value)
     update();
 }
 
+void NekoWallpaperItem::setPauseOnSessionEvents(bool value)
+{
+    if (pause_on_session_events_ == value)
+        return;
+    pause_on_session_events_ = value;
+    if (isComponentComplete())
+        configure_session_monitor();
+    emit pauseOnSessionEventsChanged();
+}
+
 unsigned NekoWallpaperItem::queryRendererCreated() const
 {
     return state_ ? state_->renderer_created.load() : 0;
@@ -356,8 +361,36 @@ void NekoWallpaperItem::wheelEvent(QWheelEvent* event)
 void NekoWallpaperItem::componentComplete()
 {
     WallpaperItemBase::componentComplete();
+    configure_session_monitor();
     if (!assets_dir_.isEmpty() && status_ == 0)
         set_status(1);
+}
+
+void NekoWallpaperItem::configure_session_monitor()
+{
+    if (pause_on_session_events_)
+    {
+        if (!session_monitor_)
+            session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
+        session_timer_->start();
+    }
+    else
+    {
+        session_timer_->stop();
+        session_monitor_.reset();
+        set_session_unavailable(false);
+    }
+}
+
+void NekoWallpaperItem::set_session_unavailable(bool unavailable)
+{
+    if (session_unavailable_ == unavailable)
+        return;
+    session_unavailable_ = unavailable;
+    std::fputs(unavailable ? "[host_session] pause engaged (lock or sleep)\n"
+                           : "[host_session] pause released (lock or sleep)\n",
+               stderr);
+    refresh_playback();
 }
 
 void NekoWallpaperItem::itemChange(ItemChange change, const ItemChangeData& data)

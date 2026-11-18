@@ -207,6 +207,11 @@ Controls:
 
 The mute toggle is managed uniformly by the "mute" entry in the UI control panel; its state is written to the `mute` field of the panel config and restored on next launch. `--mute` only forces mute at startup as an override.
 
+Wallpapers pause by default when the host detects a lock, sleep or screen-off event. Pass
+`--no-session-pause` to the X11 or layer-shell executable, or uncheck “Pause on lock,
+sleep or screen off” in Plasma 5/6 wallpaper settings. On Wayland the compositor still
+controls screen-off frame callbacks. Visibility and output hotplug handling remain active.
+
 The UI and asset display names support English, Simplified Chinese, Traditional Chinese, and Japanese, switchable in the settings drawer of the UI control panel and written to the `language` field of the panel config. First launch defaults to English and deterministically selects the first background in the list as the initial wallpaper; an explicitly cleared background in an existing config keeps the no-background state.
 
 ## KDE Plasma Wallpaper Deployment

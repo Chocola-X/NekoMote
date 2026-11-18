@@ -35,6 +35,7 @@ Item {
         // Do not load the shared default panel file before the persisted ID arrives.
         assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend
+        pauseOnSessionEvents: wallpaper.configuration.pauseOnSessionEvents !== false
         paused: !root.visible
     }
     Text {

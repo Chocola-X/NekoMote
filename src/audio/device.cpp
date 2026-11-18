@@ -306,6 +306,7 @@ struct Device::Impl
                 if (state.load(std::memory_order_relaxed) == DeviceState::Connecting)
                 {
                     connected_once = true;
+                    std::fputs("[audio] connected\n", stderr);
                     paused = requested_pause.load(std::memory_order_acquire);
                     error.store(0, std::memory_order_relaxed);
                     state.store(DeviceState::Ready, std::memory_order_release);
@@ -348,6 +349,7 @@ struct Device::Impl
     void run() noexcept
     {
         unsigned delay = 1;
+        bool reported_unavailable = false;
         while (!quitting.load(std::memory_order_acquire))
         {
             connected_once = false;
@@ -355,10 +357,16 @@ struct Device::Impl
             run_connection();
             if (connected_once)
                 delay = 1;
+            if (state.load(std::memory_order_relaxed) == DeviceState::Failed &&
+                (connected_once || !reported_unavailable))
+            {
+                std::fprintf(stderr, "[audio] %s (Pulse error %d)\n",
+                             connected_once ? "disconnected" : "unavailable",
+                             error.load(std::memory_order_relaxed));
+                reported_unavailable = true;
+            }
             if (quitting.load(std::memory_order_acquire))
                 break;
-            std::fprintf(stderr, "NekoMote audio unavailable (Pulse error %d); retry in %u s\n",
-                         error.load(std::memory_order_relaxed), delay);
             // After disconnect, Pulse may retain immediate housekeeping events.
             // Use an interruptible timer instead of dispatching that loop during
             // backoff. This mutex is never acquired by submit/snapshot/set_volume.

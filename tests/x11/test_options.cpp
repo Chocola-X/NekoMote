@@ -298,3 +298,11 @@ TEST_CASE("X11 GPU options are ephemeral and enumeration skips config", "[x11][o
                         "--gpu is per-process and cannot be combined with --save-config");
     REQUIRE_FALSE(std::filesystem::exists(output));
 }
+
+TEST_CASE("X11 session pause defaults on and can be disabled for one launch", "[options]")
+{
+    REQUIRE(parse({"--model", "model"}).pause_on_session_events);
+    REQUIRE_FALSE(parse({"--model", "model", "--no-session-pause"}).pause_on_session_events);
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--no-session-pause", "--save-config"}),
+                        "--no-session-pause is per-process and cannot be saved");
+}
