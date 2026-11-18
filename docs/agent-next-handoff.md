@@ -62,7 +62,7 @@ C13 优化之后接手，输入与验收按 [优化建议](optimization-suggesti
 
 1. 在可用 Docker/Podman 环境运行 [三套分发配方](github-actions.md)。维持 Ubuntu20 / Debian12 镜像及工具版本；Debian apt 使用冻结快照，focal 记录实际包版本。不换成最新 Ubuntu 来绕过低版本编译问题。
 2. 原生程序与 KDE5 完成 x86_64 构建，KDE6 完成 x86_64/aarch64 构建。无相应环境时记未执行；若运行 GitHub 工作流，记录 run 链接、源码提交、日志与归档 hash，不推送/发布 release 或操作真实桌面，除非用户另行授权。
-3. 原生程序通过 `ci_native_audit.py`；KDE5 包通过 `--baseline-ubuntu20`，KDE6 两份包通过 `--baseline-debian12`。保留实际 Qt 版本、ELF requirements、相对 RPATH、动态 libstdc++、依赖许可和 toolchain 清单。不得降低报告中的 Qt 版本骗过门槛。
+3. 原生程序通过 `ci_native_audit.py`；KDE5 包通过 `--baseline-almalinux8`，KDE6 两份包通过 `--baseline-debian12`。保留实际 Qt 版本、ELF requirements、相对 RPATH、动态 libstdc++、依赖许可和 toolchain 清单。不得降低报告中的 Qt 版本骗过门槛。
 4. 运行当前分发/部署正负例（本轮16项）、actionlint 与 bash 语法检查。兼容版本、缺库、错误架构、篡改 manifest 必须明确拒绝。归档在隔离目录解压，用随包工具预检/安装/verify，不修改真实用户配置。
 5. 仅修复可复现的构建/打包问题，记录失败和修复前后；涉及公开 ABI 或 GPU 行为的调整先交 Codex 复核。构建成功不等于跨发行版 GPU 验收。
 

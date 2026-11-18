@@ -31,7 +31,7 @@ REQUIRED = ELFS + (
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/config.qml",
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/config/main.xml",
 )
-UBUNTU20_BASELINE = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.12"}
+ALMALINUX8_BASELINE = {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"}
 BASELINE = {"GLIBC": "2.36", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}
 MACHINES = {"Advanced Micro Devices X86-64": "x86_64", "AArch64": "aarch64"}
 # Some Qt5 builds version-tag the public nested Renderer exports as PRIVATE_API.
@@ -129,16 +129,16 @@ def elf_info(path):
             "public_qt5_renderer_exports": sorted(public_qt5_exports)}
 
 
-def audit(stage, qt_version, baseline=False, ubuntu20=False):
+def audit(stage, qt_version, baseline=False, almalinux8=False):
     stage = stage.resolve()
     major = version(qt_version)[0]
     if major not in (5, 6):
         raise ValueError("only Qt 5 / Plasma 5 and Qt 6 / Plasma 6 are supported")
-    if (baseline and major != 6) or (ubuntu20 and major != 5) or (baseline and ubuntu20):
+    if (baseline and major != 6) or (almalinux8 and major != 5) or (baseline and almalinux8):
         raise ValueError("baseline must match the Qt/Plasma major")
-    limits = UBUNTU20_BASELINE if major == 5 else BASELINE
+    limits = ALMALINUX8_BASELINE if major == 5 else BASELINE
     qt_limit = "5.12.8" if major == 5 else "6.4.2"
-    baseline_name = "ubuntu20" if major == 5 else "debian12"
+    baseline_name = "almalinux8" if major == 5 else "debian12"
     check_manifest(stage)
     required_files = list(REQUIRED)
     if major == 5:
@@ -175,7 +175,7 @@ def audit(stage, qt_version, baseline=False, ubuntu20=False):
                 if version(required) > version(limits[family])]
     if version(qt_version) > version(qt_limit):
         failures.append(f"Qt {qt_version} > {qt_limit}")
-    if (baseline or ubuntu20) and failures:
+    if (baseline or almalinux8) and failures:
         raise ValueError(f"{baseline_name} baseline rejected: " + "; ".join(failures))
     return {"schema": 1, "architecture": architectures.pop(),
             "qt_build_version": qt_version, "plasma_major": major,
@@ -185,12 +185,12 @@ def audit(stage, qt_version, baseline=False, ubuntu20=False):
             "scope": "ELF/Qt compatibility preflight; not desktop/GPU acceptance"}
 
 
-def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
+def package_kpackage(stage, qt_version, output, baseline=False, almalinux8=False,
                      package_version="0.0.0"):
     """Export the audited build as one native, relocatable Plasma/Wallpaper ZIP."""
     if not re.fullmatch(r"(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", package_version):
         raise ValueError("package version must be a numeric major.minor.patch")
-    metadata = audit(stage, qt_version, baseline, ubuntu20)
+    metadata = audit(stage, qt_version, baseline, almalinux8)
     root = stage / "share/plasma/wallpapers/uk.nekopara.nekomote"
     files = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob("*") if p.is_file()}
     for name in ("contents/ui/main.qml", "contents/ui/config.qml"):
@@ -233,12 +233,12 @@ def package_kpackage(stage, qt_version, output, baseline=False, ubuntu20=False,
     return {"archive": str(output), "sha256": digest(output), "compatibility": metadata}
 
 
-def package_bundle(stage, qt_version, output, baseline=False, ubuntu20=False,
+def package_bundle(stage, qt_version, output, baseline=False, almalinux8=False,
                    package_version="0.0.0"):
     """One release wrapper, containing exactly the Store payload and installer."""
     with tempfile.TemporaryDirectory(prefix="nekomote-bundle-") as temporary:
         payload = Path(temporary) / "wallpaper.zip"
-        result = package_kpackage(stage, qt_version, payload, baseline, ubuntu20, package_version)
+        result = package_kpackage(stage, qt_version, payload, baseline, almalinux8, package_version)
         metadata = result["compatibility"]
         name = f"nekomote-plasma{metadata['plasma_major']}-{metadata['architecture']}"
         zip_name = name + ".wallpaper.zip"
@@ -302,7 +302,7 @@ def main():
         command.add_argument("--qt-version", required=True, help="actual build Qt version")
         baselines = command.add_mutually_exclusive_group()
         baselines.add_argument("--baseline-debian12", action="store_true")
-        baselines.add_argument("--baseline-ubuntu20", action="store_true")
+        baselines.add_argument("--baseline-almalinux8", action="store_true")
         if name in ("bundle", "kpackage"):
             command.add_argument("--output", required=True, type=Path)
             command.add_argument("--package-version", required=True)
@@ -313,13 +313,13 @@ def main():
         if args.command == "verify-bundle":
             result = verify_bundle(args.archive, args.package_version)
         elif args.command == "audit":
-            result = audit(args.stage, args.qt_version, args.baseline_debian12, args.baseline_ubuntu20)
+            result = audit(args.stage, args.qt_version, args.baseline_debian12, args.baseline_almalinux8)
             if args.output:
                 args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
         else:
             exporter = package_bundle if args.command == "bundle" else package_kpackage
             result = exporter(args.stage, args.qt_version, args.output,
-                              args.baseline_debian12, args.baseline_ubuntu20, args.package_version)
+                              args.baseline_debian12, args.baseline_almalinux8, args.package_version)
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
     except (OSError, ValueError, KeyError, tarfile.TarError, zipfile.BadZipFile,

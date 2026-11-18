@@ -1,5 +1,5 @@
-# Shared release toolchain for the native programs and the X11 shell.
-FROM almalinux:8.10@sha256:768bedc30fe0a536adb0a65d2eddb7caad364e514fbddd0ae9e026975f590342
+# Shared release toolchain; the default stage does not build Qt.
+FROM almalinux:8.10@sha256:768bedc30fe0a536adb0a65d2eddb7caad364e514fbddd0ae9e026975f590342 AS toolchain
 
 RUN dnf -y --setopt=install_weak_deps=False --enablerepo=powertools install \
       ca-certificates curl git make cmake ninja-build pkgconf-pkg-config binutils \
@@ -51,3 +51,12 @@ RUN sh /usr/local/libexec/nekomote-ci-create-build-user.sh "$CI_UID" "$CI_GID"
 
 WORKDIR /work
 ENTRYPOINT ["bash", "/source/tools/ci_build.sh"]
+
+FROM toolchain AS plasma5
+RUN dnf -y --setopt=install_weak_deps=False install gcc-c++ perl xz && dnf clean all
+COPY ci_plasma5_sdk.sh /usr/local/libexec/nekomote-ci-plasma5-sdk.sh
+RUN bash /usr/local/libexec/nekomote-ci-plasma5-sdk.sh && \
+    echo /opt/qt5.12/lib > /etc/ld.so.conf.d/nekomote-qt5.conf && ldconfig
+ENV PATH="/opt/qt5.12/bin:${PATH}" CMAKE_PREFIX_PATH=/opt/qt5.12
+
+FROM toolchain AS native

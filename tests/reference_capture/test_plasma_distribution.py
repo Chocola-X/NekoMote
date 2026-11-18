@@ -13,6 +13,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -119,18 +120,28 @@ class PlasmaDistributionTests(unittest.TestCase):
         desktop = self.stage / "share/plasma/wallpapers/uk.nekopara.nekomote/metadata.desktop"
         self.manifest()
         with self.assertRaisesRegex(ValueError, "missing required"):
-            DIST.audit(self.stage, "5.12.8", ubuntu20=True)
+            DIST.audit(self.stage, "5.12.8", almalinux8=True)
         desktop.write_text("[Desktop Entry]\n")
         self.manifest()
-        report = DIST.audit(self.stage, "5.12.8", ubuntu20=True)
+        report = DIST.audit(self.stage, "5.12.8", almalinux8=True)
         self.assertEqual(report["plasma_major"], 5)
         self.assertTrue(report["baseline"]["passed"])
+        self.assertEqual(report["baseline"]["name"], "almalinux8")
+        self.assertEqual(report["baseline"]["limits"],
+                         {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"})
+        with self.assertRaisesRegex(ValueError, "Qt 5.15.3 > 5.12.8"):
+            DIST.audit(self.stage, "5.15.3", almalinux8=True)
+        info = DIST.elf_info(self.stage / DIST.ELFS[0])
+        info["versions"]["GLIBC"] = "2.29"
+        with patch.object(DIST, "elf_info", return_value=info):
+            with self.assertRaisesRegex(ValueError, "GLIBC_2.29 > 2.28"):
+                DIST.audit(self.stage, "5.12.8", almalinux8=True)
 
     def test_baseline_cannot_be_used_for_the_other_qt_major(self):
         with self.assertRaisesRegex(ValueError, "baseline must match"):
             DIST.audit(self.stage, "5.12.8", True)
         with self.assertRaisesRegex(ValueError, "baseline must match"):
-            DIST.audit(self.stage, "6.4.2", ubuntu20=True)
+            DIST.audit(self.stage, "6.4.2", almalinux8=True)
 
     def test_corrupt_binary_rejected(self):
         with (self.stage / DIST.ELFS[0]).open("ab") as output:

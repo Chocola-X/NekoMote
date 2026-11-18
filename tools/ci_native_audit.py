@@ -7,9 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from plasma_distribution import BASELINE, elf_info, version
-
-ALMALINUX8_BASELINE = {"GLIBC": "2.28", "GLIBCXX": "3.4.25", "CXXABI": "1.3.11"}
+from plasma_distribution import ALMALINUX8_BASELINE, BASELINE, elf_info, version
 
 
 def audit(stage, mode):

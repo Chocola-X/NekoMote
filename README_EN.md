@@ -268,7 +268,7 @@ Arch's three-package PKGBUILD is in [packaging notes](packaging/arch/README.md).
 Five independent GitHub Actions workflows build on branch push, PR, or manual trigger:
 
 - Native programs: AlmaLinux 8.10 / GCC Toolset 13, x86_64 / ARM64 Release builds of `nekomote_player`, `nekomote_import`, `nekomote_audio_convert`, `nekomote_model_convert`, `nekomote_png_recompress`, `nekomote_abi_host`.
-- KDE5: Ubuntu 20.04 / Qt5.12.8 x86_64 and ARM64 plugins.
+- KDE5: AlmaLinux 8.10 glibc 2.28 baseline with a Qt 5.12.8 SDK, on x86_64 and ARM64.
 - KDE6: Debian 12 / Qt6.4.2 x86_64 and ARM64 plugins.
 - Layer-shell: Debian 12 / Wayland 1.21 x86_64 and ARM64 standalone programs.
 - X11: AlmaLinux 8.10 / EWMH/GLX x86_64 and ARM64 standalone programs.

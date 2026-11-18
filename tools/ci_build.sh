@@ -21,7 +21,7 @@ export XDG_RUNTIME_DIR="$WORK_DIR/runtime"
 tar -C "$SOURCE_DIR" --exclude='./.git' --exclude='./build' --exclude='./assets' \
     --exclude='./refer' --exclude='./experiments' --exclude='./node_modules' \
     -cf - . | tar -C "$WORK_DIR/src" -xf -
-if [[ "$MODE" == native || "$MODE" == x11 ]]; then
+if [[ "$MODE" == native || "$MODE" == x11 || "$MODE" == plasma5 ]]; then
     rpm -qa --queryformat '%{NAME}\t%{VERSION}-%{RELEASE}.%{ARCH}\n' | LC_ALL=C sort \
         > "$OUTPUT_DIR/toolchain-packages.txt"
 else
@@ -132,7 +132,7 @@ else
     python3 "$WORK_DIR/src/tools/plasma_stage_manifest.py" "$STAGE_DIR"
     if [[ "$MODE" == plasma5 ]]; then
         QT_VERSION="$(qmake -query QT_VERSION)"
-        BASELINE=--baseline-ubuntu20
+        BASELINE=--baseline-almalinux8
     else
         QT_VERSION="$(qmake6 -query QT_VERSION)"
         BASELINE=--baseline-debian12

@@ -69,7 +69,7 @@ python3 installer.py status
 
 | 包 | 构建基线 | 符号上限 |
 | --- | --- | --- |
-| Plasma 5 / Qt 5 | Ubuntu 20.04、Qt 5.12.8、GCC 10.5 | GLIBC 2.31、GLIBCXX 3.4.28、CXXABI 1.3.12 |
+| Plasma 5 / Qt 5 | AlmaLinux 8.10、上游 Qt 5.12.8 SDK、GCC Toolset 13 | GLIBC 2.28、GLIBCXX 3.4.25、CXXABI 1.3.11 |
 | Plasma 6 / Qt 6 | Debian 12、Qt 6.4.2、GCC 12 | GLIBC 2.36、GLIBCXX 3.4.30、CXXABI 1.3.13 |
 
 x86_64 与 aarch64 分别构建。Qt5/6 不得交叉加载；Qt 插件要求相同 major、主机
@@ -77,6 +77,12 @@ minor 不低于构建 minor。包不附带 Qt/KDE、glibc、libstdc++、图形�
 不链接 KF/Plasma C++ ABI。PNG/zlib、PulseAudio、Fontconfig 和图形库仍由宿主提供，
 实际依赖见内层兼容报告。Debian12 仅用于编译 Qt6 模块，其自带 Plasma5 不是 Qt6 包的运行目标。
 安装前检查通过不等于 GPU、跨发行版或长期播放验收。
+
+Plasma 5 的 glibc 基线和 Qt 基线独立。Qt 5.12.8 SDK 只在 CI 内构建，不随包分发。
+同一份 x86_64 归档已在 Ubuntu 20.04 自带 Qt 5.12.8 和本机 Qt 5.15.17 上通过
+包内设置页和原生模块的离屏导入。AlmaLinux 8.10 自带 Qt 5.15.3 给五个公开
+`QQuickFramebufferObject::Renderer` 符号使用带补丁版本号的标签，仍不能加载此包。
+降低 glibc 下限不改变这项 Qt 运行库要求；安装器通过 `ldd -r` 检查宿主依赖。
 
 ## 构建与打包
 
@@ -102,7 +108,7 @@ python3 tools/plasma_distribution.py bundle build/plasma/adapters/plasma/stage \
 
 Plasma5 对应 `plasma5` preset、stage 路径、许可证模式和 `qmake`。
 `--qt-version` 必须是实际构建版本，架构也必须匹配；不要把本地新 Qt 包改名冒充低版本基线包。
-正式分发需分别添加 `--baseline-ubuntu20` 或 `--baseline-debian12`，超过上限会拒绝生成。
+正式分发需分别添加 `--baseline-almalinux8` 或 `--baseline-debian12`，超过上限会拒绝生成。
 `kpackage` 子命令可以单独导出商店 ZIP，但 GitHub CI 只发布包含它的统一外层包。
 历史报告里的 `plasma_deploy.py` 和 `check-host stage` 命令已由安装器替代。
 

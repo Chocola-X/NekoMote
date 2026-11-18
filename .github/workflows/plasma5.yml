@@ -29,7 +29,7 @@ jobs:
           - runner: ubuntu-24.04-arm
             arch: aarch64
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - name: Checkout
         # actions/checkout v4.2.2
@@ -39,8 +39,8 @@ jobs:
       - name: Build baseline toolchain image
         run: |
           mkdir -p build/ci-plasma5
-          docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
-            -f tools/ci_ubuntu20.Containerfile -t nekomote-plasma5 tools \
+          docker build --target plasma5 --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+            -f tools/ci_almalinux8.Containerfile -t nekomote-plasma5 tools \
             2>&1 | tee build/ci-plasma5/toolchain-build.log
       - name: Release build, tests and dependency audit
         run: |

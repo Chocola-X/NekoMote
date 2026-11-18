@@ -275,7 +275,7 @@ Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
 五个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
 
 - 原生应用：AlmaLinux 8.10 / GCC Toolset 13，x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`。
-- KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 与 ARM64 插件。
+- KDE5：AlmaLinux 8.10 的 glibc 2.28 基线 / Qt 5.12.8 SDK，x86_64 与 ARM64 插件。
 - KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 ARM64 插件。
 - Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 ARM64 独立程序。
 - X11：AlmaLinux 8.10 / EWMH/GLX 的 x86_64 与 ARM64 独立程序。

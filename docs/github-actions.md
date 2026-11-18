@@ -1,8 +1,16 @@
 # GitHub 自动构建与测试
 
+2026-11-18：Plasma 5 改用 AlmaLinux 8.10 的 glibc 基线，使用固定 SHA256 的上游
+Qt 5.12.8 源码构建独立 SDK。发布包仍由宿主提供 Qt，包名和发布清单不变。
+本地在 EL8 x86_64 隔离根运行 `ci_build.sh plasma5`，265 项必选测试、ELF/Qt 审计、
+外层归档校验和包内导入通过。实际最高需求为 GLIBC2.27、GLIBCXX3.4.22、CXXABI1.3.11。
+同一外层包解出的壁纸通过原版 Ubuntu20 / Qt5.12.8 和本机 Qt5.15.17 离屏加载。
+AlmaLinux 自带 Qt5.15.3 的版本标签差异仍存在；参见 [兼容范围](plasma-distribution.md#基线与兼容范围)。
+ARM64 实编、GitHub 首跑和真实桌面 GPU 渲染未在这轮验收。
+
 2026-11-18：原生应用和 X11 的正式发布基线切换到 AlmaLinux 8.10，归档名改用
-`almalinux8`。继续在 x86_64 和 ARM64 的原生 runner 上构建；Plasma 5 仍使用
-Ubuntu 20.04 / Qt 5.12.8，Plasma 6 和 layer-shell 仍使用 Debian 12。
+`almalinux8`。继续在 x86_64 和 ARM64 的原生 runner 上构建；Plasma 6 和 layer-shell
+仍使用 Debian 12。
 
 本地从固定镜像的 x86_64 文件系统准备工具链，以有 NSS 记录的非 root UID 分别执行
 `ci_build.sh native` 和 `ci_build.sh x11`。依赖源码使用同一 Git pin 的本地缓存，
@@ -147,7 +155,7 @@ artifacts；版本标签统一由发布工作流触发构建，不额外重复�
 | 工作流 | 实际编译环境 | Release 产物 |
 | --- | --- | --- |
 | [native-linux.yml](../.github/workflows/native-linux.yml) | AlmaLinux 8.10 / GCC Toolset 13 / CMake 3.26.5，x86_64 与 aarch64 | `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host` |
-| [plasma5.yml](../.github/workflows/plasma5.yml) | Ubuntu 20.04 / Qt 5.12.8 / GCC 10.5，x86_64 与 aarch64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
+| [plasma5.yml](../.github/workflows/plasma5.yml) | AlmaLinux 8.10 / 上游 Qt 5.12.8 SDK / GCC Toolset 13，x86_64 与 aarch64 | KDE5 / Plasma5 完整壁纸包及原生 QML 模块 |
 | [plasma6.yml](../.github/workflows/plasma6.yml) | Debian 12 / Qt 6.4.2 / GCC 12，x86_64 与 aarch64 | KDE6 / Plasma6 完整壁纸包及原生 QML 模块 |
 | [layer-shell.yml](../.github/workflows/layer-shell.yml) | Debian 12 / GCC 12 / Wayland 1.21，x86_64 与 aarch64 | `nekomote_layer_shell` 独立 Wayland/EGL 程序 |
 | [x11.yml](../.github/workflows/x11.yml) | AlmaLinux 8.10 / GCC Toolset 13，x86_64 与 aarch64 | `nekomote_x11` 独立 X11/EWMH OpenGL/Vulkan 程序 |
@@ -192,7 +200,7 @@ git push origin v0.5.0
 | `nekomote-x11-almalinux8-aarch64.tar.gz` | X11 ARM64 独立程序 |
 
 本体、KDE5、KDE6、layer-shell 和 X11 的 ARM64 均使用 `ubuntu-24.04-arm` 原生 runner，在相应架构的
-固定基线镜像中编译。focal 的 Python 和两个镜像中的 Node 下载按架构校验 SHA256；
+固定基线镜像中编译。AlmaLinux 镜像的 Node 下载按架构校验 SHA256；
 不使用 x86 模拟器，不将这些构建工具捆绑进发行包。
 
 发布前检查附件齐全且 SHA256 一致；之后创建 draft、上传全部附件，上传成功后转为
@@ -214,10 +222,9 @@ Release 页面可直接下载归档；Actions 中继续保留各平台测试、�
 镜像使用官方 RPM，并以 SHA256 固定 Node 22.14.0 和 glslang 12.0.0；后者在镜像内
 编译为着色器工具，不随发行包发布。RPM 实际版本记在 `toolchain-packages.txt`，包仓库未冻结。
 
-Plasma 5 的 Ubuntu20 镜像固定 digest，使用官方 focal 包中的 GCC10；系统自带 GCC9 与
-CMake3.16 不满足项目要求。CMake 和 Python 构建工具另行固定版本；独立 Python3.11
-下载校验 SHA256，仅用于构建和测试，不随本体分发。focal apt 包实际版本保存在
-`toolchain-packages.txt`，APT 仓库没有冻结快照，不宣称每次镜像重建逐字节一致。
+Plasma 5 使用同一 AlmaLinux 镜像的 `plasma5` 构建阶段。在该阶段，系统 GCC 8 编译
+固定的 Qt 5.12.8 SDK 和 QML 测试模块，GCC Toolset 13 构建 NekoMote。Qt SDK 不进入
+发行包。默认镜像阶段仍用于原生应用和 X11，无需编译 Qt。
 
 PulseAudio 最低开发版本调至 13.99，符合现有 mainloop/context/stream API 的使用。
 WAVE 的两处位解释使用 `memcpy`，保留样本位模式与别名安全，避免 GCC10 标准库缺少
@@ -265,9 +272,8 @@ Vulkan GPU 图像共享同步保持原有契约。Release 警告检查还促使�
 
 ## 二进制兼容范围
 
-原生程序和 X11 严格检查符号需求不超过 GLIBC2.28、GLIBCXX3.4.25、CXXABI1.3.11。
-KDE5 插件保持 Ubuntu20 的 GLIBC2.31、GLIBCXX3.4.28、CXXABI1.3.12 上限，
-构建 Qt 不超过5.12.8。原生程序另在容器内执行 `ldd -r`，
+原生程序、X11 和 KDE5 插件严格检查符号需求不超过 GLIBC2.28、GLIBCXX3.4.25、
+CXXABI1.3.11。KDE5 构建 Qt 不超过5.12.8。独立程序另在容器内执行 `ldd -r`，
 检查传递的系统依赖能够解析。归档不捆绑系统库，目标仍需安装 OpenGL、Vulkan loader、
 PulseAudio、PNG/zlib、Fontconfig 及相关窗口依赖，可从兼容报告查看实际依赖。
 
@@ -303,10 +309,10 @@ docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-native:/output:rw" nekomote-almalinux8 native
 docker run --rm --user "$(id -u):$(id -g)" \
   -v "$PWD:/source:ro" -v "$PWD/build/ci-x11:/output:rw" nekomote-almalinux8 x11
-docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
-  -f tools/ci_ubuntu20.Containerfile -t nekomote-focal tools
+docker build --target plasma5 --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
+  -f tools/ci_almalinux8.Containerfile -t nekomote-plasma5 tools
 docker run --rm --user "$(id -u):$(id -g)" \
-  -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" nekomote-focal plasma5
+  -v "$PWD:/source:ro" -v "$PWD/build/ci-plasma5:/output:rw" nekomote-plasma5 plasma5
 docker build --build-arg "CI_UID=$(id -u)" --build-arg "CI_GID=$(id -g)" \
   -f tools/plasma_baseline.Containerfile -t nekomote-bookworm tools
 docker run --rm --user "$(id -u):$(id -g)" \
