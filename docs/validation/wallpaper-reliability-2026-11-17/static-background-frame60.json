@@ -1,0 +1,30 @@
+{
+  "opengl": {
+    "before": {
+      "sha256": "f2bdaafb5db3c71eb27b262c5cb1ecdc63e85dca9a46e49f22fd5974dc6a5895",
+      "gl_uploads": {
+        "array": 121,
+        "element": 62,
+        "quad_array": 60,
+        "quad_element": 60
+      }
+    },
+    "after": {
+      "sha256": "f2bdaafb5db3c71eb27b262c5cb1ecdc63e85dca9a46e49f22fd5974dc6a5895",
+      "gl_uploads": {
+        "array": 62,
+        "element": 3,
+        "quad_array": 1,
+        "quad_element": 1
+      }
+    }
+  },
+  "vulkan": {
+    "before": {
+      "sha256": "f2bdaafb5db3c71eb27b262c5cb1ecdc63e85dca9a46e49f22fd5974dc6a5895"
+    },
+    "after": {
+      "sha256": "f2bdaafb5db3c71eb27b262c5cb1ecdc63e85dca9a46e49f22fd5974dc6a5895"
+    }
+  }
+}

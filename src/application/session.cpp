@@ -25,6 +25,14 @@ struct BackgroundLayer
 {
     TextureId texture{0};
     int width{0}, height{0};
+    bool operator==(const BackgroundLayer&) const = default;
+};
+struct BackgroundFrameKey
+{
+    BackgroundLayer current, target;
+    int width{0}, height{0};
+    float alpha{0};
+    bool operator==(const BackgroundFrameKey&) const = default;
 };
 void fill_background_quad(RenderVertex* v, std::uint32_t* idx, int ow, int oh, int iw, int ih,
                           float alpha, std::uint32_t base) noexcept
@@ -290,6 +298,9 @@ struct SessionInstance::Impl
     double bg_fade_progress{1.0};
     double bg_fade_duration{0};
     int output_width{0}, output_height{0};
+    const std::shared_ptr<const FrameProducer> bg_producer = std::make_shared<FrameProducer>();
+    mutable BackgroundFrameKey bg_frame_key;
+    mutable std::uint64_t bg_revision{0};
     mutable std::array<RenderVertex, 8> bg_vertices{};
     mutable std::array<std::uint32_t, 12> bg_indices{};
     mutable std::array<DrawCommand, 2> bg_commands{};
@@ -807,28 +818,34 @@ RenderFrame SessionInstance::background_frame() const noexcept
         data.output_height <= 0)
         return {};
     const bool fading = data.bg_target.texture.value != 0 && data.bg_fade_progress < 1.0;
-    if (!fading)
+    // Use the values that reach the renderer as the key. A paused fade (or
+    // progress that rounds to the same vertex alpha) leaves the frame unchanged.
+    const BackgroundFrameKey key{data.bg_current, fading ? data.bg_target : BackgroundLayer{},
+                                 data.output_width, data.output_height,
+                                 fading ? static_cast<float>(data.bg_fade_progress) : 0.0f};
+    if (key != data.bg_frame_key)
     {
-        fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(), data.output_width,
-                             data.output_height, data.bg_current.width, data.bg_current.height,
-                             1.0f, 0);
-        data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
-        return {std::span<const RenderVertex>(data.bg_vertices.data(), 4),
-                std::span<const std::uint32_t>(data.bg_indices.data(), 6),
-                std::span<const DrawCommand>(data.bg_commands.data(), 1),
-                ColorComposition::PremultipliedOver};
+        fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(), key.width, key.height,
+                             key.current.width, key.current.height, 1.0f, 0);
+        data.bg_commands[0] = {key.current.texture, 0, 6, BlendMode::Over};
+        if (fading)
+        {
+            fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6, key.width,
+                                 key.height, key.target.width, key.target.height, key.alpha, 4);
+            data.bg_commands[1] = {key.target.texture, 6, 6, BlendMode::Over};
+        }
+        data.bg_frame_key = key;
+        if (++data.bg_revision == 0)
+            ++data.bg_revision;
     }
-    const auto alpha = static_cast<float>(data.bg_fade_progress);
-    fill_background_quad(data.bg_vertices.data(), data.bg_indices.data(), data.output_width,
-                         data.output_height, data.bg_current.width, data.bg_current.height, 1.0f,
-                         0);
-    fill_background_quad(data.bg_vertices.data() + 4, data.bg_indices.data() + 6, data.output_width,
-                         data.output_height, data.bg_target.width, data.bg_target.height, alpha, 4);
-    data.bg_commands[0] = {data.bg_current.texture, 0, 6, BlendMode::Over};
-    data.bg_commands[1] = {data.bg_target.texture, 6, 6, BlendMode::Over};
-    return {std::span<const RenderVertex>(data.bg_vertices.data(), 8),
-            std::span<const std::uint32_t>(data.bg_indices.data(), 12),
-            std::span<const DrawCommand>(data.bg_commands.data(), 2),
-            ColorComposition::PremultipliedOver};
+    const std::size_t layers = fading ? 2 : 1;
+    return {std::span<const RenderVertex>(data.bg_vertices.data(), layers * 4),
+            std::span<const std::uint32_t>(data.bg_indices.data(), layers * 6),
+            std::span<const DrawCommand>(data.bg_commands.data(), layers),
+            ColorComposition::PremultipliedOver,
+            {},
+            {},
+            data.bg_revision,
+            data.bg_producer};
 }
 } // namespace nekomote::application

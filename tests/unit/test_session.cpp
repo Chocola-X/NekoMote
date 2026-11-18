@@ -363,18 +363,51 @@ TEST_CASE("Background fade pauses during playback pause", "[application]")
     REQUIRE(session.advance(0.25));
     auto frame = session.background_frame();
     REQUIRE(frame.commands.size() == 2);
+    const auto revision = frame.revision;
+    REQUIRE(frame.producer);
+    REQUIRE(revision != 0);
     REQUIRE(session.set_playback_state(runtime::PlaybackState::Paused));
     REQUIRE(session.advance(0.5));
     frame = session.background_frame();
     REQUIRE(frame.commands.size() == 2);
+    REQUIRE(frame.revision == revision);
     REQUIRE(session.set_playback_state(runtime::PlaybackState::Running));
     REQUIRE(session.advance(0.25));
     frame = session.background_frame();
     REQUIRE(frame.commands.size() == 2);
+    REQUIRE(frame.revision != revision);
     REQUIRE(session.advance(0.25));
     REQUIRE(session.advance(0.25));
     frame = session.background_frame();
     REQUIRE(frame.commands.size() == 1);
+    REQUIRE(frame.commands.front().texture == TextureId{2});
+}
+
+TEST_CASE("Static background can be reused until its output or source changes", "[application]")
+{
+    Reference reference;
+    SessionInstance session(*reference.program), other(*reference.program);
+    for (auto* instance : {&session, &other})
+    {
+        REQUIRE(instance->set_output_size(800, 600));
+        REQUIRE(instance->set_background(TextureId{1}, 1600, 600));
+    }
+    const auto initial = session.background_frame();
+    REQUIRE(initial.producer != other.background_frame().producer);
+    REQUIRE(session.advance(0.25));
+    REQUIRE(session.background_frame().revision == initial.revision);
+
+    REQUIRE(session.set_output_size(1200, 600));
+    const auto resized = session.background_frame();
+    REQUIRE(resized.revision != initial.revision);
+    REQUIRE(resized.vertices[2].x == 1200.0f);
+    REQUIRE(resized.vertices[0].u == 0.125f);
+
+    REQUIRE(session.set_background(TextureId{1}, 1200, 600));
+    const auto replaced = session.background_frame();
+    REQUIRE(replaced.revision != resized.revision);
+    REQUIRE(replaced.vertices[0].u == 0.0f);
+    REQUIRE(replaced.producer == initial.producer);
 }
 
 TEST_CASE("Model reset preserves the configured background", "[application]")

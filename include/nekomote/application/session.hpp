@@ -151,6 +151,8 @@ class SessionInstance
     SessionStatus fade_background(TextureId id, int width, int height,
                                   double duration_seconds) noexcept;
     void clear_background() noexcept;
+    // The view is borrowed from this session. Unchanged drawable content keeps
+    // the same producer and revision so a renderer can reuse its prepared data.
     RenderFrame background_frame() const noexcept;
 
   private:
