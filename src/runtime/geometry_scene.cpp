@@ -21,6 +21,8 @@ namespace nekomote::runtime
 {
 namespace
 {
+constexpr int kMaximumMeshDivision = 256;
+
 // GCC/LTO can fold the polynomial into the vertex loop after locator evaluation
 // is introduced, increasing build_frame cost. Keep the measured kernel boundary;
 // arithmetic and accumulation order remain in the shared implementation.
@@ -289,7 +291,8 @@ struct Compiler
         n.division = layer.mesh_division;
         n.priority = layer.obj_tri_priority;
         n.maximum_division = n.division;
-        require(n.division >= 0 && n.division <= 256, n.label, "unsupported division capacity");
+        require(n.division >= 0 && n.division <= kMaximumMeshDivision, n.label,
+                "unsupported division capacity");
         n.combine = layer.mesh_combine == 1;
         n.child_sync = layer.mesh_sync_child_mask;
         n.inherit_shape = (layer.inherit_mask & 0x2000000) != 0;
@@ -696,7 +699,8 @@ GeometryCompileResult compile_geometry_scene(const model::ModelAsset& asset)
                                      std::max(2, static_cast<int>((r.rect.width + r.rect.height) *
                                                                   n.maximum_density)));
                 }
-            require(n.maximum_division <= 256, n.label, "automatic division capacity exceeded");
+            require(n.maximum_division <= kMaximumMeshDivision, n.label,
+                    "automatic division capacity exceeded");
             // One sprite is selected per node. Bound every possible resource's
             // aspect-ratio grid, rather than a square of the total division.
             // Both axes are monotonic in division; +1 includes grid endpoints.
@@ -1277,8 +1281,9 @@ GeometryStatus GeometryInstance::build_frame() noexcept
     if (!instance.evaluated || instance.evaluation != GeometryEvaluation::Frame)
         return {GeometryError::UnsupportedTransform, {}, {}};
     for (const auto& p : instance.primitives)
-        if (p.mesh_division == 0 && instance.states[p.node.value].mesh_path &&
-            instance.scene.nodes[p.node.value].priority != 2)
+        if (instance.states[p.node.value].mesh_path &&
+            (p.mesh_division > kMaximumMeshDivision ||
+             (p.mesh_division == 0 && instance.scene.nodes[p.node.value].priority != 2)))
             return {GeometryError::UnsupportedTessellation, p.node, {}};
     bool rebuild_indices = instance.frame_grids.size() != instance.primitives.size();
     std::size_t vertex_count = 0;
@@ -1341,6 +1346,12 @@ GeometryStatus GeometryInstance::build_frame() noexcept
         const auto bottom_left = corner(left, top + static_cast<double>(r.height));
         const auto bottom_right =
             corner(left + static_cast<double>(r.width), top + static_cast<double>(r.height));
+        // Each row uses the same column ratios. Keep direct double division
+        // and the existing rounding of both position and atlas coordinates.
+        // grid() adds one cell; include both endpoints of that grid.
+        std::array<double, kMaximumMeshDivision + 2> columns;
+        for (int x = 0; x <= nx; ++x)
+            columns[static_cast<std::size_t>(x)] = static_cast<double>(x) / nx;
         for (int y = 0; y <= ny; ++y)
         {
             const double row = static_cast<double>(y) / ny;
@@ -1352,7 +1363,7 @@ GeometryStatus GeometryInstance::build_frame() noexcept
             {
                 // Atlas packing affects UV only. Adding a large atlas offset and
                 // subtracting it before deformation loses local subpixel precision.
-                const double column = static_cast<double>(x) / nx;
+                const double column = columns[static_cast<std::size_t>(x)];
                 const Vec2 rigid_point{
                     static_cast<float>((1 - column) * row_left_x + column * row_right_x),
                     static_cast<float>((1 - column) * row_left_y + column * row_right_y)};
@@ -1367,10 +1378,8 @@ GeometryStatus GeometryInstance::build_frame() noexcept
                     // Atlas coordinates use the original local grid ratios in
                     // double, independently of the saved rigid corner interpolation.
                     // UV packing has its own Float32 boundary.
-                    const double local_x =
-                        static_cast<double>(x) / nx * static_cast<double>(r.width);
-                    const double local_y =
-                        static_cast<double>(y) / ny * static_cast<double>(r.height);
+                    const double local_x = column * static_cast<double>(r.width);
+                    const double local_y = row * static_cast<double>(r.height);
                     const float u = static_cast<float>(static_cast<double>(r.left) + local_x);
                     // Source atlas V is saved from the lower edge before converting
                     // to our top-origin UV. Reversing the save order changes the

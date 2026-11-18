@@ -4000,4 +4000,38 @@ TEST_CASE("Geometry capacity covers changing atlas aspect ratios without frame a
     REQUIRE(valid);
     REQUIRE(automatic_instance.frame().vertices.size() == 9);
     REQUIRE(measured_allocations == 0);
+
+    // A narrow sprite can put all 256 authored divisions on the X axis.
+    // The extra cell and both endpoints must fit while preserving the far UV.
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 64, 0.000001f, 0, 0};
+    asset.parts[0].layers[0].children[0].mesh_division = 256;
+    const auto narrow = runtime::compile_geometry_scene(asset);
+    REQUIRE(narrow.scene);
+    runtime::GeometryInstance narrow_instance(*narrow.scene);
+    REQUIRE(narrow_instance.evaluate());
+    REQUIRE(narrow_instance.build_frame());
+    const auto frame = narrow_instance.frame();
+    REQUIRE(frame.vertices.size() == 258 * 3);
+    REQUIRE(frame.vertices[257].u == 0.5f);
+    REQUIRE(frame.vertices.back().u == 0.5f);
+
+    // Interpolation can introduce a curve while the smaller left domain is
+    // still selected. Its inherited automatic division can exceed the limit.
+    asset.icons["atlas/a"] = {"atlas", 0, 0, 64, 4, 0, 0};
+    auto& varying_parent = asset.parts[0].layers[0];
+    auto left = parent_content;
+    left.icon = field(std::string{"16:16:0:0"});
+    left.mesh = {};
+    varying_parent.frame_list = {{0, 3, field(left)}, {1, 2, field(parent_content)}};
+    varying_parent.parameterize = field(0);
+    varying_parent.parameter = {{"curve", 0, 1, 1, 0, true}};
+    varying_parent.mesh_division = 256;
+    varying_parent.children[0].mesh_division = 0;
+    const auto varying = runtime::compile_geometry_scene(asset);
+    REQUIRE(varying.scene);
+    runtime::GeometryInstance varying_instance(*varying.scene);
+    REQUIRE(varying_instance.set_parameter(varying.scene->find_variable("curve"), 0.5f));
+    REQUIRE(varying_instance.evaluate());
+    REQUIRE(varying_instance.build_frame().error == runtime::GeometryError::UnsupportedTessellation);
+    REQUIRE(varying_instance.frame().vertices.empty());
 }
