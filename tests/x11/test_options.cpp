@@ -143,6 +143,24 @@ TEST_CASE("X11 discovery does not require model assets", "[x11][options]")
     REQUIRE(selected.config == path);
 }
 
+TEST_CASE("X11 global gaze defaults on and can be overridden or saved", "[x11][options]")
+{
+    const auto path = environment.root / "global-gaze.json";
+    REQUIRE(parse({"--model", "model", "--config", path.string()}).global_gaze);
+    REQUIRE_FALSE(
+        parse({"--model", "model", "--config", path.string(), "--global-gaze", "off"}).global_gaze);
+    REQUIRE_FALSE(std::filesystem::exists(path));
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--global-gaze", "auto"}),
+                        "--global-gaze expects on or off");
+
+    parse({"--model", "model", "--config", path.string(), "--global-gaze", "off", "--save-config"});
+    REQUIRE_FALSE(parse({"--config", path.string()}).global_gaze);
+    REQUIRE(parse({"--config", path.string(), "--global-gaze", "on"}).global_gaze);
+    REQUIRE_FALSE(parse({"--config", path.string()}).global_gaze);
+    parse({"--config", path.string(), "--global-gaze", "on", "--save-config"});
+    REQUIRE(parse({"--config", path.string()}).global_gaze);
+}
+
 TEST_CASE("X11 configuration paths identify independent instances", "[x11][options]")
 {
     const auto first = parse({"--assets", "assets", "--output", "DP-1"});

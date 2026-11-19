@@ -24,7 +24,9 @@ def write_licenses(source, build, stage, mode):
         notices.append(f"=== GLAD generated code: {name} ===\n\n" +
                        (source / f"tools/licenses/{name}.txt").read_text())
     if mode == "layer-shell":
-        for name in ("wlr-layer-shell-unstable-v1", "xdg-shell"):
+        for name in ("wlr-layer-shell-unstable-v1", "xdg-shell", "xdg-output-unstable-v1",
+                     "ext-foreign-toplevel-list-v1", "ext-image-capture-source-v1",
+                     "ext-image-copy-capture-v1"):
             xml = source / f"adapters/layer_shell/protocols/{name}.xml"
             notice = ET.parse(xml).getroot().findtext("copyright")
             if not notice or not notice.strip():

@@ -36,6 +36,7 @@ Item {
         assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend
         pauseOnSessionEvents: wallpaper.configuration.pauseOnSessionEvents !== false
+        globalGazeEnabled: wallpaper.configuration.globalGazeEnabled !== false
         paused: !root.visible
     }
     Text {

@@ -42,6 +42,9 @@ struct LayoutFixture
         imported.asset.author_scale = {nekomote::model::FieldState::Value, 1.0f};
         imported.asset.variables.push_back({"drag_x", {}});
         imported.asset.variables.push_back({"drag_y", {}});
+        for (const auto* name : {"face_eye_LR", "face_eye_UD", "head_slant", "head_LR", "head_UD",
+                                 "body_slant", "body_LR", "body_UD"})
+            imported.asset.variables.push_back({name, {}});
         nekomote::model::Layer anchor;
         anchor.label = "drag_anchor";
         anchor.type = 1;
@@ -83,7 +86,7 @@ struct LayoutFixture
                                         {"idle_timeline", "idle"},
                                         {"talk_max", 5},
                                         {"interaction",
-                                         {{"eye", nullptr},
+                                         {{"eye", 0},
                                           {"regions",
                                            {{"bust", nullptr},
                                             {"eye", nullptr},
@@ -109,6 +112,62 @@ struct LayoutFixture
     }
 };
 } // namespace
+
+TEST_CASE("External gaze overrides hover without routing local gestures", "[controller][pointer]")
+{
+    LayoutFixture fixture;
+    WallpaperController controller;
+    fixture.install(controller);
+    controller.set_origin({0, 0});
+    const auto* session = controller.current_instance();
+    REQUIRE(controller.current_program()->gaze_available());
+    const auto id = controller.current_program()->playback().scene().find_variable("face_eye_LR");
+    const auto eye = [&] { return session->playback().values()[id.value - 1].value; };
+    const auto settle = [&]
+    {
+        for (int i = 0; i < 100; ++i)
+            controller.advance(1.0 / 60);
+        REQUIRE(controller.last_error());
+    };
+
+    controller.pointer_enter({-180, 0});
+    controller.set_external_gaze(nekomote::Vec2{180, 0});
+    settle();
+    REQUIRE(eye() > 0.f);
+    controller.set_external_gaze(std::nullopt);
+    settle(); // No new local motion is needed to recover local gaze.
+    REQUIRE(eye() < 0.f);
+
+    controller.pointer_leave();
+    controller.pointer_enter({180, 0});
+    controller.advance(1.0 / 60);
+    REQUIRE(eye() < -50.f); // A batched re-entry still eases from the last point.
+
+    controller.pointer_press({0, 0});
+    controller.set_external_gaze(nekomote::Vec2{300, 0});
+    settle();
+    REQUIRE(eye() > 0.f);
+    REQUIRE(controller.origin().x == 0.f);
+    controller.pointer_move({25, 0});
+    REQUIRE(controller.origin().x == 25.f);
+    controller.pointer_leave();
+    controller.set_external_gaze(nekomote::Vec2{-300, 0});
+    settle();
+    REQUIRE(eye() < 0.f); // Leaving local hover doesn't stop the external gaze.
+    REQUIRE(controller.origin().x == 25.f);
+    controller.set_gaze_suppressed(true);
+    controller.set_external_gaze(nekomote::Vec2{300, 0});
+    settle();
+    REQUIRE(eye() < 0.f);
+    controller.set_gaze_suppressed(false);
+    settle();
+    REQUIRE(eye() > 0.f);
+    controller.set_output_unavailable(true);
+    controller.set_external_gaze(nekomote::Vec2{-300, 0});
+    controller.set_output_unavailable(false);
+    settle();
+    REQUIRE(eye() > 0.f); // Unavailability discards samples until the next real update.
+}
 
 TEST_CASE("Controller held left button drags immediately after movement tolerance",
           "[controller][pointer]")
@@ -138,11 +197,11 @@ TEST_CASE("External gaze does not move or cancel a held drag", "[controller][poi
     WallpaperController c;
     c.set_origin({0, 0});
     c.pointer_press({10, 10});
-    c.set_gaze_target(nekomote::Vec2{-100, 200});
+    c.set_external_gaze(nekomote::Vec2{-100, 200});
     REQUIRE(c.origin().x == 0.0f);
     REQUIRE(c.origin().y == 0.0f);
     c.pointer_move({40, 20});
-    c.set_gaze_target(std::nullopt);
+    c.set_external_gaze(std::nullopt);
     c.pointer_release({50, 25});
     REQUIRE(c.origin().x == 40.0f);
     REQUIRE(c.origin().y == 15.0f);

@@ -996,7 +996,9 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y,
     const float px = static_cast<float>(x);
     const float py = static_cast<float>(y);
     ui_context_.mouse_move(x, y);
-    if (ui_captures_mouse())
+    const bool captured = ui_captures_mouse();
+    controller_.set_gaze_suppressed(captured);
+    if (captured)
     {
         controller_.pointer_leave();
         return NEKOMOTE_OK;
@@ -1009,27 +1011,15 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y,
     return NEKOMOTE_OK;
 }
 
-nekomote_error WallpaperInstance::set_gaze_target(double x, double y)
-{
-    if (initialized_)
-        controller_.set_gaze_target(Vec2{static_cast<float>(x - output_width_ * .5),
-                                         static_cast<float>(y - output_height_ * .5)});
-    return NEKOMOTE_OK;
-}
-
-nekomote_error WallpaperInstance::clear_gaze_target()
-{
-    controller_.set_gaze_target(std::nullopt);
-    return NEKOMOTE_OK;
-}
-
 nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 {
     if (!initialized_)
         return NEKOMOTE_OK;
     presentation_dirty_ = true;
     ui_context_.mouse_move(x, y);
-    if (ui_captures_mouse())
+    const bool captured = ui_captures_mouse();
+    controller_.set_gaze_suppressed(captured);
+    if (captured)
         return NEKOMOTE_OK;
     const float cx = static_cast<float>(x) - static_cast<float>(output_width_) * .5f;
     const float cy = static_cast<float>(y) - static_cast<float>(output_height_) * .5f;
@@ -1043,8 +1033,21 @@ nekomote_error WallpaperInstance::pointer_leave()
     if (!initialized_)
         return NEKOMOTE_OK;
     presentation_dirty_ = true;
+    controller_.set_gaze_suppressed(false);
     controller_.pointer_leave();
     return NEKOMOTE_OK;
+}
+
+void WallpaperInstance::set_gaze_target(double x, double y)
+{
+    controller_.set_external_gaze(
+        Vec2{static_cast<float>(x) - static_cast<float>(output_width_) * .5f,
+             static_cast<float>(y) - static_cast<float>(output_height_) * .5f});
+}
+
+void WallpaperInstance::clear_gaze_target()
+{
+    controller_.set_external_gaze(std::nullopt);
 }
 
 nekomote_error WallpaperInstance::touch(float x, float y)

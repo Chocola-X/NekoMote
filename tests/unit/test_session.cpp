@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <nekomote/application/controller.hpp>
 #include <nekomote/application/session.hpp>
 #include <nekomote/asset_io/import_emote.hpp>
 #include <nekomote/asset_io/session_asset.hpp>
@@ -217,87 +216,6 @@ TEST_CASE("Presented touch coordinates follow mirrored placement and authored sc
         REQUIRE(session.touch_regions()[0]->center.y == -160.0f);
     }
 }
-TEST_CASE("External gaze wins over local events and clears on playback ticks",
-          "[application][gaze]")
-{
-    Reference reference;
-    SessionInstance session(*reference.program,
-                            {{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
-    REQUIRE(session.set_gaze_target(Vec2{180, -100}));
-    REQUIRE(session.pointer_enter({-180, -100}));
-    REQUIRE(session.pointer_leave());
-    REQUIRE(session.pointer_move({-180, -100}));
-    for (int i = 0; i < 8; ++i)
-        REQUIRE(session.advance(.25));
-    REQUIRE(reference.value(session, "face_eye_LR") == 60.0f);
-    REQUIRE(reference.value(session, "head_LR") == 30.0f);
-    REQUIRE(reference.value(session, "body_LR") == 20.0f);
-    REQUIRE(session.reaction_phase() == ReactionPhase::Idle);
-
-    bool local = true;
-    SECTION("fallback uses the latest local position")
-    {
-    }
-    SECTION("without a local position all differences return to neutral")
-    {
-        local = false;
-        REQUIRE(session.pointer_leave());
-    }
-    REQUIRE(session.set_playback_state(runtime::PlaybackState::Paused));
-    REQUIRE(session.set_gaze_target(std::nullopt));
-    REQUIRE(session.advance(.25));
-    REQUIRE(reference.value(session, "face_eye_LR") == 60.0f);
-    REQUIRE(session.set_playback_state(runtime::PlaybackState::Running));
-    REQUIRE(session.advance(1.0 / 60));
-    REQUIRE(reference.value(session, "face_eye_LR") < 60.0f);
-    REQUIRE(reference.value(session, "face_eye_LR") > 0.0f);
-    for (int i = 0; i < 8; ++i)
-    {
-        REQUIRE(session.set_gaze_target(std::nullopt));
-        REQUIRE(session.advance(.25));
-    }
-    REQUIRE(reference.value(session, "face_eye_LR") == (local ? -60.0f : 0.0f));
-    REQUIRE(reference.value(session, "head_LR") == (local ? -30.0f : 0.0f));
-    REQUIRE(reference.value(session, "body_LR") == (local ? -20.0f : 0.0f));
-}
-
-TEST_CASE("Character replacement inherits gaze without redirecting local clicks",
-          "[controller][gaze]")
-{
-    const auto candidate = []
-    {
-        Reference reference;
-        CandidateCpu result;
-        result.program = std::move(reference.program);
-        result.instance = std::make_unique<SessionInstance>(
-            *result.program,
-            SessionConfig{{1}, 1, PointerScope::LocalSurface, AudioMode::Disabled});
-        result.ok = true;
-        return result;
-    };
-    WallpaperController controller;
-    controller.install_initial(candidate());
-    controller.set_gaze_target(Vec2{200, -100});
-    SECTION("sync switch")
-    {
-        controller.install_candidate_sync(candidate());
-    }
-    SECTION("confirmed switch")
-    {
-        controller.confirm_candidate(candidate());
-    }
-    auto& session = *controller.current_instance();
-    REQUIRE(session.advance(.25));
-    const auto eye = controller.current_program()->playback().scene().find_variable("face_eye_LR");
-    REQUIRE(session.playback().values()[eye.value - 1].value > 0);
-    REQUIRE(session.reaction_phase() == ReactionPhase::Idle);
-    const auto point = controller.origin();
-    controller.pointer_press(point);
-    controller.set_gaze_target(Vec2{-200, -100});
-    controller.pointer_release(point);
-    REQUIRE(session.reaction_phase() == ReactionPhase::Playing);
-}
-
 TEST_CASE("Mirrored gaze keeps the presented input direction on enter and move",
           "[application][input]")
 {

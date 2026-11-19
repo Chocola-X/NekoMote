@@ -1,7 +1,12 @@
 #include "wallpaper_item.hpp"
 
+#include <nekomote/host_session/display_context.hpp>
+
+#include <QCoreApplication>
+#include <QCursor>
 #include <QDir>
 #include <QEvent>
+#include <QGuiApplication>
 #include <QHoverEvent>
 #include <QMouseEvent>
 #include <QQuickWindow>
@@ -19,9 +24,39 @@
 
 namespace nekomote::plasma
 {
+// GUI-thread sampler owned by the Plasma process. Its cache is shared across
+// wallpaper items; it has no timer and runs only when an active item asks.
+class X11CursorSampler final : public QObject
+{
+    Q_OBJECT
+
+  public:
+    using QObject::QObject;
+
+    QPointF position()
+    {
+        const auto now = std::chrono::steady_clock::now();
+        if (now >= next_query_)
+        {
+            const QPointF position = QCursor::pos();
+            next_query_ = now + host_session::native_gaze_poll_interval(position != position_);
+            position_ = position;
+        }
+        return position_;
+    }
+
+  private:
+    std::chrono::steady_clock::time_point next_query_{};
+    QPointF position_;
+};
+
 NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(parent)
 {
     state_ = std::make_shared<nekomote::qt_quick::WallpaperState>();
+    const auto platform = QGuiApplication::platformName();
+    wayland_platform_ = platform.startsWith(QLatin1String("wayland"));
+    native_x11_platform_ =
+        platform == QLatin1String("xcb") && !host_session::wayland_session_hint();
     setMirrorVertically(true);
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::LeftButton);
@@ -33,7 +68,7 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
             [this]
             {
                 start_timer();
-                update();
+                request_playback_frame();
             });
     connect(this, &QQuickItem::visibleChanged, this, &NekoWallpaperItem::refresh_playback);
     session_timer_ = new QTimer(this);
@@ -107,6 +142,10 @@ bool NekoWallpaperItem::paused() const
 bool NekoWallpaperItem::pauseOnSessionEvents() const
 {
     return pause_on_session_events_;
+}
+bool NekoWallpaperItem::globalGazeEnabled() const
+{
+    return global_gaze_enabled_;
 }
 int NekoWallpaperItem::status() const
 {
@@ -241,6 +280,20 @@ void NekoWallpaperItem::setPauseOnSessionEvents(bool value)
     emit pauseOnSessionEventsChanged();
 }
 
+void NekoWallpaperItem::setGlobalGazeEnabled(bool value)
+{
+    if (global_gaze_enabled_ == value)
+        return;
+    global_gaze_enabled_ = value;
+    if (!value)
+    {
+        compositor_pointer_.reset();
+        global_gaze_.reset();
+    }
+    emit globalGazeEnabledChanged();
+    update();
+}
+
 unsigned NekoWallpaperItem::queryRendererCreated() const
 {
     return state_ ? state_->renderer_created.load() : 0;
@@ -277,7 +330,7 @@ nekomote::qt_quick::ItemState NekoWallpaperItem::get_item_state() const
 {
     return {effective_paused_, playback_revision_,
             std::span<const nekomote::qt_quick::Input>(inputs_.data(), input_count_),
-            diagnostic_notification_};
+            diagnostic_notification_, global_gaze_};
 }
 
 void NekoWallpaperItem::clear_inputs()
@@ -434,6 +487,8 @@ void NekoWallpaperItem::attach_window(QQuickWindow* host)
         disconnect(connection);
     window_connections_[3] = {};
     host_window_ = host;
+    compositor_pointer_.reset();
+    global_gaze_.reset();
     backend_checked_ = false;
     ++playback_revision_;
     if (host)
@@ -477,8 +532,12 @@ void NekoWallpaperItem::refresh_playback()
         effective_paused_ = suspended;
         ++playback_revision_;
         if (suspended)
+        {
             input_count_ = 0;
-        update();
+            compositor_pointer_.reset();
+            global_gaze_.reset();
+        }
+        request_playback_frame();
     }
     if (suspended)
         stop_timer();
@@ -501,11 +560,46 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32
     }
     diagnostic_inputs_ = true;
     diagnostic_notification_ = true;
+    compositor_pointer_.reset();
+    global_gaze_.reset();
     setAcceptHoverEvents(false);
     setAcceptedMouseButtons(Qt::NoButton);
     input_count_ = 0;
     update();
     return true;
+}
+
+void NekoWallpaperItem::set_compositor_pointer_sample(std::optional<QPointF> position)
+{
+    if (global_gaze_enabled_ && wayland_platform_ && !effective_paused_ && !diagnostic_inputs_)
+        compositor_pointer_ = position;
+}
+
+void NekoWallpaperItem::sample_global_gaze()
+{
+    if (!global_gaze_enabled_ || effective_paused_ || diagnostic_inputs_)
+        return;
+    if (native_x11_platform_)
+    {
+        if (!x11_cursor_)
+        {
+            auto* application = QCoreApplication::instance();
+            auto* sampler =
+                application->findChild<X11CursorSampler*>(QString(), Qt::FindDirectChildrenOnly);
+            x11_cursor_ = sampler ? sampler : new X11CursorSampler(application);
+        }
+        global_gaze_ = mapFromGlobal(x11_cursor_->position());
+    }
+    else if (compositor_pointer_)
+        global_gaze_ = mapFromGlobal(*compositor_pointer_);
+    else
+        global_gaze_.reset();
+}
+
+void NekoWallpaperItem::request_playback_frame()
+{
+    sample_global_gaze();
+    update();
 }
 
 void NekoWallpaperItem::start_timer()
@@ -529,7 +623,7 @@ void NekoWallpaperItem::start_timer()
                     // Also restore the timer when the panel switches back to a limit.
                     start_timer();
                     if (state_->fps_limit.load(std::memory_order_acquire) == 0)
-                        update();
+                        request_playback_frame();
                 },
                 Qt::QueuedConnection);
         }
@@ -555,3 +649,5 @@ void NekoWallpaperItem::stop_timer()
         timer_->stop();
 }
 } // namespace nekomote::plasma
+
+#include "wallpaper_item.moc"

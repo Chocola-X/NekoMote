@@ -34,7 +34,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -260,8 +259,7 @@ class Host::Impl
 
     Options options_;
     std::unique_ptr<DesktopGaze> desktop_gaze_;
-    std::optional<std::pair<double, double>> last_gaze_;
-    bool gaze_confirmed_ = false, gaze_resized_ = false;
+    bool gaze_applied_ = false, gaze_confirmed_ = false;
     wl_display* display_ = nullptr;
     wl_registry* registry_ = nullptr;
     wl_compositor* compositor_ = nullptr;
@@ -805,10 +803,10 @@ void Host::Impl::refresh_availability()
     {
         // Keep no cursor sessions for a missing target or known locked/suspended session.
         desktop_gaze_->set_pointer(unavailable ? nullptr : pointer_);
-        if (unavailable && wallpaper_ && last_gaze_)
+        if (unavailable && wallpaper_ && gaze_applied_)
         {
             check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear unavailable gaze");
-            last_gaze_.reset();
+            gaze_applied_ = false;
         }
     }
     if (!wallpaper_ || host_unavailable_ == unavailable)
@@ -1087,7 +1085,6 @@ void Host::Impl::resize()
         check(nekomote_wallpaper_set_output_size(wallpaper_, pixel_width_, pixel_height_),
               "resize wallpaper");
     needs_resize_ = false;
-    gaze_resized_ = last_gaze_.has_value(); // ABI uses the current framebuffer centre.
 }
 
 void Host::Impl::process_input()
@@ -1128,11 +1125,10 @@ void Host::Impl::update_desktop_gaze()
     if (!desktop_gaze_ || !selected_)
         return;
     const auto point = desktop_gaze_->sample(selected_->object, scale_);
-    if (point == last_gaze_ && !gaze_resized_)
-        return;
-    gaze_resized_ = false;
     if (point)
     {
+        // The shared controller coalesces unchanged targets and clears its state on pause.
+        // Re-supply the latest sample even if the cursor hasn't moved since resume/resize.
         check(nekomote_wallpaper_set_gaze_target(wallpaper_, point->first, point->second),
               "set desktop gaze target");
         if (!gaze_confirmed_)
@@ -1141,9 +1137,9 @@ void Host::Impl::update_desktop_gaze()
             gaze_confirmed_ = true;
         }
     }
-    else
+    else if (gaze_applied_)
         check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear desktop gaze target");
-    last_gaze_ = point;
+    gaze_applied_ = point.has_value();
 }
 
 void Host::Impl::capture()

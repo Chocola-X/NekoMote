@@ -24,6 +24,7 @@ struct LaunchOptions
     std::string state_path;
     std::uint32_t width{1920};
     std::uint32_t height{1080};
+    bool global_gaze{true};
 };
 
 // Config location resolution performs no writes. Relative XDG_CONFIG_HOME values
@@ -48,6 +49,7 @@ class LaunchConfig
     void save(LaunchOptions values);
 
   private:
+    LaunchKind kind_{LaunchKind::Player};
     std::filesystem::path path_;
     LaunchOptions values_;
 };

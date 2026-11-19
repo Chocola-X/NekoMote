@@ -279,8 +279,6 @@ struct SessionInstance::Impl
     runtime::PlaybackInstance player;
     SessionConfig config;
     Vec2 origin{}, pointer{}, return_from{};
-    std::optional<Vec2> external_gaze;
-    bool external_gaze_dirty{false};
     float scale{1}, audio_level{0}, lip_value{0};
     bool started{false}, faulted{false}, pointer_inside{false}, pending_gaze{false},
         returning{false};
@@ -436,29 +434,7 @@ struct SessionInstance::Impl
             phase = ReactionPhase::Idle;
             reaction = {};
         }
-        if (external_gaze_dirty)
-        {
-            if (external_gaze)
-            {
-                if (auto status = gaze(*external_gaze); !status)
-                    return status;
-            }
-            else
-            {
-                // Local gaze may not update head/body inside their distance thresholds.
-                // Release all eight differences, then let any local target take over.
-                for (std::size_t i = 0; i < program.gaze_parameters.size(); ++i)
-                {
-                    const float frames = i < 2 ? kEyeFrames : i < 5 ? kHeadFrames : kBodyFrames;
-                    if (auto status = player.transition_difference(
-                            program.gaze, program.gaze_parameters[i], 0, frames, -1);
-                        !status)
-                        return status;
-                }
-            }
-            external_gaze_dirty = false;
-        }
-        if (!external_gaze && program.gaze.valid() && pointer_inside &&
+        if (program.gaze.valid() && pointer_inside &&
             config.pointer == PointerScope::LocalSurface && (pending_gaze || returning))
         {
             Vec2 point = pointer;
@@ -532,10 +508,7 @@ SessionStatus SessionInstance::set_origin(Vec2 origin) noexcept
         return {SessionError::Faulted, {}};
     const auto status = data.player.set_origin(origin);
     if (status)
-    {
         data.origin = origin;
-        data.external_gaze_dirty |= data.external_gaze.has_value();
-    }
     return checked(status);
 }
 SessionStatus SessionInstance::drag_origin(Vec2 origin) noexcept
@@ -545,10 +518,7 @@ SessionStatus SessionInstance::drag_origin(Vec2 origin) noexcept
         return {SessionError::Faulted, {}};
     const auto status = data.player.drag_origin(origin);
     if (status)
-    {
         data.origin = origin;
-        data.external_gaze_dirty |= data.external_gaze.has_value();
-    }
     return checked(status);
 }
 
@@ -559,31 +529,8 @@ SessionStatus SessionInstance::set_scale(float scale) noexcept
         return {SessionError::Faulted, {}};
     const auto status = data.player.set_scale(scale);
     if (status)
-    {
         data.scale = scale;
-        data.external_gaze_dirty |= data.external_gaze.has_value();
-    }
     return checked(status);
-}
-SessionStatus SessionInstance::set_gaze_target(std::optional<Vec2> position) noexcept
-{
-    auto& data = *impl_;
-    if (data.faulted)
-        return {SessionError::Faulted, {}};
-    if (position && !finite(*position))
-        return {SessionError::InvalidInput, {}};
-    if (!data.program.gaze.valid())
-        return {SessionError::InputUnavailable, {}};
-    if (position == data.external_gaze)
-        return {};
-    data.external_gaze = position;
-    data.external_gaze_dirty = true;
-    if (!position)
-    {
-        data.returning = false;
-        data.pending_gaze = data.pointer_inside;
-    }
-    return {};
 }
 SessionStatus SessionInstance::pointer_move(Vec2 position) noexcept
 {
@@ -772,7 +719,6 @@ SessionStatus SessionInstance::reset() noexcept
 {
     auto& data = *impl_;
     data.player.reset();
-    data.external_gaze_dirty = data.external_gaze.has_value();
     data.playback_state = runtime::PlaybackState::Running;
     data.started = data.faulted = data.pointer_inside = data.pending_gaze = data.returning = false;
     data.audio_level = data.lip_value = 0;

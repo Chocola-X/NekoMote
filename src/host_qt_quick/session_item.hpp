@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <span>
 
 namespace nekomote::qt_quick
@@ -92,6 +93,7 @@ struct ItemState
     std::uint64_t playback_revision{0};
     std::span<const Input> inputs;
     bool notify_frames{false};
+    std::optional<QPointF> global_gaze{}; // Item-local logical pixels, even outside the item.
 };
 
 // Abstract base for FBO items sharing the wallpaper renderer. Concrete items

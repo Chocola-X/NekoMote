@@ -3,6 +3,7 @@
 #include "nekomote/abi.h"
 
 #include <nekomote/host_gpu/gpu.hpp>
+#include <nekomote/host_session/display_context.hpp>
 #include <nekomote/host_session/monitor.hpp>
 
 #include <GL/gl.h>
@@ -32,6 +33,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -249,6 +251,7 @@ class Host::Impl
 #endif
     void update_output();
     void handle_event(const XEvent& event);
+    void sample_gaze(Clock::time_point now);
     void render();
     void capture();
     void set_mapped(bool mapped);
@@ -273,6 +276,9 @@ class Host::Impl
     bool host_unavailable_ = true;
     bool power_off_ = false, dpms_supported_ = false, session_unavailable_ = false;
     Clock::time_point next_power_query_{};
+    bool global_gaze_supported_{false};
+    Clock::time_point next_gaze_query_{};
+    std::optional<std::pair<int, int>> last_gaze_query_;
     uint64_t rendered_frames_ = 0;
     Clock::time_point last_frame_{}, next_frame_{};
     bool idle_wait_{false};
@@ -284,6 +290,10 @@ void Host::Impl::initialize_display()
     if (!display_)
         throw std::runtime_error("cannot connect to X11 DISPLAY");
     root_ = DefaultRootWindow(display_);
+    int opcode = 0, first_event = 0, first_error = 0;
+    global_gaze_supported_ =
+        options_.global_gaze && !options_.frames && !host_session::wayland_session_hint() &&
+        !XQueryExtension(display_, "XWAYLAND", &opcode, &first_event, &first_error);
     int error_base = 0, major = 1, minor = 3;
     if (!XRRQueryExtension(display_, &randr_event_, &error_base) ||
         !XRRQueryVersion(display_, &major, &minor) || major < 1 || (major == 1 && minor < 3))
@@ -536,9 +546,12 @@ void Host::Impl::initialize_wallpaper()
               "load diagnostic model");
     }
     check(nekomote_wallpaper_set_ui_open(wallpaper_, options_.ui_open), "set control panel state");
+    const char* gaze_status =
+        options_.global_gaze ? (global_gaze_supported_ ? "enabled" : "unavailable") : "disabled";
     std::cerr << "X11 local pointer "
               << (options_.input == InputMode::interactive ? "enabled" : "passthrough")
-              << "; keyboard focus/global pointer/automatic occlusion pause not requested\n";
+              << "; global gaze " << gaze_status
+              << "; keyboard focus/automatic occlusion pause not requested\n";
 }
 
 #if defined(NEKOMOTE_HAS_VULKAN)
@@ -593,6 +606,7 @@ void Host::Impl::refresh_availability()
     if (!wallpaper_ || host_unavailable_ == unavailable)
         return;
     host_unavailable_ = unavailable;
+    next_gaze_query_ = {};
     check(nekomote_wallpaper_set_output_available(wallpaper_, !unavailable),
           "set host availability");
     check(nekomote_wallpaper_advance(wallpaper_, 0), "flush host availability audio commands");
@@ -800,12 +814,38 @@ void Host::Impl::capture()
         throw std::runtime_error("cannot close capture file");
 }
 
+void Host::Impl::sample_gaze(Clock::time_point now)
+{
+    if (!global_gaze_supported_ || now < next_gaze_query_)
+        return;
+    if (nekomote_wallpaper_paused(wallpaper_))
+    {
+        next_gaze_query_ = {};
+        return;
+    }
+    Window root = None, child = None;
+    int root_x = 0, root_y = 0, x = 0, y = 0;
+    unsigned mask = 0;
+    // Window-relative coordinates are valid even outside the wallpaper, as
+    // long as the cursor and wallpaper share an X screen (one RandR layout).
+    const bool available =
+        XQueryPointer(display_, window_, &root, &child, &root_x, &root_y, &x, &y, &mask);
+    const auto position = available ? std::optional(std::pair{x, y}) : std::nullopt;
+    next_gaze_query_ = now + host_session::native_gaze_poll_interval(position != last_gaze_query_);
+    last_gaze_query_ = position;
+    if (available)
+        check(nekomote_wallpaper_set_gaze_target(wallpaper_, x, y), "set global gaze");
+    else
+        check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear global gaze");
+}
+
 void Host::Impl::render()
 {
     const auto now = Clock::now();
     const double dt = options_.frames
                           ? 1.0 / 60.0
                           : std::min(std::chrono::duration<double>(now - last_frame_).count(), .25);
+    sample_gaze(now);
     check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
     const bool paused = nekomote_wallpaper_paused(wallpaper_) != 0;
     if (paused && options_.capture.empty() && !nekomote_wallpaper_needs_render(wallpaper_))

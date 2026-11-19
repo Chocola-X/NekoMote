@@ -69,7 +69,8 @@ int main(int argc, char** argv)
             auto* native = object->findChild<QQuickItem*>(QStringLiteral("nativeSession"));
             if (!native || native->property("status").toInt() != 0 ||
                 native->property("renderBackend").toString() != "opengl" ||
-                !native->property("pauseOnSessionEvents").toBool())
+                !native->property("pauseOnSessionEvents").toBool() ||
+                !native->property("globalGazeEnabled").toBool())
                 return 1;
             const auto id = configuration.value(QStringLiteral("panelInstanceId")).toString();
             if (configuration.writes != 1 || QUuid(id).isNull() ||
@@ -84,6 +85,7 @@ int main(int argc, char** argv)
             replacement.insert(QStringLiteral("panelInstanceId"), QString{});
             replacement.insert(QStringLiteral("renderBackend"), QStringLiteral("opengl"));
             replacement.insert(QStringLiteral("pauseOnSessionEvents"), false);
+            replacement.insert(QStringLiteral("globalGazeEnabled"), false);
             wallpaper.insert(QStringLiteral("configuration"),
                              QVariant::fromValue<QObject*>(&replacement));
             QCoreApplication::processEvents();
@@ -93,6 +95,7 @@ int main(int argc, char** argv)
                 native->property("instanceId").toString() != replacement_id ||
                 native->property("assetsDir").toString() != "/assets/first-use" ||
                 native->property("pauseOnSessionEvents").toBool() ||
+                native->property("globalGazeEnabled").toBool() ||
                 native->property("status").toInt() != 1)
             {
                 std::fprintf(stderr,
@@ -113,10 +116,12 @@ int main(int argc, char** argv)
                              QVariant::fromValue<QObject*>(&configuration));
             QCoreApplication::processEvents();
             if (configuration.writes != 1 || native->property("instanceId").toString() != id ||
-                !native->property("pauseOnSessionEvents").toBool())
+                !native->property("pauseOnSessionEvents").toBool() ||
+                !native->property("globalGazeEnabled").toBool())
                 return 1;
         }
-        else if (!object->property("cfg_pauseOnSessionEvents").toBool())
+        else if (!object->property("cfg_pauseOnSessionEvents").toBool() ||
+                 !object->property("cfg_globalGazeEnabled").toBool())
             return 1;
     }
     std::puts("Plasma 5 staged module, containment, context and configuration page imported "

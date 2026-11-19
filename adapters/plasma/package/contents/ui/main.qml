@@ -43,6 +43,7 @@ WallpaperItem {
         assetsDir: instanceId.length > 0 ? root.assetsDir : ""
         renderBackend: root.renderBackend
         pauseOnSessionEvents: root.configuration.pauseOnSessionEvents !== false
+        globalGazeEnabled: root.configuration.globalGazeEnabled !== false
         paused: !root.visible
     }
 

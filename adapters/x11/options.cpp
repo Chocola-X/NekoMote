@@ -22,6 +22,7 @@ Options parse_options(int argc, char** argv)
     bool state_set = false;
     bool backend_set = false;
     bool input_set = false;
+    bool global_gaze_set = false;
     for (int index = 1; index < argc; ++index)
     {
         const std::string_view option(argv[index]);
@@ -108,6 +109,14 @@ Options parse_options(int argc, char** argv)
             else
                 throw std::runtime_error("--input expects interactive or passthrough");
         }
+        else if (option == "--global-gaze")
+        {
+            const auto mode = value();
+            if (mode != "on" && mode != "off")
+                throw std::runtime_error("--global-gaze expects on or off");
+            result.global_gaze = mode == "on";
+            global_gaze_set = true;
+        }
         else if (option == "--frames")
         {
             const auto text = value();
@@ -167,6 +176,8 @@ Options parse_options(int argc, char** argv)
     if (!input_set)
         result.input = std::string_view(saved.input) == "passthrough" ? InputMode::passthrough
                                                                       : InputMode::interactive;
+    if (!global_gaze_set)
+        result.global_gaze = saved.global_gaze != 0;
     if (std::filesystem::weakly_canonical(std::filesystem::absolute(result.state)) ==
         std::filesystem::weakly_canonical(result.config))
         throw std::runtime_error("launch configuration and panel state must use different files");
@@ -196,6 +207,7 @@ Options parse_options(int argc, char** argv)
         values.output = result.output.c_str();
         values.backend = result.backend == Backend::vulkan ? "vulkan" : "opengl";
         values.input = result.input == InputMode::passthrough ? "passthrough" : "interactive";
+        values.global_gaze = result.global_gaze ? 1 : 0;
         const auto state = result.state.string();
         values.state_path = state.c_str();
         if (nekomote_launch_config_save(config.get(), values) != NEKOMOTE_OK)
@@ -218,6 +230,7 @@ void print_help()
            "  --state FILE                  panel state (default CONFIG_STEM.panel.json)\n"
            "  --save-config                 save merged launch settings and exit\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
+           "  --global-gaze on|off          follow the cursor outside the wallpaper (default on)\n"
            "  --ui-open                     open the shared control panel\n"
            "  --mute                        disable audio\n"
            "  --no-session-pause            do not pause for lock, sleep or DPMS screen-off\n"
@@ -225,9 +238,8 @@ void print_help()
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"
            "  --capture FILE                diagnostic: final frame as binary PPM\n"
            "  --help                        show this help\n\n"
-           "Requires X11, an EWMH desktop-window WM, XRandR 1.3 and OpenGL 3.3 or Vulkan 1.0. No "
-           "keyboard focus "
-           "or global\n"
-           "pointer tracking is requested. Run one process per output for multiple screens.\n";
+           "Requires X11, an EWMH desktop-window WM, XRandR 1.3 and OpenGL 3.3 or Vulkan 1.0.\n"
+           "Native X11 supports global gaze, including with local input set to passthrough.\n"
+           "No keyboard focus is requested. Run one process per output for multiple screens.\n";
 }
 } // namespace nekomote::x11

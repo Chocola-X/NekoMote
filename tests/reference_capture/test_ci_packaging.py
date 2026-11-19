@@ -40,7 +40,9 @@ class NoticeTests(unittest.TestCase):
         notices = (self.stage / "THIRD_PARTY_NOTICES").read_text()
         for text in ("fixture nlohmann_json", "fixture fast_float", "fixture stb", "fixture glad",
                      "fixture flac", "Apache License", "CC0 1.0 Universal", "Drew DeVault",
-                     "Kristian Høgsberg"):
+                     "Kristian Høgsberg", "=== xdg-output-unstable-v1 ===",
+                     "=== ext-foreign-toplevel-list-v1 ===", "=== ext-image-capture-source-v1 ===",
+                     "=== ext-image-copy-capture-v1 ==="):
             self.assertIn(text, notices)
         self.assertNotIn("fixture glfw", notices)
         self.assertEqual({path.name for path in self.stage.iterdir()},

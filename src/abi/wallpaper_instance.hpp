@@ -83,8 +83,8 @@ class WallpaperInstance
                                 application::WallpaperController::PointerTime now);
     nekomote_error pointer_enter(double x, double y);
     nekomote_error pointer_leave();
-    nekomote_error set_gaze_target(double x, double y);
-    nekomote_error clear_gaze_target();
+    void set_gaze_target(double x, double y);
+    void clear_gaze_target();
     nekomote_error touch(float x, float y);
     nekomote_error mouse_button(int button, int action,
                                 application::WallpaperController::PointerTime now);

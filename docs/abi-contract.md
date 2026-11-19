@@ -1,6 +1,6 @@
 # C ABI 当前契约与验证
 
-此 fork 的当前版本为 **0.8.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
+当前仅支持 **0.8.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
 2026-10-21 X11 / layer-shell 的 Vulkan 壳同样只调用高层壁纸 C ABI：
 `create_vk` 借用设备，`set_vk_target` 借用本帧 command buffer/framebuffer，角色、背景与
@@ -8,15 +8,19 @@
 application/ui；拥有 instance/device/surface/swapchain 和提交。所有输入、resize、advance
 之前等待上一帧完成；退出先停止设备工作、销毁 wallpaper，再销毁宿主与原生输出。
 该次接入没有调整 ABI；限定验收见 [报告](shell-vulkan-2026-10-21.md)。随后配置规范化
-增加无图形依赖的启动配置 C 接口（0.7.0）。此 fork 在 0.8.0 新增
-`nekomote_wallpaper_set_gaze_target` / `nekomote_wallpaper_clear_gaze_target`：目标使用本壁纸
-framebuffer 的像素坐标，可落在屏外；只驱动角色视线，不产生 UI、触摸、按钮或拖动事件。
+0.7.0 增加无图形依赖的启动配置 C 接口。
 
 ## 壁纸应用层接口
 
 共享 Controller/UI 与高层 `nekomote_wallpaper_*` 已实现，GLM 已迁移 Plasma 调用者。本轮显示补修见 [说明](plasma-display-fix.md)。宿主只经 ABI 连接共享业务；以下既有单会话/renderer 契约仍适用于相应接口，不能据此推定高层实例已完成全部异常/生命周期验收。
 
 高层壁纸输入使用输出物理像素、左上原点、Y 向下；Qt 壳按逻辑/输出尺寸转换一次。转发左键按下/释放后，由共享 Controller 区分未移动点击与按住左键移动超过 4px 后立即拖动；不再额外对同一次左键按下调用 touch。直接 touch 接口保留给明确的触摸/诊断事件。滚轮在 UI 外围绕指针缩放，右键留给桌面。pointer_move/mouse_button 的 `timestamp_ms` 为采集时的单调毫秒时间，同一实例使用一致时钟，按序传递；当前手势按移动量判定，时间戳仍按宿主单调时钟传入。宿主必须按当前头文件重建，不保留旧签名。`set_render_target` 指定 FBO，角色/背景和 UI 都绘制到此目标；UI 可在输出尺寸晚于加载时延迟初始化。显式 model/session 诊断模式不绘控制面板。创建/加载/绘制/重置/销毁中的 GPU 操作须在其有效 GL 上下文与允许线程执行；CPU 查询不能作为跨线程读写许可。当前其他高层接口的异常/借用寿命边界仍需独立复核，不沿用测试数量宣称全部满足。
+
+0.8.0 新增 `nekomote_wallpaper_set_gaze_target` / `nekomote_wallpaper_clear_gaze_target`。
+这组入口只更新视线，坐标可落在输出之外。共享层在推进时优先选有效的宿主样本，
+清除后使用仍在壁纸内的本地悬停；面板接管本地指针时暂停视线。宿主样本不转发
+到 UI、点击或拖拽，也不额外请求重绘。暂停或失去输出丢弃样本，恢复后重新提交。
+X11 启动配置的 `nekomote_launch_options.global_gaze` 使用 0/1，旧启动文件省略时默认开启。
 
 `nekomote_wallpaper_needs_render` 由实例的串行求值线程查询，表示未呈现的输入/输出、
 模型或 UI 更新及未完成的 UI 动画。暂停且返回 0 时可跳过 prepare/render/present，
