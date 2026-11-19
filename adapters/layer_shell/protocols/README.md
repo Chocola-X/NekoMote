@@ -8,4 +8,6 @@ XML 保留各自内嵌许可；不引入参考仓库或桌面实现源码。
 | `wlr-layer-shell-unstable-v1.xml` | [upstream](https://raw.githubusercontent.com/swaywm/wlr-protocols/b010a03648b88d143236de193bddbfea0c08bc84/unstable/wlr-layer-shell-unstable-v1.xml) | `996b8c66e1c2276c443336d4cb174634e8e5948823779042f244930525b79cc2` |
 | `xdg-shell.xml` | [upstream](https://raw.githubusercontent.com/glfw/glfw/3.4/deps/wayland/xdg-shell.xml) | `b72112a7a1f9b2ad94ffa59468753ced568d6e7b2069df94a9d437e488b8506e` |
 
+此 fork 的 `--gaze desktop` 另使用 [wayland-protocols 1.48](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/tree/1.48) 中未修改的 `xdg-output-unstable-v1.xml`（`unstable/xdg-output`）、`ext-image-capture-source-v1.xml`、`ext-image-copy-capture-v1.xml` 及 `ext-foreign-toplevel-list-v1.xml`（各自同名的 `staging` 协议目录）。最后一个仅为生成的接口类型表提供定义，客户端不绑定窗口列表。每份 XML 都保留上游许可。
+
 本地修改：`wlr-layer-shell` 的 `get_layer_surface` 参数名 `namespace` 改为 `namespace_`，避免生成 C++ 头文件时使用保留字；不改变 wire 接口、参数顺序或类型。上表记录上游原文件摘要，修改后本地 SHA256 为 `b9bfe7411d3fe67e3bb59e3a9e1b04b948fd1e16f15941aab160691722e225cc`。

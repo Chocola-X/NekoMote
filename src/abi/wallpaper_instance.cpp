@@ -1009,6 +1009,20 @@ nekomote_error WallpaperInstance::pointer_move(double x, double y,
     return NEKOMOTE_OK;
 }
 
+nekomote_error WallpaperInstance::set_gaze_target(double x, double y)
+{
+    if (initialized_)
+        controller_.set_gaze_target(Vec2{static_cast<float>(x - output_width_ * .5),
+                                         static_cast<float>(y - output_height_ * .5)});
+    return NEKOMOTE_OK;
+}
+
+nekomote_error WallpaperInstance::clear_gaze_target()
+{
+    controller_.set_gaze_target(std::nullopt);
+    return NEKOMOTE_OK;
+}
+
 nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 {
     if (!initialized_)

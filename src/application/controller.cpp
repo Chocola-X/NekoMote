@@ -319,6 +319,8 @@ void WallpaperController::install_candidate_sync(CandidateCpu candidate)
     {
         accept(current_instance_->set_origin(initial_origin_));
         accept(current_instance_->set_scale(initial_scale_));
+        if (gaze_target_)
+            accept(current_instance_->set_gaze_target(gaze_target_));
     }
     for (std::size_t i = 0; i < catalog_.characters.size(); ++i)
         if (catalog_.characters[i].name == current_name_)
@@ -358,6 +360,8 @@ void WallpaperController::install_initial(CandidateCpu candidate)
     current_cutoff_y_ = candidate.cutoff_y;
     current_has_cutoff_ = candidate.has_cutoff;
     initial_layout_pending_ = true;
+    if (gaze_target_ && current_instance_)
+        accept(current_instance_->set_gaze_target(gaze_target_));
     if (!config_.character.empty() && config_.character != current_name_)
         config_.transform_saved = false;
     config_.character = current_name_;
@@ -423,6 +427,8 @@ void WallpaperController::confirm_candidate(CandidateCpu candidate)
     {
         accept(current_instance_->set_origin(initial_origin_));
         accept(current_instance_->set_scale(initial_scale_));
+        if (gaze_target_)
+            accept(current_instance_->set_gaze_target(gaze_target_));
     }
     if (!no_save_ && !config_path_.empty())
         config_.save(config_path_);
@@ -910,6 +916,15 @@ void WallpaperController::zoom_at(Vec2 position, double wheel_steps)
     set_origin({position.x + (old_origin.x - position.x) * ratio,
                 position.y + (old_origin.y - position.y) * ratio});
     persist_character_transform();
+}
+
+void WallpaperController::set_gaze_target(std::optional<Vec2> position)
+{
+    if (position == gaze_target_)
+        return;
+    gaze_target_ = position;
+    if (current_instance_)
+        accept(current_instance_->set_gaze_target(position));
 }
 
 void WallpaperController::pointer_enter(Vec2 position)

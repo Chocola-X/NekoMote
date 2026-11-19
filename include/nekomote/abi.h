@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.7.0
+ * @version 0.8.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -553,11 +553,20 @@ extern "C"
      * is reserved for the desktop and is not required for model control.
      * timestamp_ms is captured when the event is collected, from one monotonic
      * millisecond clock per instance. It preserves holds in delayed batches.
-     * All callers must rebuild for this current ABI (0.7.0). */
+     * All callers must rebuild for this current ABI (0.8.0). */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
                                                    uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
     nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp);
+    /* Optional model-only gaze override (ABI 0.8.0). Supply target-buffer pixels
+     * from the top left, positive Y down; off-surface positions are valid. Values
+     * must be finite and within float range. Set after initialization. The latest
+     * target wins over local gaze until cleared, including across character changes.
+     * Neither call moves the local pointer or sends UI, gesture or touch events.
+     * Transitions run on playback ticks (not while paused). Clear is idempotent:
+     * resume local gaze if present, otherwise ease eyes/head/body to neutral. */
+    nekomote_error nekomote_wallpaper_set_gaze_target(nekomote_wallpaper* wp, double x, double y);
+    nekomote_error nekomote_wallpaper_clear_gaze_target(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y);
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
                                                    nekomote_mouse_action action,

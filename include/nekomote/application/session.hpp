@@ -118,6 +118,7 @@ class SessionInstance
     SessionStatus set_scale(float scale) noexcept;
     SessionStatus pointer_move(Vec2 position) noexcept;
     SessionStatus pointer_leave() noexcept;
+    SessionStatus set_gaze_target(std::optional<Vec2> position) noexcept;
     SessionStatus pointer_enter(Vec2 position) noexcept;
     // Touch selects a seeded reaction from the first eligible region in authored
     // bust/eye/face/head/pant priority. Empty means no region; Busy preserves state.

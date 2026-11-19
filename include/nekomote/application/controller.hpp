@@ -179,6 +179,7 @@ class WallpaperController
     void zoom_at(Vec2 position, double wheel_steps);
     void pointer_enter(Vec2 position);
     void pointer_leave();
+    void set_gaze_target(std::optional<Vec2> position);
     void touch(Vec2 position);
     void reset();
     bool paused() const noexcept;
@@ -258,6 +259,7 @@ class WallpaperController
     bool paused_{false};
     bool minimized_{false};
     bool output_unavailable_{false};
+    std::optional<Vec2> gaze_target_;
     bool pointer_pressed_{false};
     bool pointer_moved_{false};
     Vec2 press_position_{};

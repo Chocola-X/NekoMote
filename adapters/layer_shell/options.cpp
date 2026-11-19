@@ -108,6 +108,13 @@ Options parse_options(int argc, char** argv)
             else
                 throw std::runtime_error("--input expects interactive or passthrough");
         }
+        else if (option == "--gaze")
+        {
+            const auto mode = value();
+            if (mode != "local" && mode != "desktop")
+                throw std::runtime_error("--gaze expects local or desktop");
+            result.desktop_gaze = mode == "desktop";
+        }
         else if (option == "--frames")
         {
             const auto text = value();
@@ -127,6 +134,9 @@ Options parse_options(int argc, char** argv)
         result.save_config = false;
         return result;
     }
+    if (result.desktop_gaze && (result.save_config || result.frames))
+        throw std::runtime_error("--gaze desktop is for interactive playback, not saved config or "
+                                 "fixed-frame diagnostics");
     if (result.save_config && !result.gpu.empty())
         throw std::runtime_error("--gpu is per-process and cannot be combined with --save-config");
     if (result.save_config && !result.pause_on_session_events)
@@ -167,6 +177,8 @@ Options parse_options(int argc, char** argv)
     if (!input_set)
         result.input = std::string_view(saved.input) == "passthrough" ? InputMode::passthrough
                                                                       : InputMode::interactive;
+    if (result.desktop_gaze && result.input == InputMode::passthrough)
+        throw std::runtime_error("--gaze desktop requires --input interactive");
     if (std::filesystem::weakly_canonical(std::filesystem::absolute(result.state)) ==
         std::filesystem::weakly_canonical(result.config))
         throw std::runtime_error("launch configuration and panel state must use different files");
@@ -218,6 +230,7 @@ void print_help()
            "  --list-gpus                   list PCI graphics hardware, without assets\n"
            "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
+           "  --gaze local|desktop          local by default; desktop uses cursor metadata only\n"
            "  --mute                        disable audio\n"
            "  --no-session-pause            do not pause for lock or sleep notifications\n"
            "  --no-save                     do not persist panel changes\n"
@@ -225,7 +238,8 @@ void print_help()
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"
            "  --capture FILE                diagnostic: final frame as binary PPM\n"
            "  --help                        show this help\n\n"
-           "Requires a Wayland compositor with wlr-layer-shell. No keyboard focus or global\n"
-           "pointer tracking is requested. Run one process per output for multiple screens.\n";
+           "Requires wlr-layer-shell. No keyboard focus is requested. Desktop gaze requires\n"
+           "interactive input and compositor cursor metadata; otherwise gaze stays local.\n"
+           "Run one process per output for multiple screens.\n";
 }
 } // namespace nekomote::layer_shell

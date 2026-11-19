@@ -108,9 +108,21 @@ void serve()
         else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager",
                                              "GetSessionByPID"))
         {
-            const char* path = "/org/freedesktop/login1/session/test";
-            reply = dbus_message_new_method_return(message);
-            dbus_message_append_args(reply, DBUS_TYPE_OBJECT_PATH, &path, DBUS_TYPE_INVALID);
+            // Model a process started by systemd --user, outside the session scope.
+            reply = dbus_message_new_error(message, "org.freedesktop.login1.NoSessionForPID",
+                                           "No session for test client");
+        }
+        else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Manager",
+                                             "GetSession"))
+        {
+            const char* id = nullptr;
+            if (dbus_message_get_args(message, nullptr, DBUS_TYPE_STRING, &id, DBUS_TYPE_INVALID) &&
+                std::strcmp(id, "test") == 0)
+            {
+                const char* path = "/org/freedesktop/login1/session/test";
+                reply = dbus_message_new_method_return(message);
+                dbus_message_append_args(reply, DBUS_TYPE_OBJECT_PATH, &path, DBUS_TYPE_INVALID);
+            }
         }
         else if (dbus_message_is_method_call(message, "org.freedesktop.DBus.Properties", "Get"))
         {

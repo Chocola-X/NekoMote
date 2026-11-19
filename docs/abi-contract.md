@@ -1,6 +1,6 @@
 # C ABI 当前契约与验证
 
-当前仅支持 **0.7.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
+此 fork 的当前版本为 **0.8.0**，入口为 `include/nekomote/abi.h`。开发期不保留旧签名；宿主重新编译。模式与错误码使用 `int32_t`，接受值由常量定义，非法值通过错误结果拒绝。这样 C/C++ 都能安全处理未知整数，不依赖 C++ 枚举的取值范围或编译器 enum 布局。
 
 2026-10-21 X11 / layer-shell 的 Vulkan 壳同样只调用高层壁纸 C ABI：
 `create_vk` 借用设备，`set_vk_target` 借用本帧 command buffer/framebuffer，角色、背景与
@@ -8,7 +8,9 @@
 application/ui；拥有 instance/device/surface/swapchain 和提交。所有输入、resize、advance
 之前等待上一帧完成；退出先停止设备工作、销毁 wallpaper，再销毁宿主与原生输出。
 该次接入没有调整 ABI；限定验收见 [报告](shell-vulkan-2026-10-21.md)。随后配置规范化
-增加无图形依赖的启动配置 C 接口，当前版本为 0.7.0。
+增加无图形依赖的启动配置 C 接口（0.7.0）。此 fork 在 0.8.0 新增
+`nekomote_wallpaper_set_gaze_target` / `nekomote_wallpaper_clear_gaze_target`：目标使用本壁纸
+framebuffer 的像素坐标，可落在屏外；只驱动角色视线，不产生 UI、触摸、按钮或拖动事件。
 
 ## 壁纸应用层接口
 

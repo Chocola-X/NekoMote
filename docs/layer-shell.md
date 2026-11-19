@@ -81,6 +81,7 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | `--save-config` | 显式保存启动设置并退出，无需显示服务器 |
 | `--backend opengl\|vulkan` | 图形后端，默认 OpenGL；Vulkan 需要构建时启用 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 和模型交互 |
+| `--gaze local\|desktop` | 默认 `local`。`desktop` 仅让角色视线使用桌面的光标位置，不转发点击或拖动；须配合 interactive，不写入配置。 |
 | `--input passthrough` | 空输入区域；全部穿透，不支持鼠标控制和视线交互 |
 | `--mute` | 强制静音 |
 | `--no-save` | 不保存配置 |
@@ -88,8 +89,25 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | `--model FILE [--session FILE]` | 显式模型诊断入口，不绘制资产控制面板 |
 
 interactive 接收背景上的指针事件，不保证桌面的右键菜单或图标层行为；layer-shell
-没有通用的逐按钮穿透机制。本程序不采集其他窗口上的全局鼠标位置。窗口上方是否有
+没有通用的逐按钮穿透机制。默认只处理当前 surface 的鼠标位置。窗口上方是否有
 桌面图标、背景右键菜单如何实现，由目标桌面决定。
+
+### 多屏角色同时跟随鼠标（此 fork）
+
+对**每个**输出实例显式添加 `--gaze desktop`，例如：
+
+```sh
+nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 --config ~/.config/nekomote/hdmi.json --gaze desktop
+```
+
+在提供 `ext_output_image_capture_source_manager_v1`、`ext_image_copy_capture_manager_v1` 和
+`zxdg_output_manager_v1` 的合成器上，订阅各输出的 *cursor session* 元数据。客户端不请求图像帧，
+不读取屏幕、光标图像或 `/dev/input`，也不注入输入。合成器仍可能将其列为捕获会话。
+坐标按来源输出的显示方向、物理模式和逻辑布局换算为目标壁纸的坐标，允许目标在屏外；
+视线可以跟随另一块屏幕和应用窗口上的可见光标，而面板、触摸、拖动和滚轮仍只看真实本地输入。
+无协议时回退本地模式；没有可见光标时撤销外部视线。已观察到的锁屏/休眠和目标输出移除会停用订阅，
+恢复后重建。在固定帧诊断、`--save-config` 或 `--input passthrough` 模式下不支持 `--gaze desktop`。
+切回 `--gaze local` 无需修改模型或面板文件。
 
 默认启动配置为 `$XDG_CONFIG_HOME/nekomote/layer-shell.json`，默认面板偏好为
 同目录的 `layer-shell.panel.json`；XDG 未设置或不是绝对路径时使用 `$HOME/.config/`。

@@ -95,6 +95,7 @@ struct Monitor::Impl
     bool screen_active = false, locked = false, sleeping = false;
     dbus_uint32_t screen_query = 0, session_query = 0, locked_query = 0, sleep_query = 0;
     std::string session_path;
+    bool tried_display_session = false;
 
     Impl()
     {
@@ -122,6 +123,7 @@ struct Monitor::Impl
     void query_login()
     {
         session_path.clear();
+        tried_display_session = false;
         auto* message =
             dbus_message_new_method_call(kLoginService, "/org/freedesktop/login1",
                                          "org.freedesktop.login1.Manager", "GetSessionByPID");
@@ -157,6 +159,27 @@ struct Monitor::Impl
             return;
         }
         const auto reply = dbus_message_get_reply_serial(message);
+        // systemd user units are outside the session scope even though niri imported
+        // the graphical session ID. Observe that session, never guess a different seat.
+        if (is_system && reply && reply == session_query && !tried_display_session &&
+            dbus_message_is_error(message, "org.freedesktop.login1.NoSessionForPID"))
+        {
+            tried_display_session = true;
+            if (const char* id = std::getenv("XDG_SESSION_ID"); id && *id)
+            {
+                auto* query =
+                    dbus_message_new_method_call(kLoginService, "/org/freedesktop/login1",
+                                                 "org.freedesktop.login1.Manager", "GetSession");
+                if (query &&
+                    dbus_message_append_args(query, DBUS_TYPE_STRING, &id, DBUS_TYPE_INVALID))
+                {
+                    session_query = system.send(query);
+                    return;
+                }
+                if (query)
+                    dbus_message_unref(query);
+            }
+        }
         if (dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR && reply &&
             ((!is_system && reply == screen_query) || (is_system && reply == session_query)))
             std::fprintf(stderr, "[host_session] %s observation unavailable: %s\n",

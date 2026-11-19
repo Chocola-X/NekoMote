@@ -4,6 +4,8 @@
 
 #include <nekomote/host_gpu/gpu.hpp>
 #include <nekomote/host_session/monitor.hpp>
+
+#include "desktop_gaze.hpp"
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "nekomote/host_vulkan/host.h"
 #endif
@@ -32,6 +34,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -102,6 +105,8 @@ class Host::Impl
   public:
     explicit Impl(Options options) : options_(std::move(options))
     {
+        if (options_.desktop_gaze && !options_.list_outputs)
+            desktop_gaze_ = std::make_unique<DesktopGaze>();
     }
     ~Impl()
     {
@@ -135,6 +140,8 @@ class Host::Impl
             wl_egl_window_destroy(egl_window_);
         if (frame_callback_)
             wl_callback_destroy(frame_callback_);
+        if (desktop_gaze_)
+            desktop_gaze_->reset(); // Destroy protocol children before their output/seat/display.
         if (pointer_)
             wl_pointer_release(pointer_);
         if (cursor_surface_)
@@ -235,6 +242,7 @@ class Host::Impl
 #endif
     void resize();
     void process_input();
+    void update_desktop_gaze();
     void render();
     void capture();
     void wait_events(int timeout);
@@ -251,6 +259,9 @@ class Host::Impl
     static const wl_callback_listener& frame_listener();
 
     Options options_;
+    std::unique_ptr<DesktopGaze> desktop_gaze_;
+    std::optional<std::pair<double, double>> last_gaze_;
+    bool gaze_confirmed_ = false, gaze_resized_ = false;
     wl_display* display_ = nullptr;
     wl_registry* registry_ = nullptr;
     wl_compositor* compositor_ = nullptr;
@@ -313,6 +324,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
             self.callback(
                 [&]
                 {
+                    if (self.desktop_gaze_)
+                        self.desktop_gaze_->global(registry, name, interface, version);
                     if (std::strcmp(interface, wl_compositor_interface.name) == 0 &&
                         !self.compositor_)
                     {
@@ -347,6 +360,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
                             throw std::runtime_error("cannot bind wl_output");
                         listen_check(wl_output_add_listener(output->object, &output_listener(),
                                                             output.get()));
+                        if (self.desktop_gaze_)
+                            self.desktop_gaze_->add_output(name, output->object);
                         self.outputs_.push_back(std::move(output));
                     }
                     else if (std::strcmp(interface, wl_seat_interface.name) == 0 && !self.seat_ &&
@@ -367,6 +382,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
             self.callback(
                 [&]
                 {
+                    if (self.desktop_gaze_)
+                        self.desktop_gaze_->remove_global(name);
                     std::erase_if(self.outputs_,
                                   [&](const auto& output)
                                   {
@@ -395,9 +412,20 @@ const wl_output_listener& Host::Impl::output_listener()
     static const auto listener = []
     {
         wl_output_listener value{};
-        value.geometry = [](void*, wl_output*, int32_t, int32_t, int32_t, int32_t, int32_t,
-                            const char*, const char*, int32_t) {};
-        value.mode = [](void*, wl_output*, uint32_t, int32_t, int32_t, int32_t) {};
+        value.geometry = [](void* data, wl_output* object, int32_t, int32_t, int32_t, int32_t,
+                            int32_t, const char*, const char*, int32_t transform)
+        {
+            auto& self = *static_cast<Output*>(data)->host;
+            if (self.desktop_gaze_)
+                self.callback([&] { self.desktop_gaze_->set_output_transform(object, transform); });
+        };
+        value.mode =
+            [](void* data, wl_output* object, uint32_t flags, int32_t w, int32_t h, int32_t)
+        {
+            auto& self = *static_cast<Output*>(data)->host;
+            if (self.desktop_gaze_ && (flags & WL_OUTPUT_MODE_CURRENT))
+                self.callback([&] { self.desktop_gaze_->set_output_mode(object, w, h); });
+        };
         value.done = [](void* data, wl_output*)
         {
             auto& output = *static_cast<Output*>(data);
@@ -405,6 +433,8 @@ const wl_output_listener& Host::Impl::output_listener()
                 [&]
                 {
                     output.complete = true;
+                    if (output.host->desktop_gaze_)
+                        output.host->desktop_gaze_->output_done(output.object);
                     output.host->update_scale();
                 });
         };
@@ -522,6 +552,8 @@ void Host::Impl::set_pointer(uint32_t capabilities)
         if (pointer_inside_)
             queue({InputKind::leave});
         pointer_inside_ = false;
+        if (desktop_gaze_)
+            desktop_gaze_->set_pointer(nullptr);
         wl_pointer_release(pointer_);
         pointer_ = nullptr;
         std::cerr << "local pointer capability removed\n";
@@ -769,6 +801,16 @@ void Host::Impl::refresh_availability()
 {
     const bool unavailable =
         output_missing_ || graphics_detached_ || !configured_ || session_unavailable_;
+    if (desktop_gaze_)
+    {
+        // Keep no cursor sessions for a missing target or known locked/suspended session.
+        desktop_gaze_->set_pointer(unavailable ? nullptr : pointer_);
+        if (unavailable && wallpaper_ && last_gaze_)
+        {
+            check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear unavailable gaze");
+            last_gaze_.reset();
+        }
+    }
     if (!wallpaper_ || host_unavailable_ == unavailable)
         return;
     host_unavailable_ = unavailable;
@@ -1023,7 +1065,9 @@ void Host::Impl::initialize_graphics()
               << (options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
-              << "; global pointer and arbitrary occlusion pause unavailable\n";
+              << (desktop_gaze_ ? "; desktop gaze requested (cursor metadata only)"
+                                : "; local gaze only")
+              << "; arbitrary occlusion pause unavailable\n";
 }
 
 void Host::Impl::resize()
@@ -1043,6 +1087,7 @@ void Host::Impl::resize()
         check(nekomote_wallpaper_set_output_size(wallpaper_, pixel_width_, pixel_height_),
               "resize wallpaper");
     needs_resize_ = false;
+    gaze_resized_ = last_gaze_.has_value(); // ABI uses the current framebuffer centre.
 }
 
 void Host::Impl::process_input()
@@ -1076,6 +1121,29 @@ void Host::Impl::process_input()
         }
     }
     input_count_ = 0;
+}
+
+void Host::Impl::update_desktop_gaze()
+{
+    if (!desktop_gaze_ || !selected_)
+        return;
+    const auto point = desktop_gaze_->sample(selected_->object, scale_);
+    if (point == last_gaze_ && !gaze_resized_)
+        return;
+    gaze_resized_ = false;
+    if (point)
+    {
+        check(nekomote_wallpaper_set_gaze_target(wallpaper_, point->first, point->second),
+              "set desktop gaze target");
+        if (!gaze_confirmed_)
+        {
+            std::cerr << "desktop gaze active: received cursor position metadata\n";
+            gaze_confirmed_ = true;
+        }
+    }
+    else
+        check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear desktop gaze target");
+    last_gaze_ = point;
 }
 
 void Host::Impl::capture()
@@ -1164,7 +1232,13 @@ void Host::Impl::render()
                                            kResumeBudgetSeconds)
                                 : 0.0);
     if (!retry_frame_)
+    {
+        // Coalesce all metadata received since the last frame. This never feeds the UI
+        // pointer or button/drag state, nor wakes a hidden output for extra frames.
+        if (!nekomote_wallpaper_paused(wallpaper_))
+            update_desktop_gaze();
         check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+    }
     const bool paused = nekomote_wallpaper_paused(wallpaper_) != 0;
     if (!retry_frame_ && paused && options_.capture.empty() &&
         !nekomote_wallpaper_needs_render(wallpaper_))
@@ -1285,6 +1359,8 @@ void Host::Impl::run()
                 std::cout << output->name << '\n';
         return;
     }
+    if (desktop_gaze_ && !desktop_gaze_->protocols_available())
+        std::cerr << "desktop gaze protocols unavailable; using local pointer gaze\n";
     create_surface();
     const auto started = Clock::now();
     while (!closed_ && !stop_requested)

@@ -242,9 +242,13 @@ static void test_vk_null_safety(void)
 static void test_version(void)
 {
     TEST("version");
+    CHECK(nekomote_wallpaper_set_gaze_target(NULL, 0, 0) == NEKOMOTE_ERROR_INVALID_INPUT,
+          "null gaze set");
+    CHECK(nekomote_wallpaper_clear_gaze_target(NULL) == NEKOMOTE_ERROR_INVALID_INPUT,
+          "null gaze clear");
     const char* v = nekomote_version();
     CHECK(v != NULL, "version is null");
-    CHECK(strcmp(v, "0.7.0") == 0, "version mismatch");
+    CHECK(strcmp(v, "0.8.0") == 0, "version mismatch");
     PASS();
 }
 

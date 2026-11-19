@@ -38,7 +38,8 @@ def main():
                  stdout=subprocess.PIPE, text=True) as bus:
         address = line(bus)
         env = dict(os.environ, DBUS_SESSION_BUS_ADDRESS=address,
-                   DBUS_SYSTEM_BUS_ADDRESS=address, NEKOMOTE_TEST_SESSION_BUS=address)
+                   DBUS_SYSTEM_BUS_ADDRESS=address, NEKOMOTE_TEST_SESSION_BUS=address,
+                   XDG_SESSION_ID='test')
 
         def set_state(action):
             subprocess.run([probe, '--set', action], env=env, check=True, timeout=5)
