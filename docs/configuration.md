@@ -33,13 +33,18 @@ player 另使用窗口宽高。只有 `--save-config` 会写入启动配置，�
 `right.panel.json`。显式保存了自定义 `state_path` 的文件仍使用该指定路径。
 
 Plasma 在每个壁纸配置中持久保存 UUID，区分不同桌面背景实例。资产目录、后端、UUID
-和「锁屏、休眠或关屏时暂停」开关由插件 KConfig 管理。面板数据通过同一壁纸 C ABI
-保存，不维护第二套面板业务。暂停开关默认开启，应用更改时无需重建渲染器。
+和「锁屏、休眠或关屏时暂停」「视线跟随壁纸外的鼠标」开关由插件 KConfig 管理。
+面板数据通过同一壁纸 C ABI 保存，不维护第二套面板业务。两个开关默认开启，
+应用更改时无需重建渲染器。
 手工复制 Plasma 的整份 KConfig 时应清空 `panelInstanceId`，使新实例生成自己的 UUID。
 
 X11 和 layer-shell 的 `--no-session-pause` 仅关闭当次启动的锁屏、休眠与可用的 DPMS
 监听，不能与 `--save-config` 同用。它不改变显隐、输出热插拔和用户暂停行为；Wayland
 合成器仍可在关屏时停止发送帧回调。
+
+独立 X11 壳用 `--global-gaze off` 关闭全局视线，`--global-gaze on` 可覆盖已保存的
+关闭状态。省略时读取 X11 启动文件的布尔字段 `global_gaze`，默认开启；可用
+`--save-config` 保存。关闭后仍可跟随壁纸表面收到的指针。
 
 Plasma 5 / 6 的壁纸列表显示 **NekoMote Wallpaper**（简体中文：**NekoMote 壁纸**），
 附带的简洁桌面布局显示 **NekoMote Desktop**（简体中文：**NekoMote 桌面**）。名称随
@@ -79,7 +84,7 @@ nekomote_player
 `--mute`、`--ui-open`、截图和固定帧等参数只作用于本次运行；`--save-config` 不接受这些
 临时选项或 `--no-save`。`--help` 和壳的 `--list-outputs` 不读取启动配置。
 
-启动文件示例：
+X11 启动文件示例：
 
 ```json
 {
@@ -88,6 +93,7 @@ nekomote_player
   "backend": "vulkan",
   "output": "DP-1",
   "input": "interactive",
+  "global_gaze": true,
   "state_path": "/home/user/.config/nekomote/left.panel.json"
 }
 ```

@@ -8,6 +8,7 @@ ColumnLayout {
     property string cfg_assetsDir: ""
     property string cfg_renderBackend: "opengl"
     property bool cfg_pauseOnSessionEvents: true
+    property bool cfg_globalGazeEnabled: true
 
     spacing: 8
 
@@ -51,6 +52,11 @@ ColumnLayout {
         text: qsTranslate("NekoMoteWallpaperConfig", "Pause on lock, sleep or screen off")
         checked: cfg_pauseOnSessionEvents
         onToggled: cfg_pauseOnSessionEvents = checked
+    }
+    CheckBox {
+        text: qsTranslate("NekoMoteWallpaperConfig", "Follow the cursor outside the wallpaper")
+        checked: cfg_globalGazeEnabled
+        onToggled: cfg_globalGazeEnabled = checked
     }
     Label {
         text: qsTranslate("NekoMoteWallpaperConfig", "Project & Authors")

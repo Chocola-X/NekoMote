@@ -93,6 +93,7 @@ LaunchConfig LaunchConfig::load(LaunchKind kind, const fs::path& path)
 {
     LaunchConfig config;
     const auto name = launch_name(kind);
+    config.kind_ = kind;
     if (!path.empty() &&
         (!path.has_filename() || path.filename() == "." || path.filename() == ".."))
         throw std::invalid_argument("launch config path must name a file");
@@ -103,8 +104,15 @@ LaunchConfig LaunchConfig::load(LaunchKind kind, const fs::path& path)
     {
         config_io::validate_keys(json,
                                  {"assets_dir", "model_path", "session_path", "output", "backend",
-                                  "input", "state_path", "width", "height"},
+                                  "input", "state_path", "width", "height", "global_gaze"},
                                  config.path_);
+        if (json.contains("global_gaze"))
+        {
+            if (kind != LaunchKind::X11 || !json["global_gaze"].is_boolean())
+                throw std::invalid_argument(config.path_.string() +
+                                            ": 'global_gaze' is an X11-only boolean");
+            config.values_.global_gaze = json["global_gaze"].get<bool>();
+        }
         for (auto [key, value] : {std::pair{"assets_dir", &config.values_.assets_dir},
                                   {"model_path", &config.values_.model_path},
                                   {"session_path", &config.values_.session_path},
@@ -139,12 +147,16 @@ LaunchConfig LaunchConfig::load(LaunchKind kind, const fs::path& path)
 
 void LaunchConfig::save(LaunchOptions values)
 {
+    if (kind_ != LaunchKind::X11 && !values.global_gaze)
+        throw std::invalid_argument("launch 'global_gaze' is an X11-only setting");
     validate(values, path_, fs::current_path(), true);
     Json document{{"version", 1},
                   {"backend", values.backend},
                   {"input", values.input},
                   {"width", values.width},
                   {"height", values.height}};
+    if (kind_ == LaunchKind::X11)
+        document["global_gaze"] = values.global_gaze;
     for (const auto& [key, value] : {std::pair{"assets_dir", &values.assets_dir},
                                      {"model_path", &values.model_path},
                                      {"session_path", &values.session_path},

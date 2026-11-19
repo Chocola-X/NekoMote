@@ -7,6 +7,14 @@ C12，2026-10-12，基线 `cfed43e`。设置页新增“渲染后端”，默认
 
 ## 输出、同步和线程
 
+Plasma 5/6 共用鼠标接入。原生 X11 下，壁纸在现有播放节奏内共用一个 Qt 光标
+采样器，多个输出各自换算到壁纸坐标；视线可以跨过其他窗口和显示器。本地点击、
+滚轮与拖拽仍只使用 Qt 发给壁纸的事件。Qt Wayland 和能从会话环境识别出的
+XWayland 保留本地悬停。`set_compositor_pointer_sample` 预留给未来 KWin 来源：
+在 GUI 线程传 Qt 逻辑桌面坐标，来源不可用时传空值，目前没有 D-Bus 或配套脚本。
+壁纸设置的「视线跟随壁纸外的鼠标」默认开启，逐壁纸实例保存。关闭后停止该实例的
+全局采样与合成器视线输入，保留本地悬停，不重建渲染器。
+
 当前插件仍要求 **宿主 Qt Quick 使用 OpenGL 场景图**。C17 已补齐 Wayland 常见的 GLES 3.0 上下文，desktop GL 3.3 路径保留，见 [兼容修复与验收](wayland-compatibility-2026-10-13.md)。壁纸选择 Vulkan 只改变
 NekoMote 的 GPU 执行后端，不修改 plasmashell 全局 RHI。Qt 自身为 Vulkan/software
 时报告不支持；原生 Qt Vulkan 场景图接入尚未实现。

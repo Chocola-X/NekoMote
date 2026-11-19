@@ -33,6 +33,7 @@ struct Options
     uint64_t frames = 0;
     bool ui_open = false;
     bool muted = false;
+    bool global_gaze = true;
     bool pause_on_session_events = true;
     bool no_save = false;
     bool save_config = false;

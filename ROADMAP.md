@@ -8,7 +8,7 @@ GL-only 和 GCC10 定向结果见 [验收](docs/gpu-selection-2026-11-17.md)，
 2026-10-21 CFG1：从 `e72e3fd` 分离显式保存的启动配置与用户操作保存的面板偏好。
 player、X11、layer-shell 使用 `--config` / `--state` / `--save-config`，默认无资产路径；
 Plasma 5/6 由插件持久保存壁纸 UUID，面板经同一 C ABI 按实例隔离。共享配置不再读写
-资产目录，严格 schema 与原子保存集中在 application，ABI 当前 0.7.0。使用与迁移见
+资产目录，严格 schema 与原子保存集中在 application，此阶段发布 ABI 0.7.0。使用与迁移见
 [配置说明](docs/configuration.md)，证据和未覆盖范围见
 [验收报告](docs/configuration-2026-10-21.md)。未安装用户桌面或执行远端发布。
 

@@ -179,6 +179,10 @@ class WallpaperController
     void zoom_at(Vec2 position, double wheel_steps);
     void pointer_enter(Vec2 position);
     void pointer_leave();
+    // A host sample takes precedence over local hover. It never routes a gesture.
+    // Clearing it restores local hover without waiting for another motion event.
+    void set_external_gaze(std::optional<Vec2> position);
+    void set_gaze_suppressed(bool suppressed);
     void touch(Vec2 position);
     void reset();
     bool paused() const noexcept;
@@ -206,6 +210,8 @@ class WallpaperController
                                            const ControllerConfig& cfg);
     void apply_controller_config(const ControllerConfig& cfg);
     void synchronize_pause();
+    void update_gaze();
+    void clear_applied_gaze();
     void advance_fade(double elapsed_seconds);
     void discard_previous_audio() noexcept;
     void accept(SessionStatus status);
@@ -262,6 +268,17 @@ class WallpaperController
     bool pointer_moved_{false};
     Vec2 press_position_{};
     Vec2 drag_previous_{};
+    std::optional<Vec2> local_gaze_;
+    std::optional<Vec2> external_gaze_;
+    struct Gaze
+    {
+        Vec2 point;
+        Vec2 origin;
+        float scale;
+    };
+    std::optional<Gaze> applied_gaze_;
+    bool local_gaze_entered_{false};
+    bool gaze_suppressed_{false};
 
     SessionStatus last_error_{};
 };

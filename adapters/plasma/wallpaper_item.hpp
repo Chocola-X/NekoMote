@@ -8,11 +8,13 @@
 #include <QTimer>
 #include <QUrl>
 #include <memory>
+#include <optional>
 
 #include "session_item.hpp"
 
 namespace nekomote::plasma
 {
+class X11CursorSampler;
 // Status values exposed to QML as integers.
 //   0 = Unconfigured: assetsDir not yet set or empty
 //   1 = Loaded:       wallpaper initialized and ready to render
@@ -24,6 +26,8 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(bool pauseOnSessionEvents READ pauseOnSessionEvents WRITE setPauseOnSessionEvents
                    NOTIFY pauseOnSessionEventsChanged)
+    Q_PROPERTY(bool globalGazeEnabled READ globalGazeEnabled WRITE setGlobalGazeEnabled NOTIFY
+                   globalGazeEnabledChanged)
     Q_PROPERTY(int status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(QString assetsDir READ assetsDir WRITE setAssetsDir NOTIFY assetsDirChanged)
@@ -44,6 +48,7 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
 
     bool paused() const;
     bool pauseOnSessionEvents() const;
+    bool globalGazeEnabled() const;
     int status() const;
     QString errorString() const;
     QString assetsDir() const;
@@ -53,17 +58,23 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
 
     void setPaused(bool value);
     void setPauseOnSessionEvents(bool value);
+    void setGlobalGazeEnabled(bool value);
     void setAssetsDir(const QString& value);
     void setRenderBackend(const QString& value);
     void setInstanceId(const QString& value);
 
     bool configure_diagnostics(int steps, bool fixed, std::uint32_t seed);
 
+    // Optional compositor feed. Call on the GUI thread with a position in Qt's
+    // logical desktop coordinates, or nullopt when the feed becomes unavailable.
+    void set_compositor_pointer_sample(std::optional<QPointF> position);
+
     std::shared_ptr<nekomote::qt_quick::WallpaperState> wallpaper_state() const override;
 
   signals:
     void pausedChanged();
     void pauseOnSessionEventsChanged();
+    void globalGazeEnabledChanged();
     void statusChanged();
     void errorStringChanged();
     void assetsDirChanged();
@@ -94,10 +105,18 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void refresh_playback();
     void configure_session_monitor();
     void set_session_unavailable(bool unavailable);
+    void request_playback_frame();
+    void sample_global_gaze();
     void start_timer();
     void stop_timer();
 
     std::shared_ptr<nekomote::qt_quick::WallpaperState> state_;
+    QPointer<X11CursorSampler> x11_cursor_;
+    bool native_x11_platform_{false};
+    bool wayland_platform_{false};
+    bool global_gaze_enabled_{true};
+    std::optional<QPointF> compositor_pointer_;
+    std::optional<QPointF> global_gaze_;
     std::unique_ptr<nekomote::host_session::Monitor> session_monitor_;
     QTimer* session_timer_{nullptr};
     bool pause_on_session_events_{true};

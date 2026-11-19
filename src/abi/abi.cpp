@@ -502,7 +502,7 @@ extern "C"
 
     const char* nekomote_version(void)
     {
-        return "0.7.0";
+        return "0.8.0";
     }
 
     /* ---- Asset loading ---- */
@@ -1744,6 +1744,43 @@ extern "C"
             return NEKOMOTE_ERROR_INVALID_INPUT;
         }
         return wallpaper_call([&] { return wp->instance->pointer_leave(); });
+    }
+
+    nekomote_error nekomote_wallpaper_set_gaze_target(nekomote_wallpaper* wp, double x, double y)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        if (!std::isfinite(x) || !std::isfinite(y) ||
+            std::abs(x) > static_cast<double>(std::numeric_limits<float>::max()) ||
+            std::abs(y) > static_cast<double>(std::numeric_limits<float>::max()))
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid gaze position");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wallpaper_call(
+            [&]
+            {
+                wp->instance->set_gaze_target(x, y);
+                return NEKOMOTE_OK;
+            });
+    }
+
+    nekomote_error nekomote_wallpaper_clear_gaze_target(nekomote_wallpaper* wp)
+    {
+        if (!wp || !wp->instance)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "null wallpaper");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        return wallpaper_call(
+            [&]
+            {
+                wp->instance->clear_gaze_target();
+                return NEKOMOTE_OK;
+            });
     }
 
     nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y)

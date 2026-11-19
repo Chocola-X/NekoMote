@@ -183,7 +183,14 @@ void WallpaperController::accept(SessionStatus status)
 void WallpaperController::synchronize_pause()
 {
     if (paused_ || minimized_ || output_unavailable_)
+    {
         cancel_pointer_gesture();
+        local_gaze_.reset();
+        local_gaze_entered_ = false;
+        external_gaze_.reset();
+        gaze_suppressed_ = false;
+        clear_applied_gaze();
+    }
     if (current_instance_)
         accept(current_instance_->set_playback_state(paused_ || minimized_ || output_unavailable_
                                                          ? runtime::PlaybackState::Paused
@@ -301,6 +308,7 @@ void WallpaperController::install_candidate_sync(CandidateCpu candidate)
     previous_instance_ = std::move(current_instance_);
     current_program_ = std::move(candidate.program);
     current_instance_ = std::move(candidate.instance);
+    applied_gaze_.reset();
     current_name_ = std::move(candidate.name);
     current_model_dir_ = std::move(candidate.model_dir);
     current_cutoff_y_ = candidate.cutoff_y;
@@ -353,6 +361,7 @@ void WallpaperController::install_initial(CandidateCpu candidate)
     cancel_pointer_gesture();
     current_program_ = std::move(candidate.program);
     current_instance_ = std::move(candidate.instance);
+    applied_gaze_.reset();
     current_name_ = std::move(candidate.name);
     current_model_dir_ = std::move(candidate.model_dir);
     current_cutoff_y_ = candidate.cutoff_y;
@@ -405,6 +414,7 @@ void WallpaperController::confirm_candidate(CandidateCpu candidate)
     previous_instance_ = std::move(current_instance_);
     current_program_ = std::move(candidate.program);
     current_instance_ = std::move(candidate.instance);
+    applied_gaze_.reset();
     current_name_ = std::move(candidate.name);
     current_model_dir_ = std::move(candidate.model_dir);
     current_cutoff_y_ = candidate.cutoff_y;
@@ -608,7 +618,11 @@ void WallpaperController::advance(double elapsed_seconds)
 {
     update_background_phase();
     if (current_instance_)
+    {
+        if (!paused_ && !minimized_ && !output_unavailable_)
+            update_gaze();
         accept(current_instance_->advance(elapsed_seconds));
+    }
     if (switch_state_ == SwitchState::CrossFade && previous_instance_)
     {
         accept(previous_instance_->advance(elapsed_seconds));
@@ -766,6 +780,11 @@ void WallpaperController::save_ui_layout(Vec2 icon_position, Vec2 sidebar_positi
 void WallpaperController::set_output_size(int width, int height)
 {
     const bool resized = width != output_width_ || height != output_height_;
+    const float dx = (static_cast<float>(output_width_) - static_cast<float>(width)) * .5f;
+    const float dy = (static_cast<float>(output_height_) - static_cast<float>(height)) * .5f;
+    for (auto* point : {&local_gaze_, &external_gaze_})
+        if (*point)
+            **point = {(**point).x + dx, (**point).y + dy};
     output_width_ = width;
     output_height_ = height;
     if (current_instance_)
@@ -872,8 +891,7 @@ void WallpaperController::pointer_move(Vec2 position, PointerTime now)
         }
         drag_previous_ = position;
     }
-    if (current_instance_)
-        accept(current_instance_->pointer_move(position));
+    local_gaze_ = position;
 }
 
 void WallpaperController::pointer_release(Vec2 position, PointerTime now)
@@ -914,15 +932,57 @@ void WallpaperController::zoom_at(Vec2 position, double wheel_steps)
 
 void WallpaperController::pointer_enter(Vec2 position)
 {
-    if (current_instance_)
-        accept(current_instance_->pointer_enter(position));
+    local_gaze_ = position;
+    local_gaze_entered_ = true;
 }
 
 void WallpaperController::pointer_leave()
 {
     cancel_pointer_gesture();
-    if (current_instance_)
+    local_gaze_.reset();
+    local_gaze_entered_ = false;
+}
+
+void WallpaperController::set_external_gaze(std::optional<Vec2> position)
+{
+    if (!paused_ && !minimized_ && !output_unavailable_)
+        external_gaze_ = position;
+}
+
+void WallpaperController::set_gaze_suppressed(bool suppressed)
+{
+    gaze_suppressed_ = suppressed;
+}
+
+void WallpaperController::clear_applied_gaze()
+{
+    if (applied_gaze_ && current_instance_)
         accept(current_instance_->pointer_leave());
+    applied_gaze_.reset();
+}
+
+void WallpaperController::update_gaze()
+{
+    const auto& point = external_gaze_ ? external_gaze_ : local_gaze_;
+    const bool entering_local = !external_gaze_ && local_gaze_entered_;
+    local_gaze_entered_ = false;
+    if (!point || gaze_suppressed_)
+    {
+        clear_applied_gaze();
+        return;
+    }
+    const Gaze next{*point, origin(), scale()};
+    if (!entering_local && applied_gaze_ && next.point.x == applied_gaze_->point.x &&
+        next.point.y == applied_gaze_->point.y && next.origin.x == applied_gaze_->origin.x &&
+        next.origin.y == applied_gaze_->origin.y && next.scale == applied_gaze_->scale)
+        return;
+    // A batched leave and re-enter can reach the same advance. The session's
+    // return animation still needs to start from the previous applied point.
+    if (entering_local && applied_gaze_)
+        clear_applied_gaze();
+    accept(entering_local ? current_instance_->pointer_enter(next.point)
+                          : current_instance_->pointer_move(next.point));
+    applied_gaze_ = next;
 }
 
 void WallpaperController::touch(Vec2 position)
@@ -934,6 +994,7 @@ void WallpaperController::touch(Vec2 position)
 void WallpaperController::reset()
 {
     cancel_pointer_gesture();
+    applied_gaze_.reset();
     if (current_instance_)
         accept(current_instance_->reset());
     synchronize_pause();

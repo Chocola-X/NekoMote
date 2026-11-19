@@ -1,7 +1,7 @@
 /**
  * @file abi.h
  * @brief C ABI for NekoMote session engine and render backend.
- * @version 0.7.0
+ * @version 0.8.0
  * @since P8
  *
  * Design rules (AGENTS.md §4):
@@ -110,6 +110,7 @@ extern "C"
         const char* state_path;
         uint32_t width;
         uint32_t height;
+        int32_t global_gaze; /* X11 only. 0 = off, 1 = on (default). */
     } nekomote_launch_options;
     nekomote_error nekomote_launch_config_load(nekomote_launch_kind kind, const char* path,
                                                nekomote_launch_config** out);
@@ -553,11 +554,19 @@ extern "C"
      * is reserved for the desktop and is not required for model control.
      * timestamp_ms is captured when the event is collected, from one monotonic
      * millisecond clock per instance. It preserves holds in delayed batches.
-     * All callers must rebuild for this current ABI (0.7.0). */
+     * All callers must rebuild for this current ABI (0.8.0). */
     nekomote_error nekomote_wallpaper_pointer_move(nekomote_wallpaper* wp, double x, double y,
                                                    uint64_t timestamp_ms);
     nekomote_error nekomote_wallpaper_pointer_enter(nekomote_wallpaper* wp, double x, double y);
     nekomote_error nekomote_wallpaper_pointer_leave(nekomote_wallpaper* wp);
+    /* Optional host gaze sample in the same physical output coordinates. Points
+     * outside the output are valid. The latest sample takes precedence over
+     * local hover on advance, unless the panel handles the local pointer.
+     * These calls never update UI or gestures. Clear on loss of the source;
+     * the last local hover is then used, if present. Pause or loss of output
+     * discards the sample; submit a fresh one on resume. */
+    nekomote_error nekomote_wallpaper_set_gaze_target(nekomote_wallpaper* wp, double x, double y);
+    nekomote_error nekomote_wallpaper_clear_gaze_target(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_touch(nekomote_wallpaper* wp, float x, float y);
     nekomote_error nekomote_wallpaper_mouse_button(nekomote_wallpaper* wp, int button,
                                                    nekomote_mouse_action action,

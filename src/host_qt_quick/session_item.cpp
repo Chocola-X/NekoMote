@@ -163,6 +163,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             notifications_connected_ = true;
         }
         logical_size_ = item->size();
+        global_gaze_ = item_state.global_gaze;
         paused_ = item_state.paused;
         if (playback_revision_ != item_state.playback_revision)
         {
@@ -299,6 +300,7 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
             clock_attached_ = true;
             const double elapsed =
                 std::chrono::duration<double>(now - state_->previous_time).count();
+            dispatch_gaze();
             dispatch_inputs();
             if (first && deterministic_ && !paused_)
             {
@@ -401,6 +403,24 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
 #endif
     }
     QPointer<QQuickWindow> window_;
+    void dispatch_gaze()
+    {
+        if (global_gaze_ && !paused_ && logical_size_.width() > 0 && logical_size_.height() > 0)
+        {
+            const double x = global_gaze_->x() * output_size_.width() / logical_size_.width();
+            const double y = global_gaze_->y() * output_size_.height() / logical_size_.height();
+            check(nekomote_wallpaper_set_gaze_target(state_->wallpaper.get(), x, y),
+                  "set global gaze");
+            sent_global_gaze_ = true;
+        }
+        else if (sent_global_gaze_)
+        {
+            check(nekomote_wallpaper_clear_gaze_target(state_->wallpaper.get()),
+                  "clear global gaze");
+            sent_global_gaze_ = false;
+        }
+    }
+
     void dispatch_inputs()
     {
         for (std::size_t i = 0; i < input_count_; ++i)
@@ -450,6 +470,8 @@ class WallpaperRenderer final : public QObject, public QQuickFramebufferObject::
     std::shared_ptr<WallpaperState> state_;
     QSizeF logical_size_;
     QSize output_size_;
+    std::optional<QPointF> global_gaze_;
+    bool sent_global_gaze_{false};
     QSGRendererInterface::GraphicsApi graphics_api_{QSGRendererInterface::Unknown};
     double diagnostic_delta_{0};
     QString diagnostic_reaction_;

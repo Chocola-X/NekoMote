@@ -124,9 +124,9 @@ TEST_CASE("Launch config rejects unsupported schema and invalid settings", "[con
         R"({"version":0,"version":1})", R"({"version":1,"unexpected":true})",
         R"({"version":1,"backend":"auto"})", R"({"version":1,"input":"global"})",
         R"({"version":1,"backend":1})", R"({"version":1,"assets_dir":null})",
-        R"({"version":1,"assets_dir":"bad\u0000path"})", R"({"version":1,"width":63})",
-        R"({"version":1,"height":8193})", R"({"version":1,"width":320.5})",
-        R"({"version":1,"width":18446744073709551615})",
+        R"({"version":1,"global_gaze":"off"})", R"({"version":1,"assets_dir":"bad\u0000path"})",
+        R"({"version":1,"width":63})", R"({"version":1,"height":8193})",
+        R"({"version":1,"width":320.5})", R"({"version":1,"width":18446744073709551615})",
         R"({"version":1,"assets_dir":"a","model_path":"b"})", R"({"version":1,"session_path":"s"})",
         R"({"version":1,"state_path":"launch.json"})", R"({"version":1,"state_path":"/"})");
     const auto file = fixture.write(document);

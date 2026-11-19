@@ -118,7 +118,8 @@ extern "C"
                 v.input.c_str(),
                 v.state_path.c_str(),
                 v.width,
-                v.height};
+                v.height,
+                v.global_gaze ? 1 : 0};
     }
 
     nekomote_error nekomote_launch_config_save(nekomote_launch_config* config,
@@ -134,6 +135,8 @@ extern "C"
             {
                 const auto string = [](const char* value)
                 { return std::string(value ? value : ""); };
+                if (values.global_gaze != 0 && values.global_gaze != 1)
+                    throw std::invalid_argument("launch global_gaze must be 0 or 1");
                 nekomote::application::LaunchOptions options{string(values.assets_dir),
                                                              string(values.model_path),
                                                              string(values.session_path),
@@ -142,7 +145,8 @@ extern "C"
                                                              string(values.input),
                                                              string(values.state_path),
                                                              values.width,
-                                                             values.height};
+                                                             values.height,
+                                                             values.global_gaze != 0};
                 config->config.save(std::move(options));
             });
     }

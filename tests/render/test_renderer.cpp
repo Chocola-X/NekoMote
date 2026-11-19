@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <new>
 #include <optional>
@@ -1222,6 +1223,11 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
     REQUIRE(nekomote_wallpaper_fps_limit(wallpaper.get()) == 120);
     REQUIRE(nekomote_wallpaper_pointer_move(wallpaper.get(), 0, 0, UINT64_MAX) ==
             NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_gaze_target(wallpaper.get(),
+                                               std::numeric_limits<double>::quiet_NaN(),
+                                               0) == NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_gaze_target(wallpaper.get(), -200, 500) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_clear_gaze_target(wallpaper.get()) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_mouse_button(wallpaper.get(), 0, 99, 1000) ==
             NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_mouse_button(wallpaper.get(), 0, NEKOMOTE_MOUSE_PRESS, UINT64_MAX) ==
@@ -1277,6 +1283,49 @@ TEST_CASE("Wallpaper ABI initializes UI after a late output size", "[gpu][abi][i
             .empty());
     REQUIRE(nekomote_wallpaper_render_ui(wallpaper.get(), 0) == NEKOMOTE_OK);
 }
+TEST_CASE("An off-output gaze sample renders the same pose as the matching local point",
+          "[gpu][abi][integration]")
+{
+    const auto directory = std::filesystem::absolute("assets/characters/chocola/date-a");
+    if (!std::filesystem::exists(directory / "model.nkm"))
+        SKIP("real asset integration unavailable: chocola/date-a");
+    Context context;
+    render_gl::Renderer reader(glfwGetProcAddress);
+    Output output;
+    output.resize(640, 480);
+    const auto capture = [&](auto input)
+    {
+        std::unique_ptr<nekomote_wallpaper, decltype(&nekomote_wallpaper_destroy)> wallpaper{
+            nekomote_wallpaper_create(glfwGetProcAddress), nekomote_wallpaper_destroy};
+        REQUIRE(wallpaper);
+        REQUIRE(nekomote_wallpaper_set_seed(wallpaper.get(), 1) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_set_output_size(wallpaper.get(), 640, 480) == NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_load_model(wallpaper.get(), (directory / "model.nkm").c_str(),
+                                              (directory / "session.nks.json").c_str()) ==
+                NEKOMOTE_OK);
+        REQUIRE(nekomote_wallpaper_fit(wallpaper.get()) == NEKOMOTE_OK);
+        input(wallpaper.get());
+        for (int i = 0; i < 75; ++i)
+            REQUIRE(nekomote_wallpaper_advance(wallpaper.get(), 1.0 / 60) == NEKOMOTE_OK);
+        nekomote_wallpaper_set_render_target(wallpaper.get(), output.framebuffer);
+        REQUIRE(nekomote_wallpaper_render_frame(wallpaper.get()) == NEKOMOTE_OK);
+        return reader.capture({output.framebuffer, 640, 480});
+    };
+    const auto reference = capture(
+        [](nekomote_wallpaper* wallpaper)
+        { REQUIRE(nekomote_wallpaper_pointer_move(wallpaper, -180, 200, 1) == NEKOMOTE_OK); });
+    const auto no_input = capture([](nekomote_wallpaper*) {});
+    const auto external = capture(
+        [](nekomote_wallpaper* wallpaper)
+        {
+            REQUIRE(nekomote_wallpaper_pointer_move(wallpaper, 600, 200, 1) == NEKOMOTE_OK);
+            REQUIRE(nekomote_wallpaper_set_gaze_target(wallpaper, -180, 200) == NEKOMOTE_OK);
+            REQUIRE(nekomote_wallpaper_pointer_leave(wallpaper) == NEKOMOTE_OK);
+        });
+    REQUIRE(external.pixels != no_input.pixels);
+    REQUIRE(external.pixels == reference.pixels);
+}
+
 TEST_CASE("Wallpaper ABI ignores asset-local config and uses the XDG config directory",
           "[gpu][abi][integration]")
 {

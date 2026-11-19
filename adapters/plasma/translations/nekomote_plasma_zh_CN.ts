@@ -40,6 +40,10 @@ After applying changes, the wallpaper rendering device will be rebuilt; this doe
         <translation>锁屏、休眠或关屏时暂停</translation>
     </message>
     <message>
+        <source>Follow the cursor outside the wallpaper</source>
+        <translation>视线跟随壁纸外的鼠标</translation>
+    </message>
+    <message>
         <source>Project &amp; Authors</source>
         <translation>项目与作者</translation>
     </message>

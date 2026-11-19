@@ -1,5 +1,8 @@
+#include <nekomote/host_session/display_context.hpp>
+
 #include <sys/resource.h>
 
+#include <QCursor>
 #include <QEventLoop>
 #include <QGuiApplication>
 #include <QHoverEvent>
@@ -93,16 +96,55 @@ void verify_input_limit(const QString& assets)
     item.wallpaper_state()->no_save = true;
     item.wallpaper_state()->config_path = path.toStdString();
     item.setRenderBackend(qEnvironmentVariable("NEKOMOTE_TEST_BACKEND", "opengl"));
+    item.setGlobalGazeEnabled(false);
     item.componentComplete();
     item.setAssetsDir(assets);
     item.setSize({640, 480});
     QQuickWindow window;
     window.setFlags(Qt::Window | Qt::WindowDoesNotAcceptFocus | Qt::WindowTransparentForInput);
+    window.setPosition(40, 50);
     window.resize(640, 480);
     item.setParentItem(window.contentItem());
     window.show();
     wait_for([&] { return item.queryRenderedFrames() >= 3 || item.status() == 2; });
     require(item.status() == 1, "input fixture failed to load");
+    const auto snapshot = [&]
+    {
+        return static_cast<nekomote::qt_quick::WallpaperItemBase&>(item)
+            .get_item_state()
+            .global_gaze;
+    };
+    const auto platform = QGuiApplication::platformName();
+    require(!snapshot(), "disabled global gaze acquired a sample on startup");
+    if (platform.startsWith(QLatin1String("wayland")))
+    {
+        const QPointF outside(-90, 530);
+        item.set_compositor_pointer_sample(item.mapToGlobal(outside));
+        item.setGlobalGazeEnabled(true);
+        run_for(100);
+        require(!snapshot(), "Wayland replayed a sample received while disabled");
+        item.set_compositor_pointer_sample(item.mapToGlobal(outside));
+        wait_for([&] { return snapshot() == outside; });
+        item.set_compositor_pointer_sample(std::nullopt);
+        wait_for([&] { return !snapshot(); });
+    }
+    else if (platform == QLatin1String("xcb"))
+    {
+        item.setGlobalGazeEnabled(true);
+        const bool native = !nekomote::host_session::wayland_session_hint();
+        if (native)
+            wait_for([&] { return snapshot().has_value(); });
+        const auto gaze = snapshot();
+        require(bool(gaze) == native, "wrong gaze source for the X11 session");
+        if (gaze)
+        {
+            require(item.mapToGlobal(*gaze) == QCursor::pos(),
+                    "global X11 pointer was not translated to the wallpaper");
+            item.setGlobalGazeEnabled(false);
+            run_for(100);
+            require(!snapshot(), "disabled X11 global gaze was sampled again");
+        }
+    }
     QTimer flood;
     flood.setInterval(1);
     unsigned events = 0;
