@@ -15,6 +15,7 @@ NekoMote 是专为 Linux 桌面动态壁纸打造的 E-mote 二维角色模型�
 </div>
 
 效果演示视频：
+
 https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 
 许可证：**GNU AGPL-3.0**（详见 [LICENSE](LICENSE)）。
