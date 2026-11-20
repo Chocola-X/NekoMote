@@ -124,7 +124,8 @@ export default class NekoMoteExtension extends Extension {
         }
 
         const renderer = {
-            client, process, monitor, source: null, desktopClone: null, window: null, unmanagedId: 0,
+            client, process, monitor, source: null, desktopClone: null,
+            window: null, unmanagedId: 0, opacityId: 0,
         };
         renderer.pointer = new DesktopPointer(process.get_stdin_pipe(), error => {
             console.error(`NekoMote: ${error.message}`);
@@ -158,9 +159,16 @@ export default class NekoMoteExtension extends Extension {
             renderer.window = window;
             renderer.unmanagedId = window.connect('unmanaged', () => this._detach(renderer));
             window.move_to_monitor(monitor.index);
-            window.minimize();
-            renderer.client.hide_from_window_list?.(window);
             renderer.source = actor;
+            // A renderer mapped during the Overview can remain visible even
+            // after minimization. Clutter clones use their own paint opacity.
+            renderer.opacityId = actor.connect('notify::opacity', () => {
+                if (actor.opacity !== 0)
+                    actor.opacity = 0;
+            });
+            window.minimize();
+            actor.opacity = 0;
+            renderer.client.hide_from_window_list?.(window);
             // Keep desktop redraws directly in the background group so Mutter
             // continues presenting frames from the minimized render window.
             const {x, y, width, height} = monitor;
@@ -226,7 +234,10 @@ export default class NekoMoteExtension extends Extension {
         renderer.pointer.close();
         if (renderer.unmanagedId)
             renderer.window.disconnect(renderer.unmanagedId);
+        if (renderer.opacityId)
+            renderer.source.disconnect(renderer.opacityId);
         renderer.unmanagedId = 0;
+        renderer.opacityId = 0;
         renderer.window = null;
         renderer.source = null;
         renderer.desktopClone?.destroy();
