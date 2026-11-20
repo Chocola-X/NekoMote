@@ -21,6 +21,9 @@ def audit(stage, mode):
     elif mode == "layer-shell":
         names = {"nekomote_layer_shell"}
         baseline, limits = "debian12", BASELINE
+    elif mode == "gnome45":
+        names = {"nekomote_gnome45"}
+        baseline, limits = "ubuntu22", {"GLIBC": "2.35", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}
     elif mode == "x11":
         names = {"nekomote_x11"}
         baseline, limits = "almalinux8", ALMALINUX8_BASELINE
@@ -53,7 +56,7 @@ def audit(stage, mode):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("--mode", choices=("native", "layer-shell", "x11"), required=True)
+    parser.add_argument("--mode", choices=("native", "layer-shell", "gnome45", "x11"), required=True)
     args = parser.parse_args()
     try:
         print(json.dumps(audit(args.stage, args.mode), indent=2, sort_keys=True))

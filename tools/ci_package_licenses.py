@@ -23,7 +23,7 @@ def write_licenses(source, build, stage, mode):
     for name in ("Apache-2.0", "CC0-1.0"):
         notices.append(f"=== GLAD generated code: {name} ===\n\n" +
                        (source / f"tools/licenses/{name}.txt").read_text())
-    if mode == "layer-shell":
+    if mode in ("layer-shell", "gnome45"):
         for name in ("wlr-layer-shell-unstable-v1", "xdg-shell", "xdg-output-unstable-v1",
                      "ext-foreign-toplevel-list-v1", "ext-image-capture-source-v1",
                      "ext-image-copy-capture-v1"):
@@ -44,6 +44,6 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path)
     parser.add_argument("build", type=Path)
     parser.add_argument("stage", type=Path)
-    parser.add_argument("mode", choices=("native", "plasma5", "plasma6", "layer-shell", "x11"))
+    parser.add_argument("mode", choices=("native", "plasma5", "plasma6", "layer-shell", "gnome45", "x11"))
     args = parser.parse_args()
     write_licenses(args.source, args.build, args.stage, args.mode)

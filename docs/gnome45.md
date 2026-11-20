@@ -8,6 +8,14 @@
 
 ## 构建与安装
 
+版本发布提供 `nekomote-gnome45-ubuntu22-x86_64.tar.gz` 和
+`nekomote-gnome45-ubuntu22-aarch64.tar.gz`。Ubuntu 22.04 是原生程序的构建基线，
+运行扩展需要 GNOME Shell 45 或更新版本的 Wayland 会话。
+解压后在包内运行 `bash install.sh` 可安装扩展和渲染程序。升级时禁用扩展后再运行同一命令，
+并重新登录 GNOME。运行 `bash install.sh uninstall` 可移除这两个组件。
+
+### 从源码构建
+
 用 CMake 3.25+、C++20、Ninja、GLib 的 `glib-compile-schemas` 以及
 [Wayland 宿主的构建依赖](layer-shell.md#构建与安装)编译。默认同时启用 OpenGL 与 Vulkan。
 

@@ -14,12 +14,13 @@ PACKAGES=(nekomote-native-almalinux8-x86_64 nekomote-native-almalinux8-aarch64
     nekomote-plasma5-ubuntu20-x86_64 nekomote-plasma5-ubuntu20-aarch64
     nekomote-plasma6-debian12-x86_64 nekomote-plasma6-debian12-aarch64
     nekomote-layer-shell-debian12-x86_64 nekomote-layer-shell-debian12-aarch64
-    nekomote-x11-almalinux8-x86_64 nekomote-x11-almalinux8-aarch64)
+    nekomote-x11-almalinux8-x86_64 nekomote-x11-almalinux8-aarch64
+    nekomote-gnome45-ubuntu22-x86_64 nekomote-gnome45-ubuntu22-aarch64)
 ARCHIVES=()
 for package in "${PACKAGES[@]}"; do ARCHIVES+=("$package.tar.gz"); done
 FILES=(*)
-if [[ "${#FILES[@]}" != 20 ]]; then
-    echo 'Expected exactly ten packages and ten SHA256 files' >&2
+if (( ${#FILES[@]} != ${#PACKAGES[@]} * 2 )); then
+    echo 'Expected exactly one archive and one SHA256 file per release package' >&2
     exit 1
 fi
 ASSETS=()

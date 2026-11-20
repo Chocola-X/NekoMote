@@ -1,12 +1,12 @@
 #!/bin/bash
 # Build/test/package inside an explicit baseline container. Never install a desktop.
 set -euo pipefail
-MODE="${1:?native, plasma5, plasma6, layer-shell or x11 required}"
+MODE="${1:?native, plasma5, plasma6, layer-shell, gnome45 or x11 required}"
 SOURCE_DIR="${2:-/source}"
 OUTPUT_DIR="${3:-/output}"
 JOBS="${NEKOMOTE_BUILD_JOBS:-4}"
 ARCH_NAME="$(uname -m)"
-case "$MODE" in native|plasma5|plasma6|layer-shell|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
+case "$MODE" in native|plasma5|plasma6|layer-shell|gnome45|x11) ;; *) echo "Unknown mode: $MODE" >&2; exit 2 ;; esac
 test -f "$SOURCE_DIR/CMakeLists.txt"
 test -d "$OUTPUT_DIR"
 if ! getent passwd "$(id -u)" >/dev/null || ! getent group "$(id -g)" >/dev/null; then
@@ -56,11 +56,17 @@ if [[ "$MODE" == native ]]; then
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF)
     TARGETS+=(nekomote_player nekomote_import nekomote_audio_convert nekomote_model_convert
         nekomote_png_recompress nekomote_abi_host)
-elif [[ "$MODE" == layer-shell ]]; then
+elif [[ "$MODE" == layer-shell || "$MODE" == gnome45 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
         -DNEKOMOTE_BUILD_LAYER_SHELL=ON)
-    TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests nekomote_desktop_gaze_math_tests
+    if [[ "$MODE" == gnome45 ]]; then
+        OPTIONS+=(-DNEKOMOTE_BUILD_GNOME45=ON)
+        TARGETS+=(nekomote_gnome45 nekomote_gnome45_extension)
+    else
+        TARGETS+=(nekomote_layer_shell)
+    fi
+    TARGETS+=(nekomote_layer_shell_option_tests nekomote_desktop_gaze_math_tests
         nekomote_desktop_gaze_wire_tests)
 elif [[ "$MODE" == x11 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
@@ -80,7 +86,7 @@ fi
 if [[ "$MODE" != native ]]; then
     TARGETS+=(nekomote_host_session_probe)
 fi
-if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
+if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == gnome45 || "$MODE" == x11 ]]; then
     TARGETS+=(nekomote_host_vulkan_failure_tests)
 fi
 cmake -S "$WORK_DIR/src" -B "$WORK_DIR/build" -G Ninja "${OPTIONS[@]}"
@@ -110,6 +116,11 @@ elif [[ "$MODE" == layer-shell ]]; then
     # Protocol notices are consolidated below; XML source and README stay in the repository.
     install -D "$WORK_DIR/build/bin/nekomote_layer_shell" "$STAGE_DIR/bin/nekomote_layer_shell"
     NAME="nekomote-layer-shell-debian12-$ARCH_NAME"
+elif [[ "$MODE" == gnome45 ]]; then
+    NAME="nekomote-gnome45-ubuntu22-$ARCH_NAME"
+    STAGE_DIR="$WORK_DIR/package/$NAME"
+    cmake --install "$WORK_DIR/build" --prefix "$STAGE_DIR" --component gnome45
+    install -m 755 "$WORK_DIR/src/tools/gnome45_installer.sh" "$STAGE_DIR/install.sh"
 elif [[ "$MODE" == x11 ]]; then
     STAGE_DIR="$WORK_DIR/package/nekomote-x11"
     # Xlib protocols belong to the system; ship only the program and notices below.
@@ -125,10 +136,22 @@ fi
 
 python3 "$WORK_DIR/src/tools/ci_package_licenses.py" "$WORK_DIR/src" \
     "$WORK_DIR/build" "$STAGE_DIR" "$MODE"
-if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == x11 ]]; then
+if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == gnome45 || "$MODE" == x11 ]]; then
     python3 "$WORK_DIR/src/tools/ci_native_audit.py" "$STAGE_DIR" --mode "$MODE" \
         > "$OUTPUT_DIR/compatibility.json"
     tar -C "$WORK_DIR/package" -czf "$OUTPUT_DIR/$NAME.tar.gz" "$(basename "$STAGE_DIR")"
+    if [[ "$MODE" == gnome45 ]]; then
+        mkdir "$WORK_DIR/export"
+        tar -xzf "$OUTPUT_DIR/$NAME.tar.gz" -C "$WORK_DIR/export"
+        export HOME="$WORK_DIR/install-home" XDG_DATA_HOME="$WORK_DIR/install-data"
+        installer="$WORK_DIR/export/$NAME/install.sh"
+        bash "$installer" install
+        "$HOME/.local/bin/nekomote_gnome45" --help
+        bash "$installer" install
+        bash "$installer" uninstall
+        test ! -e "$HOME/.local/bin/nekomote_gnome45"
+        test ! -e "$XDG_DATA_HOME/gnome-shell/extensions/nekomote@nekopara.uk"
+    fi
 else
     python3 "$WORK_DIR/src/tools/plasma_stage_manifest.py" "$STAGE_DIR"
     if [[ "$MODE" == plasma5 ]]; then
