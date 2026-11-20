@@ -25,6 +25,8 @@ PACKAGES = (
     "nekomote-layer-shell-debian12-aarch64",
     "nekomote-x11-almalinux8-x86_64",
     "nekomote-x11-almalinux8-aarch64",
+    "nekomote-gnome45-ubuntu22-x86_64",
+    "nekomote-gnome45-ubuntu22-aarch64",
 )
 
 ARCHIVES = [f"{p}.tar.gz" for p in PACKAGES]
@@ -142,8 +144,7 @@ elif operation == ["release", "upload"] and os.environ.get("MOCK_GH_UPLOAD_FAIL"
         self.assertEqual(self.calls(), [])
 
     def test_missing_or_unexpected_files_are_rejected_before_github_access(self):
-        # Every package in the ten-package set is mandatory: dropping any one
-        # of them (for example after adding a new adapter) must fail the gate.
+        # Every package is mandatory, including both architectures of each adapter.
         for package in PACKAGES:
             archive = self.assets / f"{package}.tar.gz"
             saved = archive.read_bytes()
