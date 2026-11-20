@@ -57,3 +57,38 @@ Plasma 的两个后端都绘制约 58.8 FPS。资源采样结束后，layer-shel
 绘制计数和回调节奏反映各入口的运行状态，屏幕实际呈现时间未独立计量。四种动态组合均通过桌面截图确认角色和背景可见。当前 KWin 会话中的 layer-shell 使用本地指针回落，未测全局视线跟踪的开销。结果限定在这台机器、一个模型和短时空闲桌面。2026-10-18 的测试使用不同角色、背景和采样条件，历史结果见 [原 Plasma 桌面报告](plasma-desktop-2026-10-18.md)。
 
 测试后恢复了原虚拟桌面、壁纸配置和面板偏好。原始逐秒数据与截图保存在本地 `experiments/release_test/desktop-clean-2026-11-20/`。
+
+## 资源差异复核
+
+同一批逐秒数据还记录了显卡频率及 `smaps_rollup`。下表为两轮均值。
+RSS 与 PSS 均只合计 Plasma Shell 和独立壳（若在运行）。KWin 的 PSS 无法读取，
+所以两列都排除了 KWin。PSS 按共享进程数分摊映射页。
+
+| 场景 | RSS MiB | PSS MiB | 相对静态 PSS 增量 MiB | 整卡图形时钟 MHz | 整卡显存时钟 MHz |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 静态图片 | 500.0 | 285.8 | — | 210 | 405 |
+| Plasma OpenGL | 535.3 | 321.5 | +35.7 | 539 | 751 |
+| Plasma Vulkan | 544.0 | 311.6 | +25.7 | 535 | 800 |
+| layer-shell OpenGL | 720.8 | 364.2 | +78.4 | 252 | 405 |
+| layer-shell Vulkan | 639.6 | 362.1 | +76.3 | 241 | 405 |
+
+- **CPU 与 Qt 提交**。本轮 Plasma 约 58.8 次/秒壁纸绘制对应约 117 次/秒 Qt 窗口交换。
+  之前只清屏的最小 FBO 程序也在 Qt basic 循环复现约 59/118，threaded 循环约 59/59。
+  这一现象支持 Qt 场景图和提交路径是额外开销的来源之一。插件的 OpenGL 直接绘入 Qt FBO，
+  Qt 用该纹理合成场景。插件 Vulkan 另有一次共享图像到 Qt FBO 的全尺寸 GPU blit。
+  本次未单独测量这些步骤各占多少 CPU 或 GPU 时间。
+  [Qt 最小复现](wayland-desktop-cpu-2026-11-10.md#qt-fbo-basic-001额外窗口提交) ·
+  [插件绘制路径](../src/host_qt_quick/session_item.cpp#L320) · [Vulkan 桥](../src/host_qt_quick/vulkan_gl_bridge.cpp#L720)
+- **layer-shell 的呈现缓冲**。独立壳拥有自己的 Wayland surface 和图形上下文或设备。
+  OpenGL 绘到 EGL 窗口后交换缓冲，缓冲数由驱动管理。Vulkan 有独立 RGBA8 渲染图像，
+  加上 FIFO 交换链图像，每帧从前者 blit 到取得的交换链图像。Plasma Vulkan 的共享桥也有
+  独立中间图像，但借用已有的 Qt 窗口呈现路径。1440p 的一张 RGBA8 图像约 14.1 MiB，
+  三张约 42.2 MiB，未计对齐和驱动开销。本次没有记录 EGL 缓冲数或 Vulkan 实际交换链
+  图像数，无法将整卡显存差额逐项归因。
+  [EGL 初始化](../adapters/layer_shell/host.cpp#L955) · [Vulkan 交换链](../src/host_vulkan/host.c#L263) ·
+  [Vulkan 呈现 blit](../src/host_vulkan/host.c#L782)
+- **进程内存与整卡功耗**。独立壳场景下，Plasma 静态壁纸仍驻留，独立壳另加载自身资源。
+  这两种入口合计的 PSS 相差约 43 MiB（OpenGL）或 51 MiB（Vulkan），小于 RSS 差距。
+  layer-shell 的板卡功耗较低，整卡 GPU 忙碌比例与 Plasma Vulkan 接近，高于 Plasma OpenGL。
+  NVML 的利用率统计 GPU 在采样期内运行任务的时间比例。两种入口的图形和显存时钟不同，
+  该比例与瓦数均无法单独推算每帧 GPU 工作量。 [NVML 利用率定义](https://github.com/NVIDIA/go-nvml/blob/main/pkg/nvml/nvml.h#L251)
