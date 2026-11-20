@@ -81,8 +81,8 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | `--save-config` | 显式保存启动设置并退出，无需显示服务器 |
 | `--backend opengl\|vulkan` | 图形后端，默认 OpenGL；Vulkan 需要构建时启用 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 和模型交互 |
-| `--gaze local\|desktop` | 默认 `local`。`desktop` 仅让角色视线使用桌面的光标位置，不转发点击或拖动；须配合 interactive，不写入配置。 |
-| `--input passthrough` | 空输入区域；全部穿透，不支持鼠标控制和视线交互 |
+| `--gaze local\|desktop` | 默认 `local`。`desktop` 仅让角色视线使用桌面的光标位置，不转发点击或拖动；与本地输入模式独立，不写入配置。 |
+| `--input passthrough` | 空输入区域；点击、拖动、滚轮全部穿透，不接收本地视线事件。可以单独启用桌面视线。 |
 | `--mute` | 强制静音 |
 | `--no-save` | 不保存配置 |
 | `--ui-open` | 资产加载后展开共享控制面板，便于诊断 |
@@ -92,12 +92,13 @@ interactive 接收背景上的指针事件，不保证桌面的右键菜单或�
 没有通用的逐按钮穿透机制。默认只处理当前 surface 的鼠标位置。窗口上方是否有
 桌面图标、背景右键菜单如何实现，由目标桌面决定。
 
-### 多屏角色同时跟随鼠标（此 fork）
+### 多屏角色同时跟随鼠标
 
 对**每个**输出实例显式添加 `--gaze desktop`，例如：
 
 ```sh
-nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 --config ~/.config/nekomote/hdmi.json --gaze desktop
+nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 \
+  --config ~/.config/nekomote/hdmi.json --input passthrough --gaze desktop
 ```
 
 在提供 `ext_output_image_capture_source_manager_v1`、`ext_image_copy_capture_manager_v1` 和
@@ -105,9 +106,15 @@ nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 --config ~/.conf
 不读取屏幕、光标图像或 `/dev/input`，也不注入输入。合成器仍可能将其列为捕获会话。
 坐标按来源输出的显示方向、物理模式和逻辑布局换算为目标壁纸的坐标，允许目标在屏外；
 视线可以跟随另一块屏幕和应用窗口上的可见光标，而面板、触摸、拖动和滚轮仍只看真实本地输入。
-无协议时回退本地模式；没有可见光标时撤销外部视线。已观察到的锁屏/休眠和目标输出移除会停用订阅，
-恢复后重建。在固定帧诊断、`--save-config` 或 `--input passthrough` 模式下不支持 `--gaze desktop`。
-切回 `--gaze local` 无需修改模型或面板文件。
+必须由 logind 确认目标会话处于活动状态、`LockedHint=false` 且未在准备休眠，才建立光标元数据订阅。
+用户服务不在会话 scope 内时，显式会话 ID 必须与 logind 为该用户选择的图形会话相符。
+可选的 ScreenSaver 服务可否决订阅，但不能单独授权；未实现其锁屏接口（例如某些 niri 版本只提供抑制休眠接口）与一次查询失败不同。
+初始状态未知、无法确认会话、
+锁定、休眠或目标输出移除时不订阅；状态得到重新确认后才重建，不复用旧光标位置。
+`--no-session-pause` 仅影响动画，不绕过此检查。会话通知是异步的：这是一项客户端保护，
+不是对合成器实际锁屏状态的原子保证；桌面锁屏器仍需向会话服务正确报告状态。
+无可用的桌面视线时，interactive 仍可使用本地输入；passthrough 仍完全穿透。
+`--gaze desktop` 不能用于固定帧诊断或 `--save-config`。切回 `--gaze local` 无需修改模型或面板文件。
 
 默认启动配置为 `$XDG_CONFIG_HOME/nekomote/layer-shell.json`，默认面板偏好为
 同目录的 `layer-shell.panel.json`；XDG 未设置或不是绝对路径时使用 `$HOME/.config/`。
@@ -145,18 +152,20 @@ buffer scale 和 frame callback 节奏。每次修改共享实例（包括输入
 fractional-scale/viewporter，分数缩放效果由合成器重采样。没有通用的任意遮挡通知。现在宿主被动观察 ScreenSaver/logind 锁屏与休眠状态；未提供
 这些服务时记录能力不足并保持基础播放。关屏仍依赖合成器抑制不可见 surface 的帧回调，
 不能保证所有桌面都自动暂停。验证范围见[可靠性报告](wallpaper-reliability-2026-11-17.md)。
-`--no-session-pause` 可在本次启动关闭默认启用的会话监听，不写入配置，也不会改变合成器
-的帧回调或输出恢复。日志记录会话暂停与解除、输出移除与重连；音频退避期间的重复失败不输出。
+`--no-session-pause` 可在本次启动关闭会话事件导致的动画暂停，不写入配置，也不会改变合成器
+的帧回调、输出恢复或桌面视线的会话检查。日志记录会话暂停与解除、输出移除与重连；音频退避期间的重复失败不输出。
 
 ## 验证入口
 
 ```bash
 cmake --preset layer-shell -DNEKOMOTE_BUILD_TESTS=ON
 cmake --build --preset layer-shell -j 4
-ctest --test-dir build/layer-shell -R 'layer_shell_options|abi_synthetic_boundary' --output-on-failure
+ctest --test-dir build/layer-shell -R 'layer_shell_(options|desktop_gaze_math|desktop_gaze_wire)|host_session_contract|abi_synthetic_boundary' --output-on-failure
 ```
 
-启用测试额外需要 `wayland-server` 开发文件。无 layer-shell 能力的负例服务器只连接
+启用测试额外需要 `wayland-server` 开发文件。`layer_shell_desktop_gaze_wire` 使用私有 socketpair 和两个模拟输出，验证跨屏事件、拔插和撤销授权后的订阅重建；`host_session_contract` 在私有 D-Bus 上检查会话状态。它们不移动用户鼠标、不锁定真实会话，也不以 CI runner 的 CPU 用量判定通过。
+
+无 layer-shell 能力的负例服务器只连接
 私有 runtime；完整虚拟 KWin 验证及证据格式见
 [测试说明](../tests/layer_shell/README.md)。不安装其他桌面、不连接当前桌面 socket、
 不注入系统键鼠。

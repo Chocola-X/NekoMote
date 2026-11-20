@@ -2,250 +2,512 @@
 
 #include <dbus/dbus.h>
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 #include <string>
+#include <utility>
 
 namespace nekomote::host_session
 {
 namespace
 {
-constexpr const char* kScreenService = "org.freedesktop.ScreenSaver";
-constexpr const char* kLoginService = "org.freedesktop.login1";
-constexpr const char* kProperties = "org.freedesktop.DBus.Properties";
+constexpr auto screen = "org.freedesktop.ScreenSaver";
+constexpr auto login = "org.freedesktop.login1";
+constexpr auto root = "/org/freedesktop/login1";
+constexpr auto manager = "org.freedesktop.login1.Manager";
+constexpr auto session_iface = "org.freedesktop.login1.Session";
+constexpr auto props = DBUS_INTERFACE_PROPERTIES;
 
-bool boolean(DBusMessageIter value, bool& result)
+// The raw libdbus serial API has no built-in timeout. A late snapshot must not
+// authorize; a new owner/notification can start a fresh query.
+struct Query
 {
-    if (dbus_message_iter_get_arg_type(&value) == DBUS_TYPE_VARIANT)
+    dbus_uint32_t serial = 0;
+    std::chrono::steady_clock::time_point deadline{};
+    bool matches(dbus_uint32_t reply) const
     {
-        DBusMessageIter contents;
-        dbus_message_iter_recurse(&value, &contents);
-        value = contents;
+        return reply && reply == serial && std::chrono::steady_clock::now() < deadline;
     }
-    if (dbus_message_iter_get_arg_type(&value) != DBUS_TYPE_BOOLEAN)
-        return false;
-    dbus_bool_t raw = false;
-    dbus_message_iter_get_basic(&value, &raw);
-    result = raw != 0;
-    return true;
-}
+};
+
+// Keep last playback indication while refreshing, but never authorize on it.
+struct Observation
+{
+    bool active = false, known = false;
+    Query pending;
+    void refresh(Query query = {})
+    {
+        known = false;
+        pending = query;
+    }
+    void update(DBusMessage* message, const char* signature)
+    {
+        refresh();
+        if (!dbus_message_has_signature(message, signature))
+            return;
+        DBusMessageIter args, variant;
+        dbus_message_iter_init(message, &args);
+        if (*signature == 'v')
+        {
+            dbus_message_iter_recurse(&args, &variant);
+            args = variant;
+        }
+        if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_BOOLEAN)
+            return;
+        dbus_bool_t value;
+        dbus_message_iter_get_basic(&args, &value);
+        active = value != 0;
+        known = true;
+    }
+    bool clear() const
+    {
+        return known && !active;
+    }
+};
+
 struct Bus
 {
+    const char* service;
     DBusConnection* connection = nullptr;
+    std::string owner;
+    Query lookup;
+    bool initial_lookup = true;
+    // Directed messages need not satisfy our match rule. Bound the unverified
+    // input kept across the initial owner lookup; overflow denies this epoch.
+    std::set<std::pair<std::string, std::string>> early_vetoes;
+    bool overflow = false;
+    void stage(const char* sender, const char* path, bool veto)
+    {
+        if (!sender || !path)
+            return;
+        if (std::strlen(path) > 4096)
+        {
+            overflow = true;
+            return;
+        }
+        const auto key = std::make_pair(std::string(sender), std::string(path));
+        if (!veto)
+            early_vetoes.erase(key);
+        else if (early_vetoes.size() < 64)
+            early_vetoes.insert(key);
+        else
+            overflow = true;
+    }
+    explicit Bus(const char* name) : service(name)
+    {
+    }
     ~Bus()
+    {
+        close();
+    }
+    void close()
     {
         if (connection)
         {
             dbus_connection_close(connection);
             dbus_connection_unref(connection);
+            connection = nullptr;
         }
+        owner.clear();
+        lookup = {};
     }
-    void open(DBusBusType type, const char* service)
+    template <typename... Args>
+    Query call(const char* destination, const char* path, const char* iface, const char* method,
+               Args... args)
     {
-        // libdbus may otherwise autolaunch a session bus from a bare DISPLAY.
+        auto* msg = dbus_message_new_method_call(destination, path, iface, method);
+        if (!msg)
+            return {};
+        dbus_uint32_t serial = 0;
+        dbus_message_set_auto_start(msg, false);
+        if (dbus_message_append_args(msg, args..., DBUS_TYPE_INVALID))
+            dbus_connection_send(connection, msg, &serial);
+        dbus_message_unref(msg);
+        return {serial, std::chrono::steady_clock::now() + std::chrono::seconds(5)};
+    }
+    void open(DBusBusType type)
+    {
         if (type == DBUS_BUS_SESSION && !std::getenv("DBUS_SESSION_BUS_ADDRESS"))
-        {
-            std::fprintf(stderr,
-                         "[host_session] no session bus address; lock observation unavailable\n");
             return;
-        }
-        DBusError error;
-        dbus_error_init(&error);
+        DBusError error = DBUS_ERROR_INIT;
         connection = dbus_bus_get_private(type, &error);
-        if (!connection)
+        if (connection)
         {
-            std::fprintf(stderr, "[host_session] %s observation unavailable: %s\n", service,
-                         error.message ? error.message : "no bus");
-            dbus_error_free(&error);
-            return;
-        }
-        dbus_connection_set_exit_on_disconnect(connection, false);
-        const std::string match = std::string("type='signal',sender='") + service + "'";
-        dbus_bus_add_match(connection, match.c_str(), &error);
-        if (!dbus_error_is_set(&error))
-        {
-            const std::string owner =
-                std::string("type='signal',sender='org.freedesktop.DBus',") +
-                "interface='org.freedesktop.DBus',member='NameOwnerChanged'," + "arg0='" + service +
-                "'";
-            dbus_bus_add_match(connection, owner.c_str(), &error);
+            dbus_connection_set_exit_on_disconnect(connection, false);
+            auto match = std::string("type='signal',sender='") + service + "'";
+            dbus_bus_add_match(connection, match.c_str(), &error);
+            match = std::string("type='signal',sender='org.freedesktop.DBus',") +
+                    "interface='org.freedesktop.DBus',member='NameOwnerChanged',arg0='" + service +
+                    "'";
+            if (!dbus_error_is_set(&error))
+                dbus_bus_add_match(connection, match.c_str(), &error);
         }
         if (dbus_error_is_set(&error))
-            std::fprintf(stderr, "[host_session] signal subscription failed: %s\n", error.message);
-        dbus_error_free(&error);
+        {
+            std::fprintf(stderr, "[host_session] %s unavailable: %s\n", service, error.message);
+            dbus_error_free(&error);
+            close();
+        }
     }
-    dbus_uint32_t send(DBusMessage* message)
+    void lookup_owner()
     {
-        if (!message)
-            return 0;
-        dbus_uint32_t serial = 0;
-        dbus_message_set_auto_start(message, false);
-        if (connection)
-            dbus_connection_send(connection, message, &serial);
-        dbus_message_unref(message);
-        return serial;
+        lookup = call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetNameOwner",
+                      DBUS_TYPE_STRING, &service);
+    }
+    int fd() const
+    {
+        int descriptor = -1;
+        return connection && dbus_connection_get_unix_fd(connection, &descriptor) ? descriptor : -1;
     }
 };
+
+// Only refresh for a changed/invalidated key on its own interface.
+bool touches(DBusMessage* msg, const char* iface, const char* property,
+             bool* reported_true = nullptr)
+{
+    if (!dbus_message_has_signature(msg, "sa{sv}as"))
+        return true; // Malformed trusted notification: discard the snapshot.
+    DBusMessageIter args, entries;
+    dbus_message_iter_init(msg, &args);
+    const char* name;
+    dbus_message_iter_get_basic(&args, &name);
+    if (std::strcmp(name, iface))
+        return false;
+    while (dbus_message_iter_next(&args))
+    {
+        dbus_message_iter_recurse(&args, &entries);
+        while (dbus_message_iter_get_arg_type(&entries) != DBUS_TYPE_INVALID)
+        {
+            DBusMessageIter key = entries;
+            if (dbus_message_iter_get_arg_type(&entries) == DBUS_TYPE_DICT_ENTRY)
+                dbus_message_iter_recurse(&entries, &key);
+            dbus_message_iter_get_basic(&key, &name);
+            if (!std::strcmp(name, property))
+            {
+                if (reported_true &&
+                    dbus_message_iter_get_arg_type(&entries) == DBUS_TYPE_DICT_ENTRY)
+                {
+                    dbus_message_iter_next(&key);
+                    DBusMessageIter contents;
+                    dbus_message_iter_recurse(&key, &contents);
+                    if (dbus_message_iter_get_arg_type(&contents) == DBUS_TYPE_BOOLEAN)
+                    {
+                        dbus_bool_t value;
+                        dbus_message_iter_get_basic(&contents, &value);
+                        *reported_true = value != 0;
+                    }
+                }
+                return true;
+            }
+            dbus_message_iter_next(&entries);
+        }
+    }
+    return false;
+}
 } // namespace
 
 struct Monitor::Impl
 {
-    Bus session, system;
-    bool screen_active = false, locked = false, sleeping = false;
-    dbus_uint32_t screen_query = 0, session_query = 0, locked_query = 0, sleep_query = 0;
-    std::string session_path;
-    bool tried_display_session = false;
+    Bus desktop{screen}, system{login};
+    Observation saver, sleep, locked, active;
+    bool saver_optional = false, alternate_path = false, saver_signal = false;
+    std::string path;
+    Query resolving, confirming;
+    bool verified = false, display_session = false;
+    // Requests may arrive while GetSession is still in flight (no bound path yet).
+    std::set<std::string> requested_locks;
 
     Impl()
     {
-        session.open(DBUS_BUS_SESSION, kScreenService);
-        system.open(DBUS_BUS_SYSTEM, kLoginService);
-        query_screen();
-        query_login();
+        desktop.open(DBUS_BUS_SESSION);
+        system.open(DBUS_BUS_SYSTEM);
     }
-    void query_screen()
+    void property(Observation& obs, const char* object, const char* iface, const char* key)
     {
-        screen_query = session.send(dbus_message_new_method_call(kScreenService, "/ScreenSaver",
-                                                                 kScreenService, "GetActive"));
+        obs.refresh(system.call(system.owner.c_str(), object, props, "Get", DBUS_TYPE_STRING,
+                                &iface, DBUS_TYPE_STRING, &key));
     }
-    dbus_uint32_t query_property(const char* path, const char* interface, const char* name)
+    void resolve()
     {
-        auto* message = dbus_message_new_method_call(kLoginService, path, kProperties, "Get");
-        if (message && !dbus_message_append_args(message, DBUS_TYPE_STRING, &interface,
-                                                 DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID))
+        path.clear();
+        locked.refresh();
+        active.refresh();
+        verified = false;
+        confirming = {};
+        display_session = false;
+        const dbus_uint32_t pid = 0;
+        resolving = system.call(system.owner.c_str(), root, manager, "GetSessionByPID",
+                                DBUS_TYPE_UINT32, &pid);
+    }
+    void set_owner(Bus& bus, const char* owner)
+    {
+        bus.early_vetoes.clear();
+        bus.overflow = false;
+        bus.lookup = {};
+        bus.owner = owner;
+        if (&bus == &desktop)
         {
-            dbus_message_unref(message);
-            return 0;
+            saver = {};
+            saver_optional = alternate_path = saver_signal = false;
+            if (*owner)
+                saver.refresh(bus.call(owner, "/ScreenSaver", screen, "GetActive"));
         }
-        return system.send(message);
-    }
-    void query_login()
-    {
-        session_path.clear();
-        tried_display_session = false;
-        auto* message =
-            dbus_message_new_method_call(kLoginService, "/org/freedesktop/login1",
-                                         "org.freedesktop.login1.Manager", "GetSessionByPID");
-        const dbus_uint32_t pid = 0; // logind resolves the sender's session.
-        if (message &&
-            !dbus_message_append_args(message, DBUS_TYPE_UINT32, &pid, DBUS_TYPE_INVALID))
+        else
         {
-            dbus_message_unref(message);
-            message = nullptr;
-        }
-        session_query = system.send(message);
-        locked_query = 0;
-        sleep_query = query_property("/org/freedesktop/login1", "org.freedesktop.login1.Manager",
-                                     "PreparingForSleep");
-    }
-    void receive(DBusMessage* message, bool is_system)
-    {
-        DBusMessageIter args;
-        if (!dbus_message_iter_init(message, &args))
-            return;
-        if (dbus_message_is_signal(message, DBUS_INTERFACE_DBUS, "NameOwnerChanged"))
-        {
-            if (is_system)
+            sleep = locked = active = {};
+            requested_locks.clear();
+            path.clear();
+            resolving = confirming = {};
+            verified = false;
+            if (*owner)
             {
-                locked = sleeping = false;
-                query_login();
+                resolve();
+                property(sleep, root, manager, "PreparingForSleep");
             }
-            else
+        }
+    }
+    void receive(Bus& bus, DBusMessage* msg)
+    {
+        const auto reply = dbus_message_get_reply_serial(msg);
+        const bool result = dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_METHOD_RETURN;
+        if (dbus_message_has_sender(msg, DBUS_SERVICE_DBUS))
+        {
+            const char *name, *old_owner, *new_owner;
+            if (dbus_message_has_path(msg, DBUS_PATH_DBUS) &&
+                dbus_message_is_signal(msg, DBUS_INTERFACE_DBUS, "NameOwnerChanged") &&
+                dbus_message_get_args(msg, nullptr, DBUS_TYPE_STRING, &name, DBUS_TYPE_STRING,
+                                      &old_owner, DBUS_TYPE_STRING, &new_owner,
+                                      DBUS_TYPE_INVALID) &&
+                !std::strcmp(name, bus.service))
             {
-                screen_active = false;
-                query_screen();
+                set_owner(bus, new_owner);
+                // Loss revokes first; distinguish confirmed absence from a failed lookup.
+                if (&bus == &desktop && !*new_owner)
+                    bus.lookup_owner();
+            }
+            else if (bus.lookup.matches(reply) && result &&
+                     dbus_message_get_args(msg, nullptr, DBUS_TYPE_STRING, &new_owner,
+                                           DBUS_TYPE_INVALID))
+            {
+                // Replay only the vetoes authenticated by this daemon response.
+                // NameOwnerChanged instead starts a fresh epoch and discards them.
+                auto early = std::move(bus.early_vetoes);
+                const bool overflow = bus.overflow;
+                set_owner(bus, new_owner);
+                bus.overflow = overflow;
+                for (const auto& veto : early)
+                    if (veto.first == bus.owner)
+                    {
+                        if (&bus == &system)
+                            requested_locks.insert(veto.second);
+                        else
+                            saver.active = true;
+                    }
+            }
+            else if (&bus == &desktop && bus.lookup.matches(reply) &&
+                     dbus_message_is_error(msg, DBUS_ERROR_NAME_HAS_NO_OWNER))
+            {
+                bus.lookup = {};
+                saver_optional = true;
             }
             return;
         }
-        const auto reply = dbus_message_get_reply_serial(message);
-        // systemd user units are outside the session scope even though niri imported
-        // the graphical session ID. Observe that session, never guess a different seat.
-        if (is_system && reply && reply == session_query && !tried_display_session &&
-            dbus_message_is_error(message, "org.freedesktop.login1.NoSessionForPID"))
+        if (bus.owner.empty())
         {
-            tried_display_session = true;
-            if (const char* id = std::getenv("XDG_SESSION_ID"); id && *id)
+            if (bus.lookup.serial)
             {
-                auto* query =
-                    dbus_message_new_method_call(kLoginService, "/org/freedesktop/login1",
-                                                 "org.freedesktop.login1.Manager", "GetSession");
-                if (query &&
-                    dbus_message_append_args(query, DBUS_TYPE_STRING, &id, DBUS_TYPE_INVALID))
+                const auto* sender = dbus_message_get_sender(msg);
+                if (&bus == &system && (dbus_message_is_signal(msg, session_iface, "Lock") ||
+                                        dbus_message_is_signal(msg, session_iface, "Unlock")))
+                    bus.stage(sender, dbus_message_get_path(msg),
+                              dbus_message_is_signal(msg, session_iface, "Lock"));
+                else if (&bus == &desktop &&
+                         (dbus_message_has_path(msg, "/ScreenSaver") ||
+                          dbus_message_has_path(msg, "/org/freedesktop/ScreenSaver")) &&
+                         dbus_message_is_signal(msg, screen, "ActiveChanged"))
                 {
-                    session_query = system.send(query);
-                    return;
+                    Observation signal;
+                    signal.update(msg, "b");
+                    bus.stage(sender, "/ScreenSaver", !signal.clear());
                 }
-                if (query)
-                    dbus_message_unref(query);
-            }
-        }
-        if (dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR && reply &&
-            ((!is_system && reply == screen_query) || (is_system && reply == session_query)))
-            std::fprintf(stderr, "[host_session] %s observation unavailable: %s\n",
-                         is_system ? "logind session" : "ScreenSaver",
-                         dbus_message_get_error_name(message));
-        if (dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_RETURN)
-        {
-            if (!is_system && reply && reply == screen_query)
-                boolean(args, screen_active);
-            else if (is_system && reply && reply == sleep_query)
-                boolean(args, sleeping);
-            else if (is_system && reply && reply == locked_query)
-                boolean(args, locked);
-            else if (is_system && reply && reply == session_query &&
-                     dbus_message_iter_get_arg_type(&args) == DBUS_TYPE_OBJECT_PATH)
-            {
-                const char* path = nullptr;
-                dbus_message_iter_get_basic(&args, &path);
-                session_path = path;
-                locked_query = query_property(path, "org.freedesktop.login1.Session", "LockedHint");
             }
             return;
         }
-        if (!is_system && dbus_message_is_signal(message, kScreenService, "ActiveChanged"))
+        if (!dbus_message_has_sender(msg, bus.owner.c_str()))
+            return;
+        if (&bus == &desktop)
         {
-            screen_query = 0; // A delayed initial reply cannot overwrite this newer signal.
-            boolean(args, screen_active);
+            if (saver.pending.matches(reply))
+            {
+                saver.pending = {};
+                if (result)
+                {
+                    Observation snapshot;
+                    snapshot.update(msg, "b");
+                    if (!saver_signal)
+                        saver.active = snapshot.active;
+                    saver.known = snapshot.known;
+                }
+                else if (dbus_message_is_error(msg, DBUS_ERROR_UNKNOWN_METHOD))
+                {
+                    if (alternate_path)
+                        saver_optional = true;
+                    else
+                    {
+                        alternate_path = true;
+                        saver.refresh(bus.call(bus.owner.c_str(), "/org/freedesktop/ScreenSaver",
+                                               screen, "GetActive"));
+                    }
+                }
+            }
+            else if ((dbus_message_has_path(msg, "/ScreenSaver") ||
+                      dbus_message_has_path(msg, "/org/freedesktop/ScreenSaver")) &&
+                     dbus_message_is_signal(msg, screen, "ActiveChanged"))
+            {
+                Observation signal;
+                signal.update(msg, "b");
+                saver_signal = true;
+                // Preserve query readiness independently of the newer playback indication.
+                saver.active = !signal.known || signal.active;
+            }
+            return;
         }
-        else if (is_system && dbus_message_is_signal(message, "org.freedesktop.login1.Manager",
-                                                     "PrepareForSleep"))
+        if (resolving.matches(reply))
         {
-            sleep_query = 0;
-            boolean(args, sleeping);
+            resolving = {};
+            const char* object;
+            if (result && dbus_message_has_signature(msg, "o") &&
+                dbus_message_get_args(msg, nullptr, DBUS_TYPE_OBJECT_PATH, &object,
+                                      DBUS_TYPE_INVALID))
+            {
+                path = object;
+                verified = !display_session;
+                if (display_session)
+                {
+                    const char* automatic = "auto";
+                    confirming = system.call(system.owner.c_str(), root, manager, "GetSession",
+                                             DBUS_TYPE_STRING, &automatic);
+                }
+                property(locked, object, session_iface, "LockedHint");
+                property(active, object, session_iface, "Active");
+            }
+            else if (!display_session &&
+                     dbus_message_is_error(msg, "org.freedesktop.login1.NoSessionForPID"))
+            {
+                // systemd user services need not belong to a session scope. Let logind
+                // resolve the caller's display session; XDG_SESSION_ID may be stale.
+                display_session = true;
+                const char* id = std::getenv("XDG_SESSION_ID");
+                if (id && *id && dbus_validate_utf8(id, nullptr) && std::strcmp(id, "auto") &&
+                    std::strcmp(id, "self"))
+                    resolving = system.call(system.owner.c_str(), root, manager, "GetSession",
+                                            DBUS_TYPE_STRING, &id);
+            }
         }
-        else if (is_system && !session_path.empty() &&
-                 dbus_message_is_signal(message, kProperties, "PropertiesChanged") &&
-                 dbus_message_has_path(message, session_path.c_str()))
+        else if (confirming.matches(reply))
         {
-            // Re-query on invalidation too. No property cache is trusted after a signal.
-            locked_query = query_property(session_path.c_str(), "org.freedesktop.login1.Session",
-                                          "LockedHint");
+            confirming = {};
+            const char* automatic;
+            verified = result && dbus_message_has_signature(msg, "o") &&
+                       dbus_message_get_args(msg, nullptr, DBUS_TYPE_OBJECT_PATH, &automatic,
+                                             DBUS_TYPE_INVALID) &&
+                       path == automatic;
+        }
+        else if (result && sleep.pending.matches(reply))
+        {
+            const bool was_sleeping = sleep.active;
+            sleep.update(msg, "v");
+            if (was_sleeping && sleep.clear())
+                resolve();
+        }
+        else if (result && active.pending.matches(reply))
+            active.update(msg, "v");
+        else if (result && locked.pending.matches(reply))
+        {
+            locked.update(msg, "v");
+            if (locked.known && locked.active)
+                requested_locks.erase(path); // The observed lock now holds the veto itself.
+        }
+        else if (dbus_message_has_path(msg, root) &&
+                 dbus_message_is_signal(msg, manager, "PrepareForSleep"))
+        {
+            sleep.update(msg, "b");
+            if (sleep.clear())
+                resolve(); // Do not reuse the pre-suspend session snapshot.
+        }
+        else if (dbus_message_has_path(msg, root) &&
+                 (dbus_message_is_signal(msg, manager, "SessionRemoved") ||
+                  dbus_message_is_signal(msg, manager, "SessionNew")))
+        {
+            const char *id, *object;
+            if (path.empty() || display_session ||
+                !dbus_message_get_args(msg, nullptr, DBUS_TYPE_STRING, &id, DBUS_TYPE_OBJECT_PATH,
+                                       &object, DBUS_TYPE_INVALID) ||
+                path == object)
+                resolve();
+        }
+        else if ((path.empty() || dbus_message_has_path(msg, path.c_str())) &&
+                 (dbus_message_is_signal(msg, session_iface, "Lock") ||
+                  dbus_message_is_signal(msg, session_iface, "Unlock")))
+        {
+            const char* object = dbus_message_get_path(msg);
+            if (dbus_message_is_signal(msg, session_iface, "Lock"))
+                requested_locks.insert(object);
+            else
+                requested_locks.erase(object);
+            // A request is not a playback indication. Ignore pre-request replies.
+            if (!path.empty())
+                property(locked, object, session_iface, "LockedHint");
+        }
+        else if (!path.empty() && dbus_message_has_path(msg, path.c_str()))
+        {
+            if (dbus_message_is_signal(msg, props, "PropertiesChanged"))
+            {
+                bool reported_locked = false;
+                if (touches(msg, session_iface, "LockedHint", &reported_locked))
+                {
+                    if (reported_locked)
+                    {
+                        locked.active = true;
+                        requested_locks.erase(path);
+                    }
+                    property(locked, path.c_str(), session_iface, "LockedHint");
+                }
+                if (touches(msg, session_iface, "Active"))
+                    property(active, path.c_str(), session_iface, "Active");
+            }
+        }
+        else if (dbus_message_is_signal(msg, props, "PropertiesChanged"))
+        {
+            if (dbus_message_has_path(msg, root) && touches(msg, manager, "PreparingForSleep"))
+                property(sleep, root, manager, "PreparingForSleep");
+            else if (display_session && touches(msg, "org.freedesktop.login1.User", "Display"))
+                resolve();
         }
     }
-    void dispatch(Bus& bus, bool is_system)
+    void dispatch(Bus& bus)
     {
         if (!bus.connection)
             return;
+        if (bus.initial_lookup)
+        {
+            bus.initial_lookup = false;
+            bus.lookup_owner();
+        }
         if (!dbus_connection_read_write(bus.connection, 0))
         {
-            if (is_system)
-                locked = sleeping = false;
-            else
-                screen_active = false;
+            set_owner(bus, "");
+            bus.close();
             return;
         }
         while (auto* message = dbus_connection_pop_message(bus.connection))
         {
-            receive(message, is_system);
+            receive(bus, message);
             dbus_message_unref(message);
         }
-    }
-    bool poll()
-    {
-        dispatch(session, false);
-        dispatch(system, true);
-        return screen_active || locked || sleeping;
     }
 };
 Monitor::Monitor() : impl_(std::make_unique<Impl>())
@@ -254,6 +516,19 @@ Monitor::Monitor() : impl_(std::make_unique<Impl>())
 Monitor::~Monitor() = default;
 bool Monitor::poll()
 {
-    return impl_->poll();
+    impl_->dispatch(impl_->desktop);
+    impl_->dispatch(impl_->system);
+    return impl_->saver.active || impl_->locked.active || impl_->sleep.active;
+}
+bool Monitor::desktop_gaze_allowed() const
+{
+    return !impl_->system.overflow && !impl_->desktop.overflow && impl_->verified &&
+           impl_->active.known && impl_->active.active && impl_->locked.clear() &&
+           impl_->sleep.clear() && !impl_->requested_locks.count(impl_->path) &&
+           (impl_->saver_optional || impl_->saver.known) && !impl_->saver.active;
+}
+std::array<int, 2> Monitor::dbus_fds() const
+{
+    return {impl_->desktop.fd(), impl_->system.fd()};
 }
 } // namespace nekomote::host_session

@@ -125,8 +125,11 @@ TEST_CASE("Desktop gaze is an explicit playback-only option", "[layer-shell][opt
     REQUIRE_FALSE(parse({"--model", "model", "--gaze", "local"}).desktop_gaze);
     REQUIRE(parse({"--model", "model", "--gaze", "desktop"}).desktop_gaze);
     REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "invalid"}), std::runtime_error);
-    REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "desktop", "--input", "passthrough"}),
-                      std::runtime_error);
+    const auto transparent = parse(
+        {"--model", "model", "--gaze", "desktop", "--input", "passthrough", "--no-session-pause"});
+    REQUIRE(transparent.desktop_gaze);
+    REQUIRE(transparent.input == InputMode::passthrough);
+    REQUIRE_FALSE(transparent.pause_on_session_events);
     REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "desktop", "--save-config"}),
                       std::runtime_error);
     REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "desktop", "--frames", "2"}),
