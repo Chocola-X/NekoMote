@@ -528,6 +528,8 @@ extern "C"
     nekomote_error nekomote_wallpaper_set_output_available(nekomote_wallpaper* wp, int available);
     /* Open/close the shared control panel; works before lazy GPU UI initialization. */
     nekomote_error nekomote_wallpaper_set_ui_open(nekomote_wallpaper* wp, int open);
+    /* Reserve physical pixels at the top of the output for the host's panel. */
+    nekomote_error nekomote_wallpaper_set_ui_top_inset(nekomote_wallpaper* wp, int pixels);
     void nekomote_wallpaper_set_render_target(nekomote_wallpaper* wp, uint32_t fbo);
     void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp);
     nekomote_error nekomote_wallpaper_load_initial(nekomote_wallpaper* wp);

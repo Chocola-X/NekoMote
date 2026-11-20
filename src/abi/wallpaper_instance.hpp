@@ -65,6 +65,11 @@ class WallpaperInstance
     nekomote_error set_paused(bool paused);
     nekomote_error set_output_available(bool available);
     nekomote_error set_ui_open(bool open);
+    void set_ui_top_inset(int pixels)
+    {
+        ui_context_.set_top_inset(pixels);
+        presentation_dirty_ = true;
+    }
     void set_render_target_fbo(std::uint32_t fbo);
     void reset_gpu_resources();
     nekomote_error load_initial();

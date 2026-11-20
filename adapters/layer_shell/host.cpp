@@ -24,8 +24,10 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <charconv>
 #include <chrono>
 #include <climits>
+#include <cmath>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -36,6 +38,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -192,7 +195,8 @@ class Host::Impl
         leave,
         motion,
         button,
-        scroll
+        scroll,
+        top_inset
     };
     struct Input
     {
@@ -246,7 +250,10 @@ class Host::Impl
     void initialize_vulkan();
 #endif
     void resize();
+    void apply_desktop_top_inset();
     void process_input();
+    void read_desktop_input();
+    void queue_desktop_input(std::string_view line);
     void update_desktop_gaze();
     void render();
     void capture();
@@ -301,6 +308,9 @@ class Host::Impl
     std::exception_ptr failure_;
     std::array<Input, 1024> inputs_{};
     size_t input_count_ = 0;
+    std::array<char, 96> desktop_input_line_{};
+    size_t desktop_input_size_ = 0;
+    double desktop_top_inset_ = 0.0;
     uint32_t logical_width_ = 0;
     uint32_t logical_height_ = 0;
     int scale_ = 1;
@@ -1139,12 +1149,13 @@ void Host::Impl::initialize_graphics()
                                                                      : options_.session.c_str()),
               "load diagnostic model");
     }
-    if (options_.ui_open && options_.role == SurfaceRole::layer)
+    if (options_.ui_open && (options_.role == SurfaceRole::layer || options_.desktop_input))
         check(nekomote_wallpaper_set_ui_open(wallpaper_, 1), "open shared controls");
     std::cerr << (options_.role == SurfaceRole::layer ? "layer-shell " : "GNOME ")
               << (options_.backend == Backend::vulkan ? "Vulkan" : "OpenGL") << " background "
               << pixel_width_ << 'x' << pixel_height_ << ", scale " << scale_ << ", local pointer "
-              << (options_.input == InputMode::passthrough
+              << (options_.desktop_input ? "forwarded by GNOME Shell"
+                  : options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
               << (desktop_gaze_ ? "; desktop gaze requested (cursor metadata only)"
@@ -1166,9 +1177,20 @@ void Host::Impl::resize()
     if (egl_window_)
         wl_egl_window_resize(egl_window_, pixel_width_, pixel_height_, 0, 0);
     if (wallpaper_)
+    {
         check(nekomote_wallpaper_set_output_size(wallpaper_, pixel_width_, pixel_height_),
               "resize wallpaper");
+        if (options_.desktop_input)
+            apply_desktop_top_inset();
+    }
     needs_resize_ = false;
+}
+
+void Host::Impl::apply_desktop_top_inset()
+{
+    const auto pixels = static_cast<int>(
+        std::ceil(std::min(desktop_top_inset_ * scale_, static_cast<double>(pixel_height_))));
+    check(nekomote_wallpaper_set_ui_top_inset(wallpaper_, pixels), "desktop UI top inset");
 }
 
 void Host::Impl::process_input()
@@ -1199,9 +1221,103 @@ void Host::Impl::process_input()
             case InputKind::scroll:
                 check(nekomote_wallpaper_mouse_scroll(wallpaper_, input.x), "pointer scroll");
                 break;
+            case InputKind::top_inset:
+                desktop_top_inset_ = input.x;
+                apply_desktop_top_inset();
+                break;
         }
     }
     input_count_ = 0;
+}
+
+void Host::Impl::queue_desktop_input(std::string_view line)
+{
+    // One pipe record is "<kind> <x> <y> <monotonic-ms>\n". Coordinates and
+    // scroll deltas use 1/256 of a logical unit, independent of locale and DPI.
+    if (line.size() < 7 || line[1] != ' ')
+        throw std::runtime_error("invalid GNOME desktop input record");
+    const char kind = line.front();
+    line.remove_prefix(2);
+    const auto read_number = [&line](auto& value)
+    {
+        const auto end = line.find(' ');
+        const auto word = line.substr(0, end);
+        const auto result = std::from_chars(word.data(), word.data() + word.size(), value);
+        if (result.ec != std::errc{} || result.ptr != word.data() + word.size())
+            throw std::runtime_error("invalid GNOME desktop input value");
+        line.remove_prefix(end == std::string_view::npos ? word.size() : end + 1);
+    };
+    int32_t fixed_x = 0, fixed_y = 0;
+    uint64_t time = 0;
+    read_number(fixed_x);
+    read_number(fixed_y);
+    read_number(time);
+    if (!line.empty())
+        throw std::runtime_error("unexpected GNOME desktop input fields");
+    constexpr double kFixedUnit = 256.0;
+    const double x = fixed_x / kFixedUnit;
+    const double y = fixed_y / kFixedUnit;
+    if (kind == 'i' && x >= 0)
+    {
+        queue({InputKind::top_inset, x});
+        return;
+    }
+    if (host_unavailable_)
+        return;
+    switch (kind)
+    {
+        case 'e':
+            queue({InputKind::enter, x, y});
+            break;
+        case 'l':
+            queue({InputKind::leave});
+            break;
+        case 'm':
+            queue({InputKind::motion, x, y, time});
+            break;
+        case 'p':
+        case 'r':
+            queue({InputKind::motion, x, y, time});
+            queue({InputKind::button, 0, 0, time, 0,
+                   kind == 'p' ? NEKOMOTE_MOUSE_PRESS : NEKOMOTE_MOUSE_RELEASE});
+            break;
+        case 's':
+            queue({InputKind::scroll, x});
+            break;
+        default:
+            throw std::runtime_error("unknown GNOME desktop input event");
+    }
+}
+
+void Host::Impl::read_desktop_input()
+{
+    // poll() signalled a dedicated pipe. A bounded read lets rendering and
+    // Wayland dispatch keep progressing during high-rate pointer input.
+    std::array<char, 2048> buffer;
+    const auto count = read(STDIN_FILENO, buffer.data(), buffer.size());
+    if (count < 0 && errno == EINTR)
+        return;
+    if (count < 0)
+        throw std::runtime_error("cannot read GNOME desktop input");
+    if (count == 0)
+    {
+        closed_ = true;
+        return;
+    }
+    for (const char byte : std::string_view(buffer.data(), static_cast<size_t>(count)))
+    {
+        if (byte == '\n')
+        {
+            queue_desktop_input({desktop_input_line_.data(), desktop_input_size_});
+            desktop_input_size_ = 0;
+        }
+        else
+        {
+            if (desktop_input_size_ == desktop_input_line_.size())
+                throw std::runtime_error("GNOME desktop input record too long");
+            desktop_input_line_[desktop_input_size_++] = byte;
+        }
+    }
 }
 
 void Host::Impl::update_desktop_gaze()
@@ -1339,7 +1455,7 @@ void Host::Impl::render()
     }
 #endif
     check(nekomote_wallpaper_render_frame(wallpaper_), "render wallpaper");
-    if (options_.role == SurfaceRole::layer)
+    if (options_.role == SurfaceRole::layer || options_.desktop_input)
         check(nekomote_wallpaper_render_ui(wallpaper_, static_cast<float>(dt)), "render controls");
     const bool capture_frame = !options_.capture.empty() && rendered_frames_ + 1 == options_.frames;
     if (capture_frame && options_.backend == Backend::opengl)
@@ -1435,10 +1551,11 @@ void Host::Impl::wait_events(int timeout)
     const auto buses = desktop_gaze_ && desktop_gaze_->protocols_available() && session_monitor_
                            ? session_monitor_->dbus_fds()
                            : std::array<int, 2>{-1, -1};
-    std::array<pollfd, 3> fds{
+    std::array<pollfd, 4> fds{
         {{wl_display_get_fd(display_), static_cast<short>(POLLIN | (needs_write ? POLLOUT : 0)), 0},
          {buses[0], POLLIN, 0},
-         {buses[1], POLLIN, 0}}};
+         {buses[1], POLLIN, 0},
+         {options_.desktop_input ? STDIN_FILENO : -1, POLLIN, 0}}};
     const int result = poll(fds.data(), fds.size(), timeout);
     if (result > 0 && (fds[0].revents & POLLIN))
     {
@@ -1453,6 +1570,8 @@ void Host::Impl::wait_events(int timeout)
         throw std::runtime_error("Wayland compositor disconnected");
     if (result > 0 && (fds[1].revents || fds[2].revents))
         poll_session();
+    if (result > 0 && fds[3].revents)
+        read_desktop_input();
     // POLLOUT is retried by the next prepare_read/flush iteration. Pending
     // dispatch happens at the loop head, after the prepared read is resolved.
 }

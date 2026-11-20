@@ -182,6 +182,9 @@ TEST_CASE("Wallpaper valid handle rejects invalid CPU inputs and seals OOM", "[a
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 999) == NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 1) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_ui_open(wallpaper.get(), 0) == NEKOMOTE_OK);
+    REQUIRE(nekomote_wallpaper_set_ui_top_inset(wallpaper.get(), -1) ==
+            NEKOMOTE_ERROR_INVALID_INPUT);
+    REQUIRE(nekomote_wallpaper_set_ui_top_inset(wallpaper.get(), 32) == NEKOMOTE_OK);
     REQUIRE(nekomote_wallpaper_set_volume(wallpaper.get(), -0.1f) == NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(nekomote_wallpaper_set_volume(wallpaper.get(), 1.1f) == NEKOMOTE_ERROR_INVALID_INPUT);
     REQUIRE(

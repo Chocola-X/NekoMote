@@ -1,8 +1,9 @@
 # GNOME Shell 45+ 壁纸适配器
 
 `adapters/gnome45/` 提供 GNOME Shell 扩展和独立渲染进程 `nekomote_gnome45`。
-扩展通过 Mutter 的 `Meta.WaylandClient` 启动和识别自己的窗口，在 Shell 背景组放置其
-`Clutter.Clone`。渲染进程使用 xdg-shell、现有 Wayland EGL/Vulkan 宿主和共享壁纸 C ABI。
+扩展通过 Mutter 的 `Meta.WaylandClient` 启动和识别自己的窗口。桌面与工作区预览通过
+`Clutter.Clone` 显示同一个渲染画面。渲染进程使用 xdg-shell、现有 Wayland EGL/Vulkan 宿主和
+共享壁纸 C ABI。
 关闭扩展、退出会话或重建输出时，扩展撤下克隆并终止对应进程。GNOME 原有背景随即恢复可见。
 
 ## 构建与安装
@@ -35,8 +36,13 @@ gnome-extensions prefs nekomote@nekopara.uk
   `$XDG_CONFIG_HOME/nekomote/gnome45/monitor-N.panel.json`（默认配置根为 `~/.config`）。
   状态按 GNOME 的显示器索引区分。可按 [面板状态格式](configuration.md) 预先选择角色、
   背景和帧率。
-- 首版桌面背景让鼠标事件透传。共用的壁纸面板、触摸、拖拽和全局视线暂未接入 GNOME
-  背景 actor。这个接入面向 GNOME Wayland，GNOME X11 使用独立 X11 壳。
+- 在桌面上点击右上角的按钮可打开共享控制面板。角色支持左键触摸、拖拽、滚轮缩放和桌面
+  范围内的鼠标视线。右键仍打开 GNOME 的桌面菜单。顶部面板占用的空间会留给 GNOME，
+  打开活动概览或鼠标离开壁纸时结束当前壁纸手势。
+- 活动概览和工作区预览显示动态壁纸，操作由 GNOME 接管。预览画面采用矩形边缘。
+  壁纸交互限于裸露的桌面区域，窗口覆盖下的全局视线暂未接入。GNOME X11 使用独立 X11 壳。
+- Shell 通过渲染子进程的专用标准输入管道异步转发鼠标事件。输入以桌面背景 actor 为原点，
+  由宿主一次性转换为输出物理像素。概览复用桌面渲染实例，每台显示器只运行一个渲染进程。
 - 扩展只在普通用户会话模式启动渲染器。宿主沿用已有会话暂停策略。
 - 源码参考了 Hanabi 的独立客户端与背景克隆思路，以及 Wallpaper Engine for Wayland
   的背景层与窗口所有权设计。适配器独立实现，不引入这两个参考项目作为依赖。
@@ -55,9 +61,21 @@ OpenGL 和 Vulkan 都有间隔截图证明桌面角色在更新。检查了渲�
 Release/LTO/Werror 构建通过。共用宿主的 layer-shell 既有三组测试通过，私有 KWin
 OpenGL 和 Vulkan 集成各 17 项通过。
 
+交互复测在两个版本中调用扩展的输入回调，并单独检查 Clutter 在控制按钮位置拾取到
+桌面背景 actor。OpenGL 和 Vulkan 均可打开共享面板。OpenGL 下验证了滚轮缩放和拖拽
+位移保存，右键事件继续由 Shell 分发。静置桌面在两个后端都持续更新，活动概览中的
+OpenGL 预览也有间隔截图确认。输入测试覆盖 Shell 回调到共享壁纸的链路，实体鼠标的
+完整事件分发留待手动验收。
+
 扩展元数据列出 GNOME 45–50。实际运行验证覆盖 45.2 和 48.7，46、47、49 和 50 未实测。
 49 起使用 Mutter 的新子进程接口，旧的任务列表隐藏方法不可用，任务切换器中的行为有待复核。
 本次未验收物理多屏、分数缩放、锁屏恢复和硬件 GPU 性能。
 
-隔离启动脚本、日志和截图保存在本地实验目录。最终截图分别位于
-`mantic-final/` 和 `trixie-final/`。测试只在私有根文件系统中启用扩展。
+隔离启动脚本、日志和截图保存在本地实验目录。交互复测截图分别位于
+`mantic-desktop-input/` 和 `trixie-desktop-input/`。
+在已配置的本地实验环境中，从仓库根目录运行下列命令可打开 1920×1080 的隔离窗口。
+将 `48` 替换成 `45` 可切换 Shell 版本，末尾可指定 `opengl` 或 `vulkan`。
+
+```bash
+bash experiments/gnome-adapter-2026-11-20/launch-visible.sh wayland 48
+```

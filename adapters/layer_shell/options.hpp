@@ -37,6 +37,7 @@ struct Options
     Backend backend = Backend::opengl;
     InputMode input = InputMode::interactive;
     SurfaceRole role = SurfaceRole::layer;
+    bool desktop_input = false;    // GNOME Shell owns stdin when enabled.
     int32_t width = 0, height = 0; // GNOME Shell logical output dimensions.
     uint64_t frames = 0;
     bool global_gaze = true;

@@ -1030,6 +1030,11 @@ nekomote_error WallpaperInstance::pointer_enter(double x, double y)
 nekomote_error WallpaperInstance::pointer_leave()
 {
     panel_.volume_dragging = false;
+    panel_.icon.dragging = false;
+    panel_.sidebar.dragging = false;
+    ui_context_.cancel_pointer_input();
+    // Clear the last hit-test position without feeding it into the model.
+    ui_context_.mouse_move(-1.0, -1.0);
     if (!initialized_)
         return NEKOMOTE_OK;
     presentation_dirty_ = true;

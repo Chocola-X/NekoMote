@@ -29,10 +29,9 @@ License: **GNU AGPL-3.0** (see [LICENSE](LICENSE)).
 - **Mainstream Linux Desktop Shell Support**:
   - **KDE Plasma 6 / 5 Plugins**: Seamlessly embedded into the Plasma Shell scenegraph with native graphical configuration and multi-monitor management.
   - **Wayland layer-shell Standalone Shell**: For modern Wayland compositors (Sway, Hyprland, niri, river, etc.), supporting full-screen background anchoring and global gaze tracking.
-  - **GNOME Shell 45+ (Wayland)**: A Shell extension displays the standalone renderer as a desktop background. [Build and setup](docs/gnome45.md)
+  - **GNOME Shell 45+ (Wayland)**: A Shell extension displays the live wallpaper on the desktop and in the Activities overview, with desktop interaction. [Build and setup](docs/gnome45.md)
   - **X11 / EWMH Standalone Shell**: For EWMH-compliant desktop environments and window managers (GNOME on X11, XFCE, i3, bspwm, Openbox, etc.), persisting as a standard desktop root window.
   - **Standalone Window Player**: Lightweight GLFW window, ideal for out-of-the-box testing, model diagnostics, or desktop widget usage.
-  - *(Note: GNOME is restricted on Wayland only; GNOME on X11 is verified and fully supported, see note below)*
 - **Open & Customizable Asset Pipeline**: The asset library is completely decoupled and not hardcoded to a single game. In theory, character live portraits from other Galgame titles built with the E-mote engine can also be imported and played (see Asset Preparation).
 - **Audio & Lifelike Lip-Sync**: Low-latency playback via PulseAudio, with real-time RMS extraction driving mouth movements and full mute support.
 - **Time-Based Dynamic Background Rotation**: Supports static PNG backgrounds as well as dynamic background groups that smoothly transition according to local system time. An open scheduling interface allows configuring arbitrary time phases (e.g., day/dusk/night presets) and transition durations.
@@ -51,13 +50,14 @@ NekoMote decouples the application layer from desktop adapters: all core wallpap
 | **KDE Plasma 6 Plugin** | KDE Plasma 6 (Wayland / X11) | OpenGL / Vulkan (configured) | In-process (plasmashell) | Touch clicks, drag, and UI panel | Desktop context menu "Configure Wallpaper" |
 | **KDE Plasma 5 Adapter** | KDE Plasma 5 (X11 / Wayland) | OpenGL / Vulkan (configured) | In-process (plasmashell) | Touch clicks, drag, and UI panel | Desktop context menu "Configure Wallpaper" |
 | **`nekomote_layer_shell`** | Sway, Hyprland, niri, river, etc. | OpenGL / Vulkan (at launch) | Standalone background process | Local interaction, input passthrough & global gaze | CLI flags + XDG per-instance config |
+| **GNOME Shell extension** | GNOME Shell 45+ (Wayland) | OpenGL / Vulkan (configured) | Extension + standalone renderer | Desktop clicks, dragging, scrolling and shared controls | Extension preferences + XDG per-instance config |
 | **`nekomote_x11`** | GNOME (X11), XFCE, i3, bspwm, Openbox, etc. | OpenGL / Vulkan (at launch) | Standalone background process | Local interaction, input passthrough & global gaze | CLI flags + XDG per-instance config |
 | **`nekomote_player`** | Any desktop environment (window mode) | OpenGL / Vulkan (at launch) | Standalone foreground window | Keyboard shortcuts, mouse drag & UI panel | CLI flags + XDG config |
 
 > [!NOTE]
 > **Note on the GNOME Desktop Environment**:
 > - **X11 Session (GNOME on X11)**: **Fully supported**. GNOME on X11 adheres to the standard EWMH specification and has been verified to run reliably with `nekomote_x11`.
-> - **Wayland Session (GNOME on Wayland)**: Currently unsupported. GNOME Shell (Mutter) on Wayland does not implement the `wlr-layer-shell` protocol and lacks an open native dynamic wallpaper GPU extension interface. GNOME Wayland users can switch to a GNOME on X11 session to run `nekomote_x11`, or use the standalone window player `nekomote_player`.
+> - **Wayland Session (GNOME on Wayland)**: Use the [GNOME Shell extension](docs/gnome45.md). Tested in isolated GNOME 45.2 and 48.7 sessions.
 
 ---
 

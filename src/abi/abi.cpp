@@ -1645,6 +1645,17 @@ extern "C"
             wp->instance->set_render_target_fbo(fbo);
     }
 
+    nekomote_error nekomote_wallpaper_set_ui_top_inset(nekomote_wallpaper* wp, int pixels)
+    {
+        if (!wp || !wp->instance || pixels < 0)
+        {
+            set_error(NEKOMOTE_ERROR_INVALID_INPUT, "invalid wallpaper or UI top inset");
+            return NEKOMOTE_ERROR_INVALID_INPUT;
+        }
+        wp->instance->set_ui_top_inset(pixels);
+        return NEKOMOTE_OK;
+    }
+
     void nekomote_wallpaper_reset_gl(nekomote_wallpaper* wp)
     {
         if (wp && wp->instance)

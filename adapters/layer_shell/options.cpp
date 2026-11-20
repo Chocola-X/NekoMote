@@ -51,6 +51,8 @@ Options parse_options(int argc, char** argv, SurfaceRole role)
             result.no_save = true;
         else if (option == "--ui-open")
             result.ui_open = true;
+        else if (option == "--desktop-input" && role == SurfaceRole::gnome_toplevel)
+            result.desktop_input = true;
         else if (role == SurfaceRole::gnome_toplevel &&
                  (option == "--width" || option == "--height"))
         {
@@ -158,7 +160,7 @@ Options parse_options(int argc, char** argv, SurfaceRole role)
     if (assets_set && model_set)
         throw std::runtime_error("select exactly one of --assets PATH or --model PATH");
     if (result.save_config && (result.no_save || result.frames || !result.capture.empty() ||
-                               result.ui_open || result.muted))
+                               result.ui_open || result.muted || result.desktop_input))
         throw std::runtime_error(
             "--save-config cannot be combined with runtime diagnostics or --no-save");
     nekomote_launch_config* raw = nullptr;
@@ -191,6 +193,8 @@ Options parse_options(int argc, char** argv, SurfaceRole role)
     if (!input_set)
         result.input = std::string_view(saved.input) == "passthrough" ? InputMode::passthrough
                                                                       : InputMode::interactive;
+    if (result.desktop_input)
+        result.input = InputMode::passthrough;
     if (!global_gaze_set)
         result.global_gaze = saved.global_gaze != 0;
     if (std::filesystem::weakly_canonical(std::filesystem::absolute(result.state)) ==

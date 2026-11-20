@@ -50,6 +50,10 @@ class Context
     }
 
     bool toggle_icon(IconState& icon, std::uint32_t texture_id);
+    void set_top_inset(int pixels)
+    {
+        top_inset_ = static_cast<float>(pixels);
+    }
     void sidebar(SidebarState& sidebar, float delta_time = 0.016f);
     void validate_sidebar_position(SidebarState& sidebar);
     void sidebar_header(const SidebarState& sidebar, const char* title, const Style& style);
@@ -96,6 +100,7 @@ class Context
   private:
     Painter* painter_{nullptr};
     Style style_;
+    float top_inset_ = 0.0f;
     float mouse_x_{0};
     float mouse_y_{0};
     float scroll_delta_{0.0f};

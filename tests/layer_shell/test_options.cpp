@@ -102,6 +102,12 @@ TEST_CASE("GNOME renderer needs a logical output size and separate configuration
     REQUIRE(valid.width == 1280);
     REQUIRE(valid.height == 720);
     REQUIRE(valid.config == config);
+    REQUIRE_FALSE(valid.desktop_input);
+    const auto desktop = parse({"--assets", "assets", "--width", "1280", "--height", "720",
+                                "--config", config, "--desktop-input"},
+                               role);
+    REQUIRE(desktop.desktop_input);
+    REQUIRE(desktop.input == InputMode::passthrough);
     REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280"}, role),
                         "GNOME renderer requires both --width and --height");
     REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280", "--height", "720"}, role),
@@ -110,6 +116,8 @@ TEST_CASE("GNOME renderer needs a logical output size and separate configuration
                         "--width expects a positive logical size");
     REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280"}),
                         "unknown option: --width");
+    REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--desktop-input"}),
+                        "unknown option: --desktop-input");
 }
 
 TEST_CASE("Layer shell diagnostics require positive exact frame counts", "[layer-shell][options]")

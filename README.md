@@ -29,10 +29,9 @@ https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 - **主流 Linux 桌面壁纸壳支持**：
   - **KDE Plasma 6 / 5 插件**：直接嵌入 Plasma Shell 场景图，提供原生图形化配置界面与多显示器管理。
   - **Wayland layer-shell 独立壳**：针对 Sway、Hyprland、niri、river 等现代 Wayland 合成器，支持全屏背景层常驻与全局视线追踪。
-  - **GNOME Shell 45+（Wayland）**：通过 Shell 扩展将独立渲染进程接到桌面背景。[构建与使用](docs/gnome45.md)
+  - **GNOME Shell 45+（Wayland）**：通过 Shell 扩展在桌面和活动概览显示动态壁纸，并支持桌面交互。[构建与使用](docs/gnome45.md)
   - **X11 / EWMH 独立壳**：针对 GNOME (X11)、XFCE、i3、bspwm、Openbox 等遵循 EWMH 的桌面环境与窗口管理器，以标准桌面根窗口常驻。
   - **独立播放器**：轻量 GLFW 窗口，支持开箱即用预览、单模型诊断与窗口挂件模式。
-  - *(注：GNOME 仅在 Wayland 会话下受限，X11 会话已实测支持，见下文说明)*
 - **开放自定义资产库**：资产库完全解耦，并不硬编码绑定特定作品。理论上任何使用 E-mote 引擎制作的 Galgame 角色动态立绘均可导入支持（详见资产说明）。
 - **声音与拟真口型**：基于 PulseAudio 的低延迟音频播放，实时提取 RMS 能量驱动模型嘴部动作，支持一键静音。
 - **基于时间的动态背景轮换**：支持静态 PNG 背景，以及根据本地系统时间平滑过渡的动态背景组。程序预留了通用的时间阶段配置接口，不仅限于三相，可自定义任意数量的时间相（如预设的白天/黄昏/夜晚）与过渡时长。
@@ -50,6 +49,7 @@ NekoMote 采用**应用层与壁纸壳完全解耦**的架构设计：核心业�
 | --- | --- | --- | --- | --- | --- |
 | **KDE Plasma 6 插件** | KDE Plasma 6 (Wayland / X11) | OpenGL / Vulkan (配置指定) | 嵌入 plasmashell 进程 | 支持点击触摸、拖拽与控制面板 | 桌面右键「配置壁纸」图形化设置 |
 | **KDE Plasma 5 适配器** | KDE Plasma 5 (X11 / Wayland) | OpenGL / Vulkan (配置指定) | 嵌入 plasmashell 进程 | 支持点击触摸、拖拽与控制面板 | 桌面右键「配置壁纸」图形化设置 |
+| **GNOME Shell 扩展** | GNOME Shell 45+ (Wayland) | OpenGL / Vulkan (配置指定) | 扩展 + 独立渲染进程 | 桌面点击、拖拽、滚轮与控制面板 | 扩展偏好页 + XDG 独立配置文件 |
 | **`nekomote_layer_shell`** | Sway, Hyprland, niri, river 等 | OpenGL / Vulkan (启动指定) | 独立后台进程 | 支持局部交互、鼠标穿透与全局视线 | 命令行参数 + XDG 独立配置文件 |
 | **`nekomote_x11`** | GNOME (X11), XFCE, i3, bspwm, Openbox 等 | OpenGL / Vulkan (启动指定) | 独立后台进程 | 支持局部交互、鼠标穿透与全局视线 | 命令行参数 + XDG 独立配置文件 |
 | **`nekomote_player`** | 任意桌面环境（窗口模式） | OpenGL / Vulkan (启动指定) | 独立前台窗口 | 完整键盘快捷键、鼠标拖拽与 UI 面板 | 命令行参数 + XDG 配置文件 |
@@ -57,7 +57,7 @@ NekoMote 采用**应用层与壁纸壳完全解耦**的架构设计：核心业�
 > [!NOTE]
 > **关于 GNOME 桌面环境的说明**：
 > - **X11 会话（GNOME on X11）**：**完全支持**。GNOME 在 X11 下遵循标准 EWMH 规范，经实测可通过 `nekomote_x11` 稳定运行。
-> - **Wayland 会话（GNOME on Wayland）**：暂不支持。原因在于 GNOME Shell (Mutter) 在 Wayland 下未实现 `wlr-layer-shell` 协议，且 GNOME 自身缺乏开放的外部 GPU 动态渲染壁纸接口。GNOME Wayland 用户若需体验，可切换至 GNOME X11 会话运行 `nekomote_x11`，或使用独立窗口播放器 `nekomote_player`。
+> - **Wayland 会话（GNOME on Wayland）**：使用 [GNOME Shell 扩展](docs/gnome45.md)。在 GNOME 45.2 和 48.7 的隔离会话中验收。
 
 ---
 

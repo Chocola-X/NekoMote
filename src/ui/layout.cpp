@@ -92,6 +92,8 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
         return false;
     const float vw = static_cast<float>(painter_->viewport_width());
     const float vh = static_cast<float>(painter_->viewport_height());
+    const float max_y = std::max(8.0f, vh - icon.size - 8.0f);
+    const float min_y = std::min(max_y, 8.0f + top_inset_);
     const bool invalid_position =
         icon.initialized && !icon.dragging &&
         (!std::isfinite(icon.x) || !std::isfinite(icon.y) || icon.x < 0 || icon.y < 0 ||
@@ -100,9 +102,11 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
     {
         icon.position_reset = invalid_position;
         icon.x = std::max(8.0f, vw - icon.size - 8.0f);
-        icon.y = 8.0f;
+        icon.y = min_y;
         icon.initialized = true;
     }
+    if (top_inset_ > 0 && !icon.dragging)
+        icon.y = std::max(icon.y, min_y);
     icon.hover = mouse_in_rect(icon.x, icon.y, icon.size, icon.size);
     if (icon.hover && mouse_pressed_ && !icon.dragging)
     {
@@ -119,7 +123,7 @@ bool Context::toggle_icon(IconState& icon, std::uint32_t texture_id)
         icon.x = mouse_x_ - icon.drag_offset_x;
         icon.y = mouse_y_ - icon.drag_offset_y;
         icon.x = std::clamp(icon.x, 8.0f, std::max(8.0f, vw - icon.size - 8.0f));
-        icon.y = std::clamp(icon.y, 8.0f, std::max(8.0f, vh - icon.size - 8.0f));
+        icon.y = std::clamp(icon.y, min_y, max_y);
         if (std::abs(icon.x - icon.start_x) + std::abs(icon.y - icon.start_y) > 3.0f)
             icon.moved = true;
         if (mouse_released_ || !mouse_down_)
@@ -165,8 +169,8 @@ void Context::validate_sidebar_position(SidebarState& sidebar)
 
     // Expanding content can push the bottom outside the viewport without
     // invalidating the user's horizontal position or free placement.
-    sidebar.y =
-        std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - std::max(sidebar.height, 44.0f) - 8.0f));
+    const float max_y = std::max(8.0f, vh - std::max(sidebar.height, 44.0f) - 8.0f);
+    sidebar.y = std::clamp(sidebar.y, std::min(max_y, 8.0f + top_inset_), max_y);
 }
 
 void Context::sidebar(SidebarState& sidebar, float delta_time)
@@ -178,6 +182,8 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
     const float vh = static_cast<float>(painter_->viewport_height());
     const float header_h = 44.0f;
     const float eff_h = std::max(sidebar.height, header_h);
+    const float max_y = std::max(8.0f, vh - eff_h - 8.0f);
+    const float min_y = std::min(max_y, 8.0f + top_inset_);
 
     validate_sidebar_position(sidebar);
 
@@ -199,7 +205,7 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
             sidebar.x = mouse_x_ - sidebar.drag_offset_x;
             sidebar.y = mouse_y_ - sidebar.drag_offset_y;
             sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
-            sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - eff_h - 8.0f));
+            sidebar.y = std::clamp(sidebar.y, min_y, max_y);
             sidebar.moved = sidebar.moved || std::abs(sidebar.x - sidebar.start_x) +
                                                      std::abs(sidebar.y - sidebar.start_y) >
                                                  3.0f;
@@ -231,12 +237,12 @@ void Context::sidebar(SidebarState& sidebar, float delta_time)
         const float slide_anim = sidebar.open ? ease_out_back(sidebar.animation)
                                               : (sidebar.animation * sidebar.animation);
         sidebar.x = 8.0f - (sidebar.width + 16.0f) * (1.0f - slide_anim);
-        sidebar.y = 8.0f;
+        sidebar.y = std::min(std::max(8.0f, vh - header_h - 8.0f), 8.0f + top_inset_);
     }
     else if (!sidebar.dragging)
     {
         sidebar.x = std::clamp(sidebar.x, 8.0f, std::max(8.0f, vw - sidebar.width - 8.0f));
-        sidebar.y = std::clamp(sidebar.y, 8.0f, std::max(8.0f, vh - eff_h - 8.0f));
+        sidebar.y = std::clamp(sidebar.y, min_y, max_y);
     }
 }
 

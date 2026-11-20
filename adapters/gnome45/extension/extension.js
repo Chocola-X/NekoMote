@@ -2,8 +2,10 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {DesktopPointer} from './pointer.js';
 
 const RENDERER = 'nekomote_gnome45';
 const SIGTERM = 15;
@@ -14,6 +16,29 @@ export default class NekoMoteExtension extends Extension {
             throw new Error('NekoMote requires a GNOME Wayland session');
 
         this._renderers = new Set();
+        this._backgrounds = new Map();
+        this._injections = new InjectionManager();
+        const extension = this;
+        this._injections.overrideMethod(Background.BackgroundManager.prototype,
+            '_createBackgroundActor', original => function (...args) {
+                const actor = original.apply(this, args);
+                if (!this._container.has_style_class_name?.('screen-shield-background') &&
+                    !Main.layoutManager.screenShieldGroup.contains(this._container))
+                    extension._registerBackground(actor,
+                        this._container === Main.layoutManager._backgroundGroup);
+                return actor;
+            });
+        for (const manager of Main.layoutManager._bgManagers)
+            this._registerBackground(manager.backgroundActor, true);
+        this._overviewId = Main.overview.connect('showing', () => {
+            for (const renderer of this._renderers)
+                renderer.pointer.leave();
+            this._registerPreviewTree(Main.layoutManager.overviewGroup);
+        });
+        this._panelId = Main.layoutManager.panelBox.connect('notify::height', () => {
+            for (const renderer of this._renderers)
+                this._updateTopInset(renderer);
+        });
         this._settings = this.getSettings();
         this._settingsId = this._settings.connect('changed', () => this._reload());
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._reload());
@@ -29,7 +54,13 @@ export default class NekoMoteExtension extends Extension {
         global.window_manager.disconnect(this._mapId);
         Main.layoutManager.disconnect(this._monitorsId);
         this._settings.disconnect(this._settingsId);
+        Main.overview.disconnect(this._overviewId);
+        Main.layoutManager.panelBox.disconnect(this._panelId);
+        this._injections.clear();
         this._stopRenderers();
+        for (const background of this._backgrounds.values())
+            background.actor.disconnect(background.destroyId);
+        this._backgrounds.clear();
         this._renderers = null;
         this._settings = null;
     }
@@ -71,12 +102,12 @@ export default class NekoMoteExtension extends Extension {
         const argv = [
             executable, '--assets', assets, '--backend', backend, '--config', config,
             '--width', String(monitor.width), '--height', String(monitor.height),
-            '--input', 'passthrough', '--global-gaze', 'off',
+            '--desktop-input', '--global-gaze', 'off',
         ];
         if (monitor.index !== Main.layoutManager.primaryIndex)
             argv.push('--mute');
 
-        const launcher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.NONE});
+        const launcher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.STDIN_PIPE});
         let client;
         let process;
         try {
@@ -91,8 +122,16 @@ export default class NekoMoteExtension extends Extension {
             launcher.close();
         }
 
-        const renderer = {client, process, monitor, clone: null, window: null, unmanagedId: 0};
+        const renderer = {
+            client, process, monitor, source: null, desktopClone: null, window: null, unmanagedId: 0,
+        };
+        renderer.pointer = new DesktopPointer(process.get_stdin_pipe(), error => {
+            console.error(`NekoMote: ${error.message}`);
+            this._detach(renderer);
+            process.send_signal(SIGTERM);
+        });
         this._renderers.add(renderer);
+        this._updateTopInset(renderer);
         process.wait_async(null, (child, result) => {
             child.wait_finish(result);
             if (this._renderers?.delete(renderer)) {
@@ -102,10 +141,16 @@ export default class NekoMoteExtension extends Extension {
         });
     }
 
+    _updateTopInset(renderer) {
+        const height = renderer.monitor.index === Main.layoutManager.primaryIndex
+            ? Main.layoutManager.panelBox.height : 0;
+        renderer.pointer.topInset(height);
+    }
+
     _attach(actor) {
         const window = actor.get_meta_window();
         const renderer = [...this._renderers].find(({client}) => client.owns_window(window));
-        if (!renderer || renderer.clone)
+        if (!renderer || renderer.source)
             return;
         const {monitor} = renderer;
         try {
@@ -114,13 +159,16 @@ export default class NekoMoteExtension extends Extension {
             window.move_to_monitor(monitor.index);
             window.minimize();
             renderer.client.hide_from_window_list?.(window);
-            renderer.clone = new Clutter.Clone({
-                source: actor,
-                x: monitor.x, y: monitor.y, width: monitor.width, height: monitor.height,
-                reactive: false,
-                clip_to_allocation: true,
+            renderer.source = actor;
+            // Keep desktop redraws directly in the background group so Mutter
+            // continues presenting frames from the minimized render window.
+            const {x, y, width, height} = monitor;
+            renderer.desktopClone = new Clutter.Clone({
+                source: actor, x, y, width, height, clip_to_allocation: true,
             });
-            Main.layoutManager._backgroundGroup.add_child(renderer.clone);
+            Main.layoutManager._backgroundGroup.add_child(renderer.desktopClone);
+            for (const background of this._backgrounds.values())
+                this._attachBackground(background, renderer);
         } catch (error) {
             this._detach(renderer);
             renderer.process.send_signal(SIGTERM);
@@ -128,13 +176,70 @@ export default class NekoMoteExtension extends Extension {
         }
     }
 
+    _registerPreviewTree(root) {
+        if (root instanceof Meta.BackgroundActor)
+            this._registerBackground(root, false);
+        for (const actor of root.get_children())
+            this._registerPreviewTree(actor);
+    }
+
+    _registerBackground(actor, desktop) {
+        if (this._backgrounds.has(actor))
+            return;
+        const background = {actor, desktop, clone: null, renderer: null, eventId: 0};
+        background.destroyId = actor.connect('destroy', () => {
+            if (background.desktop)
+                background.renderer?.pointer.leave();
+            this._backgrounds.delete(actor);
+        });
+        this._backgrounds.set(actor, background);
+        for (const renderer of this._renderers)
+            this._attachBackground(background, renderer);
+    }
+
+    _attachBackground(background, renderer) {
+        const {actor} = background;
+        if (!renderer.source || background.renderer || actor.monitor !== renderer.monitor.index)
+            return;
+        if (background.desktop) {
+            // Consume left-button gestures before the background menu's
+            // long-press action. Right clicks continue through GNOME's actor.
+            background.eventId = actor.connect('captured-event', (target, event) =>
+                Main.overview.visible
+                    ? Clutter.EVENT_PROPAGATE : renderer.pointer.event(target, event));
+        } else {
+            // Clutter scales the source to the clone's allocation. An allocation
+            // clip also crops the source in GNOME 45's scaled workspace previews.
+            const clone = new Clutter.Clone({source: renderer.source});
+            clone.add_constraint(new Clutter.BindConstraint({
+                source: actor,
+                coordinate: Clutter.BindCoordinate.SIZE,
+            }));
+            actor.add_child(clone);
+            background.clone = clone;
+        }
+        background.renderer = renderer;
+    }
+
     _detach(renderer) {
+        renderer.pointer.close();
         if (renderer.unmanagedId)
             renderer.window.disconnect(renderer.unmanagedId);
         renderer.unmanagedId = 0;
         renderer.window = null;
-        renderer.clone?.destroy();
-        renderer.clone = null;
+        renderer.source = null;
+        renderer.desktopClone?.destroy();
+        renderer.desktopClone = null;
+        for (const background of this._backgrounds.values()) {
+            if (background.renderer === renderer) {
+                if (background.eventId)
+                    background.actor.disconnect(background.eventId);
+                background.eventId = 0;
+                background.clone?.destroy();
+                background.clone = null;
+                background.renderer = null;
+            }
+        }
     }
 
     _stopRenderers() {

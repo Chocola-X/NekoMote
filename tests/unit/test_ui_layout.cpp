@@ -490,6 +490,32 @@ TEST_CASE("Saved UI coordinates outside new viewport return to defaults", "[ui_l
     REQUIRE(sidebar.position_reset);
 }
 
+TEST_CASE("Desktop panel inset leaves wallpaper controls accessible", "[ui_layout][config]")
+{
+    MockPainter painter;
+    painter.vw = 640;
+    painter.vh = 480;
+    Context ctx;
+    ctx.init(&painter);
+    ctx.set_top_inset(32);
+    IconState icon;
+    SidebarState sidebar;
+    ctx.toggle_icon(icon, 0);
+    ctx.sidebar(sidebar);
+    REQUIRE(icon.y == 40.0f);
+    REQUIRE(sidebar.y == 40.0f);
+
+    icon.y = 8.0f;
+    sidebar.is_free = true;
+    sidebar.x = 60.0f;
+    sidebar.y = 8.0f;
+    ctx.toggle_icon(icon, 0);
+    ctx.sidebar(sidebar);
+    REQUIRE(icon.y == 40.0f);
+    REQUIRE(sidebar.y == 40.0f);
+    REQUIRE(sidebar.is_free);
+}
+
 TEST_CASE("Sidebar bottom overflow only adjusts its vertical placement", "[ui_layout][config]")
 {
     MockPainter painter;
