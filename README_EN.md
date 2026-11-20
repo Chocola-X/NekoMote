@@ -15,6 +15,7 @@ NekoMote currently integrates seamlessly with the unpacked assets of *NEKOPARA* 
 </div>
 
 Demo Video:
+
 https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 
 License: **GNU AGPL-3.0** (see [LICENSE](LICENSE)).
