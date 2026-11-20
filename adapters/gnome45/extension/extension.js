@@ -7,13 +7,18 @@ import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {DesktopPointer} from './pointer.js';
 import {addWorkspacePreview} from './preview.js';
+import {defaultRendererPath} from './renderer.js';
 
-const RENDERER = 'nekomote_gnome45';
 const SIGTERM = 15;
+const GAZE_INTERVAL_MS = 33;
 
 export default class NekoMoteExtension extends Extension {
     enable() {
-        if (!Meta.is_wayland_compositor())
+        // GNOME 50 removed both X11 sessions and this Mutter predicate.
+        const wayland = typeof Meta.is_wayland_compositor === 'function'
+            ? Meta.is_wayland_compositor()
+            : typeof Meta.WaylandClient?.new_subprocess === 'function';
+        if (!wayland)
             throw new Error('NekoMote requires a GNOME Wayland session');
 
         this._renderers = new Set();
@@ -35,13 +40,27 @@ export default class NekoMoteExtension extends Extension {
             for (const renderer of this._renderers)
                 renderer.pointer.leave();
             this._registerPreviewTree(Main.layoutManager.overviewGroup);
+            this._updatePlayback();
         });
+        this._overviewHiddenId = Main.overview.connect('hidden', () => this._updatePlayback());
+        this._fullscreenId = global.display.connect('in-fullscreen-changed', () => this._updatePlayback());
+        this._gazeTimer = 0;
         this._panelId = Main.layoutManager.panelBox.connect('notify::height', () => {
             for (const renderer of this._renderers)
                 this._updateTopInset(renderer);
         });
         this._settings = this.getSettings();
-        this._settingsId = this._settings.connect('changed', () => this._reload());
+        const installed = defaultRendererPath();
+        if (installed && !this._settings.get_string('renderer-path'))
+            this._settings.set_string('renderer-path', installed);
+        this._settingsId = this._settings.connect('changed', (_settings, key) => {
+            if (key === 'global-gaze')
+                this._updateGazeTimer();
+            else if (key === 'pause-fullscreen')
+                this._updatePlayback();
+            else
+                this._reload();
+        });
         this._monitorsId = Main.layoutManager.connect('monitors-changed', () => this._reload());
         this._mapId = global.window_manager.connect_after('map', (_wm, actor) => {
             this._attach(actor);
@@ -56,6 +75,8 @@ export default class NekoMoteExtension extends Extension {
         Main.layoutManager.disconnect(this._monitorsId);
         this._settings.disconnect(this._settingsId);
         Main.overview.disconnect(this._overviewId);
+        Main.overview.disconnect(this._overviewHiddenId);
+        global.display.disconnect(this._fullscreenId);
         Main.layoutManager.panelBox.disconnect(this._panelId);
         this._injections.clear();
         this._stopRenderers();
@@ -81,10 +102,7 @@ export default class NekoMoteExtension extends Extension {
             const configuredPath = this._settings.get_string('renderer-path');
             if (configuredPath && !GLib.path_is_absolute(configuredPath))
                 throw new Error('The renderer executable path must be absolute');
-            const userRenderer = GLib.build_filenamev([GLib.get_home_dir(), '.local', 'bin', RENDERER]);
-            const executable = configuredPath ||
-                (GLib.file_test(userRenderer, GLib.FileTest.IS_EXECUTABLE) ? userRenderer :
-                    GLib.find_program_in_path(RENDERER));
+            const executable = configuredPath || defaultRendererPath();
             if (!executable || !GLib.file_test(executable, GLib.FileTest.IS_EXECUTABLE))
                 throw new Error('Install nekomote_gnome45 or set its path in Preferences');
 
@@ -92,6 +110,7 @@ export default class NekoMoteExtension extends Extension {
             const backend = this._settings.get_string('backend');
             for (const monitor of Main.layoutManager.monitors)
                 this._start(executable, assets, backend, configDir, monitor);
+            this._updatePlayback();
         } catch (error) {
             this._stopRenderers();
             console.error(`NekoMote: ${error.message}`);
@@ -105,6 +124,8 @@ export default class NekoMoteExtension extends Extension {
             '--width', String(monitor.width), '--height', String(monitor.height),
             '--desktop-input', '--global-gaze', 'off',
         ];
+        if (!this._settings.get_boolean('pause-session'))
+            argv.push('--no-session-pause');
         if (monitor.index !== Main.layoutManager.primaryIndex)
             argv.push('--mute');
 
@@ -125,7 +146,7 @@ export default class NekoMoteExtension extends Extension {
 
         const renderer = {
             client, process, monitor, source: null, desktopClone: null,
-            window: null, unmanagedId: 0, visibilityId: 0,
+            window: null, unmanagedId: 0, visibilityId: 0, covered: false,
         };
         renderer.pointer = new DesktopPointer(process.get_stdin_pipe(), error => {
             console.error(`NekoMote: ${error.message}`);
@@ -138,9 +159,50 @@ export default class NekoMoteExtension extends Extension {
             child.wait_finish(result);
             if (this._renderers?.delete(renderer)) {
                 this._detach(renderer);
+                this._updateGazeTimer();
                 console.warn('NekoMote: renderer exited, showing the static background');
             }
         });
+    }
+
+    _updatePlayback() {
+        const pause = this._settings.get_boolean('pause-fullscreen') && !Main.overview.visible;
+        for (const renderer of this._renderers) {
+            const covered = pause && renderer.monitor.inFullscreen;
+            if (covered === renderer.covered)
+                continue;
+            renderer.covered = covered;
+            renderer.pointer.setCovered(covered);
+        }
+        this._updateGazeTimer();
+    }
+
+    _updateGazeTimer() {
+        if (!this._settings.get_boolean('global-gaze') || Main.overview.visible ||
+            [...this._renderers].every(renderer => renderer.covered)) {
+            if (this._gazeTimer) {
+                GLib.source_remove(this._gazeTimer);
+                this._gazeTimer = 0;
+            }
+            for (const renderer of this._renderers)
+                renderer.pointer.clearGaze();
+            return;
+        }
+        if (!this._gazeTimer) {
+            this._gazeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, GAZE_INTERVAL_MS, () => {
+                if (!Main.sessionMode.isLocked && !Main.overview.visible) {
+                    const [x, y] = global.get_pointer();
+                    for (const renderer of this._renderers) {
+                        if (!renderer.covered)
+                            renderer.pointer.gaze(x - renderer.monitor.x, y - renderer.monitor.y);
+                    }
+                } else {
+                    for (const renderer of this._renderers)
+                        renderer.pointer.clearGaze();
+                }
+                return GLib.SOURCE_CONTINUE;
+            });
+        }
     }
 
     _updateTopInset(renderer) {
@@ -225,7 +287,7 @@ export default class NekoMoteExtension extends Extension {
     _desktopEvent(renderer, event) {
         // The desktop clone fills the monitor. The input actor and hidden
         // window can have different origins when the Shell reserves work area.
-        if (Main.overview.visible || !renderer.desktopClone)
+        if (Main.overview.visible || renderer.covered || !renderer.desktopClone)
             return Clutter.EVENT_PROPAGATE;
         return renderer.pointer.event(renderer.desktopClone, event);
     }
@@ -260,5 +322,6 @@ export default class NekoMoteExtension extends Extension {
             renderer.process.send_signal(SIGTERM);
         }
         this._renderers.clear();
+        this._updateGazeTimer();
     }
 }

@@ -17,5 +17,17 @@
       <default>'opengl'</default>
       <summary>NekoMote rendering backend</summary>
     </key>
+    <key name="pause-session" type="b">
+      <default>true</default>
+      <summary>Pause during session lock, sleep and screen power-off</summary>
+    </key>
+    <key name="pause-fullscreen" type="b">
+      <default>true</default>
+      <summary>Pause a wallpaper behind a fullscreen window</summary>
+    </key>
+    <key name="global-gaze" type="b">
+      <default>true</default>
+      <summary>Follow the pointer outside the desktop</summary>
+    </key>
   </schema>
 </schemalist>

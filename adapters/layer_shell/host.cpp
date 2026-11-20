@@ -196,7 +196,9 @@ class Host::Impl
         motion,
         button,
         scroll,
-        top_inset
+        top_inset,
+        gaze,
+        clear_gaze
     };
     struct Input
     {
@@ -310,6 +312,7 @@ class Host::Impl
     size_t input_count_ = 0;
     std::array<char, 96> desktop_input_line_{};
     size_t desktop_input_size_ = 0;
+    bool desktop_covered_ = false;
     double desktop_top_inset_ = 0.0;
     uint32_t logical_width_ = 0;
     uint32_t logical_height_ = 0;
@@ -892,8 +895,8 @@ void Host::Impl::destroy_surface_role() noexcept
 
 void Host::Impl::refresh_availability()
 {
-    const bool unavailable =
-        output_missing_ || graphics_detached_ || !configured_ || session_unavailable_;
+    const bool unavailable = output_missing_ || graphics_detached_ || !configured_ ||
+                             session_unavailable_ || desktop_covered_;
     if (desktop_gaze_)
     {
         if (!session_monitor_ && desktop_gaze_->protocols_available())
@@ -1221,6 +1224,14 @@ void Host::Impl::process_input()
             case InputKind::scroll:
                 check(nekomote_wallpaper_mouse_scroll(wallpaper_, input.x), "pointer scroll");
                 break;
+            case InputKind::gaze:
+                check(nekomote_wallpaper_set_gaze_target(wallpaper_, input.x * scale_,
+                                                         input.y * scale_),
+                      "GNOME gaze");
+                break;
+            case InputKind::clear_gaze:
+                check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear GNOME gaze");
+                break;
             case InputKind::top_inset:
                 desktop_top_inset_ = input.x;
                 apply_desktop_top_inset();
@@ -1262,10 +1273,21 @@ void Host::Impl::queue_desktop_input(std::string_view line)
         queue({InputKind::top_inset, x});
         return;
     }
+    if (kind == 'h' && (x == 0 || x == 1))
+    {
+        desktop_covered_ = x == 1;
+        return;
+    }
     if (host_unavailable_)
         return;
     switch (kind)
     {
+        case 'g':
+            queue({InputKind::gaze, x, y});
+            break;
+        case 'c':
+            queue({InputKind::clear_gaze});
+            break;
         case 'e':
             queue({InputKind::enter, x, y});
             break;

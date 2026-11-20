@@ -70,6 +70,29 @@ export class DesktopPointer {
         this._send('l');
     }
 
+    setCovered(covered) {
+        if (covered) {
+            this.leave();
+            this.clearGaze();
+        }
+        this._send('h', covered ? 1 : 0);
+    }
+
+    gaze(x, y) {
+        if (this._inside || (x === this._gazeX && y === this._gazeY))
+            return;
+        this._gazeX = x;
+        this._gazeY = y;
+        this._send('g', x, y);
+    }
+
+    clearGaze() {
+        if (this._gazeX === undefined)
+            return;
+        this._gazeX = this._gazeY = undefined;
+        this._send('c');
+    }
+
     topInset(height) {
         this._send('i', height);
     }
@@ -92,6 +115,7 @@ export class DesktopPointer {
         if (!inside)
             return Clutter.EVENT_PROPAGATE;
         if (!this._inside) {
+            this.clearGaze();
             this._inside = true;
             this._send('e', x, y);
         }
