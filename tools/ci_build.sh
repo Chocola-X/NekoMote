@@ -146,6 +146,7 @@ if [[ "$MODE" == native || "$MODE" == layer-shell || "$MODE" == gnome45 || "$MOD
         export HOME="$WORK_DIR/install-home" XDG_DATA_HOME="$WORK_DIR/install-data"
         installer="$WORK_DIR/export/$NAME/install.sh"
         bash "$installer" install
+        test -s "$XDG_DATA_HOME/gnome-shell/extensions/nekomote@nekopara.uk/locale/zh_CN/LC_MESSAGES/nekomote@nekopara.uk.mo"
         "$HOME/.local/bin/nekomote_gnome45" --help
         bash "$installer" install
         bash "$installer" uninstall

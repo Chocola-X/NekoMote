@@ -16,7 +16,7 @@
 
 ### 从源码构建
 
-用 CMake 3.25+、C++20、Ninja、GLib 的 `glib-compile-schemas` 以及
+用 CMake 3.25+、C++20、Ninja、GLib 的 `glib-compile-schemas`、gettext 的 `msgfmt` 以及
 [Wayland 宿主的构建依赖](layer-shell.md#构建与安装)编译。默认同时启用 OpenGL 与 Vulkan。
 
 ```bash
@@ -35,6 +35,7 @@ gnome-extensions prefs nekomote@nekopara.uk
 ```
 
 在偏好页选择含 `characters/` 的资产根目录。资产目录和渲染程序路径均可浏览选择或手动输入。
+偏好页随 GNOME 会话语言显示，当前提供英文和简体中文。
 启用扩展时会填入找到的默认程序路径，优先使用 `~/.local/bin/nekomote_gnome45`，
 其次搜索 `PATH`。自定义渲染程序需与扩展来自同一构建。默认使用 OpenGL。
 清空资产目录或禁用扩展即可恢复静态背景。

@@ -1,0 +1,68 @@
+# Simplified Chinese translations for the NekoMote GNOME preferences.
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Browse…"
+msgstr "浏览…"
+
+msgid "Wallpaper files"
+msgstr "壁纸文件"
+
+msgid "Assets directory"
+msgstr "资产目录"
+
+msgid "Choose the library root containing characters/ and backgrounds/. Use the wallpaper’s control button to change characters, backgrounds, frame rate and sound."
+msgstr "请选择包含 characters/ 和 backgrounds/ 的资产根目录。通过桌面上的壁纸控制按钮可以切换角色和背景，调整帧率及声音。"
+
+msgid "Renderer executable"
+msgstr "渲染程序"
+
+msgid "Choose the installed nekomote_gnome45 from the same release as this extension. An empty field uses the standard installation path or PATH."
+msgstr "请选择与扩展同一版本的 nekomote_gnome45 程序。留空时使用标准安装路径，或从 PATH 中查找。"
+
+msgid "Rendering"
+msgstr "渲染"
+
+msgid "Rendering backend"
+msgstr "渲染后端"
+
+msgid "OpenGL is the default and affects NekoMote only. If Vulkan fails to start, switch back to OpenGL."
+msgstr "默认使用 OpenGL。此设置仅影响 NekoMote。如果 Vulkan 无法启动，请切回 OpenGL。"
+
+msgid "Playback and interaction"
+msgstr "播放与交互"
+
+msgid "Pause on lock, sleep or screen off"
+msgstr "锁屏、休眠或息屏时暂停"
+
+msgid "Use system session events to pause playback and sound."
+msgstr "收到系统会话事件时暂停动画和声音。"
+
+msgid "Pause behind fullscreen windows"
+msgstr "全屏窗口遮挡时暂停"
+
+msgid "Pauses on the covered monitor. Activities previews keep playing."
+msgstr "只暂停被遮挡的显示器上的壁纸，活动概览中仍可播放。"
+
+msgid "Follow the pointer outside the desktop"
+msgstr "视线跟随桌面外的鼠标指针"
+
+msgid "Updates the character’s gaze across windows and monitors. Clicks and dragging work on the desktop."
+msgstr "指针移动到窗口上或其他显示器时，角色视线也会跟随。点击和拖拽限于桌面。"
+
+msgid "Project and authors"
+msgstr "项目与作者"
+
+msgid "NekoMote on GitHub"
+msgstr "NekoMote 的 GitHub 仓库"
+
+msgid "Project website"
+msgstr "项目网站"
+
+msgid "Open"
+msgstr "打开"

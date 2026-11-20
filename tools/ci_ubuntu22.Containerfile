@@ -3,7 +3,7 @@ FROM ubuntu:22.04@sha256:f64b2ffc2f10ab8f8505aa56b2664bd846cbb9df87c7e2532e30f76
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git gcc-12 g++-12 make ninja-build pkg-config binutils \
-      python3 python3-pip libglib2.0-bin libwayland-dev libegl-dev libgl-dev \
+      python3 python3-pip gettext libglib2.0-bin libwayland-dev libegl-dev libgl-dev \
       libvulkan-dev glslang-tools dbus libdbus-1-dev libpulse-dev libfontconfig1-dev \
       libpng-dev zlib1g-dev fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 ENV CC=gcc-12 CXX=g++-12
