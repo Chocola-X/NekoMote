@@ -138,7 +138,9 @@ struct DesktopGaze::Impl
     }
     void update(Output& out)
     {
-        if (layout_manager && !out.xdg)
+        if (!source_manager || !copy_manager || !layout_manager)
+            return;
+        if (!out.xdg)
         {
             auto* manager = layout_manager;
             // wl_output v1 cannot delimit a v3 xdg-output transaction with done.
@@ -152,7 +154,7 @@ struct DesktopGaze::Impl
             if (zxdg_output_v1_add_listener(checked(out.xdg), &layout_listener, &out) < 0)
                 throw std::runtime_error("cannot listen to desktop gaze layout");
         }
-        if (source_manager && copy_manager && layout_manager && pointer && !out.session)
+        if (pointer && !out.session)
         {
             auto* source = checked(ext_output_image_capture_source_manager_v1_create_source(
                 source_manager, out.object));

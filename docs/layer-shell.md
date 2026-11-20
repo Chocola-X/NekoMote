@@ -81,7 +81,7 @@ build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --backend vu
 | `--save-config` | 显式保存启动设置并退出，无需显示服务器 |
 | `--backend opengl\|vulkan` | 图形后端，默认 OpenGL；Vulkan 需要构建时启用 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 和模型交互 |
-| `--gaze local\|desktop` | 默认 `local`。`desktop` 仅让角色视线使用桌面的光标位置，不转发点击或拖动；与本地输入模式独立，不写入配置。 |
+| `--global-gaze on\|off` | 默认开启，可用 `--save-config` 保存。只影响角色视线，与本地输入模式独立。 |
 | `--input passthrough` | 空输入区域；点击、拖动、滚轮全部穿透，不接收本地视线事件。可以单独启用桌面视线。 |
 | `--mute` | 强制静音 |
 | `--no-save` | 不保存配置 |
@@ -94,11 +94,11 @@ interactive 接收背景上的指针事件，不保证桌面的右键菜单或�
 
 ### 多屏角色同时跟随鼠标
 
-对**每个**输出实例显式添加 `--gaze desktop`，例如：
+全局视线默认开启。下面的实例让鼠标输入穿透壁纸，同时保持视线跟随：
 
 ```sh
 nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 \
-  --config ~/.config/nekomote/hdmi.json --input passthrough --gaze desktop
+  --config ~/.config/nekomote/hdmi.json --input passthrough
 ```
 
 在提供 `ext_output_image_capture_source_manager_v1`、`ext_image_copy_capture_manager_v1` 和
@@ -114,7 +114,8 @@ nekomote_layer_shell --assets /path/to/assets --output HDMI-A-1 \
 `--no-session-pause` 仅影响动画，不绕过此检查。会话通知是异步的：这是一项客户端保护，
 不是对合成器实际锁屏状态的原子保证；桌面锁屏器仍需向会话服务正确报告状态。
 无可用的桌面视线时，interactive 仍可使用本地输入；passthrough 仍完全穿透。
-`--gaze desktop` 不能用于固定帧诊断或 `--save-config`。切回 `--gaze local` 无需修改模型或面板文件。
+用 `--global-gaze off` 关闭，可加 `--save-config` 保存到启动文件。固定帧诊断不订阅光标。
+使用旧版 `--gaze local|desktop` 的启动命令需改为 `--global-gaze off|on`。
 
 默认启动配置为 `$XDG_CONFIG_HOME/nekomote/layer-shell.json`，默认面板偏好为
 同目录的 `layer-shell.panel.json`；XDG 未设置或不是绝对路径时使用 `$HOME/.config/`。

@@ -40,6 +40,10 @@ The launcher is derived from the old smoke `launch` / `test.sh`, not executed th
 
 ## Measured result (final fail-closed Release)
 
+The historical build below used `--gaze local|desktop`. The current harness uses
+`--global-gaze off|on`. Use the harness from the recorded commit to rerun the
+original binaries.
+
 | Phase | Process | Local median | Desktop median | Paired Δ median [min, max] (pp) |
 |---|---|---:|---:|---:|
 | idle | wallpaper (= total) | 31.75% | 31.75% | +0.17 [−0.33, +0.33] |

@@ -22,6 +22,7 @@ Options parse_options(int argc, char** argv)
     bool state_set = false;
     bool backend_set = false;
     bool input_set = false;
+    bool global_gaze_set = false;
     for (int index = 1; index < argc; ++index)
     {
         const std::string_view option(argv[index]);
@@ -108,12 +109,13 @@ Options parse_options(int argc, char** argv)
             else
                 throw std::runtime_error("--input expects interactive or passthrough");
         }
-        else if (option == "--gaze")
+        else if (option == "--global-gaze")
         {
             const auto mode = value();
-            if (mode != "local" && mode != "desktop")
-                throw std::runtime_error("--gaze expects local or desktop");
-            result.desktop_gaze = mode == "desktop";
+            if (mode != "on" && mode != "off")
+                throw std::runtime_error("--global-gaze expects on or off");
+            result.global_gaze = mode == "on";
+            global_gaze_set = true;
         }
         else if (option == "--frames")
         {
@@ -134,9 +136,6 @@ Options parse_options(int argc, char** argv)
         result.save_config = false;
         return result;
     }
-    if (result.desktop_gaze && (result.save_config || result.frames))
-        throw std::runtime_error("--gaze desktop is for live playback, not saved config or "
-                                 "fixed-frame diagnostics");
     if (result.save_config && !result.gpu.empty())
         throw std::runtime_error("--gpu is per-process and cannot be combined with --save-config");
     if (result.save_config && !result.pause_on_session_events)
@@ -177,6 +176,8 @@ Options parse_options(int argc, char** argv)
     if (!input_set)
         result.input = std::string_view(saved.input) == "passthrough" ? InputMode::passthrough
                                                                       : InputMode::interactive;
+    if (!global_gaze_set)
+        result.global_gaze = saved.global_gaze != 0;
     if (std::filesystem::weakly_canonical(std::filesystem::absolute(result.state)) ==
         std::filesystem::weakly_canonical(result.config))
         throw std::runtime_error("launch configuration and panel state must use different files");
@@ -206,6 +207,7 @@ Options parse_options(int argc, char** argv)
         values.output = result.output.c_str();
         values.backend = result.backend == Backend::vulkan ? "vulkan" : "opengl";
         values.input = result.input == InputMode::passthrough ? "passthrough" : "interactive";
+        values.global_gaze = result.global_gaze ? 1 : 0;
         const auto state = result.state.string();
         values.state_path = state.c_str();
         if (nekomote_launch_config_save(config.get(), values) != NEKOMOTE_OK)
@@ -228,7 +230,7 @@ void print_help()
            "  --list-gpus                   list PCI graphics hardware, without assets\n"
            "  --backend opengl|vulkan       graphics backend, default opengl\n"
            "  --input interactive|passthrough  local pointer input, default interactive\n"
-           "  --gaze local|desktop          local by default; desktop uses cursor metadata only\n"
+           "  --global-gaze on|off          follow the cursor outside the wallpaper (default on)\n"
            "  --mute                        disable audio\n"
            "  --no-session-pause            do not pause for lock or sleep notifications\n"
            "  --no-save                     do not persist panel changes\n"
@@ -236,7 +238,7 @@ void print_help()
            "  --frames N                    diagnostic: fixed 1/60 step, muted, no save\n"
            "  --capture FILE                diagnostic: final frame as binary PPM\n"
            "  --help                        show this help\n\n"
-           "Requires wlr-layer-shell. Desktop gaze works with either input mode. It needs\n"
+           "Requires wlr-layer-shell. Global gaze works with either input mode. It needs\n"
            "cursor metadata and a confirmed unlocked session, even with --no-session-pause.\n"
            "Run one process per output for multiple screens.\n";
 }

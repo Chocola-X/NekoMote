@@ -108,9 +108,9 @@ LaunchConfig LaunchConfig::load(LaunchKind kind, const fs::path& path)
                                  config.path_);
         if (json.contains("global_gaze"))
         {
-            if (kind != LaunchKind::X11 || !json["global_gaze"].is_boolean())
+            if (kind == LaunchKind::Player || !json["global_gaze"].is_boolean())
                 throw std::invalid_argument(config.path_.string() +
-                                            ": 'global_gaze' is an X11-only boolean");
+                                            ": 'global_gaze' is a wallpaper-shell boolean");
             config.values_.global_gaze = json["global_gaze"].get<bool>();
         }
         for (auto [key, value] : {std::pair{"assets_dir", &config.values_.assets_dir},
@@ -147,15 +147,15 @@ LaunchConfig LaunchConfig::load(LaunchKind kind, const fs::path& path)
 
 void LaunchConfig::save(LaunchOptions values)
 {
-    if (kind_ != LaunchKind::X11 && !values.global_gaze)
-        throw std::invalid_argument("launch 'global_gaze' is an X11-only setting");
+    if (kind_ == LaunchKind::Player && !values.global_gaze)
+        throw std::invalid_argument("launch 'global_gaze' is a wallpaper-shell setting");
     validate(values, path_, fs::current_path(), true);
     Json document{{"version", 1},
                   {"backend", values.backend},
                   {"input", values.input},
                   {"width", values.width},
                   {"height", values.height}};
-    if (kind_ == LaunchKind::X11)
+    if (kind_ != LaunchKind::Player)
         document["global_gaze"] = values.global_gaze;
     for (const auto& [key, value] : {std::pair{"assets_dir", &values.assets_dir},
                                      {"model_path", &values.model_path},

@@ -21,7 +21,8 @@ def application(mode, trace=False):
     env = os.environ.copy()
     if trace:
         env['WAYLAND_DEBUG'] = 'client'
-    return sp.Popen([APP, '--backend', 'opengl', '--output', 'winit', '--gaze', mode,
+    return sp.Popen([APP, '--backend', 'opengl', '--output', 'winit',
+                     '--global-gaze', 'on' if mode == 'desktop' else 'off',
                      '--input', 'passthrough', '--no-session-pause', '--config', '/work/launch.json', '--state', CFG,
                      '--mute', '--assets', '/work/assets'],
                     stderr=sp.PIPE if trace else None, env=env)

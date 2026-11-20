@@ -31,7 +31,7 @@ struct Options
     Backend backend = Backend::opengl;
     InputMode input = InputMode::interactive;
     uint64_t frames = 0;
-    bool desktop_gaze = false; // Explicit, process-local opt-in; never persisted.
+    bool global_gaze = true;
     bool muted = false;
     bool pause_on_session_events = true;
     bool no_save = false;

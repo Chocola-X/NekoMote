@@ -42,8 +42,8 @@ X11 和 layer-shell 的 `--no-session-pause` 仅关闭当次启动的锁屏、�
 监听，不能与 `--save-config` 同用。它不改变显隐、输出热插拔和用户暂停行为；Wayland
 合成器仍可在关屏时停止发送帧回调。
 
-独立 X11 壳用 `--global-gaze off` 关闭全局视线，`--global-gaze on` 可覆盖已保存的
-关闭状态。省略时读取 X11 启动文件的布尔字段 `global_gaze`，默认开启；可用
+X11 和 layer-shell 壳用 `--global-gaze off` 关闭全局视线，`--global-gaze on` 可覆盖已保存的
+关闭状态。省略时读取启动文件的布尔字段 `global_gaze`，默认开启；可用
 `--save-config` 保存。关闭后仍可跟随壁纸表面收到的指针。
 
 Plasma 5 / 6 的壁纸列表显示 **NekoMote Wallpaper**（简体中文：**NekoMote 壁纸**），

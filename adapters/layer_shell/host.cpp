@@ -104,7 +104,7 @@ class Host::Impl
   public:
     explicit Impl(Options options) : options_(std::move(options))
     {
-        if (options_.desktop_gaze && !options_.list_outputs)
+        if (options_.global_gaze && !options_.list_outputs && !options_.frames)
             desktop_gaze_ = std::make_unique<DesktopGaze>();
     }
     ~Impl()
@@ -809,6 +809,8 @@ void Host::Impl::refresh_availability()
         output_missing_ || graphics_detached_ || !configured_ || session_unavailable_;
     if (desktop_gaze_)
     {
+        if (!session_monitor_ && desktop_gaze_->protocols_available())
+            session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
         const bool permit =
             !unavailable && session_monitor_ && session_monitor_->desktop_gaze_allowed();
         desktop_gaze_->set_pointer(permit ? pointer_ : nullptr);
@@ -1354,8 +1356,9 @@ void Host::Impl::wait_events(int timeout)
     }
     // A frame callback may be suppressed indefinitely. Wake for lock-state
     // changes independently of rendering and independently of animation pause.
-    const auto buses = desktop_gaze_ && session_monitor_ ? session_monitor_->dbus_fds()
-                                                         : std::array<int, 2>{-1, -1};
+    const auto buses = desktop_gaze_ && desktop_gaze_->protocols_available() && session_monitor_
+                           ? session_monitor_->dbus_fds()
+                           : std::array<int, 2>{-1, -1};
     std::array<pollfd, 3> fds{
         {{wl_display_get_fd(display_), static_cast<short>(POLLIN | (needs_write ? POLLOUT : 0)), 0},
          {buses[0], POLLIN, 0},
@@ -1392,7 +1395,7 @@ void Host::Impl::run()
     }
     if (desktop_gaze_ && !desktop_gaze_->protocols_available())
         std::cerr << "desktop gaze protocols unavailable; using local pointer gaze\n";
-    if (options_.pause_on_session_events || desktop_gaze_)
+    if (options_.pause_on_session_events)
         session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     create_surface();
     const auto started = Clock::now();

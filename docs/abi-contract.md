@@ -20,7 +20,7 @@ application/ui；拥有 instance/device/surface/swapchain 和提交。所有输�
 这组入口只更新视线，坐标可落在输出之外。共享层在推进时优先选有效的宿主样本，
 清除后使用仍在壁纸内的本地悬停；面板接管本地指针时暂停视线。宿主样本不转发
 到 UI、点击或拖拽，也不额外请求重绘。暂停或失去输出丢弃样本，恢复后重新提交。
-X11 启动配置的 `nekomote_launch_options.global_gaze` 使用 0/1，旧启动文件省略时默认开启。
+X11 和 layer-shell 启动配置的 `nekomote_launch_options.global_gaze` 使用 0/1，省略时默认开启。
 
 `nekomote_wallpaper_needs_render` 由实例的串行求值线程查询，表示未呈现的输入/输出、
 模型或 UI 更新及未完成的 UI 动画。暂停且返回 0 时可跳过 prepare/render/present，

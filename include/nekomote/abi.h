@@ -110,7 +110,7 @@ extern "C"
         const char* state_path;
         uint32_t width;
         uint32_t height;
-        int32_t global_gaze; /* X11 only. 0 = off, 1 = on (default). */
+        int32_t global_gaze; /* Wallpaper shells. 0 = off, 1 = on (default). */
     } nekomote_launch_options;
     nekomote_error nekomote_launch_config_load(nekomote_launch_kind kind, const char* path,
                                                nekomote_launch_config** out);

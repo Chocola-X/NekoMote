@@ -119,21 +119,25 @@ TEST_CASE("Layer shell accepts only supported local input modes", "[layer-shell]
     REQUIRE_THROWS_AS(parse({"--model", "model", "--unknown"}), std::runtime_error);
 }
 
-TEST_CASE("Desktop gaze is an explicit playback-only option", "[layer-shell][options]")
+TEST_CASE("Layer shell global gaze defaults on and supports saved overrides",
+          "[layer-shell][options]")
 {
-    REQUIRE_FALSE(parse({"--model", "model"}).desktop_gaze);
-    REQUIRE_FALSE(parse({"--model", "model", "--gaze", "local"}).desktop_gaze);
-    REQUIRE(parse({"--model", "model", "--gaze", "desktop"}).desktop_gaze);
-    REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "invalid"}), std::runtime_error);
-    const auto transparent = parse(
-        {"--model", "model", "--gaze", "desktop", "--input", "passthrough", "--no-session-pause"});
-    REQUIRE(transparent.desktop_gaze);
+    const auto path = environment.root / "global-gaze.json";
+    REQUIRE(parse({"--model", "model", "--config", path.string()}).global_gaze);
+    REQUIRE_FALSE(parse({"--model", "model", "--global-gaze", "off"}).global_gaze);
+    REQUIRE_THROWS_WITH(parse({"--model", "model", "--global-gaze", "invalid"}),
+                        "--global-gaze expects on or off");
+    const auto transparent =
+        parse({"--model", "model", "--input", "passthrough", "--no-session-pause"});
+    REQUIRE(transparent.global_gaze);
     REQUIRE(transparent.input == InputMode::passthrough);
     REQUIRE_FALSE(transparent.pause_on_session_events);
-    REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "desktop", "--save-config"}),
-                      std::runtime_error);
-    REQUIRE_THROWS_AS(parse({"--model", "model", "--gaze", "desktop", "--frames", "2"}),
-                      std::runtime_error);
+    parse({"--model", "model", "--config", path.string(), "--global-gaze", "off", "--save-config"});
+    REQUIRE_FALSE(parse({"--config", path.string()}).global_gaze);
+    REQUIRE(parse({"--config", path.string(), "--global-gaze", "on"}).global_gaze);
+    REQUIRE_FALSE(parse({"--config", path.string()}).global_gaze);
+    parse({"--config", path.string(), "--global-gaze", "on", "--save-config"});
+    REQUIRE(parse({"--config", path.string(), "--frames", "2"}).global_gaze);
 }
 
 TEST_CASE("Layer shell discovery does not require model assets", "[layer-shell][options]")

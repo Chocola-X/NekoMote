@@ -316,7 +316,7 @@ Both share a largely identical command-line contract:
 | `--output NAME` | Binds to the specified output; the process exits cleanly when that output is removed. If unspecified, layer-shell lets the compositor choose, X11 picks the primary output |
 | `--input interactive` | Default; receives local pointer where the background is visible, forwarding to shared UI and model interaction |
 | `--input passthrough` | Empty input region, fully transparent; cannot operate the control panel or touch interaction |
-| `--gaze local\|desktop` (layer-shell only) | Local gaze by default. Desktop gaze also works with `passthrough`; it requires a confirmed unlocked session and subscribes to cursor positions, not screen images. |
+| `--global-gaze on\|off` | On by default and can be saved. Works with `passthrough`. The layer-shell adapter needs compositor cursor metadata support and a confirmed unlocked session. |
 | `--config FILE` | Explicitly specifies the startup config file |
 | `--state FILE` | Explicitly specifies the panel preferences file |
 | `--save-config` | Saves the merged startup settings and exits, no display server needed |
