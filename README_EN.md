@@ -376,15 +376,18 @@ Tested on 2026-11-13 on a legacy reference laptop:
 
 At 1080p / 30 FPS, total player CPU usage drops to **3.5%–3.9%**. Independent CPU probes measure median per-frame evaluation and frame generation time (P50) at just **0.44–0.79 ms**, with **zero heap allocations** on the tested path post-warmup. Full benchmark data is available in the [Low-End Hardware Test Report](docs/headless-lowend-test-2026-11-13.md).
 
-### 2. Modern Workstation: KDE Plasma 6 (Wayland)
+### 2. Wayland Desktop: Plasma 6 Plugin and layer-shell
 
-> [!NOTE]
-> **Context & Baseline Note**: This benchmark was conducted at an early stage (2026-10-18), **prior to the extensive CPU evaluation and frame generation optimizations**. For the latest optimized CPU performance, please refer to the "Low-End Hardware (i5-2410M)" benchmark above. The RAM and VRAM footprint measured here (~42 MiB RAM delta, ~69 MiB VRAM delta) remains very close to the latest version.
+On 2026-11-20, the Debian 12 CI builds were tested with the same character on a Plasma 6.3.6 Wayland desktop with a Xeon E5-1680 v4 and RTX 3080 Ti. The display ran at 2560×1440 @ 180 Hz with the wallpaper capped at 60 FPS. The table shows the mean increase over a static wallpaper across two runs.
 
-Measured on 2026-10-18 on a workstation running Xeon E5-1680 v4 (8C/16T), NVIDIA RTX 3080 Ti, 2560×1440 @ 180 Hz, wallpaper target 60 FPS:
-- **CPU Overhead (Pre-Optimization Baseline)**: Compared to a clean static image background, running NekoMote increased Plasma Shell CPU by ~17.7% of a single logical core (~1.1% total system CPU across 16 threads). Subsequent CPU optimizations have reduced this overhead further.
-- **VRAM & RAM (Close to Latest Version)**: Compared to a static desktop, Plasma Shell RSS increased by **42.4 MiB**, and dedicated VRAM increased by **69.0 MiB**.
-- See the [Real Desktop Benchmark Report](docs/plasma-desktop-2026-10-18.md) for second-by-second profiling.
+| Mode | Desktop CPU increase (one logical CPU = 100%) | GPU-wide VRAM increase | Board power increase |
+| --- | ---: | ---: | ---: |
+| Plasma OpenGL | +28.0 percentage points | +69.0 MiB | +10.3 W |
+| Plasma Vulkan | +27.7 percentage points | +92.5 MiB | +11.6 W |
+| layer-shell OpenGL | +18.5 percentage points | +164.4 MiB | +6.5 W |
+| layer-shell Vulkan | +14.6 percentage points | +123.5 MiB | +6.3 W |
+
+CPU totals include Plasma Shell, KWin, and the standalone shell when running. Plasma Shell RSS increased by about 35 MiB in the Plasma OpenGL test. See the [desktop benchmark report](docs/wayland-desktop-performance-2026-11-20.md) for per-run results and frame-rate measurements.
 
 ---
 

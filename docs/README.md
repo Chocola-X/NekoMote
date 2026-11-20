@@ -60,7 +60,8 @@
 | 文档 | 说明 |
 | --- | --- |
 | [headless-lowend-test-2026-11-13.md](headless-lowend-test-2026-11-13.md) | **低配实机基准**：Intel Core i5-2410M / HD 3000 核显 1080p 60FPS 实测报告 |
-| [plasma-desktop-2026-10-18.md](plasma-desktop-2026-10-18.md) | **真实桌面基准**：KDE Plasma 6 / Xeon / RTX 3080 Ti 动态壁纸资源开销实测 |
+| [wayland-desktop-performance-2026-11-20.md](wayland-desktop-performance-2026-11-20.md) | **真实桌面基准**：Plasma 6 插件和独立 layer-shell 壳的 OpenGL / Vulkan 资源开销 |
+| [plasma-desktop-2026-10-18.md](plasma-desktop-2026-10-18.md) | **历史基准**：2026-10-18 的 Plasma 6 插件测试 |
 | [memory-footprint-2026-10-12.md](memory-footprint-2026-10-12.md) | 内存开销、稳态基准与多模型切换实测报告 |
 | [texture-cropping-2026-10-12.md](texture-cropping-2026-10-12.md) | PNG 图集精确裁切与显存优化报告 |
 | [optimization-lessons.md](optimization-lessons.md) | 性能优化试验、避坑与回退经验汇总 |
