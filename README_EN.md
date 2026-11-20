@@ -389,6 +389,19 @@ On 2026-11-20, the Debian 12 CI builds were tested with the same character on a 
 
 CPU totals include Plasma Shell, KWin, and the standalone shell when running. Plasma Shell RSS increased by about 35 MiB in the Plasma OpenGL test. See the [desktop benchmark report](docs/wayland-desktop-performance-2026-11-20.md) for per-run results and frame-rate measurements.
 
+### 3. X11 Desktop: Plasma 6 Plugin and Standalone X11 Shell
+
+The same machine was tested in a native X11 session with the same character, 2560×1440 @ 180 Hz display, and 60 FPS cap. The table shows the mean increase over a static wallpaper across two runs. CPU totals include Plasma Shell, KWin, Xorg, and the standalone shell when running.
+
+| Mode | Desktop CPU increase (one logical CPU = 100%) | GPU-wide VRAM increase | Board power increase |
+| --- | ---: | ---: | ---: |
+| Plasma OpenGL | +21.1 percentage points | +87.8 MiB | +8.1 W |
+| Plasma Vulkan | +20.5 percentage points | +115.3 MiB | +11.8 W |
+| X11 shell OpenGL | +19.4 percentage points | +186.1 MiB | +6.2 W |
+| X11 shell Vulkan | +18.7 percentage points | +180.4 MiB | +10.1 W |
+
+The Plasma plugin drew and swapped at about 58.8 frames per second. The standalone shell submitted about 57.7–58.4 frames per second. GPU-wide VRAM differed by about 65 MiB between the two static baselines. See the [X11 desktop benchmark report](docs/x11-desktop-performance-2026-11-20.md) for per-run results and process attribution.
+
 ---
 
 ## Project Structure

@@ -389,6 +389,19 @@ NekoMote 在设计之初便将**超低资源消耗与能效**置于首位。
 
 CPU 统计包含 Plasma Shell、KWin 以及运行中的独立壳。Plasma OpenGL 的 Plasma Shell RSS 增加约 35 MiB。逐轮数据和帧率口径见 [桌面实测报告](docs/wayland-desktop-performance-2026-11-20.md)。
 
+### 3. 真实 X11 桌面：Plasma 6 插件与独立 X11 壳
+
+同一台机器切换到原生 X11 后，沿用同一角色、2560×1440 @ 180 Hz 和 60 FPS 上限。下表为两轮均值相对静态壁纸的增量，桌面 CPU 包含 Plasma Shell、KWin、Xorg 及运行中的独立壳。
+
+| 入口 | 桌面 CPU 增量（单逻辑 CPU = 100%） | 整卡显存增量 | 板卡功耗增量 |
+| --- | ---: | ---: | ---: |
+| Plasma OpenGL | +21.1 个百分点 | +87.8 MiB | +8.1 W |
+| Plasma Vulkan | +20.5 个百分点 | +115.3 MiB | +11.8 W |
+| X11 壳 OpenGL | +19.4 个百分点 | +186.1 MiB | +6.2 W |
+| X11 壳 Vulkan | +18.7 个百分点 | +180.4 MiB | +10.1 W |
+
+Plasma 在 X11 下约 58.8 次/秒壁纸绘制和窗口交换，独立壳约 57.7–58.4 次/秒提交。两轮静态基线的整卡显存相差约 65 MiB，逐轮波动和进程归属见 [X11 桌面实测报告](docs/x11-desktop-performance-2026-11-20.md)。
+
 ---
 
 ## 项目代码结构
