@@ -1,19 +1,74 @@
-# 文档阅读入口
+# NekoMote 文档索引
 
-接手先读 [AGENTS](../AGENTS.md)、[当前摘要](review-agents-current.md)和 [任务清单](agent-workboard.md)。共享 Controller/UI/高层 ABI/Plasma 已有实现，Plasma 初步接入已获用户确认，player 与 Plasma 已接入双后端，当前安装入口见 [Plasma 后端](plasma-dual-backend.md)，自动构建见 [分发](plasma-distribution.md)。G31 专项交接保留为设计门槛，不继续执行旧待实现顺序。总体阶段见 [ROADMAP](../ROADMAP.md)。
+本目录收录 NekoMote 的架构规范、接口契约、使用指南、各壁纸壳适配说明以及各阶段的性能与质量审计报告。
 
-| 需要的信息 | 当前入口 |
+---
+
+## 1. 核心架构与技术规范
+
+| 文档 | 说明 |
 | --- | --- |
-| Wayland/X11 兼容 | [C17 修复与验收](wayland-compatibility-2026-10-13.md) |
-| 构建/运行 | [building](building.md)、[player](native-player.md)、[Qt宿主](qt-quick-host.md) |
-| 模块/ABI/所有权 | [规范](../AGENTS.md)、[G31契约](wallpaper-application-handoff.md)、[C ABI](abi-contract.md)、[约定](conventions.md) |
-| 模型资产与正式语义 | [资产格式](asset-format.md)、[字段语义](semantics.md)、[单边界继承](inheritance-semantics.md)、P3–P6语义记录 |
-| 未闭合问题 | [known-defects](known-defects.md)，不使用历史报告的FAIL数量作为当前状态 |
-| 优化审查/下一批 | [C13 复核](optimization-audit-2026-10-12.md)、[G34 契约](optimization-suggestions-2026-10-12.md)、[验证记录](validation/optimization-results.json) |
-| 内存实测与优化 | [C14 报告](memory-footprint-2026-10-12.md)、[测量记录](validation/memory-results.json) |
-| 阶段验收 | G25正式整合、G22–G26独立复核（已归档）；G27/G28/G29/V19为后续交付报告，独立复核另计 |
-| 原始证据 | validation中的冻结JSON与各报告指向的ignored build/evidence；Git保存源修改和被否决方案历史 |
+| [AGENTS.md](../AGENTS.md) | 项目核心开发规范、架构边界、性能约束、编码约定与打磨期工作准则 |
+| [ROADMAP.md](../ROADMAP.md) | 项目开发全阶段路线图（P0–P10）与各阶段完成状态记录 |
+| [abi-contract.md](abi-contract.md) | 外部宿主接入的高层 C ABI (0.8.0) 契约、所有权与线程安全规范 |
+| [semantics.md](semantics.md) | E-mote 模型求值语义、4×4 双三次 Bézier 变形、嵌套 0x7fc 与曲面传播 |
+| [inheritance-semantics.md](inheritance-semantics.md) | 图层变换继承与遮罩继承语义分析 |
+| [conventions.md](conventions.md) | 坐标空间、矩阵、时间换算、颜色/Alpha 与强类型 ID 约定 |
 
-G/V/C报告及[开发记录](development-log.md)描述对应提交时的采样/观察/失败，不重新分派当时的“下一步”，也不扩大已通过范围。KDE长参考文档用于查API来源，不是架构或任务指令。已实现的P0–P2/G7–G11/G14–G15旧任务交接、旧提问册/P6实施计划和被替代的手部近似公式长分析已删除；完整历史可从Git查看，冻结JSON/素材/截图未改写。
+---
 
-有效任务只在[当前交接](agent-next-handoff.md)维护。缺失历史截图明确记为不可用；不得以链接或旧报告文字宣布已看图/已测试。
+## 2. 功能与使用指南
+
+| 文档 | 说明 |
+| --- | --- |
+| [configuration.md](configuration.md) | 启动配置与面板运行时偏好分离持久化机制、XDG 规范与 Schema |
+| [gpu-selection.md](gpu-selection.md) | 运行时 PCI 显卡枚举 (`--list-gpus`) 与指定选卡 (`--gpu pci:...`) 指南 |
+| [native-player.md](native-player.md) | 独立普通窗口播放器（`nekomote_player`）使用与诊断说明 |
+| [asset-format.md](asset-format.md) | 模型与资产格式说明（schema 6 规范化模型、MessagePack + zlib 容器 `model.nkm`） |
+| [ui-font-fallback.md](ui-font-fallback.md) | 共享 UI 控制面板、Fontconfig 字体发现与多语言回退机制 |
+| [known-defects.md](known-defects.md) | 已知限制、待闭合边缘缺陷与环境兼容记录 |
+
+---
+
+## 3. 桌面适配器与渲染后端
+
+| 文档 | 说明 |
+| --- | --- |
+| [plasma-dual-backend.md](plasma-dual-backend.md) | KDE Plasma 6 插件架构、OpenGL / Vulkan 双后端支持与 GPU 共享图像 |
+| [plasma-distribution.md](plasma-distribution.md) | KDE Plasma 插件打包分发、跨发行版兼容性与独立安装器 `installer.py` |
+| [plasma-kpackage-distribution.md](plasma-kpackage-distribution.md) | 面向 KDE Store 的标准 `.wallpaper.zip` KPackage 打包规范 |
+| [layer-shell.md](layer-shell.md) | 独立 Wayland layer-shell 壳（`nekomote_layer_shell`）使用与多屏说明 |
+| [x11.md](x11.md) | 独立 X11/EWMH 壳（`nekomote_x11`）使用与桌面图标共存说明 |
+| [vulkan-backend.md](vulkan-backend.md) | Vulkan 1.0 渲染后端实现、WSI 呈现与生命周期规范 |
+| [qt-quick-host.md](qt-quick-host.md) | Qt Quick 场景图隔离宿主架构说明 |
+
+---
+
+## 4. 编译、打包与自动化构建
+
+| 文档 | 说明 |
+| --- | --- |
+| [building.md](building.md) | 编译环境要求、CMake 预设列表、构建与单元测试命令 |
+| [dependencies.md](dependencies.md) | 固定版本依赖（FetchContent）与发行版系统依赖模式（`-DNEKOMOTE_USE_SYSTEM_DEPS=ON`） |
+| [github-actions.md](github-actions.md) | GitHub Actions 多平台（Ubuntu 20/Debian 12/AlmaLinux 8）x86_64/aarch64 自动构建与发布 |
+| [packaging/arch/README.md](../packaging/arch/README.md) | Arch Linux 三包 PKGBUILD 打包说明 |
+
+---
+
+## 5. 性能实测与审计报告
+
+| 文档 | 说明 |
+| --- | --- |
+| [headless-lowend-test-2026-11-13.md](headless-lowend-test-2026-11-13.md) | **低配实机基准**：Intel Core i5-2410M / HD 3000 核显 1080p 60FPS 实测报告 |
+| [plasma-desktop-2026-10-18.md](plasma-desktop-2026-10-18.md) | **真实桌面基准**：KDE Plasma 6 / Xeon / RTX 3080 Ti 动态壁纸资源开销实测 |
+| [memory-footprint-2026-10-12.md](memory-footprint-2026-10-12.md) | 内存开销、稳态基准与多模型切换实测报告 |
+| [texture-cropping-2026-10-12.md](texture-cropping-2026-10-12.md) | PNG 图集精确裁切与显存优化报告 |
+| [optimization-lessons.md](optimization-lessons.md) | 性能优化试验、避坑与回退经验汇总 |
+| [wayland-compatibility-2026-10-13.md](wayland-compatibility-2026-10-13.md) | Wayland / X11 双平台兼容性修复报告 |
+| [drag-inertia-2026-10-20.md](drag-inertia-2026-10-20.md) | 鼠标拖拽与软弹簧物理惯性激励优化报告 |
+
+---
+
+## 6. 开发历史与归档记录
+
+早期阶段性试验日志、中间过程记录与交付报告保存在历史文档中供查阅追溯（如 `development-log.md`、`validation/` 下的冻结测试数据）。当前开发与维护请以根目录 [AGENTS.md](../AGENTS.md) 及本目录各通用规范为准。

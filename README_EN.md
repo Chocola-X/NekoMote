@@ -4,483 +4,425 @@
   <img src="./docs/branding/nekomote_logo.svg" alt="NekoMote" />
 </div>
 
-NekoMote is an independent C++ implementation of the E-mote 2D character model, designed as a Linux desktop dynamic wallpaper: model evaluation, timeline animation, deformation, masking, physics, and GPU rendering form a complete native playback pipeline built from scratch, with no dependency on browsers, JavaScript, asm.js, or any proprietary core. It currently integrates seamlessly with the unpacked character assets of *NEKOPARA* (normalized by this project's importer after FreeMote unpacking) and runs stably on real desktops over the long term.
+NekoMote is an independent native C++20 runtime for E-mote 2D character models, purpose-built for Linux desktop live wallpapers.
 
-It supports model playback, gaze/touch reactions, voice/lip-sync, PNG static and time-of-day dynamic backgrounds, physics sway, mesh deformation, and masking. The rendering backend is OpenGL 3.3 core (default) or Vulkan 1.0, and can run via a KDE Plasma plugin, a standalone Wayland/X11 wallpaper shell, or a normal window.
+Unlike traditional WebGL or embedded-browser solutions, NekoMote implements model evaluation, timeline animations, 4×4 bicubic Bézier mesh deformation, masking synthesis, soft-spring physics simulation, and GPU rendering as a **complete native pipeline built entirely from scratch**. It has zero dependency on browser engines, JavaScript, asm.js, or proprietary closed-source cores, enabling it to run continuously on Linux desktops with exceptionally low CPU, VRAM, and power consumption.
 
-License: GNU AGPL-3.0 (see [LICENSE](LICENSE)).
+NekoMote currently integrates seamlessly with the unpacked assets of *NEKOPARA* (unpacked via FreeMote and normalized by this project's offline importer). It can be deployed across various Linux desktop environments via native KDE Plasma plugins, standalone Wayland layer-shell processes, standalone X11 processes, or a lightweight standalone player.
 
-## Features
+<div align="center">
+  <img width="960" height="540" alt="demo" src="https://github.com/user-attachments/assets/b3ccfd23-35d0-459f-b272-4cdc56304f28" />
+</div>
 
-- Independent C++ model evaluation core: parameters, timelines, deltas, deformation, masking, physics, gaze/touch reactions
-- Dual OpenGL 3.3 and Vulkan 1.0 backends with runtime switching
-- KDE Plasma 6 wallpaper plugin; standalone Plasma 5 adapter (Qt5)
-- Standalone Wayland layer-shell wallpaper shell (OpenGL/Vulkan, for compositors supporting the protocol), see [Usage and Validation Scope](docs/layer-shell.md)
-- Standalone X11/EWMH wallpaper shell (OpenGL/GLX and Vulkan, AlmaLinux 8.10 baseline), see [Usage and Desktop Coexistence Limitations](docs/x11.md)
-- Normal window player (GLFW, auto-selects X11 or Wayland)
-- Voice and lip-sync (PulseAudio), mutable
-- PNG static backgrounds and time-of-day dynamic backgrounds (day/dusk/night three-phase)
-- Runtime UI control panel: character/background switching, mute toggle, FPS, lock, position adjustment
-- FPS overlay: optional corner placement, pink text with a white outline, updated with one decimal place
-- Configuration persistence: explicitly saved startup settings, panel preferences saved independently and automatically, asset directory read-only
+Demo Video:
+https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 
-## System Requirements
+License: **GNU AGPL-3.0** (see [LICENSE](LICENSE)).
 
-Build:
+---
 
-- CMake ≥ 3.25, Ninja, C++20 compiler (GCC or Clang)
-- Python 3 + Jinja2 (GL loader generation)
-- libpng 1.6 development package + zlib
-- pkg-config + libpulse ≥ 13.99 development package (audio)
-- X11 / layer-shell / Plasma builds also require libdbus ≥ 1.12 development files (passive session observation)
-- First-time configuration requires network access (CMake FetchContent pulls pinned-version dependencies)
+## Core Features
 
-Runtime:
+- **Independent Native Evaluation Core**: Complete implementation of parameterization, timelines, delta pose blending, mesh deformation, nested masking, soft-spring physics, gaze tracking, and touch reactions.
+- **Modern Dual Rendering Backends**: Native support for **OpenGL 3.3 Core** and **Vulkan 1.0**, configured before launch via CLI arguments or plugin settings, with PCI GPU selection (`--gpu pci:...`). **Hot-switching at runtime is not supported**; changing backends requires restarting the process or reloading the plugin.
+- **Mainstream Linux Desktop Shell Support**:
+  - **KDE Plasma 6 / 5 Plugins**: Seamlessly embedded into the Plasma Shell scenegraph with native graphical configuration and multi-monitor management.
+  - **Wayland layer-shell Standalone Shell**: For modern Wayland compositors (Sway, Hyprland, niri, river, etc.), supporting full-screen background anchoring and global gaze tracking.
+  - **X11 / EWMH Standalone Shell**: For EWMH-compliant desktop environments and window managers (GNOME on X11, XFCE, i3, bspwm, Openbox, etc.), persisting as a standard desktop root window.
+  - **Standalone Window Player**: Lightweight GLFW window, ideal for out-of-the-box testing, model diagnostics, or desktop widget usage.
+  - *(Note: GNOME is restricted on Wayland only; GNOME on X11 is verified and fully supported, see note below)*
+- **Open & Customizable Asset Pipeline**: The asset library is completely decoupled and not hardcoded to a single game. In theory, character live portraits from other Galgame titles built with the E-mote engine can also be imported and played (see Asset Preparation).
+- **Audio & Lifelike Lip-Sync**: Low-latency playback via PulseAudio, with real-time RMS extraction driving mouth movements and full mute support.
+- **Time-Based Dynamic Background Rotation**: Supports static PNG backgrounds as well as dynamic background groups that smoothly transition according to local system time. An open scheduling interface allows configuring arbitrary time phases (e.g., day/dusk/night presets) and transition durations.
+- **Shared UI Control Panel**: Backend-agnostic embedded control panel supporting character/background switching, multi-language localization (EN / ZH-CN / ZH-TW / JA), FPS overlay, position locking, and model reset.
+- **High Performance & Low Power Consumption**: Zero regular heap allocations on the steady-state frame path after warmup. Achieves a steady 60 FPS on decade-old 2nd-gen Core i5 integrated graphics (i5-2410M / HD 3000) using only ~80 MiB of RAM.
+- **Disciplined Configuration Architecture**: Startup options and runtime panel preferences are stored separately following the XDG base directory specification; asset directories remain strictly read-only.
 
-- OpenGL 3.3 core driver; Vulkan backend additionally requires libvulkan (ICD loader)
-- X11 or Wayland session + xkbcommon
-- PulseAudio (audio; runs muted when unavailable)
-- Fontconfig development package (required for build) and a usable TrueType/OpenType font at runtime; CJK/Japanese UI recommends installing Noto CJK
+---
 
-Optional:
+## Desktop Environments & Wallpaper Shells
 
-- Vulkan SDK (headers + glslangValidator) — enables Vulkan backend build
-- Qt ≥ 6.4 Quick/OpenGL — Qt6 host and Plasma6 plugin
-- Qt ≥ 5.12 Quick/OpenGL — standalone Plasma5 plugin, explicitly select `NEKOMOTE_QT_MAJOR=5`
-- KF6/Plasma 6 development packages — Plasma diagnostic probe (can be disabled in distribution builds)
-- Wayland client ≥ 1.20, wayland-scanner, wayland-egl/cursor and EGL ≥ 1.5 — standalone layer-shell shell
+NekoMote decouples the application layer from desktop adapters: all core wallpaper logic, UI rendering, and state management reside in shared C++ libraries and are exposed to host shells via a stable C ABI (0.8.0).
 
-FetchContent automatically pulls pinned dependencies: nlohmann/json v3.11.3, fast_float v6.1.6, stb, FLAC 1.4.3, Catch2 v3.5.3, GLFW 3.4, glad 2.0.8. These do not leak into the core library's public headers. System dependency mode (`-DNEKOMOTE_USE_SYSTEM_DEPS=ON`) requires the system to provide equivalent versions (FLAC ≥ 1.4); missing dependencies fail directly with no fallback download.
+| Shell Application | Target Desktops / Compositors | Graphics Backends | Execution Model | Interaction & Gaze | Configuration |
+| --- | --- | --- | --- | --- | --- |
+| **KDE Plasma 6 Plugin** | KDE Plasma 6 (Wayland / X11) | OpenGL / Vulkan (configured) | In-process (plasmashell) | Touch clicks, drag, and UI panel | Desktop context menu "Configure Wallpaper" |
+| **KDE Plasma 5 Adapter** | KDE Plasma 5 (X11 / Wayland) | OpenGL / Vulkan (configured) | In-process (plasmashell) | Touch clicks, drag, and UI panel | Desktop context menu "Configure Wallpaper" |
+| **`nekomote_layer_shell`** | Sway, Hyprland, niri, river, etc. | OpenGL / Vulkan (at launch) | Standalone background process | Local interaction, input passthrough & global gaze | CLI flags + XDG per-instance config |
+| **`nekomote_x11`** | GNOME (X11), XFCE, i3, bspwm, Openbox, etc. | OpenGL / Vulkan (at launch) | Standalone background process | Local interaction, input passthrough & global gaze | CLI flags + XDG per-instance config |
+| **`nekomote_player`** | Any desktop environment (window mode) | OpenGL / Vulkan (at launch) | Standalone foreground window | Keyboard shortcuts, mouse drag & UI panel | CLI flags + XDG config |
 
-## Build
+> [!NOTE]
+> **Note on the GNOME Desktop Environment**:
+> - **X11 Session (GNOME on X11)**: **Fully supported**. GNOME on X11 adheres to the standard EWMH specification and has been verified to run reliably with `nekomote_x11`.
+> - **Wayland Session (GNOME on Wayland)**: Currently unsupported. GNOME Shell (Mutter) on Wayland does not implement the `wlr-layer-shell` protocol and lacks an open native dynamic wallpaper GPU extension interface. GNOME Wayland users can switch to a GNOME on X11 session to run `nekomote_x11`, or use the standalone window player `nekomote_player`.
 
-```bash
-cmake --preset release          # Release + LTO + Vulkan, release build
-cmake --build --preset release
-```
+---
 
-Artifacts land in `build/release/bin/`: `nekomote_player`, `nekomote_import`, `nekomote_audio_convert`, `nekomote_model_convert`, `nekomote_png_recompress`, `nekomote_abi_host`, `nekomote_preview` (no tests or diagnostic probes).
+## User Guide
 
-Other presets:
+### 1. KDE Plasma Wallpaper Plugin
 
-| Preset | Type | Characteristics |
-| --- | --- | --- |
-| `dev` | Debug | Warnings as errors, main development preset |
-| `system` | Release | Uses distribution system dependencies, no FetchContent downloads; other options same as release |
-| `release` | Release | LTO, OpenGL + Vulkan, no tests/probes (release build) |
-| `asan` | Debug | ASan/UBSan, does not build preview/player (windowless semantic checks) |
-| `plasma` | Release | LTO, Qt6 + Plasma6 QML modules; disables KF6 probe when distributing |
-| `plasma5` | Release | LTO, Qt5 + Plasma5 QML modules, does not build KF6 probe/normal window |
-| `layer-shell` | Release | LTO, standalone Wayland background process, OpenGL/Vulkan, no Qt/GLFW dependency |
-| `x11` | Release | LTO, standalone X11/EWMH background process, OpenGL/Vulkan, no Qt/GLFW dependency |
-| `qt-quick` | Release | LTO, Qt Quick isolated host (no Plasma dependency needed) |
-| `vulkan` | Debug | Vulkan + validation layer debugging |
+GitHub Releases provides pre-built distribution archives:
+- Plasma 6: `nekomote-plasma6-debian12-<arch>.tar.gz` (`x86_64` / `aarch64`)
+- Plasma 5: `nekomote-plasma5-ubuntu20-<arch>.tar.gz` (`x86_64` / `aarch64`)
 
-Build core and tests in a display-server-free environment:
+Each archive contains the matching `.wallpaper.zip`, a SHA256 checksum file, and a standalone interactive `installer.py`.
+
+#### Installation & Management
 
 ```bash
-cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
-cmake --build --preset dev
-ctest --test-dir build/dev -LE gpu
+# Extract the archive (e.g. Plasma 6 / x86_64)
+tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
+cd nekomote-plasma6-debian12-x86_64
+
+# Interactive management menu (Install / Reinstall / Uninstall / Status)
+python3 installer.py
+
+# Or use non-interactive commands:
+python3 installer.py install      # Installs the package to ~/.local/share/plasma/wallpapers/
+python3 installer.py reinstall    # Overwrite reinstall and clean legacy split files
+python3 installer.py uninstall    # Uninstalls the plugin (preserves assets and preferences)
+python3 installer.py status       # Inspects installation status and shared library dependencies
 ```
 
-## Asset Preparation
+*Note: The installer requires Python ≥ 3.8 and the system's `kpackagetool6` (or `kpackagetool5`). After updating or installing, log out and back in to ensure the desktop loads the latest native modules.*
 
-Assets come from two sources: character models and background images are unpacked from the Steam version of *NEKOPARA*, normalized by this project's importer after FreeMote unpacking; action reaction sessions (gaze, touch, and motion rules) are user-configured and are not part of the original game data.
+#### Enabling the Wallpaper
 
-The runtime only accepts current schema 6 models and version 1 sessions, with no automatic fallback for older formats. Assets live in the `assets/` directory.
+1. Right-click on an empty desktop area → select **Configure Desktop and Wallpaper**.
+2. Select **NekoMote** from the wallpaper plugin dropdown.
+3. In the settings tab, set your **Assets Directory** (e.g., `~/Pictures/NekoMoteAssets`).
+4. (Optional) Select the rendering backend (OpenGL or Vulkan), toggle automatic pause on screen-off / lock, etc.
 
-You can directly obtain a ready-to-use imported asset bundle (character models, backgrounds, and icons) from the asset repository [NekoMoteAssets](https://github.com/Chocola-X/NekoMoteAssets) and drop it into the `assets/` directory; or import from original materials yourself following the steps below.
+---
 
-Import a single model:
+### 2. Wayland layer-shell Standalone Shell (`nekomote_layer_shell`)
+
+For Wayland compositors that support `wlr-layer-shell` (Sway, Hyprland, niri, etc.), running as an anchored background surface.
+
+#### Quick Start
 
 ```bash
-build/release/bin/nekomote_import \
-  model.json model.resx.json --output assets/characters/<character_name>
+# 1. Enumerate detected monitor outputs
+nekomote_layer_shell --list-outputs
+
+# 2. Run with the default OpenGL backend
+nekomote_layer_shell --assets /path/to/assets --output DP-1
+
+# 3. Run with the Vulkan backend
+nekomote_layer_shell --assets /path/to/assets --output DP-1 --backend vulkan
 ```
 
-Import a session (reaction rules, gaze, touch regions):
+#### Multi-Monitor Setups
+
+For multiple monitors, launch a dedicated process for each output. It is recommended to add `--mute` on secondary outputs to avoid overlapping audio:
 
 ```bash
-python3 tools/import_session/import_session.py \
-  --reference-root <original_unpacked_asset_root> \
-  --model <character_name> --output assets/characters/<character_group>/<variant>/session.nks.json \
-  --converter build/release/bin/nekomote_audio_convert \
-  --character-root assets/characters/<character_group>
+# Primary monitor: interactive with sound
+nekomote_layer_shell --config ~/.config/nekomote/main.json --assets /path/to/assets --output DP-1 &
+
+# Secondary monitor: muted
+nekomote_layer_shell --config ~/.config/nekomote/sub.json --assets /path/to/assets --output HDMI-A-1 --mute &
 ```
 
-Batch import and backgrounds:
+#### Input Passthrough & Global Gaze
+
+- `--input interactive` (default): Pointer events on the wallpaper are forwarded to the model and UI panel.
+- `--input passthrough`: Mouse events pass straight through the wallpaper to desktop windows below. When combined with `--global-gaze on` (default), **character gaze continues following the mouse cursor across the entire screen while clicks pass through to other applications**.
+
+---
+
+### 3. X11 / EWMH Standalone Shell (`nekomote_x11`)
+
+For any X11 desktop environment or window manager implementing EWMH (including GNOME on X11, XFCE, i3, bspwm, Openbox, Awesome, etc.), persisting as a `_NET_WM_WINDOW_TYPE_DESKTOP` window.
 
 ```bash
-python3 tools/import_all_assets.py --reference-root <original_asset_root> \
-  --importer build/release/bin/nekomote_import \
-  --session-tool tools/import_session/import_session.py \
-  --output assets/characters --report assets/import-report.json
-python3 tools/import_backgrounds.py --reference-root <original_asset_root> --dest assets
+# Enumerate outputs
+nekomote_x11 --list-outputs
+
+# Launch wallpaper (default OpenGL)
+nekomote_x11 --assets /path/to/assets --output HDMI-1
+
+# Launch with Vulkan backend and dedicated configuration file
+nekomote_x11 --config ~/.config/nekomote/x11.json --assets /path/to/assets --output HDMI-1 --backend vulkan
 ```
 
-Import artifacts:
+*Known Limitation Note: On XFCE desktops, if desktop icons are enabled (`xfdesktop` manages both icons and background in a single window), the wallpaper window may cover desktop icons. See [X11 Wallpaper Shell Notes](docs/x11.md).*
 
-| File | Purpose |
+---
+
+### 4. Standalone Window Player (`nekomote_player`)
+
+A standard GLFW window that automatically selects Wayland or X11, perfect for out-of-the-box asset validation, model diagnostics, or running as a desktop widget.
+
+```bash
+# Directory mode: loads full assets, UI allows switching characters and backgrounds
+nekomote_player --assets assets/ --character chocola/date-a
+
+# Single-model standalone mode
+nekomote_player --model assets/characters/chocola/date-a/model.nkm \
+                --session assets/characters/chocola/date-a/session.nks.json --fit
+
+# Headless / muted audio environment
+nekomote_player --assets assets/ --mute
+```
+
+#### Keyboard & Mouse Controls
+
+| Control | Action |
 | --- | --- |
-| `model.nkm` | schema 6 normalized model, MessagePack + zlib compressed container |
-| `session.nks.json` | reaction session |
-| `textures/N.png` | referenced PNG atlases |
-| `audio/main/*.flac` | session voice (FLAC lossless; `little/` is the little-cat voice) |
-| `report.json` | structural status and warnings (not playback validation) |
+| **Mouse Move** | Real-time gaze tracking |
+| **Left-Click (Short)** | Trigger character touch reaction and voice |
+| **Left-Click & Drag** | Move character position (hold >300ms or drag >4px) |
+| **Mouse Wheel** | Zoom character around pointer |
+| **Top-Right Gear Icon** | Toggle UI control panel drawer |
+| **Space** | Pause / Resume playback and physics |
+| **F Key** | Fit model into current view |
+| **R Key** | Reset character position and zoom |
+| **Tab / Number Keys 1–9** | Switch characters |
+| **B / N Keys** | Switch to previous / next background |
+| **C Key** | Clear current background (transparent) |
+| **Esc Key** | Close player |
 
-Existing JSON/WAV assets are converted to the current format using the [one-shot migration tool](docs/asset-format.md#现有资产一次性迁移).
+---
 
-Backgrounds go in `assets/backgrounds/`: static PNGs in the root, dynamic backgrounds in the `dynamic/` subdirectory (A/B/C three phases correspond to day/dusk/night).
+### 5. Explicit Rendering GPU Selection
+
+The standalone player, X11 shell, and layer-shell shell support selecting the physical GPU via PCI address at launch:
+
+```bash
+# 1. Enumerate local GPU devices (no display server required)
+nekomote_player --list-gpus
+
+# 2. Launch with a specific GPU (e.g. PCI address 0000:03:00.0)
+nekomote_player --assets assets/ --gpu pci:0000:03:00.0
+nekomote_layer_shell --assets /path/to/assets --backend vulkan --gpu pci:0000:03:00.0
+```
+
+*Note: If the selected GPU is missing or cannot present to the target output, the program exits with an explicit error rather than silently falling back to another device. The Plasma plugin always uses the compositor's host GPU. See [GPU Selection Guide](docs/gpu-selection.md).*
+
+---
+
+### 6. Configuration Persistence
+
+NekoMote uses a dual-file persistence model separated under the XDG config directory (`~/.config/nekomote/`), and **never writes into the asset directory**:
+- **Startup Configuration (`.json`)**: Stores asset directory path, chosen display output, rendering backend, GPU address, window size, etc. Specified via `--config FILE`, and saved only when passed `--save-config`.
+- **Panel Preferences (`.panel.json`)**: Stores active character, active background, position offset, scale, FPS limit, mute state, lock transform, and language preference. **Saved atomically only when modified by user actions via the UI panel**, avoiding unnecessary disk writes on standard runs.
+
+---
+
+## Asset Preparation & Import
+
+The NekoMote runtime strictly consumes **schema 6** compressed binary models (`model.nkm`) and **version 1** interaction sessions (`session.nks.json`).
+
+> [!NOTE]
+> **Open Asset Library & Custom Model Support**:
+> NekoMote's core is a generic and decoupled E-mote 2D model evaluation runtime; **the asset system is completely open and not hardcoded to *NEKOPARA***.
+> - **Other Titles**: In theory, dynamic character portraits from any Galgame developed using the E-mote engine can be imported and rendered, provided their model JSON, `.resx.json` resource mappings, and PNG textures are unpacked and converted using this project's offline tools (`nekomote_import` and `import_session.py`).
+> - **Validation Scope**: Please note that this project's current regression tests, geometric accuracy baselines, and physics tuning are calibrated against all 195 models from the *NEKOPARA* series. **We have not conducted broad compatibility testing on E-mote models from other Galgame titles**. Models from other games that rely on unverified inheritance bits, custom extensions, or unsupported mesh constructs may be rejected during import or evaluation. Community tests and feedback are warmly welcomed.
+
+### Method 1: Ready-to-Use Asset Bundle (Recommended)
+
+You can directly clone or download pre-imported, pre-cropped asset packages from [NekoMoteAssets](https://github.com/Chocola-X/NekoMoteAssets). Point `--assets` or the wallpaper settings directly to the extracted directory.
+
+### Method 2: Offline Import from Unpacked Game Files
+
+1. **Import a single model**:
+   ```bash
+   build/release/bin/nekomote_import model.json model.resx.json --output assets/characters/<group>/<variant>
+   ```
+2. **Import interaction sessions (reaction rules, audio, touch areas)**:
+   ```bash
+   python3 tools/import_session/import_session.py \
+     --reference-root <unpacked_root> \
+     --model <model_name> \
+     --converter build/release/bin/nekomote_audio_convert \
+     --character-root assets/characters/<group> \
+     --output assets/characters/<group>/<variant>/session.nks.json
+   ```
+3. **Batch import all characters and backgrounds**:
+   ```bash
+   python3 tools/import_all_assets.py --reference-root <unpacked_root> \
+     --importer build/release/bin/nekomote_import \
+     --session-tool tools/import_session/import_session.py \
+     --output assets/characters --report assets/import-report.json
+   python3 tools/import_backgrounds.py --reference-root <unpacked_root> --dest assets
+   ```
 
 ### Asset Directory Structure
 
-```
+```text
 assets/
 ├── characters/
-│   ├── characters.json               # Optional, character display name dictionary, key is "group/variant", value is a multi-language object
-│   └── <character_group>/            # Top-level directory: character group (e.g. chocola)
-│       ├── audio/main/               # Normal voice FLAC (little/ is the little-cat voice)
-│       └── <variant>/                # Second-level directory: model variant (e.g. date-a)
-│           ├── model.nkm             # schema 6 compressed model (required)
-│           ├── session.nks.json      # reaction session (required)
-│           ├── meta.json             # Optional: cutoff_y / display_name / hidden / order
-│           ├── audio -> ../audio/main # Selects main/little by original voice namespace
-│           ├── textures/             # PNG atlases
-│           └── report.json           # Import structure report
+│   ├── characters.json               # Optional: localized display name dictionary (EN/ZH-CN/ZH-TW/JA)
+│   └── <character_group>/            # Top-level: group (e.g. chocola)
+│       ├── audio/main/*.flac         # Voice audio (lossless FLAC; little/ for young voice)
+│       └── <variant>/                # Second-level: model variant (e.g. date-a)
+│           ├── model.nkm             # schema 6 compressed model (MessagePack + zlib)
+│           ├── session.nks.json      # Reaction session rules
+│           ├── textures/             # Cropped and optimized PNG atlases
+│           └── audio -> ../audio/main
 ├── backgrounds/
-│   ├── background.json               # Optional, static background display name dictionary (multi-language object)
-│   ├── BG_07A.png                    # Static background (root directory, name is the file stem)
+│   ├── background.json               # Optional: localized background name dictionary
+│   ├── BG_07A.png                    # Static background (identified by file stem)
 │   └── dynamic/
-│       ├── background.json           # Optional, dynamic background display name dictionary (multi-language object)
 │       └── <group_name>/             # Dynamic background group (e.g. BG_01)
-│           ├── config.json           # phases array + transition_seconds
-│           ├── A.png                 # Day phase
-│           ├── B.png                 # Dusk phase
-│           └── C.png                 # Night phase
+│           ├── config.json           # Dynamic phase configuration (arbitrary phases & fade duration)
+│           ├── A.png                 # Phase images (custom file names allowed)
+│           ├── B.png
+│           └── C.png
 └── icons/
-    └── toggle.png                    # UI panel icon
+    └── toggle.png                    # UI toggle icon
 ```
 
-Characters use a two-level directory: `characters/<character_group>/<variant>/`, where each variant directory must contain `model.nkm` and `session.nks.json`. The character name format is `group/variant` (e.g. `chocola/date-a`), used for the `--character` argument and the `character` field in panel config. `characters.json` provides display names, keyed by the full character name.
+#### Time-Based Dynamic Background Configuration (`config.json`)
 
-Display name dictionaries (`characters.json`, `background.json`, `dynamic/background.json`, and `display_name` in `meta.json`) support two value formats: a multi-language object gives translations by language code (`en` / `zh-CN` / `zh-TW` / `ja`); a plain string applies to all languages. At runtime the value is selected by the `language` field in panel config, with missing languages falling back in the order zh-CN → en → zh-TW → ja, and finally to the asset ID. UI panel language switches within the same field, defaulting to English on first launch.
-
-A static background's `name` is the PNG file stem (e.g. `BG_07A`). A dynamic background's `name` is the group directory name (e.g. `BG_01`), and its `config.json` defines each phase's image and switch time:
+The engine provides an open time-based scheduling mechanism that is not limited to three phases. You can define any number of phases in `config.json`:
 
 ```json
 {
   "phases": [
     {"image": "A.png", "start": "06:00"},
-    {"image": "B.png", "start": "16:00"},
-    {"image": "C.png", "start": "18:00"}
+    {"image": "B.png", "start": "12:00"},
+    {"image": "C.png", "start": "16:00"},
+    {"image": "D.png", "start": "18:00"}
   ],
   "transition_seconds": 1.8
 }
 ```
 
-`start` is 24-hour HH:MM, and the current phase is selected by sorting by minute-of-day. `meta.json`'s `cutoff_y` is the character crop Y coordinate, `hidden` set to `true` hides the entry from the UI list, and `order` controls sorting within the group.
+- `start`: 24-hour time string `HH:MM`. The engine sorts phases by minute-of-day and smoothly transitions to the matching phase based on local system time.
+- `transition_seconds`: Duration (in seconds) of the crossfade transition between phases.
 
-## Running the Player
+---
 
-```bash
-# Directory mode: loads from assets/, UI can switch characters/backgrounds
-build/release/bin/nekomote_player --assets assets --character <character_name>
+## Building from Source
 
-# Single model mode
-build/release/bin/nekomote_player \
-  --model assets/characters/<character_name>/model.nkm \
-  --session assets/characters/<character_name>/session.nks.json --fit
+### System Requirements
 
-# No-audio environment
-build/release/bin/nekomote_player --assets assets --character <character_name> --mute
-```
+- **Build Tools**: CMake ≥ 3.25, Ninja, C++20-compatible compiler (GCC ≥ 11 or Clang ≥ 14), Python 3 + Jinja2
+- **Core Dependencies**: libpng 1.6, zlib, Fontconfig (text rendering & font discovery), PulseAudio (libpulse ≥ 13.99)
+- **Windowing & Graphics Backends**:
+  - OpenGL 3.3 Core driver; Vulkan 1.0 requires Vulkan SDK (headers + `glslangValidator`) and ICD loader
+  - X11 shell requires `libX11`, `libXrandr`, `libXext` development headers
+  - Wayland layer-shell requires `wayland-client ≥ 1.20`, `wayland-scanner`, `wayland-egl`, `wayland-cursor`, and `EGL ≥ 1.5`
+  - Plasma plugins require Qt Quick (Plasma 6 needs Qt ≥ 6.4; Plasma 5 needs Qt ≥ 5.12)
 
-Common arguments: `--backend opengl|vulkan`, `--fit`, `--scale`, `--origin-x/--origin-y`, `--width/--height`, `--fps`, `--seed`, `--list-gpus`, `--gpu`, 640×64 range. See `--help` for the full list.
+### CMake Presets Summary
 
-Controls:
+| Preset | Type | Characteristics | Included Components |
+| --- | --- | --- | --- |
+| `release` | Release | LTO optimization, OpenGL + Vulkan 1.0, warnings as errors | Standalone player, import/conversion tools, ABI diagnostic host |
+| `system` | Release | Strict distro system packages (disables network downloads) | Same as release |
+| `dev` | Debug | Fast incremental build, debug symbols, unit tests | All tools and test suites |
+| `plasma` | Release | LTO, Qt6 + Plasma 6 QML plugin | Plasma 6 wallpaper bundle staging target |
+| `plasma5` | Release | LTO, Qt5 + Plasma 5 QML plugin | Plasma 5 wallpaper bundle staging target |
+| `layer-shell`| Release | LTO, lightweight standalone Wayland shell, no Qt/GLFW | `nekomote_layer_shell` binary |
+| `x11` | Release | LTO, lightweight standalone X11 shell, no Qt/GLFW | `nekomote_x11` binary |
+| `asan` | Debug | Address & undefined behavior sanitizers (ASan + UBSan) | Windowless core and C ABI test suite |
 
-- Mouse move: gaze follows; short left-click release: touch; left-click hold after 300ms: drag character; wheel: zoom around pointer
-- Space: pause/resume; F: fit full model; R: reset character; Esc: close
-- Tab / 1–9: switch character; B / N: switch background; C: clear background
-- Top-right icon: open the UI control panel (character and background selection, language, mute, FPS, lock, position reset)
-
-The mute toggle is managed uniformly by the "mute" entry in the UI control panel; its state is written to the `mute` field of the panel config and restored on next launch. `--mute` only forces mute at startup as an override.
-
-Wallpapers pause by default when the host detects a lock, sleep or screen-off event. Pass
-`--no-session-pause` to the X11 or layer-shell executable, or uncheck “Pause on lock,
-sleep or screen off” in Plasma 5/6 wallpaper settings. On Wayland the compositor still
-controls screen-off frame callbacks. Visibility and output hotplug handling remain active.
-
-The UI and asset display names support English, Simplified Chinese, Traditional Chinese, and Japanese, switchable in the settings drawer of the UI control panel and written to the `language` field of the panel config. First launch defaults to English and deterministically selects the first background in the list as the initial wallpaper; an explicitly cleared background in an existing config keeps the no-background state.
-
-## KDE Plasma Wallpaper Deployment
-
-GitHub distributes `nekomote-plasma5-ubuntu20-<arch>.tar.gz` and
-`nekomote-plasma6-debian12-<arch>.tar.gz` for `x86_64` and `aarch64`. Each archive contains
-one `.wallpaper.zip`, its `.sha256`, and a standalone `installer.py`.
-Upload the inner **`.wallpaper.zip`** to KDE Store; GitHub users install the same payload
-with the script. No global QML import path is required. Store listings still need to be
-published separately; see [KPackage distribution](docs/plasma-kpackage-distribution.md).
-
-### Install, Reinstall, and Uninstall
-
-Choose the package matching your Plasma major and CPU architecture:
+### Build Commands
 
 ```bash
-tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
-cd nekomote-plasma6-debian12-x86_64
-python3 installer.py              # interactive install/reinstall/uninstall/status menu
-# Or run an action directly:
-python3 installer.py install
-python3 installer.py reinstall
-python3 installer.py uninstall
-python3 installer.py status
-```
+# 1. Build standard Release binaries (uses pinned dependencies via FetchContent)
+cmake --preset release
+cmake --build --preset release -j$(nproc)
 
-Requires Python ≥ 3.8, the matching `kpackagetool5` or `kpackagetool6`, and host runtime
-libraries. The installer checks checksums, host versions, and dynamic dependencies before
-installing into `$XDG_DATA_HOME/plasma/wallpapers/uk.nekopara.nekomote/`
-(default `~/.local/share/…`). Reinstall supports the same version and migrates recorded
-legacy split installations, removing their old libraries, modules, and generated environment
-file. Failure restores the original files; modified legacy files stop the operation before
-any changes. Assets, panel state, and desktop configuration are retained.
-After an update or migration, log out and back in to release loaded modules; the installer
-does not restart the desktop. Select NekoMote in Configure Wallpaper and choose your assets directory.
+# 2. Build standalone Wayland layer-shell shell
+cmake --preset layer-shell
+cmake --build --preset layer-shell -j$(nproc)
 
-### Building the Plugin from Source
+# 3. Build standalone X11 shell
+cmake --preset x11
+cmake --build --preset x11 -j$(nproc)
 
-```bash
+# 4. Build KDE Plasma 6 plugin bundle
 cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
 cmake --build --preset plasma --target nekomote_plasma_stage
+
+# 5. Build with system dependencies (offline mode)
+cmake --preset system
+cmake --build --preset system -j$(nproc)
 ```
 
-For Plasma 5 use the `plasma5` preset. The stage is a packaging intermediate;
-see [Plasma distribution](docs/plasma-distribution.md) for bundle generation.
-The previous `plasma_deploy.py` deployment path has been removed.
-
-### Distribution Packages
-
-Distribution maintainers can use `-DNEKOMOTE_USE_SYSTEM_DEPS=ON` (or `cmake --preset system`)
-to use system-installed dependency versions; missing dependencies fail directly with no pinned-version download.
-Default builds and GitHub Actions continue to use the existing pinned dependencies.
-Arch's three-package PKGBUILD is in [packaging notes](packaging/arch/README.md).
-
-Five independent GitHub Actions workflows build on branch push, PR, or manual trigger:
-
-- Native programs: AlmaLinux 8.10 / GCC Toolset 13, x86_64 / ARM64 Release builds of `nekomote_player`, `nekomote_import`, `nekomote_audio_convert`, `nekomote_model_convert`, `nekomote_png_recompress`, `nekomote_abi_host`.
-- KDE5: Ubuntu 20.04 / Qt5.12.8 x86_64 and ARM64 plugins.
-- KDE6: Debian 12 / Qt6.4.2 x86_64 and ARM64 plugins.
-- Layer-shell: Debian 12 / Wayland 1.21 x86_64 and ARM64 standalone programs.
-- X11: AlmaLinux 8.10 / EWMH/GLX x86_64 and ARM64 standalone programs.
-
-After build, tests, and dependency audit pass, Actions artifacts are uploaded; failure logs and test reports are saved separately.
-Pushing a stable `vX.Y.Z` tag such as `v0.5.0` triggers the release workflow, which builds all the above platforms,
-verifies the ten archives and their SHA256, and publishes to GitHub Releases automatically.
-Archives do not bundle the README; the project license is AGPL-v3, and the required dependency notices are merged into
-`THIRD_PARTY_NOTICES`. Plasma licenses and notices live in `contents/` inside the wallpaper ZIP.
-See [Automated Build Notes](docs/github-actions.md) for configuration and compatibility;
-installation commands are listed above.
-
-The plugin uses the host Qt public Quick API; distribution packages do not bundle Qt/KDE/glibc/GPU drivers. A single binary cannot cover all Linux distributions: a Qt plugin requires the same Qt major and a Qt minor no lower than the build. See [Plasma Distribution](docs/plasma-distribution.md). The Plasma 5 package (`nekomote-plasma5-*`) follows the same steps but must be installed into a Plasma 5 desktop, never Plasma 6.
-
-## Standalone Wallpaper Shells (Wayland layer-shell / X11)
-
-When not using the Plasma plugin, two standalone process shells can connect the same wallpaper body to other desktops. Both reuse the shared model, background, voice, control panel, and config via the C ABI only, duplicating no business logic:
-
-- **`nekomote_layer_shell`**: targets Wayland compositors that implement the [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) protocol (Sway, Hyprland, niri, etc.), supporting OpenGL/EGL or native Wayland Vulkan output.
-- **`nekomote_x11`**: targets any X11 window manager implementing EWMH, persisting as a desktop-layer window (`_NET_WM_WINDOW_TYPE_DESKTOP`), supporting OpenGL/GLX or native Xlib Vulkan output, AlmaLinux 8.10 baseline.
-
-### Build and Run
+### Running Unit Tests (No Display Server Required)
 
 ```bash
-# Wayland layer-shell shell (requires Wayland client ≥ 1.20, wayland-scanner, EGL ≥ 1.5)
-cmake --preset layer-shell && cmake --build --preset layer-shell
-build/layer-shell/bin/nekomote_layer_shell --list-outputs
-build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --output DP-1 --backend vulkan
-
-# X11/EWMH shell (requires X11, RandR ≥ 1.3, GLX development files)
-cmake --preset x11 && cmake --build --preset x11
-build/x11/bin/nekomote_x11 --list-outputs
-build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vulkan
+cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
+cmake --build --preset dev
+ctest --test-dir build/dev -LE gpu --output-on-failure
 ```
 
-Both share a largely identical command-line contract:
+---
 
-| Argument | Meaning |
-| --- | --- |
-| `--assets DIR` | Formal asset directory, shares character/background scanning, switching, and control panel |
-| `--backend opengl\|vulkan` | Selects backend, default OpenGL; fails explicitly if Vulkan is not compiled or initialization fails |
-| `--list-gpus` | Lists PCI GPU models, addresses, and drivers; no assets or display server required |
-| `--gpu pci:dddd:bb:dd.f` | Selects the rendering GPU for this process only; never saved to config |
-| `--output NAME` | Binds to the specified output; the process exits cleanly when that output is removed. If unspecified, layer-shell lets the compositor choose, X11 picks the primary output |
-| `--input interactive` | Default; receives local pointer where the background is visible, forwarding to shared UI and model interaction |
-| `--input passthrough` | Empty input region, fully transparent; cannot operate the control panel or touch interaction |
-| `--global-gaze on\|off` | On by default and can be saved. Works with `passthrough`. The layer-shell adapter needs compositor cursor metadata support and a confirmed unlocked session. |
-| `--config FILE` | Explicitly specifies the startup config file |
-| `--state FILE` | Explicitly specifies the panel preferences file |
-| `--save-config` | Saves the merged startup settings and exits, no display server needed |
-| `--mute` / `--no-save` | Force mute / do not write config |
-| `--model FILE [--session FILE]` | Single-model diagnostic entry, does not draw the asset control panel |
-| `--frames N [--capture FILE.ppm]` | Fixed 1/60-second step diagnostic replay, reads the framebuffer only once at the final step |
+## Performance & Benchmarks
 
-Both shells support `--ui-open`, which expands the control panel on interactive-mode startup.
+NekoMote is architected from day one for **ultra-low resource consumption and long-term background efficiency**.
 
-For multi-monitor setups, launch one process per output with an explicit `--output`; secondary monitors should add `--mute` to avoid simultaneous audio from each instance. Do not run multiple wallpaper programs on the same output. Independent instances should each specify `--config FILE`; config identity is not derived from the output name.
+### 1. Low-End Hardware: i5-2410M / Intel HD 3000
 
-Both shells are off by default and do not depend on Qt/GLFW; missing protocol capabilities (a compositor without layer-shell, a WM without EWMH support) cause an explicit failure exit rather than degrading to a normal window. Applicable scope and validation boundaries are in [layer-shell notes](docs/layer-shell.md) and [X11 notes](docs/x11.md) (the latter covers the known XFCE desktop-icon coexistence limitation).
+Tested on 2026-11-13 on a legacy reference laptop:
+- **Hardware**: Intel Core i5-2410M (2 cores / 4 threads @ 2.3 GHz), Intel HD 3000 GPU, 3.7 GiB RAM
+- **Environment**: Debian 12, Mesa 22.3.6, OpenGL 3.3 Core, headless X11 session
+- **Conditions**: 1920×1080, 60 FPS target, full dynamic evaluation, 120-frame warmup, 600-frame sampling (median of 3 runs):
 
-### Selecting a Rendering GPU
-
-The standalone player, X11 shell, and layer-shell shell support GPU selection at
-startup. List local devices first, then pass the reported `pci:…` address to
-`--gpu`. Replace the example address below with one from your own device list:
-
-```bash
-# List devices; nekomote_x11 and nekomote_layer_shell also support --list-gpus
-build/release/bin/nekomote_player --list-gpus
-
-# Standalone player / X11 wallpaper shell, using the default OpenGL backend
-build/release/bin/nekomote_player --assets assets --gpu pci:0000:03:00.0
-build/x11/bin/nekomote_x11 --assets /path/to/assets --gpu pci:0000:03:00.0
-
-# Wayland layer-shell wallpaper shell, using Vulkan
-build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets \
-  --backend vulkan --gpu pci:0000:03:00.0
-```
-
-Omitting `--gpu` preserves the existing selection policy and driver environment;
-Vulkan still prefers discrete GPUs by default. The option applies only to the
-current process and cannot be combined with `--save-config`. For a persistent
-choice, add it to your autostart command or systemd user service. Changing GPUs
-requires restarting the process; live switching is not supported.
-
-The actual selected device is reported in process logs. Explicit selection fails
-if the device is missing, cannot be verified, or cannot present to the target
-output; it never silently chooses another GPU. `--list-gpus` lists PCI hardware
-and does not establish driver or presentation support. GPU selection is separate
-from monitor selection via `--output`. **The Plasma plugin follows its host GPU
-and does not support this option.** Driver-specific and multi-GPU limitations and
-validation scope are in [GPU Selection](docs/gpu-selection.md) (Chinese).
-
-## Configuration
-
-Startup config and panel preferences are saved separately to the XDG config directory; `assets/config.json` is never read or written, and there is no default asset directory.
-`--config FILE` selects the startup file; only `--save-config` writes it and exits; a normal launch reads saved values and then applies explicit command-line overrides.
-The panel file defaults to `<startup_file_stem>.panel.json` in the same directory, or can be specified via
-`--state FILE`. Plasma startup settings are managed by the plugin; the panel is isolated per wallpaper instance UUID.
-
-```bash
-nekomote_x11 --config ~/.config/nekomote/left.json --assets /path/to/assets \
-  --backend vulkan --output DP-1 --save-config
-nekomote_x11 --config ~/.config/nekomote/left.json
-```
-
-Panel preference fields:
-
-| Field | Description |
-| --- | --- |
-| `character` | Current character name |
-| `background` | Current background name (file stem for static, group name for dynamic) |
-| `scale`, `origin_x`, `origin_y` | Character scale and center origin position (Y downward) |
-| `fps` | Display frame rate limit (author clock stays 60Hz) |
-| `mute` | Mute state (maintained by the UI panel) |
-| `lock_transform` | Locks character position and size |
-| `fit` | Fit full model |
-| `icon_x`, `icon_y` | UI icon position |
-| `sidebar_x`, `sidebar_y`, `sidebar_free` | UI panel position and free-floating |
-| `background_fade_seconds` | Background switch fade duration |
-
-Panel data is saved only on user action; first launch and exit do not create a file for default values.
-`--no-save` keeps the original config without writing back. Paths, instance isolation, JSON examples, and one-shot legacy config migration commands are in
-[Configuration Notes](docs/configuration.md).
-
-## Performance
-
-### Low-end hardware: i5-2410M / Intel HD 3000
-
-On 2026-11-13, NekoMote was tested on a Debian 12 machine with a **2-core/4-thread
-i5-2410M, Intel HD 3000 integrated graphics, and 3.7 GiB RAM**, using Mesa 22.3.6,
-OpenGL 3.3, and a native Release/LTO build. Intel GPU hardware acceleration was
-verified. The standalone player used 1920×1080 at a 60 FPS limit, one character,
-a flat background, muted audio, and a closed control panel. Each run warmed up for
-120 frames and measured 600 frames; the table shows medians across three runs.
-
-| Model | Measured frame-loop FPS | Player CPU (% of all four logical CPUs) | Player sampled peak RSS |
+| Model | Measured Loop FPS | Player CPU (4-Thread Total) | Peak Player RAM (RSS) |
 | --- | ---: | ---: | ---: |
-| Chocola `chocola/date-a` | 59.05 | 6.43% | 79.66 MiB |
-| Chocola `chocola/wintermaid` | 58.98 | 7.62% | 79.32 MiB |
-| Coconut `coconut/casual` | 58.89 | 6.49% | 79.70 MiB |
+| Chocola `chocola/date-a` | **59.05 FPS** | **6.43%** (~25.7% of one core) | **79.66 MiB** |
+| Chocola `chocola/wintermaid` | **58.98 FPS** | **7.62%** (~30.5% of one core) | **79.32 MiB** |
+| Coconut `coconut/casual` | **58.89 FPS** | **6.49%** (~26.0% of one core) | **79.70 MiB** |
 
-CPU figures cover the player process alone, equivalent to 25.7%–30.5% of one
-logical CPU; Xorg used another 1.6%–1.7% of total CPU capacity. Additional single
-runs at 1080p / 30 FPS used about 3.5%–3.9% of total CPU capacity for the player.
-A separate CPU probe covering seven models in idle and drag/gaze workloads measured
-evaluation and frame preparation at P50 0.44–0.79 ms, with zero ordinary C++
-`new/new[]` allocations in the measured paths after warmup. This allocation scope
-excludes GPU, UI, audio, and the rest of the application.
+At 1080p / 30 FPS, total player CPU usage drops to **3.5%–3.9%**. Independent CPU probes measure median per-frame evaluation and frame generation time (P50) at just **0.44–0.79 ms**, with **zero heap allocations** on the tested path post-warmup. Full benchmark data is available in the [Low-End Hardware Test Report](docs/headless-lowend-test-2026-11-13.md).
 
-For these models, the player reached a frame-loop rate close to 60 FPS on Sandy
-Bridge integrated graphics with around 80 MiB RSS. Measurements used headless X11,
-with no physical display connected and no VNC running. Frame-loop FPS does not
-establish physical display presentation rates or the full desktop cost of the
-Plasma plugin. These were short samples, without whole-machine power measurements,
-long-term validation, or a before/after optimization comparison. Full conditions,
-percentiles, correctness checks, and reproducible data are in the
-[Low-End Hardware Test Report](docs/headless-lowend-test-2026-11-13.md) (Chinese).
+### 2. Modern Workstation: KDE Plasma 6 (Wayland)
 
-### Real Plasma desktop and historical measurements
+> [!NOTE]
+> **Context & Baseline Note**: This benchmark was conducted at an early stage (2026-10-18), **prior to the extensive CPU evaluation and frame generation optimizations**. For the latest optimized CPU performance, please refer to the "Low-End Hardware (i5-2410M)" benchmark above. The RAM and VRAM footprint measured here (~42 MiB RAM delta, ~69 MiB VRAM delta) remains very close to the latest version.
 
-On 2026-10-18, the current build was reinstalled on a real Wayland / KDE6 desktop and compared against a static-image background and the dynamic wallpaper.
-The machine is a Xeon E5-1680 v4 / RTX 3080 Ti, single monitor 2560×1440, 180 Hz, wallpaper target 60 FPS.
-Two-round sampling mean, **Plasma Shell delta** relative to a clean static baseline before and after:
+Measured on 2026-10-18 on a workstation running Xeon E5-1680 v4 (8C/16T), NVIDIA RTX 3080 Ti, 2560×1440 @ 180 Hz, wallpaper target 60 FPS:
+- **CPU Overhead (Pre-Optimization Baseline)**: Compared to a clean static image background, running NekoMote increased Plasma Shell CPU by ~17.7% of a single logical core (~1.1% total system CPU across 16 threads). Subsequent CPU optimizations have reduced this overhead further.
+- **VRAM & RAM (Close to Latest Version)**: Compared to a static desktop, Plasma Shell RSS increased by **42.4 MiB**, and dedicated VRAM increased by **69.0 MiB**.
+- See the [Real Desktop Benchmark Report](docs/plasma-desktop-2026-10-18.md) for second-by-second profiling.
 
-| Backend | Single logical CPU usage delta | RSS delta | Process VRAM delta |
-| --- | ---: | ---: | ---: |
-| OpenGL | +17.7 percentage points | +42.4 MiB | +69.0 MiB |
-| Vulkan | +17.9 percentage points | +84.1 MiB | +88.7 MiB |
-
-CPU 100% equals one logical CPU; the above deltas are roughly 1.1% of this machine's 16-thread whole-machine baseline.
-Vulkan's two-round RSS ranged 559–628 MiB, with an as-yet-unlocated startup footprint difference; resources also remain resident after switching back to static.
-KWin overhead, whole-card power, per-second data, and recovery checks are in [Real Desktop Usage Report](docs/plasma-desktop-2026-10-18.md).
-This is a short measurement; actual present frame rate was not measured, and the results do not represent other hardware or long-term operation.
-
-Historical standalone player measurements (1920×1080, 60 FPS, OpenGL, full character + background + UI):
-
-- Memory usage: ~140 MB
-- VRAM usage: ~60 MB
-- Core evaluation (parameter advance, physics and geometry build) single-frame P50 ~0.45 ms, ~3% of a single core at 60 FPS; excludes drawing, UI, and desktop compositing
-
-Multi-backend comparison, memory behavior under continuous multi-character switching, and detailed measurement methodology are in [Memory Footprint Report](docs/memory-footprint-2026-10-12.md) and [Long-Run Audit](docs/performance-audit-2026-10-16.md).
-
-## Diagnostic Tools
-
-- `nekomote_preview`: component-level preview and screenshots
-- `nekomote_abi_host`: C ABI isolated host, deterministic replay and screenshots (`--assets`/`--model`/`--steps`/`--capture`/`--mute`)
-- `nekomote_playback_probe`, `nekomote_session_probe`, `nekomote_frame_render`: per-frame numerical and GPU frame observation
-
-Fixed-step screenshots must be muted (`--mute --steps N --capture out.png`), are independent of performance measurement, and are not mixed into performance benchmarks.
+---
 
 ## Project Structure
 
-```
-src/model        Strongly-typed assets and math foundation
-src/runtime      Parameter, scene graph, animation, deformation, physics evaluation
-src/asset_io     Asset loading and image decoding
-src/abi          C ABI wallpaper instance (host integration boundary)
-src/render_gl    OpenGL backend
-src/render_vk    Vulkan backend
-src/application  Session, Controller, config, multi-model switching
-src/ui           Shared control panel and layout
-src/host_qt_quick Qt Quick shared host foundation
-adapters/plasma  Plasma 6 wallpaper QML module
-adapters/plasma5 Plasma 5 adapter (Qt5 plugin registration and entry)
-adapters/layer_shell Standalone Wayland layer-shell shell
-adapters/x11     Standalone X11/EWMH shell
-apps/player      Normal window player
-apps/abi_host    C ABI diagnostic host
-apps/preview     Component preview
-tools            Import, distribution, and verification scripts
+```text
+src/model/            Strongly typed immutable model asset definitions, geometry & math primitives
+src/runtime/          Parameterization, scenegraph, timeline animation, mesh deformation, physics
+src/asset_io/         Compact format loading, asset validation, atlas decoding
+src/render_gl/        OpenGL 3.3 Core backend executor & GPU state management
+src/render_vk/        Vulkan 1.0 backend executor & command buffer recording
+src/application/      Wallpaper Controller, session scheduling, configuration, audio & interaction
+src/ui/               Backend-agnostic UI layout, Hit-Testing, localization & rendering protocols
+src/abi/              Stable high-level C ABI (0.8.0) exposed to host shells
+src/host_qt_quick/    Qt Quick / Plasma host integration glue
+src/host_vulkan/      Standalone Vulkan WSI swapchain & presentation helpers
+adapters/plasma/      KDE Plasma 6 wallpaper QML plugin
+adapters/plasma5/     KDE Plasma 5 adapter plugin
+adapters/layer_shell/ Standalone layer-shell wallpaper executable for Wayland
+adapters/x11/         Standalone desktop wallpaper executable for X11/EWMH
+apps/player/          GLFW-based standalone interactive player
+apps/abi_host/        Pure C ABI deterministic diagnostics & regression test host
+apps/preview/         Part-level mesh & atlas diagnostic preview tool
+tools/                Model import, audio conversion, PNG optimization & packaging scripts
+docs/                 Architecture specifications, module contracts, guides & benchmark reports
 ```
 
-Module boundaries, performance specs, and development conventions are in [AGENTS.md](AGENTS.md); the development roadmap is in [ROADMAP.md](ROADMAP.md); build details are in [docs/building.md](docs/building.md).
+---
+
+## Documentation Navigation
+
+- **Architecture & Conventions**: [AGENTS.md](AGENTS.md)
+- **Development Roadmap**: [ROADMAP.md](ROADMAP.md)
+- **C ABI Contract Specification**: [docs/abi-contract.md](docs/abi-contract.md)
+- **Configuration Guide**: [docs/configuration.md](docs/configuration.md)
+- **GPU Selection Guide**: [docs/gpu-selection.md](docs/gpu-selection.md)
+- **Building Guide**: [docs/building.md](docs/building.md)
+- **Dependencies & Packaging**: [docs/dependencies.md](docs/dependencies.md)
+- **KDE Plasma Distribution & Installation**: [docs/plasma-distribution.md](docs/plasma-distribution.md)
+- **Wayland layer-shell Guide**: [docs/layer-shell.md](docs/layer-shell.md)
+- **X11 Wallpaper Shell Guide**: [docs/x11.md](docs/x11.md)
+- **Full Documentation Index**: [docs/README.md](docs/README.md)

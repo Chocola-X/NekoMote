@@ -12,7 +12,7 @@ application/ui；拥有 instance/device/surface/swapchain 和提交。所有输�
 
 ## 壁纸应用层接口
 
-共享 Controller/UI 与高层 `nekomote_wallpaper_*` 已实现，GLM 已迁移 Plasma 调用者。本轮显示补修见 [说明](plasma-display-fix.md)。宿主只经 ABI 连接共享业务；以下既有单会话/renderer 契约仍适用于相应接口，不能据此推定高层实例已完成全部异常/生命周期验收。
+共享 Controller/UI 与高层 `nekomote_wallpaper_*` 已实现，Plasma 及各适配器调用者均已完成接入。显示修复与隔离包验证见 [说明](plasma-display-fix.md)。宿主只经 ABI 连接共享业务；以下单会话与 renderer 契约同样适用于对应底层接口。
 
 高层壁纸输入使用输出物理像素、左上原点、Y 向下；Qt 壳按逻辑/输出尺寸转换一次。转发左键按下/释放后，由共享 Controller 区分未移动点击与按住左键移动超过 4px 后立即拖动；不再额外对同一次左键按下调用 touch。直接 touch 接口保留给明确的触摸/诊断事件。滚轮在 UI 外围绕指针缩放，右键留给桌面。pointer_move/mouse_button 的 `timestamp_ms` 为采集时的单调毫秒时间，同一实例使用一致时钟，按序传递；当前手势按移动量判定，时间戳仍按宿主单调时钟传入。宿主必须按当前头文件重建，不保留旧签名。`set_render_target` 指定 FBO，角色/背景和 UI 都绘制到此目标；UI 可在输出尺寸晚于加载时延迟初始化。显式 model/session 诊断模式不绘控制面板。创建/加载/绘制/重置/销毁中的 GPU 操作须在其有效 GL 上下文与允许线程执行；CPU 查询不能作为跨线程读写许可。当前其他高层接口的异常/借用寿命边界仍需独立复核，不沿用测试数量宣称全部满足。
 

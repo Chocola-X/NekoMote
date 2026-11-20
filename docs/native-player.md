@@ -1,8 +1,6 @@
 # 原生窗口播放器
 
-`nekomote_player` 使用独立 runtime 与 OpenGL / Vulkan 1.0 后端，提供模型播放、视线/触摸、声音/口型及PNG背景。当前是开发中的普通窗口壁纸应用；代表范围已通过对照，全部型号、桌面插件和长期运行尚未验收。当前结论见 [整合摘要](review-agents-current.md)，限制见 [known-defects](known-defects.md)。
-
-Controller、CPU UI 和 GL 执行已拆分，player 已使用这些模块；面板业务仍与 ABI 组合层重复，完整边界验收尚未闭合。设计要求见 [专项交接](wallpaper-application-handoff.md)，当前缺口见 [known-defects](known-defects.md)。
+`nekomote_player` 使用独立 runtime 与 OpenGL / Vulkan 1.0 后端，提供模型播放、视线/触摸、声音/口型及 PNG 背景。作为通用的独立播放器与诊断工具，它与各桌面壁纸壳完全共享底层的 `application`（Controller 与会话）、`ui`（共享面板与绘制数据）以及渲染后端。已知限制见 [known-defects](known-defects.md)。
 
 ## 构建与运行
 

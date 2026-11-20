@@ -4,478 +4,425 @@
   <img src="./docs/branding/nekomote_logo.svg" alt="NekoMote" />
 </div>
 
-NekoMote 是 E-mote 二维角色模型的独立 C++ 实现，用于 Linux 桌面动态壁纸：模型求值、时间线动画、变形、遮罩、物理与 GPU 渲染均为从零实现的完整原生播放链条，不依赖浏览器、JavaScript、asm.js 或任何专有核心。目前可完美对接《猫娘乐园》（NEKOPARA）的角色解包素材（FreeMote 解包后经本项目导入器规范化），在真实桌面上长期稳定运行。
+NekoMote 是专为 Linux 桌面动态壁纸打造的 E-mote 二维角色模型独立原生运行时（C++20）。
 
-<img width="960" height="540" alt="demo" src="https://github.com/user-attachments/assets/b3ccfd23-35d0-459f-b272-4cdc56304f28" />
+不同于传统的 WebGL/浏览器嵌入方案，NekoMote 的模型求值、时间线动画、4×4 双三次 Bézier 网格变形、遮罩合成、软弹簧物理模拟与 GPU 绘制均为**从零独立实现的完整原生播放链条**。它不依赖任何浏览器引擎、JavaScript、asm.js 或专有闭源库，能够在 Linux 桌面上以极低的 CPU、显存与功耗长期稳定运行。
 
+目前本项目可无缝对接《猫娘乐园》（*NEKOPARA*）的解包素材（经 FreeMote 解包后由本项目离线导入器规范化），并支持通过原生 KDE Plasma 插件、独立 Wayland layer-shell 壳、独立 X11 壳或轻量独立播放器在各种 Linux 桌面环境中呈现。
 
-支持模型播放、视线/触摸反应、声音/口型、PNG 静态与分时段动态背景、物理摆动、网格变形与遮罩。渲染后端为 OpenGL 3.3 core（默认）或 Vulkan 1.0，可经 KDE Plasma 插件、Wayland/X11 独立壁纸壳或普通窗口运行。
+<div align="center">
+  <img width="960" height="540" alt="demo" src="https://github.com/user-attachments/assets/b3ccfd23-35d0-459f-b272-4cdc56304f28" />
+</div>
 
 效果演示视频：
-
 https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 
+许可证：**GNU AGPL-3.0**（详见 [LICENSE](LICENSE)）。
 
+---
 
-许可证：GNU AGPL-3.0（见 [LICENSE](LICENSE)）。
+## 核心特性
 
-## 功能
+- **自研原生求值核心**：完整实现参数化、时间线、差分姿态叠加、网格变形、嵌套遮罩、软弹簧物理、视线追踪与触摸反应。
+- **现代化双渲染后端**：原生支持 **OpenGL 3.3 Core** 与 **Vulkan 1.0** 双后端，启动运行前通过参数或配置指定，支持 PCI 硬件选卡（`--gpu pci:...`）。**不支持运行时热切换**，更换后端需重启壁纸进程或重新载入插件。
+- **主流 Linux 桌面壁纸壳支持**：
+  - **KDE Plasma 6 / 5 插件**：直接嵌入 Plasma Shell 场景图，提供原生图形化配置界面与多显示器管理。
+  - **Wayland layer-shell 独立壳**：针对 Sway、Hyprland、niri、river 等现代 Wayland 合成器，支持全屏背景层常驻与全局视线追踪。
+  - **X11 / EWMH 独立壳**：针对 GNOME (X11)、XFCE、i3、bspwm、Openbox 等遵循 EWMH 的桌面环境与窗口管理器，以标准桌面根窗口常驻。
+  - **独立播放器**：轻量 GLFW 窗口，支持开箱即用预览、单模型诊断与窗口挂件模式。
+  - *(注：GNOME 仅在 Wayland 会话下受限，X11 会话已实测支持，见下文说明)*
+- **开放自定义资产库**：资产库完全解耦，并不硬编码绑定特定作品。理论上任何使用 E-mote 引擎制作的 Galgame 角色动态立绘均可导入支持（详见资产说明）。
+- **声音与拟真口型**：基于 PulseAudio 的低延迟音频播放，实时提取 RMS 能量驱动模型嘴部动作，支持一键静音。
+- **基于时间的动态背景轮换**：支持静态 PNG 背景，以及根据本地系统时间平滑过渡的动态背景组。程序预留了通用的时间阶段配置接口，不仅限于三相，可自定义任意数量的时间相（如预设的白天/黄昏/夜晚）与过渡时长。
+- **共享控制面板 UI**：内置后端无关的轻量 UI 面板，支持角色/背景实时切换、语言切换（简中/繁中/英/日）、FPS 显示、位置锁定与模型重置。
+- **极佳性能与低功耗**：预热完成后稳态帧路径**零常态堆分配（Zero-Allocation）**，即使在十余年前的二代酷睿核显（i5-2410M / HD 3000）上也能以约 80 MiB 内存稳定达到 60 FPS。
+- **规范的配置系统**：启动配置与面板偏好按 XDG 规范分离存储，资产目录保持严格只读，支持多实例独立配置。
 
-- 独立 C++ 模型求值核心：参数、时间线、差分、变形、遮罩、物理、视线/触摸反应
-- OpenGL 3.3 与 Vulkan 1.0 双后端，运行时切换
-- KDE Plasma 6 壁纸插件；独立 Plasma 5 适配器（Qt5）
-- 独立 Wayland layer-shell 壁纸壳（OpenGL/Vulkan，面向支持该协议的合成器），见 [使用与验收范围](docs/layer-shell.md)
-- 独立 X11/EWMH 壁纸壳（OpenGL/GLX 与 Vulkan，AlmaLinux 8.10 基线），见 [使用与桌面共存限制](docs/x11.md)
-- 普通窗口播放器（GLFW，X11 与 Wayland 自动选择）
-- 声音与口型（PulseAudio），可静音
-- PNG 静态背景与分时段动态背景（白天/黄昏/夜晚三相）
-- 运行时 UI 控制面板：角色/背景切换、声音开关、FPS、锁定、位置调整
-- 帧数显示：设置内开关及四角位置选择，粉色白描边文字，实时显示一位小数
-- 配置持久化：显式保存启动设置，面板偏好独立自动保存，资产目录只读
+---
 
-## 系统要求
+## 壁纸壳支持与桌面适配
 
-构建：
+NekoMote 采用**应用层与壁纸壳完全解耦**的架构设计：核心业务逻辑、UI 绘制与状态管理统一由 C++ 共享库实现，并通过严格的 C ABI（0.8.0）暴露给各桌面适配器。
 
-- CMake ≥ 3.25、Ninja、C++20 编译器（GCC 或 Clang）
-- Python 3 + Jinja2（GL loader 生成）
-- libpng 1.6 开发包 + zlib
-- pkg-config + libpulse ≥ 13.99 开发包（音频）
-- X11 / layer-shell / Plasma 构建另需 libdbus ≥ 1.12 开发包（被动会话状态通知）
-- 首次配置需联网（CMake FetchContent 拉取固定版本依赖）
+| 壁纸壳应用 | 适用桌面 / 合成器 | 图形后端 | 运行方式 | 交互与视线 | 配置机制 |
+| --- | --- | --- | --- | --- | --- |
+| **KDE Plasma 6 插件** | KDE Plasma 6 (Wayland / X11) | OpenGL / Vulkan (配置指定) | 嵌入 plasmashell 进程 | 支持点击触摸、拖拽与控制面板 | 桌面右键「配置壁纸」图形化设置 |
+| **KDE Plasma 5 适配器** | KDE Plasma 5 (X11 / Wayland) | OpenGL / Vulkan (配置指定) | 嵌入 plasmashell 进程 | 支持点击触摸、拖拽与控制面板 | 桌面右键「配置壁纸」图形化设置 |
+| **`nekomote_layer_shell`** | Sway, Hyprland, niri, river 等 | OpenGL / Vulkan (启动指定) | 独立后台进程 | 支持局部交互、鼠标穿透与全局视线 | 命令行参数 + XDG 独立配置文件 |
+| **`nekomote_x11`** | GNOME (X11), XFCE, i3, bspwm, Openbox 等 | OpenGL / Vulkan (启动指定) | 独立后台进程 | 支持局部交互、鼠标穿透与全局视线 | 命令行参数 + XDG 独立配置文件 |
+| **`nekomote_player`** | 任意桌面环境（窗口模式） | OpenGL / Vulkan (启动指定) | 独立前台窗口 | 完整键盘快捷键、鼠标拖拽与 UI 面板 | 命令行参数 + XDG 配置文件 |
 
-运行时：
+> [!NOTE]
+> **关于 GNOME 桌面环境的说明**：
+> - **X11 会话（GNOME on X11）**：**完全支持**。GNOME 在 X11 下遵循标准 EWMH 规范，经实测可通过 `nekomote_x11` 稳定运行。
+> - **Wayland 会话（GNOME on Wayland）**：暂不支持。原因在于 GNOME Shell (Mutter) 在 Wayland 下未实现 `wlr-layer-shell` 协议，且 GNOME 自身缺乏开放的外部 GPU 动态渲染壁纸接口。GNOME Wayland 用户若需体验，可切换至 GNOME X11 会话运行 `nekomote_x11`，或使用独立窗口播放器 `nekomote_player`。
 
-- OpenGL 3.3 core 驱动；Vulkan 后端另需 libvulkan（ICD loader）
-- X11 或 Wayland 会话 + xkbcommon
-- PulseAudio（音频；不可用时静音运行）
-- Fontconfig 开发包（构建必需）及运行时可用的 TrueType/OpenType 字体；中文/日文界面建议安装 Noto CJK
+---
 
-可选：
+## 壁纸使用指南
 
-- Vulkan SDK（headers + glslangValidator）——启用 Vulkan 后端构建
-- Qt ≥ 6.4 Quick/OpenGL——Qt6 宿主与 Plasma6 插件
-- Qt ≥ 5.12 Quick/OpenGL——独立 Plasma5 插件，显式选择 `NEKOMOTE_QT_MAJOR=5`
-- KF6/Plasma 6 开发包——Plasma 诊断探针（分发构建可关闭）
-- Wayland client ≥ 1.20、wayland-scanner、wayland-egl/cursor 与 EGL ≥ 1.5——独立 layer-shell 壳
+### 1. KDE Plasma 壁纸插件
 
-FetchContent 自动拉取的固定依赖：nlohmann/json v3.11.3、fast_float v6.1.6、stb、FLAC 1.4.3、Catch2 v3.5.3、GLFW 3.4、glad 2.0.8。不进入核心库公共头文件。系统依赖模式（`-DNEKOMOTE_USE_SYSTEM_DEPS=ON`）要求系统提供等价版本（FLAC ≥ 1.4），缺失直接报错，不回退下载。
+GitHub Releases 提供预编译的分发包：
+- Plasma 6：`nekomote-plasma6-debian12-<arch>.tar.gz`（`x86_64` / `aarch64`）
+- Plasma 5：`nekomote-plasma5-ubuntu20-<arch>.tar.gz`（`x86_64` / `aarch64`）
 
-## 构建
+解压后包含同名 `.wallpaper.zip`、SHA256 校验文件以及独立的交互式安装器 `installer.py`。
 
-```bash
-cmake --preset release          # Release + LTO + Vulkan，发布构建
-cmake --build --preset release
-```
-
-产物在 `build/release/bin/`：`nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`、`nekomote_preview`（不含测试与诊断探针）。
-
-其他 preset：
-
-| Preset | 类型 | 特性 |
-| --- | --- | --- |
-| `dev` | Debug | 警告即错误，开发主力 |
-| `system` | Release | 使用发行版系统依赖，无 FetchContent 下载；其他选项同 release |
-| `release` | Release | LTO、OpenGL + Vulkan，不含测试/探针（发布构建） |
-| `asan` | Debug | ASan/UBSan，不构建预览/播放器（无窗口语义检查） |
-| `plasma` | Release | LTO、Qt6 + Plasma6 QML 模块；分发时关闭 KF6 探针 |
-| `plasma5` | Release | LTO、Qt5 + Plasma5 QML 模块，不构建 KF6 探针/普通窗口 |
-| `layer-shell` | Release | LTO、独立 Wayland 背景进程，OpenGL/Vulkan，不依赖 Qt/GLFW |
-| `x11` | Release | LTO、独立 X11/EWMH 背景进程，OpenGL/Vulkan，不依赖 Qt/GLFW |
-| `qt-quick` | Release | LTO、Qt Quick 隔离宿主（不需 Plasma 依赖） |
-| `vulkan` | Debug | Vulkan + 验证层调试 |
-
-无显示服务器环境构建核心与测试：
+#### 安装与卸载
 
 ```bash
-cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
-cmake --build --preset dev
-ctest --test-dir build/dev -LE gpu
+# 解压对应版本的安装包（以 Plasma 6 / x86_64 为例）
+tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
+cd nekomote-plasma6-debian12-x86_64
+
+# 交互式管理菜单（支持 安装 / 重装 / 卸载 / 状态检查）
+python3 installer.py
+
+# 或使用非交互命令：
+python3 installer.py install      # 安装壁纸包到 ~/.local/share/plasma/wallpapers/
+python3 installer.py reinstall    # 同版本覆盖重装并清理旧模块
+python3 installer.py uninstall    # 卸载插件（保留资产与用户偏好）
+python3 installer.py status       # 检查当前安装状态与动态库依赖
 ```
 
-## 资产准备
+*注：安装器需要 Python ≥ 3.8 以及系统自带的 `kpackagetool6`（或 `kpackagetool5`）。更新或安装后建议注销重新登录，以确保桌面载入最新动态库。*
 
-资产分两类来源：角色模型与背景图片来自《猫娘乐园》（NEKOPARA）Steam 版游戏解包，经 FreeMote 解包后由本项目导入器规范化；动作反应会话（视线、触摸与动作规则）为用户自行配置，不属于游戏原始数据。
+#### 启用壁纸
 
-运行时只接受当前 schema 6 模型与 version 1 会话，不自动回退旧格式。资产放在 `assets/` 目录。
+1. 在桌面空白处点击右键 → 选择「配置桌面与壁纸（Configure Wallpaper）」。
+2. 壁纸插件列表中选择 **NekoMote**。
+3. 在设置页中指定你的 **资产目录（Assets Directory）**（例如 `~/Pictures/NekoMoteAssets`）。
+4. （可选）在设置中选择渲染后端（OpenGL 或 Vulkan）、配置锁屏休眠自动暂停等。
 
-可直接从资产仓库 [NekoMoteAssets](https://github.com/Chocola-X/NekoMoteAssets) 获取已导入的现成资产包（角色模型、背景与图标），放入 `assets/` 目录即可使用；或按以下步骤从原始素材自行导入。
+---
 
-导入单个模型：
+### 2. Wayland layer-shell 独立壁纸 (`nekomote_layer_shell`)
+
+面向支持 `wlr-layer-shell` 协议的 Wayland 合成器（Sway、Hyprland、niri 等），以 background 专有层常驻。
+
+#### 快速启动
 
 ```bash
-build/release/bin/nekomote_import \
-  model.json model.resx.json --output assets/characters/<角色名>
+# 1. 列出当前检测到的显示器输出
+nekomote_layer_shell --list-outputs
+
+# 2. 默认 OpenGL 后端运行
+nekomote_layer_shell --assets /path/to/assets --output DP-1
+
+# 3. 指定 Vulkan 后端运行
+nekomote_layer_shell --assets /path/to/assets --output DP-1 --backend vulkan
 ```
 
-导入会话（反应规则、视线、触摸区域）：
+#### 多显示器配置
+
+多显示器环境下，建议为每个屏幕启动独立的进程并显式绑定输出。次要屏幕建议添加 `--mute` 防止音频重叠：
 
 ```bash
-python3 tools/import_session/import_session.py \
-  --reference-root <原解包素材根目录> \
-  --model <角色名> --output assets/characters/<角色组>/<型号>/session.nks.json \
-  --converter build/release/bin/nekomote_audio_convert \
-  --character-root assets/characters/<角色组>
+# 主显示器：支持交互与声音
+nekomote_layer_shell --config ~/.config/nekomote/main.json --assets /path/to/assets --output DP-1
+
+# 副显示器：静音运行
+nekomote_layer_shell --config ~/.config/nekomote/sub.json --assets /path/to/assets --output HDMI-A-1 --mute
 ```
 
-批量导入与背景：
+#### 穿透与全局视线（Global Gaze）
+
+- `--input interactive`（默认）：壁纸可见区域接收鼠标交互，可直接操作右上角 UI 面板或触摸角色。
+- `--input passthrough`：鼠标事件完全穿透壁纸，不干扰桌面窗口；配合 `--global-gaze on`（默认开启）可实现**鼠标穿透点击桌面其他应用，但角色视线仍实时跟随光标移动**。
+
+---
+
+### 3. X11 / EWMH 独立壁纸 (`nekomote_x11`)
+
+面向任意遵循 EWMH 规范的 X11 桌面环境与窗口管理器（包括 GNOME on X11、XFCE、i3、bspwm、Openbox、Awesome 等），以 `_NET_WM_WINDOW_TYPE_DESKTOP` 桌面层窗口常驻。
 
 ```bash
-python3 tools/import_all_assets.py --reference-root <原素材根目录> \
-  --importer build/release/bin/nekomote_import \
-  --session-tool tools/import_session/import_session.py \
-  --output assets/characters --report assets/import-report.json
-python3 tools/import_backgrounds.py --reference-root <原素材根目录> --dest assets
+# 列出显示输出
+nekomote_x11 --list-outputs
+
+# 启动壁纸（默认 OpenGL）
+nekomote_x11 --assets /path/to/assets --output HDMI-1
+
+# 指定 Vulkan 后端与启动配置文件
+nekomote_x11 --config ~/.config/nekomote/x11.json --assets /path/to/assets --output HDMI-1 --backend vulkan
 ```
 
-导入产物：
+*已知限制提示：在 XFCE 桌面下，若开启了桌面图标（`xfdesktop` 图标与背景为同一窗口），壁纸窗口可能会覆盖桌面图标。详见 [X11 壁纸壳使用说明](docs/x11.md)。*
 
-| 文件 | 用途 |
+---
+
+### 4. 独立窗口播放器 (`nekomote_player`)
+
+普通 GLFW 窗口，自动适配 Wayland 与 X11 会话，适合作为开箱即用测试工具、模型诊断或悬浮小挂件。
+
+```bash
+# 目录模式：加载完整资产，支持 UI 切换角色与背景
+nekomote_player --assets assets/ --character chocola/date-a
+
+# 单模型独立运行模式
+nekomote_player --model assets/characters/chocola/date-a/model.nkm \
+                --session assets/characters/chocola/date-a/session.nks.json --fit
+
+# 无音频输出环境
+nekomote_player --assets assets/ --mute
+```
+
+#### 键盘与鼠标快捷操作
+
+| 操作 | 对应功能 |
 | --- | --- |
-| `model.nkm` | schema 6 规范化模型，MessagePack + zlib 压缩容器 |
-| `session.nks.json` | 反应会话 |
-| `textures/N.png` | 引用的 PNG 图集 |
-| `audio/main/*.flac` | 会话语音（FLAC 无损；`little/` 为小猫语音） |
-| `report.json` | 结构状态与警告（非播放认证） |
+| **鼠标移动** | 角色视线实时跟随 |
+| **鼠标左键单击** | 触发角色触摸动作与语音 |
+| **鼠标左键按住拖拽** | 移动角色在画面中的位置（长按或移动 >4px 触发） |
+| **鼠标滚轮** | 围绕指针位置缩放角色大小 |
+| **右上角齿轮图标** | 展开/折叠 UI 控制面板 |
+| **空格键 (Space)** | 暂停 / 继续播放动画与物理 |
+| **F 键** | 自动适配当前画幅大小（Fit） |
+| **R 键** | 重置角色的缩放与位置 |
+| **Tab / 数字键 1–9** | 快速切换可用角色 |
+| **B / N 键** | 切换上一个 / 下一个背景 |
+| **C 键** | 清除当前背景（透明底） |
+| **Esc 键** | 退出播放器 |
 
-已有 JSON/WAV 资产使用[一次性迁移工具](docs/asset-format.md#现有资产一次性迁移)转为当前格式。
+---
 
-背景放 `assets/backgrounds/`：静态 PNG 放根目录，动态背景放 `dynamic/` 子目录（A/B/C 三相分别对应白天/黄昏/夜晚）。
+### 5. 指定渲染 GPU 显卡
 
-### 资产目录结构
+独立播放器、X11 壳和 layer-shell 壳均支持启动时通过 PCI 地址指定物理渲染设备：
 
+```bash
+# 1. 枚举系统可用显卡（无需显示服务器）
+nekomote_player --list-gpus
+
+# 2. 指定显卡运行（以 PCI 地址 0000:03:00.0 为例）
+nekomote_player --assets assets/ --gpu pci:0000:03:00.0
+nekomote_layer_shell --assets /path/to/assets --backend vulkan --gpu pci:0000:03:00.0
 ```
+
+*注：明确指定 `--gpu` 后若设备不存在或不支持当前输出，程序将明确报错退出，绝不静默改选其它显卡。Plasma 插件自动沿用宿主合成器的 GPU。详见 [GPU 选择说明](docs/gpu-selection.md)。*
+
+---
+
+### 6. 配置持久化机制
+
+NekoMote 采用**启动配置**与**面板运行时偏好**分离的双层设计，默认均存储在 XDG 用户配置目录（`~/.config/nekomote/`）下，**绝不写入资产目录**：
+- **启动配置 (`.json`)**：记录资产目录路径、指定显示输出、渲染后端、GPU 地址、初始窗口尺寸等。通过 `--config FILE` 指定，只有带有 `--save-config` 参数时才会保存并退出。
+- **面板偏好 (`.panel.json`)**：记录当前角色、当前背景、角色的缩放/平移偏移量、帧率限制（FPS）、是否静音、锁定状态、语言偏好等。**仅在用户通过界面操作时才会自动触发原子落盘**，首次启动或未更改设置时不会无故产生多余文件。
+
+---
+
+## 资产准备与导入
+
+NekoMote 运行时只接受当前 **schema 6** 压缩二进制模型（`model.nkm`）与 **version 1** 交互会话（`session.nks.json`）。
+
+> [!NOTE]
+> **开放资产库与自定义构建说明**：
+> NekoMote 的核心是一个通用的独立 E-mote 二维模型运行时，**资产库支持完全自定义构建，并不硬编码绑定《猫娘乐园》**。
+> - **其他作品支持**：理论上任何采用 E-mote 引擎制作的 Galgame 游戏，只要能解包提取出其原始模型 JSON、`.resx.json` 资源映射与 PNG 贴图，并经本项目的离线导入工具（`nekomote_import` 及 `import_session.py`）转化为当前规范格式，都可以支持在 NekoMote 中加载与播放。
+> - **实测范围边界**：需要特别说明的是，本项目目前的开发、几何精度回归测试与基准对齐均以《猫娘乐园》系列 195 个模型型号为基线，**尚未对其他 Galgame 作品的模型进行大范围实际测试与兼容性验证**。若其他作品使用了未经本项目实现验证的私有特性、未支持的继承位或特殊网格描述，可能会在导入或求值时被拒绝。欢迎社区开发者尝试导入并提交反馈与用例。
+
+### 方式一：直接获取现成资产包（推荐）
+
+你可以直接从配套的资产仓库 [NekoMoteAssets](https://github.com/Chocola-X/NekoMoteAssets) 下载已经导入并裁切优化好的现成资产包，解压后直接将其路径填入 `--assets` 或壁纸插件设置中即可。
+
+### 方式二：从原游戏解包素材离线导入
+
+1. **导入单个模型**：
+   ```bash
+   build/release/bin/nekomote_import model.json model.resx.json --output assets/characters/<角色组>/<型号>
+   ```
+2. **导入交互会话（反应规则、语音、触摸区域）**：
+   ```bash
+   python3 tools/import_session/import_session.py \
+     --reference-root <原解包根目录> \
+     --model <型号名> \
+     --converter build/release/bin/nekomote_audio_convert \
+     --character-root assets/characters/<角色组> \
+     --output assets/characters/<角色组>/<型号>/session.nks.json
+   ```
+3. **批量导入全量资产与背景**：
+   ```bash
+   python3 tools/import_all_assets.py --reference-root <原解包根目录> \
+     --importer build/release/bin/nekomote_import \
+     --session-tool tools/import_session/import_session.py \
+     --output assets/characters --report assets/import-report.json
+   python3 tools/import_backgrounds.py --reference-root <原解包根目录> --dest assets
+   ```
+
+### 规范资产目录结构
+
+```text
 assets/
 ├── characters/
-│   ├── characters.json               # 可选，角色显示名字典，键为 "组/变体"，值为多语言对象
+│   ├── characters.json               # 可选：角色显示名字典（支持 en / zh-CN / zh-TW / ja 多语言）
 │   └── <角色组>/                     # 一级目录：角色组（如 chocola）
-│       ├── audio/main/               # 正常语音 FLAC（little/ 为小猫语音）
-│       └── <变体>/                   # 二级目录：型号变体（如 date-a）
-│           ├── model.nkm             # schema 6 压缩模型（必需）
-│           ├── session.nks.json      # 反应会话（必需）
-│           ├── meta.json             # 可选：cutoff_y / display_name / hidden / order
-│           ├── audio -> ../audio/main # 按原声音 namespace 选择 main/little
-│           ├── textures/             # PNG 图集
-│           └── report.json           # 导入结构报告
+│       ├── audio/main/*.flac         # 会话语音（无损 FLAC，little/ 为小猫声线）
+│       └── <型号变体>/               # 二级目录：具体型号（如 date-a）
+│           ├── model.nkm             # schema 6 规范化模型（MessagePack + zlib 紧凑容器）
+│           ├── session.nks.json      # 反应会话规则
+│           ├── textures/             # 预裁切优化后的 PNG 图集
+│           └── audio -> ../audio/main
 ├── backgrounds/
-│   ├── background.json               # 可选，静态背景显示名字典（多语言对象）
-│   ├── BG_07A.png                    # 静态背景（根目录，name 为文件 stem）
+│   ├── background.json               # 可选：背景多语言显示名字典
+│   ├── BG_07A.png                    # 静态背景图片（以文件名作为标识）
 │   └── dynamic/
-│       ├── background.json           # 可选，动态背景显示名字典（多语言对象）
 │       └── <组名>/                   # 动态背景组（如 BG_01）
-│           ├── config.json           # phases 数组 + transition_seconds
-│           ├── A.png                 # 白天相
-│           ├── B.png                 # 黄昏相
-│           └── C.png                 # 夜晚相
+│           ├── config.json           # 动态切换配置（自定义任意多 phases 与过渡时长）
+│           ├── A.png                 # 阶段图片（文件名可自定义）
+│           ├── B.png
+│           └── C.png
 └── icons/
-    └── toggle.png                    # UI 面板图标
+    └── toggle.png                    # 面板图标
 ```
 
-角色采用两层目录：`characters/<角色组>/<变体>/`，每个变体目录必须含 `model.nkm` 与 `session.nks.json`。角色名格式为 `组/变体`（如 `chocola/date-a`），用于 `--character` 参数与面板配置的 `character` 字段。`characters.json` 提供显示名，键为完整角色名。
+#### 动态背景的时间配置接口 (`config.json`)
 
-显示名字典（`characters.json`、`background.json`、`dynamic/background.json`、`meta.json` 的 `display_name`）支持两种值格式：多语言对象按语言代码（`en` / `zh-CN` / `zh-TW` / `ja`）给出翻译；纯字符串则对所有语言生效。运行时按面板配置的 `language` 字段选取，缺失的语言按 zh-CN → en → zh-TW → ja 顺序回退，最后回退到资产 ID。UI 面板语言在同一字段中切换，首次启动默认英文。
-
-静态背景的 `name` 为 PNG 文件 stem（如 `BG_07A`）。动态背景的 `name` 为组目录名（如 `BG_01`），其 `config.json` 定义各相图片与切换时间：
+程序内置了通用的基于时间的动态背景轮换引擎，不仅限于三相，可以在 `config.json` 的 `phases` 数组中自由定义任意数量的时间段：
 
 ```json
 {
   "phases": [
     {"image": "A.png", "start": "06:00"},
-    {"image": "B.png", "start": "16:00"},
-    {"image": "C.png", "start": "18:00"}
+    {"image": "B.png", "start": "12:00"},
+    {"image": "C.png", "start": "16:00"},
+    {"image": "D.png", "start": "18:00"}
   ],
   "transition_seconds": 1.8
 }
 ```
 
-`start` 为 24 小时制 HH:MM，按当天分钟数排序选择当前相。`meta.json` 的 `cutoff_y` 为角色裁切 Y 坐标，`hidden` 为 `true` 时不在 UI 列表显示，`order` 控制组内排序。
+- `start`：24 小时制 `HH:MM`。程序按当天分钟数排序，并根据本地系统时间自动切换到对应的阶段图片。
+- `transition_seconds`：相与相之间平滑 crossfade 渐变的持续时间（秒）。
 
-## 运行播放器
+---
 
-```bash
-# 目录模式：从 assets/ 加载，UI 可切换角色/背景
-build/release/bin/nekomote_player --assets assets --character <角色名>
+## 编译与安装
 
-# 单模型模式
-build/release/bin/nekomote_player \
-  --model assets/characters/<角色名>/model.nkm \
-  --session assets/characters/<角色名>/session.nks.json --fit
+### 系统要求
 
-# 无音频环境
-build/release/bin/nekomote_player --assets assets --character <角色名> --mute
-```
+- **构建工具**：CMake ≥ 3.25、Ninja、支持 C++20 的编译器（GCC ≥ 11 或 Clang ≥ 14）、Python 3 + Jinja2
+- **核心依赖**：libpng 1.6、zlib、Fontconfig（文本渲染与多语言字体发现）、PulseAudio（libpulse ≥ 13.99）
+- **显示与后端库**：
+  - OpenGL 3.3 Core 驱动；Vulkan 1.0 支持需 Vulkan SDK（headers + `glslangValidator`）及 ICD loader
+  - X11 壳需 `libX11`、`libXrandr`、`libXext` 开发包
+  - Wayland layer-shell 壳需 `wayland-client ≥ 1.20`、`wayland-scanner`、`wayland-egl`、`wayland-cursor` 与 `EGL ≥ 1.5`
+  - Plasma 插件需 Qt Quick（Plasma 6 需 Qt ≥ 6.4；Plasma 5 需 Qt ≥ 5.12）
 
-常用参数：`--backend opengl|vulkan`、`--fit`、`--scale`、`--origin-x/--origin-y`、`--width/--height`、`--fps`、`--seed`、`--list-gpus`、`--gpu`、640×64 范围。完整列表见 `--help`。
+### CMake 预设 (Presets) 汇总
 
-操作：
+| Preset | 类型 | 核心特性 | 包含组件 |
+| --- | --- | --- | --- |
+| `release` | Release | LTO 优化、OpenGL + Vulkan 1.0、警告即错误 | 独立播放器、所有导入/转换工具、ABI 诊断宿主 |
+| `system` | Release | 完全使用发行版系统包（禁止任何自动联网下载） | 同 release |
+| `dev` | Debug | 快速增量编译、调试符号、包含单元测试 | 全部工具与测试集 |
+| `plasma` | Release | LTO、Qt6 + Plasma 6 QML 插件 | Plasma 6 壁纸包打包与安装产物 |
+| `plasma5` | Release | LTO、Qt5 + Plasma 5 QML 插件 | Plasma 5 壁纸包打包与安装产物 |
+| `layer-shell`| Release | LTO、轻量独立 Wayland 进程、无 Qt/GLFW 依赖 | `nekomote_layer_shell` 可执行程序 |
+| `x11` | Release | LTO、轻量独立 X11 进程、无 Qt/GLFW 依赖 | `nekomote_x11` 可执行程序 |
+| `asan` | Debug | 地址与未定义行为检测（ASan + UBSan） | 无头核心与 C ABI 测试 |
 
-- 鼠标移动：视线跟随；左键短按释放：触摸；左键长按 300ms 后：拖动角色；滚轮：围绕指针缩放
-- 空格：暂停/继续；F：适配完整模型；R：重置角色；Esc：关闭
-- Tab / 1–9：切换角色；B / N：切换背景；C：清除背景
-- 右上角图标：打开 UI 控制面板（角色、背景选择、语言、关闭声音、FPS、锁定、重设位置）
-
-声音开关统一由 UI 控制面板的"关闭声音"管理，状态写入面板配置的 `mute` 字段，下次启动自动恢复。`--mute` 仅作启动时强制静音覆盖。
-
-壁纸默认在宿主检测到锁屏、休眠或关屏时暂停。X11 与 layer-shell 可在启动命令后添加
-`--no-session-pause`；Plasma 5/6 可在壁纸设置中取消勾选「锁屏、休眠或关屏时暂停」。
-Wayland 上的关屏帧回调由合成器控制，选项不改变宿主的可见性或输出热插拔处理。
-
-界面与资产显示名支持英文、简体中文、繁体中文与日文，在 UI 控制面板的设置抽屉中切换并写入面板配置的 `language` 字段。首次启动默认英文，并在内存中选取列表中的第一张背景作为初始壁纸；已有配置中显式清空的背景保持无背景状态。
-
-## KDE Plasma 壁纸部署
-
-GitHub 上的 Plasma 5 包名为 `nekomote-plasma5-ubuntu20-<架构>.tar.gz`，
-Plasma 6 为 `nekomote-plasma6-debian12-<架构>.tar.gz`，架构为 `x86_64` 或 `aarch64`。
-解压后包含同名 `.wallpaper.zip`、它的 `.sha256` 和独立安装器 `installer.py`。
-KDE Store 使用里面的 **`.wallpaper.zip`**，GitHub 用户使用安装器；两者安装相同内容，
-无需配置全局 QML 搜索路径。商店条目仍需维护者单独上架，详见
-[KDE 壁纸包分发](docs/plasma-kpackage-distribution.md)。
-
-### 安装、重装和卸载
-
-下载匹配桌面 major 与 CPU 架构的可信发行包，例如 Plasma 6 / x86_64：
+### 编译步骤
 
 ```bash
-tar -xzf nekomote-plasma6-debian12-x86_64.tar.gz
-cd nekomote-plasma6-debian12-x86_64
-python3 installer.py              # 交互菜单：安装 / 重装 / 卸载 / 状态
-# 也可直接执行：
-python3 installer.py install
-python3 installer.py reinstall
-python3 installer.py uninstall
-python3 installer.py status
-```
+# 1. 编译全功能 Release 发布版（默认通过 FetchContent 拉取固定的轻量依赖）
+cmake --preset release
+cmake --build --preset release -j$(nproc)
 
-安装器需要 Python ≥ 3.8、对应的 `kpackagetool5` 或 `kpackagetool6` 及系统运行依赖。
-安装前自动校验包、桌面版本和动态库依赖；安装位置为
-`$XDG_DATA_HOME/plasma/wallpapers/uk.nekopara.nekomote/`（默认 `~/.local/share/…`）。
-`reinstall` 支持同版本重装，并识别旧分离式安装记录，清理旧库、模块和由旧工具创建的
-环境配置；失败恢复原文件。旧安装文件有修改时会停止并说明原因，避免丢失用户改动。
-更新或迁移后请重新登录以释放已载入的旧模块；安装器不会自动重启桌面。
+# 2. 编译独立的 Wayland layer-shell 壁纸壳
+cmake --preset layer-shell
+cmake --build --preset layer-shell -j$(nproc)
 
-安装后在桌面右键 → 配置壁纸 → 选择 NekoMote，并设置资产目录。模型资产独立提供，
-重装与卸载保留资产、面板配置和桌面配置。
+# 3. 编译独立的 X11 壁纸壳
+cmake --preset x11
+cmake --build --preset x11 -j$(nproc)
 
-### 从源码构建插件
-
-```bash
+# 4. 编译 KDE Plasma 6 插件包
 cmake --preset plasma -DNEKOMOTE_BUILD_PLASMA_PROBE=OFF
 cmake --build --preset plasma --target nekomote_plasma_stage
+
+# 5. 发行版系统依赖模式（完全断网，要求系统预装依赖）
+cmake --preset system
+cmake --build --preset system -j$(nproc)
 ```
 
-Plasma 5 使用 `plasma5` preset。stage 是打包中间产物；生成统一安装包的命令见
-[Plasma 分发](docs/plasma-distribution.md)，原 `plasma_deploy.py` 部署方式已移除。
-
-### 分发包
-
-发行版维护者可用 `-DNEKOMOTE_USE_SYSTEM_DEPS=ON`（或 `cmake --preset system`），
-使用系统安装的依赖版本；缺少依赖直接报错，不下载固定版本。
-默认构建与 GitHub Actions 继续使用原有固定依赖。
-Arch 的三包 PKGBUILD 见 [打包说明](packaging/arch/README.md)。
-
-五个独立 GitHub Actions 工作流在分支 push、PR 或手动触发时分别构建：
-
-- 原生应用：AlmaLinux 8.10 / GCC Toolset 13，x86_64 / ARM64 的 Release `nekomote_player`、`nekomote_import`、`nekomote_audio_convert`、`nekomote_model_convert`、`nekomote_png_recompress`、`nekomote_abi_host`。
-- KDE5：Ubuntu 20.04 / Qt5.12.8 的 x86_64 与 ARM64 插件。
-- KDE6：Debian 12 / Qt6.4.2 的 x86_64 与 ARM64 插件。
-- Layer-shell：Debian 12 / Wayland 1.21 的 x86_64 与 ARM64 独立程序。
-- X11：AlmaLinux 8.10 / EWMH/GLX 的 x86_64 与 ARM64 独立程序。
-
-构建、测试与依赖审计通过后上传 Actions artifacts；失败日志与测试报告单独保存。
-推送 `v0.5.0` 这样的 `vX.Y.Z` 稳定版本标签后，发布工作流会构建上述全部平台，
-校验十份归档及 SHA256，自动发布到 GitHub Releases。
-归档不附带 README；项目许可证为 AGPL-v3，依赖必须保留的声明合并在
-`THIRD_PARTY_NOTICES`。Plasma 包的许可证和依赖声明保存在内层壁纸包的 `contents/` 中。
-配置和兼容范围见 [自动构建说明](docs/github-actions.md)；安装步骤见上文。
-
-插件使用宿主 Qt 公共 Quick API，发行包不附带 Qt/KDE/glibc/GPU 驱动。一个二进制不能覆盖所有 Linux 发行版：Qt 插件要求相同 major、不低于构建 minor 的 Qt。详见 [Plasma 分发](docs/plasma-distribution.md)。Plasma 5 包（`nekomote-plasma5-*`）步骤相同，但必须装进 Plasma 5 桌面，不得装进 Plasma 6。
-
-## 独立壁纸壳（Wayland layer-shell / X11）
-
-不使用 Plasma 插件时，可经两个独立进程壳把同一壁纸本体接到其他桌面。两者都只通过 C ABI 复用共享的模型、背景、声音、控制面板与配置，不重复任何业务逻辑：
-
-- **`nekomote_layer_shell`**：面向实现 [wlr-layer-shell](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml) 协议的 Wayland 合成器（Sway、Hyprland、niri 等），支持 OpenGL/EGL 或原生 Wayland Vulkan 输出。
-- **`nekomote_x11`**：面向任意实现 EWMH 的 X11 窗口管理器，以桌面层窗口（`_NET_WM_WINDOW_TYPE_DESKTOP`）常驻，支持 OpenGL/GLX 或原生 Xlib Vulkan 输出，AlmaLinux 8.10 基线。
-
-### 构建与运行
+### 运行单元测试（无需显示服务器）
 
 ```bash
-# Wayland layer-shell 壳（需 Wayland client ≥ 1.20、wayland-scanner、EGL ≥ 1.5）
-cmake --preset layer-shell && cmake --build --preset layer-shell
-build/layer-shell/bin/nekomote_layer_shell --list-outputs
-build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets --output DP-1 --backend vulkan
-
-# X11/EWMH 壳（需 X11、RandR ≥ 1.3、GLX 开发文件）
-cmake --preset x11 && cmake --build --preset x11
-build/x11/bin/nekomote_x11 --list-outputs
-build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vulkan
+cmake --preset dev -DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
+cmake --build --preset dev
+ctest --test-dir build/dev -LE gpu --output-on-failure
 ```
 
-两者命令行契约基本一致：
+---
 
-| 参数 | 含义 |
-| --- | --- |
-| `--assets DIR` | 正式资产目录，共用角色/背景扫描、切换及控制面板 |
-| `--backend opengl\|vulkan` | 选择后端，默认 OpenGL；Vulkan 未编译或初始化失败时明确报错 |
-| `--list-gpus` | 列出 PCI 显卡型号、地址及驱动，无需资产或显示服务器 |
-| `--gpu pci:dddd:bb:dd.f` | 指定本次进程的渲染 GPU，不保存到配置 |
-| `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
-| `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
-| `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
-| `--global-gaze on\|off` | 默认开启，可保存。也可配合 `passthrough`。layer-shell 需要合成器支持光标元数据且会话确认已解锁。 |
-| `--config FILE` | 显式指定启动配置文件 |
-| `--state FILE` | 显式指定面板偏好文件 |
-| `--save-config` | 保存合并后的启动设置并退出，无需显示服务器 |
-| `--mute` / `--no-save` | 强制静音 / 不写配置 |
-| `--model FILE [--session FILE]` | 单模型诊断入口，不绘制资产控制面板 |
-| `--frames N [--capture FILE.ppm]` | 固定 1/60 秒步长诊断回放，仅在最后一步读一次 framebuffer |
+## 性能测试与实测数据
 
-两个壳均支持 `--ui-open`，在交互模式启动时展开控制面板。
+NekoMote 在设计之初便将**超低资源消耗与能效**置于首位。
 
-多屏分别为每个输出启动一个进程并显式指定 `--output`；建议次要屏幕加 `--mute` 避免各实例同时发声。同一输出不要同时运行多个壁纸程序。独立实例分别指定 `--config FILE`，不按输出名称生成配置标识。
+### 1. 低配实机：i5-2410M / Intel HD 3000 核显
 
-两个壳默认关闭，不依赖 Qt/GLFW；协议能力缺失（无 layer-shell 的合成器、无 EWMH 支持的 WM）时明确失败退出，不退化为普通窗口。适用范围与验收边界见 [layer-shell 说明](docs/layer-shell.md)与 [X11 说明](docs/x11.md)（后者含 XFCE 桌面图标共存的已知限制）。
+2026-11-13 在一台具有典型代表性的老旧低配笔记本上进行了严格实测：
+- **硬件配置**：Intel Core i5-2410M（双核四线程，2.3 GHz）、Intel HD 3000 核显、3.7 GiB 内存
+- **系统环境**：Debian 12、Mesa 22.3.6、OpenGL 3.3 Core、无头 X11 会话
+- **测试条件**：1920×1080 分辨率、目标 60 FPS、完整模型动态求值、预热 120 帧后连续采样 600 帧（三轮中位数）：
 
-### 指定渲染 GPU
-
-普通播放器、X11 和 layer-shell 壁纸壳均支持启动时选卡。先枚举本机设备，再把输出中
-的 `pci:…` 地址传给 `--gpu`；以下地址仅为示例，需替换为本机枚举结果：
-
-```bash
-# 枚举设备；nekomote_x11 和 nekomote_layer_shell 也支持 --list-gpus
-build/release/bin/nekomote_player --list-gpus
-
-# 普通播放器 / X11 壁纸壳，默认 OpenGL
-build/release/bin/nekomote_player --assets assets --gpu pci:0000:03:00.0
-build/x11/bin/nekomote_x11 --assets /path/to/assets --gpu pci:0000:03:00.0
-
-# Wayland layer-shell 壁纸壳，使用 Vulkan
-build/layer-shell/bin/nekomote_layer_shell --assets /path/to/assets \
-  --backend vulkan --gpu pci:0000:03:00.0
-```
-
-不传 `--gpu` 时保持现有选择策略和驱动环境；Vulkan 默认仍优先独显。
-GPU 参数只对本次进程生效，不能与 `--save-config` 合用。长期固定设备可把参数写进
-自启动命令或 systemd 用户服务；更换 GPU 需重启进程，不支持热切换。
-
-实际选中的设备信息输出到进程日志。明确指定后，设备不存在、无法核验或不支持目标
-输出呈现时会报错，不会静默改选其他 GPU。`--list-gpus` 列出的是 PCI 硬件，
-不代表驱动或呈现能力已通过验证；GPU 选择也不等于 `--output` 的显示器选择。
-**Plasma 插件继续跟随宿主 GPU，不支持此参数。**具体驱动、多卡限制及验证范围见
-[GPU 选择说明](docs/gpu-selection.md)。
-
-## 配置
-
-启动配置与面板偏好分开保存到 XDG 配置目录，不读写 `assets/config.json`，没有默认资产目录。
-`--config FILE` 选择启动文件，只有 `--save-config` 写入并退出；普通启动读取保存值后由
-显式命令行参数覆盖。面板文件默认是同目录的 `<启动文件 stem>.panel.json`，也可指定
-`--state FILE`。Plasma 启动设置由插件代管，面板按壁纸实例 UUID 隔离。
-
-```bash
-nekomote_x11 --config ~/.config/nekomote/left.json --assets /path/to/assets \
-  --backend vulkan --output DP-1 --save-config
-nekomote_x11 --config ~/.config/nekomote/left.json
-```
-
-面板偏好字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| `character` | 当前角色名 |
-| `background` | 当前背景名（静态为文件 stem，动态为组名） |
-| `scale`、`origin_x`、`origin_y` | 角色缩放与中心原点位置（Y 向下） |
-| `fps` | 显示帧率限制（作者时钟仍 60Hz） |
-| `mute` | 静音状态（由 UI 面板维护） |
-| `lock_transform` | 锁定角色位置和大小 |
-| `fit` | 适配完整模型 |
-| `icon_x`、`icon_y` | UI 图标位置 |
-| `sidebar_x`、`sidebar_y`、`sidebar_free` | UI 面板位置与自由浮动 |
-| `background_fade_seconds` | 背景切换渐变时长 |
-
-面板数据只在用户操作时保存，首次启动和退出不为默认值创建文件。
-`--no-save` 保留原配置不写回。路径、实例隔离、JSON 示例与一次性旧配置迁移命令见
-[配置说明](docs/configuration.md)。
-
-## 性能
-
-### 低配实机：i5-2410M / Intel HD 3000
-
-2026-11-13 在 **2 核 4 线程 i5-2410M、Intel HD 3000 核显、3.7 GiB 内存**的
-Debian 12 实机上测试，使用 Mesa 22.3.6、OpenGL 3.3 和原生 Release/LTO 构建。
-已确认由 Intel 核显硬件加速渲染。独立播放器设置为 1920×1080、60 FPS，单角色、
-平色背景、静音、控制面板关闭；每场预热 120 帧、采样 600 帧，下表为三轮中位数。
-
-| 型号 | 实测帧循环 FPS | 播放器 CPU（全机四线程口径） | 播放器采样峰值 RSS |
+| 测试角色型号 | 实测帧循环节奏 | 播放器进程 CPU（整机四线程口径） | 播放器物理内存峰值 (RSS) |
 | --- | ---: | ---: | ---: |
-| 巧克力 `chocola/date-a` | 59.05 | 6.43% | 79.66 MiB |
-| 巧克力 `chocola/wintermaid` | 58.98 | 7.62% | 79.32 MiB |
-| 椰子 `coconut/casual` | 58.89 | 6.49% | 79.70 MiB |
+| 巧克力 `chocola/date-a` | **59.05 FPS** | **6.43%**（相当于单核 ~25.7%） | **79.66 MiB** |
+| 巧克力 `chocola/wintermaid` | **58.98 FPS** | **7.62%**（相当于单核 ~30.5%） | **79.32 MiB** |
+| 椰子 `coconut/casual` | **58.89 FPS** | **6.49%**（相当于单核 ~26.0%） | **79.70 MiB** |
 
-CPU 仅统计播放器进程，相当于单逻辑核的 25.7%–30.5%；Xorg 另占全机约
-1.6%–1.7%。附加的 1080p / 30 FPS 单轮测试中，播放器 CPU 约为全机
-3.5%–3.9%。独立 CPU 探针对七型号的待机及拖动/视线工况测试，求值与构帧
-P50 为 0.44–0.79 ms，预热后受测路径的常规 C++ `new/new[]` 分配计数均为零；
-该范围不含 GPU、UI、音频或整个应用的分配。
+在 1080p / 30 FPS 的工况下，播放器 CPU 占用进一步下降至全机 **3.5%–3.9%**。经独立 CPU 探针测量，单帧核心求值与构帧耗时（P50）仅为 **0.44–0.79 ms**，且预热完成后受测路径的常规 C++ 堆内存分配计数严格为零。测试详情见 [低配实机测试报告](docs/headless-lowend-test-2026-11-13.md)。
 
-这些结果表明，本轮受测模型在 Sandy Bridge 核显上也能以约 80 MiB 的播放器 RSS
-达到接近 60 FPS 的帧循环节奏。测量使用无头 X11，未连接物理显示器，未运行 VNC；
-帧循环 FPS 不代表物理屏幕实际呈现帧率，也不代表 Plasma 插件的完整桌面开销。
-测试为短时采样，未测整机功耗或长期稳定性，未进行优化前后对照。
-完整条件、分位数、正确性检查与可复测数据见
-[低配实机测试报告](docs/headless-lowend-test-2026-11-13.md)。
+### 2. 现代桌面实机：KDE Plasma 6 (Wayland)
 
-### 真实 Plasma 桌面与历史测量
+> [!NOTE]
+> **版本背景说明**：该测试开展于早期阶段（2026-10-18），处于**项目进行大量 CPU 核心求值与构帧优化之前**。最新经过深度优化后的 CPU 性能表现请参考上文「低配实机（i5-2410M）」的测试数据；而测试中测得的内存与显存表现（物理内存增量 ~42 MiB，显存增量 ~69 MiB）与当前最新版本表现接近。
 
-2026-10-18 在真实 Wayland / KDE6 桌面重装当前构建，对比静态图片背景与动态壁纸。
-本机为 Xeon E5-1680 v4 / RTX 3080 Ti，单屏 2560×1440、180 Hz，壁纸目标 60 FPS。
-两轮采样均值相对前后干净静态基线的 **Plasma Shell 增量**：
+2026-10-18 在生产力工作站（Xeon E5-1680 v4，8 核 16 线程 / NVIDIA RTX 3080 Ti / 2560×1440 @ 180 Hz / 目标 60 FPS 壁纸）上对比了静态壁纸与 NekoMote 动态壁纸：
+- **CPU 开销（优化前早期数据）**：运行动态壁纸相较于静态背景，Plasma Shell 进程的增量约单逻辑核的 17.7%（折合整机全核心口径仅增加约 1.1%）；经后续一系列 CPU 帧循环与求值优化后，CPU 消耗已进一步显著降低。
+- **显存与内存（与最新版接近）**：相比静态桌面，进程物理内存（RSS）增量仅约 **42.4 MiB**，专用显存增量仅约 **69.0 MiB**。
+- 完整逐秒监控与合成器对照见 [真实桌面使用报告](docs/plasma-desktop-2026-10-18.md)。
 
-| 后端 | 单逻辑 CPU 占用增量 | RSS 增量 | 进程显存增量 |
-| --- | ---: | ---: | ---: |
-| OpenGL | +17.7 个百分点 | +42.4 MiB | +69.0 MiB |
-| Vulkan | +17.9 个百分点 | +84.1 MiB | +88.7 MiB |
+---
 
-CPU 的 100% 等于一个逻辑 CPU，以上增量约为本机 16 线程整机口径的 1.1%。
-Vulkan 两轮 RSS 为 559–628 MiB，存在尚未定位的启动占用差异；切回静态后也有资源驻留。
-KWin 开销、整卡功耗、逐秒数据和恢复检查见 [真实桌面使用报告](docs/plasma-desktop-2026-10-18.md)。
-本次为短时测量，未测实际呈现帧率，不代表其他硬件或长期运行。
+## 项目代码结构
 
-历史独立播放器测量（1920×1080、60 FPS、OpenGL，完整角色 + 背景 + UI）：
-
-- 内存占用：约 140 MB
-- 显存占用：约 60 MB
-- 核心求值（参数推进、物理与几何构建）单帧 P50 约 0.45 ms，60 FPS 下约占 3% 单核；不含绘制、UI 和桌面合成
-
-多后端对照、多角色连续切换的内存表现与详细测量方法见 [内存占用报告](docs/memory-footprint-2026-10-12.md) 与 [长期运行核查](docs/performance-audit-2026-10-16.md)。
-
-## 诊断工具
-
-- `nekomote_preview`：部件级预览与截图
-- `nekomote_abi_host`：C ABI 隔离宿主，确定性回放与截图（`--assets`/`--model`/`--steps`/`--capture`/`--mute`）
-- `nekomote_playback_probe`、`nekomote_session_probe`、`nekomote_frame_render`：逐帧数值与 GPU 帧观察
-
-固定步截图须静音（`--mute --steps N --capture out.png`），独立于性能测量，不混入性能基准。
-
-## 项目结构
-
-```
-src/model        强类型资产与数学基础
-src/runtime      参数、场景图、动画、变形、物理求值
-src/asset_io     资产加载与图片解码
-src/abi          C ABI 壁纸实例（宿主接入边界）
-src/render_gl    OpenGL 后端
-src/render_vk    Vulkan 后端
-src/application  会话、Controller、配置、多模型切换
-src/ui           共享控制面板与布局
-src/host_qt_quick Qt Quick 共享宿主基础
-adapters/plasma  Plasma 6 壁纸 QML 模块
-adapters/plasma5 Plasma 5 适配器（Qt5 插件注册与入口）
-adapters/layer_shell 独立 Wayland layer-shell 壳
-adapters/x11     独立 X11/EWMH 壳
-apps/player      普通窗口播放器
-apps/abi_host    C ABI 诊断宿主
-apps/preview     部件预览
-tools            导入、分发与验证脚本
+```text
+src/model/            强类型不可变模型资产定义、几何与数学基础
+src/runtime/          参数化、场景图、时间线动画、网格变形、软弹簧物理求值
+src/asset_io/         紧凑格式加载、资产校验、图集与 PNG 硬件解码
+src/render_gl/        OpenGL 3.3 Core 渲染后端执行器与 GPU 状态管理
+src/render_vk/        Vulkan 1.0 渲染后端执行器与设备命令录制
+src/application/      壁纸全局 Controller、会话调度、配置持久化、音频与交互状态机
+src/ui/               后端无关轻量 UI 面板布局、Hit-Test、多语言与绘制协议
+src/abi/              面向外部桌面宿主的高层稳定 C ABI (0.8.0)
+src/host_qt_quick/    Qt Quick / Plasma 宿主共享胶水层
+src/host_vulkan/      独立的平台 Vulkan WSI 交换链呈现辅助
+adapters/plasma/      KDE Plasma 6 官方壁纸 QML 插件
+adapters/plasma5/     KDE Plasma 5 适配器插件
+adapters/layer_shell/ 针对现代 Wayland 合成器的独立 layer-shell 壁纸进程
+adapters/x11/         针对 X11/EWMH 窗口管理器的独立桌面壁纸进程
+apps/player/          基于 GLFW 的通用交互播放器
+apps/abi_host/        纯 C ABI 确定性诊断与自动化回归验证宿主
+apps/preview/         部件级网格与图集诊断预览工具
+tools/                模型导入、音频转换、PNG 优化与自动化打包脚本
+docs/                 架构规范、各模块契约、使用说明与详细实测报告
 ```
 
-模块边界、性能规范与开发约定见 [AGENTS.md](AGENTS.md)；开发路线图见 [ROADMAP.md](ROADMAP.md)；构建细节见 [docs/building.md](docs/building.md)。
+---
+
+## 文档导航
+
+- **架构与编码约定**：[AGENTS.md](AGENTS.md)
+- **开发演进路线图**：[ROADMAP.md](ROADMAP.md)
+- **C ABI 契约规范**：[docs/abi-contract.md](docs/abi-contract.md)
+- **配置系统指南**：[docs/configuration.md](docs/configuration.md)
+- **GPU 选卡指南**：[docs/gpu-selection.md](docs/gpu-selection.md)
+- **编译与构建指南**：[docs/building.md](docs/building.md)
+- **依赖说明与系统打包**：[docs/dependencies.md](docs/dependencies.md)
+- **KDE Plasma 分发与安装**：[docs/plasma-distribution.md](docs/plasma-distribution.md)
+- **Wayland layer-shell 使用说明**：[docs/layer-shell.md](docs/layer-shell.md)
+- **X11 壁纸壳使用说明**：[docs/x11.md](docs/x11.md)
+- **文档完整导航索引**：[docs/README.md](docs/README.md)
