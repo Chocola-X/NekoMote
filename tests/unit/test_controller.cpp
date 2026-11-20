@@ -192,6 +192,21 @@ TEST_CASE("Controller held left button drags immediately after movement toleranc
     REQUIRE(c.origin().y == 50.0f);
 }
 
+TEST_CASE("External gaze does not move or cancel a held drag", "[controller][pointer][gaze]")
+{
+    WallpaperController c;
+    c.set_origin({0, 0});
+    c.pointer_press({10, 10});
+    c.set_external_gaze(nekomote::Vec2{-100, 200});
+    REQUIRE(c.origin().x == 0.0f);
+    REQUIRE(c.origin().y == 0.0f);
+    c.pointer_move({40, 20});
+    c.set_external_gaze(std::nullopt);
+    c.pointer_release({50, 25});
+    REQUIRE(c.origin().x == 40.0f);
+    REQUIRE(c.origin().y == 15.0f);
+}
+
 TEST_CASE("Controller short click cannot leave a drag active", "[controller][pointer]")
 {
     WallpaperController c;

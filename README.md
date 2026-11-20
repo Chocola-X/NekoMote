@@ -322,6 +322,7 @@ build/x11/bin/nekomote_x11 --assets /path/to/assets --output HDMI-1 --backend vu
 | `--output NAME` | 绑定指定输出；该输出移除后进程正常退出。不指定时 layer-shell 由合成器选择、X11 取主输出 |
 | `--input interactive` | 默认；背景可见处接收本地指针，转发共享 UI 与模型交互 |
 | `--input passthrough` | 空输入区域，全部穿透；无法操作控制面板与触摸交互 |
+| `--gaze local\|desktop`（仅 layer-shell） | 默认仅本地视线。桌面视线也可配合 `passthrough`；只有确认会话已解锁才能订阅跨屏光标位置，不读取屏幕图像。 |
 | `--config FILE` | 显式指定启动配置文件 |
 | `--state FILE` | 显式指定面板偏好文件 |
 | `--save-config` | 保存合并后的启动设置并退出，无需显示服务器 |

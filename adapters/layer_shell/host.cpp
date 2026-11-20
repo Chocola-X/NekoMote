@@ -4,6 +4,8 @@
 
 #include <nekomote/host_gpu/gpu.hpp>
 #include <nekomote/host_session/monitor.hpp>
+
+#include "desktop_gaze.hpp"
 #if defined(NEKOMOTE_HAS_VULKAN)
 #include "nekomote/host_vulkan/host.h"
 #endif
@@ -102,6 +104,8 @@ class Host::Impl
   public:
     explicit Impl(Options options) : options_(std::move(options))
     {
+        if (options_.desktop_gaze && !options_.list_outputs)
+            desktop_gaze_ = std::make_unique<DesktopGaze>();
     }
     ~Impl()
     {
@@ -135,6 +139,8 @@ class Host::Impl
             wl_egl_window_destroy(egl_window_);
         if (frame_callback_)
             wl_callback_destroy(frame_callback_);
+        if (desktop_gaze_)
+            desktop_gaze_->reset(); // Destroy protocol children before their output/seat/display.
         if (pointer_)
             wl_pointer_release(pointer_);
         if (cursor_surface_)
@@ -228,6 +234,7 @@ class Host::Impl
     void detach_surface();
     void reconnect_graphics();
     void refresh_availability();
+    void poll_session();
     void initialize_egl();
     void initialize_graphics();
 #if defined(NEKOMOTE_HAS_VULKAN)
@@ -235,6 +242,7 @@ class Host::Impl
 #endif
     void resize();
     void process_input();
+    void update_desktop_gaze();
     void render();
     void capture();
     void wait_events(int timeout);
@@ -251,6 +259,8 @@ class Host::Impl
     static const wl_callback_listener& frame_listener();
 
     Options options_;
+    std::unique_ptr<DesktopGaze> desktop_gaze_;
+    bool gaze_applied_ = false, gaze_confirmed_ = false;
     wl_display* display_ = nullptr;
     wl_registry* registry_ = nullptr;
     wl_compositor* compositor_ = nullptr;
@@ -313,6 +323,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
             self.callback(
                 [&]
                 {
+                    if (self.desktop_gaze_)
+                        self.desktop_gaze_->global(registry, name, interface, version);
                     if (std::strcmp(interface, wl_compositor_interface.name) == 0 &&
                         !self.compositor_)
                     {
@@ -347,6 +359,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
                             throw std::runtime_error("cannot bind wl_output");
                         listen_check(wl_output_add_listener(output->object, &output_listener(),
                                                             output.get()));
+                        if (self.desktop_gaze_)
+                            self.desktop_gaze_->add_output(name, output->object);
                         self.outputs_.push_back(std::move(output));
                     }
                     else if (std::strcmp(interface, wl_seat_interface.name) == 0 && !self.seat_ &&
@@ -367,6 +381,8 @@ const wl_registry_listener& Host::Impl::registry_listener()
             self.callback(
                 [&]
                 {
+                    if (self.desktop_gaze_)
+                        self.desktop_gaze_->remove_global(name);
                     std::erase_if(self.outputs_,
                                   [&](const auto& output)
                                   {
@@ -395,9 +411,20 @@ const wl_output_listener& Host::Impl::output_listener()
     static const auto listener = []
     {
         wl_output_listener value{};
-        value.geometry = [](void*, wl_output*, int32_t, int32_t, int32_t, int32_t, int32_t,
-                            const char*, const char*, int32_t) {};
-        value.mode = [](void*, wl_output*, uint32_t, int32_t, int32_t, int32_t) {};
+        value.geometry = [](void* data, wl_output* object, int32_t, int32_t, int32_t, int32_t,
+                            int32_t, const char*, const char*, int32_t transform)
+        {
+            auto& self = *static_cast<Output*>(data)->host;
+            if (self.desktop_gaze_)
+                self.callback([&] { self.desktop_gaze_->set_output_transform(object, transform); });
+        };
+        value.mode =
+            [](void* data, wl_output* object, uint32_t flags, int32_t w, int32_t h, int32_t)
+        {
+            auto& self = *static_cast<Output*>(data)->host;
+            if (self.desktop_gaze_ && (flags & WL_OUTPUT_MODE_CURRENT))
+                self.callback([&] { self.desktop_gaze_->set_output_mode(object, w, h); });
+        };
         value.done = [](void* data, wl_output*)
         {
             auto& output = *static_cast<Output*>(data);
@@ -405,6 +432,8 @@ const wl_output_listener& Host::Impl::output_listener()
                 [&]
                 {
                     output.complete = true;
+                    if (output.host->desktop_gaze_)
+                        output.host->desktop_gaze_->output_done(output.object);
                     output.host->update_scale();
                 });
         };
@@ -505,26 +534,35 @@ const wl_seat_listener& Host::Impl::seat_listener()
 
 void Host::Impl::set_pointer(uint32_t capabilities)
 {
-    const bool available = (capabilities & WL_SEAT_CAPABILITY_POINTER) != 0 &&
-                           options_.input == InputMode::interactive;
+    const bool local_input = options_.input == InputMode::interactive;
+    const bool available =
+        (capabilities & WL_SEAT_CAPABILITY_POINTER) && (local_input || desktop_gaze_);
     if (available && !pointer_)
     {
         pointer_ = wl_seat_get_pointer(seat_);
         if (!pointer_)
             throw std::runtime_error("cannot create wl_pointer");
-        listen_check(wl_pointer_add_listener(pointer_, &pointer_listener(), this));
-        if (surface_)
-            initialize_cursor();
-        std::cerr << "local pointer capability available\n";
+        // The capture protocol needs a seat pointer, not a local input region. In
+        // passthrough mode never forward local events or allocate a cursor surface.
+        if (local_input)
+        {
+            listen_check(wl_pointer_add_listener(pointer_, &pointer_listener(), this));
+            if (surface_)
+                initialize_cursor();
+            std::cerr << "local pointer capability available\n";
+        }
     }
     else if (!available && pointer_)
     {
         if (pointer_inside_)
             queue({InputKind::leave});
         pointer_inside_ = false;
+        if (desktop_gaze_)
+            desktop_gaze_->set_pointer(nullptr);
         wl_pointer_release(pointer_);
         pointer_ = nullptr;
-        std::cerr << "local pointer capability removed\n";
+        if (local_input)
+            std::cerr << "local pointer capability removed\n";
     }
 }
 
@@ -769,6 +807,17 @@ void Host::Impl::refresh_availability()
 {
     const bool unavailable =
         output_missing_ || graphics_detached_ || !configured_ || session_unavailable_;
+    if (desktop_gaze_)
+    {
+        const bool permit =
+            !unavailable && session_monitor_ && session_monitor_->desktop_gaze_allowed();
+        desktop_gaze_->set_pointer(permit ? pointer_ : nullptr);
+        if (!permit && wallpaper_ && gaze_applied_)
+        {
+            check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear unavailable gaze");
+            gaze_applied_ = false;
+        }
+    }
     if (!wallpaper_ || host_unavailable_ == unavailable)
         return;
     host_unavailable_ = unavailable;
@@ -978,8 +1027,6 @@ void Host::Impl::initialize_vulkan()
 
 void Host::Impl::initialize_graphics()
 {
-    if (options_.pause_on_session_events)
-        session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     resize();
 #if defined(NEKOMOTE_HAS_VULKAN)
     if (options_.backend == Backend::vulkan)
@@ -1023,7 +1070,9 @@ void Host::Impl::initialize_graphics()
               << (options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
-              << "; global pointer and arbitrary occlusion pause unavailable\n";
+              << (desktop_gaze_ ? "; desktop gaze requested (cursor metadata only)"
+                                : "; local gaze only")
+              << "; arbitrary occlusion pause unavailable\n";
 }
 
 void Host::Impl::resize()
@@ -1076,6 +1125,28 @@ void Host::Impl::process_input()
         }
     }
     input_count_ = 0;
+}
+
+void Host::Impl::update_desktop_gaze()
+{
+    if (!desktop_gaze_ || !selected_)
+        return;
+    const auto point = desktop_gaze_->sample(selected_->object, scale_);
+    if (point)
+    {
+        // The shared controller coalesces unchanged targets and clears its state on pause.
+        // Re-supply the latest sample even if the cursor hasn't moved since resume/resize.
+        check(nekomote_wallpaper_set_gaze_target(wallpaper_, point->first, point->second),
+              "set desktop gaze target");
+        if (!gaze_confirmed_)
+        {
+            std::cerr << "desktop gaze active: received cursor position metadata\n";
+            gaze_confirmed_ = true;
+        }
+    }
+    else if (gaze_applied_)
+        check(nekomote_wallpaper_clear_gaze_target(wallpaper_), "clear desktop gaze target");
+    gaze_applied_ = point.has_value();
 }
 
 void Host::Impl::capture()
@@ -1164,7 +1235,13 @@ void Host::Impl::render()
                                            kResumeBudgetSeconds)
                                 : 0.0);
     if (!retry_frame_)
+    {
+        // Coalesce all metadata received since the last frame. This never feeds the UI
+        // pointer or button/drag state, nor wakes a hidden output for extra frames.
+        if (!nekomote_wallpaper_paused(wallpaper_))
+            update_desktop_gaze();
         check(nekomote_wallpaper_advance(wallpaper_, dt), "advance wallpaper");
+    }
     const bool paused = nekomote_wallpaper_paused(wallpaper_) != 0;
     if (!retry_frame_ && paused && options_.capture.empty() &&
         !nekomote_wallpaper_needs_render(wallpaper_))
@@ -1234,6 +1311,26 @@ void Host::Impl::render()
         closed_ = true;
 }
 
+void Host::Impl::poll_session()
+{
+    if (!session_monitor_)
+        return;
+    const bool observed_pause = session_monitor_->poll();
+    const bool pause = options_.pause_on_session_events && observed_pause;
+    if (session_unavailable_ != pause)
+    {
+        session_unavailable_ = pause;
+        std::fputs(pause ? "[host_session] pause engaged (lock or sleep)\n"
+                         : "[host_session] pause released (lock or sleep)\n",
+                   stderr);
+    }
+    // Revoke before dispatching more Wayland events, even if no frame is due.
+    // Any queued position belongs to the old, now destroyed cursor session.
+    if (desktop_gaze_ && !session_monitor_->desktop_gaze_allowed())
+        desktop_gaze_->set_pointer(nullptr);
+    next_session_query_ = Clock::now() + std::chrono::seconds(1);
+}
+
 void Host::Impl::wait_events(int timeout)
 {
     if (wl_display_prepare_read(display_) != 0)
@@ -1255,10 +1352,16 @@ void Host::Impl::wait_events(int timeout)
         }
         needs_write = true;
     }
-    pollfd descriptor{wl_display_get_fd(display_),
-                      static_cast<short>(POLLIN | (needs_write ? POLLOUT : 0)), 0};
-    const int result = poll(&descriptor, 1, timeout);
-    if (result > 0 && (descriptor.revents & POLLIN))
+    // A frame callback may be suppressed indefinitely. Wake for lock-state
+    // changes independently of rendering and independently of animation pause.
+    const auto buses = desktop_gaze_ && session_monitor_ ? session_monitor_->dbus_fds()
+                                                         : std::array<int, 2>{-1, -1};
+    std::array<pollfd, 3> fds{
+        {{wl_display_get_fd(display_), static_cast<short>(POLLIN | (needs_write ? POLLOUT : 0)), 0},
+         {buses[0], POLLIN, 0},
+         {buses[1], POLLIN, 0}}};
+    const int result = poll(fds.data(), fds.size(), timeout);
+    if (result > 0 && (fds[0].revents & POLLIN))
     {
         if (wl_display_read_events(display_) < 0)
             throw std::runtime_error("read Wayland connection failed");
@@ -1267,8 +1370,10 @@ void Host::Impl::wait_events(int timeout)
         wl_display_cancel_read(display_);
     if (result < 0 && errno != EINTR)
         throw std::runtime_error("poll Wayland connection failed");
-    if (result > 0 && (descriptor.revents & (POLLERR | POLLHUP | POLLNVAL)))
+    if (result > 0 && (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL)))
         throw std::runtime_error("Wayland compositor disconnected");
+    if (result > 0 && (fds[1].revents || fds[2].revents))
+        poll_session();
     // POLLOUT is retried by the next prepare_read/flush iteration. Pending
     // dispatch happens at the loop head, after the prepared read is resolved.
 }
@@ -1285,10 +1390,16 @@ void Host::Impl::run()
                 std::cout << output->name << '\n';
         return;
     }
+    if (desktop_gaze_ && !desktop_gaze_->protocols_available())
+        std::cerr << "desktop gaze protocols unavailable; using local pointer gaze\n";
+    if (options_.pause_on_session_events || desktop_gaze_)
+        session_monitor_ = std::make_unique<nekomote::host_session::Monitor>();
     create_surface();
     const auto started = Clock::now();
     while (!closed_ && !stop_requested)
     {
+        if (session_monitor_ && Clock::now() >= next_session_query_)
+            poll_session();
         if (wl_display_dispatch_pending(display_) < 0)
             throw std::runtime_error("dispatch Wayland events failed");
         rethrow_failure();
@@ -1309,18 +1420,6 @@ void Host::Impl::run()
             if (options_.backend == Backend::vulkan && vk_host_c_wait_ready(&vk_host_) != 0)
                 throw std::runtime_error("wait for Vulkan frame before input/resize failed");
 #endif
-            if (session_monitor_ && Clock::now() >= next_session_query_)
-            {
-                next_session_query_ = Clock::now() + std::chrono::seconds(1);
-                const bool pause = session_monitor_->poll();
-                if (pause != session_unavailable_)
-                {
-                    session_unavailable_ = pause;
-                    std::fputs(pause ? "[host_session] pause engaged (lock or sleep)\n"
-                                     : "[host_session] pause released (lock or sleep)\n",
-                               stderr);
-                }
-            }
             refresh_availability();
             resize();
             process_input();
