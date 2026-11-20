@@ -38,6 +38,7 @@
 | [plasma-distribution.md](plasma-distribution.md) | KDE Plasma 插件打包分发、跨发行版兼容性与独立安装器 `installer.py` |
 | [plasma-kpackage-distribution.md](plasma-kpackage-distribution.md) | 面向 KDE Store 的标准 `.wallpaper.zip` KPackage 打包规范 |
 | [layer-shell.md](layer-shell.md) | 独立 Wayland layer-shell 壳（`nekomote_layer_shell`）使用与多屏说明 |
+| [gnome45.md](gnome45.md) | GNOME Shell 45+ Wayland 扩展与独立渲染宿主 |
 | [x11.md](x11.md) | 独立 X11/EWMH 壳（`nekomote_x11`）使用与桌面图标共存说明 |
 | [vulkan-backend.md](vulkan-backend.md) | Vulkan 1.0 渲染后端实现、WSI 呈现与生命周期规范 |
 | [qt-quick-host.md](qt-quick-host.md) | Qt Quick 场景图隔离宿主架构说明 |

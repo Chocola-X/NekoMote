@@ -1,0 +1,9 @@
+{
+    "uuid": "nekomote@nekopara.uk",
+    "name": "NekoMote",
+    "description": "Render NekoMote animated wallpapers behind the GNOME desktop.",
+    "shell-version": ["45", "46", "47", "48", "49", "50"],
+    "session-modes": ["user"],
+    "settings-schema": "org.gnome.shell.extensions.nekomote",
+    "url": "https://github.com/Chocola-X/NekoMote"
+}

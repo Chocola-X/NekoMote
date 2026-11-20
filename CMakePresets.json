@@ -89,6 +89,16 @@
             }
         },
         {
+            "name": "gnome45",
+            "inherits": "release",
+            "displayName": "GNOME Shell 45+ Wayland wallpaper adapter",
+            "cacheVariables": {
+                "NEKOMOTE_BUILD_GNOME45": "ON",
+                "NEKOMOTE_BUILD_PREVIEW": "OFF",
+                "NEKOMOTE_BUILD_PLAYER": "OFF"
+            }
+        },
+        {
             "name": "x11",
             "inherits": "release",
             "displayName": "Standalone X11/EWMH OpenGL/Vulkan wallpaper (Ubuntu 20.04 baseline)",
@@ -135,6 +145,7 @@
         { "name": "plasma",   "configurePreset": "plasma" },
         { "name": "plasma5",  "configurePreset": "plasma5" },
         { "name": "layer-shell", "configurePreset": "layer-shell" },
+        { "name": "gnome45", "configurePreset": "gnome45" },
         { "name": "x11",     "configurePreset": "x11" },
         { "name": "vulkan",   "configurePreset": "vulkan" }
     ],

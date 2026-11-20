@@ -18,6 +18,12 @@ enum class InputMode
     passthrough,
 };
 
+enum class SurfaceRole
+{
+    layer,
+    gnome_toplevel,
+};
+
 struct Options
 {
     std::string assets;
@@ -30,6 +36,8 @@ struct Options
     std::filesystem::path capture;
     Backend backend = Backend::opengl;
     InputMode input = InputMode::interactive;
+    SurfaceRole role = SurfaceRole::layer;
+    int32_t width = 0, height = 0; // GNOME Shell logical output dimensions.
     uint64_t frames = 0;
     bool global_gaze = true;
     bool muted = false;
@@ -42,6 +50,6 @@ struct Options
     bool help = false;
 };
 
-Options parse_options(int argc, char** argv);
-void print_help();
+Options parse_options(int argc, char** argv, SurfaceRole role = SurfaceRole::layer);
+void print_help(SurfaceRole role = SurfaceRole::layer);
 } // namespace nekomote::layer_shell

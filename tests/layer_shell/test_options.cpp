@@ -21,6 +21,7 @@ namespace
 using nekomote::layer_shell::Backend;
 using nekomote::layer_shell::InputMode;
 using nekomote::layer_shell::Options;
+using nekomote::layer_shell::SurfaceRole;
 
 struct ConfigEnvironment
 {
@@ -65,7 +66,7 @@ std::string read(const std::filesystem::path& path)
     return {std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
 }
 
-Options parse(std::initializer_list<std::string> arguments)
+Options parse(std::initializer_list<std::string> arguments, SurfaceRole role = SurfaceRole::layer)
 {
     std::vector<std::string> storage{"nekomote_layer_shell"};
     storage.insert(storage.end(), arguments);
@@ -73,7 +74,7 @@ Options parse(std::initializer_list<std::string> arguments)
     argv.reserve(storage.size());
     for (auto& argument : storage)
         argv.push_back(argument.data());
-    return nekomote::layer_shell::parse_options(static_cast<int>(argv.size()), argv.data());
+    return nekomote::layer_shell::parse_options(static_cast<int>(argv.size()), argv.data(), role);
 }
 
 } // namespace
@@ -89,6 +90,26 @@ TEST_CASE("Layer shell options select one model source", "[layer-shell][options]
     REQUIRE_THROWS_AS(parse({"--assets", "assets", "--session", "session"}), std::runtime_error);
     REQUIRE_THROWS_AS(parse({"--model"}), std::runtime_error);
     REQUIRE_THROWS_AS(parse({"--assets", ""}), std::runtime_error);
+}
+
+TEST_CASE("GNOME renderer needs a logical output size and separate configuration",
+          "[layer-shell][gnome45][options]")
+{
+    const auto config = (environment.root / "gnome45.json").string();
+    const auto role = SurfaceRole::gnome_toplevel;
+    const auto valid = parse(
+        {"--assets", "assets", "--width", "1280", "--height", "720", "--config", config}, role);
+    REQUIRE(valid.width == 1280);
+    REQUIRE(valid.height == 720);
+    REQUIRE(valid.config == config);
+    REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280"}, role),
+                        "GNOME renderer requires both --width and --height");
+    REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280", "--height", "720"}, role),
+                        "GNOME renderer requires its own --config FILE");
+    REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "0", "--height", "720"}, role),
+                        "--width expects a positive logical size");
+    REQUIRE_THROWS_WITH(parse({"--assets", "assets", "--width", "1280"}),
+                        "unknown option: --width");
 }
 
 TEST_CASE("Layer shell diagnostics require positive exact frame counts", "[layer-shell][options]")

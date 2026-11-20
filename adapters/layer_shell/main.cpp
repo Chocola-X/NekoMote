@@ -15,16 +15,23 @@ void stop_handler(int)
 {
     nekomote::layer_shell::request_stop();
 }
+#if defined(NEKOMOTE_GNOME45)
+constexpr auto kRole = nekomote::layer_shell::SurfaceRole::gnome_toplevel;
+constexpr auto kProgram = "nekomote_gnome45";
+#else
+constexpr auto kRole = nekomote::layer_shell::SurfaceRole::layer;
+constexpr auto kProgram = "nekomote_layer_shell";
+#endif
 } // namespace
 
 int main(int argc, char** argv)
 {
     try
     {
-        auto options = nekomote::layer_shell::parse_options(argc, argv);
+        auto options = nekomote::layer_shell::parse_options(argc, argv, kRole);
         if (options.help)
         {
-            nekomote::layer_shell::print_help();
+            nekomote::layer_shell::print_help(kRole);
             return 0;
         }
         if (options.list_gpus)
@@ -50,7 +57,7 @@ int main(int argc, char** argv)
     }
     catch (const std::exception& error)
     {
-        std::cerr << "nekomote_layer_shell: " << error.what() << '\n';
+        std::cerr << kProgram << ": " << error.what() << '\n';
         return 1;
     }
 }

@@ -40,6 +40,7 @@
 #include <vector>
 
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
 
 namespace nekomote::layer_shell
 {
@@ -149,14 +150,15 @@ class Host::Impl
             wl_cursor_theme_destroy(cursor_theme_);
         if (seat_)
             wl_seat_release(seat_);
-        if (layer_surface_)
-            zwlr_layer_surface_v1_destroy(layer_surface_);
+        destroy_surface_role();
         if (surface_)
             wl_surface_destroy(surface_);
         outputs_.clear();
         if (shell_)
             // The shell destroy request was added in v3; this host binds v1.
             wl_proxy_destroy(reinterpret_cast<wl_proxy*>(shell_));
+        if (xdg_shell_)
+            xdg_wm_base_destroy(xdg_shell_);
         if (shm_)
             wl_shm_destroy(shm_);
         if (compositor_)
@@ -230,6 +232,9 @@ class Host::Impl
     }
     void initialize_wayland();
     void create_surface();
+    void create_toplevel();
+    void destroy_surface_role() noexcept;
+    void configure_surface(uint32_t width, uint32_t height);
     void process_output_lifecycle();
     void detach_surface();
     void reconnect_graphics();
@@ -266,8 +271,11 @@ class Host::Impl
     wl_compositor* compositor_ = nullptr;
     wl_shm* shm_ = nullptr;
     zwlr_layer_shell_v1* shell_ = nullptr;
+    xdg_wm_base* xdg_shell_ = nullptr;
     wl_surface* surface_ = nullptr;
     zwlr_layer_surface_v1* layer_surface_ = nullptr;
+    xdg_surface* xdg_surface_ = nullptr;
+    xdg_toplevel* toplevel_ = nullptr;
     wl_seat* seat_ = nullptr;
     uint32_t seat_global_ = 0;
     wl_pointer* pointer_ = nullptr;
@@ -334,10 +342,22 @@ const wl_registry_listener& Host::Impl::registry_listener()
                             registry, name, &wl_compositor_interface, std::min(version, 4U)));
                     }
                     else if (std::strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0 &&
-                             !self.shell_)
+                             self.options_.role == SurfaceRole::layer && !self.shell_)
                     {
                         self.shell_ = static_cast<zwlr_layer_shell_v1*>(
                             wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, 1));
+                    }
+                    else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0 &&
+                             self.options_.role == SurfaceRole::gnome_toplevel && !self.xdg_shell_)
+                    {
+                        self.xdg_shell_ = static_cast<xdg_wm_base*>(
+                            wl_registry_bind(registry, name, &xdg_wm_base_interface, 1));
+                        if (!self.xdg_shell_)
+                            throw std::runtime_error("cannot bind xdg-shell");
+                        static const xdg_wm_base_listener ping{
+                            [](void*, xdg_wm_base* shell, uint32_t serial)
+                            { xdg_wm_base_pong(shell, serial); }};
+                        listen_check(xdg_wm_base_add_listener(self.xdg_shell_, &ping, nullptr));
                     }
                     else if (std::strcmp(interface, wl_shm_interface.name) == 0 && !self.shm_)
                     {
@@ -712,13 +732,8 @@ const zwlr_layer_surface_v1_listener& Host::Impl::layer_listener()
             self.callback(
                 [&]
                 {
-                    if (!width || !height)
-                        throw std::runtime_error("compositor supplied an empty background size");
                     zwlr_layer_surface_v1_ack_configure(layer, serial);
-                    self.logical_width_ = width;
-                    self.logical_height_ = height;
-                    self.configured_ = true;
-                    self.needs_resize_ = true;
+                    self.configure_surface(width, height);
                 });
         },
         [](void* data, zwlr_layer_surface_v1*)
@@ -758,8 +773,12 @@ void Host::Impl::initialize_wayland()
 
 void Host::Impl::create_surface()
 {
-    if (!compositor_ || !shell_)
+    if (!compositor_)
+        throw std::runtime_error("compositor does not provide wl_compositor");
+    if (options_.role == SurfaceRole::layer && !shell_)
         throw std::runtime_error("compositor does not provide wlr-layer-shell");
+    if (options_.role == SurfaceRole::gnome_toplevel && !xdg_shell_)
+        throw std::runtime_error("compositor does not provide xdg-shell");
     if (target_output_name_.empty())
         target_output_name_ = options_.output;
     if (!target_output_name_.empty())
@@ -778,18 +797,24 @@ void Host::Impl::create_surface()
     if (!surface_)
         throw std::runtime_error("cannot create Wayland surface");
     listen_check(wl_surface_add_listener(surface_, &surface_listener(), this));
-    layer_surface_ = zwlr_layer_shell_v1_get_layer_surface(
-        shell_, surface_, selected_ ? selected_->object : nullptr,
-        ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, "nekomote");
-    if (!layer_surface_)
-        throw std::runtime_error("cannot create layer surface");
-    listen_check(zwlr_layer_surface_v1_add_listener(layer_surface_, &layer_listener(), this));
-    zwlr_layer_surface_v1_set_anchor(
-        layer_surface_, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-                            ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
-    zwlr_layer_surface_v1_set_size(layer_surface_, 0, 0);
-    zwlr_layer_surface_v1_set_exclusive_zone(layer_surface_, -1);
-    zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface_, 0);
+    if (options_.role == SurfaceRole::gnome_toplevel)
+        create_toplevel();
+    else
+    {
+        layer_surface_ = zwlr_layer_shell_v1_get_layer_surface(
+            shell_, surface_, selected_ ? selected_->object : nullptr,
+            ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND, "nekomote");
+        if (!layer_surface_)
+            throw std::runtime_error("cannot create layer surface");
+        listen_check(zwlr_layer_surface_v1_add_listener(layer_surface_, &layer_listener(), this));
+        zwlr_layer_surface_v1_set_anchor(layer_surface_, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
+                                                             ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+                                                             ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                                             ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+        zwlr_layer_surface_v1_set_size(layer_surface_, 0, 0);
+        zwlr_layer_surface_v1_set_exclusive_zone(layer_surface_, -1);
+        zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface_, 0);
+    }
     if (options_.input == InputMode::passthrough)
     {
         auto* region = wl_compositor_create_region(compositor_);
@@ -801,6 +826,58 @@ void Host::Impl::create_surface()
     else if (pointer_)
         initialize_cursor();
     wl_surface_commit(surface_);
+}
+
+void Host::Impl::configure_surface(uint32_t width, uint32_t height)
+{
+    if (!width || !height)
+        throw std::runtime_error("compositor supplied an empty background size");
+    needs_resize_ = true;
+    logical_width_ = width;
+    logical_height_ = height;
+    configured_ = true;
+}
+
+void Host::Impl::create_toplevel()
+{
+    xdg_surface_ = xdg_wm_base_get_xdg_surface(xdg_shell_, surface_);
+    if (!xdg_surface_)
+        throw std::runtime_error("cannot create xdg surface");
+    static const xdg_surface_listener configure{
+        [](void* data, xdg_surface* surface, uint32_t serial)
+        {
+            auto& self = *static_cast<Impl*>(data);
+            xdg_surface_ack_configure(surface, serial);
+            self.callback(
+                [&]
+                {
+                    self.configure_surface(static_cast<uint32_t>(self.options_.width),
+                                           static_cast<uint32_t>(self.options_.height));
+                });
+        }};
+    listen_check(xdg_surface_add_listener(xdg_surface_, &configure, this));
+    toplevel_ = xdg_surface_get_toplevel(xdg_surface_);
+    if (!toplevel_)
+        throw std::runtime_error("cannot create renderer toplevel");
+    static const xdg_toplevel_listener events{
+        [](void*, xdg_toplevel*, int32_t, int32_t, wl_array*) {}, [](void* data, xdg_toplevel*)
+        { static_cast<Impl*>(data)->surface_closed_ = true; }, nullptr, nullptr};
+    listen_check(xdg_toplevel_add_listener(toplevel_, &events, this));
+    xdg_toplevel_set_app_id(toplevel_, "uk.nekopara.nekomote.gnome45");
+    xdg_toplevel_set_title(toplevel_, "NekoMote");
+    // The Shell sizes the background clone from this fixed-size renderer.
+    xdg_toplevel_set_min_size(toplevel_, options_.width, options_.height);
+    xdg_toplevel_set_max_size(toplevel_, options_.width, options_.height);
+}
+
+void Host::Impl::destroy_surface_role() noexcept
+{
+    if (layer_surface_)
+        zwlr_layer_surface_v1_destroy(std::exchange(layer_surface_, nullptr));
+    if (toplevel_)
+        xdg_toplevel_destroy(std::exchange(toplevel_, nullptr));
+    if (xdg_surface_)
+        xdg_surface_destroy(std::exchange(xdg_surface_, nullptr));
 }
 
 void Host::Impl::refresh_availability()
@@ -861,11 +938,9 @@ void Host::Impl::detach_surface()
         wl_callback_destroy(frame_callback_);
         frame_callback_ = nullptr;
     }
-    if (layer_surface_)
-        zwlr_layer_surface_v1_destroy(layer_surface_);
+    destroy_surface_role();
     if (surface_)
         wl_surface_destroy(surface_);
-    layer_surface_ = nullptr;
     surface_ = nullptr;
     configured_ = false;
     surface_closed_ = false;
@@ -1064,11 +1139,11 @@ void Host::Impl::initialize_graphics()
                                                                      : options_.session.c_str()),
               "load diagnostic model");
     }
-    if (options_.ui_open)
+    if (options_.ui_open && options_.role == SurfaceRole::layer)
         check(nekomote_wallpaper_set_ui_open(wallpaper_, 1), "open shared controls");
-    std::cerr << "layer-shell " << (options_.backend == Backend::vulkan ? "Vulkan" : "OpenGL")
-              << " background " << pixel_width_ << 'x' << pixel_height_ << ", scale " << scale_
-              << ", local pointer "
+    std::cerr << (options_.role == SurfaceRole::layer ? "layer-shell " : "GNOME ")
+              << (options_.backend == Backend::vulkan ? "Vulkan" : "OpenGL") << " background "
+              << pixel_width_ << 'x' << pixel_height_ << ", scale " << scale_ << ", local pointer "
               << (options_.input == InputMode::passthrough
                       ? "disabled (passthrough)"
                       : (pointer_ ? "available" : "unavailable (requires seat v5 with pointer)"))
@@ -1264,7 +1339,8 @@ void Host::Impl::render()
     }
 #endif
     check(nekomote_wallpaper_render_frame(wallpaper_), "render wallpaper");
-    check(nekomote_wallpaper_render_ui(wallpaper_, static_cast<float>(dt)), "render controls");
+    if (options_.role == SurfaceRole::layer)
+        check(nekomote_wallpaper_render_ui(wallpaper_, static_cast<float>(dt)), "render controls");
     const bool capture_frame = !options_.capture.empty() && rendered_frames_ + 1 == options_.frames;
     if (capture_frame && options_.backend == Backend::opengl)
         capture();

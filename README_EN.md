@@ -29,6 +29,7 @@ License: **GNU AGPL-3.0** (see [LICENSE](LICENSE)).
 - **Mainstream Linux Desktop Shell Support**:
   - **KDE Plasma 6 / 5 Plugins**: Seamlessly embedded into the Plasma Shell scenegraph with native graphical configuration and multi-monitor management.
   - **Wayland layer-shell Standalone Shell**: For modern Wayland compositors (Sway, Hyprland, niri, river, etc.), supporting full-screen background anchoring and global gaze tracking.
+  - **GNOME Shell 45+ (Wayland)**: A Shell extension displays the standalone renderer as a desktop background. [Build and setup](docs/gnome45.md)
   - **X11 / EWMH Standalone Shell**: For EWMH-compliant desktop environments and window managers (GNOME on X11, XFCE, i3, bspwm, Openbox, etc.), persisting as a standard desktop root window.
   - **Standalone Window Player**: Lightweight GLFW window, ideal for out-of-the-box testing, model diagnostics, or desktop widget usage.
   - *(Note: GNOME is restricted on Wayland only; GNOME on X11 is verified and fully supported, see note below)*

@@ -29,6 +29,7 @@ https://github.com/user-attachments/assets/3df1f1a2-87f2-4c4a-a4eb-06ccd43b34a8
 - **主流 Linux 桌面壁纸壳支持**：
   - **KDE Plasma 6 / 5 插件**：直接嵌入 Plasma Shell 场景图，提供原生图形化配置界面与多显示器管理。
   - **Wayland layer-shell 独立壳**：针对 Sway、Hyprland、niri、river 等现代 Wayland 合成器，支持全屏背景层常驻与全局视线追踪。
+  - **GNOME Shell 45+（Wayland）**：通过 Shell 扩展将独立渲染进程接到桌面背景。[构建与使用](docs/gnome45.md)
   - **X11 / EWMH 独立壳**：针对 GNOME (X11)、XFCE、i3、bspwm、Openbox 等遵循 EWMH 的桌面环境与窗口管理器，以标准桌面根窗口常驻。
   - **独立播放器**：轻量 GLFW 窗口，支持开箱即用预览、单模型诊断与窗口挂件模式。
   - *(注：GNOME 仅在 Wayland 会话下受限，X11 会话已实测支持，见下文说明)*

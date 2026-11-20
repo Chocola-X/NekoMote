@@ -12,9 +12,10 @@
 
 namespace nekomote::layer_shell
 {
-Options parse_options(int argc, char** argv)
+Options parse_options(int argc, char** argv, SurfaceRole role)
 {
     Options result;
+    result.role = role;
     bool assets_set = false;
     bool model_set = false;
     bool session_set = false;
@@ -50,6 +51,16 @@ Options parse_options(int argc, char** argv)
             result.no_save = true;
         else if (option == "--ui-open")
             result.ui_open = true;
+        else if (role == SurfaceRole::gnome_toplevel &&
+                 (option == "--width" || option == "--height"))
+        {
+            const auto text = value();
+            auto& dimension = option == "--width" ? result.width : result.height;
+            const auto number = std::from_chars(text.data(), text.data() + text.size(), dimension);
+            if (number.ec != std::errc{} || number.ptr != text.data() + text.size() ||
+                dimension <= 0)
+                throw std::runtime_error(std::string(option) + " expects a positive logical size");
+        }
         else if (option == "--save-config")
             result.save_config = true;
         else if (option == "--assets")
@@ -136,6 +147,10 @@ Options parse_options(int argc, char** argv)
         result.save_config = false;
         return result;
     }
+    if (role == SurfaceRole::gnome_toplevel && (!result.width || !result.height))
+        throw std::runtime_error("GNOME renderer requires both --width and --height");
+    if (role == SurfaceRole::gnome_toplevel && result.config.empty())
+        throw std::runtime_error("GNOME renderer requires its own --config FILE");
     if (result.save_config && !result.gpu.empty())
         throw std::runtime_error("--gpu is per-process and cannot be combined with --save-config");
     if (result.save_config && !result.pause_on_session_events)
@@ -216,8 +231,15 @@ Options parse_options(int argc, char** argv)
     return result;
 }
 
-void print_help()
+void print_help(SurfaceRole role)
 {
+    if (role == SurfaceRole::gnome_toplevel)
+    {
+        std::cout << "Usage: nekomote_gnome45 --width N --height N --assets DIR --config FILE "
+                     "[--backend opengl|vulkan] [--state FILE]\n"
+                     "Native renderer for the NekoMote GNOME Shell extension.\n";
+        return;
+    }
     std::cout
         << "Usage: nekomote_layer_shell --assets DIR [options]\n"
            "       nekomote_layer_shell --model FILE [--session FILE] [options]\n"

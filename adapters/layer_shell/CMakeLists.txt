@@ -26,18 +26,24 @@ endforeach()
 add_library(nekomote_layer_shell_protocols STATIC ${protocol_sources})
 target_link_libraries(nekomote_layer_shell_protocols PRIVATE PkgConfig::WAYLAND_CLIENT)
 
-add_executable(nekomote_layer_shell main.cpp options.cpp host.cpp desktop_gaze.cpp)
-add_dependencies(nekomote_layer_shell nekomote_layer_shell_protocols)
-target_include_directories(nekomote_layer_shell PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(nekomote_layer_shell PRIVATE nekomote::abi nekomote::host_gpu nekomote::host_session nekomote_warnings
+add_library(nekomote_wayland_wallpaper_host STATIC options.cpp host.cpp desktop_gaze.cpp)
+add_dependencies(nekomote_wayland_wallpaper_host nekomote_layer_shell_protocols)
+target_include_directories(nekomote_wayland_wallpaper_host PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(nekomote_wayland_wallpaper_host PRIVATE nekomote::abi nekomote::host_gpu nekomote::host_session nekomote_warnings
     nekomote_layer_shell_protocols PkgConfig::WAYLAND_CLIENT PkgConfig::WAYLAND_EGL
     PkgConfig::WAYLAND_CURSOR PkgConfig::EGL)
-target_compile_features(nekomote_layer_shell PRIVATE cxx_std_20)
+target_compile_features(nekomote_wayland_wallpaper_host PRIVATE cxx_std_20)
 if(NEKOMOTE_BUILD_VULKAN)
-    target_link_libraries(nekomote_layer_shell PRIVATE nekomote::host_vulkan)
-    target_compile_definitions(nekomote_layer_shell PRIVATE
+    target_link_libraries(nekomote_wayland_wallpaper_host PRIVATE nekomote::host_vulkan)
+    target_compile_definitions(nekomote_wayland_wallpaper_host PRIVATE
         NEKOMOTE_HAS_VULKAN VK_USE_PLATFORM_WAYLAND_KHR)
 endif()
+if(NOT NEKOMOTE_BUILD_LAYER_SHELL)
+    return()
+endif()
+add_executable(nekomote_layer_shell main.cpp)
+target_link_libraries(nekomote_layer_shell PRIVATE nekomote_wayland_wallpaper_host
+    nekomote::host_gpu nekomote_warnings)
 install(TARGETS nekomote_layer_shell RUNTIME DESTINATION bin COMPONENT layer_shell)
 install(FILES ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION share/licenses/nekomote COMPONENT layer_shell)
 install(FILES ${protocol_xmls}
