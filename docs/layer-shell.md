@@ -165,6 +165,8 @@ ctest --test-dir build/layer-shell -R 'layer_shell_(options|desktop_gaze_math|de
 
 启用测试额外需要 `wayland-server` 开发文件。`layer_shell_desktop_gaze_wire` 使用私有 socketpair 和两个模拟输出，验证跨屏事件、拔插和撤销授权后的订阅重建；`host_session_contract` 在私有 D-Bus 上检查会话状态。它们不移动用户鼠标、不锁定真实会话，也不以 CI runner 的 CPU 用量判定通过。
 
+[CPU 对照实验](validation/private-gaze-cpu/README.md)列出了开启前后壁纸进程与 niri 各自的占用、原始数据和复现步骤。该性能实验只有一个虚拟输出，不等于已测双屏四个订阅的开销。
+
 无 layer-shell 能力的负例服务器只连接
 私有 runtime；完整虚拟 KWin 验证及证据格式见
 [测试说明](../tests/layer_shell/README.md)。不安装其他桌面、不连接当前桌面 socket、
