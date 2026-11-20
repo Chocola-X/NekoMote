@@ -6,6 +6,7 @@ import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extension
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {DesktopPointer} from './pointer.js';
+import {addWorkspacePreview} from './preview.js';
 
 const RENDERER = 'nekomote_gnome45';
 const SIGTERM = 15;
@@ -186,10 +187,11 @@ export default class NekoMoteExtension extends Extension {
     _registerBackground(actor, desktop) {
         if (this._backgrounds.has(actor))
             return;
-        const background = {actor, desktop, clone: null, renderer: null, eventId: 0};
+        const background = {actor, desktop, preview: null, renderer: null, eventId: 0};
         background.destroyId = actor.connect('destroy', () => {
             if (background.desktop)
                 background.renderer?.pointer.leave();
+            background.preview?.destroy();
             this._backgrounds.delete(actor);
         });
         this._backgrounds.set(actor, background);
@@ -204,21 +206,20 @@ export default class NekoMoteExtension extends Extension {
         if (background.desktop) {
             // Consume left-button gestures before the background menu's
             // long-press action. Right clicks continue through GNOME's actor.
-            background.eventId = actor.connect('captured-event', (target, event) =>
-                Main.overview.visible
-                    ? Clutter.EVENT_PROPAGATE : renderer.pointer.event(target, event));
+            background.eventId = actor.connect('captured-event', (_target, event) =>
+                this._desktopEvent(renderer, event));
         } else {
-            // Clutter scales the source to the clone's allocation. An allocation
-            // clip also crops the source in GNOME 45's scaled workspace previews.
-            const clone = new Clutter.Clone({source: renderer.source});
-            clone.add_constraint(new Clutter.BindConstraint({
-                source: actor,
-                coordinate: Clutter.BindCoordinate.SIZE,
-            }));
-            actor.add_child(clone);
-            background.clone = clone;
+            background.preview = addWorkspacePreview(actor, renderer.source, renderer.monitor);
         }
         background.renderer = renderer;
+    }
+
+    _desktopEvent(renderer, event) {
+        // The desktop clone fills the monitor. The input actor and hidden
+        // window can have different origins when the Shell reserves work area.
+        if (Main.overview.visible || !renderer.desktopClone)
+            return Clutter.EVENT_PROPAGATE;
+        return renderer.pointer.event(renderer.desktopClone, event);
     }
 
     _detach(renderer) {
@@ -235,8 +236,8 @@ export default class NekoMoteExtension extends Extension {
                 if (background.eventId)
                     background.actor.disconnect(background.eventId);
                 background.eventId = 0;
-                background.clone?.destroy();
-                background.clone = null;
+                background.preview?.destroy();
+                background.preview = null;
                 background.renderer = null;
             }
         }
