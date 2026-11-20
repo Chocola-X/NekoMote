@@ -137,6 +137,19 @@ PlaybackStatus PlaybackInstance::transition_difference(VariableSourceId source, 
     data.compose();
     return {};
 }
+PlaybackStatus PlaybackInstance::queue_difference_transition(VariableSourceId source, ParamId id,
+                                                             float target, float frames,
+                                                             float easing) noexcept
+{
+    auto& data = *impl_;
+    if (data.faulted)
+        return {PlaybackError::Faulted, {}, {}, {}};
+    const auto status =
+        data.animation.queue_difference_transition(source, id, target, frames, easing);
+    if (!status)
+        return {PlaybackError::Animation, status, {}, {}};
+    return {};
+}
 float PlaybackInstance::difference_value(VariableSourceId source, ParamId id) const noexcept
 {
     return impl_->faulted ? 0 : impl_->animation.difference_value(source, id);

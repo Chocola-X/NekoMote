@@ -2804,6 +2804,34 @@ TEST_CASE("External contributions preserve source activation order before the ba
     REQUIRE(player.values()[parameter.value - 1].value == 1.0f);
 }
 
+TEST_CASE("Queued gaze requests produce the same authored step as immediate requests",
+          "[runtime][playback]")
+{
+    const std::array<runtime::VariableSourceDefinition, 2> sources{
+        runtime::VariableSourceDefinition{"gaze", {"pick"}},
+        runtime::VariableSourceDefinition{"voice", {"pick"}}};
+    auto compiled = runtime::compile_playback(rig(), runtime::PhysicsMode::Enabled, sources);
+    REQUIRE(compiled.program);
+    const auto parameter = compiled.program->scene().find_variable("pick");
+    const auto gaze = compiled.program->animation().find_variable_source("gaze");
+    const auto voice = compiled.program->animation().find_variable_source("voice");
+    runtime::PlaybackInstance immediate(*compiled.program), queued(*compiled.program);
+    for (int tick = 0; tick < 12; ++tick)
+    {
+        const float target = tick < 6 ? 1.0f : -1.0f;
+        REQUIRE(immediate.transition_difference(gaze, parameter, target, 3, -1));
+        REQUIRE(immediate.transition_difference(voice, parameter, -0.25f));
+        const auto before = queued.values()[parameter.value - 1].value;
+        REQUIRE(queued.queue_difference_transition(gaze, parameter, target, 3, -1));
+        REQUIRE(queued.queue_difference_transition(voice, parameter, -0.25f, 0, 0));
+        REQUIRE(queued.values()[parameter.value - 1].value == before);
+        REQUIRE(immediate.step());
+        REQUIRE(queued.step());
+        REQUIRE(queued.values()[parameter.value - 1].value ==
+                immediate.values()[parameter.value - 1].value);
+    }
+}
+
 TEST_CASE(
     "External channels validate bindings and reuse storage during paused independent playback",
     "[runtime][playback][allocation]")
@@ -2842,7 +2870,8 @@ TEST_CASE(
     bool success = true;
     for (int i = 0; i < 500; ++i)
     {
-        success &= static_cast<bool>(player.transition_difference(gaze, parameter, 0.5f, 30, -1));
+        success &=
+            static_cast<bool>(player.queue_difference_transition(gaze, parameter, 0.5f, 30, -1));
         success &=
             static_cast<bool>(player.transition_difference(voice, parameter, -0.25f, 4.2f, -1));
         success &= static_cast<bool>(player.step());

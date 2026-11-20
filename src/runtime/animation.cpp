@@ -939,6 +939,15 @@ AnimationStatus AnimationInstance::transition_difference(VariableSourceId source
                                                          float target, float frames,
                                                          float easing) noexcept
 {
+    const auto status = queue_difference_transition(source, id, target, frames, easing);
+    if (status)
+        impl_->compose();
+    return status;
+}
+AnimationStatus AnimationInstance::queue_difference_transition(VariableSourceId source, ParamId id,
+                                                               float target, float frames,
+                                                               float easing) noexcept
+{
     auto& data = *impl_;
     if (!source.valid() || source.value >= data.differences.size())
         return {AnimationError::InvalidVariableSource, {}, id};
@@ -957,7 +966,6 @@ AnimationStatus AnimationInstance::transition_difference(VariableSourceId source
     if (std::find(data.source_order.begin(), data.source_order.end(), source.value) ==
         data.source_order.end())
         data.source_order.insert(data.source_order.begin(), source.value);
-    data.compose();
     return {};
 }
 float AnimationInstance::difference_value(VariableSourceId source, ParamId id) const noexcept

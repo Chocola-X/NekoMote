@@ -370,8 +370,8 @@ struct SessionInstance::Impl
                           static_cast<double>(origin.y));
         const auto request = [&](std::size_t i, double target, float frames)
         {
-            return player.transition_difference(program.gaze, program.gaze_parameters[i],
-                                                static_cast<float>(target), frames, -1);
+            return player.queue_difference_transition(program.gaze, program.gaze_parameters[i],
+                                                      static_cast<float>(target), frames, -1);
         };
         if (auto status = request(0, x / 3, kEyeFrames); !status)
             return status;

@@ -44,8 +44,9 @@ struct PlaybackStatus
     }
 };
 // Application schedulers may inject numeric events before each author tick.
-// The callback runs on the evaluation thread and may call play/transition, but
-// must not advance/reset this instance. Failed callbacks fault partial input.
+// The callback runs on the evaluation thread and may play or schedule
+// transitions. It must not advance/reset this instance. A failure faults the
+// instance so partially applied events do not escape.
 struct AuthorTickHandler
 {
     void* context{nullptr};
@@ -105,6 +106,10 @@ class PlaybackInstance
                               float easing = 0) noexcept;
     PlaybackStatus transition_difference(VariableSourceId source, ParamId id, float target,
                                          float frames = 0, float easing = 0) noexcept;
+    // Use from before_tick to update transition state without recomposing
+    // animation and playback outputs before the impending author step.
+    PlaybackStatus queue_difference_transition(VariableSourceId source, ParamId id, float target,
+                                               float frames, float easing) noexcept;
     float difference_value(VariableSourceId source, ParamId id) const noexcept;
     PlaybackStatus play(TimelineId id, TimelinePlayMode mode) noexcept;
     PlaybackStatus stop(TimelineId id) noexcept;

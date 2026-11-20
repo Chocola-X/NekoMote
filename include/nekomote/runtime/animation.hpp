@@ -104,6 +104,11 @@ class AnimationInstance
     // at compilation; requests interpolate without running base controllers.
     AnimationStatus transition_difference(VariableSourceId source, ParamId parameter, float target,
                                           float author_frames = 0, float easing = 0) noexcept;
+    // Schedule an update for the next step. Composed values remain unchanged
+    // until the animation composes again.
+    AnimationStatus queue_difference_transition(VariableSourceId source, ParamId parameter,
+                                                float target, float author_frames,
+                                                float easing) noexcept;
     float difference_value(VariableSourceId source, ParamId parameter) const noexcept;
     AnimationStatus play(TimelineId timeline, TimelinePlayMode mode) noexcept;
     AnimationStatus stop(TimelineId timeline) noexcept;
