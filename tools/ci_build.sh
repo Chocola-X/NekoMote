@@ -60,7 +60,8 @@ elif [[ "$MODE" == layer-shell ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF
         -DNEKOMOTE_BUILD_LAYER_SHELL=ON)
-    TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests nekomote_desktop_gaze_math_tests)
+    TARGETS+=(nekomote_layer_shell nekomote_layer_shell_option_tests nekomote_desktop_gaze_math_tests
+        nekomote_desktop_gaze_wire_tests)
 elif [[ "$MODE" == x11 ]]; then
     OPTIONS+=(-DNEKOMOTE_BUILD_PREVIEW=OFF -DNEKOMOTE_BUILD_PLAYER=OFF
         -DNEKOMOTE_BUILD_QT_QUICK=OFF -DNEKOMOTE_BUILD_PLASMA=OFF

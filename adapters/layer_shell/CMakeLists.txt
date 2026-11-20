@@ -60,6 +60,26 @@ if(NEKOMOTE_BUILD_TESTS)
     target_compile_features(nekomote_desktop_gaze_math_tests PRIVATE cxx_std_20)
     add_test(NAME layer_shell_desktop_gaze_math COMMAND nekomote_desktop_gaze_math_tests)
     pkg_check_modules(WAYLAND_SERVER REQUIRED IMPORTED_TARGET wayland-server)
+    set(server_headers)
+    foreach(protocol xdg-output-unstable-v1 ext-image-capture-source-v1 ext-image-copy-capture-v1)
+        set(xml ${CMAKE_CURRENT_SOURCE_DIR}/protocols/${protocol}.xml)
+        set(header ${CMAKE_CURRENT_BINARY_DIR}/${protocol}-server-protocol.h)
+        add_custom_command(OUTPUT ${header}
+            COMMAND ${WAYLAND_SCANNER} server-header ${xml} ${header}
+            DEPENDS ${xml} VERBATIM)
+        list(APPEND server_headers ${header})
+    endforeach()
+    add_executable(nekomote_desktop_gaze_wire_tests
+        ${PROJECT_SOURCE_DIR}/tests/layer_shell/test_desktop_gaze_wire.cpp
+        ${PROJECT_SOURCE_DIR}/tests/layer_shell/gaze_compositor.cpp desktop_gaze.cpp ${server_headers})
+    add_dependencies(nekomote_desktop_gaze_wire_tests nekomote_layer_shell_protocols)
+    target_include_directories(nekomote_desktop_gaze_wire_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(nekomote_desktop_gaze_wire_tests PRIVATE Catch2::Catch2WithMain
+        nekomote_layer_shell_protocols PkgConfig::WAYLAND_CLIENT PkgConfig::WAYLAND_SERVER nekomote_warnings)
+    target_compile_features(nekomote_desktop_gaze_wire_tests PRIVATE cxx_std_20)
+    add_test(NAME layer_shell_desktop_gaze_wire COMMAND nekomote_desktop_gaze_wire_tests)
+    set_tests_properties(layer_shell_desktop_gaze_wire PROPERTIES TIMEOUT 15)
     add_executable(nekomote_layer_shell_no_protocol_server
         ${PROJECT_SOURCE_DIR}/tests/layer_shell/no_layer_shell_server.c)
     target_link_libraries(nekomote_layer_shell_no_protocol_server PRIVATE
