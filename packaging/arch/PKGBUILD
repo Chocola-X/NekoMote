@@ -1,6 +1,7 @@
 # Development/VCS packages. Build with makepkg; do not install build dependencies from CMake.
 pkgbase=nekomote-git
-pkgname=(nekomote-git nekomote-layer-shell-git nekomote-x11-git nekomote-plasma6-git)
+pkgname=(nekomote-git nekomote-layer-shell-git nekomote-x11-git nekomote-plasma6-git
+         nekomote-gnome45-git)
 pkgver=0.5.1.r2.gcffc7e4
 pkgrel=1
 pkgdesc='Lightweight native interactive NEKOPARA (E-mote) anime wallpaper engine for Linux (KDE Plasma, X11, Wayland)'
@@ -8,7 +9,7 @@ arch=(x86_64 aarch64)
 url='https://github.com/Chocola-X/NekoMote'
 license=(AGPL-3.0-only)
 depends=(gcc-libs glibc fontconfig libpng libpulse zlib 'flac>=1.4')
-makedepends=(dbus git cmake ninja pkgconf python nlohmann-json fast_float stb glad glfw
+makedepends=(dbus git cmake ninja pkgconf python gettext glib2 nlohmann-json fast_float stb glad glfw
              libglvnd libx11 libxrandr libxext wayland qt6-base qt6-declarative qt6-tools
              vulkan-headers vulkan-icd-loader glslang)
 checkdepends=(catch2 python-pillow nodejs)
@@ -35,6 +36,7 @@ build() {
         -DNEKOMOTE_BUILD_PLAYER=ON \
         -DNEKOMOTE_BUILD_ABI=ON \
         -DNEKOMOTE_BUILD_LAYER_SHELL=ON \
+        -DNEKOMOTE_BUILD_GNOME45=ON \
         -DNEKOMOTE_BUILD_X11=ON \
         -DNEKOMOTE_BUILD_QT_QUICK=ON \
         -DNEKOMOTE_QT_MAJOR=6 \
@@ -66,7 +68,7 @@ _install_licenses() {
         if [[ "$pkgname" == nekomote-git ]]; then
             printf '\n=== GLFW ===\n\n'
             cat /usr/share/licenses/glfw/LICENSE.md
-        elif [[ "$pkgname" == nekomote-layer-shell-git ]]; then
+        elif [[ "$pkgname" == nekomote-layer-shell-git || "$pkgname" == nekomote-gnome45-git ]]; then
             python - "$source_root" <<'PY'
 from pathlib import Path
 import sys
@@ -120,6 +122,17 @@ package_nekomote-plasma6-git() {
     provides=(nekomote-plasma6)
     conflicts=(nekomote-plasma6)
     DESTDIR="$pkgdir" cmake --install build --component plasma
-    rm -r "$pkgdir/usr/share/plasma/plasmoids/org.nekomote.validation"
+    # Some Plasma builds still install the diagnostic containment.
+    rm -rf -- "$pkgdir/usr/share/plasma/plasmoids/org.nekomote.validation"
+    _install_licenses
+}
+
+package_nekomote-gnome45-git() {
+    pkgdesc='NekoMote GNOME Shell 45–50 Wayland live wallpaper extension and renderer'
+    depends+=(dbus wayland libglvnd vulkan-icd-loader 'gnome-shell>=45' 'gnome-shell<51' libadwaita)
+    optdepends=('noto-fonts-cjk: Chinese and Japanese UI glyphs')
+    provides=(nekomote-gnome45)
+    conflicts=(nekomote-gnome45)
+    DESTDIR="$pkgdir" cmake --install build --component gnome45
     _install_licenses
 }

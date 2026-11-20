@@ -1,7 +1,7 @@
 # Arch Linux 系统依赖打包
 
 [PKGBUILD](PKGBUILD) 是 VCS split package 配方，由系统管理依赖版本，不复制 FetchContent
-源码。它从项目 Git 仓库构建以下四个包，支持声明为 x86_64 / aarch64：
+源码。它从项目 Git 仓库构建以下五个包，支持声明为 x86_64 / aarch64：
 
 | 包 | 安装内容 |
 | --- | --- |
@@ -9,8 +9,9 @@
 | `nekomote-layer-shell-git` | `/usr/bin/nekomote_layer_shell` |
 | `nekomote-x11-git` | `/usr/bin/nekomote_x11` |
 | `nekomote-plasma6-git` | 原生库、`/usr/lib/qt6/qml/NekoMote/Wallpaper` 模块及 Plasma6 壁纸包 |
+| `nekomote-gnome45-git` | `/usr/bin/nekomote_gnome45` 及 `/usr/share/gnome-shell/extensions/nekomote@nekopara.uk/`（含配置 schema 和中文翻译） |
 
-Qt5 不在本配方中；项目 CMake 仍支持 `NEKOMOTE_QT_MAJOR=5`。四个包均可单独安装，
+Qt5 不在本配方中；项目 CMake 仍支持 `NEKOMOTE_QT_MAJOR=5`。五个包均可单独安装，
 不携带模型、README、测试程序、参考材料、系统动态库或验证 plasmoid。
 中文/日文界面可选安装 `noto-fonts-cjk`。
 
@@ -49,18 +50,19 @@ Werror，避免发行版的新编译器警告直接阻断用户打包。`check()
 因此 `--nocheck` 不要求安装 Catch2/Pillow/Node 检查依赖。
 CPU/ABI/QML 检查不连接显示服务或声音服务器；GPU/integration 用例明确排除。
 
-三包共用一次 OpenGL/Vulkan 构建。Layer-shell 运行时仍选择 EGL/OpenGL，但因为共用
-包含 Vulkan 支持的静态 ABI，本配方生成的 layer-shell 包也声明 `vulkan-icd-loader`
-依赖。要构建完全无 Vulkan 的独立壳，可使用项目 `layer-shell` preset 并开启系统依赖；
-GitHub 的独立 layer-shell 包保持原有无 Vulkan 配置。
+这些包共用一次 OpenGL/Vulkan 构建。需要仅 OpenGL 的独立壳时，可选择对应的 CMake
+preset 并设置 `NEKOMOTE_BUILD_VULKAN=OFF`。
 
 Plasma 使用 Qt6 的系统 QML 搜索目录，RPATH 自动计算到 `/usr/lib/`，不生成
 `environment.d` 文件、不要求设置 QML_IMPORT_PATH，也不运行项目的用户目录部署工具。
 使用系统包管理器处理安装/卸载，不自动激活或切换桌面壁纸。
 
+GNOME 包使用扩展元数据中的 GNOME Shell 45–50 兼容范围。用 pacman 安装后，在
+GNOME Wayland 会话中手动启用扩展并选择资产目录。[GNOME 使用说明](../../docs/gnome45.md)
+
 项目 LICENSE 安装在 `/usr/share/licenses/<包名>/LICENSE`；实际系统 header-only/生成代码
 的依赖许可合并到同目录的 `THIRD_PARTY_NOTICES`。声明从 Arch 已安装的
-nlohmann-json、fast_float、stb、glad 等包读取，layer-shell 另包含协议版权文本。
+nlohmann-json、fast_float、stb、glad 等包读取，layer-shell 和 GNOME 包另包含协议版权文本。
 系统共享库通过运行时 depends 提供，依赖包各自维护其许可。
 
 FLAC 音频支持增加系统运行依赖 `flac>=1.4`；CMake 通过 pkg-config 严格查找，缺失
