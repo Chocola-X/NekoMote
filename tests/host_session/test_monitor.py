@@ -141,6 +141,9 @@ def main():
                     environment['XDG_SESSION_ID'] = session_id
                 with sampled(environment) as expect:
                     expect('00', stable=True)
+            set_state('saver-canonical-path')
+            with sampled() as expect:
+                expect('01')
             set_state('saver-error')
             with sampled() as expect:
                 set_state('unlock')

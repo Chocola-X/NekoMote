@@ -169,7 +169,11 @@ void serve()
         }
         else if (dbus_message_is_method_call(message, "org.freedesktop.ScreenSaver", "GetActive"))
         {
-            if (saver_mode == "saver-unsupported" || saver_mode == "saver-error")
+            if (saver_mode == "saver-canonical-path" &&
+                dbus_message_has_path(message, "/ScreenSaver"))
+                reply = dbus_message_new_error(message, DBUS_ERROR_UNKNOWN_OBJECT,
+                                               "short ScreenSaver path is absent");
+            else if (saver_mode == "saver-unsupported" || saver_mode == "saver-error")
                 reply = dbus_message_new_error(message,
                                                saver_mode == "saver-unsupported"
                                                    ? DBUS_ERROR_UNKNOWN_METHOD

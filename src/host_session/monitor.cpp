@@ -351,7 +351,10 @@ struct Monitor::Impl
                         saver.active = snapshot.active;
                     saver.known = snapshot.known;
                 }
-                else if (dbus_message_is_error(msg, DBUS_ERROR_UNKNOWN_METHOD))
+                else if (dbus_message_is_error(msg, DBUS_ERROR_UNKNOWN_METHOD) ||
+                         (!alternate_path &&
+                          (dbus_message_is_error(msg, DBUS_ERROR_UNKNOWN_OBJECT) ||
+                           dbus_message_is_error(msg, DBUS_ERROR_UNKNOWN_INTERFACE))))
                 {
                     if (alternate_path)
                         saver_optional = true;
