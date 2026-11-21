@@ -57,7 +57,7 @@ NekoMote 采用**应用层与壁纸壳完全解耦**的架构设计：核心业�
 > [!NOTE]
 > **关于 GNOME 桌面环境的说明**：
 > - **X11 会话（GNOME on X11）**：**完全支持**。GNOME 在 X11 下遵循标准 EWMH 规范，经实测可通过 `nekomote_x11` 稳定运行。
-> - **Wayland 会话（GNOME on Wayland）**：使用 [GNOME Shell 扩展](docs/gnome45.md)。在 GNOME 45.2 和 48.7 的隔离会话中验收。
+> - **Wayland 会话（GNOME on Wayland）**：使用 [GNOME Shell 扩展](docs/gnome45.md) 可在桌面和活动概览显示壁纸。启用了 XWayland 的会话也可尝试运行 `nekomote_x11 --assets /path/to/assets`。在 Manjaro 26.1.0 的实测中，X11 壳作为底层窗口显示在普通桌面上，活动概览和应用列表中看不到壁纸。
 
 ---
 

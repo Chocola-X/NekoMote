@@ -41,6 +41,18 @@ gnome-extensions prefs nekomote@nekopara.uk
 清空资产目录或禁用扩展即可恢复静态背景。
 启动失败可在用户会话的 GNOME Shell 日志中查找 `NekoMote`。
 
+如果扩展已启用却仍显示静态壁纸，在出现现象的 GNOME 会话中检查：
+
+```bash
+gnome-shell --version
+gnome-extensions info nekomote@nekopara.uk
+journalctl --user -b --no-pager -g 'NekoMote|nekomote_gnome45|GNOME (OpenGL|Vulkan)'
+```
+
+扩展日志会分别记录渲染进程启动、接入桌面及进程退出。进程启动后未接入桌面时，
+可暂时关闭偏好页中的全屏暂停，再退出活动概览测试。也可确认渲染后端为 OpenGL，
+并检查扩展及渲染程序是否来自同一份安装包。
+
 ## 当前行为
 
 - 扩展按逻辑显示器启动独立实例。只有主显示器实例启用声音，面板状态保存在
@@ -103,6 +115,12 @@ OpenGL 预览也有间隔截图确认。输入测试覆盖 Shell 回调到共享
 GNOME 48.7 验证了两个选择对话框写入路径和 Vulkan 下的暂停恢复。跨输出坐标使用带负值的
 输入样本验证，实体多屏尚未实测。对应日志在本地实验目录的 `mantic-settings/`、
 `trixie-settings-final/`、`trixie-browse-final/` 和 `resolute-direct2/`。
+
+从 Manjaro 26.1.0 GNOME ISO 提取的 GNOME Shell 50.4 / Mutter 50.4 在隔离无头会话中
+用用户提供的 Ubuntu 22 CI 原包复测。OpenGL 软件渲染在默认扩展开启和关闭时均显示桌面
+及活动概览，日志确认桌面持续提交帧。该隔离根文件系统缺少 Vulkan ICD，Vulkan 进程报
+`cannot create Vulkan instance` 后退出。实机会话的显卡驱动及用户配置另需现场日志核对。
+证据位于本地实验目录的 `manjaro-504-*`。
 
 扩展元数据列出 GNOME 45–50。46、47 和 49 未实测。
 49 起使用 Mutter 的新子进程接口，旧的任务列表隐藏方法不可用，任务切换器中的行为有待复核。

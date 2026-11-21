@@ -57,7 +57,7 @@ NekoMote decouples the application layer from desktop adapters: all core wallpap
 > [!NOTE]
 > **Note on the GNOME Desktop Environment**:
 > - **X11 Session (GNOME on X11)**: **Fully supported**. GNOME on X11 adheres to the standard EWMH specification and has been verified to run reliably with `nekomote_x11`.
-> - **Wayland Session (GNOME on Wayland)**: Use the [GNOME Shell extension](docs/gnome45.md). Tested in isolated GNOME 45.2 and 48.7 sessions.
+> - **Wayland Session (GNOME on Wayland)**: The [GNOME Shell extension](docs/gnome45.md) displays the wallpaper on the desktop and in Activities. If XWayland is available, you can also try `nekomote_x11 --assets /path/to/assets`. On Manjaro 26.1.0, the X11 shell was reported to appear as a bottom-layer desktop window and to be absent from Activities and the application grid.
 
 ---
 

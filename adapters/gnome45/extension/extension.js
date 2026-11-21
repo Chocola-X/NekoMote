@@ -90,8 +90,10 @@ export default class NekoMoteExtension extends Extension {
     _reload() {
         this._stopRenderers();
         const assets = this._settings.get_string('assets-dir');
-        if (!assets)
+        if (!assets) {
+            console.log('NekoMote: no assets directory configured');
             return;
+        }
 
         try {
             if (!GLib.path_is_absolute(assets) ||
@@ -154,13 +156,16 @@ export default class NekoMoteExtension extends Extension {
             process.send_signal(SIGTERM);
         });
         this._renderers.add(renderer);
+        console.log(`NekoMote: starting ${backend} renderer on monitor ${monitor.index}`);
         this._updateTopInset(renderer);
         process.wait_async(null, (child, result) => {
             child.wait_finish(result);
             if (this._renderers?.delete(renderer)) {
                 this._detach(renderer);
                 this._updateGazeTimer();
-                console.warn('NekoMote: renderer exited, showing the static background');
+                const status = child.get_if_exited() ? `exit status ${child.get_exit_status()}` :
+                    `signal ${child.get_term_sig()}`;
+                console.warn(`NekoMote: renderer on monitor ${monitor.index} ended (${status})`);
             }
         });
     }
@@ -240,6 +245,7 @@ export default class NekoMoteExtension extends Extension {
             Main.layoutManager._backgroundGroup.add_child(renderer.desktopClone);
             for (const background of this._backgrounds.values())
                 this._attachBackground(background, renderer);
+            console.log(`NekoMote: attached renderer to desktop on monitor ${monitor.index}`);
         } catch (error) {
             this._detach(renderer);
             renderer.process.send_signal(SIGTERM);
