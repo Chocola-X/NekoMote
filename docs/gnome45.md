@@ -41,6 +41,16 @@ gnome-extensions prefs nekomote@nekopara.uk
 清空资产目录或禁用扩展即可恢复静态背景。
 启动失败可在用户会话的 GNOME Shell 日志中查找 `NekoMote`。
 
+需要保留日志时，在偏好页的「诊断」中打开「保存诊断日志」（默认关闭），即可看到「日志保存目录」。
+可浏览选择目录，或手动输入绝对路径并应用。默认目录为
+`$XDG_STATE_HOME/nekomote/gnome45/diagnostics`（`XDG_STATE_HOME` 未设置时使用 `~/.local/state`）。
+清空目录并应用可恢复默认值。
+
+开启日志或修改保存目录会重启壁纸渲染器。每次启动记录到一个新的 `session-*` 子目录，其中
+`extension.log` 记录扩展事件，各显示器的 `monitor-N.log` 保存渲染程序的标准输出和错误输出。
+排查时请提供复现所对应的整个子目录。在 Live 会话中，可以直接选择已挂载的持久化磁盘，
+或在重启前把日志复制到该磁盘。
+
 如果扩展已启用却仍显示静态壁纸，在出现现象的 GNOME 会话中检查：
 
 ```bash

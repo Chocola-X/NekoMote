@@ -17,6 +17,7 @@ add_custom_command(OUTPUT "${extension_dir}/schemas/gschemas.compiled"
     COMMAND "${GLIB_COMPILE_SCHEMAS}" --strict "${extension_dir}/schemas"
     DEPENDS "${extension_source}/extension.js" "${extension_source}/metadata.json"
         "${extension_source}/prefs.js" "${extension_source}/pointer.js"
+        "${extension_source}/diagnostics.js"
         "${extension_source}/preview.js" "${extension_source}/renderer.js" "${extension_source}/schemas/${schema}"
     VERBATIM)
 add_custom_command(OUTPUT "${zh_catalog}"

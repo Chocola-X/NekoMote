@@ -29,5 +29,13 @@
       <default>true</default>
       <summary>Follow the pointer outside the desktop</summary>
     </key>
+    <key name="diagnostic-logging" type="b">
+      <default>false</default>
+      <summary>Save extension and renderer diagnostics to files</summary>
+    </key>
+    <key name="diagnostic-directory" type="s">
+      <default>''</default>
+      <summary>Absolute diagnostics directory, or empty to use the default</summary>
+    </key>
   </schema>
 </schemalist>

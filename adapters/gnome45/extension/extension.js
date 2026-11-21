@@ -2,9 +2,11 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
+import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {appendDiagnostic, createDiagnosticSession} from './diagnostics.js';
 import {DesktopPointer} from './pointer.js';
 import {addWorkspacePreview} from './preview.js';
 import {defaultRendererPath} from './renderer.js';
@@ -58,6 +60,8 @@ export default class NekoMoteExtension extends Extension {
                 this._updateGazeTimer();
             else if (key === 'pause-fullscreen')
                 this._updatePlayback();
+            else if (key === 'diagnostic-directory' && !this._settings.get_boolean('diagnostic-logging'))
+                return;
             else
                 this._reload();
         });
@@ -80,6 +84,7 @@ export default class NekoMoteExtension extends Extension {
         Main.layoutManager.panelBox.disconnect(this._panelId);
         this._injections.clear();
         this._stopRenderers();
+        this._diagnosticSession = null;
         for (const background of this._backgrounds.values())
             background.actor.disconnect(background.destroyId);
         this._backgrounds.clear();
@@ -89,9 +94,21 @@ export default class NekoMoteExtension extends Extension {
 
     _reload() {
         this._stopRenderers();
+        this._diagnosticSession = null;
+        if (this._settings.get_boolean('diagnostic-logging')) {
+            try {
+                this._diagnosticSession = createDiagnosticSession(
+                    this._settings.get_string('diagnostic-directory'));
+                const backend = this._settings.get_string('backend');
+                const monitors = Main.layoutManager.monitors.length;
+                this._log(`GNOME Shell ${Config.PACKAGE_VERSION}, Wayland, backend ${backend}, ${monitors} monitor(s)`);
+            } catch (error) {
+                console.warn(`NekoMote: cannot save diagnostic logs: ${error.message}`);
+            }
+        }
         const assets = this._settings.get_string('assets-dir');
         if (!assets) {
-            console.log('NekoMote: no assets directory configured');
+            this._log('no assets directory configured');
             return;
         }
 
@@ -115,7 +132,19 @@ export default class NekoMoteExtension extends Extension {
             this._updatePlayback();
         } catch (error) {
             this._stopRenderers();
-            console.error(`NekoMote: ${error.message}`);
+            this._log(error.message, 'error');
+        }
+    }
+
+    _log(message, level = 'log') {
+        console[level](`NekoMote: ${message}`);
+        if (!this._diagnosticSession)
+            return;
+        try {
+            appendDiagnostic(this._diagnosticSession, message);
+        } catch (error) {
+            console.warn(`NekoMote: cannot write extension diagnostic log: ${error.message}`);
+            this._diagnosticSession = null;
         }
     }
 
@@ -131,10 +160,18 @@ export default class NekoMoteExtension extends Extension {
         if (monitor.index !== Main.layoutManager.primaryIndex)
             argv.push('--mute');
 
-        const launcher = new Gio.SubprocessLauncher({flags: Gio.SubprocessFlags.STDIN_PIPE});
+        let flags = Gio.SubprocessFlags.STDIN_PIPE;
+        if (this._diagnosticSession)
+            flags |= Gio.SubprocessFlags.STDERR_MERGE;
+        const launcher = new Gio.SubprocessLauncher({flags});
         let client;
         let process;
         try {
+            if (this._diagnosticSession) {
+                launcher.set_stdout_file_path(GLib.build_filenamev([
+                    this._diagnosticSession, `monitor-${monitor.index}.log`,
+                ]));
+            }
             if (typeof Meta.WaylandClient.new_subprocess === 'function') {
                 client = Meta.WaylandClient.new_subprocess(global.context, launcher, argv);
                 process = client.get_subprocess();
@@ -151,12 +188,12 @@ export default class NekoMoteExtension extends Extension {
             window: null, unmanagedId: 0, visibilityId: 0, covered: false,
         };
         renderer.pointer = new DesktopPointer(process.get_stdin_pipe(), error => {
-            console.error(`NekoMote: ${error.message}`);
+            this._log(error.message, 'error');
             this._detach(renderer);
             process.send_signal(SIGTERM);
         });
         this._renderers.add(renderer);
-        console.log(`NekoMote: starting ${backend} renderer on monitor ${monitor.index}`);
+        this._log(`starting ${backend} renderer on monitor ${monitor.index} (${monitor.width}x${monitor.height})`);
         this._updateTopInset(renderer);
         process.wait_async(null, (child, result) => {
             child.wait_finish(result);
@@ -165,7 +202,7 @@ export default class NekoMoteExtension extends Extension {
                 this._updateGazeTimer();
                 const status = child.get_if_exited() ? `exit status ${child.get_exit_status()}` :
                     `signal ${child.get_term_sig()}`;
-                console.warn(`NekoMote: renderer on monitor ${monitor.index} ended (${status})`);
+                this._log(`renderer on monitor ${monitor.index} ended (${status})`, 'warn');
             }
         });
     }
@@ -245,11 +282,11 @@ export default class NekoMoteExtension extends Extension {
             Main.layoutManager._backgroundGroup.add_child(renderer.desktopClone);
             for (const background of this._backgrounds.values())
                 this._attachBackground(background, renderer);
-            console.log(`NekoMote: attached renderer to desktop on monitor ${monitor.index}`);
+            this._log(`attached renderer to desktop on monitor ${monitor.index}`);
         } catch (error) {
             this._detach(renderer);
             renderer.process.send_signal(SIGTERM);
-            console.error(`NekoMote: could not attach renderer: ${error.message}`);
+            this._log(`could not attach renderer to monitor ${monitor.index}: ${error.message}`, 'error');
         }
     }
 
@@ -323,6 +360,8 @@ export default class NekoMoteExtension extends Extension {
     }
 
     _stopRenderers() {
+        if (this._diagnosticSession && this._renderers.size)
+            this._log('stopping renderers');
         for (const renderer of this._renderers) {
             this._detach(renderer);
             renderer.process.send_signal(SIGTERM);

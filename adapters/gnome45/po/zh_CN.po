@@ -58,6 +58,18 @@ msgstr "指针移动到窗口上或其他显示器时，角色视线也会跟随
 msgid "Project and authors"
 msgstr "项目与作者"
 
+msgid "Diagnostics"
+msgstr "诊断"
+
+msgid "Save diagnostic logs"
+msgstr "保存诊断日志"
+
+msgid "Record extension events and renderer output. Clear the directory field to restore the default."
+msgstr "记录扩展事件和渲染程序输出。清空目录并应用即可恢复默认路径。"
+
+msgid "Log directory"
+msgstr "日志保存目录"
+
 msgid "NekoMote on GitHub"
 msgstr "NekoMote 的 GitHub 仓库"
 

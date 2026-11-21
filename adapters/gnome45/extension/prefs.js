@@ -3,13 +3,16 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import {defaultDiagnosticDirectory} from './diagnostics.js';
 import {defaultRendererPath} from './renderer.js';
 
-function addPath(window, group, settings, key, title, action, description) {
-    const value = () => settings.get_string(key) ||
-        (key === 'renderer-path' ? defaultRendererPath() ?? '' : '');
+function addPath(window, group, settings, key, title, action, description, defaultPath = () => '') {
+    const value = () => settings.get_string(key) || defaultPath() || '';
     const row = new Adw.EntryRow({title, text: value(), show_apply_button: true});
-    row.connect('apply', () => settings.set_string(key, row.text.trim()));
+    row.connect('apply', () => {
+        settings.set_string(key, row.text.trim());
+        row.text = value();
+    });
     const browse = new Gtk.Button({
         icon_name: 'folder-open-symbolic',
         tooltip_text: _('Browse…'),
@@ -40,7 +43,9 @@ function addPath(window, group, settings, key, title, action, description) {
     });
     row.add_suffix(browse);
     group.add(row);
-    addDescription(group, description);
+    if (description)
+        addDescription(group, description);
+    return row;
 }
 
 function addDescription(group, description) {
@@ -69,7 +74,8 @@ export default class NekoMotePreferences extends ExtensionPreferences {
             _('Choose the library root containing characters/ and backgrounds/. Use the wallpaper’s control button to change characters, backgrounds, frame rate and sound.'));
         addPath(window, paths, settings, 'renderer-path', _('Renderer executable'),
             Gtk.FileChooserAction.OPEN,
-            _('Choose the installed nekomote_gnome45 from the same release as this extension. An empty field uses the standard installation path or PATH.'));
+            _('Choose the installed nekomote_gnome45 from the same release as this extension. An empty field uses the standard installation path or PATH.'),
+            defaultRendererPath);
 
         const graphics = new Adw.PreferencesGroup({title: _('Rendering')});
         page.add(graphics);
@@ -93,6 +99,14 @@ export default class NekoMotePreferences extends ExtensionPreferences {
             _('Pauses on the covered monitor. Activities previews keep playing.'));
         addToggle(playback, settings, 'global-gaze', _('Follow the pointer outside the desktop'),
             _('Updates the character’s gaze across windows and monitors. Clicks and dragging work on the desktop.'));
+
+        const diagnostics = new Adw.PreferencesGroup({title: _('Diagnostics')});
+        page.add(diagnostics);
+        addToggle(diagnostics, settings, 'diagnostic-logging', _('Save diagnostic logs'),
+            _('Record extension events and renderer output. Clear the directory field to restore the default.'));
+        const logDirectory = addPath(window, diagnostics, settings, 'diagnostic-directory',
+            _('Log directory'), Gtk.FileChooserAction.SELECT_FOLDER, null, defaultDiagnosticDirectory);
+        settings.bind('diagnostic-logging', logDirectory, 'visible', Gio.SettingsBindFlags.GET);
 
         const project = new Adw.PreferencesGroup({title: _('Project and authors')});
         page.add(project);
