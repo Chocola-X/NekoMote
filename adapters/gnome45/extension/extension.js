@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
 import Meta from 'gi://Meta';
 import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -15,6 +16,7 @@ import {defaultRendererPath} from './renderer.js';
 const SIGTERM = 15;
 const GAZE_INTERVAL_MS = 33;
 const {WorkspaceThumbnail} = WorkspaceThumbnails;
+const hasChildSignals = GObject.signal_lookup('child-added', Clutter.Actor.$gtype) !== 0;
 
 export default class NekoMoteExtension extends Extension {
     enable() {
@@ -351,7 +353,7 @@ export default class NekoMoteExtension extends Extension {
         let thumbnail = this._thumbnails.get(actor);
         if (!thumbnail) {
             const destroyId = actor.connect('destroy', () => this._thumbnails.delete(actor));
-            thumbnail = {destroyId, clone: null, renderer: null};
+            thumbnail = {destroyId, clone: null, renderer: null, hiddenBackgrounds: new Set()};
             this._thumbnails.set(actor, thumbnail);
         }
         if (!thumbnail.clone) {
@@ -364,6 +366,23 @@ export default class NekoMoteExtension extends Extension {
             thumbnail.renderer = renderer;
             viewport.add_child(thumbnail.clone);
             viewport.set_child_below_sibling(thumbnail.clone, contents);
+
+            // GNOME UI Tune adds static wallpaper inside the window container.
+            // Hide only its background actors, including replacements on a theme change.
+            const hideBackground = child => {
+                if (child instanceof Meta.BackgroundActor && child.visible) {
+                    thumbnail.hiddenBackgrounds.add(child);
+                    child.hide();
+                }
+            };
+            contents.connectObject(
+                hasChildSignals ? 'child-added' : 'actor-added',
+                (_container, child) => hideBackground(child),
+                hasChildSignals ? 'child-removed' : 'actor-removed',
+                (_container, child) => thumbnail.hiddenBackgrounds.delete(child),
+                thumbnail.clone);
+            for (const child of contents.get_children())
+                hideBackground(child);
         }
         const x = thumbnail.renderer.monitor.x + contents.x;
         const y = thumbnail.renderer.monitor.y + contents.y;
@@ -437,6 +456,9 @@ export default class NekoMoteExtension extends Extension {
         for (const thumbnail of this._thumbnails.values()) {
             if (thumbnail.renderer === renderer) {
                 thumbnail.clone.destroy();
+                for (const background of thumbnail.hiddenBackgrounds)
+                    background.show();
+                thumbnail.hiddenBackgrounds.clear();
                 thumbnail.clone = null;
                 thumbnail.renderer = null;
             }
