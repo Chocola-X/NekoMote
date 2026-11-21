@@ -113,10 +113,12 @@ export default class NekoMoteExtension extends Extension {
         }
 
         try {
-            if (!GLib.path_is_absolute(assets) ||
-                Gio.File.new_for_path(assets).get_child('characters')
-                    .query_file_type(Gio.FileQueryInfoFlags.NONE, null) !== Gio.FileType.DIRECTORY)
-                throw new Error('Choose a NekoMote assets directory containing characters/');
+            if (!GLib.path_is_absolute(assets))
+                throw new Error(`The assets directory must be absolute: ${assets}`);
+            const characters = Gio.File.new_for_path(assets).get_child('characters');
+            const info = characters.query_info('standard::type', Gio.FileQueryInfoFlags.NONE, null);
+            if (info.get_file_type() !== Gio.FileType.DIRECTORY)
+                throw new Error(`Expected an assets subdirectory: ${characters.get_path()}`);
 
             const configuredPath = this._settings.get_string('renderer-path');
             if (configuredPath && !GLib.path_is_absolute(configuredPath))
@@ -185,7 +187,7 @@ export default class NekoMoteExtension extends Extension {
 
         const renderer = {
             client, process, monitor, source: null, desktopClone: null,
-            window: null, unmanagedId: 0, visibilityId: 0, covered: false,
+            window: null, unmanagedId: 0, minimizedId: 0, visibilityId: 0, covered: false,
         };
         renderer.pointer = new DesktopPointer(process.get_stdin_pipe(), error => {
             this._log(error.message, 'error');
@@ -253,6 +255,25 @@ export default class NekoMoteExtension extends Extension {
         renderer.pointer.topInset(height);
     }
 
+    _hideRendererWindow(renderer, window) {
+        // Mutter disables minimization while the window is excluded from task lists.
+        // GNOME 50 moved the list controls from WaylandClient to Window.
+        const windowListOnWindow = typeof window.hide_from_window_list === 'function';
+        if (!window.minimized) {
+            if (window.is_skip_taskbar()) {
+                if (windowListOnWindow)
+                    window.show_in_window_list();
+                else
+                    renderer.client.show_in_window_list(window);
+            }
+            window.minimize();
+        }
+        if (windowListOnWindow)
+            window.hide_from_window_list();
+        else
+            renderer.client.hide_from_window_list(window);
+    }
+
     _attach(actor) {
         const window = actor.get_meta_window();
         const renderer = [...this._renderers].find(({client}) => client.owns_window(window));
@@ -270,9 +291,12 @@ export default class NekoMoteExtension extends Extension {
                 if (actor.visible)
                     actor.hide();
             });
-            window.minimize();
+            this._hideRendererWindow(renderer, window);
+            renderer.minimizedId = window.connect('notify::minimized', () => {
+                if (!window.minimized)
+                    this._hideRendererWindow(renderer, window);
+            });
             actor.hide();
-            renderer.client.hide_from_window_list?.(window);
             // Keep desktop redraws directly in the background group so Mutter
             // continues presenting frames from the minimized render window.
             const {x, y, width, height} = monitor;
@@ -339,9 +363,12 @@ export default class NekoMoteExtension extends Extension {
         renderer.pointer.close();
         if (renderer.unmanagedId)
             renderer.window.disconnect(renderer.unmanagedId);
+        if (renderer.minimizedId)
+            renderer.window.disconnect(renderer.minimizedId);
         if (renderer.visibilityId)
             renderer.source.disconnect(renderer.visibilityId);
         renderer.unmanagedId = 0;
+        renderer.minimizedId = 0;
         renderer.visibilityId = 0;
         renderer.window = null;
         renderer.source = null;
