@@ -82,6 +82,7 @@ journalctl --user -b --no-pager -g 'NekoMote|nekomote_gnome45|GNOME (OpenGL|Vulk
   扩展接入的壁纸画面。
 - 活动概览顶部的工作区缩略图也使用同一个动态壁纸画面，普通窗口仍显示在壁纸上方。
   使用 Manjaro 自带的 GNOME UI Tune 时，停用 NekoMote 会恢复其缩略图静态背景。
+- 切换工作区时，GNOME 转场也会使用动态壁纸，包括激活位于其他工作区的应用。
   GNOME X11 使用独立 X11 壳。
 - Shell 通过渲染子进程的专用标准输入管道异步转发鼠标事件。输入以实际显示壁纸的克隆为
   原点，由宿主一次性转换为输出物理像素。概览复用桌面渲染实例，每台显示器只运行一个

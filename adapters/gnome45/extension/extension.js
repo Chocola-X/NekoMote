@@ -7,6 +7,7 @@ import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as WorkspaceAnimation from 'resource:///org/gnome/shell/ui/workspaceAnimation.js';
 import * as WorkspaceThumbnails from 'resource:///org/gnome/shell/ui/workspaceThumbnail.js';
 import {appendDiagnostic, createDiagnosticSession} from './diagnostics.js';
 import {DesktopPointer} from './pointer.js';
@@ -415,7 +416,23 @@ export default class NekoMoteExtension extends Extension {
             background.eventId = actor.connect('captured-event', (_target, event) =>
                 this._desktopEvent(renderer, event));
         } else {
-            background.preview = addWorkspacePreview(actor, renderer.source, renderer.monitor);
+            const group = actor.get_parent();
+            const owner = group?.get_parent();
+            const animationGroup = WorkspaceAnimation.WorkspaceBackground ??
+                WorkspaceAnimation.WorkspaceGroup;
+            if (group instanceof Meta.BackgroundGroup && animationGroup &&
+                owner instanceof animationGroup) {
+                // The animation has its own monitor-local backdrop. Put the
+                // live clone above it, inside the layer behind window clones.
+                const {width, height} = renderer.monitor;
+                const clone = new Clutter.Clone({source: renderer.source, width, height});
+                group.add_child(clone);
+                group.set_child_above_sibling(clone, actor);
+                actor.bind_property('opacity', clone, 'opacity', GObject.BindingFlags.SYNC_CREATE);
+                background.preview = clone;
+            } else {
+                background.preview = addWorkspacePreview(actor, renderer.source, renderer.monitor);
+            }
         }
         background.renderer = renderer;
     }
