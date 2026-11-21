@@ -1,4 +1,5 @@
 #include "wallpaper_item.hpp"
+#include "kwin_pointer.hpp"
 
 #include <nekomote/host_session/display_context.hpp>
 
@@ -123,6 +124,8 @@ NekoWallpaperItem::NekoWallpaperItem(QQuickItem* parent) : WallpaperItemBase(par
 
 NekoWallpaperItem::~NekoWallpaperItem()
 {
+    if (kwin_pointer_)
+        kwin_pointer_->unsubscribe();
     stop_timer();
     if (host_window_)
         host_window_->removeEventFilter(this);
@@ -285,6 +288,7 @@ void NekoWallpaperItem::setGlobalGazeEnabled(bool value)
     if (global_gaze_enabled_ == value)
         return;
     global_gaze_enabled_ = value;
+    sync_kwin_pointer();
     if (!value)
     {
         compositor_pointer_.reset();
@@ -530,6 +534,7 @@ void NekoWallpaperItem::refresh_playback()
     if (suspended != effective_paused_)
     {
         effective_paused_ = suspended;
+        sync_kwin_pointer();
         ++playback_revision_;
         if (suspended)
         {
@@ -559,6 +564,7 @@ bool NekoWallpaperItem::configure_diagnostics(int steps, bool fixed, std::uint32
         state_->config_dirty = true;
     }
     diagnostic_inputs_ = true;
+    sync_kwin_pointer();
     diagnostic_notification_ = true;
     compositor_pointer_.reset();
     global_gaze_.reset();
@@ -573,6 +579,25 @@ void NekoWallpaperItem::set_compositor_pointer_sample(std::optional<QPointF> pos
 {
     if (global_gaze_enabled_ && wayland_platform_ && !effective_paused_ && !diagnostic_inputs_)
         compositor_pointer_ = position;
+}
+
+void NekoWallpaperItem::sync_kwin_pointer()
+{
+    if (wayland_platform_ && global_gaze_enabled_ && !effective_paused_ && !diagnostic_inputs_)
+    {
+        if (!kwin_pointer_)
+        {
+            auto* application = QCoreApplication::instance();
+            auto* bridge = application->findChild<KWinPointer*>(QString(), Qt::FindDirectChildrenOnly);
+            kwin_pointer_ = bridge ? bridge : new KWinPointer(application);
+            kwin_pointer_->subscribe();
+        }
+    }
+    else if (kwin_pointer_)
+    {
+        kwin_pointer_->unsubscribe();
+        kwin_pointer_.clear();
+    }
 }
 
 void NekoWallpaperItem::sample_global_gaze()
@@ -590,10 +615,13 @@ void NekoWallpaperItem::sample_global_gaze()
         }
         global_gaze_ = mapFromGlobal(x11_cursor_->position());
     }
-    else if (compositor_pointer_)
-        global_gaze_ = mapFromGlobal(*compositor_pointer_);
     else
-        global_gaze_.reset();
+    {
+        auto pointer = compositor_pointer_;
+        if (!pointer && kwin_pointer_)
+            pointer = kwin_pointer_->position();
+        global_gaze_ = pointer ? std::optional<QPointF>{mapFromGlobal(*pointer)} : std::nullopt;
+    }
 }
 
 void NekoWallpaperItem::request_playback_frame()

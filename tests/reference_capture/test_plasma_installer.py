@@ -33,6 +33,7 @@ class InstallerTests(unittest.TestCase):
             'contents/ui/main.qml': b'import "NekoMote/Wallpaper" 1.0\n',
             'contents/ui/config.qml': b'import "NekoMote/Wallpaper" 1.0\n',
             'contents/config/main.xml': b'<kcfg/>',
+            'contents/kwin/gaze.js': b'// KWin script fixture\n',
             'contents/ui/NekoMote/Wallpaper/qmldir': b'plugin fixture\n',
         }
         binaries = {}
@@ -113,6 +114,8 @@ class InstallerTests(unittest.TestCase):
         panel = self.config / 'panel.json'
         panel.write_text('user panel configuration')
         INSTALLER.operate('install', self.prefix, self.package)
+        script = 'contents/kwin/gaze.js'
+        self.assertEqual((self.root / script).read_bytes(), self.payload[script])
         INSTALLER.operate('status', self.prefix)
         INSTALLER.operate('reinstall', self.prefix, self.package)
         self.assertEqual(sum('--install' in call for call in self.calls), 2)

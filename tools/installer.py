@@ -332,6 +332,11 @@ def operate(action, prefix, package=None):
                         safe_path(path)
                         if not path.is_file() or digest(path) != info['binaries'][source]['sha256']:
                             raise ValueError('KPackage did not install the expected native payload')
+                    script = work / 'extracted/contents/kwin/gaze.js'
+                    if script.is_file():
+                        installed_script = safe_path(root / 'contents/kwin/gaze.js')
+                        if not installed_script.is_file() or digest(installed_script) != digest(script):
+                            raise ValueError('KPackage did not install the expected KWin script')
             for path in remove:
                 # The successful installation owns the current wallpaper directory.
                 if action != 'uninstall' and root in path.parents:

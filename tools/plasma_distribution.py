@@ -30,6 +30,7 @@ REQUIRED = ELFS + (
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/main.qml",
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/ui/config.qml",
     "share/plasma/wallpapers/uk.nekopara.nekomote/contents/config/main.xml",
+    "share/plasma/wallpapers/uk.nekopara.nekomote/contents/kwin/gaze.js",
 )
 UBUNTU20_BASELINE = {"GLIBC": "2.31", "GLIBCXX": "3.4.28", "CXXABI": "1.3.12"}
 BASELINE = {"GLIBC": "2.36", "GLIBCXX": "3.4.30", "CXXABI": "1.3.13"}

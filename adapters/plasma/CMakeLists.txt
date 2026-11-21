@@ -1,5 +1,5 @@
 # Plasma wallpaper QML module and isolated probe. Default OFF; requires Qt and ABI.
-find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Qml Quick OpenGL LinguistTools DBus)
 find_package(Python3 COMPONENTS Interpreter QUIET)
 
 if(NEKOMOTE_BUILD_PLASMA_PROBE)
@@ -24,7 +24,8 @@ qt6_add_translation(NEKOMOTE_PLASMA6_QM_FILES
 configure_file(translations.qrc.in ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 qt6_add_resources(NEKOMOTE_PLASMA6_QRC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
-add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp translations.cpp
+add_library(nekomote_plasma_qml SHARED wallpaper_item.cpp wallpaper_item.hpp
+    kwin_pointer.cpp kwin_pointer.hpp translations.cpp
     ${NEKOMOTE_PLASMA6_QRC_SOURCES})
 add_library(nekomote::plasma_qml ALIAS nekomote_plasma_qml)
 set_target_properties(nekomote_plasma_qml PROPERTIES
@@ -34,7 +35,7 @@ set_target_properties(nekomote_plasma_qml PROPERTIES
 target_include_directories(nekomote_plasma_qml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nekomote_plasma_qml PUBLIC
     nekomote::host_qt_quick nekomote::host_session Qt6::Quick Qt6::OpenGL)
-target_link_libraries(nekomote_plasma_qml PRIVATE nekomote_warnings)
+target_link_libraries(nekomote_plasma_qml PRIVATE Qt6::DBus nekomote_warnings)
 
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.5)
     qt_policy(SET QTP0001 NEW)

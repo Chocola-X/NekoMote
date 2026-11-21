@@ -15,6 +15,7 @@
 namespace nekomote::plasma
 {
 class X11CursorSampler;
+class KWinPointer;
 // Status values exposed to QML as integers.
 //   0 = Unconfigured: assetsDir not yet set or empty
 //   1 = Loaded:       wallpaper initialized and ready to render
@@ -107,11 +108,13 @@ class NekoWallpaperItem : public nekomote::qt_quick::WallpaperItemBase
     void set_session_unavailable(bool unavailable);
     void request_playback_frame();
     void sample_global_gaze();
+    void sync_kwin_pointer();
     void start_timer();
     void stop_timer();
 
     std::shared_ptr<nekomote::qt_quick::WallpaperState> state_;
     QPointer<X11CursorSampler> x11_cursor_;
+    QPointer<KWinPointer> kwin_pointer_;
     bool native_x11_platform_{false};
     bool wayland_platform_{false};
     bool global_gaze_enabled_{true};
