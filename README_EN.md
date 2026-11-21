@@ -55,9 +55,9 @@ NekoMote decouples the application layer from desktop adapters: all core wallpap
 | **`nekomote_player`** | Any desktop environment (window mode) | OpenGL / Vulkan (at launch) | Standalone foreground window | Keyboard shortcuts, mouse drag & UI panel | CLI flags + XDG config |
 
 > [!NOTE]
-> **Note on the GNOME Desktop Environment**:
-> - **X11 Session (GNOME on X11)**: **Fully supported**. GNOME on X11 adheres to the standard EWMH specification and has been verified to run reliably with `nekomote_x11`.
-> - **Wayland Session (GNOME on Wayland)**: The [GNOME Shell extension](docs/gnome45.md) displays the wallpaper on the desktop and in Activities. If XWayland is available, you can also try `nekomote_x11 --assets /path/to/assets`. On Manjaro 26.1.0, the X11 shell was reported to appear as a bottom-layer desktop window and to be absent from Activities and the application grid.
+> **GNOME desktop support**
+> - **The standalone X11 shell (`nekomote_x11`)** has been tested in both GNOME X11 and Wayland sessions (via XWayland). It displays the wallpaper in a bottom-layer window on the desktop. The wallpaper is absent from the Activities overview and app grid.
+> - **The GNOME Shell 45+ extension** runs in Wayland sessions. It displays live wallpaper on the desktop, in Activities, in the workspace thumbnails at the top of Activities, and during workspace transitions. It also supports desktop interaction. See the installation steps below.
 
 ---
 
@@ -213,6 +213,28 @@ NekoMote uses a dual-file persistence model separated under the XDG config direc
 - **Panel Preferences (`.panel.json`)**: Stores active character, active background, position offset, scale, FPS limit, mute state, lock transform, and language preference. **Saved atomically only when modified by user actions via the UI panel**, avoiding unnecessary disk writes on standard runs.
 
 ---
+
+### 7. GNOME Shell 45+ Wallpaper Extension
+
+Download `nekomote-gnome45-ubuntu22-<arch>.tar.gz` for your CPU architecture (`x86_64` or `aarch64`) from
+[GitHub Releases](https://github.com/Chocola-X/NekoMote/releases). The archive includes the Shell extension and renderer.
+Ubuntu 22 identifies the build baseline. The extension requires a GNOME Shell 45 or later Wayland session.
+
+```bash
+tar -xzf nekomote-gnome45-ubuntu22-x86_64.tar.gz
+cd nekomote-gnome45-ubuntu22-x86_64
+bash install.sh
+```
+
+If the extension does not appear after installation, log out and back in to GNOME Wayland. Then enable it and open its preferences.
+
+```bash
+gnome-extensions enable nekomote@nekopara.uk
+gnome-extensions prefs nekomote@nekopara.uk
+```
+
+In preferences, select the asset root containing `characters/`. OpenGL is the default, and Vulkan is also available in preferences.
+To uninstall, run `bash install.sh uninstall` from the extracted directory. See the [GNOME adapter guide](docs/gnome45.md) for source builds and troubleshooting.
 
 ## Asset Preparation & Import
 

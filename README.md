@@ -55,9 +55,9 @@ NekoMote 采用**应用层与壁纸壳完全解耦**的架构设计：核心业�
 | **`nekomote_player`** | 任意桌面环境（窗口模式） | OpenGL / Vulkan (启动指定) | 独立前台窗口 | 完整键盘快捷键、鼠标拖拽与 UI 面板 | 命令行参数 + XDG 配置文件 |
 
 > [!NOTE]
-> **关于 GNOME 桌面环境的说明**：
-> - **X11 会话（GNOME on X11）**：**完全支持**。GNOME 在 X11 下遵循标准 EWMH 规范，经实测可通过 `nekomote_x11` 稳定运行。
-> - **Wayland 会话（GNOME on Wayland）**：使用 [GNOME Shell 扩展](docs/gnome45.md) 可在桌面和活动概览显示壁纸。启用了 XWayland 的会话也可尝试运行 `nekomote_x11 --assets /path/to/assets`。在 Manjaro 26.1.0 的实测中，X11 壳作为底层窗口显示在普通桌面上，活动概览和应用列表中看不到壁纸。
+> **GNOME 桌面适配**
+> - **X11 独立壳 `nekomote_x11`** 在 GNOME 的 X11 和 Wayland（通过 XWayland）会话中均已实测可用。壁纸作为普通桌面上的底层窗口显示，进入活动概览（任务视图）或应用列表时不可见。
+> - **GNOME Shell 45+ 扩展**适用于 Wayland 会话。动态壁纸可显示在普通桌面、活动概览、顶部工作区缩略图和工作区切换动画中，并支持桌面交互。安装步骤见下方使用指南。
 
 ---
 
@@ -213,6 +213,28 @@ NekoMote 采用**启动配置**与**面板运行时偏好**分离的双层设计
 - **面板偏好 (`.panel.json`)**：记录当前角色、当前背景、角色的缩放/平移偏移量、帧率限制（FPS）、是否静音、锁定状态、语言偏好等。**仅在用户通过界面操作时才会自动触发原子落盘**，首次启动或未更改设置时不会无故产生多余文件。
 
 ---
+
+### 7. GNOME Shell 45+ 壁纸扩展
+
+在 [GitHub Releases](https://github.com/Chocola-X/NekoMote/releases) 下载与你的 CPU 架构对应的
+`nekomote-gnome45-ubuntu22-<arch>.tar.gz`（`x86_64` 或 `aarch64`）。包内包含 Shell 扩展与渲染程序。
+文件名中的 Ubuntu 22 指构建基线，扩展需要 GNOME Shell 45 或更新版本的 Wayland 会话。
+
+```bash
+tar -xzf nekomote-gnome45-ubuntu22-x86_64.tar.gz
+cd nekomote-gnome45-ubuntu22-x86_64
+bash install.sh
+```
+
+如果安装后扩展未出现，请注销并重新登录 GNOME Wayland。然后启用扩展并打开偏好页：
+
+```bash
+gnome-extensions enable nekomote@nekopara.uk
+gnome-extensions prefs nekomote@nekopara.uk
+```
+
+在偏好页选择包含 `characters/` 的资产根目录。默认使用 OpenGL，也可在偏好页切换至 Vulkan。
+卸载时在解压目录运行 `bash install.sh uninstall`。源码构建及故障排查见 [GNOME 适配器文档](docs/gnome45.md)。
 
 ## 资产准备与导入
 
