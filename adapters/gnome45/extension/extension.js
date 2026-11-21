@@ -6,6 +6,7 @@ import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Background from 'resource:///org/gnome/shell/ui/background.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as WorkspaceThumbnails from 'resource:///org/gnome/shell/ui/workspaceThumbnail.js';
 import {appendDiagnostic, createDiagnosticSession} from './diagnostics.js';
 import {DesktopPointer} from './pointer.js';
 import {addWorkspacePreview} from './preview.js';
@@ -13,6 +14,7 @@ import {defaultRendererPath} from './renderer.js';
 
 const SIGTERM = 15;
 const GAZE_INTERVAL_MS = 33;
+const {WorkspaceThumbnail} = WorkspaceThumbnails;
 
 export default class NekoMoteExtension extends Extension {
     enable() {
@@ -25,6 +27,7 @@ export default class NekoMoteExtension extends Extension {
 
         this._renderers = new Set();
         this._backgrounds = new Map();
+        this._thumbnails = new Map();
         this._injections = new InjectionManager();
         const extension = this;
         this._injections.overrideMethod(Background.BackgroundManager.prototype,
@@ -36,6 +39,14 @@ export default class NekoMoteExtension extends Extension {
                         this._container === Main.layoutManager._backgroundGroup);
                 return actor;
             });
+        if (typeof WorkspaceThumbnail?.prototype.setPorthole === 'function') {
+            this._injections.overrideMethod(WorkspaceThumbnail.prototype,
+                'setPorthole', original => function (...args) {
+                    const result = original.apply(this, args);
+                    extension._syncThumbnail(this);
+                    return result;
+                });
+        }
         for (const manager of Main.layoutManager._bgManagers)
             this._registerBackground(manager.backgroundActor, true);
         this._overviewId = Main.overview.connect('showing', () => {
@@ -69,6 +80,8 @@ export default class NekoMoteExtension extends Extension {
         this._mapId = global.window_manager.connect_after('map', (_wm, actor) => {
             this._attach(actor);
         });
+        if (Main.overview.visible)
+            this._registerPreviewTree(Main.layoutManager.overviewGroup);
         this._reload();
     }
 
@@ -88,6 +101,9 @@ export default class NekoMoteExtension extends Extension {
         for (const background of this._backgrounds.values())
             background.actor.disconnect(background.destroyId);
         this._backgrounds.clear();
+        for (const [actor, thumbnail] of this._thumbnails)
+            actor.disconnect(thumbnail.destroyId);
+        this._thumbnails.clear();
         this._renderers = null;
         this._settings = null;
     }
@@ -306,6 +322,8 @@ export default class NekoMoteExtension extends Extension {
             Main.layoutManager._backgroundGroup.add_child(renderer.desktopClone);
             for (const background of this._backgrounds.values())
                 this._attachBackground(background, renderer);
+            for (const thumbnail of this._thumbnails.keys())
+                this._syncThumbnail(thumbnail);
             this._log(`attached renderer to desktop on monitor ${monitor.index}`);
         } catch (error) {
             this._detach(renderer);
@@ -317,8 +335,40 @@ export default class NekoMoteExtension extends Extension {
     _registerPreviewTree(root) {
         if (root instanceof Meta.BackgroundActor)
             this._registerBackground(root, false);
+        else if (WorkspaceThumbnail && root instanceof WorkspaceThumbnail)
+            this._syncThumbnail(root);
         for (const actor of root.get_children())
             this._registerPreviewTree(actor);
+    }
+
+    _syncThumbnail(actor) {
+        // The viewport shows the work area. Keep the wallpaper behind the
+        // separate container whose window clones Shell restacks while dragging.
+        const viewport = actor._viewport;
+        const contents = actor._contents;
+        if (!viewport || contents?.get_parent() !== viewport)
+            return;
+        let thumbnail = this._thumbnails.get(actor);
+        if (!thumbnail) {
+            const destroyId = actor.connect('destroy', () => this._thumbnails.delete(actor));
+            thumbnail = {destroyId, clone: null, renderer: null};
+            this._thumbnails.set(actor, thumbnail);
+        }
+        if (!thumbnail.clone) {
+            const renderer = [...this._renderers].find(({monitor, source}) =>
+                source && monitor.index === actor.monitorIndex);
+            if (!renderer)
+                return;
+            const {width, height} = renderer.monitor;
+            thumbnail.clone = new Clutter.Clone({source: renderer.source, width, height});
+            thumbnail.renderer = renderer;
+            viewport.add_child(thumbnail.clone);
+            viewport.set_child_below_sibling(thumbnail.clone, contents);
+        }
+        const x = thumbnail.renderer.monitor.x + contents.x;
+        const y = thumbnail.renderer.monitor.y + contents.y;
+        thumbnail.clone.set_position(x, y);
+        thumbnail.clone.set_clip(-x, -y, viewport.width, viewport.height);
     }
 
     _registerBackground(actor, desktop) {
@@ -382,6 +432,13 @@ export default class NekoMoteExtension extends Extension {
                 background.preview?.destroy();
                 background.preview = null;
                 background.renderer = null;
+            }
+        }
+        for (const thumbnail of this._thumbnails.values()) {
+            if (thumbnail.renderer === renderer) {
+                thumbnail.clone.destroy();
+                thumbnail.clone = null;
+                thumbnail.renderer = null;
             }
         }
     }
